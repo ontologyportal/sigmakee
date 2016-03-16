@@ -2927,7 +2927,7 @@ public class WordNet {
     /** ***************************************************************
      * Generate a new synset from a termFormat
      */
-    public void synsetFromTermFormat(String tf, String SUMOterm, KB kb) {
+    public void synsetFromTermFormat(Formula form, String tf, String SUMOterm, KB kb) {
 
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
         String synsetID = null;
@@ -2962,7 +2962,20 @@ public class WordNet {
             keys = wordsToSenses.get(tf);
         keys.add(key);
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenses: " + tf + "," + keys);
-        wordsToSenses.put(tf,keys);            
+        wordsToSenses.put(tf,keys);
+
+        // TODO: kind of a hack to give priority to any domain term, maybe make this a switchable option
+        if (!form.sourceFile.equals("Merge.kif") && !form.sourceFile.equals("Mid-level-ontology.kif")) {
+            TreeSet<AVPair> senselist = wordFrequencies.get(tf);
+            if (senselist == null) {
+                senselist = new TreeSet<AVPair>();
+                wordFrequencies.put(tf,senselist);
+            }
+            AVPair avp = new AVPair();
+            avp.attribute = synsetID;
+            avp.value = "99999"; // bigger than any word frequency in Brown
+            senselist.add(avp);
+        }
     }
     
     /** ***************************************************************
@@ -2984,7 +2997,7 @@ public class WordNet {
                 //System.out.println("INFO in WordNet.termFormatsToSynsets() multiword:" + tf + " SUMO: " + SUMOterm);
                 multiWords.addMultiWord(tf);
             }
-            synsetFromTermFormat(tf,SUMOterm,kb);
+            synsetFromTermFormat(form,tf,SUMOterm,kb);
         }
     }
     
