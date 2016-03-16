@@ -141,6 +141,29 @@ public class WSD {
         else
             return "";
     }
+
+    /** ***************************************************************
+     * Check if a sense has been created from a domain ontology and give
+     * it priority.
+     */
+    private static List<String> termFormatBypass(String word) {
+
+        ArrayList<String> result = new ArrayList<String>();
+        TreeSet<AVPair> senselist = WordNet.wn.wordFrequencies.get(word);
+        if (senselist == null)
+            return null;
+        //System.out.println("INFO in WordNet.termFormatBypass(): senselist: " + senselist);
+        for (AVPair avp : senselist) {
+            if (avp.value.equals("99999")) {
+                result.add(avp.attribute);
+                result.add("99999");
+                //System.out.println("INFO in WordNet.termFormatBypass(): word, avp: " +
+                //        word + ", " + avp);
+                return result;
+            }
+        }
+        return null;
+    }
         
     /** ***************************************************************
      * Return the best guess at the synset for the given word in the
@@ -150,9 +173,12 @@ public class WSD {
      */
     public static List<String> findWordSensePOS(String word, List<String> words, int POS) {
 
-        //System.out.println("INFO in WordNet.findWordSensePOS(): word, POS, text, " + 
+        //System.out.println("INFO in WordNet.findWordSensePOS(): word, POS, text: " +
         //        word + ", " + POS + ", " + words);
         ArrayList<String> senses = WordNet.wn.wordsToSenses.get(word);
+        List<String> termFormatBypass = termFormatBypass(word);
+        if (termFormatBypass != null)
+            return termFormatBypass;
         if (senses == null) {
             System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word + 
                     "' not in lexicon as part of speech " + POS);
