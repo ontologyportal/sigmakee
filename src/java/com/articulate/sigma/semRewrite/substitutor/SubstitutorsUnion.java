@@ -40,6 +40,15 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
         this.substitutors = substitutors;
     }
 
+    /** ***************************************************************
+     */
+    public String toString() {
+
+        return substitutors.toString();
+    }
+
+    /** ***************************************************************
+     */
     public static ClauseSubstitutor of(ClauseSubstitutor... substitutors) {
         SubstitutorsUnion combinator = new SubstitutorsUnion(
                 Lists.newArrayList(substitutors)
@@ -47,6 +56,8 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
         return combinator;
     }
 
+    /** ***************************************************************
+     */
     @Override
     public boolean containsKey(CoreLabel key) {
 
@@ -54,6 +65,8 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
                 .anyMatch(substitutor -> substitutor.containsKey(key));
     }
 
+    /** ***************************************************************
+     */
     @Override
     public boolean containsKey(String keyLabel) {
 
@@ -61,6 +74,8 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
                 .anyMatch(substitutor -> substitutor.containsKey(keyLabel));
     }
 
+    /** ***************************************************************
+     */
     @Override
     public Optional<CoreLabelSequence> getGroupedByFirstLabel(CoreLabel label) {
 
@@ -71,6 +86,8 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
                 .orElse(Optional.empty());
     }
 
+    /** ***************************************************************
+     */
     @Override
     public CoreLabelSequence getGrouped(CoreLabel key) {
 
@@ -81,6 +98,8 @@ public class SubstitutorsUnion implements ClauseSubstitutor {
                 .orElse(EMPTY_SEQUENCE);
     }
 
+    /** ***************************************************************
+     */
     @Override
     public CoreLabelSequence getGrouped(String keyLabel) {
 
