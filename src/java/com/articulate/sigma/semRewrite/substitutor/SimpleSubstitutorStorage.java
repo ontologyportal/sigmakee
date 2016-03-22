@@ -41,9 +41,18 @@ public class SimpleSubstitutorStorage implements ClauseSubstitutor {
 
     Map<CoreLabelSequence, CoreLabelSequence> groups = Maps.newHashMap();
 
+    /** ***************************************************************
+     */
     public void addGroups(Map<CoreLabelSequence, CoreLabelSequence> groups) {
 
         this.groups.putAll(groups);
+    }
+
+    /** ***************************************************************
+     */
+    public String toString() {
+
+        return groups.toString();
     }
 
     /** ***************************************************************
@@ -55,21 +64,26 @@ public class SimpleSubstitutorStorage implements ClauseSubstitutor {
         return groups.keySet().stream().anyMatch(key -> key.containsLabel(keyLabel));
     }
 
+    /** ***************************************************************
+     */
     @Override
     public boolean containsKey(String keyLabel) {
 
         Preconditions.checkNotNull(groups);
         Matcher m = CLAUSE_PARAM.matcher(keyLabel);
-        if(m.find()) {
+        if (m.find()) {
             String text = m.group(1);
             Integer index = Integer.valueOf(m.group(2));
             return groups.keySet().stream()
                     .anyMatch(key -> key.containsLabel(IGNORE_SENTENCE, text, index));
-        } else {
+        }
+        else {
             return false;
         }
     }
 
+    /** ***************************************************************
+     */
     @Override
     public Optional<CoreLabelSequence> getGroupedByFirstLabel(CoreLabel label) {
 
@@ -94,17 +108,21 @@ public class SimpleSubstitutorStorage implements ClauseSubstitutor {
                 .findFirst().orElse(EMPTY_SEQUENCE);
     }
 
+    /** ***************************************************************
+     */
     @Override
     public CoreLabelSequence getGrouped(String keyLabel) {
+
         Matcher m = CLAUSE_PARAM.matcher(keyLabel);
-        if(m.find()) {
+        if (m.find()) {
             String text = m.group(1);
             Integer index = Integer.valueOf(m.group(2));
             return groups.entrySet().stream()
                     .filter(e -> e.getKey().containsLabel(IGNORE_SENTENCE, text, index))
                     .map(e -> e.getValue())
                     .findFirst().orElse(EMPTY_SEQUENCE);
-        } else {
+        }
+        else {
             return EMPTY_SEQUENCE;
         }
     }
