@@ -312,6 +312,7 @@ public class WSD {
                     Iterator<AVPair> it = senseKeys.descendingIterator();
                     while (it.hasNext()) {
                         AVPair avp = it.next();
+                        //System.out.println("INFO in WSD.getBestDefaultSense(): avp: " + avp);
                         String POS = WordNetUtilities.getPOSfromKey(avp.value);
                         String numPOS = WordNetUtilities.posLettersToNumber(POS);
                         int count = Integer.parseInt(avp.attribute.trim());
@@ -340,12 +341,16 @@ public class WSD {
                     String key = it.next();
                     String POS = WordNetUtilities.getPOSfromKey(key);
                     String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                    return numPOS + WordNet.wn.senseIndex.get(key);
+                    String result = numPOS + WordNet.wn.senseIndex.get(key);
+                    //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
+                    return result;
                 }  
             }
         }
-        else
+        else {
+            //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + bestSense);
             return bestSense;
+        }
         return "";
     }
     
