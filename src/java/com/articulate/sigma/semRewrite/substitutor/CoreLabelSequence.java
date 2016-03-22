@@ -35,16 +35,22 @@ public class CoreLabelSequence {
 
     final List<CoreLabel> labels;
 
+    /** ***************************************************************
+     */
     public CoreLabelSequence(List<CoreLabel> labels) {
 
         this.labels = ImmutableList.copyOf(labels);
     }
 
+    /** ***************************************************************
+     */
     public CoreLabelSequence(CoreLabel... labels) {
 
         this.labels = ImmutableList.copyOf(labels);
     }
 
+    /** ***************************************************************
+     */
     public static CoreLabelSequence from(CoreLabel... labels) {
 
         return labels.length > 0
@@ -52,16 +58,29 @@ public class CoreLabelSequence {
                 : EMPTY_SEQUENCE;
     }
 
+    /** ***************************************************************
+     */
+    public String toString() {
+
+        return labels.toString();
+    }
+
+    /** ***************************************************************
+     */
     public List<CoreLabel> getLabels() {
 
         return labels;
     }
 
+    /** ***************************************************************
+     */
     public boolean containsLabel(CoreLabel label) {
 
         return labels.contains(label);
     }
 
+    /** ***************************************************************
+     */
     public boolean isEmpty() {
 
         return labels.isEmpty();
