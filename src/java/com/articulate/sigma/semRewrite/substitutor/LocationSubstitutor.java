@@ -42,17 +42,18 @@ public class LocationSubstitutor extends SimpleSubstitutorStorage {
     }
 
     private Map<CoreLabelSequence, CoreLabelSequence> collectGroups(Annotation document) {
+
         Map<CoreLabelSequence, CoreLabelSequence> collectedGroups = Maps.newHashMap();
         List<CoreLabel> labels = document.get(CoreAnnotations.TokensAnnotation.class);
 
         ListIterator<CoreLabel> rit = labels.listIterator(labels.size());
-        while(rit.hasPrevious()) {
+        while (rit.hasPrevious()) {
             CoreLabel label = rit.previous();
 
             // We have to distinguish the case of "there" being used as a different part of speech, so we should only
             // seek to make "there" a coreference when it has POS tag VB and not "EX" from the Stanford POS tagger.
-            if("there".equals(label.lemma()) && ("RB".equals(label.tag()) || "VB".equals(label.tag()))) {
-                if(rit.hasPrevious()) {
+            if ("there".equals(label.lemma()) && ("RB".equals(label.tag()) || "VB".equals(label.tag()))) {
+                if (rit.hasPrevious()) {
                     CoreLabelSequence location = closestLocation(labels, rit.previousIndex());
                     if (!location.isEmpty()) {
                         collectedGroups.put(CoreLabelSequence.from(label), location);
@@ -64,17 +65,21 @@ public class LocationSubstitutor extends SimpleSubstitutorStorage {
         return collectedGroups;
     }
 
+    /** **************************************************************
+     */
     private CoreLabelSequence closestLocation(List<CoreLabel> labels, int therePosition) {
+
         ListIterator<CoreLabel> rit = labels.listIterator(therePosition);
         LinkedList<CoreLabel> location = Lists.newLinkedList();
-        while(rit.hasPrevious()) {
+        while (rit.hasPrevious()) {
             CoreLabel label = rit.previous();
-            if("LOCATION".equals(label.ner()) || "ORGANIZATION".equals(label.ner())) {
-                if(Iterables.getFirst(location, label).ner().equals(label.ner())) {
+            if ("LOCATION".equals(label.ner()) || "ORGANIZATION".equals(label.ner())) {
+                if (Iterables.getFirst(location, label).ner().equals(label.ner())) {
                     location.addFirst(label);
                 }
-            } else if(!location.isEmpty()){
-                if("IN".equals(label.tag())) {
+            }
+            else if (!location.isEmpty()){
+                if ("IN".equals(label.tag())) {
                     location.addFirst(label);
                 }
                 break;
