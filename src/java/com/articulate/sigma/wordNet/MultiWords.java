@@ -69,21 +69,32 @@ public class MultiWords {
      * @param startIndex is the first word in the array to look at
      * @param synset is an array of only one element, if a synset is found
      * and empty otherwise
-     * @return the index into the next word to be checked, in al,
+     * @return the index into the next word to be checked, in text,
      * which could be the same as startIndex, if no multi-word was found
      */
     public int findMultiWord(List<String> text, int startIndex, List<String> synset) {
+
+        System.out.println("INFO in MultiWords.findMultiWord(): text: '" + text + "'");
         String rootWord = rootFormOf(text.get(startIndex));
-        return startIndex + findMultiWord(rootWord, text.subList(startIndex + 1, text.size()), synset);
+        return startIndex + findMultiWord(rootWord, text.get(startIndex),
+                text.subList(startIndex + 1, text.size()), synset);
     }
 
-    public int findMultiWord(String multiWordKey, List<String> multiWordTail, List<String> synset) {
+    /** ***************************************************************
+     * @param nonRoot is the non root form of the potential multiword headword.
+     *                We need to try both the root form and the original form,
+     *                which includes capitalized and lower case versions.
+     */
+    public int findMultiWord(String multiWordKey, String nonRoot, List<String> multiWordTail, List<String> synset) {
 
+        if (!multiWord.containsKey(multiWordKey))
+            multiWordKey = nonRoot;
+        //System.out.println("INFO in MultiWords.findMultiWord(): current word: '" + multiWordKey + "'");
         int wordIndex = 0;
         if (multiWord.containsKey(multiWordKey) && !multiWordTail.isEmpty()) {
             String foundMultiWord = multiWordKey + "_" + multiWordTail.get(wordIndex);
             //int wordListSize = multiWord.get(word).size();
-            //System.out.println("INFO in MultiWords.findMultiWord(): current word: '" + word + "'");
+            //System.out.println("INFO in MultiWords.findMultiWord(): current head word: '" + multiWordKey + "'");
             Collection<String> candidates = multiWord.get(multiWordKey);
             while (candidates.size() > 0) {
                 ArrayList<String> newCandidates = new ArrayList<String>();
@@ -129,6 +140,8 @@ public class MultiWords {
         return 0;
     }
 
+    /** ***************************************************************
+     */
     private static String rootFormOf(String word) {
 
         String rootWord = word;
