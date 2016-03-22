@@ -147,6 +147,8 @@ public class SentenceUtil {
     public static void printCorefChain(Annotation document) {
 
         Map<Integer, CorefChain> graph = document.get(CorefChainAnnotation.class);
+        if (graph == null)
+            return;
         for (CorefChain cc : graph.values()) {
             List<CorefChain.CorefMention> mentions = cc.getMentionsInTextualOrder();
             if (mentions.size() > 1) {
