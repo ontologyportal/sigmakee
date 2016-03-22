@@ -43,13 +43,15 @@ public class SubstitutionUtil {
      * If both arguments are substituted to the same group, this entry will be
      * removed from the original input.
      */
-    public static void groupClauses(ClauseSubstitutor substitutor, List<String> clauses) {
+    public static List<String> groupClauses(ClauseSubstitutor substitutor, List<String> clauses) {
 
-        //System.out.println("INFO in SubstitutionUtil.groupClauses(): " + clauses);
+        //System.out.println("INFO in SubstitutionUtil.groupClauses(): clauses: " + clauses);
+        //System.out.println("INFO in SubstitutionUtil.groupClauses(): substitutors: " + substitutor);
         Iterator<String> clauseIterator = clauses.iterator();
         List<String> modifiedClauses = Lists.newArrayList();
         while (clauseIterator.hasNext()) {
             String clause = clauseIterator.next();
+            //System.out.println("INFO in SubstitutionUtil.groupClauses(): clause: " + clause);
             Matcher m = CLAUSE_SPLITTER.matcher(clause);
             if (m.matches()) {
                 // FIXME LOW: Still waiting for optimization
@@ -57,21 +59,35 @@ public class SubstitutionUtil {
                 String attr2 = m.group(4);
                 if ((m.group(3) != null && substitutor.containsKey(attr1))
                         || (m.group(5) != null && substitutor.containsKey(attr2))) {
+                    //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr1: " + attr1);
+                    //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr2: " + attr2);
                     CoreLabelSequence attr1Grouped = substitutor.getGrouped(attr1);
                     CoreLabelSequence attr2Grouped = substitutor.getGrouped(attr2);
-                    clauseIterator.remove();
-                    if (attr1Grouped != null && attr2Grouped != null &&
-                            !Objects.equals(attr1Grouped, attr2Grouped)) {
+                    //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr1Grouped: " + attr1Grouped);
+                    //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr2Grouped: " + attr2Grouped);
+                   // if (attr1Grouped.toString() != null && attr2Grouped != null &&
+                    if (!Objects.equals(attr1Grouped, attr2Grouped)) {
+                            // delete clauses like amod() and nn() that have parts of a compound noun as args
+                        clauseIterator.remove();
                         String label = m.group(1);
-                        String arg1 = attr1Grouped.toLabelString().orElse(attr1);
-                        String arg2 = attr2Grouped.toLabelString().orElse(attr2);
+                        String arg1 = attr1;
+                        if (attr1Grouped != null)
+                            arg1 = attr1Grouped.toLabelString().get();
+                        String arg2 = attr2;
+                        if (attr2Grouped != null)
+                            arg2 = attr2Grouped.toLabelString().get();
                         modifiedClauses.add(label + "(" + arg1  + "," + arg2 + ")");
                     }
                 }
+                else
+                    modifiedClauses.add(clause);
             }
+            else
+                System.out.println("Error in SubstitutionUtil.groupClauses(): unmatched clause: " + clause);
         }
 
-        //System.out.println("INFO in SubstitutionUtil.groupClauses(2): " + clauses);
+        //System.out.println("INFO in SubstitutionUtil.groupClauses(2): " + modifiedClauses);
         clauses.addAll(modifiedClauses);
+        return modifiedClauses;
     }
 }
