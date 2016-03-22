@@ -1079,7 +1079,7 @@ public class Clausifier  {
                 Formula oldVarsF = new Formula();
                 oldVarsF.read(oldVars);
                 String newVars = "";
-                while (!oldVarsF.empty()) {
+                while (oldVarsF != null && !oldVarsF.empty()) {
                     String oldVar = oldVarsF.car();
                     String newVar = newVar();
                     newScopedRenames.put(oldVar, newVar);
