@@ -85,7 +85,7 @@ public class Interpreter {
     // debug options
     public static boolean showrhs = false;
     public static boolean showr = true;
-    public static boolean coref = true;
+    public static boolean coref = false;
 
     public static List<String> qwords = Lists.newArrayList("who","what","where","when","why","which","how");
     public static List<String> months = Lists.newArrayList("January","February","March","April","May","June",
@@ -665,7 +665,7 @@ public class Interpreter {
             );
         }
         System.out.println("Interpreter.interpretGenCNF(): before grouping: " + results);
-        SubstitutionUtil.groupClauses(substitutor, results);
+        results = SubstitutionUtil.groupClauses(substitutor, results);
 
         System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
         EntityTypeParser etp = new EntityTypeParser(wholeDocument);
@@ -677,7 +677,7 @@ public class Interpreter {
 
         List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
         // TODO: This is not the best way to substitute POS information
-        SubstitutionUtil.groupClauses(substitutor, posInformation);
+        posInformation = SubstitutionUtil.groupClauses(substitutor, posInformation);
         results.addAll(posInformation);
 
         results = lemmatizeResults(results, lastSentenceTokens, substitutor);
@@ -1319,7 +1319,8 @@ public class Interpreter {
      */
     public void loadRules() {
 
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "SemRewrite.txt";
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator +
+                "WordNetMappings" + File.separator + "SemRewrite.txt";
         String pref = KBmanager.getMgr().getPref("SemRewrite");
         if (!Strings.isNullOrEmpty(pref))
             filename = pref;
@@ -1329,8 +1330,10 @@ public class Interpreter {
     /** ***************************************************************
      */
     public void initialize() throws IOException {
+
         loadRules();
-        tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings" + File.separator + "stopwords.txt");
+        tfidf = new TFIDF(KBmanager.getMgr().getPref("kbDir") + File.separator +
+                "WordNetMappings" + File.separator + "stopwords.txt");
     }
 
     /** ***************************************************************
