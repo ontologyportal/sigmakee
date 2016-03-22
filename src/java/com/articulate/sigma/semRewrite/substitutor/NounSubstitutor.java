@@ -51,6 +51,7 @@ public class NounSubstitutor extends SimpleSubstitutorStorage {
      */
     private Map<CoreLabelSequence, CoreLabelSequence> parseGroupsAndCollectRoots(List<CoreLabel> labels) {
 
+        System.out.println("Info in NounSubstitutor.parseGroupsAndCollectRoots(): " + labels);
         Map<CoreLabelSequence, CoreLabelSequence> sequences = Maps.newHashMap();
         CoreLabel firstLabel = null;
         List<CoreLabel> sequence = Lists.newArrayList();
@@ -68,7 +69,7 @@ public class NounSubstitutor extends SimpleSubstitutorStorage {
                 sequence = Lists.newArrayList(firstLabel);
             }
         }
-        if(sequence.size() > 1) {
+        if (sequence.size() > 1) {
             CoreLabelSequence s = new CoreLabelSequence(sequence);
             sequences.put(s, s);
         }
