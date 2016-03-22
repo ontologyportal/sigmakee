@@ -52,14 +52,14 @@ public class MultiWordsTest extends UnitTestBase {
         input = Lists.newArrayList("cats", "and", "dogs", "and", "sheep");
 
         synset.clear();
-        endIndex = WordNet.wn.getMultiWords().findMultiWord("rain", input, synset);
+        endIndex = WordNet.wn.getMultiWords().findMultiWord("rain", "rain", input, synset);
 
         assertEquals(4, endIndex);
         assertEquals(1, synset.size());
 
         synset.clear();
         // Incorrect root form
-        endIndex = WordNet.wn.getMultiWords().findMultiWord("raining", input, synset);
+        endIndex = WordNet.wn.getMultiWords().findMultiWord("raining", "raining", input, synset);
 
         assertEquals(0, endIndex);
         assertEquals(0, synset.size());
@@ -72,13 +72,13 @@ public class MultiWordsTest extends UnitTestBase {
 
         ArrayList<String> synset = Lists.newArrayList();
         // Incorrect root form
-        int endIndex = WordNet.wn.getMultiWords().findMultiWord("found", input, synset);
+        int endIndex = WordNet.wn.getMultiWords().findMultiWord("found", "found", input, synset);
 
         assertEquals(0, endIndex);
         assertEquals(0, synset.size());
 
         synset.clear();
-        endIndex = WordNet.wn.getMultiWords().findMultiWord("founding", input, synset);
+        endIndex = WordNet.wn.getMultiWords().findMultiWord("founding", "founding", input, synset);
 
         assertEquals(2, endIndex);
         assertEquals(1, synset.size());
