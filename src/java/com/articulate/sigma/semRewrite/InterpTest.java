@@ -14,10 +14,7 @@ import java.io.FileReader;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.ListIterator;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 /*
@@ -44,6 +41,7 @@ public class InterpTest {
     public static Interpreter interp;
     public static int pass = 0;
     public static int fail = 0;
+    public static int subsumed = 0;
     public static ArrayList<ArrayList<String>> results =  new ArrayList<ArrayList<String>>();
 
     /** **************************************************************
@@ -87,7 +85,7 @@ public class InterpTest {
 
         //return JsonReader.transform("resources/translation_tiny.json", (JSONObject jo) -> {
         //return JsonReader.transform("miscellaneous/translation_tests.json", (JSONObject jo) -> {
-        return transform(KBmanager.getMgr().getPref("kbDir") + File.separator + "ImperativeTests.json", (JSONObject jo) -> {
+        return transform(KBmanager.getMgr().getPref("kbDir") + File.separator + "ImperativeTests2.json", (JSONObject jo) -> {
             String text = (String) jo.get("text");
             //String tokens = (String) jo.get("tokens");
             //String type = (String) jo.get("type");
@@ -103,6 +101,58 @@ public class InterpTest {
         return data.replaceAll("\\n", "").replaceAll("\\s*\\)", ")").replaceAll("\\s*\\(", "(").trim();
     }
 
+    /****************************************************************
+     * if one formula has literals that are found in every other formula
+     * the first subsumes the second (a little counter-intuitive).
+     */
+    private static boolean subsumes(String actual, String expected) {
+
+        Formula act = new Formula(actual);
+        Formula exp = new Formula(expected);
+        act = act.cddrAsFormula();
+        exp = exp.cddrAsFormula();
+        System.out.println("Info in InterpTest.subsumes(): actual 1: " + act);
+        System.out.println("Info in InterpTest.subsumes(): expected 1: " + exp);
+        if (act == null)
+            return false;
+        if (exp == null)
+            return false;
+        act = act.carAsFormula();
+        exp = exp.carAsFormula();
+        System.out.println("Info in InterpTest.subsumes(): actual 2: " + act);
+        System.out.println("Info in InterpTest.subsumes(): expected 2: " + exp);
+        if (act == null)
+            return false;
+        if (exp == null)
+            return false;
+        act = act.cdrAsFormula();
+        exp = exp.cdrAsFormula();
+        System.out.println("Info in InterpTest.subsumes(): actual 3: " + act);
+        System.out.println("Info in InterpTest.subsumes(): expected 3: " + exp);
+        if (act == null)
+            return false;
+        if (exp == null)
+            return false;
+        List<String> expLiterals = exp.complexArgumentsToArrayList(0);
+        List<String> actLiterals = act.complexArgumentsToArrayList(0);
+        for (String explit : expLiterals) {
+            Formula exForm = new Formula(explit);
+            if (!exForm.isSimpleClause()) {
+                System.out.println("Error in InterpTest.subsumes(): non-simple literal: " + exForm);
+                return false;
+            }
+            boolean found = false;
+            for (String actlit : actLiterals) {
+                Formula actForm = new Formula(actlit);
+                if (actForm.equals(exForm))
+                    found = true;
+            }
+            if (!found)
+                return false;
+        }
+        return true;
+    }
+
     /***************************************************************
      */
     public static void test(String fInput, String fExpected) {
@@ -116,18 +166,32 @@ public class InterpTest {
         oneResult.add(fExpected);
         System.out.println("Actual: " + actual);
         oneResult.add(actual);
-        if (!passed) {
+        if (subsumes(actual,fExpected)) {
+            oneResult.add("Subsumed");
+            System.out.println("Subsumed");
+            subsumed++;
+        }
+        else if (!passed) {
+            oneResult.add("FAIL");
             System.out.println("****** FAIL ******");
             fail++;
         }
         else {
+            oneResult.add("PASS");
             System.out.println("pass");
             pass++;
         }
         System.out.println("The following should be equal: \n" + fExpected + "\n and \n" +
                 actual + "\n\n" + passed);
         results.add(oneResult);
+    }
 
+    /***************************************************************
+     */
+    public static void interpOne() {
+
+        String actual = interp.interpret("Can I please hear Uptown Funk on Apple Music").get(0);
+        System.out.println("Actual: " + actual);
     }
 
     /****************************************************************
@@ -135,17 +199,24 @@ public class InterpTest {
     public static void main(String[] args) throws IOException {
 
         initInterpreter();
-        Collection<Object[]> tests = prepare();
-        for (Object[] o : tests) {
-            test((String) o[0], (String) o[1]);
+        if (args != null && args.length > 0 && args[0].equals("-o")) {
+            interpOne();
         }
-        for (ArrayList<String> oneResult : results) {
-            System.out.println("************");
-            System.out.println("Input: " + oneResult.get(0));
-            System.out.println("Expected: " + oneResult.get(1));
-            System.out.println("Actual: " + oneResult.get(2));
+        else {
+            Collection<Object[]> tests = prepare();
+            for (Object[] o : tests) {
+                test((String) o[0], (String) o[1]);
+            }
+            for (ArrayList<String> oneResult : results) {
+                System.out.println("************");
+                System.out.println("Input: " + oneResult.get(0));
+                System.out.println("Expected: " + oneResult.get(1));
+                System.out.println("Actual: " + oneResult.get(2));
+                System.out.println("pass/fail: " + oneResult.get(3));
+            }
+            System.out.println("Passed: " + pass);
+            System.out.println("Failed: " + fail);
+            System.out.println("Subsumed: " + subsumed);
         }
-        System.out.println("Passed: " + pass);
-        System.out.println("Failed: " + fail);
     }
 }
