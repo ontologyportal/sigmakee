@@ -43,6 +43,7 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
      */
     private void initialize(List<CoreLabel> labels) {
 
+        System.out.println("Info in IdiomSubstitutor.initialize(): " + labels);
         int from = 0;
         Map<CoreLabelSequence, CoreLabelSequence> collectedIdioms = Maps.newHashMap();
         ArrayList<String> labelsText = Lists.newArrayList(labels.stream()
@@ -51,7 +52,7 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
         ArrayList<String> synset = Lists.newArrayList();
         while (from < labels.size()) {
             List<String> tail = labelsText.subList(from + 1, labelsText.size());
-            int to = WordNet.wn.getMultiWords().findMultiWord(labels.get(from).lemma(), tail, synset);
+            int to = WordNet.wn.getMultiWords().findMultiWord(labels.get(from).lemma(), labels.get(from).originalText(), tail, synset);
             if (to > 0) {
                 CoreLabelSequence idiom = new CoreLabelSequence(labels.subList(from, from + to));
                 collectedIdioms.put(idiom, idiom);
