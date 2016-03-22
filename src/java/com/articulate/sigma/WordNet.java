@@ -2972,8 +2972,8 @@ public class WordNet {
                 wordFrequencies.put(tf,senselist);
             }
             AVPair avp = new AVPair();
-            avp.attribute = synsetID;
-            avp.value = "99999"; // bigger than any word frequency in Brown
+            avp.value = key;
+            avp.attribute = "99999"; // bigger than any word frequency in Brown
             senselist.add(avp);
         }
     }
