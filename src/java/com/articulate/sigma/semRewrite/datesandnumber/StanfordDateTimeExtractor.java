@@ -88,7 +88,8 @@ public class StanfordDateTimeExtractor {
 	public List<Tokens> populateParserInfo(String inputSentence) {
 		
 		Properties props = new Properties();
-		props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+		// props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, dcoref");
+		props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse");
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 		Annotation annotation;
 		annotation = new Annotation(inputSentence);
