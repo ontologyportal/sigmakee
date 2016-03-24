@@ -65,8 +65,9 @@ public class Interpreter {
     public String fname = "";
 
     // execution options
-    public boolean inference = true;
+    public boolean inference = false;
     public boolean question = false;
+    public boolean ner = false;
     public static boolean addUnprocessed = false;
     //if true, show POS tags during parse
     public static boolean verboseParse = true;
@@ -647,8 +648,9 @@ public class Interpreter {
         System.out.println("Interpreter.interpretGenCNF(): dependencies: " + dependenciesList);
         results.addAll(dependenciesList);
         System.out.println("Interpreter.interpretGenCNF(): before numerics: " + results);
-        List<String> measures = InterpretNumerics.getSumoTerms(input);
-        results.addAll(measures);
+        // FIXME: temporarily removed numeric processing
+        //List<String> measures = InterpretNumerics.getSumoTerms(input);
+        //results.addAll(measures);
         System.out.println("Interpreter.interpretGenCNF(): after numerics: " + results);
         ClauseSubstitutor substitutor = null;
         if (coref) {
@@ -659,16 +661,19 @@ public class Interpreter {
             );
         }
         else {
-            substitutor = SubstitutorsUnion.of(
-                    new NounSubstitutor(lastSentenceTokens),
-                    new IdiomSubstitutor(lastSentenceTokens)
-            );
+            //substitutor = SubstitutorsUnion.of(
+            //        new NounSubstitutor(lastSentenceTokens),
+            //        new IdiomSubstitutor(lastSentenceTokens)
+            //);
+            substitutor = new IdiomSubstitutor(lastSentenceTokens);
         }
         System.out.println("Interpreter.interpretGenCNF(): before grouping: " + results);
         results = SubstitutionUtil.groupClauses(substitutor, results);
 
         System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
-        EntityTypeParser etp = new EntityTypeParser(wholeDocument);
+        EntityTypeParser etp = new EntityTypeParser(userInputs.annotateDocument(""));
+        if (ner)
+            etp = new EntityTypeParser(wholeDocument);
         List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens, substitutor), etp);
         results.addAll(wsd);
         System.out.println("Interpreter.interpretGenCNF(): after WSD: " + results);
@@ -708,7 +713,7 @@ public class Interpreter {
      */
     public String interpretSingle(String input) {
 
-        if (input.trim().endsWith("?"))
+        if (input.trim().endsWith("?") && inference)
             question = true;
         else
             question = false;
