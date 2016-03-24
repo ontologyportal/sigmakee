@@ -49,8 +49,8 @@ public class Pipeline {
 
         Properties props = new Properties();
         // props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, depparse, dcoref, entitymentions");
-        // TODO: make coref a selectable high level option
-        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, ner, parse, depparse, entitymentions");
+        // TODO: make coref and ner selectable high level options
+        props.setProperty("annotators", "tokenize, ssplit, pos, lemma, parse, depparse");
         props.setProperty("parse.kbest", "2");
         props.setProperty("depparse.language","English");
         props.put("depparse.model", "edu/stanford/nlp/models/parser/nndep/english_SD.gz");
