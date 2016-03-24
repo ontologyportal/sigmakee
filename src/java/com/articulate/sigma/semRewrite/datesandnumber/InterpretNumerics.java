@@ -22,10 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA 
 */
 
-
 import java.util.List;
 import com.articulate.sigma.KBmanager;
-
 
 public class InterpretNumerics {
 
@@ -48,6 +46,7 @@ public class InterpretNumerics {
 	/** ***************************************************************
 	 */
 	public static void main(String[] args) {
+
 		KBmanager.getMgr().initializeOnce();
         String input = "John was killed on 8/15/2014 at 3:45 PM.";
         System.out.println(input);
