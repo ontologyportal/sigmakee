@@ -190,7 +190,7 @@ public class InterpTest {
      */
     public static void interpOne() {
 
-        String actual = interp.interpret("Can I please hear Uptown Funk on Apple Music").get(0);
+        String actual = interp.interpret("Want to listen to Uptown Funk on Apple Music").get(0);
         System.out.println("Actual: " + actual);
     }
 
@@ -203,6 +203,9 @@ public class InterpTest {
             interpOne();
         }
         else {
+            System.out.println("");
+            System.out.println("****************************");
+            System.out.println("");
             Collection<Object[]> tests = prepare();
             for (Object[] o : tests) {
                 test((String) o[0], (String) o[1]);
