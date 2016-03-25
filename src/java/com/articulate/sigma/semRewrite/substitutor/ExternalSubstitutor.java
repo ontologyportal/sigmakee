@@ -56,21 +56,18 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
     /****************************************************************
      * {
      * "query": "blah blah blah",
-     * "annotatations": [
-     * {
-     * "types": [
-     * "...",
-     * ...
-     * ],
-     * "segmentation": [
-     * "...",
-     * ...
-     * ],
-     * "vertical": "...",
-     * "score": 1.234
-     * }
-     * ],
-     * "totalTime": 123
+     *      "annotatations": [
+     *          {
+     *              "types": [
+     *                  "...",
+     *                  ...
+     *              ],
+     *              "segmentation": [
+     *                  "...",
+     *                  ...
+     *              ],
+     *          }
+     *      ],
      * }
      */
     public static Object[] prepare(String json) {
