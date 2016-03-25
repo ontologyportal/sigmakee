@@ -33,7 +33,7 @@ if (sentence != null && sentCounter != null)
 
 <html>
 <head>
-  <title>Sigma WordNet mapping browser</title>
+  <title>SUMO Word Sense/Sentiment Analysis Tool</title>
 </head>
 <BODY BGCOLOR=#FFFFFF>
 <table width=95% cellspacing=0 cellpadding=0>
