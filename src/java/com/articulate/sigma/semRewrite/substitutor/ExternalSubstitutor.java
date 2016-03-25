@@ -38,10 +38,15 @@ import java.util.*;
 
 public class ExternalSubstitutor extends SimpleSubstitutorStorage {
 
-    // cache of remote system responses
-    public Map<String,Map<String,String>> loadCache = new HashMap<>();
+    public class Segmentation {
+        public ArrayList<String> segments = new ArrayList<>();
+        public ArrayList<String> types = new ArrayList<>();
+    }
 
-    /** **************************************************************
+    // cache of remote system responses
+    public Map<String, Segmentation> cache = new HashMap<>();
+
+    /*************************************************************
      */
     public ExternalSubstitutor(List<CoreLabel> labels) {
 
@@ -50,23 +55,23 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
 
     /****************************************************************
      * {
-     "query": "blah blah blah",
-     "annotatations": [
-         {
-             "types": [
-                 "...",
-                 ...
-             ],
-             "segmentation": [
-                 "...",
-                 ...
-             ],
-             "vertical": "...",
-             "score": 1.234
-        }
-     ],
-     "totalTime": 123
-     }
+     * "query": "blah blah blah",
+     * "annotatations": [
+     * {
+     * "types": [
+     * "...",
+     * ...
+     * ],
+     * "segmentation": [
+     * "...",
+     * ...
+     * ],
+     * "vertical": "...",
+     * "score": 1.234
+     * }
+     * ],
+     * "totalTime": 123
+     * }
      */
     public static Object[] prepare(String json) {
 
@@ -98,7 +103,7 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         }
     }
 
-    /** **************************************************************
+    /* *************************************************************
      */
     private void loadCache() {
 
@@ -109,21 +114,18 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(fr);
             JSONObject jsonObject = (JSONObject) obj;
+            JSONArray msg = (JSONArray) jsonObject.get("cache");
 
-            JSONObject query = (JSONObject) jsonObject.get("query");
-            JSONObject anno = (JSONObject) jsonObject.get("annotations");
-            JSONArray msg = (JSONArray) anno.get("types");
-            Iterator<String> iterator = msg.iterator();
-            Collection<String> types = new ArrayList<String>();
+            Iterator<JSONObject> iterator = msg.iterator();
             while (iterator.hasNext()) {
-                types.add(iterator.next());
-            }
-
-            JSONArray msg2 = (JSONArray) anno.get("segmentation");
-            Iterator<String> iterator2 = msg2.iterator();
-            Collection<String> segmentation = new ArrayList<String>();
-            while (iterator2.hasNext()) {
-                segmentation.add(iterator2.next());
+                JSONObject oneQuery = iterator.next();
+                String query = (String) oneQuery.get("query");
+                JSONArray types = (JSONArray) oneQuery.get("types");
+                JSONArray anno = (JSONArray) oneQuery.get("segmentation");
+                Segmentation seg = new Segmentation();
+                seg.segments.addAll(anno);
+                seg.types.addAll(types);
+                cache.put(query, seg);
             }
         }
         catch (Exception e) {
@@ -133,7 +135,7 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         }
     }
 
-    /** **************************************************************
+    /***************************************************************
      */
     private void saveCache() {
 
@@ -141,35 +143,39 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         try {
             FileWriter fw = new FileWriter(new File(resourcePath));
             System.out.println("Writing JSON file: " + resourcePath);
-            JSONParser parser = new JSONParser();
             JSONObject jsonObject = new JSONObject();
+            JSONArray cacheJson = new JSONArray();
 
-            for (String s : loadCache.keySet()) {
-                JSONObject query = (JSONObject) jsonObject.get("query");
-                JSONObject anno = (JSONObject) jsonObject.get("annotations");
-                JSONArray msg = (JSONArray) anno.get("types");
-                Iterator<String> iterator = msg.iterator();
-                Collection<String> types = new ArrayList<String>();
-                while (iterator.hasNext()) {
-                    types.add(iterator.next());
-                }
+            for (String s : cache.keySet()) {
+                JSONObject queryAndNER = new JSONObject();
+                queryAndNER.put("query", s);
 
-                JSONArray msg2 = (JSONArray) anno.get("segmentation");
-                Iterator<String> iterator2 = msg2.iterator();
-                Collection<String> segmentation = new ArrayList<String>();
-                while (iterator2.hasNext()) {
-                    segmentation.add(iterator2.next());
+                Segmentation seg = cache.get(s);
+                JSONArray seglist = new JSONArray();
+                JSONArray typelist = new JSONArray();
+                for (String segment : seg.segments) {
+                    seglist.add(segment);
                 }
+                for (String segment : seg.types) {
+                    typelist.add(segment);
+                }
+                queryAndNER.put("segmentation", seglist);
+                queryAndNER.put("types", typelist);
+                cacheJson.add(queryAndNER);
             }
+            jsonObject.put("cache", cacheJson);
+            fw.write(jsonObject.toJSONString());
+            fw.flush();
+            fw.close();
         }
         catch (Exception e) {
-            System.out.println("Parse exception writing: " + resourcePath);
+            System.out.println("Exception writing: " + resourcePath);
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
     }
 
-    /** **************************************************************
+    /* *************************************************************
      * Collects information froma remote service about continuous noun
      * sequences like "Garry Bloom", "Tim Buk Tu"
      */
@@ -184,7 +190,7 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         return sb.toString();
     }
 
-    /** **************************************************************
+    /* *************************************************************
      * Collects information froma remote service about continuous noun
      * sequences like "Garry Bloom", "Tim Buk Tu"
      */
@@ -193,8 +199,8 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         loadCache();
         String nerurl = "";
         try {
-            String sentence= toSentence(labels);
-            if (loadCache.containsKey(sentence)) {
+            String sentence = toSentence(labels);
+            if (cache.containsKey(sentence)) {
 
             }
             else {
@@ -224,7 +230,7 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         addGroups(groupsFull);
     }
 
-    /** **************************************************************
+    /* *************************************************************
      */
     private Map<CoreLabelSequence, CoreLabelSequence> parseGroupsAndCollectRoots(List<CoreLabel> labels) {
 
@@ -254,4 +260,9 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         return sequences;
     }
 
+    /****************************************************************
+     */
+    public static void main(String[] args) throws IOException {
+
+    }
 }
