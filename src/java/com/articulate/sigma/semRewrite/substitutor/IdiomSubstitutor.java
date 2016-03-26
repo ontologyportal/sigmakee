@@ -60,5 +60,6 @@ public class IdiomSubstitutor extends SimpleSubstitutorStorage {
             from++;
         }
         addGroups(collectedIdioms);
+        System.out.println("Info in IdiomSubstitutor.groups(): " + groups);
     }
 }
