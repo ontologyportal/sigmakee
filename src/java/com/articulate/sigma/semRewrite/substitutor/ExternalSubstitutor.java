@@ -25,6 +25,7 @@ import com.articulate.sigma.semRewrite.InterpTest;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import edu.stanford.nlp.ling.CoreLabel;
+import edu.stanford.nlp.ling.Label;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -41,10 +42,17 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
     public class Segmentation {
         public ArrayList<String> segments = new ArrayList<>();
         public ArrayList<String> types = new ArrayList<>();
+
+        public String toString() {
+            StringBuffer sb = new StringBuffer();
+            sb.append("segments: " + segments.toString());
+            sb.append("types: " + types.toString());
+            return sb.toString();
+        }
     }
 
     // cache of remote system responses
-    public Map<String, Segmentation> cache = new HashMap<>();
+    public static Map<String, Segmentation> cache = new HashMap<>();
 
     /*************************************************************
      */
@@ -70,28 +78,32 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
      *      ],
      * }
      */
-    public static Object[] prepare(String json) {
+    private Segmentation parseNERJson(String json) {
 
         try {
+            Segmentation result = new Segmentation();
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(json);
             JSONObject jsonObject = (JSONObject) obj;
+            System.out.println("ExternaSubstitutor.parseNERJson(): Reading JSON file: " + jsonObject);
 
-            JSONObject anno = (JSONObject) jsonObject.get("annotations");
-            JSONArray msg = (JSONArray) anno.get("types");
-            Iterator<String> iterator = msg.iterator();
-            Collection<String> types = new ArrayList<String>();
+            JSONArray anno = (JSONArray) jsonObject.get("annotatations");
+            System.out.println("ExternaSubstitutor.parseNERJson(): annotations: " + anno);
+            JSONObject msg = (JSONObject) anno.get(0);
+            JSONArray typeObj = (JSONArray) msg.get("types");
+            Iterator<String> iterator = typeObj.iterator();
+            ArrayList<String> types = new ArrayList<String>();
             while (iterator.hasNext()) {
-                types.add(iterator.next());
+                result.types.add(iterator.next());
             }
 
-            JSONArray msg2 = (JSONArray) anno.get("segmentation");
+            JSONArray msg2 = (JSONArray) msg.get("segmentation");
             Iterator<String> iterator2 = msg2.iterator();
-            Collection<String> segmentation = new ArrayList<String>();
+            ArrayList<String> segments = new ArrayList<String>();
             while (iterator2.hasNext()) {
-                segmentation.add(iterator2.next());
+                result.segments.add(iterator2.next());
             }
-            return new Object[]{types, segmentation};
+            return result;
         }
         catch (ParseException pe) {
             System.out.println("Error in ExternaSubstitutor.prepare(): parseException: " + json);
@@ -101,13 +113,21 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
     }
 
     /* *************************************************************
+     * Load a file consisting of previous responses from the remote NER
+     * server.
      */
     private void loadCache() {
 
-        String resourcePath = KBmanager.getMgr().getPref("kbDir") + File.separator + "nerCache.json";
+        if (cache.keySet().size() > 0)
+            return;  // don't load the cache multiple times
+        String resourcePath = System.getenv("SIGMA_HOME") + File.separator + "KBs" +
+                File.separator + "nerCache.json";
         try {
-            FileReader fr = new FileReader(new File(resourcePath));
-            System.out.println("Reading JSON file: " + resourcePath);
+            File f = new File(resourcePath);
+            if (!f.exists())
+                return;
+            FileReader fr = new FileReader(f);
+            System.out.println("ExternaSubstitutor.loadCache(): Reading JSON file: " + resourcePath);
             JSONParser parser = new JSONParser();
             Object obj = parser.parse(fr);
             JSONObject jsonObject = (JSONObject) obj;
@@ -136,7 +156,8 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
      */
     private void saveCache() {
 
-        String resourcePath = KBmanager.getMgr().getPref("kbDir") + File.separator + "nerCache.json";
+        String resourcePath = System.getenv("SIGMA_HOME") + File.separator + "KBs" +
+                File.separator + "nerCache.json";
         try {
             FileWriter fw = new FileWriter(new File(resourcePath));
             System.out.println("Writing JSON file: " + resourcePath);
@@ -176,32 +197,80 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
      * Collects information froma remote service about continuous noun
      * sequences like "Garry Bloom", "Tim Buk Tu"
      */
-    private String toSentence(List<CoreLabel> labels) {
+    private static String toURLSentence(List<CoreLabel> labels) {
 
         StringBuffer sb = new StringBuffer();
         for (CoreLabel cl : labels) {
+            System.out.println("Info in ExternalSubstitutor.toSentence(): label: " + cl);
             if (!sb.toString().equals(""))
-                sb.append(" ");
-            sb.append(cl.originalText());
+                sb.append("+");
+            sb.append(cl.toString());
         }
         return sb.toString();
     }
 
     /* *************************************************************
-     * Collects information froma remote service about continuous noun
-     * sequences like "Garry Bloom", "Tim Buk Tu"
+     * convert a string consisting of space-delimited words into a
+     * CoreLabelSequence
+     */
+    private static List<CoreLabel> stringToCoreLabelList(String s) {
+
+        ArrayList<CoreLabel> al = new ArrayList<>();
+        String[] splits = s.split(" ");
+        for (String word : splits) {
+            CoreLabel cl = new CoreLabel();
+            cl.setValue(word);
+            al.add(cl);
+        }
+        return al;
+    }
+
+    /* *************************************************************
+     * convert a string consisting of space-delimited words into a
+     * CoreLabelSequence
+     */
+    private static CoreLabelSequence stringToCoreLabelSeq(String s) {
+
+        List<CoreLabel> al = stringToCoreLabelList(s);
+        CoreLabelSequence result = new CoreLabelSequence(al);
+        return result;
+    }
+
+    /* *************************************************************
+     */
+    private Map<CoreLabelSequence, CoreLabelSequence> segToCoreLabel(Segmentation seg) {
+
+        Map<CoreLabelSequence, CoreLabelSequence> result = new HashMap<>();
+        for (String s : seg.segments) {
+            if (s.indexOf(' ') > -1) {
+                CoreLabelSequence cls = stringToCoreLabelSeq(s);
+                result.put(cls,cls);
+            }
+        }
+        return result;
+    }
+
+    /* *************************************************************
+     * Given a list of tokens from a single sentence, collects information from a remote
+     * service about continuous noun sequences like "Garry Bloom",
+     * "Tim Buk Tu"
      */
     private void initialize(List<CoreLabel> labels) {
 
+        System.out.println("Info in ExternalSubstitutor.initialize(): labels: " + labels);
+        Segmentation seg = null;
         loadCache();
         String nerurl = "";
         try {
-            String sentence = toSentence(labels);
+            String sentence = toURLSentence(labels);
             if (cache.containsKey(sentence)) {
-
+                seg = cache.get(sentence);
+                System.out.println("Info in ExternaSubstitutor.initialize(): " + seg);
             }
             else {
-                nerurl = System.getenv("NERURL" + "?query=" + sentence + "&limit=1");
+                System.out.println("Info in ExternalSubstitutor.initialize(): sentence: " + sentence);
+                nerurl = System.getenv("NERURL") + "query=" + sentence + "&limit=1";
+                System.out.println("Info in ExternalSubstitutor.initialize(): URL: " + nerurl);
                 URL myURL = new URL(nerurl);
 
                 URLConnection yc = myURL.openConnection();
@@ -211,8 +280,12 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
                 String inputLine;
                 while ((inputLine = in.readLine()) != null)
                     JSONString += inputLine;
+                System.out.println("Info in ExternalSubstitutor.initialize(): JSON: " + JSONString);
                 in.close();
-                Object[] result = prepare(JSONString);
+                seg = parseNERJson(JSONString);
+                System.out.println("Info in ExternaSubstitutor.initialize(): " + seg);
+                cache.put(sentence,seg);
+                saveCache();
             }
         }
         catch (MalformedURLException e) {
@@ -223,43 +296,15 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
             System.out.println("Error in ExternaSubstitutor.initialize(): IOException: " + nerurl);
             e.printStackTrace();
         }
-        Map<CoreLabelSequence, CoreLabelSequence> groupsFull = parseGroupsAndCollectRoots(labels);
+        Map<CoreLabelSequence, CoreLabelSequence> groupsFull = segToCoreLabel(seg);
+        // create structures like {[Uptown-5, Funk-6]=[Uptown-5, Funk-6], [Apple-8, Music-9]=[Apple-8, Music-9]}
         addGroups(groupsFull);
-    }
-
-    /* *************************************************************
-     */
-    private Map<CoreLabelSequence, CoreLabelSequence> parseGroupsAndCollectRoots(List<CoreLabel> labels) {
-
-        System.out.println("Info in ExternalSubstitutor.parseGroupsAndCollectRoots(): " + labels);
-        Map<CoreLabelSequence, CoreLabelSequence> sequences = Maps.newHashMap();
-        CoreLabel firstLabel = null;
-        List<CoreLabel> sequence = Lists.newArrayList();
-        for (CoreLabel label : labels) {
-            if (firstLabel != null
-                    && ("NNP".equals(label.tag()) && Objects.equals(label.tag(), firstLabel.tag()))) {
-                sequence.add(label);
-            }
-            else {
-                if (sequence.size() > 1) {
-                    CoreLabelSequence s = new CoreLabelSequence(sequence);
-                    sequences.put(s, s);
-                }
-                firstLabel = label;
-                sequence = Lists.newArrayList(firstLabel);
-            }
-        }
-        if (sequence.size() > 1) {
-            CoreLabelSequence s = new CoreLabelSequence(sequence);
-            sequences.put(s, s);
-        }
-
-        return sequences;
     }
 
     /****************************************************************
      */
     public static void main(String[] args) throws IOException {
 
+        ExternalSubstitutor es = new ExternalSubstitutor(stringToCoreLabelList("i want to watch the game of thrones"));
     }
 }
