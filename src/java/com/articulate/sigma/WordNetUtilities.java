@@ -60,9 +60,24 @@ public class WordNetUtilities {
      * Extract the POS from a word_POS_num sense key.  Should be an
      * alpha key, such as "VB".
      */
+    public static boolean isValidKey(String senseKey) {
+
+        String m = "[^_]+_(NN|VB|JJ|RB|AS)_[\\d]+";
+        return senseKey.matches(m);
+    }
+
+    /** ***************************************************************
+     * Extract the POS from a word_POS_num sense key.  Should be an
+     * alpha key, such as "VB".
+     */
     public static String getPOSfromKey (String senseKey) {
 
         int lastUS = senseKey.lastIndexOf("_");
+        if (lastUS < 0) {
+            System.out.println("Info in WordNetUtilities.getPOSfromKey(): missing POS: " + senseKey);
+            new Exception().printStackTrace();
+            return "NN"; // default to noun
+        }
         return senseKey.substring(lastUS - 2, lastUS);
     }
 
@@ -72,6 +87,11 @@ public class WordNetUtilities {
     public static String getWordFromKey (String senseKey) {
 
         int lastUS = senseKey.lastIndexOf("_");
+        if (lastUS < 0) {
+            System.out.println("Info in WordNetUtilities.getPOSfromKey(): missing word: " + senseKey);
+            new Exception().printStackTrace();
+            return "";
+        }
         return senseKey.substring(0, lastUS - 3);
     }
 
@@ -189,7 +209,7 @@ public class WordNetUtilities {
         if (pos.equalsIgnoreCase("2")) return "VB";
         if (pos.equalsIgnoreCase("3")) return "JJ";
         if (pos.equalsIgnoreCase("4")) return "RB";
-        if (pos.equalsIgnoreCase("5")) return "JJ";
+        if (pos.equalsIgnoreCase("5")) return "AS";
         System.out.println("Error in WordNetUtilities.posNumberToLetters(): bad number: " + pos);
         return "NN";
     }
@@ -205,6 +225,7 @@ public class WordNetUtilities {
         if (pos.equalsIgnoreCase("VB")) return "2";
         if (pos.equalsIgnoreCase("JJ")) return "3";
         if (pos.equalsIgnoreCase("RB")) return "4";
+        if (pos.equalsIgnoreCase("AS")) return "5";
         assert false : "Error in WordNetUtilities.posLettersToNumber(): bad letters: " + pos;
         return "1";
     }
@@ -1804,16 +1825,26 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     *  A method used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void testIsValidKey() {
+
+        System.out.println("INFO in WordNetUtilities.testIsValidKey(): " + isValidKey("morale_NN_1"));
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
-        KBmanager.getMgr().initializeOnce();
+        //KBmanager.getMgr().initializeOnce();
         //String synset = "108655464";
         //System.out.println(getAllHyponyms(synset));
         //System.out.println(collapseSenses());
-        generateHyponymSets("/home/apease/IPsoft/classifierSynsets.txt");
+        //generateHyponymSets("/home/apease/IPsoft/classifierSynsets.txt");
+        testIsValidKey();
     }
 }
 
