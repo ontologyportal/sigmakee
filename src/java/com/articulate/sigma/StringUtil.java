@@ -928,6 +928,24 @@ public class StringUtil {
     }
 
     /** ***************************************************************
+     * Returns true if input is a String is an integer (of any size)
+     * @param s A String
+     * @return true or false
+     */
+    public static boolean isInteger(String s) {
+
+        boolean isValidInteger = false;
+        try {
+            Integer.parseInt(s.trim()); // s is a valid integer
+            isValidInteger = true;
+        }
+        catch (NumberFormatException ex) {
+            // s is not an integer
+        }
+        return isValidInteger;
+    }
+
+    /** ***************************************************************
      * Returns true if input appears to be a quoted String, else
      * returns false.
      *
