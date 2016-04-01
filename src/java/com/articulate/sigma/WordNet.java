@@ -123,9 +123,13 @@ public class WordNet {
     protected HashMap<String,HashMap<String,Integer>> wordCoFrequencies = new HashMap<String,HashMap<String,Integer>>();
 
     /** a HashMap of HashMaps where the key is a word and the value is a 
-     * HashMap of 9-digit POS-prefixed senses and the number of times that 
-     * sense occurs in the Brown corpus.  */
+     * HashMap of 9-digit POS-prefixed senses which is the value of the AVPair,
+     * and the number of times that sense occurs in the Brown corpus, which is
+     * the key of the AVPair*/
     protected HashMap<String,TreeSet<AVPair>> wordFrequencies = new HashMap<String,TreeSet<AVPair>>();
+
+    // A Map from all uppercase words to their possibly mixed case original versions
+    public HashMap<String,String> caseMap = new HashMap<>();
 
     /** a HashMap where the key is a 9-digit POS-prefixed sense and the value is a
      *  the number of times that sense occurs in the Brown corpus.  */
@@ -1160,6 +1164,7 @@ public class WordNet {
         System.out.println("INFO in WordNet.readSenseCount(): Reading WordNet sense counts");
         LineNumberReader lr = null;
         int counter = 0;
+        int missingSenses = 0;
         int totalcount = 0;
         File siFile = null;
         String canonicalPath = "";
@@ -1184,24 +1189,27 @@ public class WordNet {
                 if (m.matches()) {
                     String count = m.group(1);
                     String word = m.group(2);
+                    caseMap.put(word.toUpperCase(),word);
                     String POS = m.group(3);
                     String posString = WordNetUtilities.posNumberToLetters(POS);
                     String sensenum = m.group(4);
                     String key = word + "_" + posString + "_" + sensenum;  // word_POS_sensenum
                     AVPair avp = new AVPair();
                     avp.attribute = StringUtil.fillString(count, ' ', 8, true);
-                    avp.value = key;
-                    TreeSet<AVPair> pq = new TreeSet<AVPair>();
-                    if (wordFrequencies.containsKey(word))
-                        pq = wordFrequencies.get(word);
-                    pq.add(avp);
-                    //System.out.println("Info in WordNet.readSenseCount(): word, sense, count " + word + 
-                    //        ", " + key + ", " + count);
-                    wordFrequencies.put(word, pq);
-                    int freq = Integer.parseInt(count);
-                    String synset = WordNetUtilities.getSenseFromKey(key);
-                    senseFrequencies.put(synset,freq);
-                    //System.out.println(WordNet.wn.wordFrequencies.get("be"));
+                    String synset8 = senseIndex.get(key);
+                    if (synset8 == null && missingSenses < 101) {
+                        System.out.println("Info in WordNet.readSenseCount(): no synset for key: " + key);
+                        if (missingSenses == 100)
+                            System.out.println("Info in WordNet.readSenseCount(): > 100 missing senses, suppressing messages ");
+                        missingSenses++;
+                    }
+                    else {
+                        String synset = WordNetUtilities.getSenseFromKey(key);
+                        avp.value = synset;
+                        addToWordFreq(word, avp);
+                        int freq = Integer.parseInt(count);
+                        senseFrequencies.put(synset, freq);
+                    }
                 }
                 counter++;
                 if (counter == 1000) {
@@ -1232,8 +1240,36 @@ public class WordNet {
             }
         }
         return;
-    }     
- 
+    }
+
+    /** ***************************************************************
+     * Add an entry to the wordFrequencies list, checking whether it
+     * has a valid count and synset pair.
+     */
+    public void addToWordFreq(String word, AVPair avp) {
+
+        if (avp == null) {
+            System.out.println("Error in WordNet.addToWordFreq(): null AVPair for word " + word);
+            return;
+        }
+        if (!StringUtil.isInteger(avp.attribute)) {
+            System.out.println("Error in WordNet.addToWordFreq(): bad sense count: " + avp +
+            " for word " + word);
+            return;
+        }
+        if (!StringUtil.isInteger(avp.value) || avp.value.length() != 9) {
+            System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + avp +
+                    " for word " + word);
+            return;
+        }
+
+        TreeSet<AVPair> pq = new TreeSet<AVPair>();
+        if (wordFrequencies.containsKey(word))
+            pq = wordFrequencies.get(word);
+        pq.add(avp);
+        wordFrequencies.put(word,pq);
+    }
+
     /** ***************************************************************
      *  A routine which looks up a given list of words in the hashtables
      *  to find the relevant word definitions and SUMO mappings.
@@ -2859,18 +2895,30 @@ public class WordNet {
     }
 
     /** ***************************************************************
+     * Generate a new synset ID that doesn't have an existing hash
+     */
+    public String generateSynsetID(String l) {
+
+        Integer intval = Integer.parseInt(l);
+        intval++;
+        String synsetID = String.valueOf(intval);
+        if (synsetID.length() > 8) {
+            System.out.println("Error in WordNet.generateSynsetID(): max synset number exceeded: " +
+                synsetID);
+            return null;
+        }
+        if (synsetID.length() < 8)
+            return StringUtil.fillString(synsetID,'0',8,true);
+        else
+            return synsetID;
+    }
+
+    /** ***************************************************************
      * Generate a new noun synset ID that doesn't have an existing hash
      */
     public String generateNounSynsetID() {
-        
-        //System.out.println("INFO in WordNet.generateNounSynsetID()");
-        //TreeSet<String> ts = new TreeSet<String>();
-        //ts.addAll(nounSUMOHash.keySet());
-        String l = maxNounSynsetID;
-        //System.out.println("INFO in WordNet.generateNounSynsetID(): last synset: " + l);
-        Integer intval = Integer.parseInt(l);
-        intval++;
-        maxNounSynsetID = String.valueOf(intval);
+
+        maxNounSynsetID = generateSynsetID(maxNounSynsetID);
         return maxNounSynsetID;
     }
 
@@ -2878,15 +2926,8 @@ public class WordNet {
      * Generate a new noun synset ID that doesn't have an existing hash
      */
     public String generateVerbSynsetID() {
-        
-        //System.out.println("INFO in WordNet.generateVerbSynsetID()");
-        //TreeSet<String> ts = new TreeSet<String>();
-        //ts.addAll(verbSUMOHash.keySet());
-        String l = maxVerbSynsetID;
-        //System.out.println("INFO in WordNet.generateVerbSynsetID(): last synset: " + l);
-        Integer intval = Integer.parseInt(l);
-        intval++;
-        maxVerbSynsetID = String.valueOf(intval);
+
+        maxVerbSynsetID = generateSynsetID(maxVerbSynsetID);
         return maxVerbSynsetID;
     }
     
@@ -2925,7 +2966,12 @@ public class WordNet {
     }
    
     /** ***************************************************************
-     * Generate a new synset from a termFormat
+     * Generate a new synset from a termFormat statement
+     * @param form is the entire termFormat statement
+     * @param tf is the lexical item (word).  note that in the case of a multi-word
+     *           lexical item it should already have had spaces replaced by
+     *           underscores
+     * @param SUMOterm is the SUMO term that the lexical item is mapped to
      */
     public void synsetFromTermFormat(Formula form, String tf, String SUMOterm, KB kb) {
 
@@ -2935,7 +2981,7 @@ public class WordNet {
         if (kb.kbCache.getParentClasses(SUMOterm) != null && 
             kb.kbCache.getParentClasses(SUMOterm).contains("Process")) {  // like a verb
             pos = "2";
-            synsetID = "2" + verbSynsetFromTermFormat(tf,SUMOterm,kb);            
+            synsetID = "2" + verbSynsetFromTermFormat(tf,SUMOterm,kb);
         }
         else { // like a noun
             pos = "1";
@@ -2966,16 +3012,22 @@ public class WordNet {
 
         // TODO: kind of a hack to give priority to any domain term, maybe make this a switchable option
         if (!form.sourceFile.equals("Merge.kif") && !form.sourceFile.equals("Mid-level-ontology.kif")) {
-            TreeSet<AVPair> senselist = wordFrequencies.get(tf);
-            if (senselist == null) {
-                senselist = new TreeSet<AVPair>();
-                wordFrequencies.put(tf,senselist);
-            }
+            //TreeSet<AVPair> senselist = wordFrequencies.get(tf);
+            //if (senselist == null) {
+                //senselist = new TreeSet<AVPair>();
+                //wordFrequencies.put(tf,senselist);
+                caseMap.put(tf.toUpperCase(),tf);
+                //System.out.println("INFO in WordNet.synsetFromTermFormat(): " +
+                //        tf.toUpperCase() + " : " + tf);
+            //}
             AVPair avp = new AVPair();
-            avp.value = key;
+            avp.value = synsetID;
             avp.attribute = "99999"; // bigger than any word frequency in Brown
-            senselist.add(avp);
+            //senselist.add(avp);
+            addToWordFreq(tf,avp);
         }
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): term, sensekey, synset, SUMOterm: " +
+        //        tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
     }
     
     /** ***************************************************************
@@ -2983,7 +3035,7 @@ public class WordNet {
      */
     public void termFormatsToSynsets(KB kb) {
         
-        System.out.println("INFO in WordNet.termFormatsToSynsets()");
+        //System.out.println("INFO in WordNet.termFormatsToSynsets()");
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
         for (int i = 0; i < forms.size(); i++) {
             Formula form = forms.get(i);
@@ -3011,7 +3063,8 @@ public class WordNet {
         //String word = "be";
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
         System.out.println("INFO in WordNet.main(): done initializing");
