@@ -77,7 +77,7 @@ public class WSD {
      */
     public static String findWordSenseInContext(String word, List<String> words) {
 
-        //System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
+        System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         for (int i = 1; i <= 4; i++) {
@@ -117,6 +117,8 @@ public class WSD {
      */
     public static String findWordSendInContextWithPos(String word, List<String> words, int pos) {
 
+        System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
+                word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         String newWord = "";
@@ -144,21 +146,38 @@ public class WSD {
 
     /** ***************************************************************
      * Check if a sense has been created from a domain ontology and give
-     * it priority.
+     * it priority.  Returns an ArrayList consisting of
+     * a 9-digit WordNet synset, and the score
+     * reflecting the quality of the guess the given synset is the right one.
      */
     private static List<String> termFormatBypass(String word) {
 
+        //System.out.println("INFO in WSD.termFormatBypass(): word: " + word +
+        //        " : " + WordNet.wn.caseMap.get(word.toUpperCase())
+        //);
         ArrayList<String> result = new ArrayList<String>();
         TreeSet<AVPair> senselist = WordNet.wn.wordFrequencies.get(word);
-        if (senselist == null)
-            return null;
-        //System.out.println("INFO in WordNet.termFormatBypass(): senselist: " + senselist);
+        if (senselist == null) {
+            if (WordNet.wn.caseMap.keySet().contains(word.toUpperCase())) {
+                word = WordNet.wn.caseMap.get(word.toUpperCase());
+                //System.out.println("INFO in WSD.termFormatBypass(): word: " + word);
+                senselist = WordNet.wn.wordFrequencies.get(word);
+                //System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
+                if (senselist == null)
+                    return null;
+            }
+            else
+                return null;
+        }
+        //System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
         for (AVPair avp : senselist) {
-            if (avp.value.equals("99999")) {
-                result.add(avp.attribute);
+            if (avp.attribute.equals("99999")) {
+                String synset = avp.value;
+                result.add(synset);
                 result.add("99999");
-                //System.out.println("INFO in WordNet.termFormatBypass(): word, avp: " +
-                //        word + ", " + avp);
+                String SUMO = WordNet.wn.getSUMOMapping(synset);
+                //System.out.println("INFO in WSD.termFormatBypass(): word, avp, synset, sumo: " +
+                //        word + ", " + avp + ", " + synset + ", " + SUMO);
                 return result;
             }
         }
@@ -173,7 +192,7 @@ public class WSD {
      */
     public static List<String> findWordSensePOS(String word, List<String> words, int POS) {
 
-        //System.out.println("INFO in WordNet.findWordSensePOS(): word, POS, text: " +
+        //System.out.println("INFO in WSD.findWordSensePOS(): word, POS, text: " +
         //        word + ", " + POS + ", " + words);
         ArrayList<String> senses = WordNet.wn.wordsToSenses.get(word);
         List<String> termFormatBypass = termFormatBypass(word);
@@ -313,8 +332,9 @@ public class WSD {
                     while (it.hasNext()) {
                         AVPair avp = it.next();
                         //System.out.println("INFO in WSD.getBestDefaultSense(): avp: " + avp);
-                        String POS = WordNetUtilities.getPOSfromKey(avp.value);
-                        String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                        //String POS = WordNetUtilities.getPOSfromKey(avp.value);
+                        //String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                        String numPOS = avp.value.substring(0,1);
                         int count = Integer.parseInt(avp.attribute.trim());
                         if (Integer.toString(pos).equals(numPOS) && count > bestScore) {     
                         	String baseSyn = WordNet.wn.senseIndex.get(avp.value);
