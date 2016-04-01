@@ -24,6 +24,8 @@ MA  02111-1307 USA
 
 import com.articulate.sigma.*;
 
+import java.util.List;
+
 public class Procedures {
     
     /** ***************************************************************
@@ -74,6 +76,11 @@ public class Procedures {
     public static String isInstanceOf(Literal c) {
         
         KB kb = KBmanager.getMgr().getKB("SUMO");
+        //List<Formula> forms = kb.ask("arg",1,c.arg1);
+        //System.out.println("INFO in Procedures.isInstanceOf(): " + forms);
+        //Formula f = forms.get(0);
+        //System.out.println("INFO in Procedures.isInstanceOf(): " + f.getArgument(2));
+        //System.out.println("INFO in Procedures.isInstanceOf(): " + kb.isSubclass(f.getArgument(2),c.arg2));
         //System.out.println("INFO in Procedures.isInstanceOf(): " + c);
         //System.out.println("INFO in Procedures.isInstanceOf(): " + kb.isInstanceOf(c.arg1, c.arg2));
         if (kb.isInstanceOf(c.arg1, c.arg2))
