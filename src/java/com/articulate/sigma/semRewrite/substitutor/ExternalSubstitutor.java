@@ -20,7 +20,7 @@ MA  02111-1307 USA
 */
 package com.articulate.sigma.semRewrite.substitutor;
 
-import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.*;
 import com.articulate.sigma.semRewrite.InterpTest;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -39,8 +39,10 @@ import java.util.*;
 
 public class ExternalSubstitutor extends SimpleSubstitutorStorage {
 
+    public int tokenCounter = 1; // number of token being added
+
     public class Segmentation {
-        public ArrayList<String> segments = new ArrayList<>();
+        public ArrayList<CoreLabelSequence> segments = new ArrayList<>();
         public ArrayList<String> types = new ArrayList<>();
 
         public String toString() {
@@ -48,6 +50,25 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
             sb.append("segments: " + segments.toString());
             sb.append("types: " + types.toString());
             return sb.toString();
+        }
+
+        // a segment from string without token numbers
+        public void addStringSegment(String s) {
+
+            List<CoreLabel> al = new ArrayList<>();
+            System.out.println("Segmentation.addStringSegment: before " + s);
+            String[] ss = StringUtil.removePunctuation(s).split(" ");
+            System.out.println("Segmentation.addStringSegment: after " + Arrays.toString(ss));
+            for (String seg : ss) {
+                CoreLabel cl = new CoreLabel();
+                cl.setOriginalText(seg);
+                cl.setValue(seg);
+                cl.setIndex(tokenCounter);
+                tokenCounter++;
+                al.add(cl);
+            }
+            CoreLabelSequence cls = new CoreLabelSequence(al);
+            segments.add(cls);
         }
     }
 
@@ -88,7 +109,11 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
             System.out.println("ExternaSubstitutor.parseNERJson(): Reading JSON file: " + jsonObject);
 
             JSONArray anno = (JSONArray) jsonObject.get("annotatations");
-            System.out.println("ExternaSubstitutor.parseNERJson(): annotations: " + anno);
+            System.out.println("ExternalSubstitutor.parseNERJson(): annotations: " + anno);
+            if (anno == null || anno.size() == 0 || anno.get(0) == null) {
+                System.out.println("ExternalSubstitutor.parseNERJson(): bad JSON: " + json);
+                throw new ParseException(0);
+            }
             JSONObject msg = (JSONObject) anno.get(0);
             JSONArray typeObj = (JSONArray) msg.get("types");
             Iterator<String> iterator = typeObj.iterator();
@@ -99,9 +124,9 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
 
             JSONArray msg2 = (JSONArray) msg.get("segmentation");
             Iterator<String> iterator2 = msg2.iterator();
-            ArrayList<String> segments = new ArrayList<String>();
+            tokenCounter = 1;
             while (iterator2.hasNext()) {
-                result.segments.add(iterator2.next());
+                result.addStringSegment(iterator2.next());
             }
             return result;
         }
@@ -138,9 +163,13 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
                 JSONObject oneQuery = iterator.next();
                 String query = (String) oneQuery.get("query");
                 JSONArray types = (JSONArray) oneQuery.get("types");
-                JSONArray anno = (JSONArray) oneQuery.get("segmentation");
+                JSONArray segmentation = (JSONArray) oneQuery.get("segmentation");
                 Segmentation seg = new Segmentation();
-                seg.segments.addAll(anno);
+                Iterator<String> iterator2 = segmentation.iterator();
+                tokenCounter = 1;
+                while (iterator2.hasNext()) {
+                    seg.addStringSegment(iterator2.next());
+                }
                 seg.types.addAll(types);
                 cache.put(query, seg);
             }
@@ -171,8 +200,10 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
                 Segmentation seg = cache.get(s);
                 JSONArray seglist = new JSONArray();
                 JSONArray typelist = new JSONArray();
-                for (String segment : seg.segments) {
-                    seglist.add(segment);
+                for (CoreLabelSequence segment : seg.segments) {
+                    for (CoreLabel cl : segment.getLabels()) {
+                        seglist.add(segment.toString());
+                    }
                 }
                 for (String segment : seg.types) {
                     typelist.add(segment);
@@ -201,10 +232,13 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
 
         StringBuffer sb = new StringBuffer();
         for (CoreLabel cl : labels) {
-            System.out.println("Info in ExternalSubstitutor.toSentence(): label: " + cl);
+            //System.out.println("Info in ExternalSubstitutor.toURLSentence(): label: " + cl);
+            //System.out.println("Info in ExternalSubstitutor.toURLSentence(): label: " + cl.originalText());
+            //System.out.println("Info in ExternalSubstitutor.toURLSentence(): label: " + cl.lemma());
+            //System.out.println("Info in ExternalSubstitutor.toURLSentence(): label: " + cl.value());
             if (!sb.toString().equals(""))
                 sb.append("+");
-            sb.append(cl.toString());
+            sb.append(cl.value());
         }
         return sb.toString();
     }
@@ -241,13 +275,44 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
     private Map<CoreLabelSequence, CoreLabelSequence> segToCoreLabel(Segmentation seg) {
 
         Map<CoreLabelSequence, CoreLabelSequence> result = new HashMap<>();
-        for (String s : seg.segments) {
-            if (s.indexOf(' ') > -1) {
-                CoreLabelSequence cls = stringToCoreLabelSeq(s);
-                result.put(cls,cls);
+        for (CoreLabelSequence cls : seg.segments) {
+            CoreLabelSequence clsUpper = cls.toUpperCase();
+            if (cls.size() > 1) {
+                result.put(clsUpper,cls);
             }
         }
         return result;
+    }
+
+    /* *************************************************************
+     * FIXME: A hack to use previous code for adding term formats to
+     * WordNet
+     * FIXME: Only gets used for multi words or certain types?
+     */
+    private void addNERtoWN(Segmentation seg) {
+
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        for (int i = 0; i < seg.segments.size(); i++) {
+            CoreLabelSequence cls = seg.segments.get(i);
+            CoreLabelSequence noPunc = cls.removePunctuation();
+            //if (s.contains(" ")) {
+            String type = seg.types.get(i);
+            if (!type.contains("UNKNOWN")) {
+                Formula form = new Formula("(termFormat EnglishLanguage " + type + "\"" + cls.toString() + "\")");
+                form.setSourceFile("ExternalNER.kif");
+                String wnWord = noPunc.toWordNetID(); // replace space with underscore
+                String SUMOterm = Character.toUpperCase(wnWord.charAt(0)) + wnWord.substring(1);
+                if (!WordNet.wn.caseMap.containsKey(wnWord.toUpperCase())) {
+                    if (noPunc.size() > 1)
+                        WordNet.wn.multiWords.addMultiWord(wnWord);
+                    WordNet.wn.synsetFromTermFormat(form, wnWord, SUMOterm, kb);
+                    String f = "(instance " + SUMOterm + " " + type + ")";
+                    System.out.println("Info in ExternalSubstitutor.addNERtoWN(): formula: " + f);
+                    kb.tell(f);
+                }
+            }
+        }
+        kb.kbCache.buildCaches();
     }
 
     /* *************************************************************
@@ -257,6 +322,8 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
      */
     private void initialize(List<CoreLabel> labels) {
 
+        if (labels.get(labels.size()-1).toString().startsWith(".-"))
+            labels.remove(labels.size()-1);
         System.out.println("Info in ExternalSubstitutor.initialize(): labels: " + labels);
         Segmentation seg = null;
         loadCache();
@@ -265,7 +332,7 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
             String sentence = toURLSentence(labels);
             if (cache.containsKey(sentence)) {
                 seg = cache.get(sentence);
-                System.out.println("Info in ExternaSubstitutor.initialize(): " + seg);
+                System.out.println("Info in ExternaSubstitutor.initialize(): Seg: " + seg);
             }
             else {
                 System.out.println("Info in ExternalSubstitutor.initialize(): sentence: " + sentence);
@@ -283,22 +350,28 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
                 System.out.println("Info in ExternalSubstitutor.initialize(): JSON: " + JSONString);
                 in.close();
                 seg = parseNERJson(JSONString);
+                if (seg == null)
+                    return;
                 System.out.println("Info in ExternaSubstitutor.initialize(): " + seg);
                 cache.put(sentence,seg);
                 saveCache();
             }
+            addNERtoWN(seg);
         }
         catch (MalformedURLException e) {
             System.out.println("Error in ExternaSubstitutor.initialize(): new URL() failed: " + nerurl);
             e.printStackTrace();
+            return;
         }
         catch (IOException e) {
             System.out.println("Error in ExternaSubstitutor.initialize(): IOException: " + nerurl);
-            e.printStackTrace();
+            //e.printStackTrace();
+            return;
         }
         Map<CoreLabelSequence, CoreLabelSequence> groupsFull = segToCoreLabel(seg);
-        // create structures like {[Uptown-5, Funk-6]=[Uptown-5, Funk-6], [Apple-8, Music-9]=[Apple-8, Music-9]}
+        // create structures like {[UPTOWN-5, FUNK-6]=[Uptown-5, Funk-6], [APPLE-8, MUSIC-9]=[Apple-8, Music-9]}
         addGroups(groupsFull);
+        System.out.println("Info in ExternaSubstitutor.initialize(): result: " + groupsFull);
     }
 
     /****************************************************************
