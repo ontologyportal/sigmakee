@@ -21,10 +21,12 @@
 
 package com.articulate.sigma.semRewrite.substitutor;
 
+import com.articulate.sigma.StringUtil;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import edu.stanford.nlp.ling.CoreLabel;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -60,8 +62,23 @@ public class CoreLabelSequence {
 
     /** ***************************************************************
      */
+    public String toListString() {
+
+        return labels.toString();
+    }
+
+    /** ***************************************************************
+     * Generate a String where the CoreLabel values are separated by
+     * spaces and do not have a token number suffix
+     */
     public String toString() {
 
+        StringBuffer sb = new StringBuffer();
+        for (CoreLabel cl : labels) {
+            if (!StringUtil.emptyString(sb.toString()))
+                sb.append(" ");
+            sb.append(cl.value());
+        }
         return labels.toString();
     }
 
@@ -88,15 +105,34 @@ public class CoreLabelSequence {
 
     /** *************************************************************
      * Checks if label is part of current sequence
+     * @param text the label to be checked for in the sequence
      * @param sentIndex can be CoreLabelSequence.IGNORE_SENTENCE
      */
     public boolean containsLabel(int sentIndex, String text, int index) {
 
-        return labels.stream().anyMatch(label ->
-                        (sentIndex == label.sentIndex() || sentIndex == IGNORE_SENTENCE)
-                                && text.equals(label.originalText())
-                                && index == label.index()
-        );
+        //System.out.println("CoreLabelSequence.containsLabel(): sentIndex: " + sentIndex);
+        //System.out.println("CoreLabelSequence.containsLabel(): text: " + text);
+        //System.out.println("CoreLabelSequence.containsLabel(): index: " + index);
+        //System.out.println("CoreLabelSequence.containsLabel(): labels: " + labels);
+
+        for (CoreLabel label : labels) {
+            //System.out.println("CoreLabelSequence.containsLabel(): value: " + label.value());
+            //System.out.println("CoreLabelSequence.containsLabel():index: " + label.index());
+            if ((sentIndex == label.sentIndex() || sentIndex == IGNORE_SENTENCE)
+                    && text.equals(label.value())
+                    // && index == label.index() FIXME: total hack!
+                    ) {
+                //System.out.println("CoreLabelSequence.containsLabel(): success ");
+                return true;
+            }
+        }
+        //return labels.stream().anyMatch(label ->
+        //                (sentIndex == label.sentIndex() || sentIndex == IGNORE_SENTENCE)
+        //                        && text.equals(label.originalText())
+        //                        && index == label.index()
+        //);
+        //System.out.println("CoreLabelSequence.containsLabel(): failure - label not in sequence ");
+        return false;
     }
 
     /** *************************************************************
@@ -104,7 +140,7 @@ public class CoreLabelSequence {
      */
     public String toText() {
 
-        return Joiner.on("_").join(labels.stream().map(label -> label.originalText()).toArray());
+        return Joiner.on("_").join(labels.stream().map(label -> label.value()).toArray());
     }
 
     /** *************************************************************
@@ -114,10 +150,73 @@ public class CoreLabelSequence {
 
         if (!labels.isEmpty()) {
             String combinedIndex = "-" + labels.get(0).index();
-            return Optional.of(toText() +  combinedIndex);
+            return Optional.of(toText() + combinedIndex);
         }
         else {
             return Optional.empty();
         }
+    }
+
+    /** *************************************************************
+     * Returns the sequence in the String format like "United_States-3"
+     */
+    public String toStringWithNumToken() {
+
+        //System.out.println("CoreLabelSequence.toStringWithNumToken(): labels: " + labels);
+        if (!labels.isEmpty()) {
+            String combinedIndex = "-" + labels.get(0).index();
+            return toText() + combinedIndex;
+        }
+        else {
+            return "";
+        }
+    }
+
+    /** *************************************************************
+     */
+    public int size() {
+        return labels.size();
+    }
+
+    /** *************************************************************
+     * Change the value() of each CoreLabel to be all caps
+     */
+    public CoreLabelSequence toUpperCase() {
+
+        List<CoreLabel> lcl = new ArrayList<>();
+        for (CoreLabel cl : labels) {
+            CoreLabel newcl = new CoreLabel();
+            newcl.setValue(cl.value().toUpperCase());
+            newcl.setIndex(cl.index());
+            lcl.add(newcl);
+        }
+        CoreLabelSequence cls = new CoreLabelSequence(lcl);
+        return cls;
+    }
+
+    /** *************************************************************
+     */
+    public CoreLabelSequence removePunctuation() {
+
+        CoreLabelSequence cls = new CoreLabelSequence(labels);
+        for (CoreLabel cl : labels) {
+            String puncRE = "[\\.\\,\\;\\:\\[\\]\\{\\}\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\=\\_\\+\\`\\~\\<\\>\\/\\?]";
+            if (cl.value().matches(puncRE))
+                cl.setValue(cl.value().replace(puncRE,""));
+        }
+        return cls;
+    }
+
+    /** *************************************************************
+     */
+    public String toWordNetID() {
+
+        StringBuffer sb = new StringBuffer();
+        for (CoreLabel cl : labels) {
+            if (!StringUtil.emptyString(sb.toString()))
+                sb.append("_");
+            sb.append(cl.value().replace(" ","_"));
+        }
+        return sb.toString();
     }
 }
