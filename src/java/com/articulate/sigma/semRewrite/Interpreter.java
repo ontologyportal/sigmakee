@@ -168,6 +168,7 @@ public class Interpreter {
      */
     private static HashMap<String,String> extractWords(List<String> clauses) {
 
+        System.out.println("Info in Interpreter.extractWords(): clauses: " + clauses);
         HashMap<String,String> purewords = new HashMap<String,String>();
         for (int i = 0; i < clauses.size(); i++) {
             String clause = clauses.get(i);
@@ -198,6 +199,7 @@ public class Interpreter {
             if (!purearg2.equals("ROOT"))
                 purewords.put(arg2,purearg2);
         }
+        System.out.println("Info in Interpreter.extractWords(): purewords: " + purewords);
         return purewords;
     }
 
@@ -261,7 +263,9 @@ public class Interpreter {
             String clauseKey = pureWordEntry.getKey();
             String pureWord = pureWordEntry.getValue();
             //System.out.println("INFO in Interpreter.findWSD(): pureWord:  " + pureWord);
-            if (WordNet.wn.stopwords.contains(pureWord) || qwords.contains(pureWord.toLowerCase()) || excluded(pureWord))
+            if (WordNet.wn.stopwords.contains(pureWord) ||
+                    qwords.contains(pureWord.toLowerCase()) ||
+                    excluded(pureWord))
                 continue;
             if (etp.equalsToEntityType(clauseKey, PERSON)) {
                 String[] split = pureWord.split("_");
@@ -284,6 +288,8 @@ public class Interpreter {
                 }
             }
             else {
+                //System.out.println("INFO in Interpreter.findWSD(): pureWord, pure:  " +
+                //        pureWord + ", " +  pure);
                 String pos = posMap.get(clauseKey);
                 String id = Strings.isNullOrEmpty(pos)
                         ? WSD.findWordSenseInContext(pureWord, pure)
@@ -292,13 +298,15 @@ public class Interpreter {
 
                 if (!Strings.isNullOrEmpty(id)) {
                     String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
-                    //System.out.println("INFO in Interpreter.findWSD():sumo:  " + sumo);
+                    //System.out.println("INFO in Interpreter.findWSD(): sumo: " + sumo);
                     if (!Strings.isNullOrEmpty(sumo)) {
                         if (sumo.contains(" ")) {  // TODO: if multiple mappings...
                             sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                         }
-                        if (kb.isInstance(sumo))
+                        if (kb.isInstance(sumo)) {
+                            //System.out.println("INFO in Interpreter.findWSD(): instance:  " + sumo);
                             results.add("sumoInstance(" + sumo + "," + clauseKey + ")");
+                        }
                         else
                             results.add("sumo(" + sumo + "," + clauseKey + ")");
                     }
@@ -628,11 +636,19 @@ public class Interpreter {
     }
 
     /** *************************************************************
+     */
+    private static void removeEndPunc(Annotation doc) {
+
+        // TODO
+    }
+
+    /** *************************************************************
      * Take in a single sentence and output CNF for further processing.
      */
     public CNF interpretGenCNF(String input)    {
 
         Annotation wholeDocument = userInputs.annotateDocument(input);
+        removeEndPunc(wholeDocument);
         System.out.println("Interpreter.interpretGenCNF(): Interpreting " + wholeDocument.size() + " inputs.");
         System.out.println("Interpreter.interpretGenCNF(): coref chains");
         SentenceUtil.printCorefChain(wholeDocument);
@@ -665,12 +681,15 @@ public class Interpreter {
             //        new NounSubstitutor(lastSentenceTokens),
             //        new IdiomSubstitutor(lastSentenceTokens)
             //);
-            substitutor = new IdiomSubstitutor(lastSentenceTokens);
+            substitutor = SubstitutorsUnion.of(
+                    new IdiomSubstitutor(lastSentenceTokens),
+                    new ExternalSubstitutor(lastSentenceTokens));
         }
         System.out.println("Interpreter.interpretGenCNF(): before grouping: " + results);
+        System.out.println("Interpreter.interpretGenCNF(): substitutors: " + substitutor);
         results = SubstitutionUtil.groupClauses(substitutor, results);
 
-        System.out.println("Interpreter.interpretGenCNF(): corefed: " + results);
+        System.out.println("Interpreter.interpretGenCNF(): after grouping: " + results);
         EntityTypeParser etp = new EntityTypeParser(userInputs.annotateDocument(""));
         if (ner)
             etp = new EntityTypeParser(wholeDocument);
@@ -998,7 +1017,7 @@ public class Interpreter {
             return null;
         }
         ArrayList<String> kifoutput = new ArrayList<String>();
-        //System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
+        System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
         boolean bindingFound = true;
         int counter = 0;
         while (bindingFound && counter < 10 && inputs != null && inputs.size() > 0) {
@@ -1080,7 +1099,7 @@ public class Interpreter {
             //System.out.println("INFO in Interpreter.interpretCNF(): bindingFound: " + bindingFound);
             //System.out.println("INFO in Interpreter.interpretCNF(): counter: " + counter);
             //System.out.println("INFO in Interpreter.interpretCNF(): newinputs: " + newinputs);
-            //System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
+            System.out.println("INFO in Interpreter.interpretCNF(): inputs: " + inputs);
         }
         return kifoutput;
     }
