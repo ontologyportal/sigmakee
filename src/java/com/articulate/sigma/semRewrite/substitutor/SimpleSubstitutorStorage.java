@@ -69,13 +69,21 @@ public class SimpleSubstitutorStorage implements ClauseSubstitutor {
     @Override
     public boolean containsKey(String keyLabel) {
 
+        //System.out.println("SimpleSubstitutorStorage.containsKey(): keyLabel: " + keyLabel);
+        //System.out.println("SimpleSubstitutorStorage.containsKey(): groups: " + groups);
         Preconditions.checkNotNull(groups);
         Matcher m = CLAUSE_PARAM.matcher(keyLabel);
         if (m.find()) {
             String text = m.group(1);
+            //System.out.println("SimpleSubstitutorStorage.containsKey(): text: " + text);
             Integer index = Integer.valueOf(m.group(2));
-            return groups.keySet().stream()
-                    .anyMatch(key -> key.containsLabel(IGNORE_SENTENCE, text, index));
+            for (CoreLabelSequence cls : groups.keySet()) {
+                if (cls.containsLabel(IGNORE_SENTENCE, text, index))
+                    return true;
+            }
+            return false;
+            //return groups.keySet().stream()
+            //        .anyMatch(key -> key.containsLabel(IGNORE_SENTENCE, text, index));
         }
         else {
             return false;
