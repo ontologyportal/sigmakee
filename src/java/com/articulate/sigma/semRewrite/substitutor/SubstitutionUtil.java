@@ -46,7 +46,7 @@ public class SubstitutionUtil {
     public static List<String> groupClauses(ClauseSubstitutor substitutor, List<String> clauses) {
 
         //System.out.println("INFO in SubstitutionUtil.groupClauses(): clauses: " + clauses);
-        //System.out.println("INFO in SubstitutionUtil.groupClauses(): substitutors: " + substitutor);
+        //System.out.println("INFO in SubstitutionUtil.groupClauses(): substitutor: " + substitutor);
         Iterator<String> clauseIterator = clauses.iterator();
         List<String> modifiedClauses = Lists.newArrayList();
         while (clauseIterator.hasNext()) {
@@ -57,12 +57,12 @@ public class SubstitutionUtil {
                 // FIXME LOW: Still waiting for optimization
                 String attr1 = m.group(2);
                 String attr2 = m.group(4);
-                if ((m.group(3) != null && substitutor.containsKey(attr1))
-                        || (m.group(5) != null && substitutor.containsKey(attr2))) {
-                    //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr1: " + attr1);
-                    //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr2: " + attr2);
-                    CoreLabelSequence attr1Grouped = substitutor.getGrouped(attr1);
-                    CoreLabelSequence attr2Grouped = substitutor.getGrouped(attr2);
+                //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr1: " + attr1);
+                //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr2: " + attr2);
+                if ((m.group(3) != null && substitutor.containsKey(attr1.toUpperCase()))
+                        || (m.group(5) != null && substitutor.containsKey(attr2.toUpperCase()))) {
+                    CoreLabelSequence attr1Grouped = substitutor.getGrouped(attr1.toUpperCase());
+                    CoreLabelSequence attr2Grouped = substitutor.getGrouped(attr2.toUpperCase());
                     //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr1Grouped: " + attr1Grouped);
                     //System.out.println("INFO in SubstitutionUtil.groupClauses(): attr2Grouped: " + attr2Grouped);
                    // if (attr1Grouped.toString() != null && attr2Grouped != null &&
@@ -72,11 +72,13 @@ public class SubstitutionUtil {
                         String label = m.group(1);
                         String arg1 = attr1;
                         if (attr1Grouped != null)
-                            arg1 = attr1Grouped.toLabelString().get();
+                            arg1 = attr1Grouped.toStringWithNumToken();
                         String arg2 = attr2;
                         if (attr2Grouped != null)
-                            arg2 = attr2Grouped.toLabelString().get();
-                        modifiedClauses.add(label + "(" + arg1  + "," + arg2 + ")");
+                            arg2 = attr2Grouped.toStringWithNumToken();
+                        String modClause = label + "(" + arg1  + "," + arg2 + ")";
+                        //System.out.println("INFO in SubstitutionUtil.groupClauses(): modClause: " + modClause);
+                        modifiedClauses.add(modClause);
                     }
                 }
                 else
