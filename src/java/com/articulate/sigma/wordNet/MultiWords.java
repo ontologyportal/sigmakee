@@ -42,6 +42,7 @@ public class MultiWords {
 
     /** ***************************************************************
      * Add a multi-word string to the multiWord member variable.
+     * @param word should already have had any spaces replaced by underscores
      */
     public void addMultiWord(String word) {
 
