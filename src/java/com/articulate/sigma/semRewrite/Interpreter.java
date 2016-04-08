@@ -262,7 +262,7 @@ public class Interpreter {
         for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
             String clauseKey = pureWordEntry.getKey();
             String pureWord = pureWordEntry.getValue();
-            //System.out.println("INFO in Interpreter.findWSD(): pureWord:  " + pureWord);
+            //System.out.println("INFO in Interpreter.findWSD(): pureWord: " + pureWord);
             if (WordNet.wn.stopwords.contains(pureWord) ||
                     qwords.contains(pureWord.toLowerCase()) ||
                     excluded(pureWord))
@@ -288,7 +288,7 @@ public class Interpreter {
                 }
             }
             else {
-                //System.out.println("INFO in Interpreter.findWSD(): pureWord, pure:  " +
+                //System.out.println("INFO in Interpreter.findWSD(): pureWord, pure: " +
                 //        pureWord + ", " +  pure);
                 String pos = posMap.get(clauseKey);
                 String id = Strings.isNullOrEmpty(pos)
@@ -357,12 +357,12 @@ public class Interpreter {
         //System.out.println("INFO in Interpreter.findWordNetResults(): synset: " + synset);
         if (!Strings.isNullOrEmpty(synset)) {
             String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
-            //System.out.println("INFO in Interpreter.findWordNetResults():sumo:  " + sumo);
+            //System.out.println("INFO in Interpreter.findWordNetResults(): sumo: " + sumo);
             if (!Strings.isNullOrEmpty(sumo)) {
                 if (isInstance(sumo)) {
                     results.add("sumoInstance(" + sumo + "," + valueToAdd + ")");
                 }
-                else{
+                else {
                     if (sumo.indexOf(" ") > -1) {  // TODO: if multiple mappings...
                         sumo = sumo.substring(0, sumo.indexOf(" ") - 1);
                     }
