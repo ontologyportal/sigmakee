@@ -337,11 +337,13 @@ public class WSD {
                         String numPOS = avp.value.substring(0,1);
                         int count = Integer.parseInt(avp.attribute.trim());
                         if (Integer.toString(pos).equals(numPOS) && count > bestScore) {     
-                        	String baseSyn = WordNet.wn.senseIndex.get(avp.value);
-                        	if (!StringUtil.emptyString(baseSyn)) {
-                        		bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
-                        		bestScore = count;
-                        	}
+                        	//String baseSyn = WordNet.wn.senseIndex.get(avp.value);
+                            //System.out.println("INFO in WSD.getBestDefaultSense(): baseSyn: " + baseSyn);
+                        	//if (!StringUtil.emptyString(baseSyn)) {
+                        	//	bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
+                            bestSense = avp.value;
+                            bestScore = count;
+                        	//}
                         }
                     }        
                 }
@@ -452,7 +454,8 @@ public class WSD {
     
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
         WordNet.initOnce();
@@ -502,7 +505,8 @@ public class WSD {
 
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
         WordNet.initOnce();
