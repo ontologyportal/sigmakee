@@ -190,8 +190,8 @@ public class InterpTest {
      */
     public static void interpOne() {
 
-        //String actual = interp.interpret("i want to watch the game of thrones on netflix").get(0);
-        String actual = interp.interpret("All day I've wanted to play Uptown Funk on Apple Music").get(0);
+        String actual = interp.interpret("Want to listen to Uptown Funk on Apple Music").get(0);
+        //String actual = interp.interpret("All day I've wanted to play Uptown Funk on Apple Music").get(0);
         System.out.println("Actual: " + actual);
     }
 
