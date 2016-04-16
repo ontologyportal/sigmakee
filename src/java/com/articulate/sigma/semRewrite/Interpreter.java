@@ -79,6 +79,7 @@ public class Interpreter {
     public static boolean verboseAnswer = false;
     //show the proof in console
     public static boolean verboseProof = false;
+    public static boolean removePolite = true;
 
     //timeout value
     public static int timeOut_value = 30;
@@ -576,6 +577,16 @@ public class Interpreter {
     }
 
     /** *************************************************************
+     * Remove prefacing politness expressions.
+     */
+    public String removePoliteness(String input) {
+
+        String newString = input;
+        String m = "(I want to|please)";
+        return input.replaceFirst(m,"");
+    }
+
+    /** *************************************************************
      * Take in a any number of sentences and return kif strings of declaratives
      * or answer to questions.
      */
@@ -590,9 +601,13 @@ public class Interpreter {
         Annotation document = Pipeline.toAnnotation(input);
         List<CoreMap> sentences = document.get(SentencesAnnotation.class);
         System.out.println("Interpreter.interpret(): Interpreting " + sentences.size() + " inputs.");
-
-        for(CoreMap sentence : sentences) {
-            String interpreted = interpretSingle(sentence.get(CoreAnnotations.TextAnnotation.class));
+        System.out.println("Interpreter.interpret(): original: " + sentences.size() + " inputs.");
+        for (CoreMap sentence : sentences) {
+            String textSent = sentence.get(CoreAnnotations.TextAnnotation.class);
+            System.out.println("Interpreter.interpret(): original: " + textSent);
+            if (removePolite)
+                textSent = removePoliteness(textSent);
+            String interpreted = interpretSingle(textSent);
             results.add(interpreted);
         }
         return results;
@@ -649,8 +664,8 @@ public class Interpreter {
 
         Annotation wholeDocument = userInputs.annotateDocument(input);
         removeEndPunc(wholeDocument);
-        System.out.println("Interpreter.interpretGenCNF(): Interpreting " + wholeDocument.size() + " inputs.");
-        System.out.println("Interpreter.interpretGenCNF(): coref chains");
+        //System.out.println("Interpreter.interpretGenCNF(): Interpreting " + wholeDocument.size() + " inputs.");
+        //System.out.println("Interpreter.interpretGenCNF(): coref chains");
         SentenceUtil.printCorefChain(wholeDocument);
         CoreMap lastSentence = SentenceUtil.getLastSentence(wholeDocument);
         List<CoreLabel> lastSentenceTokens = lastSentence.get(CoreAnnotations.TokensAnnotation.class);
@@ -661,13 +676,13 @@ public class Interpreter {
 
         List<String> results = Lists.newArrayList();
         List<String> dependenciesList = SentenceUtil.toDependenciesList(ImmutableList.of(lastSentence));
-        System.out.println("Interpreter.interpretGenCNF(): dependencies: " + dependenciesList);
+        //System.out.println("Interpreter.interpretGenCNF(): dependencies: " + dependenciesList);
         results.addAll(dependenciesList);
-        System.out.println("Interpreter.interpretGenCNF(): before numerics: " + results);
+        //System.out.println("Interpreter.interpretGenCNF(): before numerics: " + results);
         // FIXME: temporarily removed numeric processing
         //List<String> measures = InterpretNumerics.getSumoTerms(input);
         //results.addAll(measures);
-        System.out.println("Interpreter.interpretGenCNF(): after numerics: " + results);
+        //System.out.println("Interpreter.interpretGenCNF(): after numerics: " + results);
         ClauseSubstitutor substitutor = null;
         if (coref) {
             substitutor = SubstitutorsUnion.of(
@@ -695,9 +710,9 @@ public class Interpreter {
             etp = new EntityTypeParser(wholeDocument);
         List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens, substitutor), etp);
         results.addAll(wsd);
-        System.out.println("Interpreter.interpretGenCNF(): after WSD: " + results);
+        //System.out.println("Interpreter.interpretGenCNF(): after WSD: " + results);
         results = replaceInstances(results);
-        System.out.println("Interpreter.interpretGenCNF(): after instance replacement: " + results);
+        //System.out.println("Interpreter.interpretGenCNF(): after instance replacement: " + results);
 
         List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
         // TODO: This is not the best way to substitute POS information
@@ -711,7 +726,7 @@ public class Interpreter {
         String in = StringUtil.removeEnclosingCharPair(results.toString(),Integer.MAX_VALUE,'[',']');
 
         // Next line used for input to some unit tests.
-        System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
+        //System.out.println("INFO in Interpreter.interpretGenCNF(): " + in);
 
         Lexer lex = new Lexer(in);
         CNF cnf = CNF.parseSimple(lex);
@@ -1711,6 +1726,7 @@ public class Interpreter {
             System.out.println("       'addUnprocessed/noUnprocessed' will add/not add unprocessed clauses.");
             System.out.println("       'showr/noshowr' will show/not show what rules get matched.");
             System.out.println("       'showrhs/noshowrhs' will show/not show what right hand sides get asserted.");
+            System.out.println("       'quit' to quit");
             System.out.println("       Ending a sentence with a question mark will trigger a query,");
             System.out.println("       otherwise results will be asserted to the KB. Don't end commands with a period.");
         }
