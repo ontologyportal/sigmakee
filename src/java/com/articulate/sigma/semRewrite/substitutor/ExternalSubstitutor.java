@@ -56,9 +56,9 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         public void addStringSegment(String s) {
 
             List<CoreLabel> al = new ArrayList<>();
-            System.out.println("Segmentation.addStringSegment: before " + s);
+            //System.out.println("Segmentation.addStringSegment: before " + s);
             String[] ss = StringUtil.removePunctuation(s).split(" ");
-            System.out.println("Segmentation.addStringSegment: after " + Arrays.toString(ss));
+            //System.out.println("Segmentation.addStringSegment: after " + Arrays.toString(ss));
             for (String seg : ss) {
                 CoreLabel cl = new CoreLabel();
                 cl.setOriginalText(seg);
@@ -201,9 +201,13 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
                 JSONArray seglist = new JSONArray();
                 JSONArray typelist = new JSONArray();
                 for (CoreLabelSequence segment : seg.segments) {
+                    StringBuffer oneseg = new StringBuffer();
                     for (CoreLabel cl : segment.getLabels()) {
-                        seglist.add(segment.toString());
+                        if (!StringUtil.emptyString(oneseg.toString()))
+                            oneseg.append(" ");
+                        oneseg.append(cl.value());
                     }
+                    seglist.add(oneseg.toString());
                 }
                 for (String segment : seg.types) {
                     typelist.add(segment);
@@ -295,21 +299,24 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
         for (int i = 0; i < seg.segments.size(); i++) {
             CoreLabelSequence cls = seg.segments.get(i);
             CoreLabelSequence noPunc = cls.removePunctuation();
+            System.out.println("Info in ExternalSubstitutor.addNERtoWN(): noPunc: " + noPunc);
             //if (s.contains(" ")) {
             String type = seg.types.get(i);
-            if (!type.contains("UNKNOWN")) {
+            if (!type.contains("UNKNOWN") && !type.startsWith("ACTIONS")) {
                 Formula form = new Formula("(termFormat EnglishLanguage " + type + "\"" + cls.toString() + "\")");
                 form.setSourceFile("ExternalNER.kif");
                 String wnWord = noPunc.toWordNetID(); // replace space with underscore
+                System.out.println("Info in ExternalSubstitutor.addNERtoWN(): wnWord: " + wnWord);
                 String SUMOterm = Character.toUpperCase(wnWord.charAt(0)) + wnWord.substring(1);
-                if (!WordNet.wn.caseMap.containsKey(wnWord.toUpperCase())) {
+                System.out.println("Info in ExternalSubstitutor.addNERtoWN(): SUMOterm: " + SUMOterm);
+                //if (!WordNet.wn.caseMap.containsKey(wnWord.toUpperCase())) {
                     if (noPunc.size() > 1)
                         WordNet.wn.multiWords.addMultiWord(wnWord);
                     WordNet.wn.synsetFromTermFormat(form, wnWord, SUMOterm, kb);
                     String f = "(instance " + SUMOterm + " " + type + ")";
                     System.out.println("Info in ExternalSubstitutor.addNERtoWN(): formula: " + f);
                     kb.tell(f);
-                }
+                //}
             }
         }
         kb.kbCache.buildCaches();
@@ -345,8 +352,10 @@ public class ExternalSubstitutor extends SimpleSubstitutorStorage {
                         yc.getInputStream()));
                 String JSONString = "";
                 String inputLine;
-                while ((inputLine = in.readLine()) != null)
+                while ((inputLine = in.readLine()) != null) {
+                    System.out.println("Info in ExternalSubstitutor.initialize(): inputLine: " + inputLine);
                     JSONString += inputLine;
+                }
                 System.out.println("Info in ExternalSubstitutor.initialize(): JSON: " + JSONString);
                 in.close();
                 seg = parseNERJson(JSONString);
