@@ -1529,12 +1529,15 @@ public class KB {
                     result = "The formula has been added for browsing";
                     System.out.println("KB.tell: eprover: " + eprover);
                     // 5. Write the formula to the kb.name_UserAssertions.tptp
-                    boolean allAdded = eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover,
-                            parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                    // 6. Add the new tptp file into EBatching.txt
-                    eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60);
-                    // 7. Reload eprover
-                    eprover = new EProver(mgr.getPref("inferenceEngine"));
+                    boolean allAdded = false;
+                    if (eprover != null) {
+                        eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover,
+                                parsedFormulas, !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                        // 6. Add the new tptp file into EBatching.txt
+                        eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60);
+                        // 7. Reload eprover
+                        eprover = new EProver(mgr.getPref("inferenceEngine"));
+                    }
                     result += (allAdded ? " and inference" : " but not for local inference");
                 }
             }
