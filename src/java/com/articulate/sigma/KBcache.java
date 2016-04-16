@@ -872,7 +872,7 @@ public class KBcache {
         String rel = "subrelation";
         HashMap<String,HashSet<String>> relParents = parents.get("subrelation");
         if (relParents == null) {
-            System.out.println("Error in KBcache.breadthFirst(): no relation subrelation");
+            System.out.println("Error in KBcache.breadthFirstInheritDomains(): no relation subrelation");
             return;
         }
         ArrayDeque<String> Q = new ArrayDeque<String>();
@@ -889,7 +889,11 @@ public class KBcache {
                 while (it.hasNext()) {
                     String newTerm = it.next();                    
                     ArrayList<String> newDomains = signatures.get(newTerm);
-                    if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
+                    if (valences.get(t) == null) {
+                        System.out.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
+                        continue;
+                    }
+                    else if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
                         fillArrayList("Entity",newDomains,valences.get(newTerm)+1,valences.get(t)+1);
                         valences.put(newTerm, valences.get(t));
                     }
