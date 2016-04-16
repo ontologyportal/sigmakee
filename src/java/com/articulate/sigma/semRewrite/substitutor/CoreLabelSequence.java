@@ -183,6 +183,7 @@ public class CoreLabelSequence {
      */
     public CoreLabelSequence toUpperCase() {
 
+        //System.out.println("CoreLabelSequence.toUpperCase(): labels: " + labels);
         List<CoreLabel> lcl = new ArrayList<>();
         for (CoreLabel cl : labels) {
             CoreLabel newcl = new CoreLabel();
@@ -191,6 +192,7 @@ public class CoreLabelSequence {
             lcl.add(newcl);
         }
         CoreLabelSequence cls = new CoreLabelSequence(lcl);
+        //System.out.println("CoreLabelSequence.toUpperCase(): cls: " + cls);
         return cls;
     }
 
@@ -198,12 +200,14 @@ public class CoreLabelSequence {
      */
     public CoreLabelSequence removePunctuation() {
 
+        //System.out.println("CoreLabelSequence.toUpperCase(): removePunctuation: " + labels);
         CoreLabelSequence cls = new CoreLabelSequence(labels);
         for (CoreLabel cl : labels) {
             String puncRE = "[\\.\\,\\;\\:\\[\\]\\{\\}\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\=\\_\\+\\`\\~\\<\\>\\/\\?]";
             if (cl.value().matches(puncRE))
                 cl.setValue(cl.value().replace(puncRE,""));
         }
+        //System.out.println("CoreLabelSequence.toUpperCase(): cls: " + cls);
         return cls;
     }
 
@@ -211,12 +215,14 @@ public class CoreLabelSequence {
      */
     public String toWordNetID() {
 
+        //System.out.println("CoreLabelSequence.toUptoWordNetIDperCase(): labels: " + labels);
         StringBuffer sb = new StringBuffer();
         for (CoreLabel cl : labels) {
             if (!StringUtil.emptyString(sb.toString()))
                 sb.append("_");
             sb.append(cl.value().replace(" ","_"));
         }
+        //System.out.println("CoreLabelSequence.toUptoWordNetIDperCase(): sb: " + sb);
         return sb.toString();
     }
 }
