@@ -81,11 +81,11 @@ public class InterpTest {
 
     /****************************************************************
      */
-    public static Collection<Object[]> prepare() {
+    public static Collection<Object[]> prepare(String inputfile) {
 
         //return JsonReader.transform("resources/translation_tiny.json", (JSONObject jo) -> {
         //return JsonReader.transform("miscellaneous/translation_tests.json", (JSONObject jo) -> {
-        return transform(KBmanager.getMgr().getPref("kbDir") + File.separator + "ImperativeTests2.json", (JSONObject jo) -> {
+        return transform(KBmanager.getMgr().getPref("kbDir") + File.separator + inputfile, (JSONObject jo) -> {
             String text = (String) jo.get("text");
             //String tokens = (String) jo.get("tokens");
             //String type = (String) jo.get("type");
@@ -111,24 +111,24 @@ public class InterpTest {
         Formula exp = new Formula(expected);
         act = act.cddrAsFormula();
         exp = exp.cddrAsFormula();
-        System.out.println("Info in InterpTest.subsumes(): actual 1: " + act);
-        System.out.println("Info in InterpTest.subsumes(): expected 1: " + exp);
+        //System.out.println("Info in InterpTest.subsumes(): actual 1: " + act);
+        //System.out.println("Info in InterpTest.subsumes(): expected 1: " + exp);
         if (act == null)
             return false;
         if (exp == null)
             return false;
         act = act.carAsFormula();
         exp = exp.carAsFormula();
-        System.out.println("Info in InterpTest.subsumes(): actual 2: " + act);
-        System.out.println("Info in InterpTest.subsumes(): expected 2: " + exp);
+        //System.out.println("Info in InterpTest.subsumes(): actual 2: " + act);
+        //System.out.println("Info in InterpTest.subsumes(): expected 2: " + exp);
         if (act == null)
             return false;
         if (exp == null)
             return false;
         act = act.cdrAsFormula();
         exp = exp.cdrAsFormula();
-        System.out.println("Info in InterpTest.subsumes(): actual 3: " + act);
-        System.out.println("Info in InterpTest.subsumes(): expected 3: " + exp);
+        //System.out.println("Info in InterpTest.subsumes(): actual 3: " + act);
+        //System.out.println("Info in InterpTest.subsumes(): expected 3: " + exp);
         if (act == null)
             return false;
         if (exp == null)
@@ -155,7 +155,7 @@ public class InterpTest {
 
     /***************************************************************
      */
-    public static void test(String fInput, String fExpected) {
+    public static void testOne(String fInput, String fExpected) {
 
         String actual = interp.interpret(fInput).get(0);
         boolean passed = (new Formula(fExpected)).logicallyEquals(new Formula(actual));
@@ -195,32 +195,63 @@ public class InterpTest {
         System.out.println("Actual: " + actual);
     }
 
+    /***************************************************************
+     */
+    public static void testAll(String fname) {
+
+        System.out.println("");
+        System.out.println("****************************");
+        System.out.println("");
+        Collection<Object[]> tests = prepare(fname);
+        for (Object[] o : tests) {
+            testOne((String) o[0], (String) o[1]);
+        }
+        for (ArrayList<String> oneResult : results) {
+            System.out.println("************");
+            System.out.println("Input: " + oneResult.get(0));
+            System.out.println("Expected: " + oneResult.get(1));
+            System.out.println("Actual: " + oneResult.get(2));
+            System.out.println("pass/fail: " + oneResult.get(3));
+        }
+        System.out.println("Passed: " + pass);
+        System.out.println("Failed: " + fail);
+        System.out.println("Subsumed: " + subsumed);
+    }
+
+    /***************************************************************
+     */
+    public static void testAllCSV(String fname) {
+
+        Collection<Object[]> tests = prepare(fname);
+        for (Object[] o : tests) {
+            testOne((String) o[0], (String) o[1]);
+        }
+        for (ArrayList<String> oneResult : results) {
+            System.out.print('"' + oneResult.get(0) + "\"\t");
+            System.out.print('"' + oneResult.get(1) + "\"\t");
+            System.out.print('"' + oneResult.get(2) + "\"\t");
+            System.out.println('"' + oneResult.get(3) + "\"");
+        }
+        System.out.println("Passed: " + pass);
+        System.out.println("Failed: " + fail);
+        System.out.println("Subsumed: " + subsumed);
+    }
+
     /****************************************************************
      */
     public static void main(String[] args) throws IOException {
 
         initInterpreter();
-        if (args != null && args.length > 0 && args[0].equals("-o")) {
-            interpOne();
+        if (args != null && args.length > 0) {
+            if (args[0].equals("-o"))
+                interpOne();
+            if (args[0].equals("-f") && args.length > 1)
+                testAllCSV(args[1]);
+            else
+                testAll("draft.json");
         }
         else {
-            System.out.println("");
-            System.out.println("****************************");
-            System.out.println("");
-            Collection<Object[]> tests = prepare();
-            for (Object[] o : tests) {
-                test((String) o[0], (String) o[1]);
-            }
-            for (ArrayList<String> oneResult : results) {
-                System.out.println("************");
-                System.out.println("Input: " + oneResult.get(0));
-                System.out.println("Expected: " + oneResult.get(1));
-                System.out.println("Actual: " + oneResult.get(2));
-                System.out.println("pass/fail: " + oneResult.get(3));
-            }
-            System.out.println("Passed: " + pass);
-            System.out.println("Failed: " + fail);
-            System.out.println("Subsumed: " + subsumed);
+            testAll("draft.json");
         }
     }
 }
