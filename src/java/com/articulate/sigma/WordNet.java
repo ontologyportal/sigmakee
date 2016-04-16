@@ -690,6 +690,22 @@ public class WordNet {
 
     /** ***************************************************************
      */
+    protected void setMaxNounSynsetID(String synset) {
+
+        if (WordNetUtilities.isValidSynset8(synset))
+            maxNounSynsetID = synset;
+    }
+
+    /** ***************************************************************
+     */
+    protected void setMaxVerbSynsetID(String synset) {
+
+        if (WordNetUtilities.isValidSynset8(synset))
+            maxVerbSynsetID = synset;
+    }
+
+    /** ***************************************************************
+     */
     protected boolean processNounLine(String line) {
 
         // 6: p = Pattern.compile("^([0-9]{8})([\\S\\s]+)\\|\\s([\\S\\s]+?)\\s(\\(?\\&\\%\\S+[\\S\\s]+)$");
@@ -704,7 +720,7 @@ public class WordNet {
             }
             if ( ! anyAreNull ) {
                 addSUMOMapping(m.group(4),"1" + m.group(1));
-                maxNounSynsetID = m.group(1);
+                setMaxNounSynsetID(m.group(1));
                 nounDocumentationHash.put(m.group(1),m.group(3)); // 1-synset, 2-pointers, 3-docu, 4-SUMO term
                 processPointers("1" + m.group(1),m.group(2));
             }
@@ -714,7 +730,7 @@ public class WordNet {
             m = regexPatterns[7].matcher(line);
             if (m.matches()) {
                 nounDocumentationHash.put(m.group(1),m.group(3));
-                maxNounSynsetID = m.group(1);
+                setMaxNounSynsetID(m.group(1));
                 processPointers("1" + m.group(1),m.group(2));
             }
             else {
@@ -757,7 +773,7 @@ public class WordNet {
                 m = regexPatterns[10].matcher(line);
                 if (m.matches()) {
                     verbDocumentationHash.put(m.group(1),m.group(3));
-                    maxVerbSynsetID = m.group(1);
+                    setMaxVerbSynsetID(m.group(1));
                     addSUMOMapping(m.group(4),"2" + m.group(1));
                     processPointers("2" + m.group(1),m.group(2));
                 }
@@ -766,7 +782,7 @@ public class WordNet {
                     m = regexPatterns[11].matcher(line);
                     if (m.matches()) {
                         verbDocumentationHash.put(m.group(1),m.group(3));
-                        maxVerbSynsetID = m.group(1);
+                        setMaxVerbSynsetID(m.group(1));
                         processPointers("2" + m.group(1),m.group(2));
                     }
                     else {
@@ -1257,7 +1273,7 @@ public class WordNet {
             " for word " + word);
             return;
         }
-        if (!StringUtil.isInteger(avp.value) || avp.value.length() != 9) {
+        if (!WordNetUtilities.isValidSynset9(avp.value)) {
             System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + avp +
                     " for word " + word);
             return;
