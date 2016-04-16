@@ -57,8 +57,33 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
-     * Extract the POS from a word_POS_num sense key.  Should be an
-     * alpha key, such as "VB".
+     * Check whether a synset format is valid
+     */
+    public static boolean isValidSynset8(String synset) {
+
+        if (!StringUtil.isInteger(synset) || synset.length() != 8) {
+            System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + synset);
+            return false;
+        }
+        else
+            return true;
+    }
+
+    /** ***************************************************************
+     * Check whether a synset format is valid
+     */
+    public static boolean isValidSynset9(String synset) {
+
+        if (!StringUtil.isInteger(synset) || synset.length() != 9) {
+            System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + synset);
+            return false;
+        }
+        else
+            return true;
+    }
+
+    /** ***************************************************************
+     * Check whether a sense key format is valid
      */
     public static boolean isValidKey(String senseKey) {
 
