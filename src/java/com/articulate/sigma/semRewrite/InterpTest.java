@@ -103,37 +103,49 @@ public class InterpTest {
 
     /****************************************************************
      * if one formula has literals that are found in every other formula
-     * the first subsumes the second (a little counter-intuitive).
+     * the first subsumes the second (a little counter-intuitive).  Note that
+     *  only very simple formulas a compared correctly - they must consist
+     *  of a quantifier and conjunction (which are ignored) and then the
+     *  elements of the conjunction are compared.  The only exception that's
+     *  properly handled is if the expected formula has just one literal.
      */
     private static boolean subsumes(String actual, String expected) {
 
+        boolean debug = false;
         Formula act = new Formula(actual);
         Formula exp = new Formula(expected);
         act = act.cddrAsFormula();
         exp = exp.cddrAsFormula();
-        //System.out.println("Info in InterpTest.subsumes(): actual 1: " + act);
-        //System.out.println("Info in InterpTest.subsumes(): expected 1: " + exp);
+        if (debug) System.out.println("Info in InterpTest.subsumes(): actual 1: " + act);
+        if (debug) System.out.println("Info in InterpTest.subsumes(): expected 1: " + exp);
         if (act == null)
             return false;
         if (exp == null)
             return false;
         act = act.carAsFormula();
         exp = exp.carAsFormula();
-        //System.out.println("Info in InterpTest.subsumes(): actual 2: " + act);
-        //System.out.println("Info in InterpTest.subsumes(): expected 2: " + exp);
+        if (debug) System.out.println("Info in InterpTest.subsumes(): actual 2: " + act);
+        if (debug) System.out.println("Info in InterpTest.subsumes(): expected 2: " + exp);
         if (act == null)
             return false;
         if (exp == null)
             return false;
-        act = act.cdrAsFormula();
-        exp = exp.cdrAsFormula();
-        //System.out.println("Info in InterpTest.subsumes(): actual 3: " + act);
-        //System.out.println("Info in InterpTest.subsumes(): expected 3: " + exp);
-        if (act == null)
-            return false;
-        if (exp == null)
-            return false;
-        List<String> expLiterals = exp.complexArgumentsToArrayList(0);
+        List<String> expLiterals = null;
+        if (!exp.car().equals("and")) {
+            expLiterals = new ArrayList<>();
+            expLiterals.add(exp.theFormula);
+        }
+        else {
+            act = act.cdrAsFormula();
+            exp = exp.cdrAsFormula();
+            if (debug) System.out.println("Info in InterpTest.subsumes(): actual 3: " + act);
+            if (debug) System.out.println("Info in InterpTest.subsumes(): expected 3: " + exp);
+            if (act == null)
+                return false;
+            if (exp == null)
+                return false;
+            expLiterals = exp.complexArgumentsToArrayList(0);
+        }
         List<String> actLiterals = act.complexArgumentsToArrayList(0);
         for (String explit : expLiterals) {
             Formula exForm = new Formula(explit);
@@ -151,6 +163,19 @@ public class InterpTest {
                 return false;
         }
         return true;
+    }
+
+    /***************************************************************
+     */
+    public static void testSubsume() {
+
+        String expected = "(exists (?R) " +
+                "  (routeBetween ?R Here Reposado))";
+        String actual = "(exists (?R) " +
+                "(and " +
+                "  (routeBetween ?R Here Reposado) " +
+                "  (agent direction-3 Get_me))) ";
+        System.out.println("Info in InterpTest.testSubsume(): " + subsumes(actual,expected));
     }
 
     /***************************************************************
@@ -241,8 +266,8 @@ public class InterpTest {
      */
     public static void main(String[] args) throws IOException {
 
-        initInterpreter();
         if (args != null && args.length > 0) {
+            initInterpreter();
             if (args[0].equals("-o"))
                 interpOne();
             if (args[0].equals("-f") && args.length > 1)
@@ -251,7 +276,7 @@ public class InterpTest {
                 testAll("draft.json");
         }
         else {
-            testAll("draft.json");
+            testSubsume();
         }
     }
 }
