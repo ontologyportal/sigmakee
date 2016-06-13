@@ -9,6 +9,7 @@ import java.util.function.BiPredicate;
  * Created by sserban on 2/17/15.
  */
 public class FormulaUtil {
+
     /*******************************************************************************************
      * Generates all permutations of the given size which are valid according to the given callback function.
      * @param size
@@ -27,13 +28,13 @@ public class FormulaUtil {
     }
 
     /** ***************************************************************************************
-     *
      * @param prefix
      * @param array
      * @param permutations
      * @param validateFn
      */
-    private static void permutation(int[] prefix, int[] array, List<int[]> permutations, BiPredicate<Integer, Integer> validateFn) {
+    private static void permutation(int[] prefix, int[] array, List<int[]> permutations,
+                                    BiPredicate<Integer, Integer> validateFn) {
 
         int n = array.length;
         if (n == 0) {
