@@ -974,6 +974,9 @@ public class Clausifier  {
         return result;
     }
 
+    /** ***************************************************************
+     *  Extract all variables in a list
+     */
     private static void extractVariablesRecursively(Formula f, Set<String> vars) {
 
         if (f.atom()) {
