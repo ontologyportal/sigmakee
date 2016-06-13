@@ -47,7 +47,7 @@ public class KIF {
     /** A HashMap of ArrayLists of Formulas.  Each String key points to a list of
      * String formulas that correspond to that key. For example, 
      * "arg-1-Foo" would be one of several keys for "(instance Foo Bar)".
-     * @see KIF.createKey for key format. */
+     * @see KIF.createKey() for key format. */
     public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();    
 
     /** A HashMap of String keys representing the formula, and Formula values.
