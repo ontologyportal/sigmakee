@@ -121,9 +121,11 @@ public class SimpleSubstitutorStorage implements ClauseSubstitutor {
     @Override
     public CoreLabelSequence getGrouped(String keyLabel) {
 
+        System.out.println("SimpleSubstitutorStorage.getGrouped(): groups: " + groups);
         Matcher m = CLAUSE_PARAM.matcher(keyLabel);
         if (m.find()) {
             String text = m.group(1);
+            System.out.println("SimpleSubstitutorStorage.getGrouped(): text: " + text);
             Integer index = Integer.valueOf(m.group(2));
             return groups.entrySet().stream()
                     .filter(e -> e.getKey().containsLabel(IGNORE_SENTENCE, text, index))
