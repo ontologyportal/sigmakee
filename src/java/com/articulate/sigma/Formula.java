@@ -1131,7 +1131,7 @@ public class Formula implements Comparable {
         return result != null;
     }
 
-    /**
+    /** *****************************************************************
      * Compares two formulae by recursively traversing its predicate structure and by building possible variable maps
      * between the variables of the two formulae. If a complete mapping is possible, it is returned.
      *   Each recursive call returns a list of sets of variable pairs. Each pair is a variable from the first formula and
@@ -1288,6 +1288,12 @@ public class Formula implements Comparable {
         return normalized1.equals(normalized2);
     }
 
+    /** *****************************************************************
+     * @param formula
+     * @param kb
+     * @param varPlaceholders
+     * @return
+     */
     private static String normalizeParameterOrder(String formula,KB kb, boolean varPlaceholders) {
 
         //null test first
@@ -2100,7 +2106,8 @@ public class Formula implements Comparable {
                     || pred.equals(UQUANT)));
     }
 
-    /** Tests if this formula is an existentially quantified formula
+    /** *****************************************************************
+     * Tests if this formula is an existentially quantified formula
      *
      * @return
      */
@@ -2109,7 +2116,8 @@ public class Formula implements Comparable {
         return EQUANT.equals(this.car());
     }
 
-    /** Tests if this formula is an universally quantified formula
+    /** *****************************************************************
+     * Tests if this formula is an universally quantified formula
      *
      * @return
      */
@@ -2318,6 +2326,13 @@ public class Formula implements Comparable {
         return newFormula;
     }
 
+    /** *****************************************************************
+     *
+     * @param quantifier
+     * @param vars
+     * @return
+     * @throws Exception
+     */
     public Formula replaceQuantifierVars(String quantifier, List<String> vars) throws Exception {
 
         if(!quantifier.equals(this.car())) {
@@ -2797,6 +2812,8 @@ public class Formula implements Comparable {
         return new Formula("(not " + theFormula + ")");
     }
 
+    /** *****************************************************************
+     */
     private static class VariableMapping {
         String var1;
         String var2;
