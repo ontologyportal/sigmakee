@@ -251,7 +251,8 @@ public class Interpreter {
      */
     public static List<String> findWSD(List<String> clauses, Map<String, String> posMap, EntityTypeParser etp) {
 
-        //System.out.println("INFO in Interpreter.findWSD(): " + clauses);
+        boolean debug = true;
+        if (debug) System.out.println("INFO in Interpreter.findWSD(): " + clauses);
         KB kb = KBmanager.getMgr().getKB("SUMO");
         DependencyConverter.readFirstNames();
 
@@ -259,11 +260,11 @@ public class Interpreter {
 
         HashMap<String,String> purewords = extractWords(clauses);
         ArrayList<String> pure = Lists.newArrayList(purewords.keySet());
-        //System.out.println("INFO in Interpreter.findWSD(): words: " + pure);
+        if (debug) System.out.println("INFO in Interpreter.findWSD(): words: " + pure);
         for (Map.Entry<String, String> pureWordEntry : purewords.entrySet()) {
             String clauseKey = pureWordEntry.getKey();
             String pureWord = pureWordEntry.getValue();
-            //System.out.println("INFO in Interpreter.findWSD(): pureWord: " + pureWord);
+            if (debug) System.out.println("INFO in Interpreter.findWSD(): pureWord: " + pureWord);
             if (WordNet.wn.stopwords.contains(pureWord) ||
                     qwords.contains(pureWord.toLowerCase()) ||
                     excluded(pureWord))
@@ -289,13 +290,13 @@ public class Interpreter {
                 }
             }
             else {
-                //System.out.println("INFO in Interpreter.findWSD(): pureWord, pure: " +
-                //        pureWord + ", " +  pure);
+                if (debug) System.out.println("INFO in Interpreter.findWSD(): pureWord, pure: " +
+                        pureWord + ", " +  pure);
                 String pos = posMap.get(clauseKey);
                 String id = Strings.isNullOrEmpty(pos)
                         ? WSD.findWordSenseInContext(pureWord, pure)
                         : WSD.findWordSendInContextWithPos(pureWord, pure, WordNetUtilities.sensePOS(pos));
-                //System.out.println("INFO in Interpreter.findWSD(): id: " + id);
+                if (debug) System.out.println("INFO in Interpreter.findWSD(): id: " + id);
 
                 if (!Strings.isNullOrEmpty(id)) {
                     String sumo = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(id));
@@ -305,7 +306,7 @@ public class Interpreter {
                             sumo = sumo.substring(0,sumo.indexOf(" ")-1);
                         }
                         if (kb.isInstance(sumo)) {
-                            //System.out.println("INFO in Interpreter.findWSD(): instance:  " + sumo);
+                            if (debug) System.out.println("INFO in Interpreter.findWSD(): instance:  " + sumo);
                             results.add("sumoInstance(" + sumo + "," + clauseKey + ")");
                         }
                         else
@@ -314,7 +315,7 @@ public class Interpreter {
                 }
                 else {
                     Set<String> wordNetResults = findWordNetResults(pureWord, clauseKey);
-                    //System.out.println("INFO in Interpreter.findWSD(): wordnet:  " + wordNetResults);
+                    if (debug) System.out.println("INFO in Interpreter.findWSD(): wordnet:  " + wordNetResults);
                     if (!wordNetResults.isEmpty()) {
                         results.addAll(wordNetResults);
                     }
@@ -343,7 +344,7 @@ public class Interpreter {
                 }
             }
         }
-        //System.out.println("INFO in Interpreter.findWSD(): " + results);
+        if (debug) System.out.println("INFO in Interpreter.findWSD(): " + results);
         //results.addAll(clauses);
 
         return Lists.newArrayList(results);
@@ -710,9 +711,9 @@ public class Interpreter {
             etp = new EntityTypeParser(wholeDocument);
         List<String> wsd = findWSD(results, getPartOfSpeechList(lastSentenceTokens, substitutor), etp);
         results.addAll(wsd);
-        //System.out.println("Interpreter.interpretGenCNF(): after WSD: " + results);
+        System.out.println("Interpreter.interpretGenCNF(): after WSD: " + results);
         results = replaceInstances(results);
-        //System.out.println("Interpreter.interpretGenCNF(): after instance replacement: " + results);
+        System.out.println("Interpreter.interpretGenCNF(): after instance replacement: " + results);
 
         List<String> posInformation = SentenceUtil.findPOSInformation(lastSentenceTokens, dependenciesList);
         // TODO: This is not the best way to substitute POS information
