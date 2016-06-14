@@ -25,12 +25,13 @@ public class Prenexifier {
         if (f.car().equals("or") || f.car().equals("and")) {
 
         }
+        return f;
     }
 
     /** ***************************************************************
      */
     public Formula prenex(Formula f) {
-
+        return f;
     }
 
     /** ***************************************************************
