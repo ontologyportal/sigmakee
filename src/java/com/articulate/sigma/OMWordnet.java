@@ -43,10 +43,10 @@ August 9, Acapulco, Mexico.
         
         switch (WordNetUtilities.getSUMOMappingSuffix(SUMOmapping)) {
             case '=': return '='; 
-            case '+': return '⊂'; 
-            case '@': return '∈'; 
-            case ':': return '≠'; 
-            case '[': return '⊃'; 
+            case '+': return '\u2282'; // '⊂';
+            case '@': return '\u2208'; // '∈';
+            case ':': return '\u2260'; // '≠';
+            case '[': return '\u2283'; // '⊃';
         }
         return ' ';
     }
