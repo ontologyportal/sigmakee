@@ -162,7 +162,7 @@ public class KBmanager {
 
             // If no then instantiate variables in predicate position.
             preferences.put("holdsPrefix","no");  
-            preferences.put("cache","no");
+            preferences.put("cache","yes");
             preferences.put("TPTP","yes");  
             preferences.put("TPTPDisplay","no");  
             preferences.put("userBrowserLimit","25");
