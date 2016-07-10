@@ -120,7 +120,7 @@
 					<version>2.2</version>
 					<configuration>
 						<!-- http port -->
-						<port>9090</port>
+						<port>8080</port>
 						<!-- application path always starts with / -->
 						<path>/sigma</path>
 						<!-- optional path to a context file -->
