@@ -1292,7 +1292,7 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
-     * Write OWL format for SUMO-WordNet mappings.
+     * Write TPTP format for SUMO-WordNet mappings.
      * @param synset is a POS prefixed synset number
      */
     private static void writeTPTPWordNetSynset(PrintWriter pw, String synset) {
@@ -1801,6 +1801,43 @@ public class WordNetUtilities {
             }
             catch (Exception ex) {
             }
+        }
+    }
+
+    /** ***************************************************************
+     * Generate notional SUMO terms from WordNet
+     */
+    public static void generateSUMOfromWN(String synset, String sumo) {
+
+    }
+
+    /** ***************************************************************
+     * Generate notional SUMO terms from WordNet.  Start with an equivalence
+     * Make each synset a notional SUMO term with its parent either the
+     * synset parent or the equivalence.
+     */
+    public static void generateSUMOfromWN() {
+
+        for (String syn : WordNet.wn.nounSUMOHash.keySet()) { // Keys are synset Strings, values are SUMO
+            String sumo = WordNet.wn.nounSUMOHash.get(syn);   // terms with the &% prefix and =, +, @ or [ suffix.
+            if (sumo.endsWith("="))
+                generateSUMOfromWNsubtree("1"+syn,sumo);
+        }
+        for (String syn : WordNet.wn.verbSUMOHash.keySet()) {
+            String sumo = WordNet.wn.verbSUMOHash.get(syn);
+            if (sumo.endsWith("="))
+                generateSUMOfromWNsubtree("2"+syn,sumo);
+        }
+        for (String syn : WordNet.wn.adjectiveSUMOHash.keySet()) {
+            String sumo = WordNet.wn.adjectiveSUMOHash.get(syn);
+            if (sumo.endsWith("="))
+                generateSUMOfromWNsubtree("3"+syn,sumo);
+        }
+        for (String syn : WordNet.wn.adverbSUMOHash.keySet()) {
+            String sumo = WordNet.wn.adverbSUMOHash.get(syn);
+            if (sumo.endsWith("="))
+                generateSUMOfromWNsubtree("4"+syn,sumo);
+
         }
     }
 
