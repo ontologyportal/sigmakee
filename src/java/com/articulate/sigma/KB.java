@@ -1040,6 +1040,8 @@ public class KB {
      * will be subrelations of relation and will be related to each
      * other in a subsumption hierarchy.
      *
+     * FIXME: this routine only gets subrelations one level down
+     *
      * @param relation The name of a predicate, which is assumed to be
      *                 the 0th argument of one or more atomic
      *                 formulae  
@@ -1050,6 +1052,7 @@ public class KB {
      * @return an ArrayList of Formulas that satisfy the query, or an
      *         empty ArrayList if no Formulae are retrieved.
      */
+    @Deprecated
     public ArrayList<Formula> askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
 
         ArrayList<Formula> ans = new ArrayList<Formula>();
@@ -3106,6 +3109,7 @@ public class KB {
             KB kb = KBmanager.getMgr().getKB("SUMO");
             //kb.writeTerms();
             System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
+            kb.askEProver("(subclass ?X Object)",30,1);
         } 
         catch (Exception ioe ) {
             System.out.println(ioe.getMessage());
