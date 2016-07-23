@@ -530,7 +530,6 @@ public class KBcache {
         return instancesForType;
     }
 
-    
     /** ***************************************************************
      * Get the HashSet of the given arguments from an ArrayList of Formulas.
      */
@@ -1117,6 +1116,7 @@ public class KBcache {
         KBcache nkbc = kb.kbCache;
         //nkbc.buildCaches();
         //nkbc.buildRelationsSet();
-        nkbc.showState();
+        System.out.println("KBcache.main(): " + nkbc.getInstancesForType("Corporation"));
+        //nkbc.showState();
     }
 }
