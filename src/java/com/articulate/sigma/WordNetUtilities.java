@@ -1807,6 +1807,13 @@ public class WordNetUtilities {
     /** ***************************************************************
      * Generate notional SUMO terms from WordNet
      */
+    public static void generateSUMOfromWNsubtree(String synset, String sumo) {
+
+    }
+
+    /** ***************************************************************
+     * Generate notional SUMO terms from WordNet
+     */
     public static void generateSUMOfromWN(String synset, String sumo) {
 
     }
