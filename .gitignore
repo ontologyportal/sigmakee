@@ -1,0 +1,18 @@
+# Compiled files
+*.class
+/build
+/dist
+/target
+/examples/target
+
+# JUnit output
+/TEST*.xml
+
+# Javadoc output
+/doc
+
+# Emacs temp files
+*~
+
+# Sigma temp files
+/EBatchConfig.txt

@@ -162,7 +162,7 @@ public class KBmanager {
 
             // If no then instantiate variables in predicate position.
             preferences.put("holdsPrefix","no");  
-            preferences.put("cache","no");
+            preferences.put("cache","yes");
             preferences.put("TPTP","yes");  
             preferences.put("TPTPDisplay","no");  
             preferences.put("userBrowserLimit","25");
@@ -290,11 +290,12 @@ public class KBmanager {
         if (useCacheFile) {
             kb.kbCache = new KBcache(kb);
             kb.kbCache.buildCaches();
+            kb.checkArity();
         }
         else {
             kb.kbCache = new KBcache(kb);
+            // kb.checkArity needs the cache, so don't call it.
         }
-        kb.checkArity();
         // load inference engine only when "TPTP" = "yes"
         if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
             kb.loadEProver();
