@@ -41,18 +41,26 @@ public class MBoxReader {
         //Get the paths of the mbox files to process:
         ArrayList<String> mboxFiles = new ArrayList<>();
         File folder = new File(path);
-        File[] listOfFiles = folder.listFiles();
-
-        for (File file : listOfFiles) {
-            if (file.getName().indexOf(".") == -1)
-                mboxFiles.add(file.getName());
-            if (file.getName().indexOf(".sbd") != -1)
-                execute(file.getName() + File.separator + file.getName());
+        if (!folder.exists()) {
+            System.out.println("Error in MBoxReader.execute(): '" + folder + "' doesn't exist ");
+            return;
         }
+        File[] listOfFiles;
+        if (folder.isFile())
+            mboxFiles.add(path);
+        else {
+            listOfFiles = folder.listFiles();
 
-        if (mboxFiles == null)
-            System.out.println("Error inMBoxReader.execute: You must specify at least one filename.");
+            for (File file : listOfFiles) {
+                if (file.getName().indexOf(".") == -1)
+                    mboxFiles.add(file.getName());
+                if (file.getName().indexOf(".sbd") != -1)
+                    execute(folder.getName() + File.separator + file.getName());
+            }
 
+            if (mboxFiles == null)
+                System.out.println("Error inMBoxReader.execute: You must specify at least one filename.");
+        }
         // Now that we have processed the configuration, we're ready to
         // ;oop over each of the files to parse:
         for (String file : mboxFiles) {
@@ -100,10 +108,8 @@ public class MBoxReader {
                     //read that in, add it to the record and return the From line of
                     //the next message, if any:
                     curFromLine = processBody(reader, record);
-
                     records.add(record); //Emit the completed record.
                 }
-
                 reader.close(); //close the current file.
             }
             catch (IOException e) {
@@ -166,39 +172,47 @@ public class MBoxReader {
 
         String body = "";
         String fromLine = null;
-
         try {
             while (true) {
                 String line = reader.readLine();
-
                 if (line == null)
                     break;
-
                 if (line.equals("")) {
                     fromLine = reader.readLine();
-
                     if (fromLine == null)
                         break;
-
                     //If the line begins with "From " then it is a From line:
                     if (fromLine.regionMatches(true, 0, "From ", 0, 5))
                         break; //A new message was found.
-
                     //not a from line...
                     line += fromLine;
                     fromLine = null;
                 }
-
                 body += line; //Append line to body.
             }
-
-            //Add the body to the record:
-            record.put(PROP_NAME_BODY, body);
+            record.put(PROP_NAME_BODY, body); // Add the body to the record:
         }
         catch (IOException ioe) {
             System.out.println("Error in MBoxReader.processBody()");
             ioe.printStackTrace();
         }
         return fromLine;
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) {
+
+        MBoxReader mbr = new MBoxReader();
+        if (args.length > 0) {
+            if (args[0].equals("-h")) {
+                System.out.println("Usage: java -classpath . com.articulate.sigma.util.MBoxReader -f file");
+            }
+            else if (args[0].equals("-f") && args.length > 1) {
+                mbr.execute(args[1]);
+                System.out.println(records);
+
+            }
+        }
     }
 }
