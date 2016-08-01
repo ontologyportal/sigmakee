@@ -179,7 +179,7 @@ public class KB {
 
         this.name = kbIn.name;
 
-        if(kbIn.constituents != null)   {
+        if (kbIn.constituents != null)   {
             this.constituents = Lists.newArrayList(kbIn.constituents);
         }
 
@@ -215,7 +215,7 @@ public class KB {
             this.termFormatMap = Maps.newHashMap(kbIn.termFormatMap);
         }
 
-        if(kbIn.errors != null)   {
+        if (kbIn.errors != null)   {
             this.errors = Sets.newTreeSet(kbIn.errors);
         }
 
@@ -227,8 +227,6 @@ public class KB {
         if (kbIn.celt != null)   {
             this.celt = new CELT();
         }
-
-
     }
 
     public boolean isVisible() {
@@ -2808,6 +2806,7 @@ public class KB {
      * @return an ArrayList containing all predicates in this KB.     
      */
     public ArrayList<String> collectPredicates() {
+
         return new ArrayList<String>(kbCache.instances.get("Predicate"));
     }
 
@@ -3096,6 +3095,7 @@ public class KB {
      * a defensive copy of loadFormatMapsAttempted.
      */
     public ArrayList<String> getLoadFormatMapsAttempted() {
+
         return Lists.newArrayList(loadFormatMapsAttempted);
     }
     
@@ -3127,5 +3127,4 @@ public class KB {
         System.out.println(f.getArgument(2).equals("\"test\""));
     */
     }
-
 }
