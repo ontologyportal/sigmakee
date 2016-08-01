@@ -924,6 +924,7 @@ public class KBcache {
         try {
             File dir = new File(KBmanager.getMgr().getPref("kbDir"));
             File f = new File(dir, (kb.name + _cacheFileSuffix));
+            System.out.println("INFO in KBcache.writeCacheFile(): " + f.getName());
             if (f.exists()) 
                 f.delete();                                           
             String filename = f.getCanonicalPath();
@@ -946,6 +947,20 @@ public class KBcache {
                         }
                     }
                 }                
+            }
+            it = instances.keySet().iterator();
+            while (it.hasNext()) {
+                String inst = it.next();
+                HashSet<String> valSet = instances.get(inst);
+                Iterator<String> it2 = valSet.iterator();
+                while (it2.hasNext()) {
+                    String parent = it2.next();
+                    String tuple = "(instance " + inst + " " + parent + ")";
+                    if (!kb.formulaMap.containsKey(tuple)) {
+                        fw.write(tuple);
+                        fw.write(System.getProperty("line.separator"));
+                    }
+                }
             }
             if (fw != null) {
                 fw.close();
@@ -1024,9 +1039,9 @@ public class KBcache {
         buildInstTransRels();
         buildDirectInstances();
         buildDisjointRelationsMap(); // find relations under partition definition
+        writeCacheFile();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
     }
-
 
     /** *************************************************************
      */
@@ -1114,9 +1129,13 @@ public class KBcache {
         KB kb = KBmanager.getMgr().getKB("SUMO");
         System.out.println("**** Finished loading KB ***");
         KBcache nkbc = kb.kbCache;
+        System.out.println("KBcache.main(): parents of BinaryPredicate: " +
+                nkbc.getParentClasses("BinaryPredicate"));
+        System.out.println("KBcache.main(): parents of causes: " +
+                nkbc.getParentClassesOfInstance("causes"));
         //nkbc.buildCaches();
         //nkbc.buildRelationsSet();
-        System.out.println("KBcache.main(): " + nkbc.getInstancesForType("Corporation"));
-        //nkbc.showState();
+        //System.out.println("KBcache.main(): " + nkbc.getInstancesForType("Corporation"));
+        nkbc.showState();
     }
 }
