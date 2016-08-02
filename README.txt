@@ -40,7 +40,9 @@ run the following additional steps
 You can also follow the steps below to do a manual installation on linux.
 Just replace /home/theuser with your directory names.  This procedure
 assumes that you start from your home directory and are happy
-with having directories created there.
+with having directories created there. Before you can run Sigma you'll
+also need to modify /home/theuser/.sigmakee/KBs/config.xml to conform to
+your local paths.
 
 mkdir workspace
 mkdir Programs
@@ -68,6 +70,7 @@ mkdir .sigmakee
 cd .sigmakee
 mkdir KBs
 cp -R ~/workspace/sumo/* KBs
+mv ~/workspace/sigmakee/config-vagrant.xml KBs/config.xml
 cd ~/Programs/E
 sudo apt-get install make
 sudo apt-get install gcc
