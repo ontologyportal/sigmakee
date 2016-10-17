@@ -28,10 +28,9 @@ import com.articulate.sigma.KBmanager;
 public class InterpretNumerics {
 
     /** ***************************************************************
-	 * Returns a list of SU-KIF statements, each corresponding to a date/time/measure found in the input 
+	 * Returns a list of SUO-KIF statements, each corresponding to a date/time/measure found in the input
 	 * natural language string.
 	 * @param input: The natural language string.
-     * @param substitutor
      * @return List of SU-KIF statements, each date/time/measures are obtained from parser.
 	 */
 	public static List<String> getSumoTerms(String input) {
