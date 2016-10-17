@@ -47,7 +47,7 @@ public class KIF {
     /** A HashMap of ArrayLists of Formulas.  Each String key points to a list of
      * String formulas that correspond to that key. For example, 
      * "arg-1-Foo" would be one of several keys for "(instance Foo Bar)".
-     * @see KIF.createKey() for key format. */
+     * @see createKey for key format. */
     public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();    
 
     /** A HashMap of String keys representing the formula, and Formula values.
@@ -198,8 +198,11 @@ public class KIF {
                         // Two line separators in a row shows a new KIF
                         // statement is to start.  Check if a new statement
                         // has already been generated, otherwise report error
-                        if (!keySet.isEmpty() || (expression.length() > 0)) {
-                            errStr = (errStart + ": possible missed closing parenthesis near line " + f.startLine);
+                        if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
+                            errStr = (errStart + ": possible missed closing parenthesis near line " + f.startLine +
+                                " for formula " + expression.toString() + "\n and key " + keySet.toString() +
+                                " keyset size " + keySet.size() + " exp length " + expression.length() +
+                                " comment lines: " + totalLinesForComments);
                             throw new ParseException(errStr, f.startLine);
                         }
                         continue;
@@ -211,7 +214,7 @@ public class KIF {
                 }
                 else if (isEOL) 
                     isEOL = false;   // Turn off isEOL if a non-space token encountered                                                                      
-                if (st.ttype==40) {  // Open paren                                                   
+                if (st.ttype == 40) {  // Open paren
                     if (parenLevel == 0) {
                         //lineStart = st.lineno();
                         f = new Formula();
