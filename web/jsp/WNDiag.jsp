@@ -63,6 +63,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
   out.println(WordNetUtilities.printStatistics());
 
   ArrayList synsetsWithoutTerms = WNdiagnostics.synsetsWithoutTerms();
+    ArrayList nonRelationTermsWithoutSynsets = WNdiagnostics.nonRelationTermsWithoutSynsets();
   ArrayList synsetsWithoutFoundTerms = WNdiagnostics.synsetsWithoutFoundTerms(kb);
   ArrayList nonMatchingTaxonomy = WNdiagnostics.nonMatchingTaxonomy(kbName,language);
 
@@ -73,6 +74,14 @@ boolean isError = !(synsetsWithoutTerms.isEmpty() &&
 if (!isError) 
     out.println("<br><b>&nbsp;No errors found</b>");
 else {
+
+    if (!nonRelationTermsWithoutSynsets.isEmpty()) {
+        show.setLength(0);
+        out.println("<table ALIGN=\"LEFT\" WIDTH=\"50%\"><tr><td BGCOLOR=\"#A8BACF\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr></table><p>");
+        show.append(HTMLformatter.synsetList(nonRelationTermsWithoutSynsets,kbHref));
+        out.println("<br><b>&nbsp;Error: nonRelationTermsWithoutSynsets</b>");
+        out.println(show.toString() + "<br>");
+    }
 
     if (!synsetsWithoutTerms.isEmpty()) {
         show.setLength(0);
