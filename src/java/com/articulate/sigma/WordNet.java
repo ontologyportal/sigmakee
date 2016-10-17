@@ -3055,6 +3055,15 @@ public class WordNet {
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
         for (int i = 0; i < forms.size(); i++) {
             Formula form = forms.get(i);
+            ArrayList<String> args = form.argumentsToArrayList(1);
+            if (args == null || args.size() < 2)
+                continue;
+            if (args.size() != 3) {
+                String errStr = "Error in WordNet.termFormatsToSynsets(): wrong number of arguments: " +
+                    form.toString();
+                kb.errors.add(errStr);
+                continue;
+            }
             String SUMOterm = form.getArgument(2);
             //if (SUMOterm.equals("FourStrokeEngine"))
             //    System.out.println("INFO in WordNet.termFormatsToSynsets(): formula: " + form);
