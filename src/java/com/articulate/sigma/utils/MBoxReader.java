@@ -1,5 +1,8 @@
 package com.articulate.sigma.utils;
 
+import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.semRewrite.datesandnumber.InterpretNumerics;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -7,6 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -16,11 +20,12 @@ import java.util.regex.Pattern;
 public class MBoxReader {
 
     //Enumeration of the property names we'll use:
-    private static String PROP_NAME_SENDER			= "Sender";
-    private static String PROP_NAME_DATE			= "Message Date";
-    private static String PROP_NAME_SENDER_INFO		= "Sender Info";
-    private static String PROP_NAME_BODY			= "Body";
-    private static HashSet<HashMap<String,String>> records = new HashSet<>();
+    public static String PROP_NAME_SENDER		= "Sender";
+    public static String PROP_NAME_DATE			= "MessageDate";
+    public static String PROP_NAME_SENDER_INFO	= "SenderInfo";
+    public static String PROP_NAME_BODY			= "Body";
+    public static String PROP_NAME_FACTS		= "Facts";
+    public static HashSet<HashMap<String,String>> records = new HashSet<>();
 
     /** ***************************************************************
      * This regular expression will be used to extract fields from the From
@@ -201,17 +206,32 @@ public class MBoxReader {
 
     /** ***************************************************************
      */
+    public void extractInfo() {
+
+        System.out.println("In MBoxReader.extractInfo()");
+        for (HashMap<String,String> element : records) {
+            if (element.keySet().contains(PROP_NAME_BODY)) {
+                String body = StringUtil.removeHTML(element.get(PROP_NAME_BODY));
+                System.out.println("In MBoxReader.extractInfo() from " + body);
+                List<String> results = InterpretNumerics.getSumoTerms(body);
+                System.out.println("INFO in MBoxReader.extractInfo(): " + results);
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
     public static void main(String[] args) {
 
         MBoxReader mbr = new MBoxReader();
         if (args.length > 0) {
-            if (args[0].equals("-h")) {
+            if (args[0].contains("-h")) {
                 System.out.println("Usage: java -classpath . com.articulate.sigma.util.MBoxReader -f file");
             }
             else if (args[0].equals("-f") && args.length > 1) {
                 mbr.execute(args[1]);
-                System.out.println(records);
-
+                mbr.extractInfo();
+                //System.out.println(records);
             }
         }
     }
