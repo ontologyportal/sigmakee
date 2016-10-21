@@ -500,7 +500,8 @@ public class HTMLformatter {
         	//System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             Formula f = (Formula) kb.formulaMap.get(strForm);
             if (f == null) {
-                System.out.println("Error in HTMLformatter.formatFormulaList(): null formula object for " + strForm)
+                System.out.println("Error in HTMLformatter.formatFormulaList(): null formula object for " +
+                        strForm);
                 continue;
             }
             //System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
