@@ -499,7 +499,11 @@ public class HTMLformatter {
         	String strForm = forms.get(i).theFormula;
         	//System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             Formula f = (Formula) kb.formulaMap.get(strForm);
-        	//System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
+            if (f == null) {
+                System.out.println("Error in HTMLformatter.formatFormulaList(): null formula object for " + strForm)
+                continue;
+            }
+            //System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
             if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                     !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
                 String arg0 = f.getArgument(0);
