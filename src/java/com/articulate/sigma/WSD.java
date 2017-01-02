@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import java.io.*;
 import java.util.*;
 
 import com.google.common.collect.Lists;
@@ -77,7 +78,7 @@ public class WSD {
      */
     public static String findWordSenseInContext(String word, List<String> words) {
 
-        System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
+        //System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         for (int i = 1; i <= 4; i++) {
@@ -117,8 +118,8 @@ public class WSD {
      */
     public static String findWordSendInContextWithPos(String word, List<String> words, int pos) {
 
-        System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
-                word + ", " + words);
+        //System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
+        //        word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         String newWord = "";
@@ -445,7 +446,103 @@ public class WSD {
         }  
         return synset;
     }
-    
+
+    /** ***************************************************************
+     *  Read the SICK data set
+     *  http://clic.cimec.unitn.it/composes/sick.html
+     */
+    public static ArrayList<ArrayList<String>> readSick() {
+
+        System.out.println("In WSD.readSick(): Reading SICK file ");
+        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+        LineNumberReader lr = null;
+        try {
+            // pair_ID sentence_A sentence_B entailment_label relatedness_score entailment_AB entailment_BA sentence_A_original
+            // sentence_B_original sentence_A_dataset sentence_B_dataset SemEval_set
+            String line;
+            String f = "/home/apease/ontology/SICK/SICK.txt";
+            File sickFile = new File(f);
+            if (sickFile == null) {
+                System.out.println("Error in WordNet.readNouns(): The file does not exist in " + f );
+                return null;
+            }
+            long t1 = System.currentTimeMillis();
+            FileReader r = new FileReader(sickFile);
+            lr = new LineNumberReader(r);
+            while ((line = lr.readLine()) != null) {
+                System.out.println(line);
+                //if (lr.getLineNumber() % 1000 == 0)
+                //    System.out.print('.');
+                String[] ls = line.split("\t");
+                ArrayList<String> al = new ArrayList<String>(Arrays.asList(ls));
+                result.add(al);
+            }
+        }
+        catch (IOException ex) {
+            System.out.println("Error in WSD.readSick()");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     *  Extract SUMO terms from the SICK data set
+     *  http://clic.cimec.unitn.it/composes/sick.html
+     */
+    public static void collectSUMOFromSICK() {
+
+        FileWriter fw = null;
+        PrintWriter pw = null;
+        String fname = "/home/apease/ontology/SICK/SickOut.txt";
+
+        try {
+            fw = new FileWriter(fname);
+            pw = new PrintWriter(fw);
+
+            KBmanager.getMgr().initializeOnce();
+
+            WordNet.initOnce();
+            ArrayList<ArrayList<String>> sickAr = readSick();
+            System.out.println("collectSUMOFromSICK: size of array" + sickAr.size());
+            for (int i = 0; i < sickAr.size(); i++) {
+                ArrayList<String> al = sickAr.get(i);
+                System.out.println("WSD.collectSUMOFromSICK():  line " + i);
+                if (al.size() > 2) {
+                    System.out.println("WSD.collectSUMOFromSICK(): at line " + al.get(0));
+                    String sentA = al.get(1);
+                    String sumoA = collectSUMOFromWords(sentA).toString();
+                    String sentB = al.get(2);
+                    String sumoB = collectSUMOFromWords(sentB).toString();
+                    pw.println(sentA);
+                    pw.println(sumoA);
+                    pw.println(sentB);
+                    pw.println(sumoB);
+                }
+            }
+        }
+        catch (Exception ex) {
+            System.out.println("Error in WSD.collectSUMOFromSICK()");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null) {
+                    pw.close();
+                }
+                if (fw != null) {
+                    fw.close();
+                }
+            }
+            catch (Exception ex) {
+                System.out.println("Error in WSD.collectSUMOFromSICK()");
+                System.out.println(ex.getMessage());
+                ex.printStackTrace();
+            }
+        }
+    }
+
     /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
@@ -528,6 +625,7 @@ public class WSD {
 
         //testWordWSD();
         //testSentenceWSD();
-        testSentenceWSD2();
+        //testSentenceWSD2();
+        collectSUMOFromSICK();
     }
 }
