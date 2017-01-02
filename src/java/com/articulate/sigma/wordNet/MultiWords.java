@@ -75,7 +75,7 @@ public class MultiWords {
      */
     public int findMultiWord(List<String> text, int startIndex, List<String> synset) {
 
-        System.out.println("INFO in MultiWords.findMultiWord(): text: '" + text + "'");
+        //System.out.println("INFO in MultiWords.findMultiWord(): text: '" + text + "'");
         String rootWord = rootFormOf(text.get(startIndex));
         return startIndex + findMultiWord(rootWord, text.get(startIndex),
                 text.subList(startIndex + 1, text.size()), synset);
@@ -128,7 +128,8 @@ public class MultiWords {
                     else {
                         candidates = newCandidates;
                         wordIndex++;
-                        foundMultiWord = foundMultiWord + "_" + multiWordTail.get(wordIndex);
+                        if (wordIndex < multiWordTail.size())
+                            foundMultiWord = foundMultiWord + "_" + multiWordTail.get(wordIndex);
                         //System.out.println("INFO in MultiWords.findMultiWord(): new multi-word: " + foundMultiWord);
                     }
                 }
