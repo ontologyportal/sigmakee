@@ -15,9 +15,30 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+Copyright 2017 Cloudminds Technology, Inc
+
+Author: vishwas.mruthyunjaya@cloudminds.com
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program ; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston,
+MA  02111-1307 USA
+ */
+
 /****************************************************************************************
  * Created by Vishwas Mruthyunjaya on 1/4/17.
- ****************************************************************************************/
+ */
 public class SwitchboardDialogueDB {
 
     // Global Properties for SwitchDialogueDB Object.
@@ -26,11 +47,10 @@ public class SwitchboardDialogueDB {
     private List<String> foldersList = new ArrayList<>();
     private List<String> filesList = new ArrayList<>();
 
-
     /************************************************************************************
      * This method takes the converted data and
      * stores in a text file format which is required for the ChatBot.
-     ************************************************************************************/
+     */
     private void writeFile(List<String> rawData, String fileName, String folderName) {
 
         String addToFileName;
@@ -52,11 +72,10 @@ public class SwitchboardDialogueDB {
         }
     }
 
-
     /************************************************************************************
-     * This method is to read the file(s) from Switchboard Dialogue Database and
-     * extract the necessary column as well as convert them into required format.
-     ************************************************************************************/
+     * This method is to read the file(s) from Switchboard Dialogue Database and extract
+     * the necessary column as well as convert them into required one linguistic turn format.
+     */
     private void readFile(String filePath, String folderPath) {
 
         // Initialise parameters
@@ -75,7 +94,7 @@ public class SwitchboardDialogueDB {
             reader.readNext();
             // Formatting the CSV file data to required style
             while ((data = reader.readNext()) != null) {
-                // text[] is an array of values from the line
+                // data[] is an array of values from the line
                 data[conversationColumnIndex] = data[conversationColumnIndex].replaceAll("[{][a-zA-Z0-9]","");
                 data[conversationColumnIndex] = data[conversationColumnIndex].replaceAll("[{\\-}\\[\\]\"/+()]","");
                 data[conversationColumnIndex] = data[conversationColumnIndex].replaceAll("( )+"," ");
@@ -94,24 +113,24 @@ public class SwitchboardDialogueDB {
             System.out.println (ex.toString());
             System.out.println("Warning: In method readFile(), could not find the file");
         }
-        catch(Exception e) {
+        catch (Exception e) {
             System.out.println("Warning: In method readFile(), error in data formatting");
         }
     }
-
 
     /*************************************************************************************
      * listFolders() method takes a directory path as argument and lists all the folder
      * under the given folder path.
      * RETURN --> list of absolute folder paths.
-     *************************************************************************************/
+     */
     private List<String> listFolders(String directoryPath) {
+
         List<String> foldersPath = new ArrayList<>();
         try {
             File directory = new File(directoryPath);
             //get all the folders from a directory
             File[] folderList = directory.listFiles();
-            if(folderList != null) {
+            if (folderList != null) {
                 for (File file : folderList) {
                     if (file.isDirectory()) {
                         foldersPath.add(file.getAbsolutePath());
@@ -119,18 +138,17 @@ public class SwitchboardDialogueDB {
                 }
             }
         }
-        catch(Exception e) {
-            System.out.println("Warning: In method listFolders(), error in listing the folders under: " + directoryPath);
+        catch (Exception e) {
+            System.out.println("Warning: In method listFolders(), error in listing folders under: " + directoryPath);
         }
         return foldersPath;
     }
-
 
     /*************************************************************************************
      * listFiles() method takes a folder path as argument and lists all the files under
      * the given folder path.
      * RETURN --> list of absolute file paths.
-     **************************************************************************************/
+     */
     private List<String> listFiles(String folderPath) {
 
         List<String> filesPath = new ArrayList<>();
@@ -138,7 +156,7 @@ public class SwitchboardDialogueDB {
             File directory = new File(folderPath);
             //get all the files from a folder
             File[] filesList = directory.listFiles();
-            if(filesList != null) {
+            if (filesList != null) {
                 for (File file : filesList) {
                     if (file.isFile() && FilenameUtils.getExtension(file.toString()).equalsIgnoreCase("csv")) {
                         filesPath.add(file.getAbsolutePath());
@@ -146,16 +164,15 @@ public class SwitchboardDialogueDB {
                 }
             }
         }
-        catch(Exception e) {
+        catch (Exception e) {
             System.out.println("Warning: In method listFiles(), error in listing the files under: " + folderPath);
         }
         return filesPath;
     }
 
-
     /**************************************************************************************
      * Main()
-     **************************************************************************************/
+     */
     public static void main(String[] args) throws IOException {
 
         SwitchboardDialogueDB switchboardDialogueDBObject = new SwitchboardDialogueDB();
