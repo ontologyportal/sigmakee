@@ -16,14 +16,17 @@ public class CornellMovieDialogs {
 
     /****************************************************************
      * @param parsedLines are the parsed dialog lines
+     * Writes parsed lines to new file
      */
     private void writeFile(List<String> parsedLines, String fileName) {
+
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
             for (String parsedLine: parsedLines) {
                 bufferedWriter.write(parsedLine);
                 bufferedWriter.newLine();
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             System.out.println("Error with" + fileName + ": " + e);
             e.printStackTrace();
         }
@@ -32,8 +35,10 @@ public class CornellMovieDialogs {
     /****************************************************************
      * @param rawLines are the raw dialog lines
      * @return a list of parsed dialog lines
+     * Parses raw lines by removing non-dialog prefix
      */
     private List<String> parseLines(List<String> rawLines) {
+
         List<String> parsedLines = new ArrayList<>();
 
         for (String line: rawLines) {
@@ -48,8 +53,10 @@ public class CornellMovieDialogs {
     /****************************************************************
      * @param fileName is the name of Cornell Movie Dialog file
      * @return a list of raw dialog lines
+     * Reads dialog file contents into list of lines
      */
     private List<String> readFile(String fileName) {
+
         List<String> rawLines = new ArrayList<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
@@ -57,7 +64,8 @@ public class CornellMovieDialogs {
             while ((line = bufferedReader.readLine()) != null) {
                 rawLines.add(line);
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             System.out.println("Error with" + fileName + ": " + e);
             e.printStackTrace();
         }
@@ -67,8 +75,10 @@ public class CornellMovieDialogs {
 
     /****************************************************************
      * @param args command line arguments
+     * Instantiates class and runs functionality
      */
     public static void main(String[] args) {
+
         CornellMovieDialogs cornellMovieDialogs = new CornellMovieDialogs();
 
         // Read file and convert to list of raw lines

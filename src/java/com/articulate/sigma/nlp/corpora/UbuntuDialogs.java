@@ -1,8 +1,8 @@
 package com.articulate.sigma.nlp.corpora;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
+import org.apache.commons.io.FilenameUtils;
+
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,83 +13,104 @@ import java.util.List;
  */
 public class UbuntuDialogs {
 
-    private String rawFileName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogs/521/1.tsv";
-    private String parsedFileName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogs/521/1_parsed.txt";
+    private String rawDirectoryName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogs";
+    private String parsedDirectoryName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogsParsed/";
 
     /****************************************************************
      * @param parsedLines are the parsed dialog lines
+     * Writes parsed lines to new file
      */
     private void writeFile(List<String> parsedLines, String fileName) {
 
-    }
-
-    /****************************************************************
-     * @param rawLines are the raw dialog lines
-     * @return a list of parsed dialog lines
-     */
-    private List<String> parseLines(List<String> rawLines) {
-        List<String> parsedLines = new ArrayList<>();
-        StringBuilder buffer = new StringBuilder();
-        String currentUser = "";
-
-        for (String line: rawLines) {
-            String[] splitString = line.split("\t");
-
-            if (!splitString[1].equals(currentUser)) {
-                if (buffer.length() > 0) parsedLines.add(buffer.toString().trim());
-                buffer.setLength(0);
-                currentUser = splitString[1];
+        try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
+            for (String parsedLine: parsedLines) {
+                bufferedWriter.write(parsedLine);
+                bufferedWriter.newLine();
             }
-
-            buffer.append(splitString[3].trim());
-            buffer.append(" ");
         }
-
-        return parsedLines;
+        catch (IOException e) {
+            System.out.println("Error with" + fileName + ": " + e);
+            e.printStackTrace();
+        }
     }
 
 
     /****************************************************************
      * @param fileName is the name of Ubuntu dialog file
      * @return a list of raw dialog lines
+     * Reads dialog file contents into list of lines
      */
-    private List<String> readFile(String fileName) {
-        List<String> rawLines = new ArrayList<>();
+    private List<String> parseFile(String fileName) {
+
+        List<String> lines = new ArrayList<>();
+        StringBuilder buffer = new StringBuilder();
+        String currentUser = "";
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             String line;
             while ((line = bufferedReader.readLine()) != null) {
-                rawLines.add(line);
+
+                String[] splitString = line.split("\t");
+
+                if (splitString.length == 4) {
+                    if (!splitString[1].equals(currentUser)) {
+                        if (buffer.length() > 0) lines.add(buffer.toString().trim());
+                        buffer.setLength(0);
+                        currentUser = splitString[1];
+                    }
+
+                    buffer.append(splitString[3].trim());
+                    buffer.append(" ");
+                }
             }
-        } catch (IOException e) {
+
+            if (buffer.length() > 0) lines.add(buffer.toString().trim());
+        }
+        catch (IOException e) {
             System.out.println("Error with" + fileName + ": " + e);
             e.printStackTrace();
         }
 
-        return rawLines;
+        return lines;
+    }
+
+    /****************************************************************
+     * Iterates through all files and runs file specific functionality
+     */
+    private void parseAllFiles() {
+
+
+        File topLevelDirectory = new File(rawDirectoryName);
+        File[] directories = topLevelDirectory.listFiles();
+
+        if (directories != null) {
+            for (int i = 0; i < 2; i++) {
+                File[] files = directories[i].listFiles();
+
+                if (files != null) {
+                    // Crate new directory for parsed files
+                    File parsedDirectory = new File(parsedDirectoryName + directories[i].getName() + "/");
+                    parsedDirectory.mkdir();
+                    System.out.println(parsedDirectory.getAbsoluteFile());
+
+                    for (File file: files) {
+                        List<String> parsedLines = parseFile(file.getAbsolutePath());
+                        String parsedFilePath = parsedDirectoryName + directories[i].getName() + "/" + FilenameUtils.getBaseName(file.getAbsolutePath()) + "_parsed.txt";
+                        writeFile(parsedLines, parsedFilePath);
+                    }
+                }
+            }
+        }
+
     }
 
     /****************************************************************
      * @param args command line arguments
+     * Instantiates class and runs functionality
      */
     public static void main(String[] args) {
+
         UbuntuDialogs ubuntuDialogs = new UbuntuDialogs();
-
-        // Read file and convert to list of raw lines
-        List<String> rawLines = ubuntuDialogs.readFile(ubuntuDialogs.rawFileName);
-
-        // Parse raw lines
-        List<String> parsedLines = ubuntuDialogs.parseLines(rawLines);
-
-        parsedLines.forEach(System.out::println);
-
-//        for (int i = 0; i < rawLines.size(); i++) {
-//            System.out.println(rawLines.get(i));
-//            System.out.println(parsedLines.get(i));
-//            System.out.println();
-//        }
-
-        // Write parsed lines to new file
-//        ubuntuDialogs.writeFile(parsedLines, ubuntuDialogs.parsedFileName);
+        ubuntuDialogs.parseAllFiles();
     }
 }
