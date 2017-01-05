@@ -48,10 +48,10 @@ public class UbuntuDialogs {
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
             String line;
+
             while ((line = bufferedReader.readLine()) != null) {
-
+                // Split string on tab and add dialog to list, alternating based on the user writing dialog
                 String[] splitString = line.split("\t");
-
                 if (splitString.length == 4) {
                     if (!splitString[1].equals(currentUser)) {
                         if (buffer.length() > 0) lines.add(buffer.toString().trim());
@@ -79,29 +79,28 @@ public class UbuntuDialogs {
      */
     private void parseAllFiles() {
 
-
         File topLevelDirectory = new File(rawDirectoryName);
         File[] directories = topLevelDirectory.listFiles();
 
         if (directories != null) {
-            for (int i = 0; i < 2; i++) {
-                File[] files = directories[i].listFiles();
+            for (File directory: directories) {
+                File[] files = directory.listFiles();
 
                 if (files != null) {
-                    // Crate new directory for parsed files
-                    File parsedDirectory = new File(parsedDirectoryName + directories[i].getName() + "/");
+                    // Create new directory for parsed files
+                    File parsedDirectory = new File(parsedDirectoryName + directory.getName() + "/");
                     parsedDirectory.mkdir();
                     System.out.println(parsedDirectory.getAbsoluteFile());
 
+                    // Parse and write each file
                     for (File file: files) {
                         List<String> parsedLines = parseFile(file.getAbsolutePath());
-                        String parsedFilePath = parsedDirectoryName + directories[i].getName() + "/" + FilenameUtils.getBaseName(file.getAbsolutePath()) + "_parsed.txt";
+                        String parsedFilePath = parsedDirectoryName + directory.getName() + "/" + FilenameUtils.getBaseName(file.getAbsolutePath()) + "_parsed.txt";
                         writeFile(parsedLines, parsedFilePath);
                     }
                 }
             }
         }
-
     }
 
     /****************************************************************
