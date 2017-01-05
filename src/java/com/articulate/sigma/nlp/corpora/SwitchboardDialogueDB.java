@@ -1,8 +1,12 @@
 package com.articulate.sigma.nlp.corpora;
 
 import com.opencsv.CSVReader;
+import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.StringUtils;
+
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.File;
 import java.lang.String;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -11,73 +15,158 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
+/****************************************************************************************
  * Created by Vishwas Mruthyunjaya on 1/4/17.
- */
+ ****************************************************************************************/
 public class SwitchboardDialogueDB {
-    /**
+
+    // Global Properties for SwitchDialogueDB Object.
+    private String directoryName = "/home/vish/CloudMinds/ChatBot/swda/swda/";
+    private Path addToDirectory = Paths.get("/home/vish/CloudMinds/ChatBot/swda_parsed/");
+    private List<String> foldersList = new ArrayList<>();
+    private List<String> filesList = new ArrayList<>();
+
+
+    /************************************************************************************
      * This method takes the converted data and
      * stores in a text file format which is required for the ChatBot.
-     */
-    public void writeFile(List<String> rawData){
-        try{
-            Path file = Paths.get("/home/vish/parse1.txt");
+     ************************************************************************************/
+    private void writeFile(List<String> rawData, String fileName, String folderName) {
+
+        String addToFileName;
+        String addToFolderName;
+        String addToFilePath;
+        Path addToFolderPath;
+        try {
+            addToFileName = StringUtils.substringBefore(FilenameUtils.getBaseName(fileName), ".");
+            addToFolderName = folderName.substring(folderName.lastIndexOf("/") + 1);
+            addToFolderPath = Paths.get(addToDirectory+"/"+addToFolderName+"_parsed/");
+            Files.createDirectories(addToFolderPath);
+            addToFilePath = addToFolderPath+"/"+addToFileName+"_parsed.txt";
+            Path file = Paths.get(addToFilePath);
             Files.write(file, rawData, Charset.forName("UTF-8"));
         }
-        catch (IOException ex){
+        catch (Exception ex) {
             System.out.println (ex.toString());
-            System.out.println("Could not find the file");
+            System.out.println("writeFile() Method: Could not find the file");
         }
     }
 
 
-    /**
+    /************************************************************************************
      * This method is to read the file(s) from Switchboard Dialogue Database and
      * extract the necessary column as well as convert them into required format.
-     */
-    public void readFile(String fName){
-        // Initiate parameters
-        String [] text;
-        StringBuffer buf = new StringBuffer();
+     ************************************************************************************/
+    private void readFile(String filePath, String folderPath) {
+
+        // Initialise parameters
+        String [] data;
+        StringBuilder buf = new StringBuilder();
         List<String> rawData = new ArrayList<>();
+        // Identified conversation column and conversing agents column in the CSV file
+        int conversationColumnIndex = 8;
+        int conversingAgentsColumnIndex = 7;
+
         // CSV file reading and formatting
-        try{
+        try {
             // CSV File reader
-            CSVReader reader = new CSVReader(new FileReader(fName));
+            CSVReader reader = new CSVReader(new FileReader(filePath));
+            // This skips the header row in CSV file
             reader.readNext();
             // Formatting the CSV file data to required style
-            while ((text = reader.readNext()) != null) {
+            while ((data = reader.readNext()) != null) {
                 // text[] is an array of values from the line
-                text[8] = text[8].replaceAll("[{][a-zA-Z0-9]","");
-                text[8] = text[8].replaceAll("[{\\-}\\[\\]\"/+]","");
-                text[8] = text[8].replaceAll("( )+"," ");
-                if (Integer.parseInt(text[7]) == 1 && buf.length() > 0){
+                data[conversationColumnIndex] = data[conversationColumnIndex].replaceAll("[{][a-zA-Z0-9]","");
+                data[conversationColumnIndex] = data[conversationColumnIndex].replaceAll("[{\\-}\\[\\]\"/+()]","");
+                data[conversationColumnIndex] = data[conversationColumnIndex].replaceAll("( )+"," ");
+                if (Integer.parseInt(data[conversingAgentsColumnIndex]) == 1 && buf.length() > 0) {
                     rawData.add(buf.toString().trim());
                     buf.setLength(0);
                 }
-                buf.append(text[8].trim());
+                buf.append(data[conversationColumnIndex].trim());
                 buf.append(" ");
             }
+            if (buf.length() > 0 ) rawData.add(buf.toString().trim());
             // Invoke writeFile method to write the converted data into a .txt file
-            writeFile(rawData);
+            writeFile(rawData, filePath, folderPath);
         }
-        catch (IOException ex){
+        catch (IOException ex) {
             System.out.println (ex.toString());
-            System.out.println("Could not find the file");
+            System.out.println("Warning: In method readFile(), could not find the file");
         }
-        catch(Exception e){
-            System.out.println("Warning: Exception in data formatting");
+        catch(Exception e) {
+            System.out.println("Warning: In method readFile(), error in data formatting");
         }
-
     }
 
 
-    /**
+    /*************************************************************************************
+     * listFolders() method takes a directory path as argument and lists all the folder
+     * under the given folder path.
+     * RETURN --> list of absolute folder paths.
+     *************************************************************************************/
+    private List<String> listFolders(String directoryPath) {
+        List<String> foldersPath = new ArrayList<>();
+        try {
+            File directory = new File(directoryPath);
+            //get all the folders from a directory
+            File[] folderList = directory.listFiles();
+            if(folderList != null) {
+                for (File file : folderList) {
+                    if (file.isDirectory()) {
+                        foldersPath.add(file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        catch(Exception e) {
+            System.out.println("Warning: In method listFolders(), error in listing the folders under: " + directoryPath);
+        }
+        return foldersPath;
+    }
+
+
+    /*************************************************************************************
+     * listFiles() method takes a folder path as argument and lists all the files under
+     * the given folder path.
+     * RETURN --> list of absolute file paths.
+     **************************************************************************************/
+    private List<String> listFiles(String folderPath) {
+
+        List<String> filesPath = new ArrayList<>();
+        try {
+            File directory = new File(folderPath);
+            //get all the files from a folder
+            File[] filesList = directory.listFiles();
+            if(filesList != null) {
+                for (File file : filesList) {
+                    if (file.isFile() && FilenameUtils.getExtension(file.toString()).equalsIgnoreCase("csv")) {
+                        filesPath.add(file.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        catch(Exception e) {
+            System.out.println("Warning: In method listFiles(), error in listing the files under: " + folderPath);
+        }
+        return filesPath;
+    }
+
+
+    /**************************************************************************************
      * Main()
-     */
+     **************************************************************************************/
     public static void main(String[] args) throws IOException {
-        SwitchboardDialogueDB swdaObj = new SwitchboardDialogueDB();
-        swdaObj.readFile("/home/vish/Downloads/swda/swda/sw00utt/sw_0001_4325.utt.csv");
-    }
 
+        SwitchboardDialogueDB switchboardDialogueDBObject = new SwitchboardDialogueDB();
+        Files.createDirectories(switchboardDialogueDBObject.addToDirectory);
+        switchboardDialogueDBObject.foldersList = switchboardDialogueDBObject.listFolders(switchboardDialogueDBObject.directoryName);
+        for (String folderPath: switchboardDialogueDBObject.foldersList) {
+            switchboardDialogueDBObject.filesList = switchboardDialogueDBObject.listFiles(folderPath);
+            for (String filePath: switchboardDialogueDBObject.filesList) {
+                switchboardDialogueDBObject.readFile(filePath, folderPath);
+            }
+        }
+
+    }
 }
