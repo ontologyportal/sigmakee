@@ -7,9 +7,12 @@ import java.util.List;
 /**
  * Created by charlescostello on 1/4/17.
  * Class to parse Cornell Movie Dialog file and write to new file
- * Data source: https://www.cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html
+ * Data source: cs.cornell.edu/~cristian/Cornell_Movie-Dialogs_Corpus.html
  */
 public class CornellMovieDialogs {
+
+    private String rawFileName = "/Users/charlescostello/CloudMinds/data/cornellMovieDialogs/movie_lines.txt";
+    private String parsedFileName = "/Users/charlescostello/CloudMinds/data/cornellMovieDialogs/movie_lines_parsed.txt";
 
     /****************************************************************
      * @param parsedLines are the parsed dialog lines
@@ -66,14 +69,15 @@ public class CornellMovieDialogs {
      * @param args command line arguments
      */
     public static void main(String[] args) {
-        // Read file and convert to list of raw lines
         CornellMovieDialogs cornellMovieDialogs = new CornellMovieDialogs();
-        List<String> rawLines = cornellMovieDialogs.readFile("CornellMovieDialogs/movie_lines.txt");
+
+        // Read file and convert to list of raw lines
+        List<String> rawLines = cornellMovieDialogs.readFile(cornellMovieDialogs.rawFileName);
 
         // Parse raw lines
         List<String> parsedLines = cornellMovieDialogs.parseLines(rawLines);
 
         // Write parsed lines to new file
-        cornellMovieDialogs.writeFile(parsedLines, "CornellMovieDialogs/movie_lines_parsed.txt");
+        cornellMovieDialogs.writeFile(parsedLines, cornellMovieDialogs.parsedFileName);
     }
 }

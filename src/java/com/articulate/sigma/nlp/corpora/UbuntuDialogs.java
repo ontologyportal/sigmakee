@@ -1,14 +1,21 @@
 package com.articulate.sigma.nlp.corpora;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by charlescostello on 1/4/17.
  * Class to parse Ubuntu dialog files and write to new files
- * Data source: http://cs.mcgill.ca/~jpineau/datasets/ubuntu-corpus-1.0/
+ * Data source: github.com/rkadlec/ubuntu-ranking-dataset-creator
  */
 public class UbuntuDialogs {
+
+    private String rawFileName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogs/521/1.tsv";
+    private String parsedFileName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogs/521/1_parsed.txt";
+
     /****************************************************************
      * @param parsedLines are the parsed dialog lines
      */
@@ -21,7 +28,24 @@ public class UbuntuDialogs {
      * @return a list of parsed dialog lines
      */
     private List<String> parseLines(List<String> rawLines) {
-        return new ArrayList<>();
+        List<String> parsedLines = new ArrayList<>();
+        StringBuilder buffer = new StringBuilder();
+        String currentUser = "";
+
+        for (String line: rawLines) {
+            String[] splitString = line.split("\t");
+
+            if (!splitString[1].equals(currentUser)) {
+                if (buffer.length() > 0) parsedLines.add(buffer.toString().trim());
+                buffer.setLength(0);
+                currentUser = splitString[1];
+            }
+
+            buffer.append(splitString[3].trim());
+            buffer.append(" ");
+        }
+
+        return parsedLines;
     }
 
 
@@ -30,21 +54,42 @@ public class UbuntuDialogs {
      * @return a list of raw dialog lines
      */
     private List<String> readFile(String fileName) {
-        return new ArrayList<>();
+        List<String> rawLines = new ArrayList<>();
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                rawLines.add(line);
+            }
+        } catch (IOException e) {
+            System.out.println("Error with" + fileName + ": " + e);
+            e.printStackTrace();
+        }
+
+        return rawLines;
     }
 
     /****************************************************************
      * @param args command line arguments
      */
     public static void main(String[] args) {
+        UbuntuDialogs ubuntuDialogs = new UbuntuDialogs();
+
         // Read file and convert to list of raw lines
-        UbuntuDialogs cornellMovieDialogs = new UbuntuDialogs();
-        List<String> lines = cornellMovieDialogs.readFile("UbuntuDialogs/movie_lines.txt");
+        List<String> rawLines = ubuntuDialogs.readFile(ubuntuDialogs.rawFileName);
 
         // Parse raw lines
-        List<String> parsedLines = cornellMovieDialogs.parseLines(lines);
+        List<String> parsedLines = ubuntuDialogs.parseLines(rawLines);
+
+        parsedLines.forEach(System.out::println);
+
+//        for (int i = 0; i < rawLines.size(); i++) {
+//            System.out.println(rawLines.get(i));
+//            System.out.println(parsedLines.get(i));
+//            System.out.println();
+//        }
 
         // Write parsed lines to new file
-        cornellMovieDialogs.writeFile(parsedLines, "UbuntuDialogs/movie_lines_parsed.txt");
+//        ubuntuDialogs.writeFile(parsedLines, ubuntuDialogs.parsedFileName);
     }
 }
