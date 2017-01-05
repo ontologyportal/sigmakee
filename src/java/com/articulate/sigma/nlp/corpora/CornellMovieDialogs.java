@@ -68,10 +68,10 @@ public class CornellMovieDialogs {
     public static void main(String[] args) {
         // Read file and convert to list of raw lines
         CornellMovieDialogs cornellMovieDialogs = new CornellMovieDialogs();
-        List<String> lines = cornellMovieDialogs.readFile("CornellMovieDialogs/movie_lines.txt");
+        List<String> rawLines = cornellMovieDialogs.readFile("CornellMovieDialogs/movie_lines.txt");
 
         // Parse raw lines
-        List<String> parsedLines = cornellMovieDialogs.parseLines(lines);
+        List<String> parsedLines = cornellMovieDialogs.parseLines(rawLines);
 
         // Write parsed lines to new file
         cornellMovieDialogs.writeFile(parsedLines, "CornellMovieDialogs/movie_lines_parsed.txt");
