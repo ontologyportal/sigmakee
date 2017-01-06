@@ -46,7 +46,6 @@ public class UbuntuDialogs {
         }
     }
 
-
     /****************************************************************
      * @param fileName is the name of Ubuntu dialog file
      * @return a list of raw dialog lines

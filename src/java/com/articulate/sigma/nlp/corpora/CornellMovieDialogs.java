@@ -57,7 +57,6 @@ public class CornellMovieDialogs {
         return parsedLines;
     }
 
-
     /****************************************************************
      * @param fileName is the name of Cornell Movie Dialog file
      * @return a list of raw dialog lines
