@@ -8,13 +8,12 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * This code is copyright IPsoft 2015.
+ * This code is copyright CloudMinds 2017.
  * This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
  * Users of this code also consent, by use of this code, to credit Articulate Software
  * and Teknowledge in any writings, briefings, publications, presentations, or
  * other representations of any software which incorporates, builds on, or uses this
  * code.  Please cite the following article in any publication with references:
- *
  * Pease, A., (2003). The Sigma Ontology Development Environment,
  * in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  * August 9, Acapulco, Mexico.
@@ -46,7 +45,6 @@ public class UbuntuDialogs {
             e.printStackTrace();
         }
     }
-
 
     /****************************************************************
      * @param fileName is the name of Ubuntu dialog file
@@ -104,7 +102,6 @@ public class UbuntuDialogs {
                     // Create new directory for parsed files
                     File parsedDirectory = new File(parsedDirectoryName + directory.getName() + "/");
                     parsedDirectory.mkdir();
-                    System.out.println(parsedDirectory.getAbsoluteFile());
 
                     // Parse and write each file
                     for (File file: files) {
@@ -123,10 +120,11 @@ public class UbuntuDialogs {
      */
     public static void main(String[] args) {
 
+        // Instantiate class
         UbuntuDialogs ubuntuDialogs = new UbuntuDialogs();
 
+        // Get paths from properties file
         Properties prop = new Properties();
-
         try {
             InputStream input = new FileInputStream("corpora.properties");
             prop.load(input);
@@ -138,6 +136,7 @@ public class UbuntuDialogs {
         ubuntuDialogs.rawDirectoryName = prop.getProperty("ubuntuRawDirectoryName");
         ubuntuDialogs.parsedDirectoryName = prop.getProperty("ubuntuParsedDirectoryName");
 
+        // Run functionality
         ubuntuDialogs.parseAllFiles();
     }
 }
