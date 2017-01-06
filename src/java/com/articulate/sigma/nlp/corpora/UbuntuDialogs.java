@@ -5,16 +5,29 @@ import org.apache.commons.io.FilenameUtils;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
+ * This code is copyright IPsoft 2015.
+ * This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+ * Users of this code also consent, by use of this code, to credit Articulate Software
+ * and Teknowledge in any writings, briefings, publications, presentations, or
+ * other representations of any software which incorporates, builds on, or uses this
+ * code.  Please cite the following article in any publication with references:
+ *
+ * Pease, A., (2003). The Sigma Ontology Development Environment,
+ * in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+ * August 9, Acapulco, Mexico.
+ *
  * Created by charlescostello on 1/4/17.
  * Class to parse Ubuntu dialog files and write to new files
  * Data source: github.com/rkadlec/ubuntu-ranking-dataset-creator
  */
 public class UbuntuDialogs {
 
-    private String rawDirectoryName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogs";
-    private String parsedDirectoryName = "/Users/charlescostello/CloudMinds/data/ubuntuDialogsParsed/";
+
+    private String rawDirectoryName;
+    private String parsedDirectoryName;
 
     /****************************************************************
      * @param parsedLines are the parsed dialog lines
@@ -51,6 +64,7 @@ public class UbuntuDialogs {
 
             while ((line = bufferedReader.readLine()) != null) {
                 // Split string on tab and add dialog to list, alternating based on the user writing dialog
+                // One linguistic term per line
                 String[] splitString = line.split("\t");
                 if (splitString.length == 4) {
                     if (!splitString[1].equals(currentUser)) {
@@ -110,6 +124,20 @@ public class UbuntuDialogs {
     public static void main(String[] args) {
 
         UbuntuDialogs ubuntuDialogs = new UbuntuDialogs();
+
+        Properties prop = new Properties();
+
+        try {
+            InputStream input = new FileInputStream("corpora.properties");
+            prop.load(input);
+        }
+        catch (IOException e) {
+            System.out.println("Problem loading resource file " + e);
+            e.printStackTrace();
+        }
+        ubuntuDialogs.rawDirectoryName = prop.getProperty("ubuntuRawDirectoryName");
+        ubuntuDialogs.parsedDirectoryName = prop.getProperty("ubuntuParsedDirectoryName");
+
         ubuntuDialogs.parseAllFiles();
     }
 }
