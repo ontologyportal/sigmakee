@@ -6,13 +6,12 @@ import java.util.List;
 import java.util.Properties;
 
 /**
- * This code is copyright IPsoft 2015.
+ * This code is copyright CloudMinds 2017.
  * This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
  * Users of this code also consent, by use of this code, to credit Articulate Software
  * and Teknowledge in any writings, briefings, publications, presentations, or
  * other representations of any software which incorporates, builds on, or uses this
  * code.  Please cite the following article in any publication with references:
- *
  * Pease, A., (2003). The Sigma Ontology Development Environment,
  * in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  * August 9, Acapulco, Mexico.
@@ -88,9 +87,11 @@ public class CornellMovieDialogs {
      */
     public static void main(String[] args) {
 
+        // Instantiate class
         CornellMovieDialogs cornellMovieDialogs = new CornellMovieDialogs();
-        Properties prop = new Properties();
 
+        // Get paths from properties file
+        Properties prop = new Properties();
         try {
             InputStream input = new FileInputStream("corpora.properties");
             prop.load(input);
@@ -99,7 +100,6 @@ public class CornellMovieDialogs {
             System.out.println("Problem loading resource file " + e);
             e.printStackTrace();
         }
-
         String rawFileName = prop.getProperty("cornellRawFileName");
         String parsedFileName = prop.getProperty("cornellParsedFileName");
 
