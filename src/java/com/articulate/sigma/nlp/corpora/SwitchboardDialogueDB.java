@@ -4,16 +4,11 @@ import com.opencsv.CSVReader;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.File;
+import java.io.*;
 import java.lang.String;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.file.*;
+import java.util.*;
 
 /*
 Copyright 2017 Cloudminds Technology, Inc
@@ -42,8 +37,8 @@ MA  02111-1307 USA
 public class SwitchboardDialogueDB {
 
     // Global Properties for SwitchDialogueDB Object.
-    private String directoryName = "/home/vish/CloudMinds/ChatBot/swda/swda/";
-    private Path addToDirectory = Paths.get("/home/vish/CloudMinds/ChatBot/swda_parsed/");
+    private String directoryName = "";
+    private Path addToDirectory;
     private List<String> foldersList = new ArrayList<>();
     private List<String> filesList = new ArrayList<>();
 
@@ -176,6 +171,20 @@ public class SwitchboardDialogueDB {
     public static void main(String[] args) throws IOException {
 
         SwitchboardDialogueDB switchboardDialogueDBObject = new SwitchboardDialogueDB();
+        Properties prop = new Properties();
+
+        try {
+            InputStream input = new FileInputStream("corpora.properties");
+            prop.load(input);
+        }
+        catch (IOException e) {
+            System.out.println("Problem loading resource file " + e);
+            e.printStackTrace();
+        }
+
+        switchboardDialogueDBObject.directoryName = prop.getProperty("switchboardDialogueDirectoryName");
+        switchboardDialogueDBObject.addToDirectory = Paths.get(prop.getProperty("switchboardDialogueParsedDirectoryName"));
+
         Files.createDirectories(switchboardDialogueDBObject.addToDirectory);
         switchboardDialogueDBObject.foldersList = switchboardDialogueDBObject.listFolders(switchboardDialogueDBObject.directoryName);
         for (String folderPath: switchboardDialogueDBObject.foldersList) {
