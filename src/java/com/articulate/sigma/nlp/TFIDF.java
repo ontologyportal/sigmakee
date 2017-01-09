@@ -26,16 +26,15 @@ Author: Adam Pease apease@articulatesoftware.com
 
 /*******************************************************************/
 
+import com.articulate.sigma.utils.ProgressPrinter;
+import com.google.common.io.Resources;
+
 import java.io.*;
 import java.net.URL;
 import java.util.*;
-import java.util.function.Function;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import com.articulate.sigma.utils.ProgressPrinter;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -67,7 +66,11 @@ public class TFIDF {
       // when true, indicates that responses should be the line after the matched line
     private boolean alternating = false;
 
-    private static boolean asResource = false; // use JUnit resource path for input file
+      // use JUnit resource path for input file
+    private static boolean asResource = false;
+
+      // flag for development mode (use Scanner instead of console for input)
+    private static boolean isDevelopment = false;
 
       // similarity of each document to the query (index -1)
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
@@ -806,18 +809,27 @@ public class TFIDF {
             cb.readFile(fname);
         }
 
-        System.out.println("Hi, I'm a chatbot, tell/ask me something");
-        boolean done = false;
-        while (!done) {
-            Console c = System.console();
-            if (c == null) {
-                System.err.println("No console.");
-                System.exit(1);
+        System.out.println("Hi, I'm a chatbot, tell/ask me something. Type 'quit' to exit");
+
+        if (isDevelopment) {
+            Scanner scanner = new Scanner(System.in);
+            while (true) {
+                String input = scanner.nextLine();
+                if (input.toLowerCase().trim().equals("quit")) break;
+                System.out.println(cb.matchBestInput(input));
             }
-            String input = c.readLine("> ");
-            //boolean question = input.trim().endsWith("?");
-            //System.out.println(cb.matchInput(input,10));
-            System.out.println(cb.matchBestInput(input));
+        }
+        else {
+            while (true) {
+                Console c = System.console();
+                if (c == null) {
+                    System.err.println("No console.");
+                    System.exit(1);
+                }
+                String input = c.readLine("> ");
+                if (input.toLowerCase().trim().equals("quit")) System.exit(1);
+                System.out.println(cb.matchBestInput(input));
+            }
         }
     }
 
@@ -860,11 +872,25 @@ public class TFIDF {
         if (args != null && args.length > 0 && args[0].equals("-h")) {
             System.out.println("Usage: ");
             System.out.println("TFIDF -h         % show this help info");
-            System.out.println("      -f fname   % use a particular input file");
+            System.out.println("      -f fname   % run program using a particular input file");
+            System.out.println("      -d fname   % development mode using a particular input file");
+            System.out.println("      -d -s      % development mode using s3 to load input files");
         }
         else if (args != null && args.length > 1 && args[0].equals("-f")) {
             asResource = false;
+            isDevelopment = false;
             run(args[1]);
+        }
+        else if (args != null && args.length > 1 && args[0].equals("-d")) {
+            asResource = false;
+            isDevelopment = true;
+            if (args[1].equals("-s")) {
+                String newFileName = TFIDFUtil.readS3File("Corpora/UbuntuDialogs/80/3_parsed.txt");
+                run(newFileName);
+            }
+            else {
+                run(args[1]);
+            }
         }
         else
             staticTest();

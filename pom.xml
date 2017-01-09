@@ -205,6 +205,11 @@
 			<version>3.5.2</version>
 			<classifier>models</classifier>
 		</dependency>
+		<dependency>
+			<groupId>com.amazonaws</groupId>
+			<artifactId>aws-java-sdk-s3</artifactId>
+			<version>1.11.76</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<sourceDirectory>${src.dir}</sourceDirectory>
