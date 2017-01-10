@@ -638,13 +638,13 @@ public class TFIDF {
         return profanityFilter(result);
     }
 
+    //region<Vish. Edited: 9-Jan-2016>
     /** *************************************************************************************************
      * This method takes the best result matched by the ChatBot from the method matchBestInput() as input
      * and filters any profane word(s) found in the result before responding to a query.
      */
     private ArrayList<String> profanityFilter(ArrayList<String> result) {
 
-        System.out.println(result);
         ArrayList<String> filteredResult = new ArrayList<>();
         List<String> profanityList = new ArrayList<>();
         String line;
@@ -673,6 +673,7 @@ public class TFIDF {
         }
         return filteredResult;
     }
+    //endregion
 
     /** *************************************************************
      * Rank only a set of specified document IDs against a question
