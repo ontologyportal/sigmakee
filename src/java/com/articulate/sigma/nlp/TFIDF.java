@@ -26,6 +26,7 @@ Author: Adam Pease apease@articulatesoftware.com
 
 /*******************************************************************/
 
+//import antlr.StringUtils;
 import com.articulate.sigma.utils.ProgressPrinter;
 import com.google.common.io.Resources;
 
@@ -35,6 +36,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -631,7 +635,45 @@ public class TFIDF {
             for (int j = 0; j < temp.size(); j++)
                 result.add(lines.get(temp.get(j).intValue()));
         }
-        return result;
+        return profanityFilter(result);
+    }
+
+    /** *************************************************************************************************
+     * This method takes the best result matched by the ChatBot from the method matchBestInput() as input
+     * and filters any profane word(s) found in the result before responding to a query.
+     */
+    public ArrayList<String> profanityFilter(ArrayList<String> result) {
+
+        ArrayList<String> filteredResult = new ArrayList<>();
+        List<String> profanityList = new ArrayList<>();
+        String line;
+        Properties prop = new Properties();
+
+        try {
+            InputStream input = new FileInputStream("corpora.properties");
+            prop.load(input);
+            String profanityFile = prop.getProperty("profanityFilterDirectoryName");
+            String str = String.join(",", result);
+            BufferedReader br = new BufferedReader(new FileReader(profanityFile));
+
+            while ((line = br.readLine()) != null) {
+                profanityList.add(line);
+            }
+            for (String profaneWord: profanityList) {
+                // in the replaceAll() method call, the regEx searches for any spaces before and after the profane word
+                // along with the punctuation marks. (?i) nullifies any case sensitive string matching.
+                str  = str.replaceAll("[( )](?i)"+profaneWord+"(.?)", " <censored>");
+            }
+            filteredResult = new ArrayList<>(Arrays.asList(str.split(",")));
+            return filteredResult;
+        }
+        catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+        return filteredResult;
     }
 
     /** *************************************************************
@@ -792,6 +834,7 @@ public class TFIDF {
     private static void run(String fname) throws IOException {
 
         List<String> documents = null;
+
         try {
             if (asResource)
                 documents = TextFileUtil.readLines(fname, false);
