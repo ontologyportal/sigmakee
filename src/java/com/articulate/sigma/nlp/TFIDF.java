@@ -642,8 +642,9 @@ public class TFIDF {
      * This method takes the best result matched by the ChatBot from the method matchBestInput() as input
      * and filters any profane word(s) found in the result before responding to a query.
      */
-    public ArrayList<String> profanityFilter(ArrayList<String> result) {
+    private ArrayList<String> profanityFilter(ArrayList<String> result) {
 
+        System.out.println(result);
         ArrayList<String> filteredResult = new ArrayList<>();
         List<String> profanityList = new ArrayList<>();
         String line;
@@ -662,13 +663,10 @@ public class TFIDF {
             for (String profaneWord: profanityList) {
                 // in the replaceAll() method call, the regEx searches for any spaces before and after the profane word
                 // along with the punctuation marks. (?i) nullifies any case sensitive string matching.
-                str  = str.replaceAll("[( )](?i)"+profaneWord+"(.?)", " <censored>");
+                str  = str.replaceAll("[^\\\\s\\\\w( )]*(?i)"+profaneWord+"[[^a-zA-Z0-9\\s][ ][^a-zA-Z0-9\\s]]", " <censored> ");
             }
             filteredResult = new ArrayList<>(Arrays.asList(str.split(",")));
             return filteredResult;
-        }
-        catch (FileNotFoundException e) {
-            e.printStackTrace();
         }
         catch (IOException e) {
             e.printStackTrace();
