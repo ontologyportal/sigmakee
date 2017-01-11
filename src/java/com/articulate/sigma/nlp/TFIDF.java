@@ -26,7 +26,6 @@ Author: Adam Pease apease@articulatesoftware.com
 
 /*******************************************************************/
 
-//import antlr.StringUtils;
 import com.articulate.sigma.utils.ProgressPrinter;
 import com.google.common.io.Resources;
 
@@ -36,9 +35,6 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 
@@ -75,6 +71,8 @@ public class TFIDF {
 
       // flag for development mode (use Scanner instead of console for input)
     private static boolean isDevelopment = false;
+
+    private static boolean isExcludingNegativeSeniment = false;
 
       // similarity of each document to the query (index -1)
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
@@ -605,14 +603,12 @@ public class TFIDF {
      * "I don't know".  Iterate the number of clusters until the top
      * cluster is no more than 3.
      */
-    public ArrayList<String> matchBestInput(String input) {
+    public String matchBestInput(String input) {
         
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         TreeMap<Float,ArrayList<Integer>> sortedSim = matchInputFull(input);
-        if (sortedSim == null || sortedSim.keySet() == null || 
-                sortedSim.keySet().size() < 1 || sortedSim.lastKey() < .1) {
-            result.add("I don't know");
-            return result;
+        if (sortedSim == null || sortedSim.keySet().size() < 1 || sortedSim.lastKey() < .1) {
+            return "I don't know";
         }
         Object[] floats = sortedSim.keySet().toArray();
         int numClusters = 3;
@@ -635,7 +631,22 @@ public class TFIDF {
             for (int j = 0; j < temp.size(); j++)
                 result.add(lines.get(temp.get(j).intValue()));
         }
-        return profanityFilter(result);
+
+        ArrayList<String> resultNoProfanity = profanityFilter(result);
+
+        ArrayList<String> rankedResponses = rankResponses(resultNoProfanity);
+
+        return chooseBestResponse(rankedResponses);
+    }
+
+    private ArrayList<String> rankResponses(ArrayList<String> responses) {
+        // Create ranking based on sentiment, history, etc.
+        return responses;
+    }
+
+    private String chooseBestResponse(ArrayList<String> responses) {
+        // Choose best response based on some combination of rankings
+        return responses.get(0);
     }
 
     //region<Vish. Edited: 9-Jan-2016>
@@ -904,7 +915,7 @@ public class TFIDF {
         System.out.println(cb.removeStopWords(s1));
         System.out.println(cb.splitToArrayList(s1));
     }
-    
+
     /** *************************************************************
      * Run a series of tests containing a filename,
      * a query and an expected answer.
