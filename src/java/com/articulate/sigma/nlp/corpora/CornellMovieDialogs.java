@@ -27,9 +27,8 @@ public class CornellMovieDialogs {
      * Writes parsed lines to new file
      */
     private void writeFile(List<String> parsedLines, String fileName) {
-
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
-            for (String parsedLine: parsedLines) {
+            for (String parsedLine : parsedLines) {
                 bufferedWriter.write(parsedLine);
                 bufferedWriter.newLine();
             }
@@ -49,7 +48,7 @@ public class CornellMovieDialogs {
 
         List<String> parsedLines = new ArrayList<>();
 
-        for (String line: rawLines) {
+        for (String line : rawLines) {
             String[] splitString = line.split("\\+\\+\\+\\$\\+\\+\\+");
             parsedLines.add(splitString[splitString.length - 1].trim());
         }
