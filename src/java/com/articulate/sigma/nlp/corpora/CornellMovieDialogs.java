@@ -27,6 +27,7 @@ public class CornellMovieDialogs {
      * Writes parsed lines to new file
      */
     private void writeFile(List<String> parsedLines, String fileName) {
+
         try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(fileName))) {
             for (String parsedLine : parsedLines) {
                 bufferedWriter.write(parsedLine);
