@@ -11,8 +11,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 /**
  * This code is copyright CloudMinds 2017.
@@ -60,7 +62,8 @@ public class NPSChatCorpus {
     private List<String> parseFile(String fileName) {
 
         List<String> lines = new ArrayList<>();
-        System.out.println(fileName);
+        StringBuilder buffer = new StringBuilder();
+        String currentUser = "";
 
         DocumentBuilder builder;
         DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
@@ -69,45 +72,29 @@ public class NPSChatCorpus {
             Document document = builder.parse(fileName);
             document.getDocumentElement().normalize();
             NodeList posts = document.getElementsByTagName("Post");
+
             for (int i = 0; i < posts.getLength(); i++) {
-                String text = posts.item(i).getFirstChild().getNodeValue();
-                int user = Integer.parseInt(((DeferredElementImpl) posts.item(i)).getAttribute("user").split("sUser")[1]);
-                System.out.println(user + ": " + text);
+                String text = Arrays.stream(posts.item(i).getFirstChild().getNodeValue().split(" ")).filter(w -> !w.contains("sUser")).collect(Collectors.joining(" "));
+                text = text.contains(".ACTION") ? "<" + text.substring(8, (text.charAt(text.length() - 1) == '.') ? text.length() - 1 : text.length()) + ">" : text;
+
+                if (!text.trim().equals("PART") && !text.trim().equals("JOIN")) {
+                    String user = ((DeferredElementImpl) posts.item(i)).getAttribute("user").split("sUser")[1];
+                    if (!user.equals(currentUser)) {
+                        if (buffer.toString().trim().length() > 0) lines.add(buffer.toString().trim());
+                        buffer.setLength(0);
+                        currentUser = user;
+                    }
+
+                    buffer.append(text.trim());
+                    buffer.append(" ");
+                }
             }
+
+            if (buffer.length() > 0) lines.add(buffer.toString().trim());
         }
         catch (ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();
         }
-
-
-//        StringBuilder buffer = new StringBuilder();
-//        String currentUser = "";
-//
-//        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(fileName))) {
-//            String line;
-//
-//            while ((line = bufferedReader.readLine()) != null) {
-//                // Split string on tab and add dialog to list, alternating based on the user writing dialog
-//                // One linguistic term per line
-//                String[] splitString = line.split("\t");
-//                if (splitString.length == 4) {
-//                    if (!splitString[1].equals(currentUser)) {
-//                        if (buffer.length() > 0) lines.add(buffer.toString().trim());
-//                        buffer.setLength(0);
-//                        currentUser = splitString[1];
-//                    }
-//
-//                    buffer.append(splitString[3].trim());
-//                    buffer.append(" ");
-//                }
-//            }
-//
-//            if (buffer.length() > 0) lines.add(buffer.toString().trim());
-//        }
-//        catch (IOException e) {
-//            System.out.println("Error with" + fileName + ": " + e);
-//            e.printStackTrace();
-//        }
 
         return lines;
     }
@@ -125,6 +112,7 @@ public class NPSChatCorpus {
             for (File file : files) {
                 if (FilenameUtils.getExtension(file.getName()).equals("xml")) {
                     List<String> parsedLines = parseFile(file.getAbsolutePath());
+                    parsedLines.forEach(System.out::println);
 //                String parsedFilePath = parsedDirectoryName + directory.getName() + "/" + FilenameUtils.getBaseName(file.getAbsolutePath()) + "_parsed.txt";
 //                writeFile(parsedLines, parsedFilePath);
                 }
