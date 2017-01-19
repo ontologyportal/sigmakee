@@ -112,9 +112,7 @@ public class NPSChatCorpus {
             for (File file : files) {
                 if (FilenameUtils.getExtension(file.getName()).equals("xml")) {
                     List<String> parsedLines = parseFile(file.getAbsolutePath());
-                    parsedLines.forEach(System.out::println);
-//                String parsedFilePath = parsedDirectoryName + directory.getName() + "/" + FilenameUtils.getBaseName(file.getAbsolutePath()) + "_parsed.txt";
-//                writeFile(parsedLines, parsedFilePath);
+                    writeFile(parsedLines, parsedDirectoryName + file.getName());
                 }
             }
         }
