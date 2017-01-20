@@ -145,7 +145,7 @@ public class SwitchboardDialogueDB {
      * RETURN --> list of absolute file paths.
      */
     private List<String> listFiles(String folderPath) {
-
+        
         List<String> filesPath = new ArrayList<>();
         try {
             File directory = new File(folderPath);
@@ -166,7 +166,7 @@ public class SwitchboardDialogueDB {
     }
 
     /**************************************************************************************
-     * Main()
+     * main() instantiates class and runs functionality
      */
     public static void main(String[] args) throws IOException {
 
