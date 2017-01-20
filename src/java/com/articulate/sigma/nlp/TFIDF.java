@@ -26,8 +26,10 @@ Author: Adam Pease apease@articulatesoftware.com
 
 /*******************************************************************/
 
+import com.articulate.sigma.DB;
 import com.articulate.sigma.utils.ProgressPrinter;
 import com.google.common.io.Resources;
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.*;
 import java.net.URL;
@@ -72,7 +74,11 @@ public class TFIDF {
       // flag for development mode (use Scanner instead of console for input)
     private static boolean isDevelopment = false;
 
-    private static boolean isExcludingNegativeSeniment = false;
+    // flag for excluding negative sentiment responses
+    private static boolean isExcludingNegativeSentiment = false;
+
+    // flag for choosing responses that match the question's sentiment
+    private static boolean isMatchingSentiment = false;
 
       // similarity of each document to the query (index -1)
     private HashMap<Integer,Float> docSim = new HashMap<Integer,Float>();
@@ -634,18 +640,42 @@ public class TFIDF {
 
         ArrayList<String> resultNoProfanity = profanityFilter(result);
 
-        ArrayList<String> rankedResponses = rankResponses(resultNoProfanity);
+        ArrayList<String> rankedResponses = rankResponses(resultNoProfanity, input);
 
         return chooseBestResponse(rankedResponses);
     }
 
-    private ArrayList<String> rankResponses(ArrayList<String> responses) {
-        // Create ranking based on sentiment, history, etc.
-        return responses;
+    private boolean compareSentiment(int first, int second) {
+
+        return first > 0 && second > 0 || first < 0 && second < 0 || first == 0 && second == 0;
+    }
+
+    private ArrayList<String> rankResponsesOnSentiment(ArrayList<String> responses, String input) {
+
+        if (DB.sentiment.keySet().size() < 1)
+            DB.readSentimentArray();
+
+        if (isExcludingNegativeSentiment)
+            responses = responses.stream().filter(r -> DB.computeSentiment(r) >= 0).collect(Collectors.toCollection(ArrayList::new));
+        else if (isMatchingSentiment)
+            responses = responses.stream().filter(r -> compareSentiment(DB.computeSentiment(r), DB.computeSentiment(input))).collect(Collectors.toCollection(ArrayList::new));
+
+        return responses.size() > 0 ? responses : new ArrayList<>(Collections.singletonList("I don't know"));
+    }
+
+    private ArrayList<String> rankResponses(ArrayList<String> responses, String input) {
+
+        ArrayList<String> rankedResponses = responses;
+
+        if (isExcludingNegativeSentiment || isMatchingSentiment)
+            rankedResponses = rankResponsesOnSentiment(rankedResponses, input);
+
+        return rankedResponses;
     }
 
     private String chooseBestResponse(ArrayList<String> responses) {
-        // Choose best response based on some combination of rankings
+
+        // TODO: Choose best response based on some combination of rankings
         return responses.get(0);
     }
 
@@ -928,15 +958,21 @@ public class TFIDF {
             System.out.println("      -f fname   % run program using a particular input file");
             System.out.println("      -d fname   % development mode using a particular input file");
             System.out.println("      -d -s      % development mode using s3 to load input files");
+            System.out.println("adding -snn      % filters responses by non-negative sentiment");
+            System.out.println("adding -sm       % filters responses by matching sentiment");
         }
         else if (args != null && args.length > 1 && args[0].equals("-f")) {
             asResource = false;
             isDevelopment = false;
+            if (ArrayUtils.contains(args, "-snn")) isExcludingNegativeSentiment = true;
+            if (ArrayUtils.contains(args, "-sm")) isMatchingSentiment = true;
             run(args[1]);
         }
         else if (args != null && args.length > 1 && args[0].equals("-d")) {
             asResource = false;
             isDevelopment = true;
+            if (ArrayUtils.contains(args, "-snn")) isExcludingNegativeSentiment = true;
+            if (ArrayUtils.contains(args, "-sm")) isMatchingSentiment = true;
             if (args[1].equals("-s")) {
                 String newFileName = TFIDFUtil.readS3File("Corpora/UbuntuDialogs/80/3_parsed.txt");
                 run(newFileName);
