@@ -1912,12 +1912,13 @@ public class WordNetUtilities {
      */
     public static void main (String[] args) {
 
-        //KBmanager.getMgr().initializeOnce();
-        //String synset = "108655464";
-        //System.out.println(getAllHyponyms(synset));
-        //System.out.println(collapseSenses());
-        //generateHyponymSets("/home/apease/IPsoft/classifierSynsets.txt");
-        testIsValidKey();
+        KBmanager.getMgr().initializeOnce();
+        String synset = "108655464";
+        System.out.println(getAllHyponyms(synset));
+        System.out.println(collapseSenses());
+        if (args.length > 0)
+            generateHyponymSets(args[0]);
+        //testIsValidKey();
     }
 }
 
