@@ -418,7 +418,34 @@ public class KButilities {
             System.out.println(e.getMessage());
         }
     }
-    
+
+    /** *************************************************************
+     * Count the number of words in all the strings in a knowledge base
+     */
+    public static void countStringWords(KB kb) {
+
+        int total = 0;
+        System.out.println("INFO in KB.countStringWords(): counting words");
+        Iterator<String> it = kb.formulas.keySet().iterator();
+        while (it.hasNext()) {
+            String s = it.next();
+            Pattern p = Pattern.compile("\"(.+)\"");
+            Matcher m = p.matcher(s);
+            boolean b = m.find();
+            if (b) {
+                String quoted = m.group(1);
+                String[] ar = quoted.split(" ");
+                for (int i = 0; i < ar.length-1; i++) {
+                    if (ar[i].matches("\\w+"))
+                        total++;
+                }
+                System.out.println(quoted);
+                System.out.println(ar.length);
+            }
+        }
+        System.out.println(total);
+    }
+
     /** *************************************************************
      */
     public static void main(String[] args) {
@@ -433,8 +460,9 @@ public class KButilities {
         //countRelations(kb);
         //checkURLs(kb);
         //validatePictureList();
-        for (String s : generateSemanticNetwork(kb))
-            System.out.println(s);
+        //for (String s : generateSemanticNetwork(kb))
+        //    System.out.println(s);
+        countStringWords(kb);
     }
 }
 
