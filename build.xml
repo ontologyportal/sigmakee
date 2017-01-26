@@ -108,9 +108,6 @@
 		<doctitle>Sigma API Specification</doctitle>
 		<header><![CDATA[<b>Sigma API Specification</b>]]></header>
 		<group title="Sigma" packages="com.articulate.sigma.*"/>
-		<group title="Sigma NLP" packages="com.articulate.sigma.nlp.*"/>
-		<group title="Sigma Semantic Rewriting" packages="com.articulate.sigma.semRewrite.*"/>
-		<group title="Sigma Date Number Units processing" packages="com.articulate.sigma.semRewrite.datesandnumber.*"/>
 		<group title="Sigma TPTPWorld" packages="TPTPWorld.*"/>
 		<group title="Sigma TPTP Parser" packages="tptp_parser.*"/>
 	</javadoc>
@@ -304,9 +301,6 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
-    <pathelement path="src/java/com/articulate/sigma/nlp"/>
-    <pathelement path="src/java/com/articulate/sigma/semRewrite"/>
-    <pathelement path="src/java/com/articulate/sigma/semRewrite/datesandnumber"/>
 	<pathelement path="test/corpus/java/com/articulate/sigma"/>
 	<pathelement path="test/unit/java/com/articulate/sigma"/>
 	<pathelement path="test/integration/java/com/articulate/sigma"/>

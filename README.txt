@@ -43,6 +43,7 @@ assumes that you start from your home directory and are happy
 with having directories created there. Before you can run Sigma you'll
 also need to modify /home/theuser/.sigmakee/KBs/config.xml to conform to
 your local paths.
+If you are running tomcat locally, also change the port value to 8080
 
 mkdir workspace
 mkdir Programs
@@ -70,7 +71,7 @@ mkdir .sigmakee
 cd .sigmakee
 mkdir KBs
 cp -R ~/workspace/sumo/* KBs
-mv ~/workspace/sigmakee/config-vagrant.xml KBs/config.xml
+mv ~/workspace/sigmakee/config_vagrant.xml KBs/config.xml
 cd ~/Programs/E
 sudo apt-get install make
 sudo apt-get install gcc
@@ -84,3 +85,10 @@ cd ~/workspace/sigmakee
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
 java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*  com.articulate.sigma.KB
+After starting TomCat, go to http://localhost:8080/sigma/login.html
+
+
+Debugging
+- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try again.
+- If you are repeatedly getting 404s, check the port value in /home/theuser/.sigmakee/KBs/config.xml. 8080 for local, 9090 for Vagrant
+
