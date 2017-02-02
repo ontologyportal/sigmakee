@@ -6,7 +6,7 @@
 	<groupId>com.github.ontologyportal</groupId>
 	<artifactId>sigma-component</artifactId>
 	<packaging>jar</packaging>
-	<version>2.11</version>
+	<version>2.12</version>
 	<name>sigma-component</name>
     <description>Sigma knowledge engineering system is an system for developing, viewing and debugging theories in first 
     	order logic. It works with Knowledge Interchange Format (KIF) and is optimized for the Suggested Upper Merged 
@@ -77,19 +77,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.apache.maven.plugins</groupId>
-			<artifactId>maven-release-plugin</artifactId>
-			<version>2.5.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.maven.scm</groupId>
-			<artifactId>maven-scm-provider-cvs-commons</artifactId>
-			<version>1.9.4</version>
-		</dependency>
-		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.11</version>
+			<version>4.12</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -118,25 +108,9 @@
 			<version>1.1</version>
 		</dependency>
 		<dependency>
-			<groupId>edu.stanford.nlp</groupId>
-			<artifactId>stanford-corenlp</artifactId>
-			<version>3.5.2</version>
-		</dependency>
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>3.3</version>
-		</dependency>
-		<dependency>
-			<groupId>edu.stanford.nlp</groupId>
-			<artifactId>stanford-corenlp</artifactId>
-			<version>3.5.2</version>
-			<classifier>models</classifier>
-		</dependency>
-		<dependency>
-			<groupId>com.amazonaws</groupId>
-			<artifactId>aws-java-sdk-s3</artifactId>
-			<version>1.11.76</version>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+			<version>3.5</version>
 		</dependency>
 	</dependencies>
 

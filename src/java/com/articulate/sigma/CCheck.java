@@ -13,7 +13,7 @@ package com.articulate.sigma;
  */
 
 import TPTPWorld.InterfaceTPTP;
-import edu.stanford.nlp.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.util.ArrayList;
