@@ -63,16 +63,6 @@
 
     <copy todir="${deploy.home}/lib">
         <fileset file="${basedir}/lib/*.jar" />
-        <!-- fileset file="${basedir}/lib/IDV.jar" />
-        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
-        <fileset file="${basedir}/lib/mail.jar" />
-        <fileset file="${basedir}/lib/guava-15.0.jar" />
-        <fileset file="${basedir}/lib/junit-4.12.jar" />
-        <fileset file="${basedir}/lib/java-json.jar" />
-        <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
-        <fileset file="${basedir}/lib/TptpParser.jar" />
-        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
-        <fileset file="${basedir}/lib/ClientHttpRequest.jar" / -->
     </copy>
 
     <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
@@ -122,124 +112,6 @@
     <echo>the system date/time is ${TODAY_US}</echo>
 </target>
 
-	<!-- taskdef name="deb" classname="com.googlecode.ant_deb_task.Deb" classpath="lib/ant/ant-deb-0.0.1.jar"/>
-	<taskdef name="aptrepo" classname="com.codemarvels.ant.aptrepotask.AptRepoTask" >
-		<classpath>
-			<fileset dir="lib/ant/apt-repo" >
-				 <include name="*.jar"/>
-			</fileset>
-		</classpath>
-	</taskdef-->
-
-	<!--target name="createDEB" depends="compile" description="Create the *.deb file and place in ${debian.folder}/output.">
-		<!- clean up any existing files in temp>
-		<delete includeemptydirs="true" failonerror="false">
-	        <fileset dir="${debian.folder}/temp/sigmawebapp"/>
-			<fileset file="${debian.folder}/temp/sigma.war"/>
-		</delete>
-						
-		<create staging folder>
-		<mkdir dir="${debian.folder}/temp/sigmawebapp"/>
-		
-		<Copy all the *.jsp, *.xsl, *.html, pixmaps, etc.>
-		<copy todir="${debian.folder}/temp/sigmawebapp">
-		     <fileset dir="web/jsp"/>
-		</copy>
-		<copy todir="${debian.folder}/temp/sigmawebapp">
-		      <fileset file="web/simple.css"/>
-		</copy>
-	    <copy todir="${debian.folder}/temp/sigmawebapp/pixmaps">
-	        <fileset dir="web/pixmaps"/>
-	    </copy>
-	    <copy todir="${debian.folder}/temp/sigmawebapp/lib">
-	    	<fileset file="${basedir}/lib/*.jar" />
-	        <fileset file="${basedir}/lib/IDV.jar" />
-	        <fileset file="${basedir}/lib/antlr-2.7.5.jar" />
-	        <fileset file="${basedir}/lib/mail.jar" />
-	        <fileset file="${basedir}/lib/guava-15.0.jar" />
-	        <fileset file="${basedir}/lib/junit-4.12.jar" />
-	        <fileset file="${basedir}/lib/java-json.jar" />
-	        <fileset file="${basedir}/lib/json-simple-1.1.1.jar" />
-	        <fileset file="${basedir}/lib/TptpParser.jar" />
-	    	<fileset file="${basedir}/lib/cos-multipart.jar" />
-	        <fileset file="${basedir}/lib/owlapi-distribution-3.4.5.jar" />
-	    </copy>
-	    <Create WEB-INF/classes/ and copy all the loose classes to it.>
-		<mkdir dir="${debian.folder}/temp/sigmawebapp/WEB-INF/classes"/>
-	     <copy todir="${debian.folder}/temp/sigmawebapp/WEB-INF/classes">
-	          <fileset dir="${build.classes}"/>
-	     </copy>
-	    <Create WEB-INF/lib/ and copy over the needed jar files.>
-		<mkdir dir="${debian.folder}/temp/sigmawebapp/WEB-INF/lib"/>
-		<copy todir="${debian.folder}/temp/sigmawebapp/WEB-INF/lib">
-	          <fileset dir="${basedir}/lib" />
-	    </copy>
-		<Create .WAR file.>
-		<war warfile="${debian.folder}/temp/${dist.war}" webxml="web.xml">
-	        <fileset dir="web/jsp"/>
-	        <fileset file="web/simple.css"/>
-	        <zipfileset dir="web/pixmaps" prefix="pixmaps"/>
-	        <lib dir="${debian.folder}/temp/sigmawebapp/lib"/>
-	        <classes dir="${debian.folder}/temp/sigmawebapp/WEB-INF/classes"/>
-	    </war>
-		<clean and create a package folder from template>
-		<delete includeemptydirs="true" failonerror="false">
-		       <fileset dir="${debian.folder}/temp/package"/>
-		</delete>
-		<mkdir dir="${debian.folder}/temp/package"/>
-		<copy todir="${debian.folder}/temp/package">
-			  <fileset dir="${debian.folder}/dependencies/files" />
-		</copy>
-		
-		
-		<Copy .WAR file to staging webapps>
-		<copy todir="${debian.folder}/temp/package/var/lib/tomcat7/webapps">
-			 <fileset file="${debian.folder}/temp/${dist.war}" />
-		</copy>
-		<Create KBs folder>
-		<mkdir dir="${debian.folder}/temp/package/usr/share/sigma/KBs"/>
-		<Copy KBs from the parallel project KBs>
-		<copy todir="${debian.folder}/temp/package/usr/share/sigma/KBs">
-			 <fileset dir="../KBs" />
-		</copy>
-		<Create .deb package>
-		<deb package="sigma"
-		     todir="${debian.folder}/temp"
-		     section="utils"
-		     depends="tomcat7"
-			 architecture="amd64"
-			 priority="optional" postinst="${debian.folder}/dependencies/files/DEBIAN/postinst">
-		        <version upstream="1.0"/>
-		        <maintainer name="Adam Pease" email="Adam.Pease@ipsoft.com"/>
-		        <description>Sigma 1.0
-		        	Sigma knowledge engineering system is an system for developing, 
-		        	viewing and debugging theories in first order logic. 
-		        	It works with Knowledge Interchange Format (KIF) and 
-		        	is optimized for the Suggested Upper Merged Ontology (SUMO). 
-		        	For details vist  http://www.adampease.org/OP/
-		        </description>
-		        <tarfileset dir="${debian.folder}/temp/package">
-		        </tarfileset>
-		        </deb>
-		<mkdir dir="${debian.folder}/temp/repository"/>
-		<move todir="${debian.folder}/temp/repository">
-			<fileset dir="${debian.folder}/temp">
-				<include name="*.deb"/>
-			</fileset>
-		</move>
-		<aptrepo repoDir="${debian.folder}/temp/repository"/>
-	</target -->
-<!-- target name="uploadRepository" depends="createDEB" >
-	<input message="SourceForge Username :" addproperty="sfusername"></input>
-	<input message="SourceForge Password :" addproperty="sfpassword" ></input>
-	<scp remoteTodir="${sfusername}@web.sourceforge.net:/home/project-web/sigmakee/htdocs/" 
-		verbose="true"
-		password="${sfpassword}"
-		trust="true" >
-	 	<fileset dir="native-installers/debian/temp/repository"></fileset>
-	</scp>
-</target -->
-
 	<target name="install" depends="init">
 		<fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME" />
 		<copy todir="${sigma.home}/KBs">
@@ -277,22 +149,6 @@
 			</patternset>
 			<mapper type="flatten"/>
 		</unzip>
-
-		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip" usetimestamp="true" />
-		<unzip dest="${sigma.install.downloads}" src="${sigma.install.downloads}/stanford-corenlp-full-2015-12-09.zip" >
-			<patternset>
-				<include name="**/stanford-corenlp-3.6.0-models.jar" />
-			</patternset>
-			<mapper type="flatten"/>
-		</unzip>
-		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-corenlp-3.6.0-models.jar" >
-			<patternset>
-				<include name="edu/stanford/nlp/models/lexparser/englishPCFG.ser.gz" />
-			</patternset>
-			<mapper type="flatten"/>
-		</unzip>
-
-		<!-- get dest="${sigma.install.downloads}" src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.8/E.tgz" usetimestamp="true" /-->
 	</target>
 	
 <path id="javadoc.classpath">

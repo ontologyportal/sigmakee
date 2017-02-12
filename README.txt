@@ -59,10 +59,6 @@ unzip stanford-corenlp-full-2015-12-09.zip
 rm stanford-corenlp-full-2015-12-09.zip
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
 unzip stanford-corenlp-3.6.0-models.jar
-cd ~/Programs
-gunzip WordNet-3.0.tar.gz
-tar -xvf WordNet-3.0.tar
-cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
 cd ~/workspace/
 sudo apt-get install git
 git clone https://github.com/ontologyportal/sigmakee
@@ -72,6 +68,10 @@ cd .sigmakee
 mkdir KBs
 cp -R ~/workspace/sumo/* KBs
 mv ~/workspace/sigmakee/config_vagrant.xml KBs/config.xml
+cd ~/Programs
+gunzip WordNet-3.0.tar.gz
+tar -xvf WordNet-3.0.tar
+cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
 cd ~/Programs/E
 sudo apt-get install make
 sudo apt-get install gcc
@@ -91,4 +91,4 @@ After starting TomCat, go to http://localhost:8080/sigma/login.html
 Debugging
 - If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try again.
 - If you are repeatedly getting 404s, check the port value in /home/theuser/.sigmakee/KBs/config.xml. 8080 for local, 9090 for Vagrant
-
+- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions

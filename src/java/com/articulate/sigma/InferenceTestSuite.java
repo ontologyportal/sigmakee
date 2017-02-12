@@ -2,7 +2,7 @@ package com.articulate.sigma;
 
 import TPTPWorld.InterfaceTPTP;
 import TPTPWorld.SystemOnTPTP;
-import edu.stanford.nlp.util.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileWriter;
