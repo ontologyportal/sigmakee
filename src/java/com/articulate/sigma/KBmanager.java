@@ -287,15 +287,16 @@ public class KBmanager {
         }
 
         // build kb cache when "cache" = "yes"
-        if (useCacheFile) {
+        //if (useCacheFile) {
+        // always build the cache
             kb.kbCache = new KBcache(kb);
             kb.kbCache.buildCaches();
             kb.checkArity();
-        }
-        else {
-            kb.kbCache = new KBcache(kb);
+        //}
+        //else {
+        //    kb.kbCache = new KBcache(kb);
             // kb.checkArity needs the cache, so don't call it.
-        }
+       // }
         // load inference engine only when "TPTP" = "yes"
         if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
             kb.loadEProver();
