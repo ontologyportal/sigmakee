@@ -62,7 +62,7 @@ public class WordNetUtilities {
     public static boolean isValidSynset8(String synset) {
 
         if (!StringUtil.isInteger(synset) || synset.length() != 8) {
-            System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + synset);
+            //System.out.println("Error in WordNetUtilities.isValidSynset8(): bad synset: " + synset);
             return false;
         }
         else
@@ -75,7 +75,7 @@ public class WordNetUtilities {
     public static boolean isValidSynset9(String synset) {
 
         if (!StringUtil.isInteger(synset) || synset.length() != 9) {
-            System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + synset);
+            //System.out.println("Error in WordNetUtilities.isValidSynset9(): bad synset: " + synset);
             return false;
         }
         else
@@ -1744,8 +1744,10 @@ public class WordNetUtilities {
      */
     public static HashSet<String> getAllHyponyms(String s) {
 
+        System.out.println("getAllHyponyms(): " + s);
         HashSet<String> result = new HashSet<String>();
         ArrayList<AVPair> rels = WordNet.wn.relations.get(s);
+        System.out.println("getAllHyponyms() rels: " + rels);
         if (rels == null)
             return result;
         for (AVPair avp : rels) {
@@ -1753,6 +1755,29 @@ public class WordNetUtilities {
                 result.addAll(getAllHyponyms(avp.value));
         }
         result.add(s);
+        return result;
+    }
+
+    /** ***************************************************************
+     * @return all the hyponyms of a given POS-prefixed synset
+     */
+    public static HashSet<String> getAllHyponymsTransitive(String s) {
+
+        HashSet<String> result = new HashSet<String>();
+        result.addAll(getAllHyponyms(s));
+        boolean changed = true;
+        while (changed) {
+            HashSet<String> newresult = new HashSet<String>();
+            newresult.addAll(result);
+            for (String str : result)
+                newresult.addAll(getAllHyponyms(str));
+            System.out.println("getAllHyponymsTransitive(): " + newresult);
+            if (newresult.size() == result.size())
+                changed = false;
+            else
+                changed = true;
+            result = newresult;
+        }
         return result;
     }
 
@@ -1783,7 +1808,7 @@ public class WordNetUtilities {
                 ArrayList<String> words = WordNet.wn.synsetsToWords.get(line.trim());
                 if (words != null)
                     System.out.println(words);
-                HashSet<String> hyps = getAllHyponyms(line.trim());
+                HashSet<String> hyps = getAllHyponymsTransitive(line.trim());
                 for (String s : hyps) {
                     words = WordNet.wn.synsetsToWords.get(s);
                     System.out.println(words);
@@ -1913,7 +1938,7 @@ public class WordNetUtilities {
     public static void main (String[] args) {
 
         KBmanager.getMgr().initializeOnce();
-        String synset = "108655464";
+        String synset = "105786372";
         System.out.println(getAllHyponyms(synset));
         System.out.println(collapseSenses());
         if (args.length > 0)
