@@ -1214,7 +1214,7 @@ public class WordNet {
                     avp.attribute = StringUtil.fillString(count, ' ', 8, true);
                     String synset8 = senseIndex.get(key);
                     if (synset8 == null && missingSenses < 101) {
-                        System.out.println("Info in WordNet.readSenseCount(): no synset for key: " + key);
+                        //System.out.println("Info in WordNet.readSenseCount(): no synset for key: " + key);
                         if (missingSenses == 100)
                             System.out.println("Info in WordNet.readSenseCount(): > 100 missing senses, suppressing messages ");
                         missingSenses++;
@@ -1274,8 +1274,8 @@ public class WordNet {
             return;
         }
         if (!WordNetUtilities.isValidSynset9(avp.value)) {
-            System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + avp +
-                    " for word " + word);
+            //System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + avp +
+            //        " for word " + word);
             return;
         }
 
