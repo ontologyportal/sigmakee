@@ -167,15 +167,29 @@ August 9, Acapulco, Mexico.
 
     /** *************************************************************
      */
-    public static ArrayList<String> lcodes = new ArrayList<String>(Arrays.asList("als","arb",
-            "cat","cmn","dan","eng","eus","fas","fin",
-            "fra","fre","glg","heb","ita","ind","jpn","nno","nob","pol","por","spa","tha","zsm"));
-    public static ArrayList<String> lnames = new ArrayList<String>(Arrays.asList("AlbanianLanguage",
-            "ArabicLanguage","CatalanLanguage","ChineseLanguage",
-            "DanishLanguage","EnglishLanguage","BasqueLanguage","FarsiLanguage","FinnishLanguage",
-            "FrenchLanguage","FrenchLanguage","GalicianLanguage","HebrewLanguage","ItalianLanguage",
-            "IndonesianLanguage","JapaneseLanguage","NorwegianNorskLanguage","NorwegianBokmalLanguage",
-            "PolishLanguage","PortugueseLanguage","SpanishLanguage","ThaiLanguage","MalayLanguage"));
+    public static ArrayList<String> lcodes = new ArrayList<String>(Arrays.asList(
+            "als","arb","bul",
+            "cat","cow","dan",
+            "ell","eng","eus",
+            "fas","fin","fra",
+            "glg","heb",
+            "hrv","isl","ita",
+            "ind","jpn","nno",
+            "nob","pol","por",
+            "qcn","spa","swe",
+            "tha","zsm"));
+    public static ArrayList<String> lnames = new ArrayList<String>(Arrays.asList(
+            "AlbanianLanguage","ArabicLanguage","BulgarianLanguage",
+            "CatalanLanguage","ChineseLanguage","DanishLanguage",
+            "GreekLanguage","EnglishLanguage","BasqueLanguage",
+            "FarsiLanguage","FinnishLanguage","FrenchLanguage",
+            "GalicianLanguage","HebrewLanguage",
+            "CroatianLanguage","IcelandicLanguage","ItalianLanguage",
+            "IndonesianLanguage","JapaneseLanguage","NorwegianNorskLanguage",
+            "NorwegianBokmalLanguage","PolishLanguage","PortugueseLanguage",
+            "TaiwanChineseLanguage","SpanishLanguage","SwedishLanguage",
+            "ThaiLanguage","MalayLanguage"));
+
     
     /** *************************************************************
      */
@@ -236,7 +250,7 @@ August 9, Acapulco, Mexico.
             String filename = kbDir + File.separator + "OMW" + 
                     File.separator + lcodes.get(i)  + File.separator + 
                     "wn-data-" + lcodes.get(i) + ".tab";
-            System.out.print(" " + filename.substring(filename.length()-15));
+            System.out.print(filename);
             readOMWformat(filename,lcodes.get(i));            
         }
         System.out.println();
