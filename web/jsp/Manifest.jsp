@@ -12,7 +12,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 */
 
 /** This jsp page handles listing the files which comprise a knowledge base,
@@ -22,6 +22,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     kbName - the name of the knowledge base for which the manifest is displayed.
     constituent - a constituent to be added to the KB.
     delete - a constituent to be deleted from the KB.
+    reload - a request to reload the constituents of the KB.
+    refetch - a request to 'git pull' to update the constituents of the KB.
 */
     String kbDir = KBmanager.getMgr().getPref("kbDir");
     File kbDirFile = new File(kbDir);
@@ -29,6 +31,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     String constituent = request.getParameter("constituent");
     String saveFile = request.getParameter("saveFile");
     String delete = request.getParameter("delete");
+    String reload = request.getParameter("reload");
+    String refetch = request.getParameter("refetch");
     String result = "";
 
     if (KBmanager.getMgr().getPref("userRole") == null || !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { 
@@ -136,6 +140,34 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 	    }
 	    kb.loadEProver();
     }
+    else if (reload != null)
+        result = kb.reload();
+    else if (refetch != null) {
+        /* collect all the dirs the constituents appear in */
+        Map<String, Integer> dirs = new HashMap<String, Integer>();
+        for (int i = 0 ; i < kb.constituents.size() ; i++) {
+            String cname = (String) kb.constituents.get(i);
+            File file = new File(cname);
+            String dir = file.getParent();
+            if (!dirs.containsKey(dir)) {
+                dirs.put(dir,0);
+            }
+        }
+        for (String dir : dirs.keySet()) {
+            ProcessBuilder pb = new ProcessBuilder("git", "pull");
+            pb.directory(new File(dir));
+            Process p = pb.start();
+            p.waitFor();
+            int exitvalue = p.exitValue();
+            java.util.Scanner s = new java.util.Scanner(p.getInputStream()).useDelimiter("\\A");
+            String stdout = s.hasNext() ? s.next() : "";
+            s = new java.util.Scanner(p.getErrorStream()).useDelimiter("\\A");
+            String stderr = s.hasNext() ? s.next() : "";
+            System.out.println("INFO git pull (" + dir + ") exitValue: " + exitvalue);
+            System.out.println("INFO git pull (" + dir + ") stdout: " + stdout);
+            System.out.println("INFO git pull (" + dir + ") stderr: " + stderr);
+        }
+    }
 %>
 <HTML>
 <HEAD>
@@ -198,6 +230,27 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 <%
   }   // if
 %>
+<P>
+
+<%
+if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+//	if (Files.isDirectory(Paths.get(new File(kbDirFile, ".git")))) {
+%>
+		<hr><b>Refetch constituents (git pull)</b>
+		<form name="refetch" id="refetch" action="Manifest.jsp" method="GET">
+			<input type="hidden" name="kb" value=<%=kbName%>>
+			<input type="submit" name="refetch" value="Refetch">
+		</form>
+<%
+//	}
+}
+%>
+<P>
+<hr><b>Reload constituents</b>
+<form name="reload" id="reload" action="Manifest.jsp" method="GET">
+	<input type="hidden" name="kb" value=<%=kbName%>>
+	<input type="submit" name="reload" value="Reload">
+</form>
 <P>
 
 <% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
