@@ -13,8 +13,6 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -535,7 +533,7 @@ public class ProofProcessor {
     		  KBmanager.getMgr().initializeOnce();
     		  KB kb = KBmanager.getMgr().getKB("SUMO");
     		  String stmt = "(subclass ?X Entity)";
-    		  String result = StringUtils.join(kb.ask(stmt, 30, 3), " ");
+    		  String result = kb.ask(stmt, 30, 3) + " ";
     		  result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
     		  System.out.println(result);
     	  } 

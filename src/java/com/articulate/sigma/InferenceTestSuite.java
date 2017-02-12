@@ -2,7 +2,6 @@ package com.articulate.sigma;
 
 import TPTPWorld.InterfaceTPTP;
 import TPTPWorld.SystemOnTPTP;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -314,7 +313,7 @@ public class InferenceTestSuite {
                         long start = System.currentTimeMillis();
                         if (systemChosen != null && systemChosen.equals("EProver")) {
                             System.out.println("INFO in InferenceTestSuite.test(): Query is posed to EProver ");
-                            proof = StringUtils.join(kb.ask(processedStmt, timeout, maxAnswers), " ");
+                            proof = kb.ask(processedStmt, timeout, maxAnswers) + " ";
                         }
                         else  // SoTPTP:
                             proof = askSoTPTP(processedStmt,timeout,maxAnswers,systemChosen,kb, TPTPlocation);                       

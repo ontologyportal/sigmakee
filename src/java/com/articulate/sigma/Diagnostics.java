@@ -12,8 +12,6 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.PrintWriter;
@@ -364,10 +362,12 @@ public class Diagnostics {
                 if (quantifierNotInStatement(restForm)) 
                     return true;
             }
-            for (int i = 0; i < qList.size(); i++) {
-                String var = (String) qList.get(i);
-                if (body.indexOf(var) == -1) 
-                    return true;
+            if (qList != null) {
+                for (int i = 0; i < qList.size(); i++) {
+                    String var = (String) qList.get(i);
+                    if (body.indexOf(var) == -1)
+                        return true;
+                }
             }
         }
         return false;
@@ -780,7 +780,7 @@ public class Diagnostics {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.theFormula);
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
-                    proof = StringUtils.join(empty.ask(processedQuery,timeout,maxAnswers), " ");
+                    proof = empty.ask(processedQuery,timeout,maxAnswers) + " ";
                     StringBuffer a = new StringBuffer();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
                     //  if (answer.length() != 0) return answer;
@@ -788,7 +788,7 @@ public class Diagnostics {
 
                     StringBuffer negatedQuery = new StringBuffer();
                     negatedQuery.append("(not " + processedQuery + ")");
-                    proof = StringUtils.join(empty.ask(negatedQuery.toString(),timeout,maxAnswers), " ");
+                    proof = empty.ask(negatedQuery.toString(),timeout,maxAnswers) + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {
                         answer.append(a);
