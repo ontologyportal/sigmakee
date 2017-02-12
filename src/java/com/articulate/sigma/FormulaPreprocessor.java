@@ -608,11 +608,13 @@ public class FormulaPreprocessor {
      * Pre-process a formula before sending it to the theorem prover.
      * This includes ignoring meta-knowledge like documentation strings,
      * translating mathematical operators, quoting higher-order formulas,
+     * adding a numerical suffix to VariableArityRelations based on their count,
      * expanding row variables and prepending the 'holds__' predicate.
      * @return an ArrayList of Formula(s)
      */
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
-                                     boolean translateIneq, boolean translateMath) {
+                                     boolean translateIneq, boolean translateMath,
+                                     KB kb) {
 
         StringBuilder result = new StringBuilder();
         if (f.listP() && !f.empty()) {
@@ -627,9 +629,13 @@ public class FormulaPreprocessor {
                 Formula nextF = new Formula();
                 nextF.read(next);
                 result.append(" ");
-                result.append(preProcessRecurse(nextF,"",ignoreStrings,translateIneq,translateMath));
+                result.append(preProcessRecurse(nextF,"",ignoreStrings,translateIneq,translateMath,kb));
             }
             else {
+                if (kb.isInstanceOf(pred,"VariableArityRelation")) {
+                    int arity = f.argumentsToArrayList(1).size();
+                    pred = pred + "_" + arity;
+                }
                 Formula restF = f.cdrAsFormula();
                 int argCount = 1;
                 while (!restF.empty()) {
@@ -638,7 +644,7 @@ public class FormulaPreprocessor {
                     Formula argF = new Formula();
                     argF.read(arg);
                     if (argF.listP()) {
-                        String res = preProcessRecurse(argF,pred,ignoreStrings,translateIneq,translateMath);
+                        String res = preProcessRecurse(argF,pred,ignoreStrings,translateIneq,translateMath,kb);
                         result.append(" ");
                         if (!Formula.isLogicalOperator(pred) &&
                                 !Formula.isComparisonOperator(pred) &&
@@ -911,7 +917,7 @@ public class FormulaPreprocessor {
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
                     FormulaPreprocessor fp = new FormulaPreprocessor();
-                    theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath);
+                    theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
                     fnew.read(theNewFormula);
                     form.errors.addAll(fnew.getErrors());
                     if (isOkForInference(fnew,isQuery, kb)) {
@@ -1045,11 +1051,32 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      */
+    public static void testOne() {
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+
+        System.out.println();
+        System.out.println();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        FormulaPreprocessor.debug = true;
+        String strf = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
+                " (contraryAttribute ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        System.out.println(fp.findType(1,"part",kb));
+        System.out.println(fp.preProcess(f,false,kb));
+    }
+
+    /** ***************************************************************
+     */
     public static void main(String[] args) {
 
-        testFindTypes();
-        testAddTypes();
-        testFindExplicit();
+        testOne();
+
+        //testFindTypes();
+        //testAddTypes();
+        //testFindExplicit();
     }
 
 }
