@@ -125,7 +125,7 @@ public class SigmaMockTestBase {
 
         List<String> recognizedCaseRolesCapitalized = Lists.newArrayList();
         for(String str : RECOGNIZED_CASE_ROLES) {
-            recognizedCaseRolesCapitalized.add(edu.stanford.nlp.util.StringUtils.capitalize(str));
+            recognizedCaseRolesCapitalized.add(Character.toUpperCase(str.charAt(0)) + str.substring(1));
         }
 
         List<String> entityList = Lists.newArrayList(RECOGNIZED_PROCESSES);
