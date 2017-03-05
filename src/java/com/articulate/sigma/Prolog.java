@@ -40,7 +40,7 @@ public class Prolog {
         Formula antecedent = f.cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): antecedent: " + antecedent);
         sb.append(" :- ");
-        if (antecedent.isSimpleClause()) {
+        if (antecedent.isSimpleClause(kb)) {
             String clause = antecedent.toProlog();
             if (clause == null)
                 return;
@@ -64,7 +64,7 @@ public class Prolog {
 
         Formula consequent = f.cdrAsFormula().cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): consequent: " + consequent);
-        if (consequent.isSimpleClause()) {
+        if (consequent.isSimpleClause(kb)) {
             String clause = consequent.toProlog();
             if (clause == null)
                 return;
@@ -91,10 +91,10 @@ public class Prolog {
         Iterator<Formula> it = kb.formulaMap.values().iterator();
         while (it.hasNext()) {
             Formula f = it.next();
-            if (f.isRule() && f.isHorn() && !f.theFormula.contains("exists") &&
+            if (f.isRule() && f.isHorn(kb) && !f.theFormula.contains("exists") &&
                 !f.theFormula.contains("forall")) 
                 writeOneHornClause(f,pw);  
-            else if (f.isSimpleClause())
+            else if (f.isSimpleClause(kb))
                 pw.println(f.toProlog() + ".");
         }
     }
