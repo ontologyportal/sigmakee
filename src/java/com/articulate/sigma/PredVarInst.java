@@ -37,11 +37,11 @@ public class PredVarInst {
      *
      * @return add explicit type condition into types
      */
-    private static HashMap<String,HashSet<String>> addExplicitTypes(Formula input, HashMap<String,HashSet<String>> types) {
+    private static HashMap<String,HashSet<String>> addExplicitTypes(KB kb, Formula input, HashMap<String,HashSet<String>> types) {
         
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         FormulaPreprocessor fp = new FormulaPreprocessor();
-    	HashMap<String,HashSet<String>> explicit = fp.findExplicitTypesInAntecedent(input);
+    	HashMap<String,HashSet<String>> explicit = fp.findExplicitTypesInAntecedent(kb,input);
         if (explicit == null || explicit.keySet() == null || explicit.keySet().size() == 0)
             return types;
         Iterator<String> it = explicit.keySet().iterator();
@@ -68,7 +68,7 @@ public class PredVarInst {
     public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
         
         Set<Formula> result = new HashSet<Formula>();
-        HashSet<String> predVars = gatherPredVars(input);
+        HashSet<String> predVars = gatherPredVars(kb,input);
         if (predVars == null )
             return null;
         if (predVars.size() == 0)   // Return empty if input does not have predicate variables
@@ -76,7 +76,7 @@ public class PredVarInst {
         // 1. get types for predicate variables from domain definitions
         HashMap<String,HashSet<String>> varTypes = findPredVarTypes(input,kb);
         // 2. add explicitly defined types for predicate variables
-        varTypes = addExplicitTypes(input,varTypes);
+        varTypes = addExplicitTypes(kb,input,varTypes);
         Iterator<String> it = varTypes.keySet().iterator();
         while (it.hasNext()) {
             String var = it.next();
@@ -159,10 +159,10 @@ public class PredVarInst {
                     throw new IllegalArgumentException(rel);
                 }
             }
-            if (f.isSimpleClause()) {
+            if (f.isSimpleClause(kb)) {
                 //check if the clasue has function clause and check arity of function clause
                 for (String arg : l) {
-                    if (Formula.isFunction(arg)) {
+                    if (kb.isFunction(arg)) {
                         String result = hasCorrectArityRecurse(new Formula(arg), kb);
                         if (!StringUtil.emptyString(result))
                             return result;
@@ -379,13 +379,13 @@ public class PredVarInst {
      /** ***************************************************************
      * Get a set of all the predicate variables in the formula
      */
-    private static HashSet<String> gatherPredVarRecurse(Formula f) {
+    private static HashSet<String> gatherPredVarRecurse(KB kb, Formula f) {
         
         HashSet<String> ans = new HashSet<String>();
         //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
         if (f == null || f.empty() || Formula.atom(f.theFormula) || f.isVariable())
             return ans;
-        if (f.isSimpleClause()) {
+        if (f.isSimpleClause(kb)) {
             String arg0 = f.getArgument(0);
             //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
             if (arg0.startsWith("?")) {
@@ -404,12 +404,12 @@ public class PredVarInst {
         else if (Formula.isQuantifier(f.car())) {
             //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): found quantifier: " + f);
             Formula f2 = f.cddrAsFormula();
-            ans.addAll(gatherPredVarRecurse(f2));
+            ans.addAll(gatherPredVarRecurse(kb,f2));
         }
         else {
             //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not simple or quant: " + f);
-            ans.addAll(gatherPredVarRecurse(f.carAsFormula()));
-            ans.addAll(gatherPredVarRecurse(f.cdrAsFormula()));
+            ans.addAll(gatherPredVarRecurse(kb,f.carAsFormula()));
+            ans.addAll(gatherPredVarRecurse(kb,f.cdrAsFormula()));
         }
         //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): returning: " + ans);
         return ans;
@@ -441,7 +441,7 @@ public class PredVarInst {
      */
     static HashMap<String, HashSet<String>> findPredVarTypes(Formula f, KB kb) {
         
-        HashSet<String> predVars = gatherPredVars(f);
+        HashSet<String> predVars = gatherPredVars(kb,f);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
@@ -457,12 +457,12 @@ public class PredVarInst {
     /** ***************************************************************
      * Collect and return all predicate variables for the given formula
      */
-    protected static HashSet<String> gatherPredVars(Formula f) {
+    protected static HashSet<String> gatherPredVars(KB kb, Formula f) {
         
         HashSet<String> varlist = null;
         HashMap<String,HashSet<String>> ans = new HashMap<String,HashSet<String>>();
         if (!StringUtil.emptyString(f.theFormula)) {
-            varlist = gatherPredVarRecurse(f);
+            varlist = gatherPredVarRecurse(kb,f);
         }
         return varlist;
     }
@@ -768,10 +768,10 @@ public class PredVarInst {
         //Formula f = kb.formulaMap.get(formStr);
         Formula f = new Formula(formStr);
         System.out.println("Formula: " + f);
-        System.out.println("Pred vars: " + gatherPredVars(f));
+        System.out.println("Pred vars: " + gatherPredVars(kb,f));
         System.out.println("Pred vars with types: " + findPredVarTypes(f,kb));
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(f));
+        System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(kb,f));
         System.out.println("Instantiated: " + instantiatePredVars(f,kb));
         System.out.println();
         
@@ -785,7 +785,7 @@ public class PredVarInst {
         //f = kb.formulaMap.get(formStr);
         f = new Formula(formStr);
         System.out.println("Formula: " + f);
-        System.out.println("Pred vars: " + gatherPredVars(f));
+        System.out.println("Pred vars: " + gatherPredVars(kb,f));
         System.out.println("Instantiated: " + instantiatePredVars(f,kb));
         
     }
