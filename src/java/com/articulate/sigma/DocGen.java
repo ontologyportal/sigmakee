@@ -4140,7 +4140,7 @@ public class DocGen {
             }
             else if (Formula.isVariable(currentTerm)
                      || Formula.isLogicalOperator(currentTerm)
-                     || Formula.isFunction(currentTerm)
+                     || kb.isFunction(currentTerm)
                      || StringUtil.isQuotedString(currentTerm)
                      || StringUtil.isDigitString(currentTerm)) {
                 sb.append(currentTerm);
