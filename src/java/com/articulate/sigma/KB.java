@@ -1477,7 +1477,8 @@ public class KB {
      * where the body should be " Formula has been added to the session
      * database" if all went well.
      *
-     * TODO: If we find a way to directly add assertions into opened inference engine, we can roll back to 1.111 version
+     * TODO: If we find a way to directly add assertions into opened inference engine,
+     * we can roll back to 1.111 version
      *
      * @param input The String representation of a SUO-KIF Formula.
      *
@@ -1512,7 +1513,7 @@ public class KB {
             // since these axioms do exist in formulasAlreadyPresent but not in SUMO.tptp
             // In the future, when SUMO can completely run using whole KB, we can remove
             // SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
-            if (SUMOKBtoTPTPKB.filterSimpleOnly==false && !formulasAlreadyPresent.isEmpty()) {
+            if (SUMOKBtoTPTPKB.filterSimpleOnly == false && !formulasAlreadyPresent.isEmpty()) {
                 String sf = ((Formula) formulasAlreadyPresent.get(0)).sourceFile;
                 result = "The formula was already added from " + sf;
             }
