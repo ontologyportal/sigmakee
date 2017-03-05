@@ -5,8 +5,7 @@ import java.util.*;
 
 public class SUMOKBtoTPTPKB {
 
-    // TODO: In future, should turn filterSimpleOnly off
-    public static final boolean filterSimpleOnly = true;
+    public static final boolean filterSimpleOnly = false;
 
     public KB kb;
 
@@ -287,7 +286,7 @@ public class SUMOKBtoTPTPKB {
                 if (filterSimpleOnly) {
                     // only consider ground statements and axioms in Amelia.kif
                     if (!(f.sourceFile.equals(KBmanager.getMgr().getPref("kbDir") + File.separator + "Amelia.kif"))
-                            && !(f.isSimpleClause())) {
+                            && !(f.isSimpleClause(kb))) {
                         continue;
                     }
                 }
@@ -322,7 +321,8 @@ public class SUMOKBtoTPTPKB {
                                 .replaceAll("[$]plus","dollar_plus")
                                 .replaceAll("[$]minus","dollar_minus");
                         //----Don't output ""ed ''ed and numbers
-                        if (theTPTPFormula.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*")
+                        if (theTPTPFormula.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") ||
+                                theTPTPFormula.indexOf("'") > -1
                                 || theTPTPFormula.indexOf('"') >= 0)
                             //pr.print("%FOL ");
                             continue;
@@ -409,10 +409,10 @@ public class SUMOKBtoTPTPKB {
      *   and contains one of the excluded predicates;
      * otherwise return true;
      */
-    public static boolean filterExcludePredicates(HashSet<String> excludedPredicates, Formula formula) {
+    public boolean filterExcludePredicates(HashSet<String> excludedPredicates, Formula formula) {
 
         boolean pass = false;
-        if (formula.isSimpleClause())
+        if (formula.isSimpleClause(kb))
             pass = excludedPredicates.contains(formula.getArgument(0));
 
         return pass;
