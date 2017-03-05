@@ -73,7 +73,7 @@ public class WNdiagnostics {
         Iterator<String> it = kb.terms.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
-            if (!WordNet.wn.SUMOHash.containsKey(term) & !Formula.isFunction(term) &&
+            if (!WordNet.wn.SUMOHash.containsKey(term) & !kb.isFunction(term) &&
                 Character.isUpperCase(term.charAt(0)))
                 result.add(term);            
         }
