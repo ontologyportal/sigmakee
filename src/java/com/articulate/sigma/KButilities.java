@@ -219,7 +219,7 @@ public class KButilities {
             String formula = it.next();
             Formula f = new Formula();
             f.read(formula);
-            if (!f.isSimpleClause() || !f.isGround()) {                
+            if (!f.isSimpleClause(kb) || !f.isGround()) {
                 Set<String> terms = f.collectTerms();
                 for (String term1 : terms) {
                     if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1))
