@@ -70,7 +70,6 @@ public class KBcache {
     
     /** A temporary list of instances built during creation of the
     children map, in order to efficiently create the instances map **/
-    // TODO: make private
     public HashSet<String> insts = new HashSet<String>();
     
     /** All the cached "child" relations of all transitive relations
@@ -82,7 +81,9 @@ public class KBcache {
     public HashMap<String,HashMap<String,HashSet<String>>> children = 
             new HashMap<String,HashMap<String,HashSet<String>>>();
     
-    /** Relation name keys and argument types with 0th arg always "".
+    /** Relation name keys and argument types with 0th arg always ""
+     * except in the case of Functions where the 0th arg will be the
+     * function range..
      Variable arity relations may have a type for the last argument,
      which will be the type repeated for all extended arguments.
      Note that types can be functions, rather than just terms. **/
@@ -813,13 +814,10 @@ public class KBcache {
      * no domain is defined for the given relation and argument position,
      * inherit it from the parent.  If there is no argument type, send
      * an error to the Sigma error list.
-     * Relation name keys and argument types with 0th arg always ""
+     * Relation name keys and argument types with 0th arg always "" except
+     *   for functions which will have the range type as their 0th argument
      * public HashMap<String,ArrayList<String>> signatures =
      *      new HashMap<String,ArrayList<String>>();
-     *      
-     *      TODO: Function range
-     *      TODO: Variable arity relations, which requires a new predicate
-     *      in SUMO that will define the type of a row variable
      */
     public void collectDomains() {
         
@@ -841,6 +839,7 @@ public class KBcache {
                         maxIndex = arg;
                 }
             }
+
             forms = kb.askWithRestriction(0,"domainSubclass",1,rel);
             if (forms != null) {
                 for (int i = 0; i < forms.size(); i++) {
@@ -852,7 +851,30 @@ public class KBcache {
                         maxIndex = arg;
                 }
             }
-            fillArray("Entity",domainArray,1,maxIndex);
+
+            forms = kb.askWithRestriction(0,"range",1,rel);
+            if (forms != null) {
+                if (forms.size() > 1)
+                    System.out.println("Warning in KBcache.collectDomains(): more than one range statement" + forms);
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula form = forms.get(i);
+                    String type = form.getArgument(2);
+                    domainArray[0] = type;
+                }
+            }
+
+            forms = kb.askWithRestriction(0,"rangeSubclass",1,rel);
+            if (forms != null) {
+                if (forms.size() > 1)
+                    System.out.println("Warning in KBcache.collectDomains(): more than one rangeSubclass statement" + forms);
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula form = forms.get(i);
+                    String type = form.getArgument(2);
+                    domainArray[0] = type + "+";
+                }
+            }
+
+            fillArray("Entity",domainArray,1,maxIndex); // set default arg type of Entity in case user forgets
             ArrayList<String> domains = new ArrayList<String>();
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
@@ -1043,6 +1065,19 @@ public class KBcache {
         System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
     }
 
+    /** ***************************************************************
+     * Copy all relevant information from a VariableArityRelation to a new
+     * predicate that is a particular fixed arity.
+     */
+    public void copyNewPredFromVariableArity(String pred, String oldPred, int arity) {
+
+        if (signatures.keySet().contains(oldPred))
+            signatures.put(pred,signatures.get(oldPred));
+        if (instances.keySet().contains(oldPred))
+            instances.put(pred,instances.get(oldPred));
+        valences.put(pred,arity);
+    }
+        ;
     /** *************************************************************
      */
     public void showState() {
