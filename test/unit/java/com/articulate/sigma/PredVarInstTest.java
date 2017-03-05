@@ -34,7 +34,7 @@ public class PredVarInstTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt1);
 
-        Set<String> actual = PredVarInst.gatherPredVars(f);
+        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
 
         Set<String> expected = Sets.newHashSet("?REL");
         assertEquals(expected, actual);
@@ -44,8 +44,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testGatherPredVarsStmt2()     {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
-
-        Set<String> actual = PredVarInst.gatherPredVars(f);
+        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
 
         Set<String> expected = Sets.newHashSet();
         assertEquals(expected, actual);

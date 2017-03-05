@@ -117,6 +117,7 @@ public class FormulaTest {
         assertEquals("()", cdrF.theFormula);
     }
 
+    /*
     @Test
     public void testIsSimpleClauseWithFunctionalTerm() {
         Formula f1 = new Formula();
@@ -173,7 +174,7 @@ public class FormulaTest {
 
         assertFalse(f1.isSimpleClause());
     }
-
+*/
     @Test
     public void testCollectQuantifiedVariables() {
         List<String> expected = Lists.newArrayList("?T", "?Z");
