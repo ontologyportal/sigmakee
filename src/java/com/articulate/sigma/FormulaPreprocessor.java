@@ -138,7 +138,7 @@ public class FormulaPreprocessor {
      */
     public Formula addTypeRestrictions(Formula form, KB kb) {
 
-        if (debug) System.out.println("addTypeRestrictions: " + form);
+        if (debug) System.out.println("addTypeRestrictions: form " + form);
         // get variable types from domain definitions
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
         // get variable types which are explicitly defined in formula
@@ -203,7 +203,12 @@ public class FormulaPreprocessor {
 
         Formula f = new Formula();
         f.read(sb.toString());
+
+        if (StringUtil.emptyString(f.theFormula) || f.empty())
+            f.read(form.theFormula);
         if (debug) System.out.println("addTypeRestrictions: result: " + f);
+        if (debug) System.out.println("addTypeRestrictions: form at end: " + form);
+        if (debug) System.out.println("addTypeRestrictions: sb at end: '" + sb + "'");
         return f;
     }
 
@@ -973,14 +978,14 @@ public class FormulaPreprocessor {
                         fnew.sourceFile = form.sourceFile;
                         if (!StringUtil.emptyString(theNewFormula))
                             results.add(fnew);
-                        //if (debug) System.out.println("preProcess: results: " + results);
+                        if (debug) System.out.println("preProcess: results: " + results);
                    // }
                     //else
                     //    form.errors.add("Formula rejected for inference: " + f.theFormula);
                 }
             }
         }
-        //if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): 1 result: " + results);
+        if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): 1 result: " + results);
 
         // If typePrefix==yes and isQuery==false, add a "sortal" antecedent to every axiom
         KBmanager mgr = KBmanager.getMgr();
@@ -994,7 +999,7 @@ public class FormulaPreprocessor {
             }
         }
 
-        //if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): 2 result: " + results);
+        if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): 2 result: " + results);
         return results;
     }
 
