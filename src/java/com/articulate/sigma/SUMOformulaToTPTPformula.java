@@ -15,7 +15,8 @@ import java.util.logging.Level;
 public class SUMOformulaToTPTPformula {
 
     public Formula _f = null;
-    
+    public static boolean debug = false;
+
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
      * operators and inequalities in SUO-KIF to their TPTP
@@ -194,7 +195,8 @@ public class SUMOformulaToTPTPformula {
      * Parse a single formula into TPTP format
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
-        
+
+        if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): input: " + suoString);
         Formula tempF = new Formula();      // Special case to rename Foo for (instance Foo SetOrClass)
         tempF.read(suoString);              // so a symbol can't be both a class and an instance. However,
                                             // this may not be needed and we might just not allow a class 
@@ -239,6 +241,10 @@ public class SUMOformulaToTPTPformula {
             KIF.setupStreamTokenizer(st);
 
             do {
+                if (query || debug)
+                    System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): looping: " +
+                            st);
+
                 st.nextToken();
                 if (st.ttype==40) {         //----Open bracket
                     if (lastWasOpen)      //----Should not have ((in KIF
@@ -413,7 +419,10 @@ public class SUMOformulaToTPTPformula {
     public void tptpParse(Formula input, boolean query, KB kb, List<Formula> preProcessedForms)
         throws ParseException, IOException {
 
-        if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
+        if (debug)
+            System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): input: " + input);
+        if (debug)
+            System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessedForms: " + preProcessedForms);
         _f = input;
         try {
             KBmanager mgr = KBmanager.getMgr();
@@ -429,6 +438,8 @@ public class SUMOformulaToTPTPformula {
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 processed = fp.preProcess(_f,query, kb);
             }
+            if (debug)
+                System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
             if (processed != null) {
                 _f.clearTheTptpFormulas();
                 //----Performs function on each current processed axiom
@@ -451,7 +462,7 @@ public class SUMOformulaToTPTPformula {
             if (ex instanceof IOException)
                 throw (IOException) ex;
         }
-        if (query) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
+        if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
         return;
     }
 
