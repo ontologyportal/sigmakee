@@ -282,15 +282,6 @@ public class SUMOKBtoTPTPKB {
                 oldSourceFile = sourceFile;
                 tptpFormulas = f.getTheTptpFormulas();
 
-                // TODO: this should be removed in the future
-                if (filterSimpleOnly) {
-                    // only consider ground statements and axioms in Amelia.kif
-                    if (!(f.sourceFile.equals(KBmanager.getMgr().getPref("kbDir") + File.separator + "Amelia.kif"))
-                            && !(f.isSimpleClause(kb))) {
-                        continue;
-                    }
-                }
-
                 Formula tmpF = new Formula();
                 tmpF.read(f.theFormula);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -308,7 +299,9 @@ public class SUMOKBtoTPTPKB {
                     tptpFormulas = tmpF.getTheTptpFormulas();
                     f.theTptpFormulas.addAll(tptpFormulas);
                 }
-                //}
+                if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): formula: " + f);
+                if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
+
                 Iterator<String> tptpIt = tptpFormulas.iterator();
                 while (tptpIt.hasNext()) {
                     theTPTPFormula = tptpIt.next();
@@ -405,16 +398,15 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * return true if the given formula is simple clause,
+     * @return true if the given formula is simple clause,
      *   and contains one of the excluded predicates;
-     * otherwise return true;
+     * otherwise return false;
      */
     public boolean filterExcludePredicates(HashSet<String> excludedPredicates, Formula formula) {
 
         boolean pass = false;
         if (formula.isSimpleClause(kb))
             pass = excludedPredicates.contains(formula.getArgument(0));
-
         return pass;
     }
 
@@ -422,8 +414,11 @@ public class SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
+        //debug = true;
         KBmanager.getMgr().initializeOnce();
+                /* not needed since initialization will create the tptp file
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+
         skbtptpkb.kb = KBmanager.getMgr().getKB("SUMO");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
         String fileWritten = skbtptpkb.writeTPTPFile(filename, null, true, "none");
@@ -432,5 +427,6 @@ public class SUMOKBtoTPTPKB {
         else
             System.out.println("Could not write " + filename);
         return;
+        */
     }
 }
