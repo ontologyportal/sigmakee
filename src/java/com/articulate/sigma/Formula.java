@@ -661,12 +661,12 @@ public class Formula implements Comparable {
     public Formula carAsFormula() {
     	
         String thisCar = this.car();
-        if (listP(thisCar)) {
+        //if (listP(thisCar)) {
             Formula f = new Formula();
             f.read(thisCar);
             return f;
-        }
-        return null;
+       // }
+        //return null;
     }
     
     /** ***************************************************************
@@ -1395,8 +1395,10 @@ public class Formula implements Comparable {
      */
     public ArrayList<String> argumentsToArrayList(int start) {
 
-        if (theFormula.indexOf('(',1) != -1)
+        if (theFormula.indexOf('(',1) != -1) {
+            System.out.println("Error in Formula.argumentsToArrayList(): complex formula: " + this);
             return null;
+        }
         int index = start;
         ArrayList<String> result = new ArrayList<String>();
         String arg = getArgument(index);
@@ -2020,7 +2022,7 @@ public class Formula implements Comparable {
      * Returns true only if this Formula, is a horn clause or is simply
      * modified to be horn by breaking out a conjunctive conclusion.
      */
-    public boolean isHorn() {
+    public boolean isHorn(KB kb) {
         
         if (!isRule()) {
             System.out.println("Error in Formula.isHorn(): Formula is not a rule: " + this);
@@ -2032,10 +2034,10 @@ public class Formula implements Comparable {
             return false;        
         
         Formula antecedent = cdrAsFormula().carAsFormula();
-        if (!antecedent.isSimpleClause() && !antecedent.car().equals("and"))
+        if (!antecedent.isSimpleClause(kb) && !antecedent.car().equals("and"))
             return false;
         Formula consequent = cdrAsFormula().cdrAsFormula().carAsFormula();
-        if (!consequent.isSimpleClause() && !consequent.car().equals("and"))
+        if (!consequent.isSimpleClause(kb) && !consequent.car().equals("and"))
             return false;  
         return true;
     }
@@ -2053,7 +2055,7 @@ public class Formula implements Comparable {
      * Test whether a Formula is a simple list of terms (including
      * functional terms).
      */
-    public boolean isSimpleClause() {
+    public boolean isSimpleClause(KB kb) {
 
         if (!listP(this.theFormula))
         	return false;
@@ -2066,7 +2068,7 @@ public class Formula implements Comparable {
         	argnum++;        	
             if (listP(arg)) {
             	Formula f = new Formula(arg);
-                if (!Formula.isFunction(f.car()))
+                if (!kb.isFunction(f.car()))
                     return false;
             }
         } while (!StringUtil.emptyString(arg));
@@ -2077,7 +2079,7 @@ public class Formula implements Comparable {
      * Test whether a Formula is a simple clause wrapped in a
      * negation.
      */
-    public boolean isSimpleNegatedClause() {
+    public boolean isSimpleNegatedClause(KB kb) {
 
         if (!listP(this.theFormula))
         	return false;
@@ -2087,7 +2089,7 @@ public class Formula implements Comparable {
             f.read(f.cdr());
             if (empty(f.cdr())) {
                 f.read(f.car());
-                return f.isSimpleClause();
+                return f.isSimpleClause(kb);
             }
             else
                 return false;
@@ -2255,7 +2257,9 @@ public class Formula implements Comparable {
      * @param term A String.
      */
     public static boolean isFunction(String term) {
-        return (!StringUtil.emptyString(term) && term.endsWith(FN_SUFF));
+
+        System.out.println("Error in Formula.isFuction(): must use KB.isFunction() instead");
+        return (!StringUtil.emptyString(term) && (term.endsWith(FN_SUFF)));
     }
 
     /** ***************************************************************
@@ -2412,6 +2416,8 @@ public class Formula implements Comparable {
         String result = this.theFormula;
         if (!StringUtil.emptyString(this.theFormula))
             this.theFormula = this.theFormula.trim();
+        if (atom())
+            return theFormula;
         String legalTermChars = "-:";
         String varStartChars = "?@";
         String quantifiers = "forall|exists";
@@ -2747,21 +2753,23 @@ public class Formula implements Comparable {
      * A test method.
      */
     public static void testIsSimpleClause() {
-    	
+
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
     	Formula f1 = new Formula();
     	f1.read("(not (instance ?X Human))");
-    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");
     	f1.read("(instance ?X Human)");
-    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");
         f1.read("(=> (attribute ?Agent Investor) (exists (?Investing) (agent ?Investing ?Agent)))");  
-    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");
         f1.read("(member (SkFn 1 ?X3) ?X3)");
-    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");
         f1.read("(member ?VAR1 Org1-1)");
-    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");
     	f1.read("(capability (KappaFn ?HEAR (and (instance ?HEAR Hearing) (agent ?HEAR ?HUMAN) " +
                 "(destination ?HEAR ?HUMAN) (origin ?HEAR ?OBJ))) agent ?HUMAN)");
-    	System.out.println("Simple clause? : " + f1.isSimpleClause() + "\n" + f1 + "\n");
+    	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");
     }
     
     /** ***************************************************************
@@ -2797,7 +2805,18 @@ public class Formula implements Comparable {
         System.out.println("Input: " + f1);
         System.out.println(f1.validArgs());
     }
-    
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void testCar1() {
+
+        Formula f1 = new Formula();
+        f1.read("(=>   (instance ?AT AutomobileTransmission)  (hasPurpose ?AT    (exists (?C ?D ?A ?R1 ?N1 ?R2 ?R3 ?R4 ?N2 ?N3)      (and        (instance ?C Crankshaft)        (instance ?D Driveshaft)        (instance ?A Automobile)        (part ?D ?A)        (part ?AT ?A)        (part ?C ?A)        (connectedEngineeringComponents ?C ?AT)        (connectedEngineeringComponents ?D ?AT)        (instance ?R1 Rotating)        (instance ?R2 Rotating)               (instance ?R3 Rotating)        (instance ?R4 Rotating)        (patient ?R1 ?C)        (patient ?R2 ?C)        (patient ?R3 ?D)        (patient ?R4 ?D)        (causes ?R1 ?R3)        (causes ?R2 ?R4)        (not          (equal ?R1 ?R2))        (holdsDuring ?R1          (measure ?C (RotationFn ?N1 MinuteDuration)))        (holdsDuring ?R2          (measure ?C (RotationFn ?N1 MinuteDuration)))        (holdsDuring ?R3          (measure ?D (RotationFn ?N2 MinuteDuration)))        (holdsDuring ?R4          (measure ?D (RotationFn ?N3 MinuteDuration)))        (not          (equal ?N2 ?N3))))))");
+        System.out.println("Input: " + f1);
+        System.out.println(f1.validArgs());
+    }
+
     /** ***************************************************************
      * A test method.
      */
