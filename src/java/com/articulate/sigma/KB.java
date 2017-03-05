@@ -516,6 +516,27 @@ public class KB {
    }
 
     /** *************************************************************
+     * Returns true if i is an instance of Function in any loaded KB, else
+     * returns false.
+     *
+     * @param i A String denoting an instance.
+     * @return true or false.
+     */
+    public boolean isFunction(String i) {
+
+        if (kbCache != null) {
+            if (isInstanceOf(i,"Function")) {
+                if (!i.endsWith(Formula.FN_SUFF))
+                    System.out.println("Error in KB.isFunction(): functional relation type without 'Fn' suffix: " + i);
+                return true;
+            }
+            else if (i.endsWith(Formula.FN_SUFF))
+                System.out.println("Error in KB.isFunction(): 'Fn' suffix without functional relation type : " + i);
+        }
+        return false;
+    }
+
+    /** *************************************************************
      * Returns true if i is an instance of c in any loaded KB, else
      * returns false.
      *
