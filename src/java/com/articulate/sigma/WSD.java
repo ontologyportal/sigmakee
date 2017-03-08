@@ -146,6 +146,43 @@ public class WSD {
     }
 
     /** ***************************************************************
+     * Return the best guess at the synset for the given word in the
+     * context of the sentence with the given POS.
+     * @param word - word to disambiguate
+     * @param words - words in context
+     * @param pos - part of speech of @word
+     * @return the 9-digit synset but only if there's a reasonable amount of data.
+     */
+    public static String findWordSendInContextWithPosCoreNLP(String word, List<String> words, int pos) {
+
+        //System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
+        //        word + ", " + words);
+        int bestScore = -1;
+        String bestSynset = "";
+        String newWord = "";
+        if (pos == 1)
+            newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
+        if (pos == 2)
+            newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
+        if (newWord != null && newWord != "")
+            word = newWord;
+        List<String> al = findWordSensePOS(word, words, pos);
+        if (al != null && al.size() > 0) {
+            String synset = (String) al.get(0); // 9-digit
+            String bestTotal = (String) al.get(1);
+            int total = (new Integer(bestTotal)).intValue();
+            if (total >= bestScore) {
+                bestScore = total;
+                bestSynset = synset;
+            }
+        }
+        if (bestScore > 5)
+            return bestSynset;
+        else
+            return getBestDefaultSense(word);
+    }
+
+    /** ***************************************************************
      * Check if a sense has been created from a domain ontology and give
      * it priority.  Returns an ArrayList consisting of
      * a 9-digit WordNet synset, and the score
