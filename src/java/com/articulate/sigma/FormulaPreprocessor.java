@@ -682,7 +682,7 @@ public class FormulaPreprocessor {
                     //else
                         pred = pred + "_" + arity;
                     kb.kbCache.copyNewPredFromVariableArity(pred,oldPred,arity);
-                    System.out.println("preProcessRecurse: pred: " + pred);
+                    if (debug) System.out.println("preProcessRecurse: pred: " + pred);
                 }
                 Formula restF = f.cdrAsFormula();
                 //if (debug) System.out.println("preProcessRecurse: restF: " + restF);
