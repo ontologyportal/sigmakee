@@ -225,6 +225,51 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    public static char posPennToNumber(String penn) {
+
+        if (penn.equals("CC")) return '0';	// Coordinating conjunction
+        else if (penn.equals("CD")) return '0';	//     CD	Cardinal number
+        else if (penn.equals("DT")) return '0';	//     3.	DT	Determiner
+        else if (penn.equals("EX")) return '0';	// 4.	EX	Existential there
+        else if (penn.equals("FW")) return '0';	// 5.	FW	Foreign word
+        else if (penn.equals("IN")) return '0';	// 6.	IN	Preposition or subordinating conjunction
+        else if (penn.equals("JJ")) return '3';	// 7.	JJ	Adjective
+        else if (penn.equals("JJR")) return '3';	// 8.	JJR	Adjective, comparative
+        else if (penn.equals("JJS")) return '3';	// 9.	JJS	Adjective, superlative
+        else if (penn.equals("LS")) return '0';	// 10.	LS	List item marker
+        else if (penn.equals("MD")) return '0';	// 11.	MD	Modal
+        else if (penn.equals("NN")) return '1';	// 12.	NN	Noun, singular or mass
+        else if (penn.equals("NNS")) return '1';	// 13.	NNS	Noun, plural
+        else if (penn.equals("NNP")) return '1';	// 14.	NNP	Proper noun, singular
+        else if (penn.equals("NNPS")) return '1';	// 15.	NNPS	Proper noun, plural
+        else if (penn.equals("PDT")) return '0';	// 16.	PDT	Predeterminer
+        else if (penn.equals("POS")) return '0';	// 17.	POS	Possessive ending
+        else if (penn.equals("PRP")) return '0';	// 18.	PRP	Personal pronoun
+        else if (penn.equals("PRP$")) return '0';	// 19.	PRP$	Possessive pronoun
+        else if (penn.equals("RB")) return '4';	// 20.	RB	Adverb
+        else if (penn.equals("RBR")) return '4';	// 21.	RBR	Adverb, comparative
+        else if (penn.equals("RBS")) return '4';	// 22.	RBS	Adverb, superlative
+        else if (penn.equals("RP")) return '0';	// 23.	RP	Particle
+        else if (penn.equals("SYM")) return '0';	// 24.	SYM	Symbol
+        else if (penn.equals("TO")) return '0';	// 25.	TO	to
+        else if (penn.equals("UH")) return '0';	// 26.	UH	Interjection
+        else if (penn.equals("VB")) return '2';	// 27.	VB	Verb, base form
+        else if (penn.equals("VBD")) return '2';	// 28.	VBD	Verb, past tense
+        else if (penn.equals("VBG")) return '2';	// 29.	VBG	Verb, gerund or present participle
+        else if (penn.equals("VBN")) return '2';	// 30.	VBN	Verb, past participle
+        else if (penn.equals("VBP")) return '2';	// 31.	VBP	Verb, non-3rd person singular present
+        else if (penn.equals("VBZ")) return '2';	// 32.	VBZ	Verb, 3rd person singular present
+        else if (penn.equals("WDT")) return '0';	// 33.	WDT	Wh-determiner
+        else if (penn.equals("WP")) return '0';	// 34.	WP	Wh-pronoun
+        else if (penn.equals("WP$")) return '0';	// 35.	WP$	Possessive wh-pronoun
+        else if (penn.equals("WRB")) return '0';	// 36.	WRB	Wh-adverb
+
+        else System.out.println("Error in WordNetUtilities.posPennToNumber(): bad tag: " + penn);
+        return '0';
+    }
+
+    /** ***************************************************************
      * Convert a part of speech number to the two letter format used by
      * the WordNet sense index code.  Defaults to noun "NN".
      */
