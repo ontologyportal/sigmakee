@@ -463,7 +463,7 @@ public class WSD {
             String f = "/home/apease/ontology/SICK/SICK.txt";
             File sickFile = new File(f);
             if (sickFile == null) {
-                System.out.println("Error in WordNet.readNouns(): The file does not exist in " + f );
+                System.out.println("Error in WSD.readSick(): The file does not exist in " + f );
                 return null;
             }
             long t1 = System.currentTimeMillis();
@@ -541,6 +541,84 @@ public class WSD {
                 ex.printStackTrace();
             }
         }
+    }
+
+    /** ***************************************************************
+     *  @return each line of a file into an array.  The first element of
+     *  each interior array is the whole line, and subsequent elements
+     *  are the individual words.
+     */
+    public static ArrayList<ArrayList<String>> readFileIntoArray(String filename) {
+
+        System.out.println("In WSD.readFileIntoArray(): Reading file " + filename);
+        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
+        LineNumberReader lr = null;
+        try {
+            String line;
+            File file = new File(filename);
+            if (file == null) {
+                System.out.println("Error in WSD.collectSUMOFromFile(): The file does not exist in " + filename);
+                return null;
+            }
+            long t1 = System.currentTimeMillis();
+            FileReader r = new FileReader(file);
+            lr = new LineNumberReader(r);
+            while ((line = lr.readLine()) != null) {
+                System.out.println(line);
+                String[] ls = line.split(" ");
+                ArrayList<String> al = new ArrayList<String>();
+                al.add(line);
+                al.addAll(Arrays.asList(ls));
+                result.add(al);
+            }
+        }
+        catch (IOException ex) {
+            System.out.println("Error in WSD.readSick()");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     *  Extract SUMO terms from a file assuming one sentence per line
+     *  @return a Map of SUMO term keys and integer counts of their
+     *  appearance
+     */
+    public static Map<String,Integer> collectSUMOFromFile(String filename) {
+
+        HashMap<String,Integer> result = new HashMap<>();
+        ArrayList<ArrayList<String>> far = readFileIntoArray(filename);
+        for (ArrayList<String> line : far) {
+            String fullsent = line.get(0);
+            for (int i = 1; i < line.size(); i++) {
+                String synset = findWordSenseInContext(line.get(i), line);
+                if (synset == "")
+                    synset = WSD.getBestDefaultSense(line.get(i));
+                if (synset != null && synset != "") {
+                    if (!result.containsKey(synset)) {
+                        result.put(synset, 1);
+                        System.out.println("new synset: " + synset);
+                    }
+                    else {
+                        Integer val = result.get(synset);
+                        //System.out.println("adding to synset: " + synset + " : " + (val + 1));
+                        result.put(synset, val.intValue() + 1);
+                    }
+                }
+            }
+        }
+        Iterator<String> it = result.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            String SUMO = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(key));
+            ArrayList<String> words = WordNet.wn.synsetsToWords.get(key);
+            String wordstr = "";
+            if (words != null)
+                wordstr = words.toString();
+            System.out.println(key + "\t" + result.get(key) + "\t" + SUMO + "\t" + wordstr);
+        }
+        return result;
     }
 
     /** ***************************************************************
@@ -626,6 +704,16 @@ public class WSD {
         //testWordWSD();
         //testSentenceWSD();
         //testSentenceWSD2();
-        collectSUMOFromSICK();
+        //collectSUMOFromSICK();
+        if (args != null && args.length > 0 && (args[0].equals("-f"))) {
+            KBmanager.getMgr().initializeOnce();
+            collectSUMOFromFile(args[1]);
+        }
+        else if (args != null || args.length == 0 || (args.length > 0 && args[0].equals("-h"))) {
+            System.out.println("Word Sense Disambiguation");
+            System.out.println("  options:");
+            System.out.println("  -h - show this help screen");
+            System.out.println("  -f <file> - find all SUMO terms in a file");
+        }
     }
 }
