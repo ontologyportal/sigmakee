@@ -13,7 +13,12 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import java.io.File;
+import java.io.FileReader;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -525,7 +530,67 @@ public class ProofProcessor {
     	 System.out.println(removeNestedAnswerClause(stmt));
      }
 
-      /** ***************************************************************
+	 /****************************************************************
+      * Tally the number of appearances of a particular axiom label in
+      * a file.  This is intended to be used to analyse E output that
+      * looks for contradictions, with the intuition that axioms that
+      * appear in most or all of the contractions found are the source
+      * of the problem.
+	 */
+	 public static void tallyAxioms(String file) {
+
+         HashMap<String,String> axioms = new HashMap<>();
+         HashMap<String,Integer> counts = new HashMap<>();
+		 LineNumberReader lr = null;
+		 try {
+			 String line;
+			 File f = new File(file);
+			 if (f == null) {
+				 System.out.println("Error in ProofProcessor.tallyAxioms(): The file does not exist " + file);
+				 return;
+			 }
+			 FileReader r = new FileReader(f);
+			 // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
+			 lr = new LineNumberReader(r);
+			 while ((line = lr.readLine()) != null) {
+				 if (lr.getLineNumber() % 1000 == 0)
+					 System.out.print('.');
+                 Pattern p = Pattern.compile("fof\\((kb_SUMO_\\d+)");
+				 Matcher m = p.matcher(line);
+				 if (m.find()) {
+					 axioms.put(m.group(1),line);
+                     Integer i = counts.get(m.group(1));
+                     if (i == null)
+                         counts.put(m.group(1),new Integer(1));
+                     else {
+                         i++;
+                         counts.put(m.group(1), i);
+                     }
+				 }
+			 }
+		 }
+		 catch (Exception ex) {
+			 ex.printStackTrace();
+		 }
+
+         Iterator<String> it = axioms.keySet().iterator();
+         while (it.hasNext()) {
+             String key = it.next();
+             String val = axioms.get(key);
+             System.out.println(key + "\t" + val);
+         }
+
+         System.out.println();
+         it = counts.keySet().iterator();
+         while (it.hasNext()) {
+             String key = it.next();
+             Integer val = counts.get(key);
+             System.out.println(key + "\t" + val);
+         }
+         return;
+	 }
+
+	  /** ***************************************************************
        */
       public static void testFormatProof() {
 
@@ -548,6 +613,7 @@ public class ProofProcessor {
       */
        public static void main (String[] args) {
 
-    	   testRemoveAnswer();
+    	   //testRemoveAnswer();
+		   tallyAxioms(args[0]);
        }
 }
