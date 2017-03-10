@@ -7,29 +7,27 @@
   <property name="build.lib" value="${build.home}/lib"/>
   <property environment="env"/>
   <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
-  <echo message="CATALINA_HOME is set to = ${env.CATALINA_HOME}"/>
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
   <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
-  <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
   <property name="kbs.home" value="${sigma.home}/KBs" />
-  <echo message="KBs_HOME is set to = ${kbs.home}" />
-  <echo>Java Version via Ant: ${ant.java.version}</echo>
-  <echo>Java Version System Prop: ${java.version}</echo> 
   <property name="dist.home" value="${tomcat.home}/webapps"/>
   <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
   <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
   <property name="deploy.lib" value="${deploy.home}/WEB-INF/lib"/>
-  <property name="deploy.jars" value="${deploy.home}/WEB-INF/lib"/>
   <property name="dist.war" value="sigma.war"/>
   <property name="javadoc.home" value="doc/api"/>
   <property name="build.javadoc" value="${build.home}/${javadoc.home}"/>
-  <property name="debian.folder" value="native-installers/debian"/>
+
+  <echo message="CATALINA_HOME is set to = ${env.CATALINA_HOME}"/>
+  <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
+  <echo message="KBs_HOME is set to = ${kbs.home}" />
+  <echo>Java Version via Ant: ${ant.java.version}</echo>
+  <echo>Java Version System Prop: ${java.version}</echo> 
 </target>
 
 <target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" classpathref="compile.classpath">
-        <!-- classpath refid="core.classpath"/ -->
         <src refid="core.sourcepath"/>
     </javac>
     <copy todir="${build.lib}">
@@ -37,12 +35,11 @@
     </copy>
 </target>
 
-<target name="web_deploy" depends="compile,compile" description="Create the deploy structure and add the contents.">
+<target name="web_deploy" depends="compile" description="deploy code to sigma.war">
     <!-- Make the root. -->   
 	<mkdir dir="${deploy.home}"/>
 
     <!-- Delete the old code -->
-
     <delete includeemptydirs="true" failonerror="false">
         <fileset dir="${deploy.home}"/>
         <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
@@ -76,7 +73,6 @@
 	<copy todir="${deploy.lib}">
           <fileset dir="${basedir}/lib" />
     </copy>
-
 </target>
 
 <target name="dist" depends="web_deploy" description="Create the *.war file and place in ${build.home}.">
@@ -87,6 +83,9 @@
         <lib dir="${deploy.lib}"/>
         <classes dir="${deploy.classes}"/>
     </war>
+    <jar destfile="${build.home}/sigmakee.jar">
+        <fileset dir="${deploy.classes}"/>
+    </jar>
 </target>
 
 <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
@@ -106,50 +105,29 @@
 <!-- target name="all" depends="dist, api_doc" -->
 <target name="all" depends="dist">
     <tstamp>
-        <format property="TODAY_US" pattern="yyyy-MM-dd HH:mm:ss:sss zzz"
-                locale="en,US"/>
+        <format property="TODAY_US" pattern="yyyy-MM-dd HH:mm:ss:sss zzz" locale="en,US"/>
     </tstamp>
     <echo>the system date/time is ${TODAY_US}</echo>
 </target>
 
-	<target name="install" depends="init">
-		<fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME" />
-		<copy todir="${sigma.home}/KBs">
-			<fileset dir="${kbs.home}" />
-		</copy>
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/Translations/language.txt" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/FirstNames.csv" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/sentiment.csv" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/stopwords.txt" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/wordFrequencies.txt" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/WordNetMappings30-noun.txt" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/WordNetMappings30-verb.txt" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/WordNetMappings30-adj.txt" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/WordNetMappings/WordNetMappings30-adv.txt" />
+<target name="install" depends="init">
+  <fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME" />
+  <copy todir="${sigma.home}/KBs">
+    <fileset dir="${kbs.home}" />
+  </copy>
+  <copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/Translations/language.txt" />
+  <copy todir="${sigma.home}/KBs/WordNetMappings">
+    <fileset dir="${kbs.home}/WordNetMappings" />
+  </copy>
 
-		<!-- copy wordnet -->
-		<untar dest="${sigma.install.downloads}" compression="gzip">
-			<url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" />
-		</untar>
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/adj.exc" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/adv.exc" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/noun.exc" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/verb.exc" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/index.adj" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/index.adv" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/index.noun" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/index.sense" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/index.verb" />
-		<copy todir="${sigma.home}/KBs/WordNetMappings" file="${sigma.install.downloads}/WordNet-3.0/dict/cntlist" />
-
-		<get dest="${sigma.install.downloads}" src="http://nlp.stanford.edu/software/stanford-ner-2015-01-29.zip" usetimestamp="true" />
-		<unzip dest="${sigma.home}" src="${sigma.install.downloads}/stanford-ner-2015-12-09.zip" >
-			<patternset>
-				<include name="**/classifiers/english.muc.7class.distsim.crf.ser.gz" />
-			</patternset>
-			<mapper type="flatten"/>
-		</unzip>
-	</target>
+  <!-- copy wordnet -->
+  <untar dest="${sigma.install.downloads}" compression="gzip">
+    <url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" />
+  </untar>
+  <copy todir="${sigma.home}/KBs/WordNetMappings">
+    <fileset dir="${sigma.install.downloads}/WordNet-3.0/dict" />
+  </copy>
+</target>
 	
 <path id="javadoc.classpath">
     <pathelement path="classes:${basedir}/lib/cos.jar:"/>
