@@ -116,7 +116,7 @@ public class WSD {
      * @param pos - part of speech of @word
      * @return the 9-digit synset but only if there's a reasonable amount of data.
      */
-    public static String findWordSendInContextWithPos(String word, List<String> words, int pos) {
+    public static String findWordSenseInContextWithPos(String word, List<String> words, int pos) {
 
         //System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
         //        word + ", " + words);
@@ -153,9 +153,9 @@ public class WSD {
      * @param pos - part of speech of @word
      * @return the 9-digit synset but only if there's a reasonable amount of data.
      */
-    public static String findWordSendInContextWithPosCoreNLP(String word, List<String> words, int pos) {
+    public static String findWordSenseInContextWithPosCoreNLP(String word, List<String> words, int pos) {
 
-        //System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
+        //System.out.println("INFO in WSD.findWordSenseInContextWithPos(): word, words: " +
         //        word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
