@@ -1240,7 +1240,7 @@ public class OWLtranslator {
         if (word.indexOf("_") != -1) 
             wordOrPhrase = "phrase";
         pw.println("  <rdfs:comment xml:lang=\"en\">The English " + wordOrPhrase + " \"" + word + "\".</rdfs:comment>");
-        ArrayList senses = (ArrayList) WordNet.wn.wordsToSenses.get(word);
+        ArrayList senses = (ArrayList) WordNet.wn.wordsToSenseKeys.get(word);
         if (senses != null) {
         	for (int i = 0; i < senses.size(); i++) {
         		String sense = (String) senses.get(i);
@@ -1256,7 +1256,7 @@ public class OWLtranslator {
      */
     private void writeWordsToSenses(PrintWriter pw) throws IOException {
 
-        Iterator it = WordNet.wn.wordsToSenses.keySet().iterator();
+        Iterator it = WordNet.wn.wordsToSenseKeys.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
             writeOneWordToSenses(pw,word);
