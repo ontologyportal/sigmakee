@@ -30,6 +30,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.articulate.sigma.WordNetUtilities.isValidKey;
+
 /** ***************************************************************
  *  This program finds and displays SUMO terms that are related in meaning to the English
  *  expressions that are entered as input.  Note that this program uses four WordNet data
@@ -46,25 +48,11 @@ public class WordNet {
     
     /* A map of language name to wordnets */
     public static HashMap<String,WordNet> wns = new HashMap<String,WordNet>();
-    private static String baseDir = "";
-    private static File baseDirFile = null;
+    public static String baseDir = "";
+    public static File baseDirFile = null;
     public static boolean initNeeded = true;
 
-    private static final String[][] wnFilenamePatterns =
-    { { "noun_mappings",    "WordNetMappings.*noun.*txt" },
-        { "verb_mappings",    "WordNetMappings.*verb.*txt" },
-        { "adj_mappings",     "WordNetMappings.*adj.*txt" },
-        { "adv_mappings",     "WordNetMappings.*adv.*txt" },
-        { "noun_exceptions",  "noun.exc" },
-        { "verb_exceptions",  "verb.exc" },
-        { "adj_exceptions",   "adj.exc" },
-        { "adv_exceptions",   "adv.exc" },
-        { "sense_indexes",    "index.sense" },
-        { "word_frequencies", "wordFrequencies.txt" },
-        { "cntlist", "cntlist" },
-        { "stopwords",        "stopwords.txt" },
-        { "messages",         "messages.txt" }
-    };
+    private static HashMap<String,String> wnFilenames = new HashMap<>();
 
     /** This array contains all of the compiled Pattern objects that
      * will be used by methods in this file. */
@@ -120,7 +108,7 @@ public class WordNet {
      * of the sense in WordNet.  The value is a HashMap of words and the
      * number of times that word cooccurs in sentences with the word sense
      * given in the key.  */
-    protected HashMap<String,HashMap<String,Integer>> wordCoFrequencies = new HashMap<String,HashMap<String,Integer>>();
+    public HashMap<String,HashMap<String,Integer>> wordCoFrequencies = new HashMap<String,HashMap<String,Integer>>();
 
     /** a HashMap of HashMaps where the key is a word and the value is a 
      * HashMap of 9-digit POS-prefixed senses which is the value of the AVPair,
@@ -140,11 +128,14 @@ public class WordNet {
     public ArrayList<String> stopwords = new ArrayList<String>();
 
     /** A HashMap where the keys are of the form word_POS_sensenum (alpha POS like "VB")
-     * and values are 8 digit WordNet synset byte offsets. */
+     * and values are 8 digit WordNet synset byte offsets. Note that all words are
+     * from index.sense, which reduces all words to lower case */
     public HashMap<String,String> senseIndex = new HashMap<String,String>();
 
     /** A HashMap where the keys are 9 digit POS prefixed WordNet synset byte offsets, 
-     * and the values are of the form word_POS_sensenum (alpha POS like "VB"). */
+     * and the values are of the form word_POS_sensenum (alpha POS like "VB"). Note
+     * that all words are from index.sense, which reduces
+     * all words to lower case */
     public HashMap<String,String> reverseSenseIndex = new HashMap<String,String>();
     
     /** A HashMap where keys are 8 digit
@@ -156,8 +147,9 @@ public class WordNet {
     /** A HashMap with words as keys and ArrayList as values.  The
      * ArrayList contains word senses which are Strings of the form
      * word_POS_num (alpha POS like "VB") signifying the word, part of speech and number of
-     * the sense in WordNet. */
-    public HashMap<String,ArrayList<String>> wordsToSenses = new HashMap<String,ArrayList<String>>();
+     * the sense in WordNet. Note that all words are from index.sense, which reduces
+     * all words to lower case*/
+    public HashMap<String,ArrayList<String>> wordsToSenseKeys = new HashMap<String,ArrayList<String>>();
 
     public MultiWords multiWords = new MultiWords();
 
@@ -265,6 +257,25 @@ public class WordNet {
     }
 
     /** ***************************************************************
+     */
+    private void makeFileMap() {
+
+        wnFilenames.put("noun_mappings",    "WordNetMappings30-noun.txt" );
+        wnFilenames.put("verb_mappings",    "WordNetMappings30-verb.txt" );
+        wnFilenames.put("adj_mappings",     "WordNetMappings30-adj.txt" );
+        wnFilenames.put("adv_mappings",     "WordNetMappings30-adv.txt" );
+        wnFilenames.put("noun_exceptions",  "noun.exc" );
+        wnFilenames.put("verb_exceptions",  "verb.exc" );
+        wnFilenames.put("adj_exceptions",   "adj.exc" );
+        wnFilenames.put("adv_exceptions",   "adv.exc" );
+        wnFilenames.put("sense_indexes",    "index.sense" );
+        wnFilenames.put("word_frequencies", "wordFrequencies.txt" );
+        wnFilenames.put("cntlist",          "cntlist" );
+        wnFilenames.put("stopwords",        "stopwords.txt" );
+        wnFilenames.put("messages",         "messages.txt");
+    }
+
+    /** ***************************************************************
      * This method compiles all of the regular expression pattern
      * strings in regexPatternStrings and puts the resulting compiled
      * Pattern objects in the Pattern[] regexPatterns.
@@ -283,47 +294,23 @@ public class WordNet {
     }
 
     /** ***************************************************************
-     * Returns the WordNet File object corresponding to key.  The
-     * purpose of this accessor is to make it easier to deal with
-     * possible changes to these file names, since the descriptive
-     * key, ideally, need not change.  Each key maps to a regular
-     * expression that is used to match against filenames found in the
-     * directory denoted by WordNet.baseDir.  If multiple filenames
-     * match the pattern for one key, then the file that was most
-     * recently changed (presumably, saved) is chosen.
+     * Returns the WordNet File object corresponding to key.
      *
      * @param key A descriptive literal String that maps to a regular
      * expression pattern used to obtain a WordNet file.
      *
      * @return A File object
      */
-    public File getWnFile(String key) {
+    public File getWnFile(String key, String override) {
         
         File theFile = null;
         try {
-            String pattern = null;
-            int i = 0;
-            for (i = 0; i < wnFilenamePatterns.length; i++) {
-                if ((wnFilenamePatterns[i][0]).equalsIgnoreCase(key)) {
-                    pattern = wnFilenamePatterns[i][1];
-                    break;
-                }
-            }
-            if ((pattern != null) && (baseDirFile != null)) {
-                File[] wnFiles = baseDirFile.listFiles();
-                if (wnFiles != null) {
-                    for (i = 0; i < wnFiles.length; i++) {
-                        if (wnFiles[i].getName().matches(pattern) && wnFiles[i].exists()) {
-                            if (theFile != null) {
-                                if (wnFiles[i].lastModified() > theFile.lastModified()) 
-                                    theFile = wnFiles[i];                                
-                            }
-                            else 
-                                theFile = wnFiles[i];                            
-                        }
-                    }
-                }
-            }
+            if (override != null)
+                theFile = new File(override);
+            else if ((key != null) && (baseDirFile != null))
+                theFile = new File(baseDirFile + File.separator + wnFilenames.get(key));
+            if (theFile == null || !theFile.exists())
+                System.out.println("Error in WordNet.getWnFile(): no such file: " + theFile.getAbsolutePath());
         }
         catch (Exception ex) {
             System.out.println("Error in WordNet.getWnFile(): key: " + key);
@@ -389,6 +376,7 @@ public class WordNet {
     /** ***************************************************************
      * Add a synset and its corresponding word to the synsetsToWords
      * variable.  Prefix the synset with its part of speech before adding.
+     * Also add a wordsToSynsets entry
      */
     private void addToSynsetsToWords(String word, String synsetStr, String POS) {
 
@@ -557,7 +545,8 @@ public class WordNet {
                 }
             }
             else {
-                System.out.println("Error in WordNet.processPointers(): " + synset.charAt(0) + " leftover pointers: \"" + pointers + "\"");
+                System.out.println("Error in WordNet.processPointers(): " +
+                        synset.charAt(0) + " leftover pointers: \"" + pointers + "\"");
             }
         }
         return;
@@ -587,7 +576,8 @@ public class WordNet {
     public String getSUMOMapping(String synset) {
 
         if (StringUtil.emptyString(synset)) {
-            System.out.println("Error in WordNet.getSUMOMapping: null synset ");
+            System.out.println("Error in WordNet.getSUMOMapping: null synset " + synset);
+            Thread.dumpStack();
             return null;
         }
         switch (synset.charAt(0)) {
@@ -597,6 +587,7 @@ public class WordNet {
         case '4': return (String) adverbSUMOHash.get(synset.substring(1));
         }
         System.out.println("Error in WordNet.getSUMOMapping: improper first character for synset: " + synset);
+        Thread.dumpStack();
         return null;
     }
 
@@ -606,6 +597,8 @@ public class WordNet {
      *  noun synsets, word definitions, mappings to SUMO, and plural
      *  exception forms, respectively.
      *  Throws an IOException if the files are not found.
+     *  Use a default filename and path unless a non-null string is
+     *  provided, in which case assume it is a full path.
      */
     private void readNouns() throws java.io.IOException {
     	
@@ -614,7 +607,7 @@ public class WordNet {
         try {
             // synset_offset  lex_filenum  ss_type  w_cnt  word  lex_id  [word  lex_id...]  p_cnt  [ptr...]  [frames...]  |   gloss
             String line;
-            File nounFile = getWnFile("noun_mappings");
+            File nounFile = getWnFile("noun_mappings",null);
             if (nounFile == null) {
                 System.out.println("Error in WordNet.readNouns(): The noun mappings file does not exist in " + baseDir );
                 return;
@@ -638,7 +631,7 @@ public class WordNet {
                     + " seconds to process " + nounFile.getCanonicalPath() + 
                     " with " + lr.getLineNumber() + " lines");
             // System.out.println("INFO in WordNet.readNouns(): Reading WordNet noun exceptions");
-            nounFile = getWnFile("noun_exceptions");
+            nounFile = getWnFile("noun_exceptions",null);
             if (nounFile == null) {
                 System.out.println("ERROR in WordNet.readNouns(): "
                         + "The noun mapping exceptions file does not exist in " + baseDir);
@@ -674,6 +667,7 @@ public class WordNet {
                     + " seconds to process " + nounFile.getCanonicalPath() );
         }
         catch (Exception ex) {
+            System.out.println("Error in WordNet.readNouns(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -757,7 +751,7 @@ public class WordNet {
         LineNumberReader lr = null;
         try {
             String line;
-            File verbFile = getWnFile("verb_mappings");
+            File verbFile = getWnFile("verb_mappings",null);
             if (verbFile == null) {
                 System.out.println("Error in WordNet.readVerbs(): The verb mappings file does not exist in " + baseDir);
                 return;
@@ -800,7 +794,7 @@ public class WordNet {
                     + " seconds to process " + verbFile.getCanonicalPath()  + 
                     " with " + lr.getLineNumber() + " lines");
             // System.out.println("INFO in WordNet.readVerbs(): Reading WordNet verb exceptions");
-            verbFile = getWnFile("verb_exceptions");
+            verbFile = getWnFile("verb_exceptions",null);
             if (verbFile == null) {
                 System.out.println("Error in WordNet.readVerbs(): The verb mapping exceptions file does not exist in " + baseDir);
                 return;
@@ -824,6 +818,7 @@ public class WordNet {
                     + " seconds to process " + verbFile.getCanonicalPath() );
         }
         catch (Exception ex) {
+            System.out.println("Error in WordNet.readVerbs(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -850,7 +845,7 @@ public class WordNet {
         LineNumberReader lr = null;
         try {
             String line;
-            File adjFile = getWnFile("adj_mappings");
+            File adjFile = getWnFile("adj_mappings",null);
             if (adjFile == null) {
                 System.out.println("Error in WordNet.readAdjectives(): The adjective mappings file does not exist in " + baseDir);
                 return;
@@ -892,6 +887,7 @@ public class WordNet {
                     " with " + lr.getLineNumber() + " lines");
         }
         catch (Exception ex) {
+            System.out.println("Error in WordNet.readAdjectives(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -918,7 +914,7 @@ public class WordNet {
         LineNumberReader lr = null;
         try {
             String line;
-            File advFile = getWnFile("adv_mappings");
+            File advFile = getWnFile("adv_mappings",null);
             if (advFile == null) {
                 System.out.println("Error in WordNet.readAdverbs(): The adverb mappings file does not exist in " + baseDir);
                 return;
@@ -960,6 +956,7 @@ public class WordNet {
                     " with " + lr.getLineNumber() + " lines");
         }
         catch (Exception ex) {
+            System.out.println("Error in WordNet.readAdverbs(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -971,7 +968,78 @@ public class WordNet {
             catch (Exception ex) {
             }
         }
-        return;
+    }
+
+    /** ***************************************************************
+     * Merge a new set of word co-occurrence statistics into the existing
+     * set.
+     */
+    public void mergeWordCoFrequencies(HashMap<String,HashMap<String,Integer>> senses) {
+
+        System.out.println("INFO in WordNet.mergeWordCoFrequencies(): before size: " +
+                wordCoFrequencies.keySet().size());
+        for (String s : senses.keySet()) {
+            if (wordCoFrequencies.containsKey(s)) {
+                HashMap<String,Integer> newValues = senses.get(s);
+                HashMap<String,Integer> oldValues = wordCoFrequencies.get(s);
+                for (String w : newValues.keySet()) {
+                    if (oldValues.containsKey(w)) {
+                        oldValues.put(w,newValues.get(w) + oldValues.get(w));
+                    }
+                    else {
+                        oldValues.put(w,newValues.get(w));
+                    }
+                }
+            }
+            else
+                wordCoFrequencies.put(s,senses.get(s));
+        }
+        System.out.println("INFO in WordNet.mergeWordCoFrequencies(): after size: " +
+                wordCoFrequencies.keySet().size());
+    }
+
+    /** ***************************************************************
+     * Write a HashMap of HashMaps where the key is a word sense of the
+     * form word_POS_num signifying the word, part of speech and number
+     * of the sense in WordNet.  The value is a HashMap of words and the
+     * number of times that word cooccurs in sentences with the word sense
+     * given in the key.
+     */
+    public static void writeWordCoFrequencies(String fname, HashMap<String,HashMap<String,Integer>> senses) {
+
+        FileWriter fw = null;
+        PrintWriter pw = null;
+        String dir = WordNet.baseDir;
+
+        try {
+            fw = new FileWriter(dir + File.separator + fname);
+            pw = new PrintWriter(fw);
+            System.out.println("INFO in WordNet.writeWordFrequencies(): Writing WordNet word frequencies");
+            for (String s : senses.keySet()) {
+                HashMap<String,Integer> values = senses.get(s);
+                if (values.size() > 0) {
+                    pw.print("Word: " + s + " Values: ");
+                    for (String v : values.keySet())
+                        pw.print(v + "_" + values.get(v) + " ");
+                    pw.println();
+                }
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in WordNet.writeProlog(): " + e.getMessage());
+            System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null)
+                    pw.close();
+                if (fw != null)
+                    fw.close();
+            }
+            catch (Exception ex) {
+            }
+        }
     }
 
     /** ***************************************************************
@@ -984,12 +1052,13 @@ public class WordNet {
     public void readWordCoFrequencies() {
 
         System.out.println("INFO in WordNet.readWordFrequencies(): Reading WordNet word frequencies");
+        wordCoFrequencies = new HashMap<String,HashMap<String,Integer>>();
         LineNumberReader lr = null;
         int counter = 0;
         File wfFile = null;
         String canonicalPath = "";
         try {
-            wfFile = getWnFile("word_frequencies");
+            wfFile = getWnFile("word_frequencies",null);
             if (wfFile == null) {
                 System.out.println("Error in WordNet.readWordFrequencies(): The word frequencies file does not exist in " + baseDir);
                 return;
@@ -1063,7 +1132,7 @@ public class WordNet {
         File swFile = null;
         String canonicalPath = "";
         try {
-            swFile = getWnFile("stopwords");
+            swFile = getWnFile("stopwords",null);
             if (swFile == null) {
                 System.out.println("Error in WordNet.readStopWords(): The stopwords file does not exist in " + baseDir);
                 return;
@@ -1098,7 +1167,7 @@ public class WordNet {
     /** ***************************************************************
      * Note that WordNet forces all these words to lowercase in the index.xxx files
      */
-    public void readSenseIndex() {
+    public void readSenseIndex(String filename) {
 
         System.out.println("INFO in WordNet.readSenseIndex(): Reading WordNet sense index");
         LineNumberReader lr = null;
@@ -1107,7 +1176,7 @@ public class WordNet {
         File siFile = null;
         String canonicalPath = "";
         try {
-            siFile = getWnFile("sense_indexes");
+            siFile = getWnFile("sense_indexes",filename);
             if (siFile == null) {
                 System.out.println("Error in WordNet.readSenseIndex(): The sense indexes file does not exist in " + baseDir);
                 return;
@@ -1129,10 +1198,10 @@ public class WordNet {
                     String sensenum = m.group(4);
                     String posString = WordNetUtilities.posNumberToLetters(pos); // alpha POS - NN,VB etc
                     String key = word + "_" + posString + "_" + sensenum;
-                    ArrayList<String> al = wordsToSenses.get(word);
+                    ArrayList<String> al = wordsToSenseKeys.get(word);
                     if (al == null) {
                         al = new ArrayList<String>();
-                        wordsToSenses.put(word, al);
+                        wordsToSenseKeys.put(word, al);
                     }
                     al.add(key);
                     senseIndex.put(key, synset);
@@ -1185,7 +1254,7 @@ public class WordNet {
         File siFile = null;
         String canonicalPath = "";
         try {
-            siFile = getWnFile("cntlist");
+            siFile = getWnFile("cntlist",null);
             if (siFile == null) {
                 System.out.println("Error in WordNet.readSenseCount(): The sense count file does not exist in " + 
                         baseDir + File.separator + "cntlist");
@@ -1461,7 +1530,7 @@ public class WordNet {
             return result.toString();
         }
         catch (FileNotFoundException e) {
-            return "<b> No such File </b>";
+            return "<b> No such File " + pathname + "</b>";
         }
         catch (IOException i) {
             return "<b> IO error </b>";
@@ -1541,7 +1610,7 @@ public class WordNet {
             return "";
         for (int i = 0; i < al.size(); i++) {
             String word = (String) al.get(i);
-            if (!stopwords.contains(word.toLowerCase())) {
+            if (!isStopWord(word)) {
                 if (result == "")
                     result = word;
                 else
@@ -1550,6 +1619,24 @@ public class WordNet {
         }
         return result;
     }
+
+    /** ***************************************************************
+     * Remove stop words from a sentence.
+     */
+    public ArrayList<String> removeStopWords(ArrayList<String> sentence) {
+
+        ArrayList<String> result = new ArrayList<String>();
+        if (sentence == null)
+            return result;
+        for (int i = 0; i < sentence.size(); i++) {
+            String word = (String) sentence.get(i);
+            if (!isStopWord(word)) {
+                result.add(word);
+            }
+        }
+        return result;
+    }
+
     /** ***************************************************************
      * Check whether the word is a stop word
      */
@@ -1562,13 +1649,6 @@ public class WordNet {
         return false;
     }
 
-    /** ***************************************************************
-     
-    public String matchMultiWord(ArrayList<String> al) {
-        
-        return "";
-    }
-*/
     /** ***************************************************************
      * Collect all the synsets that represent the best guess at
      * meanings for all the words in a sentence.  Keep track of how many
@@ -1625,6 +1705,7 @@ public class WordNet {
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
                 baseDirFile = new File(WordNet.baseDir);
                 wn = new WordNet();
+                wn.makeFileMap();
                 wn.compileRegexPatterns();
                 wn.readNouns();
                 wn.readVerbs();
@@ -1632,13 +1713,14 @@ public class WordNet {
                 wn.readAdverbs();
                 wn.readWordCoFrequencies();
                 wn.readStopWords();
-                wn.readSenseIndex();
+                wn.readSenseIndex(null);
                 wn.readSenseCount();
                 initNeeded = false;
                 DB.readSentimentArray();                
             }
         }
         catch (Exception ex) {
+            System.out.println("Error in WordNet.initOnce(): ");
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
@@ -1768,12 +1850,16 @@ public class WordNet {
                                 if (WordNetUtilities.substTest(input,"shes$","sh", nounSynsetHash))
                                     result = WordNetUtilities.subst(input,"shes$","sh");
                                 else {
-                                    if (nounSynsetHash.containsKey(mixedCase))
-                                        result = mixedCase;
+                                    if (WordNetUtilities.substTest(input,"ies$","y", nounSynsetHash)) // but ties and series will be false
+                                        result = WordNetUtilities.subst(input,"ies$","y");
                                     else {
-                                        if (nounSynsetHash.containsKey(input))
-                                            result = input;
-                                    }
+                                        if (nounSynsetHash.containsKey(mixedCase))
+                                            result = mixedCase;
+                                        else {
+                                            if (nounSynsetHash.containsKey(input))
+                                                result = input;
+                                        }
+                                     }
                                 }
                             }
                         }
@@ -1922,22 +2008,26 @@ public class WordNet {
 
     /** ***************************************************************
      * Get all the synsets for a given word.
-     * @return a TreeMap of word keys and values that are ArrayLists of
-     * synset Strings
+     * @return a TreeMap of sense keys in the form of word_POS_num
+     * and values that are ArrayLists of synset Strings
      */
-    public TreeMap<String,ArrayList<String>> getSensesFromWord(String word) {
+    public TreeMap<String,ArrayList<String>> getSenseKeysFromWord(String word) {
 
         TreeMap<String,ArrayList<String>> result = new TreeMap<String,ArrayList<String>>();
         String verbRoot = verbRootForm(word,word.toLowerCase());
         String nounRoot = nounRootForm(word,word.toLowerCase());
-        ArrayList<String> senses = wordsToSenses.get(verbRoot);
-        if (senses != null) {
-            for (int i = 0; i < senses.size(); i++) {
-                String sense = (String) senses.get(i);                // returns a word_POS_num
-                if (sense != null) {
-                    String POS = WordNetUtilities.getPOSfromKey(sense);
+        ArrayList<String> senseKeys = wordsToSenseKeys.get(verbRoot);
+        if (senseKeys != null) {
+            for (int i = 0; i < senseKeys.size(); i++) {
+                String senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
+                if (!isValidKey(senseKey)) {
+                    System.out.println("Error in WordNet.getSenseKeysFromWord: invalid key: " + senseKey);
+                    senseKey = null;
+                }
+                if (senseKey != null) {
+                    String POS = WordNetUtilities.getPOSfromKey(senseKey);
                     if (POS != null) {
-                        String synset = WordNetUtilities.posLettersToNumber(POS) + ((String) senseIndex.get(sense));
+                        String synset = WordNetUtilities.posLettersToNumber(POS) + ((String) senseIndex.get(senseKey));
                         if (synset != null) {
                             ArrayList<String> words = synsetsToWords.get(synset);
                             if (words != null) {
@@ -1957,14 +2047,18 @@ public class WordNet {
                 }
             }
         }
-        senses = wordsToSenses.get(nounRoot);
-        if (senses != null) {
-            for (int i = 0; i < senses.size(); i++) {
-                String sense = (String) senses.get(i);                // returns a word_POS_num
-                if (sense != null) {
-                    String POS = WordNetUtilities.getPOSfromKey(sense);
+        senseKeys = wordsToSenseKeys.get(nounRoot);
+        if (senseKeys != null) {
+            for (int i = 0; i < senseKeys.size(); i++) {
+                String senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
+                if (!isValidKey(senseKey)) {
+                    System.out.println("Error in WordNet.getSenseKeysFromWord: invalid key: " + senseKey);
+                    senseKey = null;
+                }
+                if (senseKey != null) {
+                    String POS = WordNetUtilities.getPOSfromKey(senseKey);
                     if (POS != null) {
-                        String synset = WordNetUtilities.posLettersToNumber(POS) + ((String) senseIndex.get(sense));
+                        String synset = WordNetUtilities.posLettersToNumber(POS) + ((String) senseIndex.get(senseKey));
                         if (synset != null) {
                             ArrayList<String> words = synsetsToWords.get(synset);
                             if (words != null) {
@@ -1984,7 +2078,6 @@ public class WordNet {
                 }
             }
         }
-
         return result;
     }
 
@@ -2321,6 +2414,7 @@ public class WordNet {
             pw.println(se.toFileString());
         }
         catch (Exception e) {
+            System.out.println("Error in WordNet.writeXML(): " + e.getMessage());
             System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
@@ -2637,6 +2731,7 @@ public class WordNet {
             writeAdverbsProlog(pw,kb);
         }
         catch (Exception e) {
+            System.out.println("Error in WordNet.writeProlog(): " + e.getMessage());
             System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
@@ -2736,13 +2831,13 @@ public class WordNet {
         try {
             fw = new FileWriter(dir + File.separator + fname);
             pw = new PrintWriter(fw);
-            if (wordsToSenses.keySet().size() < 1)
+            if (wordsToSenseKeys.keySet().size() < 1)
                 System.out.println("Error in WordNet.writeWordNetS(): No contents in sense index");
-            Iterator<String> it = wordsToSenses.keySet().iterator();
+            Iterator<String> it = wordsToSenseKeys.keySet().iterator();
             while (it.hasNext()) {
                 String word = (String) it.next();
                 String processedWord = processWordForProlog(word);
-                ArrayList<String> keys = wordsToSenses.get(word);
+                ArrayList<String> keys = wordsToSenseKeys.get(word);
                 Iterator<String> it2 = keys.iterator();
                 if (keys.size() < 1)
                     System.out.println("Error in WordNet.writeWordNetS(): No synsets for word: " + word);
@@ -2762,6 +2857,7 @@ public class WordNet {
             }
         }
         catch (Exception e) {
+            System.out.println("Error in WordNet.writeWordNetS(): ");
             System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
@@ -2810,6 +2906,7 @@ public class WordNet {
             }
         }
         catch (Exception e) {
+            System.out.println("Error in WordNet.writeWordNetHyp(): ");
             System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
@@ -2886,6 +2983,7 @@ public class WordNet {
             }
         }
         catch (Exception e) {
+            System.out.println("Error in WordNet.writeWordNetG(): ");
             System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
@@ -2911,26 +3009,17 @@ public class WordNet {
     }
 
     /** ***************************************************************
-     * Generate a new synset ID that doesn't have an existing hash
+     * Generate a new 8 digit synset ID that doesn't have an existing hash
      */
     public String generateSynsetID(String l) {
 
         Integer intval = Integer.parseInt(l);
         intval++;
-        String synsetID = String.valueOf(intval);
-        if (synsetID.length() > 8) {
-            System.out.println("Error in WordNet.generateSynsetID(): max synset number exceeded: " +
-                synsetID);
-            return null;
-        }
-        if (synsetID.length() < 8)
-            return StringUtil.fillString(synsetID,'0',8,true);
-        else
-            return synsetID;
+        return StringUtil.integerToPaddedString(intval);
     }
 
     /** ***************************************************************
-     * Generate a new noun synset ID that doesn't have an existing hash
+     * Generate a new eight digit noun synset ID that doesn't have an existing hash
      */
     public String generateNounSynsetID() {
 
@@ -2939,7 +3028,7 @@ public class WordNet {
     }
 
     /** ***************************************************************
-     * Generate a new noun synset ID that doesn't have an existing hash
+     * Generate a new eight digit verb synset ID that doesn't have an existing hash
      */
     public String generateVerbSynsetID() {
 
@@ -2960,7 +3049,7 @@ public class WordNet {
             nounDocumentationHash.put(synsetID, doc);
         }
         nounSUMOHash.put(synsetID, SUMOterm + "=");
-        //nounSynsetHash
+        nounSynsetHash.put(tf,synsetID);
         return synsetID;
     }
 
@@ -2977,7 +3066,7 @@ public class WordNet {
             verbDocumentationHash.put(synsetID, doc);
         }
         verbSUMOHash.put(synsetID, SUMOterm + "=");
-        //verbSynsetHash
+        verbSynsetHash.put(tf,synsetID);
         return synsetID;
     }
    
@@ -3019,12 +3108,13 @@ public class WordNet {
         String letterPOS = WordNetUtilities.posNumberToLetters(pos);
         String key = tf + "_" + letterPOS + "_1"; // FIXME: Note! This will cause a bug if there's a name clash        
         senseIndex.put(key,synsetID.substring(1)); // senseIndex requires un-prefixed synset #
+        reverseSenseIndex.put(synsetID,key);
         ArrayList<String> keys = new ArrayList<String>();
-        if (wordsToSenses.containsKey(tf)) 
-            keys = wordsToSenses.get(tf);
+        if (wordsToSenseKeys.containsKey(tf))
+            keys = wordsToSenseKeys.get(tf);
         keys.add(key);
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenses: " + tf + "," + keys);
-        wordsToSenses.put(tf,keys);
+        wordsToSenseKeys.put(tf,keys);
 
         // TODO: kind of a hack to give priority to any domain term, maybe make this a switchable option
         if (!form.sourceFile.equals("Merge.kif") && !form.sourceFile.equals("Mid-level-ontology.kif")) {
@@ -3090,9 +3180,10 @@ public class WordNet {
             KBmanager.getMgr().initializeOnce();
         }
         catch (Exception ex) {
+            System.out.println("Error in WordNet.testWordFreq(): ");
             System.out.println(ex.getMessage());
         }
-        System.out.println("INFO in WordNet.main(): done initializing");
+        System.out.println("INFO in WordNet.testWordFreq(): done initializing");
         WordNet.initOnce();
         System.out.println("Word frequencies: " + WordNet.wn.wordFrequencies.get(word));
         System.out.println("Best word frequency: " + WordNet.wn.wordFrequencies.get(word).last());
@@ -3123,7 +3214,32 @@ public class WordNet {
         }
         System.out.println("Info in WordNet.testProcessPointers(): synset: " + WordNet.wn.verbSynsetHash.get("roll"));
     }
-    
+
+    /** ***************************************************************
+     *  A method used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void checkWordsToSenses() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        }
+        catch (Exception ioe ) {
+            System.out.println("Error in WordNet.checkWordsToSenses(): ");
+            System.out.println(ioe.getMessage());
+        }
+        System.out.println("run " + wn.wordsToSenseKeys.get("run"));
+        System.out.println("TV " + wn.wordsToSenseKeys.get("TV"));
+        System.out.println("tv " + wn.wordsToSenseKeys.get("tv"));
+        System.out.println("106277280 " + wn.synsetsToWords.get("106277280"));
+        System.out.println("106277280 " + wn.reverseSenseIndex.get("106277280"));
+        System.out.println("court " + wn.wordsToSenseKeys.get("court"));
+        System.out.println("state " + wn.wordsToSenseKeys.get("state"));
+        System.out.println("labor " + wn.wordsToSenseKeys.get("labor"));
+        System.out.println("phase " + wn.wordsToSenseKeys.get("phase"));
+        System.out.println("craft " + wn.wordsToSenseKeys.get("craft"));
+    }
+
     /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
@@ -3131,6 +3247,6 @@ public class WordNet {
     public static void main (String[] args) {
         
         //testWordFreq();    
-        testProcessPointers();
+        checkWordsToSenses();
     }
 }
