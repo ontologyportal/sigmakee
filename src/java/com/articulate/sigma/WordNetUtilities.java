@@ -33,10 +33,11 @@ public class WordNetUtilities {
 
     /** POS-prefixed mappings from a new synset number to the old
      *  one. */
-    HashMap<String,String> mappings = new HashMap<String,String>();
+    public static HashMap<String,String> mappings = new HashMap<String,String>();
 
     public static int TPTPidCounter = 1;
-    
+    public static int errorCount = 0;
+
     /** ***************************************************************
      *  Get a SUMO term minus its &% prefix and one character mapping
      * suffix.
@@ -128,6 +129,66 @@ public class WordNetUtilities {
         String POS = getPOSfromKey(senseKey);
         String POSnum = posLettersToNumber(POS);
         return POSnum + WordNet.wn.senseIndex.get(senseKey);
+    }
+
+    /** ***************************************************************
+     * Get the word_POS_num sense key corresponding to a 9 digit synset.
+     * Note that some adjective keys are listed as "adjuncts" with id
+     * '3' instead of '5' so we try that too in case of failure.
+     */
+    public static String getKeyFromSense(String synset) {
+
+        String key = WordNet.wn.reverseSenseIndex.get(synset);
+        if (StringUtil.emptyString(key)) {
+            if (synset.charAt(0) == '3')
+                key = WordNet.wn.reverseSenseIndex.get("5" + synset.substring(1));
+            if (!StringUtil.emptyString(key))
+                return key;
+            if (errorCount < 20) {
+                System.out.println("Error in WordNetUtilities.getKeyFromSense(): no result for " + synset);
+                errorCount++;
+                if (errorCount >= 20)
+                    System.out.println("surpressing further errors...");
+            }
+            return null;
+        }
+        else
+            return key;
+    }
+
+    /** ***************************************************************
+     * Extract the nine digit synset ID corresponding to a word-POS.num sense key.
+     * see nlp.corpora.OntoNotes
+     */
+    public static String synsetFromOntoNotes (String onKey) {
+
+        int index1 = onKey.indexOf('-');
+        if (index1 == -1) {
+            System.out.println("Error in WordNetUtilities.synsetFromOntoNotes(): bad key format: " + onKey);
+            return null;
+        }
+        int index2 = onKey.indexOf('.');
+        if (index2 == -1) {
+            System.out.println("Error in WordNetUtilities.synsetFromOntoNotes(): bad key format: " + onKey);
+            return null;
+        }
+        String word = onKey.substring(0,index1);
+        char POS = onKey.charAt(index1+1);
+        char POSnum = posLetterToNumber(POS);
+        String senseNum = onKey.substring(index2+1,onKey.length());
+        String senseKey = word + "_" + posNumberToLetters(Character.toString(POSnum)) + "_" + senseNum;
+        String eightDigit = WordNet.wn.senseIndex.get(senseKey);
+        if (eightDigit == null) {
+            if (errorCount < 20) {
+                System.out.println("Error in WordNetUtilities.synsetFromOntoNotes(): no synset for sense key: " + senseKey);
+                errorCount++;
+                if (errorCount >= 20)
+                    System.out.println("surpressing further errors...");
+            }
+            return null;
+        }
+        else
+            return POSnum + WordNet.wn.senseIndex.get(senseKey);
     }
 
     /** ***************************************************************
@@ -316,11 +377,11 @@ public class WordNetUtilities {
             return WordNet.ADVERB;
         if (sense.indexOf("_AS_") != -1)
             return WordNet.ADJECTIVE_SATELLITE;
-        if (sense.indexOf("NN") != -1)
+        if (sense.indexOf("NNP") != -1)
             return WordNet.NOUN;
         if (sense.indexOf("JJ") != -1)
             return WordNet.ADJECTIVE;
-        if (sense.indexOf("VB") != -1)
+        if (sense.indexOf("VBG") != -1)
             return WordNet.VERB;
         if (sense.indexOf("RB") != -1)
             return WordNet.ADVERB;
@@ -735,7 +796,7 @@ public class WordNetUtilities {
      * updateWNversion().  The output is a set of WordNet data files
      * with a "-new" suffix.
      */
-    public void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
+    public static void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null;
@@ -801,12 +862,13 @@ public class WordNetUtilities {
     /** ***************************************************************
      * Read the version mapping files and store in the HashMap
      * called "mappings".
+     * Note that the "old" synset should be the second element of each line
      */
-    public void updateWNversionReading(String fileName, String pattern, String posNum) throws IOException {
+    public static void readWNversionMap(String fileName, String pattern, String posNum) throws IOException {
 
         LineNumberReader lr = null;
         try {
-            FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
+            FileReader r = new FileReader(fileName);
             lr = new LineNumberReader(r);
             String line;
             while ((line = lr.readLine()) != null) {
@@ -835,6 +897,29 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * Note that the "old" synset should be the second element of each line
+     */
+    public static void updateWNversionReading(String path, String versionPair) throws IOException {
+
+        String fileName = path + "wn" + versionPair + ".noun";
+        String pattern = "^(\\d+) (\\d+) .*$";
+        String posNum = "1";
+        readWNversionMap(fileName,pattern,posNum);
+        fileName = path + "wn" + versionPair + ".verb";
+        pattern = "^(\\d+) (\\d+) .*$";
+        posNum = "2";
+        readWNversionMap(fileName,pattern,posNum);
+        fileName = path + "wn" + versionPair + ".adj";
+        pattern = "^(\\d+) (\\d+) .*$";
+        posNum = "3";
+        readWNversionMap(fileName,pattern,posNum);
+        fileName = path + "wn" + versionPair + ".adv";
+        pattern = "^(\\d+) (\\d+) .*$";
+        posNum = "4";
+        readWNversionMap(fileName,pattern,posNum);
+    }
+
+    /** ***************************************************************
      * Port the mappings from one version of WordNet to another. It
      * calls updateWNversionReading to do most of the work. It assumes
      * that the mapping file has the new synset first and the old one
@@ -849,24 +934,13 @@ public class WordNetUtilities {
      * http://www.lsi.upc.edu/~nlp/web/ and go to Resources and then an
      * item on WordNet mappings.
      */
-    public void updateWNversion() throws IOException {
+    public static void updateWNversion(String path, String versionPair) throws IOException {
 
-        String fileName = "wn30-21.noun";
+        // versionPair="30-21" to map version numbers from 2.1 to 3.0
+        String fileName = "wn" + versionPair + ".noun";
         String pattern = "^(\\d+) (\\d+) .*$";
         String posNum = "1";
-        updateWNversionReading(fileName,pattern,posNum);
-        fileName = "wn30-21.verb";
-        pattern = "^(\\d+) (\\d+) .*$";
-        posNum = "2";
-        updateWNversionReading(fileName,pattern,posNum);
-        fileName = "wn30-21.adj";
-        pattern = "^(\\d+) (\\d+) .*$";
-        posNum = "3";
-        updateWNversionReading(fileName,pattern,posNum);
-        fileName = "wn30-21.adv";
-        pattern = "^(\\d+) (\\d+) .*$";
-        posNum = "4";
-        updateWNversionReading(fileName,pattern,posNum);
+        updateWNversionReading(path, versionPair);
 
         fileName = "data3.noun";
         pattern = "^([0-9]{8}) .+$";
@@ -1427,7 +1501,7 @@ public class WordNetUtilities {
             wordOrPhrase = "phrase";
         //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30Word_" + 
         //        wordAsID + ",s__EnglishLanguage,\"The English " + wordOrPhrase + " '" + word + "'\"))).\n");
-        ArrayList<String> senses = WordNet.wn.wordsToSenses.get(word);
+        ArrayList<String> senses = WordNet.wn.wordsToSenseKeys.get(word);
         if (senses != null) {
             for (int i = 0; i < senses.size(); i++) {
                 String sense = StringUtil.StringToPrologID(senses.get(i));
@@ -1443,7 +1517,7 @@ public class WordNetUtilities {
      */
     private static void writeTPTPWordsToSenses(PrintWriter pw) throws IOException {
 
-        Iterator<String> it = WordNet.wn.wordsToSenses.keySet().iterator();
+        Iterator<String> it = WordNet.wn.wordsToSenseKeys.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
             writeTPTPOneWordToSenses(pw, word);
@@ -1722,7 +1796,7 @@ public class WordNetUtilities {
     public static HashSet<String> wordsToSynsets(String word) {
 
         HashSet<String> result = new HashSet<String>();
-        ArrayList<String> sensekeys = WordNet.wn.wordsToSenses.get(word);
+        ArrayList<String> sensekeys = WordNet.wn.wordsToSenseKeys.get(word);
         if (sensekeys == null) {
             System.out.println("Error in WordNetUtilities.wordsToSynsets(): no synset for : " + word);
             return null;
