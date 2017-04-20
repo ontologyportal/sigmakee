@@ -38,7 +38,7 @@ public class MultiWords {
      * The String key is the first word of a multi-word WordNet "word", such as "table_tennis",
      * where words are separated by underscores.  The values are an ArrayList of Strings which
      * contain the whole multi-word. The same head word can appear in many multi-words.*/
-    Multimap<String, String> multiWord = HashMultimap.create();
+    public Multimap<String, String> multiWord = HashMultimap.create();
 
     /** ***************************************************************
      * Add a multi-word string to the multiWord member variable.
