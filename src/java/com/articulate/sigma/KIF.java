@@ -199,10 +199,11 @@ public class KIF {
                         // statement is to start.  Check if a new statement
                         // has already been generated, otherwise report error
                         if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
-                            errStr = (errStart + ": possible missed closing parenthesis near line " + f.startLine +
+                            errStr = (errStart + " possible missed closing parenthesis near start line " + f.startLine +
+                                " end line " + f.endLine +
                                 " for formula " + expression.toString() + "\n and key " + keySet.toString() +
                                 " keyset size " + keySet.size() + " exp length " + expression.length() +
-                                " comment lines: " + totalLinesForComments);
+                                " comment lines " + totalLinesForComments);
                             throw new ParseException(errStr, f.startLine);
                         }
                         continue;
