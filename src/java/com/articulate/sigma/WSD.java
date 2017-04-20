@@ -5,7 +5,12 @@ import java.util.*;
 
 import com.google.common.collect.Lists;
 
+import static com.articulate.sigma.WordNetUtilities.isValidKey;
+
 public class WSD {
+
+    public static int threshold = 5;
+    public static int gap = 5;
 
     /** ***************************************************************
      * Collect all the SUMO terms that are found in the sentence.
@@ -21,6 +26,44 @@ public class WSD {
                 result.add(SUMO);
         }
         return result;
+    }
+
+    /** ***************************************************************
+     */
+    public static boolean polysemous(String word) {
+
+        ArrayList<String> values = WordNet.wn.wordsToSenseKeys.get(word);
+        if (values == null || values.size() == 0)
+            return false;
+        if (values.size() == 1)
+            return false;
+        return true;
+    }
+
+    /** ***************************************************************
+     */
+    public static boolean polysemous(String word, int pos) {
+
+        ArrayList<String> values = WordNet.wn.wordsToSenseKeys.get(word);
+        if (values == null || values.size() == 0)
+            return false;
+        if (values.size() == 1)
+            return false;
+        boolean done = false;
+        int count = 0;
+        Iterator<String> it = values.iterator();
+        while (it.hasNext()) {
+            String s = it.next();
+            if (!WordNetUtilities.isValidKey(s))
+                continue;
+            String POS = WordNetUtilities.getPOSfromKey(s);
+            String num = WordNetUtilities.posLettersToNumber(POS);
+            if (num.equals(Integer.toString(pos)))
+                count++;
+            if (count > 1)
+                return true;
+        }
+        return false;
     }
 
     /** ***************************************************************
@@ -74,7 +117,8 @@ public class WSD {
     /** ***************************************************************
      * Return the best guess at the synset for the given word in the
      * context of the sentence.  @return the 9-digit synset but only
-     * if there's a reasonable amount of data.
+     * if there's a reasonable amount of data, otherwise return the most
+     * frequent sense.
      */
     public static String findWordSenseInContext(String word, List<String> words) {
 
@@ -89,15 +133,11 @@ public class WSD {
                 newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
             if (newWord != null && newWord != "")
                 word = newWord;
-            List<String> al = findWordSensePOS(word, words, i);
+            TreeSet<AVPair> al = findWordSensePOS(word, words, i);
             if (al != null && al.size() > 0) {
-                String synset = (String) al.get(0); // 9-digit
-                String bestTotal = (String) al.get(1);
-                int total = (new Integer(bestTotal)).intValue();
-                if (total >= bestScore) {
-                    bestScore = total;
-                    bestSynset = synset;
-                }
+                AVPair avp1 = al.pollLast();
+                bestScore = Integer.parseInt(avp1.attribute);
+                bestSynset = avp1.value;
             }
         }
         //System.out.println("INFO in findWordSenseInContext(): best synset: " + bestSynset);
@@ -105,7 +145,7 @@ public class WSD {
         if (bestScore > 5)
             return bestSynset;
         else
-            return "";
+            return getBestDefaultSense(word);
     }
 
     /** ***************************************************************
@@ -116,70 +156,42 @@ public class WSD {
      * @param pos - part of speech of @word
      * @return the 9-digit synset but only if there's a reasonable amount of data.
      */
-    public static String findWordSenseInContextWithPos(String word, List<String> words, int pos) {
-
-        //System.out.println("INFO in WSD.findWordSendInContextWithPos(): word, words: " +
-        //        word + ", " + words);
-        int bestScore = -1;
-        String bestSynset = "";
-        String newWord = "";
-        if (pos == 1)
-            newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
-        if (pos == 2)
-            newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
-        if (newWord != null && newWord != "")
-            word = newWord;
-        List<String> al = findWordSensePOS(word, words, pos);
-        if (al != null && al.size() > 0) {
-            String synset = (String) al.get(0); // 9-digit
-            String bestTotal = (String) al.get(1);
-            int total = (new Integer(bestTotal)).intValue();
-            if (total >= bestScore) {
-                bestScore = total;
-                bestSynset = synset;
-            }
-        }
-        if (bestScore > 5)
-            return bestSynset;
-        else
-            return "";
-    }
-
-    /** ***************************************************************
-     * Return the best guess at the synset for the given word in the
-     * context of the sentence with the given POS.
-     * @param word - word to disambiguate
-     * @param words - words in context
-     * @param pos - part of speech of @word
-     * @return the 9-digit synset but only if there's a reasonable amount of data.
-     */
-    public static String findWordSenseInContextWithPosCoreNLP(String word, List<String> words, int pos) {
+    public static String findWordSenseInContextWithPos(String word, List<String> words, int pos, boolean lemma) {
 
         //System.out.println("INFO in WSD.findWordSenseInContextWithPos(): word, words: " +
         //        word + ", " + words);
         int bestScore = -1;
+        int nextBestScore = -1;
         String bestSynset = "";
-        String newWord = "";
-        if (pos == 1)
-            newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
-        if (pos == 2)
-            newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
-        if (newWord != null && newWord != "")
-            word = newWord;
-        List<String> al = findWordSensePOS(word, words, pos);
+        String nextBestSynset = "";
+        if (!lemma) {
+            String newWord = "";
+            if (pos == 1)
+                newWord = WordNet.wn.nounRootForm(word, word.toLowerCase());
+            if (pos == 2)
+                newWord = WordNet.wn.verbRootForm(word, word.toLowerCase());
+            if (!StringUtil.emptyString(newWord))
+                word = newWord;
+        }
+        TreeSet<AVPair> al = findWordSensePOS(word, words, pos);
         if (al != null && al.size() > 0) {
-            String synset = (String) al.get(0); // 9-digit
-            String bestTotal = (String) al.get(1);
-            int total = (new Integer(bestTotal)).intValue();
-            if (total >= bestScore) {
-                bestScore = total;
-                bestSynset = synset;
+            AVPair avp1 = al.pollLast();
+            bestScore = Integer.parseInt(avp1.attribute);
+            bestSynset = avp1.value;
+            if (al != null && al.size() > 0) {
+                AVPair avp2 = al.pollLast();
+                nextBestScore = Integer.parseInt(avp2.attribute);
+                nextBestSynset = avp2.value;
             }
         }
-        if (bestScore > 5)
+        //if (polysemous(word,pos) && bestScore != -1)
+        //    System.out.println("INFO in WSD.findWordSenseInContextWithPos(): best, next " +
+        //        bestSynset + ":" + bestScore + ", " + nextBestSynset  + ":" + nextBestScore +
+        //        " for word " + word + " pos: " + pos + " words: " + words);
+        if (bestScore > threshold && (bestScore - nextBestScore) > gap)
             return bestSynset;
         else
-            return getBestDefaultSense(word);
+            return getBestDefaultSense(word,pos);
     }
 
     /** ***************************************************************
@@ -223,33 +235,49 @@ public class WSD {
     }
         
     /** ***************************************************************
-     * Return the best guess at the synset for the given word in the
-     * context of the sentence.  Returns an ArrayList consisting of
-     * a 9-digit WordNet synset, and the score
-     * reflecting the quality of the guess the given synset is the right one.
+     * Return a list of scored guesses at the synset for the given word in the
+     * context of the sentence.  Returns a TreeSet consisting AVPairs of
+     * the key score reflecting the quality of the guess the given synset is the right one
+     * and a value of a 9-digit WordNet synset
      */
-    public static List<String> findWordSensePOS(String word, List<String> words, int POS) {
+    public static TreeSet<AVPair> findWordSensePOS(String word, List<String> words, int POS) {
 
+        TreeSet<AVPair> result = new TreeSet<AVPair>();
         //System.out.println("INFO in WSD.findWordSensePOS(): word, POS, text: " +
         //        word + ", " + POS + ", " + words);
-        ArrayList<String> senses = WordNet.wn.wordsToSenses.get(word);
+        ArrayList<String> senseKeys = WordNet.wn.wordsToSenseKeys.get(word);
         List<String> termFormatBypass = termFormatBypass(word);
-        if (termFormatBypass != null)
-            return termFormatBypass;
-        if (senses == null) {
-            System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word + 
-                    "' not in lexicon as part of speech " + POS);
-            return new ArrayList<String>();
+        if (termFormatBypass != null) {
+            AVPair score = new AVPair();
+            score.attribute = "000" + termFormatBypass.get(1);
+            score.value = termFormatBypass.get(0);
+            result.add(score);
+            return result;
         }
-        int firstSense = -1;
+        if (senseKeys == null) {
+            senseKeys = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
+            termFormatBypass = termFormatBypass(word.toLowerCase());
+            if (termFormatBypass != null) {
+                AVPair score = new AVPair();
+                score.attribute = "000" + termFormatBypass.get(1);
+                score.value = termFormatBypass.get(0);
+                result.add(score);
+                return result;
+            }
+            if (senseKeys == null) {
+                System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word +
+                        "' not in lexicon as part of speech " + POS);
+                return result;
+            }
+        }
+
         int bestSense = -1;
         int bestTotal = -1;
-        for (int i = 0; i < senses.size(); i++) {
-            String sense = (String) senses.get(i);
-            if (WordNetUtilities.sensePOS(sense) == POS) {
-                if (firstSense == -1)
-                    firstSense = i;
-                HashMap<String,Integer> senseAssoc = WordNet.wn.wordCoFrequencies.get(sense.intern());
+        for (int i = 0; i < senseKeys.size(); i++) {
+            String senseKey = (String) senseKeys.get(i);
+            String synset = WordNetUtilities.getSenseFromKey(senseKey);
+            if (WordNetUtilities.sensePOS(senseKey) == POS) {
+                HashMap<String,Integer> senseAssoc = WordNet.wn.wordCoFrequencies.get(senseKey.intern());
                 if (senseAssoc != null) {
                     int total = 0;
                     for (int j = 0; j < words.size(); j++) {
@@ -257,19 +285,21 @@ public class WSD {
                         if (senseAssoc.containsKey(lowercase)) 
                             total = total + ((Integer) senseAssoc.get(lowercase)).intValue();                        
                     }
-                    if (total > bestTotal) {
-                        bestTotal = total;
-                        bestSense = i;
-                    }
+                    AVPair score = new AVPair();
+                    score.attribute = StringUtil.integerToPaddedString(total);
+                    score.value = synset;
+                    result.add(score);
                 }
                 else {
-                    if (0 > bestTotal) { // no word frequency found, give lowest possible score
-                        bestTotal = 0;
-                        bestSense = i;
-                    }
+                    AVPair score = new AVPair();
+                    score.attribute = StringUtil.integerToPaddedString(0);
+                    score.value = synset;
+                    result.add(score);
                 }
             }
         }
+        return result;
+        /*
         if (bestTotal > 5) {
             String senseValue = (String) senses.get(bestSense);
             String synset = WordNet.wn.senseIndex.get(senseValue.intern());
@@ -282,6 +312,7 @@ public class WSD {
         else {
             return Lists.newArrayList();
         }
+        */
     }
     
     /** ***************************************************************
@@ -390,9 +421,9 @@ public class WSD {
         }
         if (bestSense == "") {
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
-            ArrayList<String> al = WordNet.wn.wordsToSenses.get(word);
+            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
             if (al == null)
-                al = WordNet.wn.wordsToSenses.get(word.toLowerCase());
+                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
 
             //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
             if (al != null) {
@@ -441,15 +472,18 @@ public class WSD {
                 Iterator<AVPair> it = senseKeys.descendingIterator();
                 while (it.hasNext()) {
                     AVPair avp = it.next();
-                    String POS = WordNetUtilities.getPOSfromKey(avp.value);
-                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                    //String POS = WordNetUtilities.getPOSfromKey(avp.value);
+                    String numPOS = avp.value.substring(0,1);
+                    String POS = Character.toString(avp.value.charAt(0));
+                    //if (Integer.toString(pos).equals(numPOS))
+                    //    return numPOS + WordNet.wn.senseIndex.get(avp.value);
                     if (Integer.toString(pos).equals(numPOS))
-                        return numPOS + WordNet.wn.senseIndex.get(avp.value);
+                        return avp.value;
                 }        
             }
         }
         // if none of the sensekeys are the right pos, fall through to here
-        ArrayList<String> al = WordNet.wn.wordsToSenses.get(newWord.toLowerCase());
+        ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(newWord.toLowerCase());
         //System.out.println("WSD.getBestDefaultSense(): al: " + al);
         //System.out.println("WSD.getBestDefaultSense(): nouns: " + WordNet.wn.nounSynsetHash.get(newWord));
         if (al == null || al.size() == 0) {
