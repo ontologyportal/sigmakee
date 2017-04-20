@@ -10,7 +10,7 @@ package com.articulate.sigma;
 
 public class AVPair implements Comparable {
 
-    public String attribute ="";  // this is the sort field for comparison
+    public String attribute = "";  // this is the sort field for comparison
     public String value = "";
 
     public int compareTo(Object avp) throws ClassCastException {
