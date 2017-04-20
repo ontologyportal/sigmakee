@@ -58,18 +58,16 @@ public class LanguageFormatter {
      * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
      * the agent is an instance of human and the agent is an agent of the process".
      */
-    private boolean doInformalNLG = true;
+    private boolean doInformalNLG = false;
 
     public void setDoInformalNLG(boolean doIt) {
         doInformalNLG = doIt;
     }
 
-
     /**
      * The stack holds information on the formula being processed, so that successive recursive calls can refer to it.
      */
     private final LanguageFormatterStack theStack = new LanguageFormatterStack();
-
 
     /*******************************************************************************
      *
@@ -144,9 +142,9 @@ public class LanguageFormatter {
      *               will fill in.
      * @return
      */
-    public String htmlParaphrase(String href)     {
-        init();
+    public String htmlParaphrase(String href) {
 
+        init();
         String nlFormat = "";
         try {
             theStack.pushNew();
@@ -374,6 +372,7 @@ public class LanguageFormatter {
      * @param property
      */
     private void updateVariables(Map<String, Set<String>> variableMap, String key, SumoProcessEntityProperty property) {
+
         if (variableMap.containsKey(key))     {
             Set<String> oldSet = variableMap.get(key);
             Set<String> newSet = Sets.newHashSet();
@@ -384,7 +383,6 @@ public class LanguageFormatter {
             }
             variableMap.put(key, newSet);
         }
-
     }
 
     /*****************************************************************
@@ -395,9 +393,9 @@ public class LanguageFormatter {
      * @param isNegMode
      */
     private void handleCaseRole(Formula formula, String caseRole, boolean isNegMode) {
-        if (! doInformalNLG)    {
+
+        if (! doInformalNLG)
             return;
-        }
 
         if (kb.kbCache.isInstanceOf(caseRole, "CaseRole")) {
             try {
@@ -441,7 +439,8 @@ public class LanguageFormatter {
                     }
 
                 }
-            } catch (IllegalArgumentException e) {
+            }
+            catch (IllegalArgumentException e) {
                 // Recover from exception by turning off full NLG.
                 this.doInformalNLG = false;
                 String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
@@ -459,8 +458,8 @@ public class LanguageFormatter {
      * @return
      */
     private String resolveVariable(String input) {
-        String retVal = input;
 
+        String retVal = input;
         if (variableToInstanceMap.containsKey(input))    {
             Set<String> values = variableToInstanceMap.get(input);
             // If more than one entry, take the first one returned by the iterator.
@@ -471,7 +470,6 @@ public class LanguageFormatter {
             // If more than one entry, take the first one returned by the iterator.
             retVal = values.iterator().next();
         }
-
         return retVal;
     }
 
@@ -527,12 +525,9 @@ public class LanguageFormatter {
 
                 while (!f.empty()) {
                     arg = f.car();
-
                     String result = paraphraseStatement(arg, false, depth + 1);
-
                     if (StringUtil.isNonEmptyString(result))    {
                         args.add(result);
-
                         // Let the next element down in the stack know whether we've performed informal NLG.
                         theStack.pushCurrTranslatedStateDown(arg);
                     }
@@ -541,7 +536,6 @@ public class LanguageFormatter {
                                 + "bad result for \"" + arg + "\": " + result);
                         return "";
                     }
-
                     f.read(f.cdr());
                 }
 
@@ -1074,6 +1068,27 @@ public class LanguageFormatter {
             }
         }
         return result;
+    }
+
+    /** **************************************************************
+     */
+    public static void test1() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        }
+        catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+
+        // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
+        String stmt =  "(and (instance ?GUIE1 GUIElement) (hasGUEState ?GUIE1 GUE_ActiveState)" +
+                " (properPart ?GUIE1 ?GUIE2) (instance ?GUIE2 GUIElement))";
+        Formula f = new Formula(stmt);
+        System.out.println("Formula: " + f.theFormula);
+        System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println();
     }
 
     /** **************************************************************
