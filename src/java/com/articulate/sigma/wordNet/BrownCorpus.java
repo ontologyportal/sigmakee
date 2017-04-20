@@ -52,6 +52,7 @@ public class BrownCorpus {
         }
 
         public String toText() {
+
             return tokens.stream().map(Token::getTok).reduce("", (a,b) -> a + " " + b) + "\n";
         }
     }
