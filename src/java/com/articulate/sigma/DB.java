@@ -1214,7 +1214,7 @@ public class DB {
         for (int i = 0; i < al.size(); i++) {
             //System.out.println("\nINFO in DB.getFoodWordSenses(): word: " + al.get(i));
             // TreeMap of word keys and values that are ArrayLists of synset Strings
-            TreeMap<String,ArrayList<String>> al2 = WordNet.wn.getSensesFromWord(al.get(i));
+            TreeMap<String,ArrayList<String>> al2 = WordNet.wn.getSenseKeysFromWord(al.get(i));
             boolean equivalence = false;
             Iterator it = al2.keySet().iterator();
             while (it.hasNext()) {
