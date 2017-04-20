@@ -1494,9 +1494,10 @@ public class Formula implements Comparable {
 
         Set<String> intersections = Sets.intersection(quantifiedVariables, unquantifiedVariables);
         if (intersections != null && !intersections.isEmpty())
-            System.err.println("Some variables (" + intersections
+            System.out.println("Error in Formula.collectQuantifiedUnquantifiedVariables(): Some variables (" +
+                    intersections
                     + ") are both quantified (" + quantifiedVariables
-                    + ") and unquantified (" + unquantifiedVariables + ")");
+                    + ") and unquantified (" + unquantifiedVariables + ") in formula \n" + theFormula);
 
         quantifiedUnquantifiedVariables.add(new ArrayList(quantifiedVariables));
         quantifiedUnquantifiedVariables.add(new ArrayList(unquantifiedVariables));
@@ -2548,6 +2549,15 @@ public class Formula implements Comparable {
     public String toString() {
 
         return format("", "  ", new Character((char) 10).toString());
+    }
+
+    /** ***************************************************************
+     * Format a formula for text presentation include file and line#.
+     */
+    public String toStringMeta() {
+
+        return format("", "  ", new Character((char) 10).toString()) +
+                "[" + sourceFile + " " + startLine + "-" + endLine + "]";
     }
 
     /** ***************************************************************
