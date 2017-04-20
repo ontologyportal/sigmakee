@@ -4210,7 +4210,7 @@ public class DocGen {
                 ArrayList relations = getPredicates(kb,!formatToken.equalsIgnoreCase(F_SI));
                 // System.out.println(StringUtil.getLineSeparator() + "relations == " 
                 // + relations + StringUtil.getLineSeparator());
-                if (!relations.isEmpty()) {
+                if (relations != null && !relations.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     Set avoid = getInhibitDisplayRelations();
                     Map map = new HashMap();
