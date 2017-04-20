@@ -524,7 +524,7 @@ public class KB {
      */
     public boolean isFunction(String i) {
 
-        if (kbCache != null) {
+        if (kbCache != null && ! StringUtil.emptyString(i)) {
             if (isInstanceOf(i,"Function")) {
                 if (!i.endsWith(Formula.FN_SUFF))
                     System.out.println("Error in KB.isFunction(): functional relation type without 'Fn' suffix: " + i);
