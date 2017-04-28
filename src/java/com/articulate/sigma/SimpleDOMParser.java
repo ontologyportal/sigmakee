@@ -3,6 +3,9 @@
  * From DevX
  * http://www.devx.com/xml/Article/10114
  * Further modified for Articulate Software by Adam Pease 12/2005
+ *   modified 2017 to allow contents in a parent element after the close of a child element
+ *
+ * Note that consecutive whitespace characters in a tag body are removed
  */
 package com.articulate.sigma;
 
@@ -49,6 +52,7 @@ public class SimpleDOMParser {
             result = sdp.parse(br);
         }
         catch (java.io.IOException e) {
+            e.printStackTrace();
             System.out.println("Error in SimpleDOMParser.readFile(): IO exception parsing file " + 
                                filename + "\n" + e.getMessage());
         }
@@ -77,8 +81,22 @@ public class SimpleDOMParser {
             String tagName;
             
             String currentTag = null;
-            while (currentTag == null || currentTag.startsWith("<!--"))         // ignore comments
-                currentTag = readTag().trim();                                  // remove the prepend or trailing white spaces
+            while (currentTag == null || currentTag.startsWith("<!--")) {        // ignore comments
+                currentTag = readTag();                                  // remove the prepend or trailing white spaces
+                //System.out.println("SimpleDOMParse.parse() currentTag: '" + currentTag + "'");
+                //if (currentElement != null)
+                //    System.out.println("SimpleDOMParse.parse() currentelement text: " + currentElement.getText());
+                if (currentTag.length() > 1 && currentTag.contains("<"))
+                    currentTag = currentTag.trim();
+                if (currentTag.charAt(0) != '<') { // don't allow consecutive whitespace
+                     if (currentElement.getText().length() == 0 || !(Character.isWhitespace(currentTag.charAt(0)) &&
+                             Character.isWhitespace(currentElement.getText().charAt(currentElement.getText().length()-1)))) {
+                        currentElement.setText(currentElement.getText() + currentTag.charAt(0));
+                    }
+                    currentTag = null;
+                }
+            }
+            //System.out.println("SimpleDOMParse.parse() currentTag 2: " + currentTag);
             if (currentTag.startsWith("</")) {                                  // close tag
                 tagName = currentTag.substring(2, currentTag.length()-1).trim();
                 if (currentElement == null)                                     // no open tag
@@ -91,7 +109,7 @@ public class SimpleDOMParser {
                 if (elements.empty()) 
                     return currentElement;                                      // document processing is over
                 else                                                            // pop up the previous open tag
-                    currentElement = (SimpleElement)elements.pop();
+                    currentElement = (SimpleElement) elements.pop();
             }
             else {                                                              // open tag or tag with both open and close tags                        
                 index = currentTag.indexOf(" ");
@@ -99,7 +117,8 @@ public class SimpleDOMParser {
                     if (currentTag.endsWith("/>")) {                            // close tag as well                        
                         tagName = currentTag.substring(1, currentTag.length()-2).trim();
                         currentTag = "/>";
-                    } else {                                                    // open tag                        
+                    }
+                    else {                                                    // open tag
                         tagName = currentTag.substring(1, currentTag.length()-1).trim();
                         currentTag = "";
                     }
@@ -201,9 +220,8 @@ public class SimpleDOMParser {
     */
     private void skipWhitespace() throws IOException {
 
-        while (Character.isWhitespace((char)peek())) {
+        while (Character.isWhitespace((char) peek()))
             reader.read();
-        }
     }
 
     /** *****************************************************************
@@ -213,16 +231,14 @@ public class SimpleDOMParser {
         reader.skip(2);                        // skip "<?" or "<!"
         while (true) {
             int next = peek();
-
             if (next == '>') {
                 reader.read();
                 break;
-            } else if (next == '<') {           // nesting prolog
-                    
-                skipProlog();
-            } else {
-                reader.read();
             }
+            else if (next == '<')            // nesting prolog
+                skipProlog();
+            else
+                reader.read();
         }
     }
 
@@ -235,7 +251,7 @@ public class SimpleDOMParser {
             int[] next = new int[2];
             peek(next);
             if (next[0] != '<') 
-                throw new IOException("Expected '<' but got '" + (char)next[0] + "'.");           
+                throw new IOException("SimpleDOMParser.skipPrologs(): Expected '<' but got '" + (char)next[0] + "'.");
             if ((next[1] == '?') || (next[1] == '!')) 
                 skipProlog();
             else
@@ -247,11 +263,14 @@ public class SimpleDOMParser {
     */
     private String readTag() throws IOException {
 
-        skipWhitespace();
+        //skipWhitespace();
         StringBuffer sb = new StringBuffer();
         int next = peek();
-        if (next != '<') 
-            throw new IOException("Expected < but got " + (char)next);        
+        if (next != '<') {
+            //throw new IOException("SimpleDOMParser.readTag(): Expected < but got " + (char) next);
+            next = (char) reader.read();
+            return Character.toString((char) next);
+        }
         sb.append((char)reader.read());
         while (peek() != '>') {
             char c = (char)reader.read();
@@ -308,7 +327,8 @@ public class SimpleDOMParser {
                 else 
                     sb.append((char)reader.read());               
             }
-        } else {
+        }
+        else {
             while (peek() != '<') 
                 sb.append((char)reader.read());                
         }
@@ -332,26 +352,31 @@ public class SimpleDOMParser {
     */
     public static void main(String[] args) {
 
-        /** String fname = "";
+        SimpleDOMParser sdp = new SimpleDOMParser();
+        String fname = "";
         try {
-//            String _projectFileName = "projects-energy.xml";
-//            fname = KBmanager.getMgr().getPref("baseDir") + File.separator + _projectFileName;
-            fname = "test.xml";
+            //String _projectFileName = "projects-energy.xml";
+            //fname = KBmanager.getMgr().getPref("baseDir") + File.separator + _projectFileName;
+            fname = "/home/apease/corpora/timebank_1_2/data/extra/wsj_0991.tml";
             System.out.println(fname);
             File f = new File(fname);
             if (!f.exists()) 
                 return;
             BufferedReader br = new BufferedReader(new FileReader(fname));
-            SimpleDOMParser sdp = new SimpleDOMParser();
+
             SimpleElement se = sdp.parse(br);
             System.out.println(se.toString());            
         } 
         catch (java.io.IOException e) {
-                System.out.println("Error in main(): IO exception parsing file " + fname);
-        }  */
-        String test = "<P>hi<P>";
+            System.out.println("Error in main(): IO exception parsing file " + fname);
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+            System.out.println("elements: " + sdp.elements);
+            System.out.println("current element: " + sdp.currentElement);
+        }
+        /* String test = "<P>hi<P>";
         String converted = SimpleDOMParser.convertFromReservedCharacters(test);
         System.out.println(converted);
-        System.out.println(SimpleDOMParser.convertToReservedCharacters(converted));
+        System.out.println(SimpleDOMParser.convertToReservedCharacters(converted)); */
     }
 }
