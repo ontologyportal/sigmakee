@@ -51,9 +51,9 @@ public class SimpleElement {
     public void setText(String text) {
 
         if (!StringUtil.emptyString(text))
-            this.text = SimpleDOMParser.convertFromReservedCharacters(text.trim());
+            this.text = SimpleDOMParser.convertFromReservedCharacters(text);
         else
-            this.text = text.trim();
+            this.text = text;
     }
 
     public String getAttribute(String name) {
