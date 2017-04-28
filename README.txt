@@ -43,7 +43,9 @@ assumes that you start from your home directory and are happy
 with having directories created there. Before you can run Sigma you'll
 also need to modify /home/theuser/.sigmakee/KBs/config.xml to conform to
 your local paths.
-If you are running tomcat locally, also change the port value to 8080
+If you are running tomcat locally, also change the port value to 8080 .  E will only work
+if your $TMPDIR is set correctly.  If you load a different version of tomcat, be
+sure to change $CATALINA_HOME and your paths to conform to the version.
 
 mkdir workspace
 mkdir Programs
@@ -77,15 +79,21 @@ sudo apt-get install make
 sudo apt-get install gcc
 ./configure
 make
+make install
 cd ~
 echo "export SIGMA_HOME=/home/theuser/.sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=/var/tomcat/apache-tomcat-8.0.26" >> .bashrc
+echo "export CATALINA_HOME=/var/tomcat/apache-tomcat-7.0.68" >> .bashrc
 cd ~/workspace/sigmakee
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
 java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*  com.articulate.sigma.KB
-After starting TomCat, go to http://localhost:8080/sigma/login.html
+
+
+Start Tomcat with
+/home/theuser/Programs/apache-tomcat-7.0.68/bin/startup.sh
+
+point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
