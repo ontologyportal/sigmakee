@@ -1041,18 +1041,19 @@ public class Formula implements Comparable {
      */
     @Override
 	public boolean equals(Object o) {
-        if(o == null ) {
+
+        if (o == null ) {
             return false;
         }
 
         if (!(o instanceof Formula))
             return false;
         Formula f = (Formula) o;
-        if(f.theFormula == null) {
+        if (f.theFormula == null) {
             return (this.theFormula == null);
         }
-        String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
-        String argString = Clausifier.normalizeVariables(f.theFormula).trim();
+        String thisString = Clausifier.normalizeVariables(this.theFormula).trim().replaceAll("\\s+", " ");
+        String argString = Clausifier.normalizeVariables(f.theFormula).trim().replaceAll("\\s+", " ");
         return (thisString.equals(argString));
     }
 
@@ -1061,7 +1062,8 @@ public class Formula implements Comparable {
      * Normalize all variables.
      */
     public boolean equals(String s) {
-        if(s == null) {
+
+        if (s == null) {
             return false;
         }
 
@@ -1103,9 +1105,11 @@ public class Formula implements Comparable {
         boolean equalStrings = this.equals(f);
         if (equalStrings) {
             return true;
-        } else if (!this.deepEquals(f)) {
+        }
+        else if (!this.deepEquals(f)) {
             return false;
-        } else {
+        }
+        else {
             return this.unifyWith(f);
         }
     }
@@ -1168,7 +1172,8 @@ public class Formula implements Comparable {
             ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
             result.add(new HashSet<VariableMapping>());
             return result;
-        } else if (f1 == null || f2 == null) {
+        }
+        else if (f1 == null || f2 == null) {
             return null;
         }
 
@@ -1180,7 +1185,8 @@ public class Formula implements Comparable {
                 set.add(new VariableMapping(f1.theFormula, f2.theFormula));
                 result.add(set);
                 return result;
-            } else {
+            }
+            else {
                 if(f1.theFormula.equals(f2.theFormula)) {
                     ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
                     result.add(new HashSet<VariableMapping>());
@@ -1189,7 +1195,8 @@ public class Formula implements Comparable {
                     return null;
                 }
             }
-        } else if (f1.atom() || f2.atom()) {
+        }
+        else if (f1.atom() || f2.atom()) {
             return null;
         }
 
@@ -1201,7 +1208,7 @@ public class Formula implements Comparable {
         head2.read(f2.car());
         List<Set<VariableMapping>> headMaps = mapFormulaVariables(head1, head2, kb, memoMap);
         memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(head1.theFormula, head2.theFormula), headMaps);
-        if(headMaps == null) {
+        if (headMaps == null) {
             //heads don't match; no point of going further
             return null;
         }
@@ -1229,7 +1236,8 @@ public class Formula implements Comparable {
                 }
             }
             return runningMaps;
-        } else {
+        }
+        else {
             //commutative relation; going through all possible parameter permutations and comparing
             List<Set<VariableMapping>> unionMaps = new ArrayList<Set<VariableMapping>>();
             List<int[]> permutations = FormulaUtil.getPermutations(args1.size(),
@@ -1267,12 +1275,12 @@ public class Formula implements Comparable {
      */
     public boolean deepEquals(Formula f) {
         //null and simple string equality tests
-        if(f == null) {
+        if (f == null) {
             return false;
         }
         // if the strings are equal or any of the formula strings are null, there is no point on comparing deep
         boolean stringsEqual = Objects.equals(this.theFormula, f.theFormula);
-        if(stringsEqual || (this.theFormula == null || f.theFormula == null)) {
+        if (stringsEqual || (this.theFormula == null || f.theFormula == null)) {
             return stringsEqual;
         }
 
@@ -1303,9 +1311,10 @@ public class Formula implements Comparable {
 
         //checking formula is a simple tokens
         if (!Formula.listP(formula)) {
-            if(varPlaceholders && isVariable(formula)) {
+            if (varPlaceholders && isVariable(formula)) {
                 return "?XYZ";
-            } else {
+            }
+            else {
                 return formula;
             }
         }
@@ -1526,7 +1535,8 @@ public class Formula implements Comparable {
                 for (int i = 2 ; i < f.listLength(); i++) {
                     collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)), varFlag, unquantifiedVariables, quantifiedVariables);
                 }
-            } else {
+            }
+            else {
                 for (int i = 1; i < f.listLength(); i++) {
                     collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)), varFlag, unquantifiedVariables, quantifiedVariables);
                 }
