@@ -32,7 +32,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
     show.append(HTMLformatter.showStatistics(kb));
  else if (kb != null && term != null && !kb.containsTerm(term) && KBPOS.equals("1")) {           // Show the alphabetic neighbors of a term
     show.append(HTMLformatter.showNeighborTerms(kb,term));
-    TreeMap tm = WordNet.wn.getSensesFromWord(term);
+    TreeMap tm = WordNet.wn.getSenseKeysFromWord(term);
     if (tm != null) {
         show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
         show.append("<td width=\"40%\" valign=\"top\"><small>");
