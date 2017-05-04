@@ -44,7 +44,8 @@ with having directories created there. Before you can run Sigma you'll
 also need to modify /home/theuser/.sigmakee/KBs/config.xml to conform to
 your local paths.
 If you are running tomcat locally, also change the port value to 8080 .  E will only work
-if your $TMPDIR is set correctly.  If you load a different version of tomcat, be
+if your $TMPDIR is set correctly.  No particular version of tomcat is required.
+If you load a different version of tomcat, be
 sure to change $CATALINA_HOME and your paths to conform to the version.
 
 mkdir workspace
@@ -65,6 +66,7 @@ cd ~/workspace/
 sudo apt-get install git
 git clone https://github.com/ontologyportal/sigmakee
 git clone https://github.com/ontologyportal/sumo
+cd ~
 mkdir .sigmakee
 cd .sigmakee
 mkdir KBs
