@@ -581,10 +581,11 @@ public class WordNet {
             return null;
         }
         switch (synset.charAt(0)) {
-        case '1': return (String) nounSUMOHash.get(synset.substring(1));
-        case '2': return (String) verbSUMOHash.get(synset.substring(1));
-        case '3': return (String) adjectiveSUMOHash.get(synset.substring(1));
-        case '4': return (String) adverbSUMOHash.get(synset.substring(1));
+            case '1': return (String) nounSUMOHash.get(synset.substring(1));
+            case '2': return (String) verbSUMOHash.get(synset.substring(1));
+            case '3': return (String) adjectiveSUMOHash.get(synset.substring(1));
+            case '4': return (String) adverbSUMOHash.get(synset.substring(1));
+            case '5': return (String) adjectiveSUMOHash.get(synset.substring(1));
         }
         System.out.println("Error in WordNet.getSUMOMapping: improper first character for synset: " + synset);
         Thread.dumpStack();
