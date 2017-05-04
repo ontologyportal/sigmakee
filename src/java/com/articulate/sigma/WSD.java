@@ -693,6 +693,45 @@ public class WSD {
     }
 
     /** ***************************************************************
+     *  Extract SUMO terms from a file assuming one sentence per line
+     *  @return a Map of SUMO term keys and integer counts of their
+     *  appearance
+     */
+    public static Map<String,Integer> collectSUMOFromString(String lineStr) {
+
+        ArrayList<String> line = new ArrayList<String>();
+        line.addAll(Arrays.asList(lineStr.split(" ")));
+        HashMap<String,Integer> result = new HashMap<>();
+        for (int i = 1; i < line.size(); i++) {
+            String synset = findWordSenseInContext(line.get(i), line);
+            if (synset == "")
+                synset = WSD.getBestDefaultSense(line.get(i));
+            if (synset != null && synset != "") {
+                if (!result.containsKey(synset)) {
+                    result.put(synset, 1);
+                    System.out.println("new synset: " + synset);
+                }
+                else {
+                    Integer val = result.get(synset);
+                    //System.out.println("adding to synset: " + synset + " : " + (val + 1));
+                    result.put(synset, val.intValue() + 1);
+                }
+            }
+        }
+        Iterator<String> it = result.keySet().iterator();
+        while (it.hasNext()) {
+            String key = it.next();
+            String SUMO = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(key));
+            ArrayList<String> words = WordNet.wn.synsetsToWords.get(key);
+            String wordstr = "";
+            if (words != null)
+                wordstr = words.toString();
+            System.out.println(key + "\t" + result.get(key) + "\t" + SUMO + "\t" + wordstr);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
      */
@@ -767,6 +806,27 @@ public class WSD {
     }
 
     /** ***************************************************************
+     */
+    public static void interactive() {
+
+        BufferedReader d = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("type 'quit' (without the quotes) on its own line to quit");
+        String line = "";
+        try {
+            while (!line.equals("quit")) {
+                System.out.print("> ");
+                line = d.readLine();
+                if (!line.equals("quit"))
+                    System.out.println(collectSUMOFromString(line));
+            }
+        }
+        catch (IOException ioe) {
+            ioe.printStackTrace();
+            System.out.println("error in TimeBank.interactive()");
+        }
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
@@ -780,11 +840,21 @@ public class WSD {
             KBmanager.getMgr().initializeOnce();
             collectSUMOFromFile(args[1]);
         }
+        else if (args != null && args.length > 0 && (args[0].equals("-p"))) {
+            KBmanager.getMgr().initializeOnce();
+            collectSUMOFromString(StringUtil.removeEnclosingQuotes(args[1]));
+        }
+        else if (args != null && args.length > 0 && (args[0].equals("-i"))) {
+            KBmanager.getMgr().initializeOnce();
+            interactive();
+        }
         else if (args != null || args.length == 0 || (args.length > 0 && args[0].equals("-h"))) {
             System.out.println("Word Sense Disambiguation");
             System.out.println("  options:");
             System.out.println("  -h - show this help screen");
             System.out.println("  -f <file> - find all SUMO terms in a file");
+            System.out.println("  -p one quoted sentence with space delimited tokens into SUMO ");
+            System.out.println("  -i interactive mode ");
         }
     }
 }
