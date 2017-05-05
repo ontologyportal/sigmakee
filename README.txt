@@ -85,7 +85,8 @@ make install
 cd ~
 echo "export SIGMA_HOME=/home/theuser/.sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=/var/tomcat/apache-tomcat-7.0.68" >> .bashrc
+echo "export CATALINA_HOME=/home/theuser/Programs/apache-tomcat-7.0.68" >> .bashrc
+source .bashrc
 cd ~/workspace/sigmakee
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
@@ -93,7 +94,7 @@ java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/
 
 
 Start Tomcat with
-/home/theuser/Programs/apache-tomcat-7.0.68/bin/startup.sh
+$CATALINA_HOME/bin/startup.sh
 
 point your browser at http://localhost:8080/sigma/login.html
 
