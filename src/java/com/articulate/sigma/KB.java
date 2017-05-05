@@ -1071,7 +1071,6 @@ public class KB {
      * @return an ArrayList of Formulas that satisfy the query, or an
      *         empty ArrayList if no Formulae are retrieved.
      */
-    @Deprecated
     public ArrayList<Formula> askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
 
         ArrayList<Formula> ans = new ArrayList<Formula>();
