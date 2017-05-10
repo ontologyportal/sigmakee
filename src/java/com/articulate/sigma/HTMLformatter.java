@@ -93,7 +93,7 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
-     *  Create the HTML for a single step in a proof.
+     *  Create the HTML for a kb link.
      */
     public static String createKBHref(String kbName, String language) {
     
