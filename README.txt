@@ -1,6 +1,6 @@
 You can follow the steps below to do a manual installation on linux. This procedure assumes that you start from
 your home directory and are happy with having directories created there. The sed command below attempts to modify
-/home/theuser/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths differ, then you may need to
+~/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths differ, then you may need to
 edit your config.xml manually. If you are running tomcat on vagrant or another VM, you may need to change the port
 value from 8080 .  E will only work if your $TMPDIR is set correctly.  No particular version of tomcat is required.
 If you load a different version of tomcat, be sure to change $CATALINA_HOME and your paths to conform to the version.
@@ -43,9 +43,9 @@ sudo apt-get install gcc
 make
 make install
 cd ~
-echo "export SIGMA_HOME=/home/theuser/.sigmakee" >> .bashrc
+echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=/home/theuser/Programs/apache-tomcat-8.5.15" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.15" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 sudo add-apt-repository universe
@@ -53,7 +53,7 @@ sudo apt-get update
 sudo apt-get install ant
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
-java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
   com.articulate.sigma.KB
 
 
@@ -66,7 +66,7 @@ point your browser at http://localhost:8080/sigma/login.html
 Debugging
 - If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
 again.
-- If you are repeatedly getting 404s, check the port value in /home/theuser/.sigmakee/KBs/config.xml. 8080 for local,
+- If you are repeatedly getting 404s, check the port value in ~/.sigmakee/KBs/config.xml. 8080 for local,
 9090 for Vagrant
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
