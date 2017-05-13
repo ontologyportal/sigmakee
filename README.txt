@@ -37,19 +37,14 @@ run the following additional steps
 > java  -Xmx2500m -classpath  /home/vagrant/workspace/sigma/sigma/build/classes:/home/vagrant/workspace/sigma/sigma/build/lib/*  com.articulate.sigma.semRewrite.Interpreter -i
 
 
-You can also follow the steps below to do a manual installation on linux.
-Just replace /home/theuser with your directory names.  This procedure
-assumes that you start from your home directory and are happy
-with having directories created there. Before you can run Sigma you'll
-also need to modify /home/theuser/.sigmakee/KBs/config.xml to conform to
-your local paths.
-If you are running tomcat locally, also change the port value to 8080 .  E will only work
-if your $TMPDIR is set correctly.  No particular version of tomcat is required.
-If you load a different version of tomcat, be
-sure to change $CATALINA_HOME and your paths to conform to the version.  If you use
-a different mirror or version you'll need to change the wget commend below.
-You may need to download Java and set your JAVA_HOME
-http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+You can also follow the steps below to do a manual installation on linux. This procedure assumes that you start from
+your home directory and are happy with having directories created there. The sed command below attempts to modify
+/home/theuser/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths differ, then you may need to
+edit your config.xml manually. If you are running tomcat on vagrant or another VM, you may need to change the port
+value from 8080 .  E will only work if your $TMPDIR is set correctly.  No particular version of tomcat is required.
+If you load a different version of tomcat, be sure to change $CATALINA_HOME and your paths to conform to the version.
+If you use a different mirror or version you'll need to change the wget commend below. You may need to download
+Java and set your JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
 mkdir workspace
 mkdir Programs
@@ -74,7 +69,8 @@ mkdir .sigmakee
 cd .sigmakee
 mkdir KBs
 cp -R ~/workspace/sumo/* KBs
-mv ~/workspace/sigmakee/config_vagrant.xml KBs/config.xml
+me="$(whoami)"
+sed -i "s/theuser/$me/g" config.xml
 cd ~/Programs
 gunzip WordNet-3.0.tar.gz
 tar -xvf WordNet-3.0.tar
@@ -96,7 +92,8 @@ sudo apt-get update
 sudo apt-get install ant
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
-java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*  com.articulate.sigma.KB
+java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+  com.articulate.sigma.KB
 
 
 Start Tomcat with
@@ -106,6 +103,9 @@ point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
-- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try again.
-- If you are repeatedly getting 404s, check the port value in /home/theuser/.sigmakee/KBs/config.xml. 8080 for local, 9090 for Vagrant
-- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
+again.
+- If you are repeatedly getting 404s, check the port value in /home/theuser/.sigmakee/KBs/config.xml. 8080 for local,
+9090 for Vagrant
+- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
+from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
