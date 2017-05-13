@@ -1,4 +1,4 @@
-You can also follow the steps below to do a manual installation on linux. This procedure assumes that you start from
+You can follow the steps below to do a manual installation on linux. This procedure assumes that you start from
 your home directory and are happy with having directories created there. The sed command below attempts to modify
 /home/theuser/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths differ, then you may need to
 edit your config.xml manually. If you are running tomcat on vagrant or another VM, you may need to change the port
