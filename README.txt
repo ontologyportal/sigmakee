@@ -46,18 +46,21 @@ your local paths.
 If you are running tomcat locally, also change the port value to 8080 .  E will only work
 if your $TMPDIR is set correctly.  No particular version of tomcat is required.
 If you load a different version of tomcat, be
-sure to change $CATALINA_HOME and your paths to conform to the version.
+sure to change $CATALINA_HOME and your paths to conform to the version.  If you use
+a different mirror or version you'll need to change the wget commend below.
+You may need to download Java and set your JAVA_HOME
+http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 
 mkdir workspace
 mkdir Programs
 cd Programs
 wget 'http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip'
-wget 'http://www.gtlib.gatech.edu/pub/apache/tomcat/tomcat-7/v7.0.68/bin/apache-tomcat-7.0.68.zip'
+wget 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.15/bin/apache-tomcat-8.5.15.zip'
 wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
 tar -xvzf E.tgz
-unzip apache-tomcat-7.0.68.zip
-rm apache-tomcat-7.0.68.zip
+unzip apache-tomcat-8.5.15.zip
+rm apache-tomcat-8.5.15.zip
 unzip stanford-corenlp-full-2015-12-09.zip
 rm stanford-corenlp-full-2015-12-09.zip
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
@@ -85,9 +88,12 @@ make install
 cd ~
 echo "export SIGMA_HOME=/home/theuser/.sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=/home/theuser/Programs/apache-tomcat-7.0.68" >> .bashrc
+echo "export CATALINA_HOME=/home/theuser/Programs/apache-tomcat-8.5.15" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
+sudo add-apt-repository universe
+sudo apt-get update
+sudo apt-get install ant
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
 java  -Xmx2500m -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*  com.articulate.sigma.KB
