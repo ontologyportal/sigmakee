@@ -1,0 +1,69 @@
+<configuration >
+  <preference name="sumokbname" value="SUMO" />
+  <preference name="testOutputDir" value="/home/theuser/.sigmakee/KBs/tests" />
+  <preference name="TPTPDisplay" value="no" />
+  <preference name="inferenceEngine" value="/home/theuser/E/PROVER/e_ltb_runner" />
+  <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
+  <preference name="baseDir" value="/home/theuser/.sigmakee" />
+  <preference name="hostname" value="localhost" />
+  <preference name="logLevel" value="warning" />
+  <preference name="systemsDir" value="/home/theuser/workspace/sigma/sigma" />
+  <preference name="userBrowserLimit" value="25" />
+  <preference name="adminBrowserLimit" value="200" />
+  <preference name="SemRewrite" value="/home/theuser/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
+  <preference name="typePrefix" value="yes" />
+  <preference name="graphDir" value="/home/theuser/workspace/sigma/sigma/webapps/sigma/graph" />
+  <preference name="TPTP" value="yes" />
+  <preference name="cache" value="yes" />
+  <preference name="editorCommand" value="" />
+  <preference name="graphVizDir" value="/usr/bin" />
+  <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
+  <preference name="loadCELT" value="no" />
+  <preference name="celtdir" value="" />
+  <preference name="lineNumberCommand" value="" />
+  <preference name="prolog" value="" />
+  <preference name="port" value="8080" />
+  <preference name="tptpHomeDir" value="/home/theuser/workspace/sigma/sigma" />
+  <preference name="showcached" value="no" />
+  <preference name="leoExecutable" value="" />
+  <preference name="holdsPrefix" value="no" />
+  <preference name="logDir" value="/home/theuser/.sigmakee/logs" />
+  <kb name="SUMO" >
+    <constituent filename="/home/theuser/.sigmakee/KBs/english_format.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/domainEnglishFormat.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/ArabicCulture.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Biography.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Cars.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Catalog.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Communications.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/CountriesAndRegions.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Dining.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Economy.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/engineering.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/FinancialOntology.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Food.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Geography.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Government.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Hotel.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Justice.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Languages.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Media.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Merge.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Mid-level-ontology.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/MilitaryDevices.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Military.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/MilitaryPersons.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/MilitaryProcesses.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Music.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/naics.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/People.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/QoSontology.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Sports.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/TransnationalIssues.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/Transportation.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/TransportDetail.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/UXExperimentalTerms.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/VirusProteinAndCellPart.kif" />
+    <constituent filename="/home/theuser/.sigmakee/KBs/WMD.kif" />
+  </kb>
+</configuration>
