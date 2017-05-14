@@ -57,7 +57,7 @@ public class KBmanager {
 
     private HashMap<String,String> preferences = new HashMap<String,String>();
     protected HashMap<String,KB> kbs = new HashMap<String,KB>();
-    boolean initialized = false;
+    public static boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
     public boolean initializing = false;
