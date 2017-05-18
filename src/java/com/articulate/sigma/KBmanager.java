@@ -56,7 +56,7 @@ public class KBmanager {
     protected static final String CONFIG_FILE = "config.xml";
 
     private HashMap<String,String> preferences = new HashMap<String,String>();
-    protected HashMap<String,KB> kbs = new HashMap<String,KB>();
+    public HashMap<String,KB> kbs = new HashMap<String,KB>();
     public static boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
