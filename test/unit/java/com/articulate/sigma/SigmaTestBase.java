@@ -15,7 +15,7 @@ public class SigmaTestBase {
 
     protected static KB kb;
 
-    /**
+    /****************************************************************
      * Performs the KB load.
      * @param reader
      */
@@ -43,6 +43,7 @@ public class SigmaTestBase {
         checkConfiguration();
     }
 
+    /****************************************************************/
     protected static void checkConfiguration() {
         List<String> problemList = Lists.newArrayList();
         if(NLGUtils.getKeywordMap() == null || NLGUtils.getKeywordMap().isEmpty()) {
@@ -63,8 +64,7 @@ public class SigmaTestBase {
 
     }
 
-
-    /**
+    /****************************************************************
      * Gets a BufferedReader for the xml file that is this test's configuration.
      * @param path
      * @param theClass
@@ -96,6 +96,7 @@ public class SigmaTestBase {
         return xmlReader;
     }
 
+    /****************************************************************/
     public static <T> void displayCollectionStringDiffs(Collection<T> coll1, Collection<T> coll2) {
         for (T obj : coll1) {
             if (!coll2.contains(obj)) {
