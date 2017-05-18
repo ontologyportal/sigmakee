@@ -383,10 +383,14 @@ public class WordNetUtilities {
             return WordNet.ADJECTIVE;
         if (sense.indexOf("VBG") != -1)
             return WordNet.VERB;
+        if (sense.indexOf("VBZ") != -1)
+            return WordNet.VERB;
         if (sense.indexOf("RB") != -1)
             return WordNet.ADVERB;
         if (sense.indexOf("AS") != -1)
             return WordNet.ADJECTIVE_SATELLITE;
+        if (sense.indexOf("NN") != -1)
+            return WordNet.NOUN;
         System.out.println("Error in WordNetUtilities.sensePOS(): Unknown part of speech type in sense code: " + sense);
         return 0;
     }
