@@ -7,31 +7,37 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 
-/**
+/** ***************************************************************
  * Base class for unit tests which are closer to integration tests because they require a large KB configuration.
  */
 
 public class IntegrationTestBase extends SigmaTestBase {
+
     //private static final String CONFIG_FILE_PATH = "resources/config_all.xml";
     private static final Class CLASS = IntegrationTestBase.class;
-
+    static Long totalKbMgrInitTime = Long.MAX_VALUE;
     protected static KB kbBackup;
 
-    /**
+    /** ***************************************************************
      * File object pointing to this test's resources directory.
      */
-    public static final File RESOURCES_FILE;
+    public static final File RESOURCES_DIR;
+
     static  {
-        URI uri = null;
+        String d = null;
         try {
-            uri = CLASS.getClassLoader().getResource("./resources").toURI();
-        } catch (URISyntaxException e) {
+            d = System.getenv("SIGMA_SRC") + File.separator + "test/integration/java/resources";
+            System.out.println("IntegrationTestBase initialization with dir: " + d);
+            File f = new File(d);
+            if (!f.exists())
+                throw new Exception();
+        }
+        catch (Exception e) {
+            System.out.println("Error in IntegrationTestBase initialization with dir: " + d);
             e.printStackTrace();
         }
-        RESOURCES_FILE = new File(uri);
+        RESOURCES_DIR = new File(d);
     }
-
-    static Long totalKbMgrInitTime = Long.MAX_VALUE;
 
     // Write out a meaningful error message if the config file path is bad.
 //    private static final BufferedReader xmlReader;
@@ -39,22 +45,21 @@ public class IntegrationTestBase extends SigmaTestBase {
 //        xmlReader = SigmaTestBase.getXmlReader(CONFIG_FILE_PATH, CLASS);
 //    }
 
+    /** ***************************************************************
+     */
     @BeforeClass
     public static void setup() throws IOException {
+
         long startTime = System.currentTimeMillis();
 
         //SigmaTestBase.doSetUp(xmlReader);
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB("SUMO");
-
         kbBackup = new KB(kb);
-
         checkConfiguration();
-
         long endTime = System.currentTimeMillis();
-
         // Update the init time only if it has its initialized value.
-        if(IntegrationTestBase.totalKbMgrInitTime == Long.MAX_VALUE) {
+        if (IntegrationTestBase.totalKbMgrInitTime == Long.MAX_VALUE) {
             IntegrationTestBase.totalKbMgrInitTime = endTime - startTime;
         }
     }
@@ -64,6 +69,7 @@ public class IntegrationTestBase extends SigmaTestBase {
      * @throws IOException
      */
     public static void resetAllForInference() throws IOException {
+
         kb = new KB(kbBackup);
         KBmanager.getMgr().kbs.put("SUMO", kb);
         kb.deleteUserAssertions();
