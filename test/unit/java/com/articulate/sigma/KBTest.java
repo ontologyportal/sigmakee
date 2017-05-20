@@ -17,12 +17,14 @@ public class KBTest extends UnitTestBase {
     }
 
     /**
-     * Fails because askWithTwoRestrictions does not go up the class hierarchy.
+     * Fails because askWithTwoRestrictions does not go up the class hierarchy but if caching is on will get "1".
      */
     @Test
     public void testAskWithTwoRestrictionsIndirect1() {
         ArrayList<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Process");
-        assertEquals(0, actual.size());
+        if (actual != null && actual.size() != 0)
+            System.out.println("KBtest.testAskWithTwoRestrictionsIndirect1(): " + actual);
+        assertEquals(1, actual.size());
     }
 
     /**
