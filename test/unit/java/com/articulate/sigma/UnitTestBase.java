@@ -12,36 +12,48 @@ import static org.junit.Assert.fail;
  */
 
 public class UnitTestBase  extends SigmaTestBase {
-    private static final String CONFIG_FILE_PATH = "resources/config_topOnly.xml";
+
+    private static final String SIGMA_SRC = System.getenv("SIGMA_SRC");
+    public static final String CONFIG_FILE_DIR = SIGMA_SRC + File.separator +
+            "test/unit/java/resources";
+    private static final String CONFIG_FILE_PATH = CONFIG_FILE_DIR + File.separator +
+            "config_topOnly.xml";
+    //private static final String CONFIG_FILE_PATH = "/home/apease/.sigmakee/KBs/config.xml";
     private static final Class CLASS = UnitTestBase.class;
-    public static final int NUM_KIF_FILES = 3;
+    public static final int NUM_KIF_FILES = 4;  // include cache file
 
     static Long totalKbMgrInitTime = Long.MAX_VALUE;
 
-    // Write out a meaningful error message if the config file path is bad.
+    /***************************************************************
+     * Write out a meaningful error message if the config file path is bad.
+     * */
     private static final BufferedReader xmlReader;
+
     static  {
         xmlReader = SigmaTestBase.getXmlReader(CONFIG_FILE_PATH, CLASS);
     }
 
+    /***************************************************************
+     * */
     @BeforeClass
     public static void setup()  {
+
+        System.out.println("UnitTestBase.setup(): reading config file: " + CONFIG_FILE_PATH);
         long startTime = System.currentTimeMillis();
-
         SigmaTestBase.doSetUp(xmlReader);
-
         long endTime = System.currentTimeMillis();
-
         // Update the init time only if it has its initialized value.
-        if(UnitTestBase.totalKbMgrInitTime == Long.MAX_VALUE) {
+        if (UnitTestBase.totalKbMgrInitTime == Long.MAX_VALUE) {
             UnitTestBase.totalKbMgrInitTime = endTime - startTime;
         }
     }
 
-
+    /***************************************************************
+     * */
     @AfterClass
-    public static void checkKBCount()    {
-        if (KBmanager.getMgr().getKB("SUMO").constituents.size() > NUM_KIF_FILES) {
+    public static void checkKBCount() {
+
+        if (KBmanager.getMgr().getKB("SUMO").constituents.size() > NUM_KIF_FILES) { // include cache file
             System.out.println("FAILURE: This test is running with the wrong configuration. Please investigate immediately, since the problem does not consistently appear.");
             System.out.println("  Because this test is changing the configuration, other tests may fail, even if this one passes.");
             System.out.println("  Nbr kif files: " + KBmanager.getMgr().getKB("SUMO").constituents.size());
