@@ -4,11 +4,45 @@ your home directory and are happy with having directories created there. The sed
 edit your config.xml manually. If you are running tomcat on vagrant or another VM, you may need to change the port
 value from 8080 .  E will only work if your $TMPDIR is set correctly.  No particular version of tomcat is required.
 If you load a different version of tomcat, be sure to change $CATALINA_HOME and your paths to conform to the version.
-If you use a different mirror or version you'll need to change the wget commend below. You may need to download
-Java and set your JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
-The following command line version may work
+If you use a different mirror or version you'll need to change the wget commend below. Change "theuser" below to your
+user name.
+
+-----------------
+System preparation on Linux
+
+# create user theuser
+  useradd theuser
+
+# add password for theuser
+  passwd theuser
+
+# add to sudoers file
+  usermod -aG sudo theuser
+
+# install unzip
+  sudo apt-get install unzip
+
+cd KBs
+cp ~/workspace/sigmakee/config.xml .
+
+sudo apt-get update
+
+# may need to create a .bashrc
+touch .bashrc
+
+# handy to add stuff to .bashrc
+echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
+echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
+echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
+echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
+
+# You may need to download Java and set your
+# JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
+# The following command line version may work
 wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
   http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
+
+-----------------------------
 
 mkdir workspace
 mkdir Programs
@@ -20,6 +54,9 @@ wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
 tar -xvzf E.tgz
 unzip apache-tomcat-8.5.15.zip
 rm apache-tomcat-8.5.15.zip
+cd ~/Programs/apache-tomcat-8.5.15/bin
+chmod 777 *
+cd ~/Programs
 unzip stanford-corenlp-full-2015-12-09.zip
 rm stanford-corenlp-full-2015-12-09.zip
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
@@ -34,6 +71,7 @@ cd .sigmakee
 mkdir KBs
 cp -R ~/workspace/sumo/* KBs
 me="$(whoami)"
+cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
 sed -i "s/theuser/$me/g" config.xml
 cd ~/Programs
 gunzip WordNet-3.0.tar.gz
@@ -57,16 +95,16 @@ sudo apt-get install ant
 ant
 cd ~/Programs/stanford-corenlp-full-2015-12-09/
 
-to test run
+# to test run
 
 java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
   com.articulate.sigma.KB
 
 
-Start Tomcat with
+# Start Tomcat with
 $CATALINA_HOME/bin/startup.sh
 
-point your browser at http://localhost:8080/sigma/login.html
+# point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
