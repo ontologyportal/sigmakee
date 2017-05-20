@@ -115,6 +115,12 @@ again.
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
+---------------------------------------------------------------------
+jUnit testing on the command line:
+
+java  -Xmx2500m -classpath
+  /home/theuser/workspace/sigmanlp/build/classes:/home/theuser/workspace/sigmanlp/build/lib/*
+  org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
 ---------------------------------------------------------------------
 The installation approaches below may be out of date
