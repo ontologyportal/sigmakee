@@ -217,7 +217,9 @@ public class KBmanager {
         }
     }
     
-    /** *************************************************************** 
+    /** ***************************************************************
+     * Note that filenames that are not full paths are prefixed with the
+     * value of preference kbDir
      */
     private void kbsFromXML(SimpleElement configuration) {
         
@@ -236,8 +238,10 @@ public class KBmanager {
                         if (!kbConst.getTagName().equals("constituent")) 
                         	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                         String filename = (String) kbConst.getAttribute("filename");
+                        if (!filename.startsWith((File.separator)))
+                            filename = getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
-                            if (filename.endsWith(KB._cacheFileSuffix) ) {
+                            if (filename.endsWith(KB._cacheFileSuffix)) {
                                 if (useCacheFile) 
                                     constituentsToAdd.add(filename);                                
                             }
@@ -644,7 +648,7 @@ public class KBmanager {
     public KB getKB(String name) {
 
         if (!kbs.containsKey(name))
-        	System.out.println("KB " + name + " not found.");
+        	System.out.println("KBmanager.getKB(): KB " + name + " not found.");
         return (KB) kbs.get(name.intern());
     }
 
