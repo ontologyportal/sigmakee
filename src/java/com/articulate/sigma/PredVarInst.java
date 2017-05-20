@@ -155,7 +155,7 @@ public class PredVarInst {
                 //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
                 if (val > 0 && val != l.size()) {
                     System.out.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
-                            val + " but found " + l.size() + " for relation " + rel);
+                            val + " but found " + l.size() + " for relation " + rel + " in formula: " + f);
                     throw new IllegalArgumentException(rel);
                 }
             }
