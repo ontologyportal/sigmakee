@@ -31,7 +31,7 @@ public class FormulaUnificationTest extends UnitTestBase {
     @Parameterized.Parameters
     public static Collection<Object[]> loadParamteres() {
 
-        File jsonTestFile = new File(IntegrationTestBase.RESOURCES_FILE, TEST_FILE_NAME);
+        File jsonTestFile = new File(UnitTestBase.CONFIG_FILE_DIR, TEST_FILE_NAME);
         JSONParser parser = new JSONParser();
         ArrayList<Object[]> result = new ArrayList<Object[]>();
 
