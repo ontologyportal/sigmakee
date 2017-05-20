@@ -17,11 +17,12 @@ import java.util.ListIterator;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-/**
+/***************************************************************
  * Created by sserban on 3/1/15.
  */
 @RunWith(Parameterized.class)
 public class FormulaLogicalEqualityTest extends UnitTestBase {
+
     private static final String TEST_FILE_NAME = "formula_logical_equality_tests.json";
 
     private static long totalExecutionTime;
@@ -34,11 +35,12 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
     @Parameterized.Parameter(value= 2)
     public boolean areEqual;
 
-
+    /***************************************************************
+     */
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> loadParamteres() {
 
-        File jsonTestFile = new File(IntegrationTestBase.RESOURCES_FILE, TEST_FILE_NAME);
+        File jsonTestFile = new File(UnitTestBase.CONFIG_FILE_DIR, TEST_FILE_NAME);
         JSONParser parser = new JSONParser();
         ArrayList<Object[]> result = new ArrayList<Object[]>();
 
@@ -64,13 +66,18 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
         return result;
     }
 
+    /***************************************************************
+     */
     @After
     public void performanceReport() {
-       System.out.println("\nA total of " + testCount + " tests ran with an average of " + ((totalExecutionTime/testCount) / 1000000) + " milisecond execution time per test.\n");
+       System.out.println("\nFormulaLogicalEqualityTest: \nA total of " + testCount + " tests ran with an average of " + ((totalExecutionTime/testCount) / 1000000) + " milisecond execution time per test.\n");
     }
 
+    /***************************************************************
+     */
     @Test
     public void test() {
+
         Formula f1 = new Formula();
         f1.read(f1Text);
         Formula f2 = new Formula();
@@ -82,9 +89,10 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
         long stop = System.nanoTime();
         totalExecutionTime += (stop - start);
         testCount++;
-        if(areEqual) {
+        if (areEqual) {
             assertTrue("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
-        } else {
+        }
+        else {
             assertFalse("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
         }
     }
