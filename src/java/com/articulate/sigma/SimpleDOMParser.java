@@ -28,10 +28,13 @@ public class SimpleDOMParser {
     private Reader reader;
     private Stack elements;
     private SimpleElement currentElement;
+    private boolean skipProlog = true;
+    public void setSkipProlog(boolean b) { skipProlog = b; }
 
     /** *****************************************************************
     */
     public SimpleDOMParser() {
+
         elements = new Stack();
         currentElement = null;
     }
@@ -75,7 +78,7 @@ public class SimpleDOMParser {
     public SimpleElement parse(Reader reader) throws IOException {
 
         this.reader = reader;
-        skipPrologs();          // skip xml declaration or DocTypes
+        if (skipProlog) skipPrologs();          // skip xml declaration or DocTypes
         while (true) {
             int index;
             String tagName;
@@ -84,11 +87,12 @@ public class SimpleDOMParser {
             while (currentTag == null || currentTag.startsWith("<!--")) {        // ignore comments
                 currentTag = readTag();                                  // remove the prepend or trailing white spaces
                 //System.out.println("SimpleDOMParse.parse() currentTag: '" + currentTag + "'");
+                //System.out.println("SimpleDOMParse.parse() currentElement: '" + currentElement + "'");
                 //if (currentElement != null)
                 //    System.out.println("SimpleDOMParse.parse() currentelement text: " + currentElement.getText());
                 if (currentTag.length() > 1 && currentTag.contains("<"))
                     currentTag = currentTag.trim();
-                if (currentTag.charAt(0) != '<') { // don't allow consecutive whitespace
+                if (currentTag.charAt(0) != '<' && currentElement != null) { // don't allow consecutive whitespace
                      if (currentElement.getText().length() == 0 || !(Character.isWhitespace(currentTag.charAt(0)) &&
                              Character.isWhitespace(currentElement.getText().charAt(currentElement.getText().length()-1)))) {
                         currentElement.setText(currentElement.getText() + currentTag.charAt(0));
@@ -210,8 +214,8 @@ public class SimpleDOMParser {
     private void peek(int[] buffer) throws IOException {
 
         reader.mark(buffer.length);
-        for (int i=0; i<buffer.length; i++) {
-                buffer[i] = reader.read();
+        for (int i = 0; i < buffer.length; i++) {
+            buffer[i] = reader.read();
         }
         reader.reset();
     }
@@ -220,8 +224,9 @@ public class SimpleDOMParser {
     */
     private void skipWhitespace() throws IOException {
 
-        while (Character.isWhitespace((char) peek()))
+        while (Character.isWhitespace((char) peek())) {
             reader.read();
+        }
     }
 
     /** *****************************************************************
