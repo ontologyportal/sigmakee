@@ -27,28 +27,31 @@ import com.google.common.io.Files;
 import java.io.File;
 import java.io.IOException;
 
-public class CVSExporter {
+public class CSVExporter {
 
     final boolean enabled;
     StringBuilder collectedOutput = new StringBuilder();
 
-    public CVSExporter(boolean enabled, String header) {
+    public CSVExporter(boolean enabled, String header) {
+
         this.enabled = enabled;
-        if(enabled) {
+        if (enabled) {
             collectedOutput.append(header).append("\n");
         }
     }
 
     public void addRow(String[] row) {
-        if(enabled) {
-            for(int i = 0; i<row.length; i++) {
+
+        if (enabled) {
+            for (int i = 0; i<row.length; i++) {
                 String col = row[i];
-                if(i != 0) {
+                if (i != 0) {
                     collectedOutput.append(", ");
                 }
-                if(col.contains(",")) {
+                if (col.contains(",")) {
                     collectedOutput.append("\"").append(col).append("\"");
-                } else {
+                }
+                else {
                     collectedOutput.append(col);
                 }
             }
@@ -57,12 +60,14 @@ public class CVSExporter {
     }
 
     public void flushIfEnabled() {
-        if(enabled) {
+
+        if (enabled) {
             try {
                 File file = new File("testresults-exported-" + System.currentTimeMillis() + ".csv");
                 Files.write(collectedOutput.toString(), file, Charsets.UTF_8);
                 System.out.println("Results exported to: " + file.getPath());
-            } catch (IOException e) {
+            }
+            catch (IOException e) {
                 e.printStackTrace();
             }
             collectedOutput = null;
