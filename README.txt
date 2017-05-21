@@ -119,7 +119,7 @@ from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 jUnit testing on the command line:
 
 java  -Xmx2500m -classpath
-  /home/theuser/workspace/sigmanlp/build/classes:/home/theuser/workspace/sigmanlp/build/lib/*
+  /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
   org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
 ---------------------------------------------------------------------
