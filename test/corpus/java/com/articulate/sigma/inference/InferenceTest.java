@@ -78,10 +78,10 @@ public class InferenceTest {
                     }
                 }
             }
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             e.printStackTrace();
         }
-
         return result;
     }
 
@@ -94,7 +94,6 @@ public class InferenceTest {
         ArrayList<String> expectedAnswers = new ArrayList<>();
         ArrayList<String> actualAnswers = new ArrayList<>();
         InferenceTestSuite.inferenceUnitTest(fInput, kb, expectedAnswers, actualAnswers);
-
         assertEquals(expectedAnswers, actualAnswers);
     }
 }
