@@ -1,7 +1,0 @@
-RiSE is a robot that climbs vertical terrain such as walls, trees and fences.
-RiSE uses feet with micro-claws to climb on textured surfaces.
-RiSE changes posture to conform to the curvature of the climbing surface and its tail helps RiSE balance on steep ascents.
-RiSE is 0.25 m long, weighs 2 kg, and travels 0.3 m/s. Each of RiSE 's six legs is powered by a pair of electric motors.
-An onboard computer controls leg motion, manages communications, and services a variety of sensors, including joint position sensors, leg strain sensors and foot contact sensors.
-Boston Dynamics developed RiSE in conjunction with researchers at University of Pennsylvania, Carnegie Mellon, UC Berkeley, Stanford, and Lewis and Clark University.
-RiSE was funded by DARPA.
