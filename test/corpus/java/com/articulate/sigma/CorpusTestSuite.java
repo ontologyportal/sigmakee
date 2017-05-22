@@ -2,7 +2,6 @@ package com.articulate.sigma;
 
 import com.google.common.collect.Sets;
 import com.articulate.sigma.inference.InferenceTest;
-import com.articulate.sigma.inference.InferenceWikiTest;
 import org.junit.Test;
 import com.articulate.sigma.nlg.HtmlParaphraseIntegrationTest;
 import java.util.ArrayList;
