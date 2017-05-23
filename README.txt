@@ -47,7 +47,6 @@ wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-
 mkdir workspace
 mkdir Programs
 cd Programs
-wget 'http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip'
 wget 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.15/bin/apache-tomcat-8.5.15.zip'
 wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
@@ -56,11 +55,6 @@ unzip apache-tomcat-8.5.15.zip
 rm apache-tomcat-8.5.15.zip
 cd ~/Programs/apache-tomcat-8.5.15/bin
 chmod 777 *
-cd ~/Programs
-unzip stanford-corenlp-full-2015-12-09.zip
-rm stanford-corenlp-full-2015-12-09.zip
-cd ~/Programs/stanford-corenlp-full-2015-12-09/
-unzip stanford-corenlp-3.6.0-models.jar
 cd ~/workspace/
 sudo apt-get install git
 git clone https://github.com/ontologyportal/sigmakee
