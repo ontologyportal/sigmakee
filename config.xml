@@ -2,7 +2,7 @@
   <preference name="sumokbname" value="SUMO" />
   <preference name="testOutputDir" value="/home/theuser/.sigmakee/KBs/tests" />
   <preference name="TPTPDisplay" value="no" />
-  <preference name="inferenceEngine" value="/home/theuser/E/PROVER/e_ltb_runner" />
+  <preference name="inferenceEngine" value="/home/theuser/Programs/E/PROVER/e_ltb_runner" />
   <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
   <preference name="baseDir" value="/home/theuser/.sigmakee" />
   <preference name="hostname" value="localhost" />
