@@ -87,7 +87,6 @@ sudo add-apt-repository universe
 sudo apt-get update
 sudo apt-get install ant
 ant
-cd ~/Programs/stanford-corenlp-full-2015-12-09/
 
 # to test run
 
@@ -109,6 +108,14 @@ again.
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
+---------------------------------------------------------------------
+mac install notes
+
+use "curl -o filename URL" if you don't have wget installed
+java will be installed in /usr/libexec/java_home
+get git from the xcode tools - "xcode-select --install"
+instead of .bashrc edit .bash_profile
+you may want to install Homebrew from http://brew.sh to install ant with brew install ant
 ---------------------------------------------------------------------
 jUnit testing on the command line:
 
