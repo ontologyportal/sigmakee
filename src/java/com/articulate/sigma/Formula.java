@@ -2342,7 +2342,6 @@ public class Formula implements Comparable {
     }
 
     /** *****************************************************************
-     *
      * @param quantifier
      * @param vars
      * @return
@@ -2350,7 +2349,7 @@ public class Formula implements Comparable {
      */
     public Formula replaceQuantifierVars(String quantifier, List<String> vars) throws Exception {
 
-        if(!quantifier.equals(this.car())) {
+        if (!quantifier.equals(this.car())) {
             throw new Exception("The formula is not properly quantified: " + this);
         }
 
@@ -2358,12 +2357,12 @@ public class Formula implements Comparable {
         param.read(this.cadr());
         ArrayList<String> existVars = param.complexArgumentsToArrayList(0);
 
-        if(existVars.size() != vars.size()) {
+        if (existVars.size() != vars.size()) {
             throw new Exception("Wrong number of variables: " + vars + " to substitute in existentially quantified formula: " + this);
         }
 
         Formula result = this;
-        for(int i = 0; i < existVars.size(); i++) {
+        for (int i = 0; i < existVars.size(); i++) {
             result = result.replaceVar(existVars.get(i), vars.get(i));
         }
 
