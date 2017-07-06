@@ -1905,6 +1905,25 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * @return whether the word is a possible hyponym of a given POS-prefixed synset
+     */
+    public static boolean isHyponymousWord(String word, HashSet<String> synsets) {
+
+        for (String synset : synsets) {
+            HashSet<String> hypo = getAllHyponymsTransitive(synset);
+            HashSet<String> words = new HashSet<>();
+            for (String s : hypo) {
+                if (WordNet.wn.synsetsToWords.keySet().contains(s)) {
+                    words.addAll(WordNet.wn.synsetsToWords.get(s));
+                }
+            }
+            if (words.contains(word))
+                return true;
+        }
+        return false;
+    }
+
+    /** ***************************************************************
      * Generate sets of all hyponymous words for each synset in a file
      */
     public static void generateHyponymSets (String filename) {
