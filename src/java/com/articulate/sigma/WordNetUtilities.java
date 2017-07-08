@@ -1867,10 +1867,10 @@ public class WordNetUtilities {
      */
     public static HashSet<String> getAllHyponyms(String s) {
 
-        System.out.println("getAllHyponyms(): " + s);
+        //System.out.println("getAllHyponyms(): " + s);
         HashSet<String> result = new HashSet<String>();
         ArrayList<AVPair> rels = WordNet.wn.relations.get(s);
-        System.out.println("getAllHyponyms() rels: " + rels);
+        //System.out.println("getAllHyponyms() rels: " + rels);
         if (rels == null)
             return result;
         for (AVPair avp : rels) {
@@ -1894,7 +1894,7 @@ public class WordNetUtilities {
             newresult.addAll(result);
             for (String str : result)
                 newresult.addAll(getAllHyponyms(str));
-            System.out.println("getAllHyponymsTransitive(): " + newresult);
+            //System.out.println("getAllHyponymsTransitive(): " + newresult);
             if (newresult.size() == result.size())
                 changed = false;
             else
@@ -1909,6 +1909,11 @@ public class WordNetUtilities {
      */
     public static boolean isHyponymousWord(String word, HashSet<String> synsets) {
 
+        if (StringUtil.emptyString(word) || synsets == null || synsets.isEmpty()) {
+            System.out.println("WordNetUtilities.isHyponymousWord(): bad inputs");
+            System.out.println("word: '" + word + "' synsets: " + synsets);
+            return false;
+        }
         for (String synset : synsets) {
             HashSet<String> hypo = getAllHyponymsTransitive(synset);
             HashSet<String> words = new HashSet<>();
