@@ -1870,7 +1870,7 @@ public class WordNetUtilities {
         //System.out.println("getAllHyponyms(): " + s);
         HashSet<String> result = new HashSet<String>();
         ArrayList<AVPair> rels = WordNet.wn.relations.get(s);
-        //System.out.println("getAllHyponyms() rels: " + rels);
+        // System.out.println("getAllHyponyms() rels: " + rels);
         if (rels == null)
             return result;
         for (AVPair avp : rels) {
@@ -1886,6 +1886,7 @@ public class WordNetUtilities {
      */
     public static HashSet<String> getAllHyponymsTransitive(String s) {
 
+        //System.out.println("getAllHyponymsTransitive(): input: " + s);
         HashSet<String> result = new HashSet<String>();
         result.addAll(getAllHyponyms(s));
         boolean changed = true;
@@ -1919,7 +1920,9 @@ public class WordNetUtilities {
             HashSet<String> words = new HashSet<>();
             for (String s : hypo) {
                 if (WordNet.wn.synsetsToWords.keySet().contains(s)) {
-                    words.addAll(WordNet.wn.synsetsToWords.get(s));
+                    ArrayList<String> newWords = WordNet.wn.synsetsToWords.get(s);
+                    //System.out.println("WordNetUtilities.isHyponymousWord(): words: "  + newWords);
+                    words.addAll(newWords);
                 }
             }
             if (words.contains(word))
