@@ -3139,9 +3139,9 @@ public class KB {
         try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB("SUMO");
-            //kb.writeTerms();
-            System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
-            kb.askEProver("(subclass ?X Object)",30,1);
+            kb.writeTerms();
+            //System.out.println("KB.main(): " + kb.isChildOf("Africa", "Region"));
+            //kb.askEProver("(subclass ?X Object)",30,1);
         } 
         catch (Exception ioe ) {
             System.out.println(ioe.getMessage());
