@@ -310,6 +310,37 @@ public class StringUtil {
     }
 
     /****************************************************************
+     */
+    public static String spacesToUnderlines(String input) {
+
+        String[] s = input.split("\\s+");
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < s.length; i++) {
+            sb.append(s[i]);
+            if ((i+1) < s.length) {
+                sb.append("_");
+            }
+        }
+        return sb.toString();
+    }
+
+    /****************************************************************
+     */
+    public static String camelCaseToUnderlines(String input) {
+
+        StringBuffer sb = new StringBuffer();
+        char lastChar = ' ';
+        for (char c : input.toCharArray()) {
+            if (Character.isUpperCase(c) && Character.isLowerCase(lastChar))
+                sb.append("_" + c);
+            else
+                sb.append(c);
+            lastChar = c;
+        }
+        return sb.toString();
+    }
+
+    /****************************************************************
      * Removes all balanced ASCII double-quote characters from each
      * end of the String s, if any are present.
      */
