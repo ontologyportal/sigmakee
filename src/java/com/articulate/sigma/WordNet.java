@@ -2196,25 +2196,43 @@ public class WordNet {
         StringBuffer buf = new StringBuffer();
         
         String mixedCase = input;
-        String[] s = input.split("\\s+");
-        StringBuffer sb = new StringBuffer();
-        for (int i = 0; i < s.length; i++) {
-            sb.append(s[i]);
-            if ((i+1) < s.length) {
-                sb.append("_");
-            }
-        }
+        String str = input;
+        if (input.contains(" "))
+            str = StringUtil.spacesToUnderlines(input);
+        if (input.matches(".*[a-z][A-Z].*"))
+            str = StringUtil.camelCaseToUnderlines(input);
 
-        mixedCase = sb.toString();
-        input = sb.toString().toLowerCase();
-        if (pos == NOUN)
-            buf.append(processNoun(kbname,mixedCase,input,synset,params));
-        if (pos == VERB)
-            buf.append(processVerb(kbname,mixedCase,input,synset,params));
-        if (pos == ADJECTIVE)
-            buf.append(processAdjective(kbname,mixedCase,input,synset,params));
-        if (pos == ADVERB)
-            buf.append(processAdverb(kbname,mixedCase,input,synset,params));
+        mixedCase = str;
+        input = str.toLowerCase();
+        boolean found = false;
+        if (pos == NOUN || pos == 0) {
+            String res = processNoun(kbname, mixedCase, input, synset, params);
+            if (!res.startsWith("<P>There are no"))
+                found = true;
+            if (found == true || pos != 0)
+                buf.append(res);
+        }
+        if (pos == VERB || pos == 0) {
+            String res = processVerb(kbname, mixedCase, input, synset, params);
+            if (!res.startsWith("<P>There are no"))
+                found = true;
+            if (found == true || pos != 0)
+                buf.append(res);
+        }
+        if (pos == ADJECTIVE || pos == 0) {
+            String res = processAdjective(kbname, mixedCase, input, synset, params);
+            if (!res.isEmpty())
+                found = true;
+            if (found == true || pos != 0)
+                buf.append(res);
+        }
+        if (pos == ADVERB || pos == 0) {
+            String res = processAdverb(kbname, mixedCase, input, synset, params);
+            if (!res.isEmpty())
+                found = true;
+            if (found == true || pos != 0)
+                buf.append(res);
+        }
         buf.append("\n");
 
         return buf.toString();
