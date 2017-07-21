@@ -19,7 +19,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   String POS = request.getParameter("POS");
   String key = request.getParameter("key");      
   if (POS == null)
-      POS = "1";  
+      POS = "0";
 %>
 <head>
   <title>Sigma WordNet mapping browser</title>
@@ -45,6 +45,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   <font face="Arial,helvetica"><b>English Word:&nbsp;</b></font>
   <input type="text" name="word" VALUE=<%= "\"" + (request.getParameter("word")==null?"":request.getParameter("word")) + "\"" %>>
     <select name="POS">
+      <option <%= POS.equals("0")?"selected":"" %> value="0">Any
       <option <%= POS.equals("1")?"selected":"" %> value="1">Noun
       <option <%= POS.equals("2")?"selected":"" %> value="2">Verb
       <option <%= POS.equals("3")?"selected":"" %> value="3">Adjective 
