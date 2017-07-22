@@ -449,7 +449,7 @@ public class WordNetUtilities {
      *  @return is a boolean indicating whether the result of the substitution
      *  was found in the hashtable.
      */
-    public static boolean substTest(String result, String match, String subst, Hashtable<String,String> hash) {
+    public static boolean substTest(String result, String match, String subst, HashMap<String,HashSet<String>> hash) {
 
         Pattern p = Pattern.compile(match);
         Matcher m = p.matcher(result);
