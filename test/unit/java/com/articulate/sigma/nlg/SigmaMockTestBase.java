@@ -21,7 +21,7 @@ public class SigmaMockTestBase {
 
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
-    private static Hashtable<String, String> oldWordNetSynSetTable;
+    private static HashMap<String, HashSet<String>> oldWordNetSynSetTable;
 
     protected final KB kbMock = new KBMock("dummyString");
 
@@ -206,13 +206,13 @@ public class SigmaMockTestBase {
 
         NLGUtils.readKeywordMap(KB_PATH);
 
-        Hashtable<String,String> hash = new Hashtable<>();
-        hash.put("drink", "");
-        hash.put("drive", "");
-        hash.put("eat", "");
-        hash.put("give", "");
-        hash.put("read", "");
-        hash.put("go", "");
+        HashMap<String,HashSet<String>> hash = new HashMap<>();
+        hash.put("drink", null);
+        hash.put("drive", null);
+        hash.put("eat", null);
+        hash.put("give", null);
+        hash.put("read", null);
+        hash.put("go", null);
 
         oldWordNetSynSetTable = WordNet.wn.verbSynsetHash;
         WordNet.wn.verbSynsetHash = hash;
