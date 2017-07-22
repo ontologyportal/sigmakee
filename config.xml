@@ -1,33 +1,34 @@
 <configuration >
   <preference name="sumokbname" value="SUMO" />
-  <preference name="testOutputDir" value="/home/theuser/.sigmakee/KBs/tests" />
+  <preference name="testOutputDir" value="~/.sigmakee/KBs/tests" />
   <preference name="TPTPDisplay" value="no" />
-  <preference name="inferenceEngine" value="/home/theuser/Programs/E/PROVER/e_ltb_runner" />
-  <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
+  <preference name="inferenceEngine" value="~/Programs/E/PROVER/e_ltb_runner" />
+  <preference name="inferenceTestDir" value="~/.sigmakee/KBs/tests" />
   <preference name="baseDir" value="/home/theuser/.sigmakee" />
   <preference name="hostname" value="localhost" />
   <preference name="logLevel" value="warning" />
-  <preference name="systemsDir" value="/home/theuser/workspace/sigma/sigma" />
+  <preference name="systemsDir" value="~/workspace/sigma/sigma" />
   <preference name="userBrowserLimit" value="25" />
   <preference name="adminBrowserLimit" value="200" />
-  <preference name="SemRewrite" value="/home/theuser/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
+  <preference name="SemRewrite" value="~/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
   <preference name="typePrefix" value="yes" />
-  <preference name="graphDir" value="/home/theuser/workspace/sigma/sigma/webapps/sigma/graph" />
+  <preference name="graphDir" value="graph" />
+  <preference name="graphWidth" value="600" />
   <preference name="TPTP" value="yes" />
   <preference name="cache" value="yes" />
   <preference name="editorCommand" value="" />
   <preference name="graphVizDir" value="/usr/bin" />
-  <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
+  <preference name="kbDir" value="~/.sigmakee/KBs" />
   <preference name="loadCELT" value="no" />
   <preference name="celtdir" value="" />
   <preference name="lineNumberCommand" value="" />
   <preference name="prolog" value="" />
   <preference name="port" value="8080" />
-  <preference name="tptpHomeDir" value="/home/theuser/workspace/sigma/sigma" />
+  <preference name="tptpHomeDir" value="~/workspace/sigma/sigma" />
   <preference name="showcached" value="no" />
   <preference name="leoExecutable" value="" />
   <preference name="holdsPrefix" value="no" />
-  <preference name="logDir" value="/home/theuser/.sigmakee/logs" />
+  <preference name="logDir" value="~/.sigmakee/logs" />
   <kb name="SUMO" >
     <constituent filename="english_format.kif" />
     <constituent filename="domainEnglishFormat.kif" />
@@ -47,6 +48,7 @@
     <constituent filename="Hotel.kif" />
     <constituent filename="Justice.kif" />
     <constituent filename="Languages.kif" />
+    <constituent filename="Law.kif" />
     <constituent filename="Media.kif" />
     <constituent filename="Merge.kif" />
     <constituent filename="Mid-level-ontology.kif" />
@@ -57,6 +59,8 @@
     <constituent filename="Music.kif" />
     <constituent filename="naics.kif" />
     <constituent filename="People.kif" />
+    <constituent filename="pictureList.kif" />
+    <constituent filename="pictureList-ImageNet.kif" />
     <constituent filename="QoSontology.kif" />
     <constituent filename="Sports.kif" />
     <constituent filename="TransnationalIssues.kif" />
@@ -64,6 +68,7 @@
     <constituent filename="TransportDetail.kif" />
     <constituent filename="UXExperimentalTerms.kif" />
     <constituent filename="VirusProteinAndCellPart.kif" />
+    <constituent filename="Weather.kif" />
     <constituent filename="WMD.kif" />
   </kb>
 </configuration>
