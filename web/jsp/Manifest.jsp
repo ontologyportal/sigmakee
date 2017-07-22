@@ -299,7 +299,7 @@ if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref
   if (!kb.errors.isEmpty()) {
       TreeSet<String> errors = kb.errors;
       out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
-      out.println(HTMLformatter.formatErrorsWarnings(kb));
+      out.println(HTMLformatter.formatErrorsWarnings(errors,kb));
   }
   if (!kb.warnings.isEmpty()) {
       TreeSet<String> warns = kb.warnings;
