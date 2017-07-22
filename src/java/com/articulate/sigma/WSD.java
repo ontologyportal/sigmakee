@@ -488,7 +488,7 @@ public class WSD {
         //System.out.println("WSD.getBestDefaultSense(): nouns: " + WordNet.wn.nounSynsetHash.get(newWord));
         if (al == null || al.size() == 0) {
             al = new ArrayList<String>();
-            String synsets = "";
+            HashSet<String> synsets = null;
             switch (pos) {
                 case 1: synsets = WordNet.wn.nounSynsetHash.get(newWord);                        
                         break;
@@ -500,7 +500,7 @@ public class WSD {
                         break;
             }
             if (!StringUtil.emptyString(synsets)) 
-                al.addAll(Arrays.asList(synsets.split(" "))); 
+                al.addAll(synsets);
             //System.out.println("WSD.getBestDefaultSense(): al: " + al);
             if (al == null || al.size() == 0)
                 return "";
