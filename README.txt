@@ -47,13 +47,13 @@ wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-
 mkdir workspace
 mkdir Programs
 cd Programs
-wget 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.15/bin/apache-tomcat-8.5.15.zip'
+wget 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.16/bin/apache-tomcat-8.5.16.zip'
 wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
 tar -xvzf E.tgz
-unzip apache-tomcat-8.5.15.zip
-rm apache-tomcat-8.5.15.zip
-cd ~/Programs/apache-tomcat-8.5.15/bin
+unzip apache-tomcat-8.5.16.zip
+rm apache-tomcat-8.5.16.zip
+cd ~/Programs/apache-tomcat-8.5.16/bin
 chmod 777 *
 cd ~/workspace/
 sudo apt-get install git
@@ -78,9 +78,11 @@ sudo apt-get install gcc
 make
 make install
 cd ~
+sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
+echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.15" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.16" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 sudo add-apt-repository universe
@@ -115,16 +117,82 @@ use "curl -o filename URL" if you don't have wget installed
 java will be installed in /usr/libexec/java_home
 get git from the xcode tools - "xcode-select --install"
 instead of .bashrc edit .bash_profile
-you may want to install Homebrew from http://brew.sh to install ant with brew install ant
+
+install Homebrew from http://brew.sh
+
+mkdir workspace
+mkdir Programs
+cd Programs
+curl -O 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.16/bin/apache-tomcat-8.5.16.zip'
+curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
+tar -xvzf E.tgz
+unzip apache-tomcat-8.5.16.zip
+rm apache-tomcat-8.5.16.zip
+cd ~/Programs/apache-tomcat-8.5.16/bin
+chmod 777 *
+cd ~/workspace/
+sudo apt-get install git
+git clone https://github.com/ontologyportal/sigmakee
+git clone https://github.com/ontologyportal/sumo
+cd ~
+mkdir .sigmakee
+cd .sigmakee
+mkdir KBs
+cp -R ~/workspace/sumo/* KBs
+me="$(whoami)"
+cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
+sed -i "s/theuser/$me/g" config.xml
+cd ~/Programs
+gunzip WordNet-3.0.tar.gz
+tar -xvf WordNet-3.0.tar
+cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
+cd ~/Programs/E
+brew install make
+brew install gcc
+./configure
+make
+make install
+cd ~
+brew install graphviz
+echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
+echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.16" >> .bashrc
+source .bashrc
+cd ~/workspace/sigmakee
+brew install ant
+ant
+
+# to test run
+
+java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
+  com.articulate.sigma.KB
+
+
+# Start Tomcat with
+$CATALINA_HOME/bin/startup.sh
+
+# point your browser at http://localhost:8080/sigma/login.html
+
+
+Debugging
+- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
+again.
+- If you are repeatedly getting 404s, check the port value in ~/.sigmakee/KBs/config.xml. 8080 for local,
+9090 for Vagrant
+- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
+from ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+
 ---------------------------------------------------------------------
 jUnit testing on the command line:
 
 java  -Xmx2500m -classpath
-  /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+  ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
   org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
 ---------------------------------------------------------------------
-The installation approaches below may be out of date
+The installation approaches below are be out of date
 
 Install via script from source on Linux or Mac OS with
 bash <(curl -L https://raw.githubusercontent.com/ontologyportal/sigmakee/master/install.sh)
