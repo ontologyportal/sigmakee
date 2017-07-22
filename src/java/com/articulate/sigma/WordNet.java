@@ -58,10 +58,10 @@ public class WordNet {
      * will be used by methods in this file. */
     private static Pattern[] regexPatterns = null;
 
-    public Hashtable<String,String> nounSynsetHash = new Hashtable<String,String>();   // Words in root form are String keys,
-    public Hashtable<String,String> verbSynsetHash = new Hashtable<String,String>();   // String values are synset lists.
-    public Hashtable<String,String> adjectiveSynsetHash = new Hashtable<String,String>();
-    public Hashtable<String,String> adverbSynsetHash = new Hashtable<String,String>();
+    public HashMap<String,HashSet<String>> nounSynsetHash = new HashMap<>();   // Words in root form are  String keys,
+    public HashMap<String,HashSet<String>> verbSynsetHash = new HashMap<>();   // String values are 8-digit synset lists.
+    public HashMap<String,HashSet<String>> adjectiveSynsetHash = new HashMap<>();
+    public HashMap<String,HashSet<String>> adverbSynsetHash = new HashMap<>();
 
     public Hashtable<String,String> verbDocumentationHash = new Hashtable<String,String>();       // Keys are synset Strings, values
     public Hashtable<String,String> adjectiveDocumentationHash = new Hashtable<String,String>();  // are documentation strings.
@@ -389,50 +389,41 @@ public class WordNet {
         }
         al.add(word);
 
+        HashSet<String> synsets = null;
         switch (POS.charAt(0)) {
         case '1':
-            String synsets = (String) nounSynsetHash.get(word);
+            synsets = nounSynsetHash.get(word);
             if (synsets == null)
-                synsets = "";
-            if (synsets.indexOf(synsetStr) < 0) {
-                if (synsets.length() > 0)
-                    synsets = synsets + " ";
-                synsets = synsets + synsetStr;
+                synsets = new HashSet<String>();
+            if (!synsets.contains(synsetStr)) {
+                synsets.add(synsetStr);
                 nounSynsetHash.put(word,synsets);
             }
             break;
         case '2':
-            synsets = (String) verbSynsetHash.get(word);
+            synsets = verbSynsetHash.get(word);
             if (synsets == null)
-                synsets = "";
-            if (synsets.indexOf(synsetStr) < 0) {
-                if (synsets.length() > 0)
-                    synsets = synsets + " ";
-                synsets = synsets + synsetStr;
-                //if (word.equals("roll"))
-                //    System.out.println("INFO in WordNet.addToSynsetsToWords(): word: " + word);
+                synsets = new HashSet<String>();
+            if (!synsets.contains(synsetStr)) {
+                synsets.add(synsetStr);
                 verbSynsetHash.put(word,synsets);
             }
             break;
         case '3':
-            synsets = (String) adjectiveSynsetHash.get(word);
+            synsets = adjectiveSynsetHash.get(word);
             if (synsets == null)
-                synsets = "";
-            if (synsets.indexOf(synsetStr) < 0) {
-                if (synsets.length() > 0)
-                    synsets = synsets + " ";
-                synsets = synsets + synsetStr;
+                synsets = new HashSet<String>();
+            if (!synsets.contains(synsetStr)) {
+                synsets.add(synsetStr);
                 adjectiveSynsetHash.put(word,synsets);
             }
             break;
         case '4':
-            synsets = (String) adverbSynsetHash.get(word);
+            synsets = adverbSynsetHash.get(word);
             if (synsets == null)
-                synsets = "";
-            if (synsets.indexOf(synsetStr) < 0) {
-                if (synsets.length() > 0)
-                    synsets = synsets + " ";
-                synsets = synsets + synsetStr;
+                synsets = new HashSet<String>();
+            if (!synsets.contains(synsetStr)) {
+                synsets.add(synsetStr);
                 adverbSynsetHash.put(word,synsets);
             }
             break;
@@ -1746,7 +1737,7 @@ public class WordNet {
      *  @param type is whether the word is a noun or verb (we need to add capability for adjectives and adverbs.
      *  @param params is the set of html parameters
      */
-    private String sumoDisplay(String synsetBlock, String word, String type,
+    private String sumoDisplay(HashSet<String> synsetBlock, String word, String type,
             String sumokbname, String synsetNum, String params) {
 
         StringBuffer result = new StringBuffer();
@@ -1754,61 +1745,60 @@ public class WordNet {
         String documentation = new String();
         String sumoEquivalent = new String();
         String kbString = "&kb=" + sumokbname;
-        int listLength;
-        String[] synsetList = splitSynsets(synsetBlock);
 
-        if (synsetList != null)
-            listLength = synsetList.length;
-        else
-            listLength = 0;
-        result.append("<i>According to WordNet, the " + type + " \"" + word + "\" has ");
-        result.append(String.valueOf(listLength) + " sense(s).</i><P>\n\n");
+        if (synsetBlock != null) {
+            result.append("<i>According to WordNet, the " + type + " \"" + word + "\" has ");
+            result.append(synsetBlock.size() + " sense(s).</i><P>\n\n");
+            Iterator<String> it = synsetBlock.iterator();
 
-        for (int i=0; i<listLength; i++) {         // Split apart the SUMO concepts, and store them as an associative array.
-            synset = synsetList[i];
-            synset = synset.trim();
-            if (synset.equals(synsetNum))
-                result.append("<b>");
-            if (type.compareTo("noun") == 0) {
-                documentation = (String) nounDocumentationHash.get(synset);
-                result.append("<a href=\"WordNet.jsp?synset=1" + synset + kbString + "&" + params + "\">1" + synset + "</a> ");
-                result.append(" " + documentation + ".\n");
-                sumoEquivalent = (String) nounSUMOHash.get(synset);
-            }
-            else {
-                if (type.compareTo("verb") == 0) {
-                    documentation = (String) verbDocumentationHash.get(synset);
-                    result.append("<a href=\"WordNet.jsp?synset=2" + synset + kbString + "&" + params + "\">2" + synset + "</a> ");
+            while (it.hasNext()) {         // Split apart the SUMO concepts, and store them as an associative array.
+                synset = it.next();
+                synset = synset.trim();
+                if (synset.equals(synsetNum))
+                    result.append("<b>");
+                if (type.compareTo("noun") == 0) {
+                    documentation = (String) nounDocumentationHash.get(synset);
+                    result.append("<a href=\"WordNet.jsp?synset=1" + synset + kbString + "&" + params + "\">1" + synset + "</a> ");
                     result.append(" " + documentation + ".\n");
-                    sumoEquivalent = (String) verbSUMOHash.get(synset);
+                    sumoEquivalent = (String) nounSUMOHash.get(synset);
                 }
                 else {
-                    if (type.compareTo("adjective") == 0) {
-                        documentation = (String) adjectiveDocumentationHash.get(synset);
-                        result.append("<a href=\"WordNet.jsp?synset=3" + synset + kbString + "&" + params + "\">3" + synset + "</a> ");
+                    if (type.compareTo("verb") == 0) {
+                        documentation = (String) verbDocumentationHash.get(synset);
+                        result.append("<a href=\"WordNet.jsp?synset=2" + synset + kbString + "&" + params + "\">2" + synset + "</a> ");
                         result.append(" " + documentation + ".\n");
-                        sumoEquivalent = (String) adjectiveSUMOHash.get(synset);
+                        sumoEquivalent = (String) verbSUMOHash.get(synset);
                     }
                     else {
-                        if (type.compareTo("adverb") == 0) {
-                            documentation = (String) adverbDocumentationHash.get(synset);
-                            result.append("<a href=\"WordNet.jsp?synset=4" + synset + kbString + "&" + params + "\">4" + synset + "</a> ");
+                        if (type.compareTo("adjective") == 0) {
+                            documentation = (String) adjectiveDocumentationHash.get(synset);
+                            result.append("<a href=\"WordNet.jsp?synset=3" + synset + kbString + "&" + params + "\">3" + synset + "</a> ");
                             result.append(" " + documentation + ".\n");
-                            sumoEquivalent = (String) adverbSUMOHash.get(synset);
+                            sumoEquivalent = (String) adjectiveSUMOHash.get(synset);
+                        }
+                        else {
+                            if (type.compareTo("adverb") == 0) {
+                                documentation = (String) adverbDocumentationHash.get(synset);
+                                result.append("<a href=\"WordNet.jsp?synset=4" + synset + kbString + "&" + params + "\">4" + synset + "</a> ");
+                                result.append(" " + documentation + ".\n");
+                                sumoEquivalent = (String) adverbSUMOHash.get(synset);
+                            }
                         }
                     }
                 }
-            }
-            if (synset.equals(synsetNum)) {
-                result.append("</b>");
-            }
-            if (sumoEquivalent == null) {
-                result.append("<P><ul><li>" + word + " not yet mapped to SUMO</ul><P>");
-            }
-            else {
-                result.append(HTMLformatter.termMappingsList(sumoEquivalent,"<a href=\"Browse.jsp?" + params + "&term="));
+                if (synset.equals(synsetNum)) {
+                    result.append("</b>");
+                }
+                if (sumoEquivalent == null) {
+                    result.append("<P><ul><li>" + word + " not yet mapped to SUMO</ul><P>");
+                }
+                else {
+                    result.append(HTMLformatter.termMappingsList(sumoEquivalent, "<a href=\"Browse.jsp?" + params + "&term="));
+                }
             }
         }
+        else
+            result.append("<P>No " + type + " synsets\n");
         String searchTerm = word.replaceAll("_+", "+");
         searchTerm = searchTerm.replaceAll("\\s+", "+");
         result.append("<hr>Explore the word <a href=\"http://wordnetweb.princeton.edu/perl/webwn/webwn?s=");
@@ -1885,7 +1875,7 @@ public class WordNet {
             String synset, String params) {
 
         String regular = null;
-        String synsetBlock;
+        HashSet<String> synsetBlock = null;
 
         regular = nounRootForm(mixedCase,input);
         //System.out.println("Info in WordNet.processNoun(): root form: " + regular);
@@ -1961,7 +1951,7 @@ public class WordNet {
             String synset, String params) {
 
         String regular = null;
-        String synsetBlock;
+        HashSet<String> synsetBlock = null;
 
         regular = verbRootForm(mixedCase,input);
         System.out.println("INFO in processVerb(): word: " + regular);
@@ -1982,7 +1972,7 @@ public class WordNet {
             String synset, String params) {
 
         StringBuffer result = new StringBuffer();
-        String synsetBlock;
+        HashSet<String> synsetBlock = null;
 
         synsetBlock = adverbSynsetHash.get(input);
         result.append(sumoDisplay(synsetBlock, mixedCase, "adverb", sumokbname,synset,params));
@@ -1999,7 +1989,7 @@ public class WordNet {
             String input, String synset, String params) {
 
         StringBuffer result = new StringBuffer();
-        String synsetBlock;
+        HashSet<String> synsetBlock = null;
 
         synsetBlock = adjectiveSynsetHash.get(input);
         result.append(sumoDisplay(synsetBlock, mixedCase, "adjective", sumokbname,synset,params));
@@ -2119,22 +2109,22 @@ public class WordNet {
 
     /** ***************************************************************
      * Get the SUMO term for the given root form word and part of speech.
-     */
+
     public String getSUMOterm(String word, int pos) {
 
         if (StringUtil.emptyString(word))
             return null;
-        String synsetBlock = null;  // A String of synsets, which are 8 digit numbers, separated by spaces.
+        HashSet<String> synsetBlock = null;  // A String of synsets, which are 8 digit numbers, separated by spaces.
 
         //System.out.println("INFO in WordNet.getSUMOterm: Checking word : " + word);
         if (pos == NOUN)
-            synsetBlock = (String) nounSynsetHash.get(word);
+            synsetBlock = nounSynsetHash.get(word);
         if (pos == VERB)
-            synsetBlock = (String) verbSynsetHash.get(word);
+            synsetBlock = verbSynsetHash.get(word);
         if (pos == ADJECTIVE)
-            synsetBlock = (String) adjectiveSynsetHash.get(word);
+            synsetBlock = adjectiveSynsetHash.get(word);
         if (pos == ADVERB)
-            synsetBlock = (String) adverbSynsetHash.get(word);
+            synsetBlock = adverbSynsetHash.get(word);
 
         //int listLength;
         String synset;
@@ -2160,7 +2150,7 @@ public class WordNet {
         else
             return null;
     }
-
+*/
     /** ***************************************************************
      * Does WordNet contain the given word.
      */
@@ -2551,7 +2541,7 @@ public class WordNet {
             if (word.indexOf("_") > -1)
                 compound = "compound";
 
-            String stringSynsets = (String) verbSynsetHash.get(word);
+            HashSet<String> stringSynsets = verbSynsetHash.get(word);
             String plural = WordNetUtilities.verbPlural(word);
             if (word.indexOf("_") > -1) {
                 word = processMultiWord(word);
@@ -2566,10 +2556,9 @@ public class WordNet {
                     plural = "'" + plural + "'";
                 }
             }
-            String[] synsetList = splitSynsets(stringSynsets);
-            //Iterator<String> it2 = verbSUMOHash.keySet().iterator();
-            for (int i = 0; i < synsetList.length; i++) {
-                String synset = synsetList[i];
+            Iterator<String> it2 = stringSynsets.iterator();
+            while (it2.hasNext()) {
+                String synset = it2.next();
                 String sumoTerm = (String) verbSUMOHash.get(synset);
                 if (sumoTerm != null && sumoTerm != "") {
                     String bareSumoTerm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
@@ -2595,15 +2584,9 @@ public class WordNet {
         Iterator<String> it = adjectiveSynsetHash.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
-            //String compound = "simple";
-            //if (word.indexOf("_") > -1)
-            //    compound = "compound";
-
-            String stringSynsets = (String) adjectiveSynsetHash.get(word);
-            if (word.indexOf("_") > -1) {
+            HashSet<String> stringSynsets = adjectiveSynsetHash.get(word);
+            if (word.indexOf("_") > -1)
                 word = processMultiWord(word);
-
-            }
             else {
                 word = word.replace("'","\\'");
                 if (word.indexOf("-") > -1 || (word.indexOf(".") > -1) ||
@@ -2611,10 +2594,9 @@ public class WordNet {
                     word = "'" + word + "'";
                 }
             }
-            String[] synsetList = splitSynsets(stringSynsets);
-            //Iterator<String> it2 = adjectiveSUMOHash.keySet().iterator();
-            for (int i = 0; i < synsetList.length; i++) {
-                String synset = synsetList[i];
+            Iterator<String> it2 = stringSynsets.iterator();
+            while (it2.hasNext()) {
+                String synset = it2.next();
                 String sumoTerm = (String) adjectiveSUMOHash.get(synset);
                 if (sumoTerm != null && sumoTerm != "") {
                     String bareSumoTerm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
@@ -2635,15 +2617,9 @@ public class WordNet {
         Iterator<String> it = verbSynsetHash.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
-            //String compound = "simple";
-            //if (word.indexOf("_") > -1)
-            //    compound = "compound";
-
-            String stringSynsets = (String) verbSynsetHash.get(word);
-            if (word.indexOf("_") > -1) {
+            HashSet<String> stringSynsets = verbSynsetHash.get(word);
+            if (word.indexOf("_") > -1)
                 word = processMultiWord(word);
-
-            }
             else {
                 word = word.replace("'","\\'");
                 if (word.indexOf("-") > -1 || (word.indexOf(".") > -1) ||
@@ -2651,10 +2627,9 @@ public class WordNet {
                     word = "'" + word + "'";
                 }
             }
-            String[] synsetList = splitSynsets(stringSynsets);
-            //Iterator it2 = verbSUMOHash.keySet().iterator();
-            for (int i = 0; i < synsetList.length; i++) {
-                String synset = synsetList[i];
+            Iterator<String> it2 = stringSynsets.iterator();
+            while (it2.hasNext()) {
+                String synset = it2.next();
                 String sumoTerm = (String) verbSUMOHash.get(synset);
                 if (sumoTerm != null && sumoTerm != "") {
                     String bareSumoTerm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
@@ -2673,7 +2648,7 @@ public class WordNet {
         Iterator<String> it = nounSynsetHash.keySet().iterator();
         while (it.hasNext()) {
             String word = (String) it.next();
-            String stringSynsets = (String) nounSynsetHash.get(word);
+            HashSet<String> stringSynsets = nounSynsetHash.get(word);
             boolean uppercase = false;
             if (Character.isUpperCase(word.charAt(0)))
                 uppercase = true;
@@ -2685,9 +2660,9 @@ public class WordNet {
                         || (word.indexOf("\\'") > -1) || uppercase || Character.isDigit(word.charAt(0)))
                     word = "'" + word + "'";
             }
-            String[] synsetList = splitSynsets(stringSynsets);
-            for (int i = 0; i < synsetList.length; i++) {
-                String synset = synsetList[i];
+            Iterator<String> it2 = stringSynsets.iterator();
+            while (it2.hasNext()) {
+                String synset = it2.next();
                 String sumoTerm = (String) nounSUMOHash.get(synset);
                 if (sumoTerm != null && sumoTerm != "") {
                     String bareSumoTerm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
@@ -3068,7 +3043,11 @@ public class WordNet {
             nounDocumentationHash.put(synsetID, doc);
         }
         nounSUMOHash.put(synsetID, SUMOterm + "=");
-        nounSynsetHash.put(tf,synsetID);
+        HashSet<String> synsets = new HashSet<>();
+        if (nounSynsetHash.containsKey(tf))
+            synsets = nounSynsetHash.get(tf);
+        synsets.add(synsetID);
+        nounSynsetHash.put(tf,synsets);
         return synsetID;
     }
 
@@ -3085,7 +3064,11 @@ public class WordNet {
             verbDocumentationHash.put(synsetID, doc);
         }
         verbSUMOHash.put(synsetID, SUMOterm + "=");
-        verbSynsetHash.put(tf,synsetID);
+        HashSet<String> synsets = new HashSet<>();
+        if (verbSynsetHash.containsKey(tf))
+            synsets = verbSynsetHash.get(tf);
+        synsets.add(synsetID);
+        verbSynsetHash.put(tf,synsets);
         return synsetID;
     }
    
@@ -3099,7 +3082,7 @@ public class WordNet {
      */
     public void synsetFromTermFormat(Formula form, String tf, String SUMOterm, KB kb) {
 
-        //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
+        System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
         String synsetID = null;
         String pos = null;
         if (kb.kbCache.getParentClasses(SUMOterm) != null && 
@@ -3125,14 +3108,19 @@ public class WordNet {
         synsetsToWords.put(synsetID,words);
         
         String letterPOS = WordNetUtilities.posNumberToLetters(pos);
-        String key = tf + "_" + letterPOS + "_1"; // FIXME: Note! This will cause a bug if there's a name clash        
+        char num = '1';
+        String key = tf + "_" + letterPOS + "_" + num; // FIXME: Note! This will cause a bug if there's a name clash
+        while (senseIndex.keySet().contains(key) || reverseSenseIndex.values().contains(key)) {
+            num++;
+            key = tf + "_" + letterPOS + "_" + num;
+        }
         senseIndex.put(key,synsetID.substring(1)); // senseIndex requires un-prefixed synset #
         reverseSenseIndex.put(synsetID,key);
         ArrayList<String> keys = new ArrayList<String>();
         if (wordsToSenseKeys.containsKey(tf))
             keys = wordsToSenseKeys.get(tf);
         keys.add(key);
-        //System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenses: " + tf + "," + keys);
+        System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenseKeys: " + tf + ", " + keys);
         wordsToSenseKeys.put(tf,keys);
 
         // TODO: kind of a hack to give priority to any domain term, maybe make this a switchable option
@@ -3142,8 +3130,8 @@ public class WordNet {
                 //senselist = new TreeSet<AVPair>();
                 //wordFrequencies.put(tf,senselist);
                 caseMap.put(tf.toUpperCase(),tf);
-                //System.out.println("INFO in WordNet.synsetFromTermFormat(): " +
-                //        tf.toUpperCase() + " : " + tf);
+                System.out.println("INFO in WordNet.synsetFromTermFormat(): " +
+                        tf.toUpperCase() + " : " + tf);
             //}
             AVPair avp = new AVPair();
             avp.value = synsetID;
@@ -3151,8 +3139,8 @@ public class WordNet {
             //senselist.add(avp);
             addToWordFreq(tf,avp);
         }
-        //System.out.println("INFO in WordNet.synsetFromTermFormat(): term, sensekey, synset, SUMOterm: " +
-        //        tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
+        System.out.println("INFO in WordNet.synsetFromTermFormat(): term, sensekey, synset, SUMOterm: " +
+                tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
     }
     
     /** ***************************************************************
