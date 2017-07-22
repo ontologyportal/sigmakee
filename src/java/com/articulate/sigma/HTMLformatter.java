@@ -692,11 +692,11 @@ public class HTMLformatter {
      * characters.
      */
     //public static String formatErrors(KB kb, String kbHref) {
-    public static String formatErrors(KB kb) {
+    public static String formatErrorsWarnings(TreeSet<String> list, KB kb) {
         
         System.out.println("INFO in HTMLformatter.formatErrors(): href: " + kbHref);
         StringBuilder result = new StringBuilder();
-        Iterator<String> it = kb.errors.iterator();
+        Iterator<String> it = list.iterator();
         while (it.hasNext()) {
             String err = it.next();            
 			err = err.replaceAll("\\n", "<br>");

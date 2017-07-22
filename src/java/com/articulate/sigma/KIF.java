@@ -47,7 +47,7 @@ public class KIF {
     /** A HashMap of ArrayLists of Formulas.  Each String key points to a list of
      * String formulas that correspond to that key. For example, 
      * "arg-1-Foo" would be one of several keys for "(instance Foo Bar)".
-     * @see createKey for key format. */
+     * @see #createKey(String, boolean, boolean, int, int) for key format. */
     public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();    
 
     /** A HashMap of String keys representing the formula, and Formula values.
@@ -66,6 +66,8 @@ public class KIF {
 
     /** warnings generated during parsing */
     public TreeSet<String> warningSet = new TreeSet<String>();
+    /** errors generated during parsing */
+    public TreeSet<String> errorSet = new TreeSet<String>();
     
     /** ***************************************************************
      
@@ -204,6 +206,7 @@ public class KIF {
                                 " for formula " + expression.toString() + "\n and key " + keySet.toString() +
                                 " keyset size " + keySet.size() + " exp length " + expression.length() +
                                 " comment lines " + totalLinesForComments);
+                            errorSet.add(errStr);
                             throw new ParseException(errStr, f.startLine);
                         }
                         continue;
@@ -256,6 +259,7 @@ public class KIF {
                                 validArgs = f.badQuantification();                      
                             if (StringUtil.isNonEmptyString(validArgs)) {
                                 errStr = (errStart + ": Invalid number of arguments near line " + f.startLine + " : " + validArgs);
+                                errorSet.add(errStr);
                                 throw new ParseException(errStr, f.startLine);  
                             }
                         }
@@ -268,16 +272,20 @@ public class KIF {
                             if (formulas.containsKey(fkey)) {
                                 if (!formulaMap.keySet().contains(f.theFormula)) {  // don't add keys if formula is already present                                    
                                     ArrayList<String> list = formulas.get(fkey);
-                                    if (StringUtil.emptyString(f.theFormula))
-                                    	System.out.println("Error in KIF.parse(): Storing empty formula from line: " + f.startLine); 
+                                    if (StringUtil.emptyString(f.theFormula)) {
+                                        System.out.println("Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
+                                        errorSet.add(errStr);
+                                    }
                                     else if (!list.contains(f.theFormula)) 
                                         list.add(f.theFormula);
                                 }
                             }
                             else {
                                 ArrayList<String> list = new ArrayList<String>();
-                                if (StringUtil.emptyString(f.theFormula))
-                                	System.out.println("Error in KIF.parse(): Storing empty formula from line: " + f.startLine); 
+                                if (StringUtil.emptyString(f.theFormula)) {
+                                    System.out.println("Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
+                                    errorSet.add(errStr);
+                                }
                                 else if (!list.contains(f.theFormula)) 
                                     list.add(f.theFormula);                               		
                                 formulas.put(fkey,list);
@@ -293,6 +301,7 @@ public class KIF {
                     }
                     else if (parenLevel < 0) {
                         errStr = (errStart + ": Extra closing parenthesis found near line " + f.startLine);
+                        errorSet.add(errStr);
                         throw new ParseException(errStr, f.startLine);
                     }
                 }
@@ -329,6 +338,7 @@ public class KIF {
                     expression.append(String.valueOf(st.sval));
                     if (expression.length() > 64000) {
                         errStr = (errStart + ": Sentence over 64000 characters new line " + f.startLine);
+                        errorSet.add(errStr);
                         throw new ParseException(errStr, f.startLine);                      
                     }
                     // Build the terms list and special keys ONLY if in NORMAL_PARSE_MODE
@@ -344,18 +354,20 @@ public class KIF {
                     expression.append(" `");                
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
                     errStr = (errStart + ": Illegal character near line " + f.startLine);
+                    errorSet.add(errStr);
                     throw new ParseException(errStr, f.startLine);                      
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
             
             if (!keySet.isEmpty() || expression.length() > 0) {
                 errStr = (errStart + ": Missed closing parenthesis near line " + f.startLine);
+                errorSet.add(errStr);
                 throw new ParseException(errStr, f.startLine);            
             }
         }
         catch (Exception ex) {
         	String message = ex.getMessage().replaceAll(":","&58;"); // HTMLformatter.formatErrors depends on :
-            warningSet.add("Error in KIF.parse() " + message);
+            warningSet.add("Warning in KIF.parse() " + message);
             ex.printStackTrace();
         }
         if (duplicateCount > 0) {

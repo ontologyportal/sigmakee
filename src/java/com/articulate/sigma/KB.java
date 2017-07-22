@@ -125,8 +125,11 @@ public class KB {
      *  HashMap is term name keys and String values. */
     private HashMap<String,HashMap<String,String>> termFormatMap = new HashMap<String,HashMap<String,String>>();
 
-    /** Errors and warnings found during loading of the KB constituents. */
+    /** Errors found during loading of the KB constituents. */
     public TreeSet<String> errors = new TreeSet<String>();
+
+    /** Warnings found during loading of the KB constituents. */
+    public TreeSet<String> warnings = new TreeSet<String>();
 
     /** Future: If true, the contents of the KB have been modified without updating the caches */
     public boolean modifiedContents = false;
@@ -527,20 +530,16 @@ public class KB {
         if (kbCache != null && ! StringUtil.emptyString(i)) {
             if (isInstanceOf(i,"Function")) {
                 if (!i.endsWith(Formula.FN_SUFF)) {
-                    String err = "Error in KB.isFunction(): functional relation type without 'Fn' suffix: " + i;
-                    if (!errors.contains(err)) {
-                        System.out.println(err);
-                        errors.add(err);
-                    }
+                    String warn = "Warnings in KB.isFunction(): functional relation type without 'Fn' suffix: " + i;
+                    System.out.println(warn);
+                    warnings.add(warn);
                 }
                 return true;
             }
             else if (i.endsWith(Formula.FN_SUFF)) {
-                String err = "Error in KB.isFunction(): 'Fn' suffix without functional relation type : " + i;
-                if (!errors.contains(err)) {
-                    System.out.println(err);
-                    errors.add(err);
-                }
+                String warn = "Warnings in KB.isFunction(): 'Fn' suffix without functional relation type : " + i;
+                System.out.println(warn);
+                warnings.add(warn);
             }
         }
         return false;
@@ -2347,7 +2346,7 @@ public class KB {
             if (constituents.contains(canonicalPath))
                 errors.add("Error. " + canonicalPath + " already loaded.");
             file.readFile(canonicalPath);
-            errors.addAll(file.warningSet);
+            warnings.addAll(file.warningSet);
         }
         catch (Exception ex1) {
             StringBuilder error = new StringBuilder();
@@ -3080,7 +3079,9 @@ public class KB {
                 System.out.print(".");
             Formula f = formulaMap.get(form);
             if (f == null) {
-                System.out.println("Error in KB.preProcess(): No formula for : " + form);
+                String warn = "Warning in KB.preProcess(): No formula for : " + form;
+                System.out.println(warn);
+                warnings.add(warn);
                 continue;
             }
             //System.out.println("INFO in KB.preProcess(): form : " + form);
@@ -3094,12 +3095,14 @@ public class KB {
                     stptp.tptpParse(f,false, this, processed);   // not a query
                 }
                 catch (ParseException pe) {
-                    String er = ("Error in KB.preProcess() " + pe.getMessage() + " at line "
+                    String err = ("Error in KB.preProcess() " + pe.getMessage() + " at line "
                                  + f.startLine + " in file " + f.sourceFile);
-                    mgr.setError(mgr.getError() + "\n<br/>" + er + "\n<br/>");
+                    errors.add(err);
                 }
                 catch (IOException ioe) {
-                    System.out.println("Error in KB.preProcess(): " + ioe.getMessage());
+                    String err = "Error in KB.preProcess(): " + ioe.getMessage();
+                    System.out.println(err);
+                    errors.add(err);
                 }
             }
             errors.addAll(f.getErrors());
@@ -3112,7 +3115,9 @@ public class KB {
                     errors.addAll(p.getErrors());
                 }
                 else {
-                    System.out.println("Error in KB.preProcess(): empty formula: " + p);
+                    String warn = "Warning in KB.preProcess(): empty formula: " + p;
+                    System.out.println(warn);
+                    warnings.add(warn);
                 }
             }
         }

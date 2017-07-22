@@ -277,8 +277,8 @@ public class SUMOKBtoTPTPKB {
                 sf = new File(f.sourceFile);
                 sourceFile = sf.getName();
                 sourceFile = sourceFile.substring(0, sourceFile.lastIndexOf("."));
-                if (!sourceFile.equals(oldSourceFile))
-                    kb.errors.add("Source file has changed to " + sourceFile);
+                //if (!sourceFile.equals(oldSourceFile))
+                //    kb.warnings.add("Source file has changed to " + sourceFile);
                 oldSourceFile = sourceFile;
                 tptpFormulas = f.getTheTptpFormulas();
 
@@ -341,7 +341,7 @@ public class SUMOKBtoTPTPKB {
                 pr.flush();
                 if (f.getTheTptpFormulas().isEmpty()) {
                     String addErrStr = "No TPTP formula for:" + f.theFormula;
-                    kb.errors.add(addErrStr);
+                    kb.warnings.add(addErrStr);
                 }
             }
             System.out.println();

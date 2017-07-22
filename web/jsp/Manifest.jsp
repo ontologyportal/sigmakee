@@ -297,10 +297,16 @@ if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref
   HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?";
   String er = KBmanager.getMgr().getError();
   if (!kb.errors.isEmpty()) {
+      TreeSet<String> errors = kb.errors;
       out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
-      out.println(HTMLformatter.formatErrors(kb));  
+      out.println(HTMLformatter.formatErrorsWarnings(kb));
   }
-  
+  if (!kb.warnings.isEmpty()) {
+      TreeSet<String> warns = kb.warnings;
+      out.println("<br/><b>Warnings in KB " + kb.name + "</b><br>\n");
+      out.println(HTMLformatter.formatErrorsWarnings(warns,kb));
+  }
+
   if (StringUtil.isNonEmptyString(er)) 
       out.println(er);    
   else
