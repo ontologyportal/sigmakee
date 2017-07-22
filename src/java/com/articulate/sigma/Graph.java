@@ -19,11 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 import javax.imageio.ImageIO;
 
@@ -39,6 +35,10 @@ public class Graph {
       // A map of the fields to display in the graph in addition to the 
       // indented term name with option names as keys and "yes", "no" as values.
     public TreeMap<String,String> columnList = new TreeMap<String,String>();
+
+    public static String indent = "&nbsp;&nbsp;&nbsp;&nbsp;";
+
+    public TreeSet<String> errors = new TreeSet<>();
     
     /** *************************************************************
      */
@@ -232,7 +232,7 @@ public class Graph {
      *              far, which is used to prevent cycles
      */
     private ArrayList<String> createGraphBody(KB kb, Set<String> check, String term, String relation, 
-                                      int above, int below, String indentChars,int level, 
+                                      int above, int below, String indentChars, int level,
                                       boolean show, String language) {
 
         ArrayList<String> result = new ArrayList<String>();
@@ -301,7 +301,8 @@ public class Graph {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
-        String filename = KBmanager.getMgr().getPref("graphDir") + File.separator + fname;
+        String filename = System.getenv("CATALINA_HOME") + File.separator + "webapps" +
+                File.separator + "sigma" + File.separator + "graph" + File.separator + fname;
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         try {
             fw = new FileWriter(filename + ".dot");
@@ -326,14 +327,18 @@ public class Graph {
             
             String command = graphVizDir + File.separator + "dot " + filename + ".dot -Tgif";            
             Process proc = Runtime.getRuntime().exec(command);
+            System.out.println("Graph.createDotGraph(): exec command: " + command);
             BufferedInputStream img = new BufferedInputStream(proc.getInputStream());            
             RenderedImage image = ImageIO.read(img);            
             File file = new File(filename + ".gif");
-            ImageIO.write(image, "gif", file);            
+            ImageIO.write(image, "gif", file);
+            System.out.println("Graph.createDotGraph(): write image file: " + file);
             return true;
         }
         catch (java.io.IOException e) {
-            throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
+            String err = "Error writing file " + filename + "\n" + e.getMessage();
+            errors.add(err);
+            throw new IOException(err);
         }
         finally {
             if (pw != null) pw.close();
@@ -364,8 +369,11 @@ public class Graph {
             String term = (String) it.next();
                         
             boolean removed = startSet.remove(term);
-            if (!removed) 
-                System.out.println("Error in Graph.createDotGraphBody(): " + term + " not removed");
+            if (!removed) {
+                String err = "Error in Graph.createDotGraphBody(): " + term + " not removed";
+                errors.add(err);
+                System.out.println(err);
+            }
             ArrayList<Formula> stmts;
             if (upSearch) 
                 stmts = kb.askWithRestriction(0,relation,1,term);
