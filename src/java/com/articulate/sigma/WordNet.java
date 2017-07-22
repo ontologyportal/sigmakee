@@ -3082,7 +3082,7 @@ public class WordNet {
      */
     public void synsetFromTermFormat(Formula form, String tf, String SUMOterm, KB kb) {
 
-        System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
         String synsetID = null;
         String pos = null;
         if (kb.kbCache.getParentClasses(SUMOterm) != null && 
@@ -3120,7 +3120,7 @@ public class WordNet {
         if (wordsToSenseKeys.containsKey(tf))
             keys = wordsToSenseKeys.get(tf);
         keys.add(key);
-        System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenseKeys: " + tf + ", " + keys);
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): add to wordsToSenseKeys: " + tf + ", " + keys);
         wordsToSenseKeys.put(tf,keys);
 
         // TODO: kind of a hack to give priority to any domain term, maybe make this a switchable option
@@ -3130,8 +3130,8 @@ public class WordNet {
                 //senselist = new TreeSet<AVPair>();
                 //wordFrequencies.put(tf,senselist);
                 caseMap.put(tf.toUpperCase(),tf);
-                System.out.println("INFO in WordNet.synsetFromTermFormat(): " +
-                        tf.toUpperCase() + " : " + tf);
+                //System.out.println("INFO in WordNet.synsetFromTermFormat(): " +
+                //        tf.toUpperCase() + " : " + tf);
             //}
             AVPair avp = new AVPair();
             avp.value = synsetID;
@@ -3139,8 +3139,8 @@ public class WordNet {
             //senselist.add(avp);
             addToWordFreq(tf,avp);
         }
-        System.out.println("INFO in WordNet.synsetFromTermFormat(): term, sensekey, synset, SUMOterm: " +
-                tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): term, sensekey, synset, SUMOterm: " +
+        //        tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
     }
     
     /** ***************************************************************
