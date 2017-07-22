@@ -28,6 +28,7 @@ August 9, Acapulco, Mexico.
 
   Graph g = new Graph();
   String view = request.getParameter("view");
+  String inst = request.getParameter("inst");
   if (view == null)
   	view = "text";
   String term = request.getParameter("term");
@@ -118,8 +119,10 @@ out.println(HTMLformatter.createKBMenu(kbName));
               out.println("</table><P>\n");
           }
           else { // it is a graph
-              int width = 200;
-              int size = 200;
+              int width = 500;
+              String widthStr = KBmanager.getMgr().getPref("graphWidth");
+              if (!StringUtil.emptyString(widthStr))
+                  width = Integer.parseInt(widthStr);
               String edges = "";
    			  String fname = null;
    			  boolean graphAvailable = false;
@@ -133,24 +136,22 @@ out.println(HTMLformatter.createKBMenu(kbName));
    			          graphAvailable = false;
    			      }	  	  		
    			  }
-			 
    			  if (graphAvailable) {
-   			      %>
-   			      <img src="graph/<%=fname%>.gif"></img>
-   			      <%
+   			      out.println("<img width=" + width + " src='graph/" + fname + ".gif'></img><P>");
    			  }
    			  else {
-   			      %> <p> Error producing graph. </p>
-   			      <% 
+   			      out.println("<p><b>Error producing graph.</b></p>");
+   			      out.println(HTMLformatter.formatErrorsWarnings(g.errors,kb));
    			  }
-          } // end else - graph
+          }
   %>
 
   Relation: <input type="text" size="30" name="relation" value="<%=relation %>">
   Term: <input type="text" size="30" name="term" value="<%=term %>"><p>
   Levels &quot;above&quot;:<input type="text" size="2" name="up" value="<%=up %>">
   Levels &quot;below&quot;:<input type="text" size="2" name="down" value="<%=down %>">
-  Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>"><br>
+  Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>">
+  Show instances: <input type="checkbox" name="inst" value="inst" <%= (view.equals("inst")) ? "checked" : "" %>><br>
   Columns to display:<%=HTMLformatter.createMultiMenu("columns",g.columnList) %>
   <p>
   <table border="0">
