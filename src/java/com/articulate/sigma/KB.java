@@ -529,14 +529,14 @@ public class KB {
 
         if (kbCache != null && ! StringUtil.emptyString(i)) {
             if (isInstanceOf(i,"Function")) {
-                if (!i.endsWith(Formula.FN_SUFF)) {
+                if (!i.endsWith(Formula.FN_SUFF) && !i.matches("\\w+Fn_\\d+")) {
                     String warn = "Warnings in KB.isFunction(): functional relation type without 'Fn' suffix: " + i;
                     System.out.println(warn);
                     warnings.add(warn);
                 }
                 return true;
             }
-            else if (i.endsWith(Formula.FN_SUFF)) {
+            else if (i.endsWith(Formula.FN_SUFF) || i.matches("\\w+Fn_\\d+")) {
                 String warn = "Warnings in KB.isFunction(): 'Fn' suffix without functional relation type : " + i;
                 System.out.println(warn);
                 warnings.add(warn);
