@@ -6,6 +6,26 @@
   </head>
 <body BGCOLOR=#FFFFFF>
 
+<script>
+function getWidth() {
+    if (self.innerWidth) {
+       return self.innerWidth;
+    }
+    else if (document.documentElement && document.documentElement.clientHeight){
+        return document.documentElement.clientWidth;
+    }
+    else if (document.body) {
+        return document.body.clientWidth;
+    }
+    return 0;
+}
+
+function setWidth(id) {
+    // document.getElementById(id).value = screen.width * 0.9;
+    document.getElementById(id).value = Math.round(getWidth() * 0.9);
+}
+</script>
+
 <%
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -29,6 +49,7 @@ August 9, Acapulco, Mexico.
   Graph g = new Graph();
   String view = request.getParameter("view");
   String inst = request.getParameter("inst");
+  int limitInt = 100;
   if (view == null)
   	view = "text";
   String term = request.getParameter("term");
@@ -54,7 +75,9 @@ August 9, Acapulco, Mexico.
       downint = 1;
   String limit = request.getParameter("limit");
   try {
-      Integer.parseInt(limit);
+      limitInt = Integer.parseInt(limit);
+      if (limitInt > 100 || limitInt < 10)
+          limitInt = 100;
   } 
   catch (NumberFormatException nfe) {
       limit = "";
@@ -107,10 +130,14 @@ out.println(HTMLformatter.createKBMenu(kbName));
           /* Present the text layout (graph layout is in the else) */
           if (view.equals("text")) {
               ArrayList result = null;
+              boolean instBool = false;
+              if (!StringUtil.emptyString(inst) && inst.equals("checked"))
+              instBool = true;
               if (limit != null && limit != "")
-                  result = g.createBoundedSizeGraph(kb,term,relation,Integer.parseInt(limit),"&nbsp;&nbsp;&nbsp;&nbsp;",language);              
+                  result = g.createBoundedSizeGraph(kb,term,relation,limitInt,instBool,language);
               else
-                  result = g.createGraph(kb,term,relation,Integer.parseInt(up),Integer.parseInt(down),"&nbsp;&nbsp;&nbsp;&nbsp;",language);
+                  result = g.createGraph(kb,term,relation,Integer.parseInt(up),
+                                         Integer.parseInt(down),limitInt,instBool,language);
               out.println("<table>\n");
               for (int i = 0; i < result.size(); i++) {
                   String element = (String) result.get(i);
@@ -123,6 +150,9 @@ out.println(HTMLformatter.createKBMenu(kbName));
               String widthStr = KBmanager.getMgr().getPref("graphWidth");
               if (!StringUtil.emptyString(widthStr))
                   width = Integer.parseInt(widthStr);
+              String scrWidth = request.getParameter("scrWidth");
+              if (!StringUtil.emptyString(scrWidth))
+                  width = Integer.parseInt(scrWidth);
               String edges = "";
    			  String fname = null;
    			  boolean graphAvailable = false;
@@ -130,7 +160,8 @@ out.println(HTMLformatter.createKBMenu(kbName));
    			  if (term != null && relation != null && kb != null && userRole.equalsIgnoreCase("administrator")) {
    			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
    			      try {
-   			          graphAvailable = g.createDotGraph(kb, term, relation, Integer.parseInt(up),Integer.parseInt(down), fname); 
+   			          graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
+   			                                            Integer.parseInt(down),limitInt,inst,fname);
    			      }
    			      catch (Exception ex) {
    			          graphAvailable = false;
@@ -153,11 +184,15 @@ out.println(HTMLformatter.createKBMenu(kbName));
   Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>">
   Show instances: <input type="checkbox" name="inst" value="inst" <%= (view.equals("inst")) ? "checked" : "" %>><br>
   Columns to display:<%=HTMLformatter.createMultiMenu("columns",g.columnList) %>
+  <input type="hidden" value="" onLoad="setWidth(this)" name="scrWidth" id="scrWidth"/>
+      <script type="text/javascript">setWidth('scrWidth');</script>
   <p>
   <table border="0">
   <tr>
   <td>View format:</td>
-  <td><input type="radio" name="view" value="graph" <%= (view.equals("graph")) ? "checked" : "" %>>graph</td>
+  <% if (userRole.equalsIgnoreCase("administrator")) { %>
+         <td><input type="radio" name="view" value="graph" <%= (view.equals("graph")) ? "checked" : "" %>>graph</td>
+  <% } %>
   <td><input type="radio" name="view" value="text" <%= (view.equals("text")) ? "checked" : "" %>>text</td>
   </tr>
   </table>
