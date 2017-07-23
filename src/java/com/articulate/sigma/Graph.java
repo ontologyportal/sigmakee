@@ -149,10 +149,16 @@ public class Graph {
      */
     private String createGraphEntry(KB kb, String prefix, String kbHref, String term, String language) {
 
+        String ital = "";
+        String italEnd = "";
+        if (kb.isInstance(term)) { // italicize instances
+            ital = "<i>";
+            italEnd = "</i>";
+        }
         StringBuffer result = new StringBuffer();
         result.append("<tr>");
         String formattedTerm = "<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>";
-        result.append("<td>" + prefix + formattedTerm + "</td>");
+        result.append("<td>" + prefix + ital + formattedTerm + italEnd + "</td>");
         Iterator<String> it = columnList.keySet().iterator();
         while (it.hasNext()) {
             String col = it.next();
@@ -176,11 +182,11 @@ public class Graph {
      * no more levels in the knowledge base from the given term and 
      * relation. creatGraphBody() does most of the work.
      */
-    public ArrayList<String> createBoundedSizeGraph(KB kb, String term, String relation, 
+    public LinkedHashSet<String> createBoundedSizeGraph(KB kb, String term, String relation,
                                         int size, boolean instances, String language) {
 
-        ArrayList<String> result = new ArrayList<String>();
-        ArrayList<String> oldresult = new ArrayList<String>();
+        LinkedHashSet<String> result = new LinkedHashSet<String>();
+        LinkedHashSet<String> oldresult = new LinkedHashSet<String>();
         int above = 1;
         int below = 1;
         int oldlimit = -1;
@@ -189,8 +195,8 @@ public class Graph {
             oldresult = result;
             HashSet<String> checkAbove = new HashSet<String>();
             HashSet<String> checkBelow = new HashSet<String>();
-            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,language);
-            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,language));
+            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language);
+            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language));
             above++;
             below++;
         }
@@ -210,16 +216,16 @@ public class Graph {
      * @param below the number of levels below the given term in the graph
      * @param instances whether to display instances below subclass relations
      */
-    public ArrayList<String> createGraph(KB kb, String term, String relation, 
+    public LinkedHashSet<String> createGraph(KB kb, String term, String relation,
                                  int above, int below, int termLimit, boolean instances, String language) {
 
         graphsize = 0;
-        ArrayList<String> result = new ArrayList<String>();  // a list of Strings
+        LinkedHashSet<String> result = new LinkedHashSet<String>();  // a list of Strings
         HashSet<String> checkAbove = new HashSet<String>();
         HashSet<String> checkBelow = new HashSet<String>();
         result.add(createColumnHeader());
-        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,language));
-        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,language));
+        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,instances,language));
+        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,instances,language));
         if (graphsize == 100)
             result.add("<P>Graph size limited to 100 terms.<P>\n");
         return result;
@@ -231,11 +237,11 @@ public class Graph {
      * @param check collects all the terms added to the graph so
      *              far, which is used to prevent cycles
      */
-    private ArrayList<String> createGraphBody(KB kb, Set<String> check, String term, String relation, 
+    private LinkedHashSet<String> createGraphBody(KB kb, Set<String> check, String term, String relation,
                                       int above, int below, int level,
-                                      boolean show, String language) {
+                                      boolean show, boolean instances, String language) {
 
-        ArrayList<String> result = new ArrayList<String>();
+        LinkedHashSet<String> result = new LinkedHashSet<String>();
         int graphMax = Integer.valueOf(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
         if (!check.contains(term) && graphsize < graphMax) {
             if (above > 0) {
@@ -248,7 +254,7 @@ public class Graph {
                     Formula f = stmtAbove.get(i);
                     String newTerm = f.getArgument(2);
                     if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,language));
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language));
                     check.add(term);
                 }
             }
@@ -268,8 +274,12 @@ public class Graph {
                 graphsize++;
                 if (graphsize < 100)                 
                     result.add(createGraphEntry(kb,prefix.toString(),kbHref,term,language));
-                else
+                else {
+                    String endStr = "<tr><td><b>Truncating graph at 100 terms</b><P></td></tr>\n";
+                    if (!result.contains(endStr))
+                        result.add(endStr);
                     return result;
+                }
             }
             if (below > 0) {
                 ArrayList<Formula> stmtBelow = kb.askWithRestriction(0,relation,2,term);
@@ -277,8 +287,18 @@ public class Graph {
                     Formula f = stmtBelow.get(i);
                     String newTerm = f.getArgument(1);
                     if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,language));
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
                     check.add(term);
+                }
+                if (instances && (stmtBelow == null || stmtBelow.size() == 0) && relation.equals("subclass")) {
+                    stmtBelow = kb.askWithRestriction(0,"instance",2,term);
+                    for (int i = 0; i < stmtBelow.size(); i++) {
+                        Formula f = stmtBelow.get(i);
+                        String newTerm = f.getArgument(1);
+                        if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+                            result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
+                        check.add(term);
+                    }
                 }
             }
         }

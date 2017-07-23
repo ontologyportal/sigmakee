@@ -129,18 +129,17 @@ out.println(HTMLformatter.createKBMenu(kbName));
       <%
           /* Present the text layout (graph layout is in the else) */
           if (view.equals("text")) {
-              ArrayList result = null;
+              LinkedHashSet<String> result = null;
               boolean instBool = false;
-              if (!StringUtil.emptyString(inst) && inst.equals("checked"))
-              instBool = true;
+              if (!StringUtil.emptyString(inst) && inst.equals("inst"))
+                  instBool = true;
               if (limit != null && limit != "")
                   result = g.createBoundedSizeGraph(kb,term,relation,limitInt,instBool,language);
               else
                   result = g.createGraph(kb,term,relation,Integer.parseInt(up),
                                          Integer.parseInt(down),limitInt,instBool,language);
               out.println("<table>\n");
-              for (int i = 0; i < result.size(); i++) {
-                  String element = (String) result.get(i);
+              for (String element : result) {
                   out.println(element);
               }
               out.println("</table><P>\n");
@@ -182,7 +181,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
   Levels &quot;above&quot;:<input type="text" size="2" name="up" value="<%=up %>">
   Levels &quot;below&quot;:<input type="text" size="2" name="down" value="<%=down %>">
   Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>">
-  Show instances: <input type="checkbox" name="inst" value="inst" <%= (view.equals("inst")) ? "checked" : "" %>><br>
+  Show instances: <input type="checkbox" name="inst" value="inst" <%= (inst != null && inst.equals("inst")) ? "checked" : "" %>><br>
   Columns to display:<%=HTMLformatter.createMultiMenu("columns",g.columnList) %>
   <input type="hidden" value="" onLoad="setWidth(this)" name="scrWidth" id="scrWidth"/>
       <script type="text/javascript">setWidth('scrWidth');</script>
