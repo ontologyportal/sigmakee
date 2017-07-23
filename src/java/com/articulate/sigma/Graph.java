@@ -177,7 +177,7 @@ public class Graph {
      * relation. creatGraphBody() does most of the work.
      */
     public ArrayList<String> createBoundedSizeGraph(KB kb, String term, String relation, 
-                                        int size, String indentChars, String language) {
+                                        int size, boolean instances, String language) {
 
         ArrayList<String> result = new ArrayList<String>();
         ArrayList<String> oldresult = new ArrayList<String>();
@@ -189,8 +189,8 @@ public class Graph {
             oldresult = result;
             HashSet<String> checkAbove = new HashSet<String>();
             HashSet<String> checkBelow = new HashSet<String>();
-            result = createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language);
-            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
+            result = createGraphBody(kb,checkAbove,term,relation,above,0,above,true,language);
+            result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,language));
             above++;
             below++;
         }
@@ -208,18 +208,18 @@ public class Graph {
      *                 in the graph.
      * @param above the number of levels above the given term in the graph
      * @param below the number of levels below the given term in the graph
-     * @param indentChars a String of characters to be used for indenting the terms
+     * @param instances whether to display instances below subclass relations
      */
     public ArrayList<String> createGraph(KB kb, String term, String relation, 
-                                 int above, int below, String indentChars, String language) {
+                                 int above, int below, int termLimit, boolean instances, String language) {
 
         graphsize = 0;
         ArrayList<String> result = new ArrayList<String>();  // a list of Strings
         HashSet<String> checkAbove = new HashSet<String>();
         HashSet<String> checkBelow = new HashSet<String>();
         result.add(createColumnHeader());
-        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,indentChars,above,true,language));
-        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,indentChars,above,false,language));
+        result.addAll(createGraphBody(kb,checkAbove,term,relation,above,0,above,true,language));
+        result.addAll(createGraphBody(kb,checkBelow,term,relation,0,below,above,false,language));
         if (graphsize == 100)
             result.add("<P>Graph size limited to 100 terms.<P>\n");
         return result;
@@ -232,7 +232,7 @@ public class Graph {
      *              far, which is used to prevent cycles
      */
     private ArrayList<String> createGraphBody(KB kb, Set<String> check, String term, String relation, 
-                                      int above, int below, String indentChars, int level,
+                                      int above, int below, int level,
                                       boolean show, String language) {
 
         ArrayList<String> result = new ArrayList<String>();
@@ -248,14 +248,14 @@ public class Graph {
                     Formula f = stmtAbove.get(i);
                     String newTerm = f.getArgument(2);
                     if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,indentChars,level-1,true,language));		    
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,language));
                     check.add(term);
                 }
             }
 
             StringBuffer prefix = new StringBuffer();
             for (int i = 0; i < level; i++)
-                prefix = prefix.append(indentChars);
+                prefix = prefix.append(indent);
 
             String hostname = KBmanager.getMgr().getPref("hostname");
             if (hostname == null)
@@ -277,7 +277,7 @@ public class Graph {
                     Formula f = stmtBelow.get(i);
                     String newTerm = f.getArgument(1);
                     if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
-                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,indentChars,level+1,true,language));            
+                        result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,language));
                     check.add(term);
                 }
             }
@@ -297,7 +297,8 @@ public class Graph {
      * @param relation the binary relation that is used to forms the arcs
      *                 in the graph.
      */
-    public boolean createDotGraph(KB kb, String term, String relation, int above, int below, String fname) throws IOException {
+    public boolean createDotGraph(KB kb, String term, String relation, int above, int below,
+                                  int limitInt, String inst, String fname) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null; 
