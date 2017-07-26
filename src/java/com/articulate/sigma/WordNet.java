@@ -75,6 +75,9 @@ public class WordNet {
 
     public String maxNounSynsetID = "";
     public String maxVerbSynsetID = "";
+
+    public String origMaxNounSynsetID = "";
+    public String origMaxVerbSynsetID = "";
     
     /** Keys are SUMO terms, values are ArrayLists(s) of
      * POS-prefixed synset String(s) meaning that the part of speech code is
@@ -1754,19 +1757,29 @@ public class WordNet {
             while (it.hasNext()) {         // Split apart the SUMO concepts, and store them as an associative array.
                 synset = it.next();
                 synset = synset.trim();
+                String ital = "";
+                String italEnd = "";
                 if (synset.equals(synsetNum))
                     result.append("<b>");
                 if (type.compareTo("noun") == 0) {
                     documentation = (String) nounDocumentationHash.get(synset);
-                    result.append("<a href=\"WordNet.jsp?synset=1" + synset + kbString + "&" + params + "\">1" + synset + "</a> ");
-                    result.append(" " + documentation + ".\n");
+                    if (synset.compareTo(origMaxNounSynsetID) > 0) {
+                        ital = "<i>";
+                        italEnd = "</i> <small>(entry from SUMO termFormat and documentation)</small> ";
+                    }
+                    result.append(ital + "<a href=\"WordNet.jsp?synset=1" + synset + kbString + "&" + params + "\">1" + synset + "</a> ");
+                    result.append(" " + documentation + italEnd + ".\n");
                     sumoEquivalent = (String) nounSUMOHash.get(synset);
                 }
                 else {
                     if (type.compareTo("verb") == 0) {
+                        if (synset.compareTo(origMaxVerbSynsetID) > 0) {
+                            ital = "<i>";
+                            italEnd = "</i> <small>(entry from SUMO termFormat and documentation)</small> ";
+                        }
                         documentation = (String) verbDocumentationHash.get(synset);
-                        result.append("<a href=\"WordNet.jsp?synset=2" + synset + kbString + "&" + params + "\">2" + synset + "</a> ");
-                        result.append(" " + documentation + ".\n");
+                        result.append(ital + "<a href=\"WordNet.jsp?synset=2" + synset + kbString + "&" + params + "\">2" + synset + "</a> ");
+                        result.append(" " + documentation + italEnd + ".\n");
                         sumoEquivalent = (String) verbSUMOHash.get(synset);
                     }
                     else {
@@ -3040,6 +3053,8 @@ public class WordNet {
         if (forms.size() > 0) {
             Formula f = forms.get(0);
             String doc = f.getArgument(3);
+            if (StringUtil.emptyString(doc))
+                doc = "no gloss";
             nounDocumentationHash.put(synsetID, doc);
         }
         nounSUMOHash.put(synsetID, SUMOterm + "=");
@@ -3061,6 +3076,8 @@ public class WordNet {
         if (forms.size() > 0) {
             Formula f = forms.get(0);
             String doc = f.getArgument(3);
+            if (StringUtil.emptyString(doc))
+                doc = "no gloss";
             verbDocumentationHash.put(synsetID, doc);
         }
         verbSUMOHash.put(synsetID, SUMOterm + "=");
@@ -3147,7 +3164,10 @@ public class WordNet {
      * Generate a new synset from a termFormat
      */
     public void termFormatsToSynsets(KB kb) {
-        
+
+        origMaxNounSynsetID = maxNounSynsetID;
+        origMaxVerbSynsetID = maxVerbSynsetID;
+
         //System.out.println("INFO in WordNet.termFormatsToSynsets()");
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
         for (int i = 0; i < forms.size(); i++) {
