@@ -1763,6 +1763,8 @@ public class WordNet {
                     result.append("<b>");
                 if (type.compareTo("noun") == 0) {
                     documentation = (String) nounDocumentationHash.get(synset);
+                    if (documentation == null)
+                        documentation = "";
                     if (synset.compareTo(origMaxNounSynsetID) > 0) {
                         ital = "<i>";
                         italEnd = "</i> <small>(entry from SUMO termFormat and documentation)</small> ";
@@ -1778,6 +1780,8 @@ public class WordNet {
                             italEnd = "</i> <small>(entry from SUMO termFormat and documentation)</small> ";
                         }
                         documentation = (String) verbDocumentationHash.get(synset);
+                        if (documentation == null)
+                            documentation = "";
                         result.append(ital + "<a href=\"WordNet.jsp?synset=2" + synset + kbString + "&" + params + "\">2" + synset + "</a> ");
                         result.append(" " + documentation + italEnd + ".\n");
                         sumoEquivalent = (String) verbSUMOHash.get(synset);
