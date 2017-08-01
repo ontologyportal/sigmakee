@@ -1273,6 +1273,18 @@ public class StringUtil {
 
     /****************************************************************
      */
+    public static boolean quoted(String input) {
+
+        String trimmed = input.trim();
+        if (trimmed.charAt(0) == '\'' && trimmed.charAt(trimmed.length()-1) == '\'')
+            return true;
+        if (trimmed.charAt(0) == '\"' && trimmed.charAt(trimmed.length()-1) == '\"')
+            return true;
+        return false;
+    }
+
+    /****************************************************************
+     */
     public static String quote(String input) {
 
         String str = StringUtil.removeEnclosingQuotes(input);
