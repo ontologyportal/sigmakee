@@ -96,7 +96,7 @@ public class KBmanager {
     /** ***************************************************************
      * Set default attribute values if not in the configuration file.
      */
-    private void setDefaultAttributes() {
+    public void setDefaultAttributes() {
         
         try {
             String sep = File.separator;
