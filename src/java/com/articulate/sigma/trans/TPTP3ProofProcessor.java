@@ -532,7 +532,7 @@ public class TPTP3ProofProcessor {
 			KB kb = null;
 			System.out.println("------------- INFO in EProver.main() completed initialization--------");
 			EProver eprover = new EProver(System.getProperty("user.home") + "/Programs/E/PROVER/e_ltb_runner",
-					System.getProperty("user.home") + "/.sigmakee/KBs/SUMO.tptp");
+					System.getenv("SIGMA_HOME") + "/KBs/SUMO.tptp");
 
 			String result = eprover.submitQuery("(subclass Patio Object)",kb);
 			StringReader sr = new StringReader(result);

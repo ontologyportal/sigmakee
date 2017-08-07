@@ -18,7 +18,7 @@ public class UnitTestBase  extends SigmaTestBase {
             "test/unit/java/resources";
     private static final String CONFIG_FILE_PATH = CONFIG_FILE_DIR + File.separator +
             "config_topOnly.xml";
-    //private static final String CONFIG_FILE_PATH = "/home/apease/.sigmakee/KBs/config.xml";
+    //private static final String CONFIG_FILE_PATH = System.getenv("SIGMA_HOME") + "/KBs/config.xml";
     private static final Class CLASS = UnitTestBase.class;
     public static final int NUM_KIF_FILES = 4;  // include cache file
 
