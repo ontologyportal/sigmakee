@@ -22,7 +22,7 @@ public class NER {
         String newcore = KBmanager.getMgr().getPref("stanford-ner");
         if (!StringUtil.emptyString(newcore))
         	stanfordCore = newcore;
-        String execString = System.getProperty("user.home") + "/Programs/java/jdk1.8.0_25/bin/java -mx700m " +
+        String execString = System.getProperty("java.home") + "/java -mx700m " +
                 "-classpath " + stanfordCore + "/stanford-ner.jar " +
                 "edu.stanford.nlp.ie.crf.CRFClassifier " +
                 //                 "-loadClassifier " + System.getProperty("user.home") + "/Programs/stanford-ner-2014-10-26/classifiers/english.all.3class.distsim.crf.ser.gz " +
