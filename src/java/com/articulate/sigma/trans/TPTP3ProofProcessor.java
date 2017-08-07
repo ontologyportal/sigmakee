@@ -510,7 +510,7 @@ public class TPTP3ProofProcessor {
 		KB kb = null;
 		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 		try {
-			FileReader r = new FileReader("/home/apease/Programs/E/PROVER/eltb_out.txt");
+			FileReader r = new FileReader(System.getProperty("user.home") + "/Programs/E/PROVER/eltb_out.txt");
 			LineNumberReader lnr = new LineNumberReader(r);
 			tpp = parseProofOutput(lnr, kb);
 		}
@@ -531,8 +531,8 @@ public class TPTP3ProofProcessor {
 			//KB kb = KBmanager.getMgr().getKB("SUMO");
 			KB kb = null;
 			System.out.println("------------- INFO in EProver.main() completed initialization--------");
-			EProver eprover = new EProver("/home/apease/Programs/E/PROVER/e_ltb_runner",
-					"/home/apease/Sigma/KBs/SUMO.tptp");
+			EProver eprover = new EProver(System.getProperty("user.home") + "/Programs/E/PROVER/e_ltb_runner",
+					System.getProperty("user.home") + "/.sigmakee/KBs/SUMO.tptp");
 
 			String result = eprover.submitQuery("(subclass Patio Object)",kb);
 			StringReader sr = new StringReader(result);

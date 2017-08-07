@@ -413,7 +413,7 @@ public class EProver {
         String initialDatabase = "SUMO-v.kif";
         EProver eprover = EProver.getNewInstance(initialDatabase);
         eprover.setCommandLineOptions("--cpu-limit=600 --soft-cpu-limit=500 -xAuto -tAuto -l 4 --tptp3-in");
-        KBmanager.getMgr().setPref("eprover","/home/apease/Programs/E/Prover/eprover");
+        KBmanager.getMgr().setPref("eprover",System.getProperty("user.home") + "/Programs/E/Prover/eprover");
         System.out.print(eprover.submitQuery("(holds instance ?X Relation)",5,2));
         */
         try {

@@ -227,7 +227,7 @@ public class BrownCorpus {
     public static void main(String[] args) {
 
         BrownCorpus bc = new BrownCorpus();
-        bc.read("/home/apease/ontology/brown");
+        bc.read(System.getProperty("user.home") + "/ontology/brown");
         bc.process();
     }
 }
