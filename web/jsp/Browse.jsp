@@ -48,7 +48,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  	KBPOS = kb.REswitch(term);
 %>
 <html>
-<head><title>Knowledge base Browser - <%=term%></title></head>
+<head><title><%=term%> - Sigma Knowledge base Browser</title></head>
 <body bgcolor="#FFFFFF">
 
 <%
