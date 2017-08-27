@@ -7,6 +7,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.trans.TPTP2SUMO;
 
 public class InterfaceTPTP {
 

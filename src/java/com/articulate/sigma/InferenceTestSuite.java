@@ -2,6 +2,10 @@ package com.articulate.sigma;
 
 import TPTPWorld.InterfaceTPTP;
 import TPTPWorld.SystemOnTPTP;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.trans.TPTP2SUMO;
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -187,7 +191,7 @@ public class InferenceTestSuite {
         tptpresult = res;
         res = temp;
         if (SystemOnTPTP.isTheorem(tptpresult)) 
-            return TPTP2SUMO.convert(res,false);                            
+            return TPTP2SUMO.convert(res,false);
         else 
             return "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n" +
                    "<summary proofs=\"0\"/>\n</queryResponse>\n";                            

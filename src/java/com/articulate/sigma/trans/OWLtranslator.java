@@ -1,4 +1,4 @@
-package com.articulate.sigma;
+package com.articulate.sigma.trans;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
@@ -13,7 +13,8 @@ import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
-import com.articulate.sigma.KB;
+
+import com.articulate.sigma.*;
 /** This code is copyright Articulate Software (c) 2010.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -309,7 +310,7 @@ public class OWLtranslator {
             String text = se.getText();
             text = processStringForKIFOutput(text);
             if (parentTerm != null && text != null) 
-                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " EnglishLanguage \"" + 
+                pw.println(DB.wordWrap(indent + "(documentation " + parentTerm + " EnglishLanguage \"" +
                                        text + "\")",70));
         }
         else if (tag.equals("rdfs:label")) {

@@ -11,7 +11,10 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
 
-package com.articulate.sigma;
+package com.articulate.sigma.trans;
+
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.StringUtil;
 
 import java.util.ArrayList;
 

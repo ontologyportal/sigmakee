@@ -14,6 +14,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  */
 
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.trans.TPTP2SUMO;
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.trans.TPTPutil;
 
 import java.io.File;
 import java.util.*;
@@ -807,7 +810,7 @@ public class HTMLformatter {
     /** *************************************************************
      */    
     public static String formatTPTP3ProofResult(TPTP3ProofProcessor tpp, String stmt,
-    		String lineHtml, String kbName, String language) {
+                                                String lineHtml, String kbName, String language) {
 
     	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number steps" + tpp.proof.size());
     	StringBuffer html = new StringBuffer();

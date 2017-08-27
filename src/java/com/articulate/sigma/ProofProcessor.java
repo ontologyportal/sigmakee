@@ -13,6 +13,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.LineNumberReader;
@@ -468,7 +470,7 @@ public class ProofProcessor {
     			else 
     				result.append("plain");                
     			result.append(",");
-    			result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));                       
+    			result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));
 
     			if (!isLeaf) {
     				result.append(",inference(rule,[],[" + step.premises.get(0));

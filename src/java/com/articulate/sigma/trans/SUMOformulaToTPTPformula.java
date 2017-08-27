@@ -1,4 +1,6 @@
-package com.articulate.sigma;
+package com.articulate.sigma.trans;
+
+import com.articulate.sigma.*;
 
 import java.io.IOException;
 import java.io.StreamTokenizer;
@@ -10,7 +12,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Stack;
 import java.util.Vector;
-import java.util.logging.Level;
 
 public class SUMOformulaToTPTPformula {
 

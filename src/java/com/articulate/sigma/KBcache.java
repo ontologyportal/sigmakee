@@ -499,6 +499,25 @@ public class KBcache {
     }
 
     /** ***************************************************************
+     * return child classes for the given cl from subclass expressions.
+     */
+    public HashSet<String> getChildInstances(String cl) {
+
+        HashSet<String> result = new HashSet<>();
+        HashMap<String,HashSet<String>> ps = children.get("subclass");
+        if (ps != null && ps.values() != null) {
+            for (String cc : ps.get(cl)) {
+                HashSet<String> insts = getInstancesForType(cc);
+                if (insts != null)
+                    result.addAll(insts);
+            }
+            return result;
+        }
+        else
+            return null;
+    }
+
+    /** ***************************************************************
      * return classes for the given instance cl.
      *
      * For example, if we know (instance UnitedStates Nation), then
@@ -1160,17 +1179,32 @@ public class KBcache {
      */
     public static void main(String[] args) {
 
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        System.out.println("**** Finished loading KB ***");
-        KBcache nkbc = kb.kbCache;
-        System.out.println("KBcache.main(): parents of BinaryPredicate: " +
-                nkbc.getParentClasses("BinaryPredicate"));
-        System.out.println("KBcache.main(): parents of causes: " +
-                nkbc.getParentClassesOfInstance("causes"));
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            System.out.println("**** Finished loading KB ***");
+            KBcache nkbc = kb.kbCache;
+            String term = "Object";
+            HashSet<String> classes = nkbc.getChildClasses(term);
+            HashSet<String> instances = nkbc.getChildInstances(term);
+            System.out.println("number of classes: " + classes.size());
+            System.out.println("KBcache.main(): children of " + term + ": " +
+                    classes);
+            System.out.println("number of instances: " + instances.size());
+            System.out.println("KBcache.main(): instances of " + term + ": " +
+                   instances);
+            term = "Process";
+            classes = nkbc.getChildClasses(term);
+            instances = nkbc.getChildInstances(term);
+            System.out.println("number of classes: " + classes.size());
+            System.out.println("KBcache.main(): children of " + term + ": " +
+                    classes);
+            System.out.println("number of instances: " + instances.size());
+            System.out.println("KBcache.main(): instances of " + term + ": " +
+                    instances);
+
         //nkbc.buildCaches();
         //nkbc.buildRelationsSet();
         //System.out.println("KBcache.main(): " + nkbc.getInstancesForType("Corporation"));
-        nkbc.showState();
+        //nkbc.showState();
     }
 }

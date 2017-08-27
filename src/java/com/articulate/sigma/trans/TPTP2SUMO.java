@@ -13,12 +13,14 @@ http://sigmakee.sourceforge.net
 */
 
 /*************************************************************************************************/
-package com.articulate.sigma;
+package com.articulate.sigma.trans;
 
 import TPTPWorld.AnswerExtractor;
 import TPTPWorld.Binding;
 import TPTPWorld.TPTPFormula;
 import TPTPWorld.TPTPParser;
+import com.articulate.sigma.Formula;
+import com.articulate.sigma.ProofStep;
 import tptp_parser.SimpleTptpParserOutput;
 
 import java.io.BufferedReader;
@@ -152,7 +154,7 @@ public class TPTP2SUMO {
       if (formula.parent.isEmpty()) {
           if (formula.type.equals("conjecture")) {
         	  if (!instantiated) 
-                  result.append("          <query type='" + ProofStep.QUERY + "'/>\n");              
+                  result.append("          <query type='" + ProofStep.QUERY + "'/>\n");
         	  else 
                   result.append("          <query type='" + ProofStep.INSTANTIATED_QUERY + "'/>\n");              
           } 
