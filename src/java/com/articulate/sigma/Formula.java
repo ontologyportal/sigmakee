@@ -29,39 +29,39 @@ import java.util.*;
  */
 public class Formula implements Comparable {
 
-    protected static final String AND    = "and";
-    protected static final String OR     = "or";
-    protected static final String NOT    = "not";
-    protected static final String IF     = "=>";
-    protected static final String IFF    = "<=>";
+    public static final String AND    = "and";
+    public static final String OR     = "or";
+    public static final String NOT    = "not";
+    public static final String IF     = "=>";
+    public static final String IFF    = "<=>";
     public static final String UQUANT = "forall";
     public static final String EQUANT = "exists";
-    protected static final String EQUAL  = "equal";
-    protected static final String GT     = "greaterThan";
-    protected static final String GTET   = "greaterThanOrEqualTo";
-    protected static final String LT     = "lessThan";
-    protected static final String LTET   = "lessThanOrEqualTo";
+    public static final String EQUAL  = "equal";
+    public static final String GT     = "greaterThan";
+    public static final String GTET   = "greaterThanOrEqualTo";
+    public static final String LT     = "lessThan";
+    public static final String LTET   = "lessThanOrEqualTo";
 
-    protected static final String KAPPAFN  = "KappaFn";
-    protected static final String PLUSFN   = "AdditionFn";
-    protected static final String MINUSFN  = "SubtractionFn";
-    protected static final String TIMESFN  = "MultiplicationFn";
-    protected static final String DIVIDEFN = "DivisionFn";
-    protected static final String SKFN     = "SkFn";
-    protected static final String SK_PREF = "Sk";
-    protected static final String FN_SUFF = "Fn";
-    protected static final String V_PREF  = "?";
-    protected static final String R_PREF  = "@";
-    protected static final String VX      = "?X";
-    protected static final String VVAR    = "?VAR";
-    protected static final String RVAR    = "@ROW";
+    public static final String KAPPAFN  = "KappaFn";
+    public static final String PLUSFN   = "AdditionFn";
+    public static final String MINUSFN  = "SubtractionFn";
+    public static final String TIMESFN  = "MultiplicationFn";
+    public static final String DIVIDEFN = "DivisionFn";
+    public static final String SKFN     = "SkFn";
+    public static final String SK_PREF = "Sk";
+    public static final String FN_SUFF = "Fn";
+    public static final String V_PREF  = "?";
+    public static final String R_PREF  = "@";
+    public static final String VX      = "?X";
+    public static final String VVAR    = "?VAR";
+    public static final String RVAR    = "@ROW";
 
-    protected static final String LP = "(";
-    protected static final String RP = ")";
-    protected static final String SPACE = " ";
+    public static final String LP = "(";
+    public static final String RP = ")";
+    public static final String SPACE = " ";
 
-    protected static final String LOG_TRUE  = "True";
-    protected static final String LOG_FALSE = "False";
+    public static final String LOG_TRUE  = "True";
+    public static final String LOG_FALSE = "False";
 
     /** The SUO-KIF logical operators. */
     public static final List<String> LOGICAL_OPERATORS = Arrays.asList(UQUANT,
@@ -91,7 +91,7 @@ public class Formula implements Comparable {
                                                                     // "termFormat"
                                                                     );
     /** The source file in which the formula appears. */
-    protected String sourceFile;
+    public String sourceFile;
 
     /** The line in the file on which the formula starts. */
     public int startLine;
@@ -1807,7 +1807,7 @@ public class Formula implements Comparable {
      * suffix corresponding to the actual number of arguments in the
      * Formula.
      */
-    protected Formula renameVariableArityRelations(KB kb, TreeMap<String,String> relationMap) {
+    public Formula renameVariableArityRelations(KB kb, TreeMap<String,String> relationMap) {
 
         Formula result = this;
         if (this.listP()) {
