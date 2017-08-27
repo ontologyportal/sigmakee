@@ -63,6 +63,35 @@ public class WNdiagnostics {
     }
 
     /** *****************************************************************
+     * Distinguish between WordNet 3.0 synset ids and ones created from
+     * SUMO termFormat expressions by use of origMaxNounSynsetID and
+     * origMaxVerbSynsetID
+     * @param term is the term that needs to be checked for whether it
+     *             has WordNet mappings
+     */
+    private static boolean hasWordNetSynsetID(String term) {
+
+        if (!WordNet.wn.SUMOHash.containsKey(term))
+            return false;
+        ArrayList<String> synsets = WordNet.wn.SUMOHash.get(term);
+        for (String s : synsets) {
+            if (s.charAt(0) == '1') { // noun
+                String bareSynset = s.substring(1);
+                if (bareSynset.compareTo(WordNet.wn.origMaxNounSynsetID) < 0)
+                    return true;
+            }
+            else if (s.charAt(0) == '2') { // noun
+                String bareSynset = s.substring(1);
+                if (bareSynset.compareTo(WordNet.wn.origMaxVerbSynsetID) < 0)
+                    return true;
+            }
+            else if (WordNetUtilities.isValidSynset9(s))
+                return true;
+        }
+        return false;
+    }
+
+    /** *****************************************************************
      * @return an ArrayList of Strings which are terms that don't
      * have a corresponding synset
      */
@@ -73,8 +102,8 @@ public class WNdiagnostics {
         Iterator<String> it = kb.terms.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
-            if (!WordNet.wn.SUMOHash.containsKey(term) & !kb.isFunction(term) &&
-                Character.isUpperCase(term.charAt(0)))
+            if (!hasWordNetSynsetID(term) && !kb.isFunction(term) &&
+                    Character.isUpperCase(term.charAt(0)))
                 result.add(term);            
         }
         return result;
@@ -289,7 +318,8 @@ public class WNdiagnostics {
 
         try {
             KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
         WordNet.wn.initOnce();
