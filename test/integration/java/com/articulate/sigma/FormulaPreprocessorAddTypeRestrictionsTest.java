@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import org.junit.Ignore;
 import org.junit.Test;
 

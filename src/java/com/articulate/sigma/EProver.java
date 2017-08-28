@@ -11,6 +11,8 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 */
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;

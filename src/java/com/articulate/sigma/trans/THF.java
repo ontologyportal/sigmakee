@@ -1,6 +1,6 @@
 /*** The KIF2THF converter file is a contribution by Christoph Benzmueller
  */
-package com.articulate.sigma;
+package com.articulate.sigma.trans;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
@@ -18,7 +18,12 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.RowVars;
+
 /** ************************************************************
  * This class handles the conversion of problems (= axioms + queries)
  * from their KIF representation into a THF representation; THF is the 

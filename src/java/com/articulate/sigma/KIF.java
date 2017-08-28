@@ -12,6 +12,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforget.net
 */
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;

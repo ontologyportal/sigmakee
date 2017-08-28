@@ -80,7 +80,7 @@ public class WordNet {
     public String origMaxVerbSynsetID = "";
     
     /** Keys are SUMO terms, values are ArrayLists(s) of
-     * POS-prefixed synset String(s) meaning that the part of speech code is
+     * POS-prefixed 9-digit synset String(s) meaning that the part of speech code is
      * prepended to the synset number. */
     public Hashtable<String,ArrayList<String>> SUMOHash = new Hashtable<String,ArrayList<String>>();
 

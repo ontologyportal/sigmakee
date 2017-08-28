@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

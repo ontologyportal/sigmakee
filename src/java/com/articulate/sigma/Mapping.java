@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.articulate.sigma.KB;
+import com.articulate.sigma.trans.OWLtranslator;
 
 /** This code is copyright Articulate Software (c) 2004.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
