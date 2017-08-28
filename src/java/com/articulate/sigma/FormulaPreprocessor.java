@@ -198,8 +198,8 @@ public class FormulaPreprocessor {
             sb.append(")\n");
         if (debug) System.out.println("addTypeRestrictions: sb: " + sb);
         // recursively add sortals for existentially quantified variables
-        if ((form.theFormula.indexOf(Formula.EQUANT) > -1) ||
-                (form.theFormula.indexOf(Formula.UQUANT) > -1))
+        //if ((form.theFormula.indexOf(Formula.EQUANT) > -1) ||
+          //      (form.theFormula.indexOf(Formula.UQUANT) > -1))
             addTypeRestrictionsRecurse(kb, form, sb);
 
         if (!begin)
