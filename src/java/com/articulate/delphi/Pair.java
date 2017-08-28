@@ -6,27 +6,40 @@ and Ted Gordon in any writings, briefings, publications, presentations, or
 other representations of any software which incorporates, builds on, or uses this 
 code.  */
 package com.articulate.delphi;
+
 import java.util.*;
 import java.io.*;
 import java.text.*;
 import com.articulate.sigma.*;
 
-/** *****************************************************************
+/**
+ * *****************************************************************
  */
 public class Pair implements Comparable {
 
-    public int value = -1;
-    public String str = null;
+	public int value = -1;
+	public String str = null;
 
-    /** *****************************************************************
-     */
-    public int compareTo(Object o) {
+	public Pair() {
 
-        Pair p = (Pair) o;
-        if (value < p.value) 
-            return -1;
-        if (value == p.value) 
-            return 0;
-        return 1;        
-    }
+	}
+
+	public Pair(int value, String str) {
+		this.value = value;
+		this.str = str;
+	}
+
+	/**
+	 * *****************************************************************
+	 */
+
+	public int compareTo(Object o) {
+
+		Pair p = (Pair) o;
+		if (value < p.value)
+			return -1;
+		if (value == p.value)
+			return 0;
+		return 1;
+	}
 }
