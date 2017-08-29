@@ -34,8 +34,6 @@ being present in the ontology in order to function as intended.  They are:
 /*************************************************************************************************/
 package com.articulate.sigma;
 
-import com.articulate.delphi.Pair;
-
 /*
 Copyright 2014-2015 IPsoft
 
