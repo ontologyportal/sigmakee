@@ -1627,12 +1627,12 @@ public class Formula implements Comparable {
         	Formula varlist = new Formula();
         	varlist.read(remainder.car());
         	resultSet.addAll(varlist.collectAllVariables());
-    		resultSet.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
+    		resultSet.addAll(remainder.cdrAsFormula().collectExistentiallyQuantifiedVariables());
     	}
     	else {
     		if (fcar.listP())
-    			resultSet.addAll(fcar.collectQuantifiedVariables());
-    		resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
+    			resultSet.addAll(fcar.collectExistentiallyQuantifiedVariables());
+    		resultSet.addAll(this.cdrAsFormula().collectExistentiallyQuantifiedVariables());
     	}
     	result.addAll(resultSet);
     	return result;

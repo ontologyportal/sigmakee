@@ -676,16 +676,6 @@ public class OWLtranslator {
     }
 
     /** ***************************************************************
-     */
-    private boolean isFromCache(Formula form){
-
-        if (form.getSourceFile().contains("Cache")) {
-            return true;
-        }
-        return false;
-    }
-
-    /** ***************************************************************
      * Write OWL format.
      */
     private void writeRelations(PrintWriter pw, String term) {
@@ -703,7 +693,7 @@ public class OWLtranslator {
         if (argTypes.size() > 0) {
             for (int i = 0; i < argTypes.size(); i++) {
                 Formula form = (Formula) argTypes.get(i);
-                if (isFromCache(form))
+                if (form.isCached())
                     continue;
                 String arg = form.getArgument(2);
                 String argType = form.getArgument(3);
@@ -717,21 +707,21 @@ public class OWLtranslator {
         if (ranges.size() > 0) {
             Formula form = (Formula) ranges.get(0);
             String argType = form.getArgument(2);
-            if (Formula.atom(argType) && !isFromCache(form))
+            if (Formula.atom(argType) && !form.isCached())
                 pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
         }
         ArrayList inverses = kb.askWithRestriction(0,"inverse",1,term);  // inverse expressions for term.
         if (inverses.size() > 0) {
             Formula form = (Formula) inverses.get(0);
             String arg = form.getArgument(2);
-            if (Formula.atom(arg) && !isFromCache(form))
+            if (Formula.atom(arg) && !form.isCached())
                 pw.println("  <owl:inverseOf rdf:resource=\"" + (arg.equals("Entity") ? "&owl;Thing" : "#" + arg) + "\" />");
         }
         if (subs.size() > 0) {
             for (int i = 0; i < subs.size(); i++) {
                 Formula form = (Formula) subs.get(i);
                 String superProp = form.getArgument(2);
-                if (!isFromCache(form))
+                if (!form.isCached())
                     pw.println("  <owl:subPropertyOf rdf:resource=\"" + (superProp.equals("Entity") ? "&owl;Thing" : "#" + superProp) + "\" />");
             }
         }

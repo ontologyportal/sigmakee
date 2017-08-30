@@ -994,8 +994,7 @@ public class StringUtil {
                     char fc = input.charAt(0);
                     char lc = input.charAt(ilen - 1);
                     ans = (((fc == '"') && (lc == '"'))
-                            || (((fc == '\'') || (fc == '`'))
-                            && (lc == '\'')));
+                            || ((fc == '\'') && (lc == '\'')) || (fc == '`'));
                 }
             }
         }

@@ -155,7 +155,7 @@ public class EProver {
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-                executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
+                executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -181,7 +181,7 @@ public class EProver {
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-                executable.substring(0, executable.lastIndexOf("/")) + File.separator + "eprover"));
+                executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
