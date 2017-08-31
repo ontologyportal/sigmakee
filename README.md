@@ -14,37 +14,37 @@ user name.
 System preparation on Linux
 ==========================
 
-# create user theuser
+create user theuser
   useradd theuser
 
-# add password for theuser
+add password for theuser
   passwd theuser
 
-# add to sudoers file
+add to sudoers file
   usermod -aG sudo theuser
 
-# install unzip
+install unzip
   sudo apt-get install unzip
 
-cd KBs
-cp ~/workspace/sigmakee/config.xml .
+  cd KBs
+  cp ~/workspace/sigmakee/config.xml .
 
-sudo apt-get update
+  sudo apt-get update
 
-# may need to create a .bashrc
-touch .bashrc
+may need to create a .bashrc
+  touch .bashrc
 
-# handy to add stuff to .bashrc
-echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
-echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
-echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
-echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
+handy to add stuff to .bashrc
+  echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
+  echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
+  echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
+  echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
 
-# You may need to download Java and set your
-# JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
-# The following command line version may work
-wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
-  http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
+You may need to download Java and set your
+JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
+The following command line version may work
+  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
+    http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
 
 Linux Installation
 ==================
@@ -95,16 +95,16 @@ sudo apt-get update
 sudo apt-get install ant
 ant
 
-# to test run
+To test run
 
-java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
-  com.articulate.sigma.KB
+  java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+    com.articulate.sigma.KB
 
 
-# Start Tomcat with
-$CATALINA_HOME/bin/startup.sh
+Start Tomcat with
+  $CATALINA_HOME/bin/startup.sh
 
-# point your browser at http://localhost:8080/sigma/login.html
+Point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
@@ -170,16 +170,16 @@ cd ~/workspace/sigmakee
 brew install ant
 ant
 
-# to test run
+To test run
 
-java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
-  com.articulate.sigma.KB
+  java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
+    com.articulate.sigma.KB
 
 
-# Start Tomcat with
-$CATALINA_HOME/bin/startup.sh
+Start Tomcat with
+  $CATALINA_HOME/bin/startup.sh
 
-# point your browser at http://localhost:8080/sigma/login.html
+Point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
