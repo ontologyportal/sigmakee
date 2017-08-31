@@ -1,3 +1,6 @@
+Introduction
+============
+
 You can follow the steps below to do a manual installation on linux. This procedure assumes that you start from
 your home directory and are happy with having directories created there. The sed command below attempts to modify
 ~/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths differ, then you may need to
@@ -7,42 +10,45 @@ If you load a different version of tomcat, be sure to change $CATALINA_HOME and 
 If you use a different mirror or version you'll need to change the wget commend below. Change "theuser" below to your
 user name.
 
------------------
-System preparation on Linux
 
-# create user theuser
+System preparation on Linux
+==========================
+
+create user theuser
   useradd theuser
 
-# add password for theuser
+add password for theuser
   passwd theuser
 
-# add to sudoers file
+add to sudoers file
   usermod -aG sudo theuser
 
-# install unzip
+install unzip
   sudo apt-get install unzip
 
-cd KBs
-cp ~/workspace/sigmakee/config.xml .
+  cd KBs
+  cp ~/workspace/sigmakee/config.xml .
 
-sudo apt-get update
+  sudo apt-get update
 
-# may need to create a .bashrc
-touch .bashrc
+may need to create a .bashrc
+  touch .bashrc
 
-# handy to add stuff to .bashrc
-echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
-echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
-echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
-echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
+handy to add stuff to .bashrc
+  echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
+  echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
+  echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
+  echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
 
-# You may need to download Java and set your
-# JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
-# The following command line version may work
-wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
-  http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
 
------------------------------
+You may need to download Java and set your
+JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
+The following command line version may work
+  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
+    http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
+
+Linux Installation
+==================
 
 mkdir workspace
 mkdir Programs
@@ -90,19 +96,20 @@ sudo apt-get update
 sudo apt-get install ant
 ant
 
-# to test run
+To test run
 
-java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
-  com.articulate.sigma.KB
+  java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+    com.articulate.sigma.KB
 
 
-# Start Tomcat with
-$CATALINA_HOME/bin/startup.sh
+Start Tomcat with
+  $CATALINA_HOME/bin/startup.sh
 
-# point your browser at http://localhost:8080/sigma/login.html
+Point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
+
 - If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
 again.
 - If you are repeatedly getting 404s, check the port value in ~/.sigmakee/KBs/config.xml. 8080 for local,
@@ -110,8 +117,8 @@ again.
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
----------------------------------------------------------------------
-mac install notes
+Apple install notes
+===================
 
 use "curl -o filename URL" if you don't have wget installed
 java will be installed in /usr/libexec/java_home
@@ -164,16 +171,16 @@ cd ~/workspace/sigmakee
 brew install ant
 ant
 
-# to test run
+To test run
 
-java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
-  com.articulate.sigma.KB
+  java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
+    com.articulate.sigma.KB
 
 
-# Start Tomcat with
-$CATALINA_HOME/bin/startup.sh
+Start Tomcat with
+  $CATALINA_HOME/bin/startup.sh
 
-# point your browser at http://localhost:8080/sigma/login.html
+Point your browser at http://localhost:8080/sigma/login.html
 
 
 Debugging
@@ -184,15 +191,35 @@ again.
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
----------------------------------------------------------------------
-jUnit testing on the command line:
+
+jUnit testing on the command line
+=================================
 
 java  -Xmx2500m -classpath
   ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
   org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
----------------------------------------------------------------------
-The installation approaches below are be out of date
+python Interface
+================
+
+Compile SigmaKEE then run with
+
+user@user-machine:~/workspace/sigmakee$ python
+Python 2.7.12 (default, Nov 19 2016, 06:48:10)
+[GCC 5.4.0 20160609] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from py4j.java_gateway import JavaGateway
+>>> gateway = JavaGateway()
+>>> sigma_app = gateway.entry_point
+>>> print(sigma_app.getTerms())
+
+set([u'-1', u'-3', u'-6', u'-7235', u'.5', u'<=>', u'=>', u'AAA-Rating', u'AAM', u'AAV', u'ABPFn', u'ABTest', u'ACPowerSource', ...
+
+Look at com.articulate.sigma.KBmanager.pythonServer() to expose the API of more classes
+than just com.articulate.sigma.KB
+
+Old Installation Notes
+======================
 
 Install via script from source on Linux or Mac OS with
 bash <(curl -L https://raw.githubusercontent.com/ontologyportal/sigmakee/master/install.sh)
