@@ -3263,7 +3263,8 @@ public class KB {
 			// System.out.println("KB.main(): " + kb.isChildOf("Africa",
 			// "Region"));
 			// kb.askEProver("(subclass ?X Object)",30,1);
-		} catch (Exception ioe) {
+		}
+		catch (Exception ioe) {
 			System.out.println(ioe.getMessage());
 		}
 
