@@ -3149,6 +3149,7 @@ public class KB {
         return Lists.newArrayList(loadFormatMapsAttempted);
     }
 
+    //Edited by Infosys Ltd
     public List<Pair> getSortedTermFrequency() {
 
         List<Pair> termFrequencies = new ArrayList<>();
@@ -3158,6 +3159,7 @@ public class KB {
         Collections.sort(termFrequencies, Collections.reverseOrder());
         return termFrequencies;
     }
+    // Edit END
 
     /**
      * *************************************************************
