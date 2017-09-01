@@ -153,9 +153,11 @@ public class EProver {
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        // Edited by Infosys LTD
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
+        // Edit END
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -179,9 +181,11 @@ public class EProver {
             this.terminate();
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        // Edited by Infosys LTD
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
+        // Edit End
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
