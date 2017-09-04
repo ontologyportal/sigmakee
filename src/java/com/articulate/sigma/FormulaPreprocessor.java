@@ -178,10 +178,12 @@ public class FormulaPreprocessor {
             HashSet<String> types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
                 for (String t : types) {
+                	// Edited by Infosys LTD
                 	// type restriction Entity is not explicitly required.
                     if(t.equals("Entity")){
                         continue;
                     }
+                    // Edit END
                     if (begin) {
                         sb.append("(=> \n  (and \n");  // TODO: need test for singular list
                         begin = false;
@@ -258,12 +260,14 @@ public class FormulaPreprocessor {
                 for (String ev : quantifiedVariables) {
                     HashSet<String> types = varmap.get(ev);
                     if (types != null) {
+                    	// Edited by Infosys LTD
                         // type restriction Entity is not explicitly required.
                         types.remove("Entity");
                         if(!types.isEmpty()){
                             addSortals = true;
                             break;
                         }
+                        // Edit End
                     }
                 }
                 if (addSortals) {
