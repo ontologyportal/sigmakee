@@ -154,10 +154,21 @@ public class EProver {
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
         // Edited by Infosys LTD
+        
+        // To make sigma work on windows. 
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+                       
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-                executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
-        // Edit END
+                eproverPath));
+        // Edit End
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -182,9 +193,20 @@ public class EProver {
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
         // Edited by Infosys LTD
+        
+        // To make sigma work on windows
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+               
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-                executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
+                eproverPath));
         // Edit End
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
