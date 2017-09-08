@@ -15,6 +15,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.nlg.NLGUtils;
+import py4j.GatewayServer;
 
 import java.io.*;
 import java.util.*;
@@ -788,20 +789,67 @@ public class KBmanager {
     }
 
     /** ***************************************************************
-     * A test method.
+     * Create an server-based interface for Python to call the KB object.
+     * https://pypi.python.org
+     *
+     * from py4j.java_gateway import JavaGateway
+     * gateway = JavaGateway()             # connect to the JVM
+     * sigma_app = gateway.entry_point     # get the KB instance
+     * print(sigma_app.getTerms())         # call a method
      */
-    public static void main(String[] args) {
+    public static void pythonServer() {
 
+        System.out.println("KBmanager.pythonServer(): begin initialization");
         try {
             KBmanager.getMgr().initializeOnce();
-        } 
+        }
         catch (Exception e ) {
             System.out.println(e.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB("SUMO");
-        Formula f = new Formula();
-        f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        System.out.println(fp.preProcess(f,false,kb));
+        GatewayServer server = new GatewayServer(kb);
+        server.start();
+        System.out.println("KBmanager.pythonServer(): completed initialization, server running");
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void printHelp() {
+
+        System.out.println("Sigma Knowledge Engineering Environment");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -p - demo Python interface");
+        System.out.println("  with no arguments show this help screen an execute a test");
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void main(String[] args) {
+
+        if (args == null) {
+            printHelp();
+            try {
+                KBmanager.getMgr().initializeOnce();
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            Formula f = new Formula();
+            f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            System.out.println(fp.preProcess(f, false, kb));
+        }
+        else {
+            if (args != null && args.length > 0 && args[0].equals("-p")) {
+                pythonServer();
+            }
+            if (args != null && args.length > 0 && args[0].equals("-h")) {
+                printHelp();
+            }
+        }
     }
 }
