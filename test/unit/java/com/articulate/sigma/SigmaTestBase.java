@@ -35,6 +35,7 @@ public class SigmaTestBase {
             }
 
             manager.initializing = true;
+            KBmanager.getMgr().setDefaultAttributes();
             KBmanager.getMgr().setConfiguration(configuration);
             manager.initialized = true;
             manager.initializing = false;
