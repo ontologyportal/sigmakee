@@ -1656,7 +1656,7 @@ public class KB {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     eprover.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"), maxAnswers < 1 ? 1 : maxAnswers);
                 }
                 catch (IOException e) {
                     e.printStackTrace();

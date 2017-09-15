@@ -217,6 +217,43 @@ public class EProver {
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
     
+    
+    /** *************************************************************
+     * @author Infosys LTD.
+     * Create a running instance of EProver based on existing batch
+     * specification file.
+     *
+     * @param executable A File object denoting the platform-specific
+     * EProver executable.
+     * @param maxAnswers - Limit the answers upto maxAnswers only
+     * @throws IOException
+     */
+    public EProver (String executable,int maxAnswers) throws IOException {
+        if (this._eprover != null)
+            this.terminate();
+        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        // To make sigma work on windows
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                eproverPath));
+        System.out.println("EProver(): command: " + commands);
+        _builder = new ProcessBuilder(commands);
+        _builder.redirectErrorStream(false);
+        _eprover = _builder.start();
+        System.out.println("EProver(): process: " + _eprover);
+        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
+        _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
+    }
+    
+    
     /** *************************************************************
      * Add an assertion for inference.
      *
