@@ -74,272 +74,272 @@ import java.util.regex.PatternSyntaxException;
  */
 public class KB {
 
-	private boolean isVisible = true;
+    private boolean isVisible = true;
 
-	/** The inference engine process for this KB. */
-	public EProver eprover;
+    /** The inference engine process for this KB. */
+    public EProver eprover;
 
-	/** The name of the knowledge base. */
-	public String name;
+    /** The name of the knowledge base. */
+    public String name;
 
-	/**
-	 * An ArrayList of Strings that are the full canonical pathnames of the
-	 * files that comprise the KB.
-	 */
-	public ArrayList<String> constituents = new ArrayList<String>();
+    /**
+     * An ArrayList of Strings that are the full canonical pathnames of the
+     * files that comprise the KB.
+     */
+    public ArrayList<String> constituents = new ArrayList<String>();
 
-	/** The natural language in which axiom paraphrases should be presented. */
-	public String language = "EnglishLanguage";
+    /** The natural language in which axiom paraphrases should be presented. */
+    public String language = "EnglishLanguage";
 
-	/**
-	 * The location of preprocessed KIF files, suitable for loading into
-	 * EProver.
-	 */
-	public String kbDir = null;
+    /**
+     * The location of preprocessed KIF files, suitable for loading into
+     * EProver.
+     */
+    public String kbDir = null;
 
-	/** The instance of the CELT process. */
-	public CELT celt = null;
+    /** The instance of the CELT process. */
+    public CELT celt = null;
 
-	/**
-	 * A synchronized SortedSet of Strings, which are all the terms in the KB.
-	 */
-	public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
+    /**
+     * A synchronized SortedSet of Strings, which are all the terms in the KB.
+     */
+    public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
 
-	/** The String constant that is the suffix for files of user assertions. */
-	public static final String _userAssertionsString = "_UserAssertions.kif";
+    /** The String constant that is the suffix for files of user assertions. */
+    public static final String _userAssertionsString = "_UserAssertions.kif";
 
-	/**
-	 * The String constant that is the suffix for files of cached assertions.
-	 */
-	public static final String _cacheFileSuffix = "_Cache.kif";
+    /**
+     * The String constant that is the suffix for files of cached assertions.
+     */
+    public static final String _cacheFileSuffix = "_Cache.kif";
 
-	/**
-	 * A Map of all the Formula objects in the KB. Each key is a String
-	 * representation of a Formula. Each value is the Formula object
-	 * corresponding to the key.
-	 */
-	public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();
+    /**
+     * A Map of all the Formula objects in the KB. Each key is a String
+     * representation of a Formula. Each value is the Formula object
+     * corresponding to the key.
+     */
+    public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();
 
-	/**
-	 * A HashMap of ArrayLists of String formulae, containing all the formulae
-	 * in the KB. Keys are the formula itself, a formula ID, and term indexes
-	 * created in KIF.createKey(). The actual formula can be retrieved by using
-	 * the returned String as the key for the variable formulaMap
-	 */
-	public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();
+    /**
+     * A HashMap of ArrayLists of String formulae, containing all the formulae
+     * in the KB. Keys are the formula itself, a formula ID, and term indexes
+     * created in KIF.createKey(). The actual formula can be retrieved by using
+     * the returned String as the key for the variable formulaMap
+     */
+    public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();
 
-	/**
-	 * The natural language formatting strings for relations in the KB. It is a
-	 * HashMap of language keys and HashMap values. The interior HashMap is term
-	 * name keys and String values.
-	 */
-	private HashMap<String, HashMap<String, String>> formatMap = new HashMap<String, HashMap<String, String>>();
+    /**
+     * The natural language formatting strings for relations in the KB. It is a
+     * HashMap of language keys and HashMap values. The interior HashMap is term
+     * name keys and String values.
+     */
+    private HashMap<String, HashMap<String, String>> formatMap = new HashMap<String, HashMap<String, String>>();
 
-	/** The natural language strings for terms in the KB. It is a HashMap of
-	 * language keys and HashMap values. The interior HashMap is term name keys
-	 * and String values.
-	 */
-	private HashMap<String, HashMap<String, String>> termFormatMap = new HashMap<String, HashMap<String, String>>();
+    /** The natural language strings for terms in the KB. It is a HashMap of
+     * language keys and HashMap values. The interior HashMap is term name keys
+     * and String values.
+     */
+    private HashMap<String, HashMap<String, String>> termFormatMap = new HashMap<String, HashMap<String, String>>();
 
-	/** Errors found during loading of the KB constituents. */
-	public TreeSet<String> errors = new TreeSet<String>();
+    /** Errors found during loading of the KB constituents. */
+    public TreeSet<String> errors = new TreeSet<String>();
 
-	/** Warnings found during loading of the KB constituents. */
-	public TreeSet<String> warnings = new TreeSet<String>();
+    /** Warnings found during loading of the KB constituents. */
+    public TreeSet<String> warnings = new TreeSet<String>();
 
-	/**
-	 * Future: If true, the contents of the KB have been modified without
-	 * updating the caches
-	 */
-	public boolean modifiedContents = false;
+    /**
+     * Future: If true, the contents of the KB have been modified without
+     * updating the caches
+     */
+    public boolean modifiedContents = false;
 
-	/**
-	 * If true, assertions of the form (predicate x x) will be included in the
-	 * relation cache tables.
-	 */
-	private boolean cacheReflexiveAssertions = false;
+    /**
+     * If true, assertions of the form (predicate x x) will be included in the
+     * relation cache tables.
+     */
+    private boolean cacheReflexiveAssertions = false;
 
-	public KBcache kbCache = null;
+    public KBcache kbCache = null;
 
-	public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
+    public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 
-	/*************************************************************** Constructor
-	 * which takes the name of the KB and the location where KBs preprocessed
-	 * for EProver should be placed.
-	 */
-	public KB(String n, String dir) {
+    /*************************************************************** Constructor
+     * which takes the name of the KB and the location where KBs preprocessed
+     * for EProver should be placed.
+     */
+    public KB(String n, String dir) {
 
-		name = n;
-		kbDir = dir;
-		try {
-			KBmanager mgr = KBmanager.getMgr();
-			if (mgr != null) {
-				String loadCelt = mgr.getPref("loadCELT");
-				if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
-					celt = new CELT();
-			}
-		} catch (IOException ioe) {
-			System.out.println("Error in KB(): " + ioe.getMessage());
-			celt = null;
-		}
-	}
+        name = n;
+        kbDir = dir;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            if (mgr != null) {
+                String loadCelt = mgr.getPref("loadCELT");
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
+                    celt = new CELT();
+            }
+        } catch (IOException ioe) {
+            System.out.println("Error in KB(): " + ioe.getMessage());
+            celt = null;
+        }
+    }
 
-	public KB(String n, String dir, boolean visibility) {
+    public KB(String n, String dir, boolean visibility) {
 
-		this(n, dir);
-		isVisible = visibility;
-	}
+        this(n, dir);
+        isVisible = visibility;
+    }
 
-	/*************************************************************** Perform a
-	 * deep copy of the kb input
-	 * 
-	 * @param kbIn
-	 * @throws IOException
-	 */
-	public KB(KB kbIn) throws IOException {
-		this.isVisible = kbIn.isVisible;
+    /*************************************************************** Perform a
+     * deep copy of the kb input
+     *
+     * @param kbIn
+     * @throws IOException
+     */
+    public KB(KB kbIn) throws IOException {
+        this.isVisible = kbIn.isVisible;
 
-		if (kbIn.eprover != null) {
-			this.eprover = kbIn.eprover;
-		}
+        if (kbIn.eprover != null) {
+            this.eprover = kbIn.eprover;
+        }
 
-		this.name = kbIn.name;
+        this.name = kbIn.name;
 
-		if (kbIn.constituents != null) {
-			this.constituents = Lists.newArrayList(kbIn.constituents);
-		}
+        if (kbIn.constituents != null) {
+            this.constituents = Lists.newArrayList(kbIn.constituents);
+        }
 
-		this.language = kbIn.language;
+        this.language = kbIn.language;
 
-		this.kbDir = kbIn.kbDir;
+        this.kbDir = kbIn.kbDir;
 
-		if (kbIn.terms != null) {
-			this.terms = Collections.synchronizedSortedSet(new TreeSet<String>(kbIn.terms));
-		}
+        if (kbIn.terms != null) {
+            this.terms = Collections.synchronizedSortedSet(new TreeSet<String>(kbIn.terms));
+        }
 
-		if (kbIn.formulaMap != null) {
-			for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet()) {
-				String key = pair.getKey();
-				Formula newFormula = new Formula(pair.getValue());
-				this.formulaMap.put(key, newFormula);
-			}
-		}
+        if (kbIn.formulaMap != null) {
+            for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet()) {
+                String key = pair.getKey();
+                Formula newFormula = new Formula(pair.getValue());
+                this.formulaMap.put(key, newFormula);
+            }
+        }
 
-		if (kbIn.formulas != null) {
-			for (Map.Entry<String, ArrayList<String>> pair : kbIn.formulas.entrySet()) {
-				String key = pair.getKey();
-				ArrayList<String> newList = Lists.newArrayList(pair.getValue());
-				this.formulas.put(key, newList);
-			}
-		}
+        if (kbIn.formulas != null) {
+            for (Map.Entry<String, ArrayList<String>> pair : kbIn.formulas.entrySet()) {
+                String key = pair.getKey();
+                ArrayList<String> newList = Lists.newArrayList(pair.getValue());
+                this.formulas.put(key, newList);
+            }
+        }
 
-		if (kbIn.formatMap != null) {
-			this.formatMap = Maps.newHashMap(kbIn.formatMap);
-		}
+        if (kbIn.formatMap != null) {
+            this.formatMap = Maps.newHashMap(kbIn.formatMap);
+        }
 
-		if (kbIn.termFormatMap != null) {
-			this.termFormatMap = Maps.newHashMap(kbIn.termFormatMap);
-		}
+        if (kbIn.termFormatMap != null) {
+            this.termFormatMap = Maps.newHashMap(kbIn.termFormatMap);
+        }
 
-		if (kbIn.errors != null) {
-			this.errors = Sets.newTreeSet(kbIn.errors);
-		}
+        if (kbIn.errors != null) {
+            this.errors = Sets.newTreeSet(kbIn.errors);
+        }
 
-		this.modifiedContents = kbIn.modifiedContents;
+        this.modifiedContents = kbIn.modifiedContents;
 
-		this.kbCache = new KBcache(kbIn.kbCache, this);
+        this.kbCache = new KBcache(kbIn.kbCache, this);
 
-		// Must be done after kb manager set.
-		if (kbIn.celt != null) {
-			this.celt = new CELT();
-		}
-	}
+        // Must be done after kb manager set.
+        if (kbIn.celt != null) {
+            this.celt = new CELT();
+        }
+    }
 
-	public boolean isVisible() {
-		return isVisible;
-	}
+    public boolean isVisible() {
+        return isVisible;
+    }
 
-	/*************************************************************** Constructor
-	 */
-	public KB(String n) {
+    /*************************************************************** Constructor
+     */
+    public KB(String n) {
 
-		name = n;
-		try {
-			KBmanager mgr = KBmanager.getMgr();
-			kbDir = mgr.getPref("kbDir");
-			if (mgr != null) {
-				String loadCelt = mgr.getPref("loadCELT");
-				if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
-					celt = new CELT();
-			}
-		} catch (IOException ioe) {
-			System.out.println("Error in KB(): " + ioe.getMessage());
-			celt = null;
-		}
-	}
+        name = n;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            kbDir = mgr.getPref("kbDir");
+            if (mgr != null) {
+                String loadCelt = mgr.getPref("loadCELT");
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
+                    celt = new CELT();
+            }
+        } catch (IOException ioe) {
+            System.out.println("Error in KB(): " + ioe.getMessage());
+            celt = null;
+        }
+    }
 
-	/************************************************************** Returns a
-	 * SortedSet of Strings, which are all the terms in the KB.
-	 */
-	public SortedSet<String> getTerms() {
+    /************************************************************** Returns a
+     * SortedSet of Strings, which are all the terms in the KB.
+     */
+    public SortedSet<String> getTerms() {
 
-		return this.terms;
-	}
+        return this.terms;
+    }
 
-	/**************************************************** REswitch determines if
-	 * a String is a RegEx or not based on its use of RE metacharacters.
-	 * "1"=nonRE, "2"=RE
-	 * 
-	 * @param term
-	 *            A String
-	 * @return "1" or "2"
-	 */
-	public String REswitch(String term) {
+    /**************************************************** REswitch determines if
+     * a String is a RegEx or not based on its use of RE metacharacters.
+     * "1"=nonRE, "2"=RE
+     *
+     * @param term
+     *            A String
+     * @return "1" or "2"
+     */
+    public String REswitch(String term) {
 
-		if (term.contains("(") || term.contains("[") || term.contains("{") || term.contains("\\") || term.contains("^")
-				|| term.contains("$") || term.contains("|") || term.contains("}") || term.contains("]")
-				|| term.contains(")") || term.contains("?") || term.contains("*") || term.contains("+"))
-			return "2";
-		return "1";
-	}
+        if (term.contains("(") || term.contains("[") || term.contains("{") || term.contains("\\") || term.contains("^")
+                || term.contains("$") || term.contains("|") || term.contains("}") || term.contains("]")
+                || term.contains(")") || term.contains("?") || term.contains("*") || term.contains("+"))
+            return "2";
+        return "1";
+    }
 
-	/*************************************************** Only called in
-	 * BrowseBody.jsp when a single match is found. Purpose is to simplify a
-	 * RegEx to its only matching term
-	 * 
-	 * @param term
-	 *            a String
-	 * @return modified term a String
-	 */
-	public String simplifyTerm(String term) {
+    /*************************************************** Only called in
+     * BrowseBody.jsp when a single match is found. Purpose is to simplify a
+     * RegEx to its only matching term
+     *
+     * @param term
+     *            a String
+     * @return modified term a String
+     */
+    public String simplifyTerm(String term) {
 
-		if (getREMatch(term.intern()).size() == 1)
-			return getREMatch(term.intern()).get(0);
-		return term;
-	}
+        if (getREMatch(term.intern()).size() == 1)
+            return getREMatch(term.intern()).get(0);
+        return term;
+    }
 
-	/**************************************************** Takes a term
-	 * (interpreted as a Regular Expression) and returns true if any term in the
-	 * KB has a match with the RE.
-	 *
-	 * @param term
-	 *            A String
-	 * @return true or false.
-	 */
-	public boolean containsRE(String term) {
+    /**************************************************** Takes a term
+     * (interpreted as a Regular Expression) and returns true if any term in the
+     * KB has a match with the RE.
+     *
+     * @param term
+     *            A String
+     * @return true or false.
+     */
+    public boolean containsRE(String term) {
 
-		return (getREMatch(term).size() > 0 ? true : false);
-	}
+        return (getREMatch(term).size() > 0 ? true : false);
+    }
 
-	/**************************************************** Takes a term
-	 * (interpreted as a Regular Expression) and returns an ArrayList containing
-	 * every term in the KB that has a match with the RE.
-	 *
-	 * @param term
-	 *            A String
-	 * @return An ArrayList of terms that have a match to term
-	 */
-	public ArrayList<String> getREMatch(String term) {
+    /**************************************************** Takes a term
+     * (interpreted as a Regular Expression) and returns an ArrayList containing
+     * every term in the KB that has a match with the RE.
+     *
+     * @param term
+     *            A String
+     * @return An ArrayList of terms that have a match to term
+     */
+    public ArrayList<String> getREMatch(String term) {
 
         try {
             Pattern p = Pattern.compile(term);
@@ -1775,10 +1775,10 @@ public class KB {
                     String line = null;
                     /*
                      * readLine is a bit quirky : it returns the content of a
-					 * line MINUS the newline. it returns null only for the END
-					 * of the stream. it returns an empty String if two newlines
-					 * appear in a row.
-					 */
+                     * line MINUS the newline. it returns null only for the END
+                     * of the stream. it returns an empty String if two newlines
+                     * appear in a row.
+                     */
                     while ((line = userAssertedInput.readLine()) != null)
                         selFs.add(line);
                 }
@@ -1870,43 +1870,43 @@ public class KB {
         return getTerms().size();
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Count the number of relations in the knowledge base in order to present statistics
-	 * to the user.
-	 *
-	 * @return The int(eger) number of relations in the knowledge base.
-	 */
-	public int getCountRelations() {
+     * to the user.
+     *
+     * @return The int(eger) number of relations in the knowledge base.
+     */
+    public int getCountRelations() {
 
         return kbCache.relations.size();
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Count the number of formulas in the knowledge base in order to present statistics
-	 * to the user.
-	 *
-	 * @return The int(eger) number of formulas in the knowledge base.
-	 */
-	public int getCountAxioms() {
+     * to the user.
+     *
+     * @return The int(eger) number of formulas in the knowledge base.
+     */
+    public int getCountAxioms() {
 
         return formulaMap.size();
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * An accessor providing a TreeSet of un-preProcessed String representations of
-	 * Formulae.
-	 *
-	 * @return A TreeSet of Strings.
-	 */
-	public TreeSet<String> getFormulas() {
+     * Formulae.
+     *
+     * @return A TreeSet of Strings.
+     */
+    public TreeSet<String> getFormulas() {
 
         return new TreeSet<String>(formulaMap.keySet());
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * An accessor providing a Formula
-	 */
-	public Formula getFormulaByKey(String key) {
+     */
+    public Formula getFormulaByKey(String key) {
 
         Formula f = null;
         ArrayList<String> al = formulas.get(key);
@@ -1915,14 +1915,14 @@ public class KB {
         return f;
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Count the number of rules in the knowledge base in order to present statistics to
-	 * the user. Note that the number of rules is a subset of the number of
-	 * formulas.
-	 *
-	 * @return The int(eger) number of rules in the knowledge base.
-	 */
-	public int getCountRules() {
+     * the user. Note that the number of rules is a subset of the number of
+     * formulas.
+     *
+     * @return The int(eger) number of rules in the knowledge base.
+     */
+    public int getCountRules() {
 
         int count = 0;
         Iterator<Formula> it = formulaMap.values().iterator();
@@ -1934,10 +1934,10 @@ public class KB {
         return count;
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Create an ArrayList of the specific size, filled with empty strings.
-	 */
-	private ArrayList<String> arrayListWithBlanks(int size) {
+     */
+    private ArrayList<String> arrayListWithBlanks(int size) {
 
         ArrayList<String> al = new ArrayList<String>(size);
         for (int i = 0; i < size; i++)
@@ -1945,13 +1945,13 @@ public class KB {
         return al;
     }
 
-	/** ***************************************************************
+    /** ***************************************************************
      * Get the alphabetically nearest terms to the given term, which is not in the KB.
-	 * Elements 0-(k-1) should be alphabetically lesser and k-(2*k-1)
-	 * alphabetically greater. If the term is at the beginning or end of the
-	 * alphabet, fill in blank items with the empty string: "".
-	 */
-	private ArrayList<String> getNearestKTerms(String term, int k) {
+     * Elements 0-(k-1) should be alphabetically lesser and k-(2*k-1)
+     * alphabetically greater. If the term is at the beginning or end of the
+     * alphabet, fill in blank items with the empty string: "".
+     */
+    private ArrayList<String> getNearestKTerms(String term, int k) {
 
         ArrayList<String> al;
         if (k == 0)
@@ -1980,40 +1980,40 @@ public class KB {
         return al;
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Get the alphabetically nearest terms to the given term, which is not in the KB.
-	 * Elements 0-14 should be alphabetically lesser and 15-29 alphabetically
-	 * greater. If the term is at the beginning or end of the alphabet, fill in
-	 * blank items with the empty string: "".
-	 */
-	private ArrayList<String> getNearestTerms(String term) {
+     * Elements 0-14 should be alphabetically lesser and 15-29 alphabetically
+     * greater. If the term is at the beginning or end of the alphabet, fill in
+     * blank items with the empty string: "".
+     */
+    private ArrayList<String> getNearestTerms(String term) {
 
         return getNearestKTerms(term, 15);
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Get the neighbors of this initial uppercase term (class or function).
-	 */
-	public ArrayList<String> getNearestRelations(String term) {
+     */
+    public ArrayList<String> getNearestRelations(String term) {
 
-		term = Character.toUpperCase(term.charAt(0)) + term.substring(1, term.length());
-		return getNearestTerms(term);
-	}
+        term = Character.toUpperCase(term.charAt(0)) + term.substring(1, term.length());
+        return getNearestTerms(term);
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * Get the neighbors of this initial lowercase term (relation).
-	 */
-	public ArrayList<String> getNearestNonRelations(String term) {
+     */
+    public ArrayList<String> getNearestNonRelations(String term) {
 
         term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Get the alphabetically num lower neighbor of this initial term, which must exist
-	 * in the current KB otherwise an empty string is returned.
-	 */
-	public String getAlphaBefore(String term, int num) {
+     * in the current KB otherwise an empty string is returned.
+     */
+    public String getAlphaBefore(String term, int num) {
 
         if (!getTerms().contains(term)) {
             ArrayList<String> al = getNearestKTerms(term, 0);
@@ -2031,11 +2031,11 @@ public class KB {
         return (String) tal.get(i);
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Get the alphabetically num higher neighbor of this initial term, which must exist
-	 * in the current KB otherwise an empty string is returned.
-	 */
-	public String getAlphaAfter(String term, int num) {
+     * in the current KB otherwise an empty string is returned.
+     */
+    public String getAlphaAfter(String term, int num) {
 
         if (!getTerms().contains(term)) {
             ArrayList<String> al = getNearestKTerms(term, 0);
@@ -2053,26 +2053,26 @@ public class KB {
         return (String) tal.get(i);
     }
 
-	/****************************************************************
+    /****************************************************************
      * This List is used to limit the number of warning messages logged by
-	 * loadFormatMaps(lang). If an attempt to load format or termFormat values
-	 * for lang is unsuccessful, the list is checked for the presence of lang.
-	 * If lang is not in the list, a warning message is logged and lang is added
-	 * to the list. The list is cleared whenever a constituent file is added or
-	 * removed for KB, since the latter might affect the availability of format
-	 * or termFormat values.
-	 */
-	protected ArrayList<String> loadFormatMapsAttempted = new ArrayList<String>();
+     * loadFormatMaps(lang). If an attempt to load format or termFormat values
+     * for lang is unsuccessful, the list is checked for the presence of lang.
+     * If lang is not in the list, a warning message is logged and lang is added
+     * to the list. The list is cleared whenever a constituent file is added or
+     * removed for KB, since the latter might affect the availability of format
+     * or termFormat values.
+     */
+    protected ArrayList<String> loadFormatMapsAttempted = new ArrayList<String>();
 
-	/****************************************************************
+    /****************************************************************
      * Populates the format maps for language lang.
-	 *
-	 * @see termFormatMap is a HashMap of language keys and HashMap values. The
-	 *      interior HashMaps are term keys and format string values.
-	 *
-	 * @see formatMap is the same but for relation format strings.
-	 */
-	public void loadFormatMaps(String lang) {
+     *
+     * @see termFormatMap is a HashMap of language keys and HashMap values. The
+     *      interior HashMaps are term keys and format string values.
+     *
+     * @see formatMap is the same but for relation format strings.
+     */
+    public void loadFormatMaps(String lang) {
 
         if (formatMap == null)
             formatMap = new HashMap<String, HashMap<String, String>>();
@@ -2117,10 +2117,10 @@ public class KB {
         language = lang;
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Clears all loaded format and termFormat maps, for all languages.
-	 */
-	protected void clearFormatMaps() {
+     */
+    protected void clearFormatMaps() {
 
         if (formatMap != null) {
             Iterator<HashMap<String, String>> itf = formatMap.values().iterator();
@@ -2144,17 +2144,17 @@ public class KB {
         return;
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method creates a dictionary (Map) of SUO-KIF term symbols -- the keys --
-	 * and a natural language string for each key that is the preferred name for
-	 * the term -- the values -- in the context denoted by lang. If the Map has
-	 * already been built and the language hasn't changed, just return the
-	 * existing map. This is a case of "lazy evaluation".
-	 *
-	 * @return An instance of Map where the keys are terms and the values are
-	 *         format strings.
-	 */
-	public HashMap<String, String> getTermFormatMap(String lang) {
+     * and a natural language string for each key that is the preferred name for
+     * the term -- the values -- in the context denoted by lang. If the Map has
+     * already been built and the language hasn't changed, just return the
+     * existing map. This is a case of "lazy evaluation".
+     *
+     * @return An instance of Map where the keys are terms and the values are
+     *         format strings.
+     */
+    public HashMap<String, String> getTermFormatMap(String lang) {
 
         if (!StringUtil.isNonEmptyString(lang))
             lang = "EnglishLanguage";
@@ -2166,16 +2166,16 @@ public class KB {
         return (HashMap<String, String>) termFormatMap.get(lang);
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method creates an association list (Map) of the natural language format
-	 * string and the relation name for which that format string applies. If the
-	 * map has already been built and the language hasn't changed, just return
-	 * the existing map. This is a case of "lazy evaluation".
-	 *
-	 * @return An instance of Map where the keys are relation names and the
-	 *         values are format strings.
-	 */
-	public HashMap<String, String> getFormatMap(String lang) {
+     * string and the relation name for which that format string applies. If the
+     * map has already been built and the language hasn't changed, just return
+     * the existing map. This is a case of "lazy evaluation".
+     *
+     * @return An instance of Map where the keys are relation names and the
+     *         values are format strings.
+     */
+    public HashMap<String, String> getFormatMap(String lang) {
 
         if (!StringUtil.isNonEmptyString(lang))
             lang = "EnglishLanguage";
@@ -2187,29 +2187,29 @@ public class KB {
         return formatMap.get(lang);
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Deletes user assertions, both in the files and in the constituents list.
-	 */
-	public void deleteUserAssertions() throws IOException {
+     */
+    public void deleteUserAssertions() throws IOException {
 
-		String toRemove = null;
-		for (String name : constituents) {
-			if (name.endsWith(_userAssertionsString)) {
-				toRemove = name;
-				break;
-			}
-		}
-		// Remove the string from the list.
-		if (toRemove != null) {
-			constituents.remove(toRemove);
-		}
-	}
+        String toRemove = null;
+        for (String name : constituents) {
+            if (name.endsWith(_userAssertionsString)) {
+                toRemove = name;
+                break;
+            }
+        }
+        // Remove the string from the list.
+        if (toRemove != null) {
+            constituents.remove(toRemove);
+        }
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * Deletes the user assertions key in the constituents map, and then reloads the
-	 * KBs.
-	 */
-	public void deleteUserAssertionsAndReload() {
+     * KBs.
+     */
+    public void deleteUserAssertionsAndReload() {
 
         String cname = null;
         for (int i = 0; i < constituents.size(); i++) {
@@ -2228,15 +2228,15 @@ public class KB {
         }
     }
 
-	/***************************************************************
+    /***************************************************************
      * Add a new KB constituent by reading in the file, and then merging the formulas with
-	 * the existing set of formulas.
-	 *
-	 * @param filename
-	 *            - The full path of the file being added
-	 */
-	public void addConstituent(String filename) {
-		// , boolean buildCachesP, boolean loadEProverP, boolean performArity) {
+     * the existing set of formulas.
+     *
+     * @param filename
+     *            - The full path of the file being added
+     */
+    public void addConstituent(String filename) {
+        // , boolean buildCachesP, boolean loadEProverP, boolean performArity) {
 
         System.out.println("INFO in KB.addConstituent(): " + filename);
         String canonicalPath = null;
@@ -2324,779 +2324,779 @@ public class KB {
         // loadEProver();
     }
 
-	/*****************************************************************
+    /*****************************************************************
      * Reload all the KB constituents.
-	 */
-	public String reload() {
+     */
+    public String reload() {
 
-		ArrayList<String> newConstituents = new ArrayList<String>();
-		synchronized (this.getTerms()) {
-			Iterator<String> ci = constituents.iterator();
-			while (ci.hasNext()) {
-				String cName = ci.next();
-				if (!cName.endsWith(_cacheFileSuffix)) // Recompute cached data
-					newConstituents.add(cName);
-			}
-			constituents.clear();
-			formulas.clear();
-			formulaMap.clear();
-			terms.clear();
-			clearFormatMaps();
-			errors.clear();
-			Iterator<String> nci = newConstituents.iterator();
-			if (nci.hasNext())
-				System.out.println("INFO in KB.reload()");
-			while (nci.hasNext()) {
-				String cName = (String) nci.next();
-				addConstituent(cName);
-				// addConstituent(cName, false, false, false);
-			}
-			// build kb cache when "cache" = "yes"
-			if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
-				kbCache = new KBcache(this);
-				kbCache.buildCaches();
-				checkArity(); // Reperform arity checks on everything
-			}
-			else {
-				kbCache = new KBcache(this);
-				// checkArity needs the cache, so don't call it.
-			}
-			// At this point, we have reloaded all constituents, have
-			// rebuilt the relation caches, and, if cache == yes, have
-			// written out the _Cache.kif file. Now we reload the
-			// inference engine.
-			loadEProver();
-		}
-		return "";
-	}
+        ArrayList<String> newConstituents = new ArrayList<String>();
+        synchronized (this.getTerms()) {
+            Iterator<String> ci = constituents.iterator();
+            while (ci.hasNext()) {
+                String cName = ci.next();
+                if (!cName.endsWith(_cacheFileSuffix)) // Recompute cached data
+                    newConstituents.add(cName);
+            }
+            constituents.clear();
+            formulas.clear();
+            formulaMap.clear();
+            terms.clear();
+            clearFormatMaps();
+            errors.clear();
+            Iterator<String> nci = newConstituents.iterator();
+            if (nci.hasNext())
+                System.out.println("INFO in KB.reload()");
+            while (nci.hasNext()) {
+                String cName = (String) nci.next();
+                addConstituent(cName);
+                // addConstituent(cName, false, false, false);
+            }
+            // build kb cache when "cache" = "yes"
+            if (KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) {
+                kbCache = new KBcache(this);
+                kbCache.buildCaches();
+                checkArity(); // Reperform arity checks on everything
+            }
+            else {
+                kbCache = new KBcache(this);
+                // checkArity needs the cache, so don't call it.
+            }
+            // At this point, we have reloaded all constituents, have
+            // rebuilt the relation caches, and, if cache == yes, have
+            // written out the _Cache.kif file. Now we reload the
+            // inference engine.
+            loadEProver();
+        }
+        return "";
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * Write a KIF file consisting of all the formulas in the knowledge base.
-	 * 
-	 * @param fname
-	 *            - the name of the file to write, including full path.
-	 */
-	public void writeFile(String fname) throws IOException {
+     *
+     * @param fname
+     *            - the name of the file to write, including full path.
+     */
+    public void writeFile(String fname) throws IOException {
 
-		FileWriter fr = null;
-		PrintWriter pr = null;
-		HashSet<String> formulaSet = new HashSet<String>();
+        FileWriter fr = null;
+        PrintWriter pr = null;
+        HashSet<String> formulaSet = new HashSet<String>();
 
-		Iterator<String> it = formulas.keySet().iterator();
-		while (it.hasNext()) {
-			String key = (String) it.next();
-			ArrayList<String> list = formulas.get(key);
-			for (int i = 0; i < list.size(); i++) {
-				String s = list.get(i);
-				formulaSet.add(s);
-			}
-		}
-		try {
-			fr = new FileWriter(fname);
-			pr = new PrintWriter(fr);
-			it = formulaMap.keySet().iterator();
-			while (it.hasNext()) {
-				String s = (String) it.next();
-				pr.println(s);
-				pr.println();
-			}
-		}
-		catch (java.io.IOException e) {
-			System.out.println("Error in KB.writeFile(): Error writing file " + fname);
-			e.printStackTrace();
-		}
-		finally {
-			if (pr != null) {
-				pr.close();
-			}
-			if (fr != null) {
-				fr.close();
-			}
-		}
-	}
+        Iterator<String> it = formulas.keySet().iterator();
+        while (it.hasNext()) {
+            String key = (String) it.next();
+            ArrayList<String> list = formulas.get(key);
+            for (int i = 0; i < list.size(); i++) {
+                String s = list.get(i);
+                formulaSet.add(s);
+            }
+        }
+        try {
+            fr = new FileWriter(fname);
+            pr = new PrintWriter(fr);
+            it = formulaMap.keySet().iterator();
+            while (it.hasNext()) {
+                String s = (String) it.next();
+                pr.println(s);
+                pr.println();
+            }
+        }
+        catch (java.io.IOException e) {
+            System.out.println("Error in KB.writeFile(): Error writing file " + fname);
+            e.printStackTrace();
+        }
+        finally {
+            if (pr != null) {
+                pr.close();
+            }
+            if (fr != null) {
+                fr.close();
+            }
+        }
+    }
 
-	/***************************************************************
+    /***************************************************************
      * Create the XML configuration element.
-	 */
-	public SimpleElement writeConfiguration() {
+     */
+    public SimpleElement writeConfiguration() {
 
-		SimpleElement se = new SimpleElement("kb");
-		se.setAttribute("name", name);
-		for (int i = 0; i < constituents.size(); i++) {
-			SimpleElement constituent = new SimpleElement("constituent");
-			String filename = (String) constituents.get(i);
-			filename = KBmanager.escapeFilename(filename);
-			constituent.setAttribute("filename", filename);
-			se.addChildElement(constituent);
-		}
-		return se;
-	}
+        SimpleElement se = new SimpleElement("kb");
+        se.setAttribute("name", name);
+        for (int i = 0; i < constituents.size(); i++) {
+            SimpleElement constituent = new SimpleElement("constituent");
+            String filename = (String) constituents.get(i);
+            filename = KBmanager.escapeFilename(filename);
+            constituent.setAttribute("filename", filename);
+            se.addChildElement(constituent);
+        }
+        return se;
+    }
 
-	/***************************************************************
+    /***************************************************************
      * A HashMap for holding compiled regular expression patterns. The map is initialized
-	 * by calling compilePatterns().
-	 */
-	private static HashMap<String, ArrayList> REGEX_PATTERNS = null;
+     * by calling compilePatterns().
+     */
+    private static HashMap<String, ArrayList> REGEX_PATTERNS = null;
 
-	/*****************************************************************
+    /*****************************************************************
      * This method returns a compiled regular expression Pattern object indexed by
-	 * key.
-	 *
-	 * @param key
-	 *            A String that is the retrieval key for a compiled regular
-	 *            expression Pattern.
-	 *
-	 * @return A compiled regular expression Pattern instance.
-	 */
-	public static Pattern getCompiledPattern(String key) {
+     * key.
+     *
+     * @param key
+     *            A String that is the retrieval key for a compiled regular
+     *            expression Pattern.
+     *
+     * @return A compiled regular expression Pattern instance.
+     */
+    public static Pattern getCompiledPattern(String key) {
 
-		if (StringUtil.isNonEmptyString(key) && (REGEX_PATTERNS != null)) {
-			ArrayList al = (ArrayList) REGEX_PATTERNS.get(key);
-			if (al != null)
-				return (Pattern) al.get(0);
-		}
-		return null;
-	}
+        if (StringUtil.isNonEmptyString(key) && (REGEX_PATTERNS != null)) {
+            ArrayList al = (ArrayList) REGEX_PATTERNS.get(key);
+            if (al != null)
+                return (Pattern) al.get(0);
+        }
+        return null;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method returns the int value that identifies the regular expression
-	 * binding group to be returned when there is a match.
-	 *
-	 * @param key
-	 *            A String that is the retrieval key for the binding group index
-	 *            associated with a compiled regular expression Pattern.
-	 *
-	 * @return An int that indexes a binding group.
-	 */
-	public static int getPatternGroupIndex(String key) {
+     * binding group to be returned when there is a match.
+     *
+     * @param key
+     *            A String that is the retrieval key for the binding group index
+     *            associated with a compiled regular expression Pattern.
+     *
+     * @return An int that indexes a binding group.
+     */
+    public static int getPatternGroupIndex(String key) {
 
-		if (StringUtil.isNonEmptyString(key) && (REGEX_PATTERNS != null)) {
-			ArrayList al = (ArrayList) REGEX_PATTERNS.get(key);
-			if (al != null)
-				return ((Integer) al.get(1)).intValue();
-		}
-		return -1;
-	}
+        if (StringUtil.isNonEmptyString(key) && (REGEX_PATTERNS != null)) {
+            ArrayList al = (ArrayList) REGEX_PATTERNS.get(key);
+            if (al != null)
+                return ((Integer) al.get(1)).intValue();
+        }
+        return -1;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method compiles and stores regular expression Pattern objects and binding
-	 * group indexes as two cell ArrayList objects. Each ArrayList is indexed by
-	 * a String retrieval key.
-	 *
-	 * @return void
-	 */
-	private static void compilePatterns() {
+     * group indexes as two cell ArrayList objects. Each ArrayList is indexed by
+     * a String retrieval key.
+     *
+     * @return void
+     */
+    private static void compilePatterns() {
 
-		if (REGEX_PATTERNS == null) {
-			REGEX_PATTERNS = new HashMap<String, ArrayList>();
-			String[][] patternArray = { { "row_var", "\\@ROW\\d*", "0" },
-					// { "open_lit", "\\(\\w+\\s+\\?\\w+\\s+.\\w+\\s*\\)", "0"
-					// },
-					{ "open_lit", "\\(\\w+\\s+\\?\\w+[a-zA-Z_0-9-?\\s]+\\)", "0" },
-					{ "pred_var_1", "\\(holds\\s+(\\?\\w+)\\W", "1" }, { "pred_var_2", "\\((\\?\\w+)\\W", "1" },
-					{ "var_with_digit_suffix", "(\\D+)\\d*", "1" } };
-			String pName = null;
-			Pattern p = null;
-			Integer groupN = null;
-			ArrayList pVal = null;
-			for (int i = 0; i < patternArray.length; i++) {
-				pName = patternArray[i][0];
-				p = Pattern.compile(patternArray[i][1]);
-				groupN = new Integer(patternArray[i][2]);
-				pVal = new ArrayList();
-				pVal.add(p);
-				pVal.add(groupN);
-				REGEX_PATTERNS.put(pName, pVal);
-			}
-		}
-		return;
-	}
+        if (REGEX_PATTERNS == null) {
+            REGEX_PATTERNS = new HashMap<String, ArrayList>();
+            String[][] patternArray = { { "row_var", "\\@ROW\\d*", "0" },
+                    // { "open_lit", "\\(\\w+\\s+\\?\\w+\\s+.\\w+\\s*\\)", "0"
+                    // },
+                    { "open_lit", "\\(\\w+\\s+\\?\\w+[a-zA-Z_0-9-?\\s]+\\)", "0" },
+                    { "pred_var_1", "\\(holds\\s+(\\?\\w+)\\W", "1" }, { "pred_var_2", "\\((\\?\\w+)\\W", "1" },
+                    { "var_with_digit_suffix", "(\\D+)\\d*", "1" } };
+            String pName = null;
+            Pattern p = null;
+            Integer groupN = null;
+            ArrayList pVal = null;
+            for (int i = 0; i < patternArray.length; i++) {
+                pName = patternArray[i][0];
+                p = Pattern.compile(patternArray[i][1]);
+                groupN = new Integer(patternArray[i][2]);
+                pVal = new ArrayList();
+                pVal.add(p);
+                pVal.add(groupN);
+                REGEX_PATTERNS.put(pName, pVal);
+            }
+        }
+        return;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method finds regular expression matches in an input string using a
-	 * compiled Pattern and binding group index retrieved with patternKey. If
-	 * the ArrayList accumulator is provided, match results are added to it and
-	 * it is returned. If accumulator is not provided (is null), then a new
-	 * ArrayList is created and returned if matches are found.
-	 *
-	 * @param input
-	 *            The input String in which matches are sought.
-	 *
-	 * @param patternKey
-	 *            A String used as the retrieval key for a regular expression
-	 *            Pattern object, and an int index identifying a binding group.
-	 *
-	 * @param accumulator
-	 *            An optional ArrayList to which matches are added. Note that if
-	 *            accumulator is provided, it will be the return value even if
-	 *            no new matches are found in the input String.
-	 *
-	 * @return An ArrayList, or null if no matches are found and an accumulator
-	 *         is not provided.
-	 */
-	public static ArrayList<String> getMatches(String input, String patternKey, ArrayList<String> accumulator) {
+     * compiled Pattern and binding group index retrieved with patternKey. If
+     * the ArrayList accumulator is provided, match results are added to it and
+     * it is returned. If accumulator is not provided (is null), then a new
+     * ArrayList is created and returned if matches are found.
+     *
+     * @param input
+     *            The input String in which matches are sought.
+     *
+     * @param patternKey
+     *            A String used as the retrieval key for a regular expression
+     *            Pattern object, and an int index identifying a binding group.
+     *
+     * @param accumulator
+     *            An optional ArrayList to which matches are added. Note that if
+     *            accumulator is provided, it will be the return value even if
+     *            no new matches are found in the input String.
+     *
+     * @return An ArrayList, or null if no matches are found and an accumulator
+     *         is not provided.
+     */
+    public static ArrayList<String> getMatches(String input, String patternKey, ArrayList<String> accumulator) {
 
-		ArrayList<String> ans = null;
-		if (accumulator != null)
-			ans = accumulator;
-		if (REGEX_PATTERNS == null)
-			KB.compilePatterns();
-		if (StringUtil.isNonEmptyString(input) && StringUtil.isNonEmptyString(patternKey)) {
-			Pattern p = KB.getCompiledPattern(patternKey);
-			if (p != null) {
-				Matcher m = p.matcher(input);
-				int gidx = KB.getPatternGroupIndex(patternKey);
-				if (gidx >= 0) {
-					while (m.find()) {
-						String rv = m.group(gidx);
-						if (StringUtil.isNonEmptyString(rv)) {
-							if (ans == null)
-								ans = new ArrayList<String>();
-							if (!(ans.contains(rv)))
-								ans.add(rv);
-						}
-					}
-				}
-			}
-		}
-		return ans;
-	}
+        ArrayList<String> ans = null;
+        if (accumulator != null)
+            ans = accumulator;
+        if (REGEX_PATTERNS == null)
+            KB.compilePatterns();
+        if (StringUtil.isNonEmptyString(input) && StringUtil.isNonEmptyString(patternKey)) {
+            Pattern p = KB.getCompiledPattern(patternKey);
+            if (p != null) {
+                Matcher m = p.matcher(input);
+                int gidx = KB.getPatternGroupIndex(patternKey);
+                if (gidx >= 0) {
+                    while (m.find()) {
+                        String rv = m.group(gidx);
+                        if (StringUtil.isNonEmptyString(rv)) {
+                            if (ans == null)
+                                ans = new ArrayList<String>();
+                            if (!(ans.contains(rv)))
+                                ans.add(rv);
+                        }
+                    }
+                }
+            }
+        }
+        return ans;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method finds regular expression matches in an input string using a
-	 * compiled Pattern and binding group index retrieved with patternKey, and
-	 * returns the results, if any, in an ArrayList.
-	 *
-	 * @param input
-	 *            The input String in which matches are sought.
-	 *
-	 * @param patternKey
-	 *            A String used as the retrieval key for a regular expression
-	 *            Pattern object, and an int index identifying a binding group.
-	 *
-	 * @return An ArrayList, or null if no matches are found.
-	 */
-	public static ArrayList<String> getMatches(String input, String patternKey) {
-		return KB.getMatches(input, patternKey, null);
-	}
+     * compiled Pattern and binding group index retrieved with patternKey, and
+     * returns the results, if any, in an ArrayList.
+     *
+     * @param input
+     *            The input String in which matches are sought.
+     *
+     * @param patternKey
+     *            A String used as the retrieval key for a regular expression
+     *            Pattern object, and an int index identifying a binding group.
+     *
+     * @return An ArrayList, or null if no matches are found.
+     */
+    public static ArrayList<String> getMatches(String input, String patternKey) {
+        return KB.getMatches(input, patternKey, null);
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method retrieves Formulas by asking the query expression queryLit, and
-	 * returns the results, if any, in an ArrayList.
-	 *
-	 * @param queryLit
-	 *            The query, which is assumed to be a List (atomic literal)
-	 *            consisting of a single predicate and its arguments. The
-	 *            arguments could be variables, constants, or a mix of the two,
-	 *            but only the first constant encountered in a left to right
-	 *            sweep over the literal will be used in the actual query.
-	 *
-	 * @return An ArrayList of Formula objects, or an empty ArrayList if no
-	 *         answers are retrieved.
-	 */
-	public ArrayList<Formula> askWithLiteral(List<String> queryLit) {
+     * returns the results, if any, in an ArrayList.
+     *
+     * @param queryLit
+     *            The query, which is assumed to be a List (atomic literal)
+     *            consisting of a single predicate and its arguments. The
+     *            arguments could be variables, constants, or a mix of the two,
+     *            but only the first constant encountered in a left to right
+     *            sweep over the literal will be used in the actual query.
+     *
+     * @return An ArrayList of Formula objects, or an empty ArrayList if no
+     *         answers are retrieved.
+     */
+    public ArrayList<Formula> askWithLiteral(List<String> queryLit) {
 
-		ArrayList<Formula> ans = new ArrayList<Formula>();
-		if ((queryLit instanceof List) && !(queryLit.isEmpty())) {
-			String pred = (String) queryLit.get(0);
-			if (pred.equals("instance") && isVariable(queryLit.get(1)) && !(isVariable(queryLit.get(2)))) {
-				String className = queryLit.get(2);
-				String inst = null;
-				String fStr = null;
-				Formula f = null;
-				Set<String> ai = getAllInstances(className);
-				Iterator<String> it = ai.iterator();
-				while (it.hasNext()) {
-					inst = (String) it.next();
-					fStr = ("(instance " + inst + " " + className + ")");
-					f = new Formula();
-					f.read(fStr);
-					ans.add(f);
-				}
-			}
-			else if (pred.equals("valence") && isVariable((String) queryLit.get(1))
-					&& isVariable((String) queryLit.get(2))) {
-				TreeSet<String> ai = getAllInstances("Relation");
-				Iterator<String> it = ai.iterator();
-				int valence = 0;
-				while (it.hasNext()) {
-					String inst = (String) it.next();
-					valence = kbCache.valences.get(inst);
-					if (valence > 0) {
-						String fStr = ("(valence " + inst + " " + valence + ")");
-						Formula f = new Formula();
-						f.read(fStr);
-						ans.add(f);
-					}
-				}
-			}
-			else {
-				String constant = null;
-				int cidx = -1;
-				int qlLen = queryLit.size();
-				String term = null;
-				for (int i = 1; i < qlLen; i++) {
-					term = (String) queryLit.get(i);
-					if (StringUtil.isNonEmptyString(term) && !isVariable(term)) {
-						constant = term;
-						cidx = i;
-						break;
-					}
-				}
-				if (constant != null)
-					ans = askWithRestriction(cidx, constant, 0, pred);
-				else
-					ans = ask("arg", 0, pred);
-			}
-		}
-		return ans;
-	}
+        ArrayList<Formula> ans = new ArrayList<Formula>();
+        if ((queryLit instanceof List) && !(queryLit.isEmpty())) {
+            String pred = (String) queryLit.get(0);
+            if (pred.equals("instance") && isVariable(queryLit.get(1)) && !(isVariable(queryLit.get(2)))) {
+                String className = queryLit.get(2);
+                String inst = null;
+                String fStr = null;
+                Formula f = null;
+                Set<String> ai = getAllInstances(className);
+                Iterator<String> it = ai.iterator();
+                while (it.hasNext()) {
+                    inst = (String) it.next();
+                    fStr = ("(instance " + inst + " " + className + ")");
+                    f = new Formula();
+                    f.read(fStr);
+                    ans.add(f);
+                }
+            }
+            else if (pred.equals("valence") && isVariable((String) queryLit.get(1))
+                    && isVariable((String) queryLit.get(2))) {
+                TreeSet<String> ai = getAllInstances("Relation");
+                Iterator<String> it = ai.iterator();
+                int valence = 0;
+                while (it.hasNext()) {
+                    String inst = (String) it.next();
+                    valence = kbCache.valences.get(inst);
+                    if (valence > 0) {
+                        String fStr = ("(valence " + inst + " " + valence + ")");
+                        Formula f = new Formula();
+                        f.read(fStr);
+                        ans.add(f);
+                    }
+                }
+            }
+            else {
+                String constant = null;
+                int cidx = -1;
+                int qlLen = queryLit.size();
+                String term = null;
+                for (int i = 1; i < qlLen; i++) {
+                    term = (String) queryLit.get(i);
+                    if (StringUtil.isNonEmptyString(term) && !isVariable(term)) {
+                        constant = term;
+                        cidx = i;
+                        break;
+                    }
+                }
+                if (constant != null)
+                    ans = askWithRestriction(cidx, constant, 0, pred);
+                else
+                    ans = ask("arg", 0, pred);
+            }
+        }
+        return ans;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method retrieves formulas by asking the query expression queryLit, and
-	 * returns the results, if any, in an ArrayList.
-	 *
-	 * @param queryLit
-	 *            The query, which is assumed to be an atomic literal consisting
-	 *            of a single predicate and its arguments. The arguments could
-	 *            be variables, constants, or a mix of the two, but only the
-	 *            first constant encountered in a left to right sweep over the
-	 *            literal will be used in the actual query.
-	 *
-	 * @return An ArrayList of Formula objects, or an empty ArrayList if no
-	 *         answers are retrieved.
-	 */
-	public ArrayList<Formula> askWithLiteral(Formula queryLit) {
+     * returns the results, if any, in an ArrayList.
+     *
+     * @param queryLit
+     *            The query, which is assumed to be an atomic literal consisting
+     *            of a single predicate and its arguments. The arguments could
+     *            be variables, constants, or a mix of the two, but only the
+     *            first constant encountered in a left to right sweep over the
+     *            literal will be used in the actual query.
+     *
+     * @return An ArrayList of Formula objects, or an empty ArrayList if no
+     *         answers are retrieved.
+     */
+    public ArrayList<Formula> askWithLiteral(Formula queryLit) {
 
-		List<String> input = queryLit.literalToArrayList();
-		return askWithLiteral(input);
-	}
+        List<String> input = queryLit.literalToArrayList();
+        return askWithLiteral(input);
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method retrieves the upward transitive closure of all Class names
-	 * contained in the input set. The members of the input set are not included
-	 * in the result set.
-	 *
-	 * @param classNames
-	 *            A Set object containing SUO-KIF class names (Strings).
-	 *
-	 * @return A Set of SUO-KIF class names, which could be empty.
-	 */
-	public Set<String> getAllSuperClasses(Set<String> classNames) {
+     * contained in the input set. The members of the input set are not included
+     * in the result set.
+     *
+     * @param classNames
+     *            A Set object containing SUO-KIF class names (Strings).
+     *
+     * @return A Set of SUO-KIF class names, which could be empty.
+     */
+    public Set<String> getAllSuperClasses(Set<String> classNames) {
 
-		Set<String> ans = new HashSet<String>();
-		Iterator<String> it = classNames.iterator();
-		while (it.hasNext()) {
-			String term = it.next();
-			ans.addAll(kbCache.getParentClasses(term));
-		}
-		return ans;
-	}
+        Set<String> ans = new HashSet<String>();
+        Iterator<String> it = classNames.iterator();
+        while (it.hasNext()) {
+            String term = it.next();
+            ans.addAll(kbCache.getParentClasses(term));
+        }
+        return ans;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method retrieves all instances of the classes named in the input set.
-	 *
-	 * @param classNames
-	 *            A Set of String, containing SUO-KIF class names
-	 * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
-	 */
-	protected TreeSet<String> getAllInstances(TreeSet<String> classNames) {
+     *
+     * @param classNames
+     *            A Set of String, containing SUO-KIF class names
+     * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
+     */
+    protected TreeSet<String> getAllInstances(TreeSet<String> classNames) {
 
-		TreeSet<String> ans = new TreeSet<String>();
-		if ((classNames instanceof TreeSet) && !classNames.isEmpty()) {
-			String name = null;
-			Iterator<String> it = classNames.iterator();
-			while (it.hasNext()) {
-				name = it.next();
-				ans.addAll(kbCache.getParentClassesOfInstance(name));
-			}
-		}
-		return ans;
-	}
+        TreeSet<String> ans = new TreeSet<String>();
+        if ((classNames instanceof TreeSet) && !classNames.isEmpty()) {
+            String name = null;
+            Iterator<String> it = classNames.iterator();
+            while (it.hasNext()) {
+                name = it.next();
+                ans.addAll(kbCache.getParentClassesOfInstance(name));
+            }
+        }
+        return ans;
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method retrieves all instances of the class named in the input String.
-	 *
-	 * @param className
-	 *            The name of a SUO-KIF Class.
-	 * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
-	 */
-	public TreeSet<String> getAllInstances(String className) {
+     *
+     * @param className
+     *            The name of a SUO-KIF Class.
+     * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
+     */
+    public TreeSet<String> getAllInstances(String className) {
 
-		if (StringUtil.isNonEmptyString(className)) {
-			TreeSet<String> input = new TreeSet<String>();
-			input.add(className);
-			return getAllInstances(input);
-		}
-		return new TreeSet<String>();
-	}
+        if (StringUtil.isNonEmptyString(className)) {
+            TreeSet<String> input = new TreeSet<String>();
+            input.add(className);
+            return getAllInstances(input);
+        }
+        return new TreeSet<String>();
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * This method tries to find or compute a valence for the input relation.
-	 *
-	 * @param relnName
-	 *            A String, the name of a SUO-KIF Relation.
-	 * @return An int value. -1 means that no valence value could be found. 0
-	 *         means that the relation is a VariableArityRelation. 1-5 are the
-	 *         standard SUO-KIF valence values.
-	 */
-	public int getValence(String relnName) {
+     *
+     * @param relnName
+     *            A String, the name of a SUO-KIF Relation.
+     * @return An int value. -1 means that no valence value could be found. 0
+     *         means that the relation is a VariableArityRelation. 1-5 are the
+     *         standard SUO-KIF valence values.
+     */
+    public int getValence(String relnName) {
 
-		if (kbCache.valences.get(relnName) == null) {
-			if (Formula.isLogicalOperator(relnName)) // logical operator arity
-														// is checked in
-														// KIF.parse()
-				return -1;
-			System.out.println("Error in KB.getValence(): No valence found for " + relnName);
-			return -1;
-		}
-		else
-			return kbCache.valences.get(relnName);
-	}
+        if (kbCache.valences.get(relnName) == null) {
+            if (Formula.isLogicalOperator(relnName)) // logical operator arity
+                                                        // is checked in
+                                                        // KIF.parse()
+                return -1;
+            System.out.println("Error in KB.getValence(): No valence found for " + relnName);
+            return -1;
+        }
+        else
+            return kbCache.valences.get(relnName);
+    }
 
-	/*****************************************************************
-	 * 
-	 * @return an ArrayList containing all predicates in this KB.
-	 */
-	public ArrayList<String> collectPredicates() {
+    /*****************************************************************
+     *
+     * @return an ArrayList containing all predicates in this KB.
+     */
+    public ArrayList<String> collectPredicates() {
 
-		return new ArrayList<String>(kbCache.instances.get("Predicate"));
-	}
+        return new ArrayList<String>(kbCache.instances.get("Predicate"));
+    }
 
-	/*****************************************************************
-	 * 
-	 * @param obj
-	 *            Any object
-	 *
-	 * @return true if obj is a String representation of a LISP empty list, else
-	 *         false.
-	 */
-	public static boolean isEmptyList(Object obj) {
-		return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
-	}
+    /*****************************************************************
+     *
+     * @param obj
+     *            Any object
+     *
+     * @return true if obj is a String representation of a LISP empty list, else
+     *         false.
+     */
+    public static boolean isEmptyList(Object obj) {
+        return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
+    }
 
-	/*****************************************************************
+    /*****************************************************************
      * A static utility method.
-	 *
-	 * @param obj
-	 *            Presumably, a String.
-	 * @return true if obj is a SUO-KIF variable, else false.
-	 */
-	public static boolean isVariable(String obj) {
+     *
+     * @param obj
+     *            Presumably, a String.
+     * @return true if obj is a SUO-KIF variable, else false.
+     */
+    public static boolean isVariable(String obj) {
 
-		if (StringUtil.isNonEmptyString(obj)) {
-			return (obj.startsWith("?") || obj.startsWith("@"));
-		}
-		return false;
-	}
+        if (StringUtil.isNonEmptyString(obj)) {
+            return (obj.startsWith("?") || obj.startsWith("@"));
+        }
+        return false;
+    }
 
-	/*****************************************************************
-	 * A static utility method.
-	 *
-	 * @param obj
-	 *            A String.
-	 * @return true if obj is a SUO-KIF logical quantifier, else false.
-	 */
-	public static boolean isQuantifier(String obj) {
+    /*****************************************************************
+     * A static utility method.
+     *
+     * @param obj
+     *            A String.
+     * @return true if obj is a SUO-KIF logical quantifier, else false.
+     */
+    public static boolean isQuantifier(String obj) {
 
-		return (StringUtil.isNonEmptyString(obj) && (obj.equals("forall") || obj.equals("exists")));
-	}
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals("forall") || obj.equals("exists")));
+    }
 
-	/*****************************************************************
-	 * A static utility method.
-	 *
-	 * @param obj
-	 *            Presumably, a String.
-	 * @return true if obj is a SUO-KIF commutative logical operator, else
-	 *         false.
-	 */
-	public static boolean isCommutative(String obj) {
+    /*****************************************************************
+     * A static utility method.
+     *
+     * @param obj
+     *            Presumably, a String.
+     * @return true if obj is a SUO-KIF commutative logical operator, else
+     *         false.
+     */
+    public static boolean isCommutative(String obj) {
 
-		return (StringUtil.isNonEmptyString(obj) && (obj.equals("and") || obj.equals("or")));
-	}
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals("and") || obj.equals("or")));
+    }
 
-	/***************************************************************
-	 * Hyperlink terms identified with '&%' to the URL that brings up that term in the
-	 * browser. Handle (and ignore) suffixes on the term. For example
-	 * "&%Processes" would get properly linked to the term "Process", if present
-	 * in the knowledge base.
-	 */
-	public String formatDocumentation(String href, String documentation, String language) {
+    /***************************************************************
+     * Hyperlink terms identified with '&%' to the URL that brings up that term in the
+     * browser. Handle (and ignore) suffixes on the term. For example
+     * "&%Processes" would get properly linked to the term "Process", if present
+     * in the knowledge base.
+     */
+    public String formatDocumentation(String href, String documentation, String language) {
 
-		String formatted = documentation;
-		if (StringUtil.isNonEmptyString(formatted)) {
-			boolean isStaticFile = false;
-			StringBuilder sb = new StringBuilder(formatted);
-			String suffix = "";
-			if (StringUtil.emptyString(href)) {
-				href = "";
-				suffix = ".html";
-				isStaticFile = true;
-			}
-			else if (!href.endsWith("&term="))
-				href += "&term=";
-			int i = -1;
-			int j = -1;
-			int start = 0;
-			String term = "";
-			String formToPrint = "";
-			while ((start < sb.length()) && ((i = sb.indexOf("&%", start)) != -1)) {
-				sb.delete(i, (i + 2));
-				j = i;
-				while ((j < sb.length()) && !Character.isWhitespace(sb.charAt(j)) && sb.charAt(j) != '"')
-					j++;
-				while (j > i) {
-					term = sb.substring(i, j);
-					if (containsTerm(term))
-						break;
-					j--;
-				}
-				if (j > i) {
-					// formToPrint =
-					// DocGen.getInstance(this.name).showTermName(this,term,language);
-					formToPrint = term;
-					StringBuilder hsb = new StringBuilder("<a href=\"");
-					hsb.append(href);
-					hsb.append(isStaticFile ? StringUtil.toSafeNamespaceDelimiter(term) : term);
-					hsb.append(suffix);
-					hsb.append("\">");
-					hsb.append(formToPrint);
-					hsb.append("</a>");
-					sb.replace(i, j, hsb.toString());
-					start = (i + hsb.length());
-				}
-			}
-			formatted = sb.toString();
-		}
-		return formatted;
-	}
+        String formatted = documentation;
+        if (StringUtil.isNonEmptyString(formatted)) {
+            boolean isStaticFile = false;
+            StringBuilder sb = new StringBuilder(formatted);
+            String suffix = "";
+            if (StringUtil.emptyString(href)) {
+                href = "";
+                suffix = ".html";
+                isStaticFile = true;
+            }
+            else if (!href.endsWith("&term="))
+                href += "&term=";
+            int i = -1;
+            int j = -1;
+            int start = 0;
+            String term = "";
+            String formToPrint = "";
+            while ((start < sb.length()) && ((i = sb.indexOf("&%", start)) != -1)) {
+                sb.delete(i, (i + 2));
+                j = i;
+                while ((j < sb.length()) && !Character.isWhitespace(sb.charAt(j)) && sb.charAt(j) != '"')
+                    j++;
+                while (j > i) {
+                    term = sb.substring(i, j);
+                    if (containsTerm(term))
+                        break;
+                    j--;
+                }
+                if (j > i) {
+                    // formToPrint =
+                    // DocGen.getInstance(this.name).showTermName(this,term,language);
+                    formToPrint = term;
+                    StringBuilder hsb = new StringBuilder("<a href=\"");
+                    hsb.append(href);
+                    hsb.append(isStaticFile ? StringUtil.toSafeNamespaceDelimiter(term) : term);
+                    hsb.append(suffix);
+                    hsb.append("\">");
+                    hsb.append(formToPrint);
+                    hsb.append("</a>");
+                    sb.replace(i, j, hsb.toString());
+                    start = (i + hsb.length());
+                }
+            }
+            formatted = sb.toString();
+        }
+        return formatted;
+    }
 
-	/***************************************************************
-	 * Save the contents of the current KB to a file.
-	 */
-	public String writeInferenceEngineFormulas(TreeSet<String> forms) {
+    /***************************************************************
+     * Save the contents of the current KB to a file.
+     */
+    public String writeInferenceEngineFormulas(TreeSet<String> forms) {
 
-		FileWriter fw = null;
-		PrintWriter pw = null;
-		String filename = null;
-		try {
-			String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
-			if (StringUtil.isNonEmptyString(inferenceEngine)) {
-				File executable = new File(inferenceEngine);
-				if (executable.exists()) {
-					File dir = executable.getParentFile();
-					File file = new File(dir, (this.name + "-v.kif"));
-					filename = file.getCanonicalPath();
-					fw = new FileWriter(filename);
-					pw = new PrintWriter(fw);
-					Iterator<String> it = forms.iterator();
-					while (it.hasNext()) {
-						pw.println(it.next());
-						pw.println();
-					}
-				}
-				else
-					System.out.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
-			}
-		}
-		catch (IOException ioe) {
-			System.out.println("Error in KB.writeInferenceEngineFormulas(): writing file: " + filename);
-			System.out.println(ioe.getMessage());
-			ioe.printStackTrace();
-		}
-		finally {
-			try {
-				if (pw != null) {
-					pw.close();
-				}
-				if (fw != null) {
-					fw.close();
-				}
-			}
-			catch (Exception ex) {
-			}
-		}
-		return filename;
-	}
+        FileWriter fw = null;
+        PrintWriter pw = null;
+        String filename = null;
+        try {
+            String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
+            if (StringUtil.isNonEmptyString(inferenceEngine)) {
+                File executable = new File(inferenceEngine);
+                if (executable.exists()) {
+                    File dir = executable.getParentFile();
+                    File file = new File(dir, (this.name + "-v.kif"));
+                    filename = file.getCanonicalPath();
+                    fw = new FileWriter(filename);
+                    pw = new PrintWriter(fw);
+                    Iterator<String> it = forms.iterator();
+                    while (it.hasNext()) {
+                        pw.println(it.next());
+                        pw.println();
+                    }
+                }
+                else
+                    System.out.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
+            }
+        }
+        catch (IOException ioe) {
+            System.out.println("Error in KB.writeInferenceEngineFormulas(): writing file: " + filename);
+            System.out.println(ioe.getMessage());
+            ioe.printStackTrace();
+        }
+        finally {
+            try {
+                if (pw != null) {
+                    pw.close();
+                }
+                if (fw != null) {
+                    fw.close();
+                }
+            }
+            catch (Exception ex) {
+            }
+        }
+        return filename;
+    }
 
-	/***************************************************************
-	 * Creates InferenceEngine and loads all of the constituents into it.
-	 *
-	 * @param factory
-	 *            Factory object used to create new InferenceEngine.
-	 * @return InferenceEngine object with all constituents loaded.
-	 */
-	public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory) {
+    /***************************************************************
+     * Creates InferenceEngine and loads all of the constituents into it.
+     *
+     * @param factory
+     *            Factory object used to create new InferenceEngine.
+     * @return InferenceEngine object with all constituents loaded.
+     */
+    public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory) {
 
-		InferenceEngine res = null;
-		try {
-			if (!formulaMap.isEmpty()) {
-				TreeSet<String> forms = preProcess((HashSet<String>) formulaMap.keySet());
-				String filename = writeInferenceEngineFormulas(forms);
-				boolean vFileSaved = !StringUtil.emptyString(filename);
-				if (!vFileSaved)
-					System.out.println("Error in KB.createInterenceEngine(): new -v.kif file not written");
-				if (vFileSaved && !factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
-					res = factory.createFromKBFile(filename);
-				if (factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
-					res = factory.createWithFormulas(forms);
-			}
-		}
-		catch (Exception e) {
-			System.out.println("Error in KB.createInterenceEngine():" + e.getMessage());
-			e.printStackTrace();
-		}
-		return res;
-	}
+        InferenceEngine res = null;
+        try {
+            if (!formulaMap.isEmpty()) {
+                TreeSet<String> forms = preProcess((HashSet<String>) formulaMap.keySet());
+                String filename = writeInferenceEngineFormulas(forms);
+                boolean vFileSaved = !StringUtil.emptyString(filename);
+                if (!vFileSaved)
+                    System.out.println("Error in KB.createInterenceEngine(): new -v.kif file not written");
+                if (vFileSaved && !factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
+                    res = factory.createFromKBFile(filename);
+                if (factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
+                    res = factory.createWithFormulas(forms);
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in KB.createInterenceEngine():" + e.getMessage());
+            e.printStackTrace();
+        }
+        return res;
+    }
 
-	/***************************************************************
-	 * Starts EProver and collects, preprocesses and loads all of the constituents into
-	 * it.
-	 */
-	public void loadEProver() {
+    /***************************************************************
+     * Starts EProver and collects, preprocesses and loads all of the constituents into
+     * it.
+     */
+    public void loadEProver() {
 
-		System.out.println("INFO in KB.loadEProver(): Creating new process");
-		KBmanager mgr = KBmanager.getMgr();
-		try {
-			if (!formulaMap.isEmpty()) {
-				HashSet<String> formulaStrings = new HashSet<String>();
-				formulaStrings.addAll(formulaMap.keySet());
-				if (eprover != null) {
-					System.out.println("INFO in KB.loadEProver(): terminating old process first");
-					eprover.terminate();
-				}
-				eprover = null;
-				SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-				skb.kb = this;
-				String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-				skb.writeTPTPFile(tptpFilename, true);
-				if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
-					eprover = new EProver(mgr.getPref("inferenceEngine"), tptpFilename);
-			}
-		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-		}
-		if (eprover == null)
-			mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
-		return;
-	}
+        System.out.println("INFO in KB.loadEProver(): Creating new process");
+        KBmanager mgr = KBmanager.getMgr();
+        try {
+            if (!formulaMap.isEmpty()) {
+                HashSet<String> formulaStrings = new HashSet<String>();
+                formulaStrings.addAll(formulaMap.keySet());
+                if (eprover != null) {
+                    System.out.println("INFO in KB.loadEProver(): terminating old process first");
+                    eprover.terminate();
+                }
+                eprover = null;
+                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                skb.kb = this;
+                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+                skb.writeTPTPFile(tptpFilename, true);
+                if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
+                    eprover = new EProver(mgr.getPref("inferenceEngine"), tptpFilename);
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        if (eprover == null)
+            mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
+        return;
+    }
 
-	/*****************************************************************
-	 * Preprocess the knowledge base to TPTP. This includes "holds" prefixing,
-	 * ticking nested formulas, expanding row variables, and translating
-	 * mathematical relation operators. All the real work is done in
-	 * Formula.preProcess().
-	 * 
-	 * @return a TreeSet of Strings.
-	 */
-	public TreeSet<String> preProcess(HashSet<String> forms) {
+    /*****************************************************************
+     * Preprocess the knowledge base to TPTP. This includes "holds" prefixing,
+     * ticking nested formulas, expanding row variables, and translating
+     * mathematical relation operators. All the real work is done in
+     * Formula.preProcess().
+     *
+     * @return a TreeSet of Strings.
+     */
+    public TreeSet<String> preProcess(HashSet<String> forms) {
 
-		System.out.println("INFO in KB.preProcess(): ");
-		TreeSet<String> newTreeSet = new TreeSet<String>();
-		KBmanager mgr = KBmanager.getMgr();
-		kbCache.kb = this;
-		kbCache.buildCaches();
-		boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
-		Iterator<String> it = forms.iterator();
-		int counter = 0;
-		while (it.hasNext()) {
-			String form = it.next();
-			if ((counter++ % 100) == 1)
-				System.out.print(".");
-			Formula f = formulaMap.get(form);
-			if (f == null) {
-				String warn = "Warning in KB.preProcess(): No formula for : " + form;
-				System.out.println(warn);
-				warnings.add(warn);
-				continue;
-			}
-			// System.out.println("INFO in KB.preProcess(): form : " + form);
-			// System.out.println("INFO in KB.preProcess(): f : " + f);
-			FormulaPreprocessor fp = new FormulaPreprocessor();
-			ArrayList<Formula> processed = fp.preProcess(f, false, this); // not
-																			// queries
-			if (tptpParseP) {
-				try {
-					SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-					stptp._f = f;
-					stptp.tptpParse(f, false, this, processed); // not a query
-				}
-				catch (ParseException pe) {
-					String err = ("Error in KB.preProcess() " + pe.getMessage() + " at line " + f.startLine
-							+ " in file " + f.sourceFile);
-					errors.add(err);
-				}
-				catch (IOException ioe) {
-					String err = "Error in KB.preProcess(): " + ioe.getMessage();
-					System.out.println(err);
-					errors.add(err);
-				}
-			}
-			errors.addAll(f.getErrors());
-			Formula p = null;
-			Iterator<Formula> itp = processed.iterator();
-			while (itp.hasNext()) {
-				p = itp.next();
-				if (StringUtil.isNonEmptyString(p.theFormula)) {
-					newTreeSet.add(p.theFormula);
-					errors.addAll(p.getErrors());
-				}
-				else {
-					String warn = "Warning in KB.preProcess(): empty formula: " + p;
-					System.out.println(warn);
-					warnings.add(warn);
-				}
-			}
-		}
-		System.out.println();
-		// kbCache.clearSortalTypeCache();
-		return newTreeSet;
-	}
+        System.out.println("INFO in KB.preProcess(): ");
+        TreeSet<String> newTreeSet = new TreeSet<String>();
+        KBmanager mgr = KBmanager.getMgr();
+        kbCache.kb = this;
+        kbCache.buildCaches();
+        boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
+        Iterator<String> it = forms.iterator();
+        int counter = 0;
+        while (it.hasNext()) {
+            String form = it.next();
+            if ((counter++ % 100) == 1)
+                System.out.print(".");
+            Formula f = formulaMap.get(form);
+            if (f == null) {
+                String warn = "Warning in KB.preProcess(): No formula for : " + form;
+                System.out.println(warn);
+                warnings.add(warn);
+                continue;
+            }
+            // System.out.println("INFO in KB.preProcess(): form : " + form);
+            // System.out.println("INFO in KB.preProcess(): f : " + f);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            ArrayList<Formula> processed = fp.preProcess(f, false, this); // not
+                                                                            // queries
+            if (tptpParseP) {
+                try {
+                    SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                    stptp._f = f;
+                    stptp.tptpParse(f, false, this, processed); // not a query
+                }
+                catch (ParseException pe) {
+                    String err = ("Error in KB.preProcess() " + pe.getMessage() + " at line " + f.startLine
+                            + " in file " + f.sourceFile);
+                    errors.add(err);
+                }
+                catch (IOException ioe) {
+                    String err = "Error in KB.preProcess(): " + ioe.getMessage();
+                    System.out.println(err);
+                    errors.add(err);
+                }
+            }
+            errors.addAll(f.getErrors());
+            Formula p = null;
+            Iterator<Formula> itp = processed.iterator();
+            while (itp.hasNext()) {
+                p = itp.next();
+                if (StringUtil.isNonEmptyString(p.theFormula)) {
+                    newTreeSet.add(p.theFormula);
+                    errors.addAll(p.getErrors());
+                }
+                else {
+                    String warn = "Warning in KB.preProcess(): empty formula: " + p;
+                    System.out.println(warn);
+                    warnings.add(warn);
+                }
+            }
+        }
+        System.out.println();
+        // kbCache.clearSortalTypeCache();
+        return newTreeSet;
+    }
 
-	/*****************************************************************
-	 * @return a defensive copy of loadFormatMapsAttempted.
-	 */
-	public ArrayList<String> getLoadFormatMapsAttempted() {
+    /*****************************************************************
+     * @return a defensive copy of loadFormatMapsAttempted.
+     */
+    public ArrayList<String> getLoadFormatMapsAttempted() {
 
-		return Lists.newArrayList(loadFormatMapsAttempted);
-	}
+        return Lists.newArrayList(loadFormatMapsAttempted);
+    }
 
-	public List<Pair> getSortedTermFrequency() {
-		List<Pair> termFrequencies = new ArrayList<>();
-		for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
-			termFrequencies.add(new Pair(entry.getValue(), entry.getKey()));
-		}
-		Collections.sort(termFrequencies, Collections.reverseOrder());
-		return termFrequencies;
-	}
+    public List<Pair> getSortedTermFrequency() {
+        List<Pair> termFrequencies = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
+            termFrequencies.add(new Pair(entry.getValue(), entry.getKey()));
+        }
+        Collections.sort(termFrequencies, Collections.reverseOrder());
+        return termFrequencies;
+    }
 
-	/***************************************************************
-	 */
-	public static void main(String[] args) {
+    /***************************************************************
+     */
+    public static void main(String[] args) {
 
-		// generateTPTPTestAssertions();
-		// testTPTP(args);
-		try {
-			KBmanager.getMgr().initializeOnce();
-			KB kb = KBmanager.getMgr().getKB("SUMO");
-			kb.writeTerms();
-			// System.out.println("KB.main(): " + kb.isChildOf("Africa",
-			// "Region"));
-			// kb.askEProver("(subclass ?X Object)",30,1);
-		}
-		catch (Exception ioe) {
-			System.out.println(ioe.getMessage());
-		}
+        // generateTPTPTestAssertions();
+        // testTPTP(args);
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            kb.writeTerms();
+            // System.out.println("KB.main(): " + kb.isChildOf("Africa",
+            // "Region"));
+            // kb.askEProver("(subclass ?X Object)",30,1);
+        }
+        catch (Exception ioe) {
+            System.out.println(ioe.getMessage());
+        }
 
-		// kb.generateSemanticNetwork();
-		// kb.generateRandomProof();
-		// kb.instanceOfInstanceP();
+        // kb.generateSemanticNetwork();
+        // kb.generateRandomProof();
+        // kb.instanceOfInstanceP();
 
-		/*
-		 * String foo = "(rel bar \"test\")"; Formula f = new Formula();
-		 * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
-		 */
-	}
+        /*
+         * String foo = "(rel bar \"test\")"; Formula f = new Formula();
+         * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
+         */
+    }
 }
