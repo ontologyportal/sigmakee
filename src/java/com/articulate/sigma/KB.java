@@ -35,10 +35,9 @@ being present in the ontology in order to function as intended.  They are:
 package com.articulate.sigma;
 
 /*
-Copyright 2014-2015 IPsoft
+Author: Adam Pease apease@articulatesoftware.com
 
-Author: Adam Pease adam.pease@ipsoft.com
-Author: Sofia Athenikos sofia.athenikos@ipsoft.com
+some portions copyright Teknowledge, IPsoft
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -2020,9 +2019,8 @@ public class KB {
 		return getTerms().size();
 	}
 
-	/**
-	 * *************************************************************** Count the
-	 * number of relations in the knowledge base in order to present statistics
+	/*****************************************************************
+     * Count the number of relations in the knowledge base in order to present statistics
 	 * to the user.
 	 *
 	 * @return The int(eger) number of relations in the knowledge base.
@@ -2032,9 +2030,8 @@ public class KB {
 		return kbCache.relations.size();
 	}
 
-	/**
-	 * *************************************************************** Count the
-	 * number of formulas in the knowledge base in order to present statistics
+	/*****************************************************************
+     * Count the number of formulas in the knowledge base in order to present statistics
 	 * to the user.
 	 *
 	 * @return The int(eger) number of formulas in the knowledge base.
@@ -2044,9 +2041,8 @@ public class KB {
 		return formulaMap.size();
 	}
 
-	/**
-	 * *************************************************************** An
-	 * accessor providing a TreeSet of un-preProcessed String representations of
+	/*****************************************************************
+     * An accessor providing a TreeSet of un-preProcessed String representations of
 	 * Formulae.
 	 *
 	 * @return A TreeSet of Strings.
@@ -2056,9 +2052,8 @@ public class KB {
 		return new TreeSet<String>(formulaMap.keySet());
 	}
 
-	/**
-	 * *************************************************************** An
-	 * accessor providing a Formula
+	/*****************************************************************
+     * An accessor providing a Formula
 	 */
 	public Formula getFormulaByKey(String key) {
 
@@ -2069,9 +2064,8 @@ public class KB {
 		return f;
 	}
 
-	/**
-	 * *************************************************************** Count the
-	 * number of rules in the knowledge base in order to present statistics to
+	/*****************************************************************
+     * Count the number of rules in the knowledge base in order to present statistics to
 	 * the user. Note that the number of rules is a subset of the number of
 	 * formulas.
 	 *
@@ -2089,9 +2083,8 @@ public class KB {
 		return count;
 	}
 
-	/**
-	 * *************************************************************** Create an
-	 * ArrayList of the specific size, filled with empty strings.
+	/*****************************************************************
+     * Create an ArrayList of the specific size, filled with empty strings.
 	 */
 	private ArrayList<String> arrayListWithBlanks(int size) {
 
@@ -2101,9 +2094,8 @@ public class KB {
 		return al;
 	}
 
-	/**
-	 * *************************************************************** Get the
-	 * alphabetically nearest terms to the given term, which is not in the KB.
+	/** ***************************************************************
+     * Get the alphabetically nearest terms to the given term, which is not in the KB.
 	 * Elements 0-(k-1) should be alphabetically lesser and k-(2*k-1)
 	 * alphabetically greater. If the term is at the beginning or end of the
 	 * alphabet, fill in blank items with the empty string: "".
@@ -2137,9 +2129,8 @@ public class KB {
 		return al;
 	}
 
-	/**
-	 * *************************************************************** Get the
-	 * alphabetically nearest terms to the given term, which is not in the KB.
+	/*****************************************************************
+     * Get the alphabetically nearest terms to the given term, which is not in the KB.
 	 * Elements 0-14 should be alphabetically lesser and 15-29 alphabetically
 	 * greater. If the term is at the beginning or end of the alphabet, fill in
 	 * blank items with the empty string: "".
@@ -2149,9 +2140,8 @@ public class KB {
 		return getNearestKTerms(term, 15);
 	}
 
-	/**
-	 * *************************************************************** Get the
-	 * neighbors of this initial uppercase term (class or function).
+	/*****************************************************************
+     * Get the neighbors of this initial uppercase term (class or function).
 	 */
 	public ArrayList<String> getNearestRelations(String term) {
 
@@ -2159,9 +2149,8 @@ public class KB {
 		return getNearestTerms(term);
 	}
 
-	/**
-	 * *************************************************************** Get the
-	 * neighbors of this initial lowercase term (relation).
+	/*****************************************************************
+     * Get the neighbors of this initial lowercase term (relation).
 	 */
 	public ArrayList<String> getNearestNonRelations(String term) {
 
@@ -2169,9 +2158,8 @@ public class KB {
 		return getNearestTerms(term);
 	}
 
-	/**
-	 * *************************************************************** Get the
-	 * alphabetically num lower neighbor of this initial term, which must exist
+	/*****************************************************************
+     * Get the alphabetically num lower neighbor of this initial term, which must exist
 	 * in the current KB otherwise an empty string is returned.
 	 */
 	public String getAlphaBefore(String term, int num) {
@@ -2192,9 +2180,8 @@ public class KB {
 		return (String) tal.get(i);
 	}
 
-	/**
-	 * *************************************************************** Get the
-	 * alphabetically num higher neighbor of this initial term, which must exist
+	/*****************************************************************
+     * Get the alphabetically num higher neighbor of this initial term, which must exist
 	 * in the current KB otherwise an empty string is returned.
 	 */
 	public String getAlphaAfter(String term, int num) {
@@ -2215,9 +2202,8 @@ public class KB {
 		return (String) tal.get(i);
 	}
 
-	/**
-	 * *************************************************************** This List
-	 * is used to limit the number of warning messages logged by
+	/****************************************************************
+     * This List is used to limit the number of warning messages logged by
 	 * loadFormatMaps(lang). If an attempt to load format or termFormat values
 	 * for lang is unsuccessful, the list is checked for the presence of lang.
 	 * If lang is not in the list, a warning message is logged and lang is added
@@ -2227,9 +2213,8 @@ public class KB {
 	 */
 	protected ArrayList<String> loadFormatMapsAttempted = new ArrayList<String>();
 
-	/**
-	 * *************************************************************** Populates
-	 * the format maps for language lang.
+	/****************************************************************
+     * Populates the format maps for language lang.
 	 *
 	 * @see termFormatMap is a HashMap of language keys and HashMap values. The
 	 *      interior HashMaps are term keys and format string values.
@@ -2281,9 +2266,8 @@ public class KB {
 		language = lang;
 	}
 
-	/**
-	 * *************************************************************** Clears
-	 * all loaded format and termFormat maps, for all languages.
+	/*****************************************************************
+     * Clears all loaded format and termFormat maps, for all languages.
 	 */
 	protected void clearFormatMaps() {
 
@@ -2309,9 +2293,8 @@ public class KB {
 		return;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method creates a dictionary (Map) of SUO-KIF term symbols -- the keys --
+	/*****************************************************************
+     * This method creates a dictionary (Map) of SUO-KIF term symbols -- the keys --
 	 * and a natural language string for each key that is the preferred name for
 	 * the term -- the values -- in the context denoted by lang. If the Map has
 	 * already been built and the language hasn't changed, just return the
@@ -2332,9 +2315,8 @@ public class KB {
 		return (HashMap<String, String>) termFormatMap.get(lang);
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method creates an association list (Map) of the natural language format
+	/*****************************************************************
+     * This method creates an association list (Map) of the natural language format
 	 * string and the relation name for which that format string applies. If the
 	 * map has already been built and the language hasn't changed, just return
 	 * the existing map. This is a case of "lazy evaluation".
@@ -2354,11 +2336,11 @@ public class KB {
 		return formatMap.get(lang);
 	}
 
-	/**
-	 * *************************************************************** Deletes
-	 * user assertions, both in the files and in the constituents list.
+	/*****************************************************************
+     * Deletes user assertions, both in the files and in the constituents list.
 	 */
 	public void deleteUserAssertions() throws IOException {
+
 		String toRemove = null;
 		for (String name : constituents) {
 			if (name.endsWith(_userAssertionsString)) {
@@ -2372,9 +2354,8 @@ public class KB {
 		}
 	}
 
-	/**
-	 * *************************************************************** Deletes
-	 * the user assertions key in the constituents map, and then reloads the
+	/*****************************************************************
+     * Deletes the user assertions key in the constituents map, and then reloads the
 	 * KBs.
 	 */
 	public void deleteUserAssertionsAndReload() {
@@ -2395,9 +2376,8 @@ public class KB {
 		}
 	}
 
-	/**
-	 * ************************************************************* Add a new
-	 * KB constituent by reading in the file, and then merging the formulas with
+	/***************************************************************
+     * Add a new KB constituent by reading in the file, and then merging the formulas with
 	 * the existing set of formulas.
 	 *
 	 * @param filename
@@ -2422,7 +2402,8 @@ public class KB {
 				errors.add("Error. " + canonicalPath + " already loaded.");
 			file.readFile(canonicalPath);
 			warnings.addAll(file.warningSet);
-		} catch (Exception ex1) {
+		}
+		catch (Exception ex1) {
 			StringBuilder error = new StringBuilder();
 			error.append(ex1.getMessage());
 			if (ex1 instanceof ParseException)
@@ -2433,7 +2414,8 @@ public class KB {
 		for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
 			if (!termFrequency.containsKey(entry.getKey())) {
 				termFrequency.put(entry.getKey(), entry.getValue());
-			} else {
+			}
+			else {
 				termFrequency.put(entry.getKey(), termFrequency.get(entry.getKey()) + entry.getValue());
 			}
 		}
@@ -2490,9 +2472,8 @@ public class KB {
 		// loadEProver();
 	}
 
-	/**
-	 * *************************************************************** Reload
-	 * all the KB constituents.
+	/*****************************************************************
+     * Reload all the KB constituents.
 	 */
 	public String reload() {
 
@@ -2523,7 +2504,8 @@ public class KB {
 				kbCache = new KBcache(this);
 				kbCache.buildCaches();
 				checkArity(); // Reperform arity checks on everything
-			} else {
+			}
+			else {
 				kbCache = new KBcache(this);
 				// checkArity needs the cache, so don't call it.
 			}
@@ -2536,9 +2518,8 @@ public class KB {
 		return "";
 	}
 
-	/**
-	 * *************************************************************** Write a
-	 * KIF file consisting of all the formulas in the knowledge base.
+	/*****************************************************************
+     * Write a KIF file consisting of all the formulas in the knowledge base.
 	 * 
 	 * @param fname
 	 *            - the name of the file to write, including full path.
@@ -2567,10 +2548,12 @@ public class KB {
 				pr.println(s);
 				pr.println();
 			}
-		} catch (java.io.IOException e) {
+		}
+		catch (java.io.IOException e) {
 			System.out.println("Error in KB.writeFile(): Error writing file " + fname);
 			e.printStackTrace();
-		} finally {
+		}
+		finally {
 			if (pr != null) {
 				pr.close();
 			}
@@ -2580,9 +2563,8 @@ public class KB {
 		}
 	}
 
-	/**
-	 * ************************************************************* Create the
-	 * XML configuration element.
+	/***************************************************************
+     * Create the XML configuration element.
 	 */
 	public SimpleElement writeConfiguration() {
 
@@ -2598,16 +2580,14 @@ public class KB {
 		return se;
 	}
 
-	/**
-	 * ************************************************************* A HashMap
-	 * for holding compiled regular expression patterns. The map is initialized
+	/***************************************************************
+     * A HashMap for holding compiled regular expression patterns. The map is initialized
 	 * by calling compilePatterns().
 	 */
 	private static HashMap<String, ArrayList> REGEX_PATTERNS = null;
 
-	/**
-	 * *************************************************************** This
-	 * method returns a compiled regular expression Pattern object indexed by
+	/*****************************************************************
+     * This method returns a compiled regular expression Pattern object indexed by
 	 * key.
 	 *
 	 * @param key
@@ -2626,9 +2606,8 @@ public class KB {
 		return null;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method returns the int value that identifies the regular expression
+	/*****************************************************************
+     * This method returns the int value that identifies the regular expression
 	 * binding group to be returned when there is a match.
 	 *
 	 * @param key
@@ -2647,9 +2626,8 @@ public class KB {
 		return -1;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method compiles and stores regular expression Pattern objects and binding
+	/*****************************************************************
+     * This method compiles and stores regular expression Pattern objects and binding
 	 * group indexes as two cell ArrayList objects. Each ArrayList is indexed by
 	 * a String retrieval key.
 	 *
@@ -2682,9 +2660,8 @@ public class KB {
 		return;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method finds regular expression matches in an input string using a
+	/*****************************************************************
+     * This method finds regular expression matches in an input string using a
 	 * compiled Pattern and binding group index retrieved with patternKey. If
 	 * the ArrayList accumulator is provided, match results are added to it and
 	 * it is returned. If accumulator is not provided (is null), then a new
@@ -2733,9 +2710,8 @@ public class KB {
 		return ans;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method finds regular expression matches in an input string using a
+	/*****************************************************************
+     * This method finds regular expression matches in an input string using a
 	 * compiled Pattern and binding group index retrieved with patternKey, and
 	 * returns the results, if any, in an ArrayList.
 	 *
@@ -2752,9 +2728,8 @@ public class KB {
 		return KB.getMatches(input, patternKey, null);
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method retrieves Formulas by asking the query expression queryLit, and
+	/*****************************************************************
+     * This method retrieves Formulas by asking the query expression queryLit, and
 	 * returns the results, if any, in an ArrayList.
 	 *
 	 * @param queryLit
@@ -2786,7 +2761,8 @@ public class KB {
 					f.read(fStr);
 					ans.add(f);
 				}
-			} else if (pred.equals("valence") && isVariable((String) queryLit.get(1))
+			}
+			else if (pred.equals("valence") && isVariable((String) queryLit.get(1))
 					&& isVariable((String) queryLit.get(2))) {
 				TreeSet<String> ai = getAllInstances("Relation");
 				Iterator<String> it = ai.iterator();
@@ -2801,7 +2777,8 @@ public class KB {
 						ans.add(f);
 					}
 				}
-			} else {
+			}
+			else {
 				String constant = null;
 				int cidx = -1;
 				int qlLen = queryLit.size();
@@ -2823,9 +2800,8 @@ public class KB {
 		return ans;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method retrieves formulas by asking the query expression queryLit, and
+	/*****************************************************************
+     * This method retrieves formulas by asking the query expression queryLit, and
 	 * returns the results, if any, in an ArrayList.
 	 *
 	 * @param queryLit
@@ -2844,9 +2820,8 @@ public class KB {
 		return askWithLiteral(input);
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method retrieves the upward transitive closure of all Class names
+	/*****************************************************************
+     * This method retrieves the upward transitive closure of all Class names
 	 * contained in the input set. The members of the input set are not included
 	 * in the result set.
 	 *
@@ -2866,9 +2841,8 @@ public class KB {
 		return ans;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method retrieves all instances of the classes named in the input set.
+	/*****************************************************************
+     * This method retrieves all instances of the classes named in the input set.
 	 *
 	 * @param classNames
 	 *            A Set of String, containing SUO-KIF class names
@@ -2888,9 +2862,8 @@ public class KB {
 		return ans;
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method retrieves all instances of the class named in the input String.
+	/*****************************************************************
+     * This method retrieves all instances of the class named in the input String.
 	 *
 	 * @param className
 	 *            The name of a SUO-KIF Class.
@@ -2906,9 +2879,8 @@ public class KB {
 		return new TreeSet<String>();
 	}
 
-	/**
-	 * *************************************************************** This
-	 * method tries to find or compute a valence for the input relation.
+	/*****************************************************************
+     * This method tries to find or compute a valence for the input relation.
 	 *
 	 * @param relnName
 	 *            A String, the name of a SUO-KIF Relation.
@@ -2925,12 +2897,12 @@ public class KB {
 				return -1;
 			System.out.println("Error in KB.getValence(): No valence found for " + relnName);
 			return -1;
-		} else
+		}
+		else
 			return kbCache.valences.get(relnName);
 	}
 
-	/**
-	 * ***************************************************************
+	/*****************************************************************
 	 * 
 	 * @return an ArrayList containing all predicates in this KB.
 	 */
@@ -2939,8 +2911,7 @@ public class KB {
 		return new ArrayList<String>(kbCache.instances.get("Predicate"));
 	}
 
-	/**
-	 * ***************************************************************
+	/*****************************************************************
 	 * 
 	 * @param obj
 	 *            Any object
@@ -2952,9 +2923,8 @@ public class KB {
 		return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
 	}
 
-	/**
-	 * *************************************************************** A static
-	 * utility method.
+	/*****************************************************************
+     * A static utility method.
 	 *
 	 * @param obj
 	 *            Presumably, a String.
@@ -2968,9 +2938,8 @@ public class KB {
 		return false;
 	}
 
-	/**
-	 * *************************************************************** A static
-	 * utility method.
+	/*****************************************************************
+	 * A static utility method.
 	 *
 	 * @param obj
 	 *            A String.
@@ -2981,9 +2950,8 @@ public class KB {
 		return (StringUtil.isNonEmptyString(obj) && (obj.equals("forall") || obj.equals("exists")));
 	}
 
-	/**
-	 * *************************************************************** A static
-	 * utility method.
+	/*****************************************************************
+	 * A static utility method.
 	 *
 	 * @param obj
 	 *            Presumably, a String.
@@ -2995,9 +2963,8 @@ public class KB {
 		return (StringUtil.isNonEmptyString(obj) && (obj.equals("and") || obj.equals("or")));
 	}
 
-	/**
-	 * ************************************************************* Hyperlink
-	 * terms identified with '&%' to the URL that brings up that term in the
+	/***************************************************************
+	 * Hyperlink terms identified with '&%' to the URL that brings up that term in the
 	 * browser. Handle (and ignore) suffixes on the term. For example
 	 * "&%Processes" would get properly linked to the term "Process", if present
 	 * in the knowledge base.
@@ -3013,7 +2980,8 @@ public class KB {
 				href = "";
 				suffix = ".html";
 				isStaticFile = true;
-			} else if (!href.endsWith("&term="))
+			}
+			else if (!href.endsWith("&term="))
 				href += "&term=";
 			int i = -1;
 			int j = -1;
@@ -3051,9 +3019,8 @@ public class KB {
 		return formatted;
 	}
 
-	/**
-	 * ************************************************************* Save the
-	 * contents of the current KB to a file.
+	/***************************************************************
+	 * Save the contents of the current KB to a file.
 	 */
 	public String writeInferenceEngineFormulas(TreeSet<String> forms) {
 
@@ -3075,14 +3042,17 @@ public class KB {
 						pw.println(it.next());
 						pw.println();
 					}
-				} else
+				}
+				else
 					System.out.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
 			}
-		} catch (IOException ioe) {
+		}
+		catch (IOException ioe) {
 			System.out.println("Error in KB.writeInferenceEngineFormulas(): writing file: " + filename);
 			System.out.println(ioe.getMessage());
 			ioe.printStackTrace();
-		} finally {
+		}
+		finally {
 			try {
 				if (pw != null) {
 					pw.close();
@@ -3090,15 +3060,15 @@ public class KB {
 				if (fw != null) {
 					fw.close();
 				}
-			} catch (Exception ex) {
+			}
+			catch (Exception ex) {
 			}
 		}
 		return filename;
 	}
 
-	/**
-	 * ************************************************************* Creates
-	 * InferenceEngine and loads all of the constituents into it.
+	/***************************************************************
+	 * Creates InferenceEngine and loads all of the constituents into it.
 	 *
 	 * @param factory
 	 *            Factory object used to create new InferenceEngine.
@@ -3119,16 +3089,16 @@ public class KB {
 				if (factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
 					res = factory.createWithFormulas(forms);
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			System.out.println("Error in KB.createInterenceEngine():" + e.getMessage());
 			e.printStackTrace();
 		}
 		return res;
 	}
 
-	/**
-	 * ************************************************************* Starts
-	 * EProver and collects, preprocesses and loads all of the constituents into
+	/***************************************************************
+	 * Starts EProver and collects, preprocesses and loads all of the constituents into
 	 * it.
 	 */
 	public void loadEProver() {
@@ -3151,7 +3121,8 @@ public class KB {
 				if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
 					eprover = new EProver(mgr.getPref("inferenceEngine"), tptpFilename);
 			}
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
@@ -3160,8 +3131,7 @@ public class KB {
 		return;
 	}
 
-	/**
-	 * ***************************************************************
+	/*****************************************************************
 	 * Preprocess the knowledge base to TPTP. This includes "holds" prefixing,
 	 * ticking nested formulas, expanding row variables, and translating
 	 * mathematical relation operators. All the real work is done in
@@ -3200,11 +3170,13 @@ public class KB {
 					SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
 					stptp._f = f;
 					stptp.tptpParse(f, false, this, processed); // not a query
-				} catch (ParseException pe) {
+				}
+				catch (ParseException pe) {
 					String err = ("Error in KB.preProcess() " + pe.getMessage() + " at line " + f.startLine
 							+ " in file " + f.sourceFile);
 					errors.add(err);
-				} catch (IOException ioe) {
+				}
+				catch (IOException ioe) {
 					String err = "Error in KB.preProcess(): " + ioe.getMessage();
 					System.out.println(err);
 					errors.add(err);
@@ -3218,7 +3190,8 @@ public class KB {
 				if (StringUtil.isNonEmptyString(p.theFormula)) {
 					newTreeSet.add(p.theFormula);
 					errors.addAll(p.getErrors());
-				} else {
+				}
+				else {
 					String warn = "Warning in KB.preProcess(): empty formula: " + p;
 					System.out.println(warn);
 					warnings.add(warn);
@@ -3230,9 +3203,7 @@ public class KB {
 		return newTreeSet;
 	}
 
-	/**
-	 * ***************************************************************
-	 * 
+	/*****************************************************************
 	 * @return a defensive copy of loadFormatMapsAttempted.
 	 */
 	public ArrayList<String> getLoadFormatMapsAttempted() {
@@ -3249,8 +3220,7 @@ public class KB {
 		return termFrequencies;
 	}
 
-	/**
-	 * *************************************************************
+	/***************************************************************
 	 */
 	public static void main(String[] args) {
 
