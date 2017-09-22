@@ -1755,7 +1755,7 @@ public class Hotel {
                 path = args[1];
             execJSON(path);
         }
-        //parseOneJSONReviewFile("/home/apease/Rearden/Schema/TA/2992-Arlington.json");
+        //parseOneJSONReviewFile(System.getProperty("user.home") + "/Rearden/Schema/TA/2992-Arlington.json");
         
         //HotelDBImport();
         //System.out.println(topSUMOInReviews());

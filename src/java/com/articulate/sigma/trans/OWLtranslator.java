@@ -693,8 +693,10 @@ public class OWLtranslator {
         if (argTypes.size() > 0) {
             for (int i = 0; i < argTypes.size(); i++) {
                 Formula form = (Formula) argTypes.get(i);
+                // Edited by Infosys LTD
                 if (form.isCached())
                     continue;
+                //Edit End
                 String arg = form.getArgument(2);
                 String argType = form.getArgument(3);
                 if (arg.equals("1") && Formula.atom(argType)) 
@@ -707,21 +709,27 @@ public class OWLtranslator {
         if (ranges.size() > 0) {
             Formula form = (Formula) ranges.get(0);
             String argType = form.getArgument(2);
+            // Edited by Infosys LTD
             if (Formula.atom(argType) && !form.isCached())
+            	//Edit END
                 pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
         }
         ArrayList inverses = kb.askWithRestriction(0,"inverse",1,term);  // inverse expressions for term.
         if (inverses.size() > 0) {
             Formula form = (Formula) inverses.get(0);
             String arg = form.getArgument(2);
+            // Edited by Infosys LTD
             if (Formula.atom(arg) && !form.isCached())
+            	// Edit END
                 pw.println("  <owl:inverseOf rdf:resource=\"" + (arg.equals("Entity") ? "&owl;Thing" : "#" + arg) + "\" />");
         }
         if (subs.size() > 0) {
             for (int i = 0; i < subs.size(); i++) {
                 Formula form = (Formula) subs.get(i);
                 String superProp = form.getArgument(2);
+                // Edited by Infosys LTD
                 if (!form.isCached())
+                	// Edit END
                     pw.println("  <owl:subPropertyOf rdf:resource=\"" + (superProp.equals("Entity") ? "&owl;Thing" : "#" + superProp) + "\" />");
             }
         }

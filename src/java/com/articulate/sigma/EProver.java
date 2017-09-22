@@ -153,9 +153,22 @@ public class EProver {
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        // Edited by Infosys LTD
+        
+        // To make sigma work on windows. 
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+                       
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-                executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
+                eproverPath));
+        // Edit End
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -179,9 +192,22 @@ public class EProver {
             this.terminate();
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        // Edited by Infosys LTD
+        
+        // To make sigma work on windows
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+               
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-                executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover"));
+                eproverPath));
+        // Edit End
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -387,7 +413,7 @@ public class EProver {
         String initialDatabase = "SUMO-v.kif";
         EProver eprover = EProver.getNewInstance(initialDatabase);
         eprover.setCommandLineOptions("--cpu-limit=600 --soft-cpu-limit=500 -xAuto -tAuto -l 4 --tptp3-in");
-        KBmanager.getMgr().setPref("eprover","/home/apease/Programs/E/Prover/eprover");
+        KBmanager.getMgr().setPref("eprover",System.getProperty("user.home") + "/Programs/E/Prover/eprover");
         System.out.print(eprover.submitQuery("(holds instance ?X Relation)",5,2));
         */
         try {

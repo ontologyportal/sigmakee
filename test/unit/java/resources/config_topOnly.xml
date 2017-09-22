@@ -6,12 +6,12 @@
   <preference name="userBrowserLimit" value="25" />
   <preference name="hostname" value="localhost" />
   <preference name="loadCELT" value="no" />
-  <preference name="baseDir" value="/home/apease/.sigmakee" />
   <preference name="showcached" value="yes" />
-  <preference name="kbDir" value="/home/apease/.sigmakee/KBs" />
   <preference name="typePrefix" value="yes" />
   <preference name="TPTP" value="yes" />
   <preference name="holdsPrefix" value="no" />
+  <preference name="inferenceEngine" value="" />
+  <preference name="leoExecutable" value="" />
   <kb name="SUMO">
     <constituent filename="Merge.kif" />
     <constituent filename="english_format.kif" />

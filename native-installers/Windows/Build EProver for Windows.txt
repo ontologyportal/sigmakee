@@ -1,0 +1,56 @@
+Title: Compile cygwin in Windows using cygwin
+Author: Pruthvirajsinh Chauhan, Pruthvirajsinh_C@infosys.com
+Copyright : Infosys LTD. , 2017
+
+Follow below steps to compile eprover in windows and distribute it as a standalone windows binary.
+ 
+1. Compile in cygwin 
+	1.1 To Download and Install cygwin visit https://www.cygwin.com/install.html
+	1.2 Select following packages while installing 
+		gcc-core: GNU Compiler Collection (C,OpenMP)
+		gcc-g++: GNU Compiler Collection (C++)
+		make: The GNU version of the 'make' utility
+	1.3 Download eprover source code from http://wwwlehre.dhbw-stuttgart.de/~sschulz/E/Download.html
+	1.4 Extract the source code to C:\cygwin64\home\<user_name>\E
+	1.5 Start cygwin terminal and cd to ~/<user_name>/E
+    1.6 run command 'make' 	
+2. Copy compiled binaries in windows
+	2.1 In windows explorer go to C:\cygwin64\home\<user_name>\E\PROVER
+	2.2 Copy eprover.exe and eprover_ltb_runner.exe to the folder D:\EPROVER_BIN
+
+Note: I am using D:\EPROVER_BIN as a folder to store binaries. 
+you can use your own path but remember to change everywhere accordingly. 
+Just don't choose a folder with spaces in the path.
+
+3. Copy required libaries
+	1.1 Copy below files from cygwin's bin folder located at C:\cygwin64\bin
+		cyggcc_s-1.dll
+		cygiconv-2.dll 
+		cygintl-8.dll 
+		cygncursesw-10.dll 
+		cygreadline7.dll 
+		cygwin1.dll
+		ls.exe 
+		sh.exe
+	1.2 Paste these files to D:\EPROVER_BIN\bin 	
+	(Reference: https://stackoverflow.com/questions/14641191/cygwin-trying-to-run-dos-command-in-c-language )
+4. Add path 'D:\EPROVER_BIN\bin' to System Variable 'Path'
+5. Set Environment variable TMPDIR to D:\temp (Or any path of your choice)
+	Make sure to create temp directory before hand. Eprover wont try to create it and will throw an error.
+
+You can use D:\EPROVER_BIN\eprover.exe and D:\EPROVER_BIN\eprover_ltb_runner.exe or can add D:\EPROVER_BIN to System Path to run from anywhere.
+
+Test: 
+1. eprover.exe
+Assuming that eprover v2.0 is extracted at 'C:\cygwin64\home\<user_name>\E', you can run a smoke test that is shipped with eprover v2.0.
+Run following command from D:\EPROVER_BIN
+eprover.exe --auto --proof-object --assume-incompleteness /cygdrive/c/cygwin64/home/<user_name>/E/EXAMPLE_PROBLEMS/SMOKETEST/socrates.p
+
+2. eprover_ltb_runner.exe
+e_ltb_runner.exe -v --interactive <Path to EBatchConfig in Windows>\EBatchConfig.txt /cygdrive/d/EPROVER_BIN/eprover.exe
+Creating EBatchConfig.txt is out of this document's scope.
+
+Troubleshooting tips:
+1.	In cygwin you can access host Windows files using /cygdrive/<drive letter>/folder 
+	e.g. use /cygdrive/d/EPROVER_BIN to access files at D:\EPROVER_BIN. 
+	Again don't use paths with spaces

@@ -531,7 +531,7 @@ public class WSD {
             // pair_ID sentence_A sentence_B entailment_label relatedness_score entailment_AB entailment_BA sentence_A_original
             // sentence_B_original sentence_A_dataset sentence_B_dataset SemEval_set
             String line;
-            String f = "/home/apease/ontology/SICK/SICK.txt";
+            String f = System.getProperty("user.home") + "/ontology/SICK/SICK.txt";
             File sickFile = new File(f);
             if (sickFile == null) {
                 System.out.println("Error in WSD.readSick(): The file does not exist in " + f );
@@ -565,7 +565,7 @@ public class WSD {
 
         FileWriter fw = null;
         PrintWriter pw = null;
-        String fname = "/home/apease/ontology/SICK/SickOut.txt";
+        String fname = System.getProperty("user.home") + "/ontology/SICK/SickOut.txt";
 
         try {
             fw = new FileWriter(fname);

@@ -3,6 +3,9 @@
   <preference name="testOutputDir" value="~/.sigmakee/KBs/tests" />
   <preference name="TPTPDisplay" value="no" />
   <preference name="inferenceEngine" value="~/Programs/E/PROVER/e_ltb_runner" />
+  <!--  Added config for eproverPath to read eprover's path on Windows OS.
+   If sigma is running on linux it is ignored. Added by Infosys LTD. -->
+  <preference name="eproverPath" value="/cygdrive/d/EPROVER_BIN/eprover" />  
   <preference name="inferenceTestDir" value="~/.sigmakee/KBs/tests" />
   <preference name="baseDir" value="/home/theuser/.sigmakee" />
   <preference name="hostname" value="localhost" />

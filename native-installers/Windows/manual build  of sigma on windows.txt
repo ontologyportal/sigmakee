@@ -1,0 +1,71 @@
+--------------------------------------------------------------------------------
+Title : Manual Installation of Sigmakee on Windows
+Author : Infosys LTD.
+Copyright : Infosys LTD., 2017
+Licence : GPL 
+--------------------------------------------------------------------------------
+
+
+* Setup required directories
+--------------------------------------------------------------------------------
+cd %BASE_DIR%
+mkdir workspace
+mkdir Programs
+cd Programs
+
+* Download the required software
+--------------------------------------------------------------------------------
+Download http://nlp.stanford.edu/software/stanford-corenlp-full-2015-12-09.zip
+Download http://mirror.fibergrid.in/apache/tomcat/tomcat-9/v9.0.0.M18/bin/apache-tomcat-9.0.0.M18-windows-x64.zip
+Download http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz
+Download http://people.csail.mit.edu/kostas/E/eprover.exe
+Download http://mirror.fibergrid.in/apache//ant/binaries/apache-ant-1.10.1-bin.zip
+
+* Install the software
+--------------------------------------------------------------------------------
+Extract apache-ant-1.10.1-bin.zip
+Extract apache-tomcat-9.0.0.M18-windows-x64.zip
+Remove apache-tomcat-9.0.0.M18-windows-x64.zip
+Extract stanford-corenlp-full-2015-12-09.zip
+Remove stanford-corenlp-full-2015-12-09.zip
+cd %BASE_DIR%/Programs/stanford-corenlp-full-2015-12-09/
+Extract stanford-corenlp-3.6.0-models.jar
+cd %BASE_DIR%/workspace/
+Download repo - https://github.com/ontologyportal/sigmakee
+Download repo - https://github.com/ontologyportal/sumo
+
+cd %BASE_DIR%
+mkdir dotsigmakee
+cd dotsigmakee
+mkdir KBs
+cp -R %BASE_DIR%/workspace/sumo/* KBs
+mv %BASE_DIR%/workspace/sigmakee/config_vagrant.xml KBs/config.xml
+cd %BASE_DIR%/Programs
+Extract WordNet-3.0.tar.gz
+cp WordNet-3.0/dict/* %BASE_DIR%/dotsigmakee/KBs/WordNetMappings/
+Copy eprover.exe and other binaries to a folder and update the paths in KBs/config.xml
+(Follow "Build EProver for Windows.txt" to build EProver in windows)
+
+* Build the sigmakee project
+--------------------------------------------------------------------------------
+cd %BASE_DIR%
+set SIGMA_HOME=%BASE_DIR%/dotsigmakee
+set CATALINA_OPTS=$CATALINA_OPTS -Xms500M -Xmx2500M
+set CATALINA_HOME=%BASE_DIR%/apache-tomcat-8.0.26
+cd %BASE_DIR%/workspace/sigmakee
+%BASE_DIR%/workspace/Programs/apache-ant-1.10.1/bin/ant
+
+* Update configuration files
+--------------------------------------------------------------------------------
+Update %BASE_DIR%/dotsigmakee/KBs/config.xml with all the applicable path
+If you are running tomcat locally, also change the port value to 8080
+Update the SIGMA_HOME, CATALINA_OPTS and CATALINA_HOME variables in CATALINA_HOME/bin/setenv.bat
+
+* Start Tomcat and login
+--------------------------------------------------------------------------------
+After starting Tomcat, go to http://localhost:8080/sigma/login.html
+Login using admin/admin
+
+* References
+--------------------------------------------------------------------------------
+* https://github.com/ontologyportal/sigmakee
