@@ -2,7 +2,7 @@
 Title : Manual Installation of Sigmakee on Windows
 Author : Infosys LTD.
 Copyright : Infosys LTD., 2017
-Licence : GPL 
+License : GPL v3
 --------------------------------------------------------------------------------
 
 

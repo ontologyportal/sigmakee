@@ -1,6 +1,8 @@
 Title: Compile cygwin in Windows using cygwin
-Author: Pruthvirajsinh Chauhan, Pruthvirajsinh_C@infosys.com
+Author: Infosys LTD.
 Copyright : Infosys LTD. , 2017
+Contact: Pruthvirajsinh_C@infosys.com
+License : GPL v3
 
 Follow below steps to compile eprover in windows and distribute it as a standalone windows binary.
  
