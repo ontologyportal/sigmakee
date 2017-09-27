@@ -18,16 +18,16 @@ public class NER {
         BufferedReader _reader; 
         BufferedWriter _writer; 
         BufferedReader _error;
-        String stanfordCore = "/home/apease/Programs/stanford-ner-2014-10-26";
+        String stanfordCore = System.getProperty("user.home") + "/Programs/stanford-ner-2014-10-26";
         String newcore = KBmanager.getMgr().getPref("stanford-ner");
         if (!StringUtil.emptyString(newcore))
         	stanfordCore = newcore;
-        String execString = "/home/apease/Programs/java/jdk1.8.0_25/bin/java -mx700m " +
+        String execString = System.getProperty("java.home") + "/java -mx700m " +
                 "-classpath " + stanfordCore + "/stanford-ner.jar " +
                 "edu.stanford.nlp.ie.crf.CRFClassifier " +
-                //                 "-loadClassifier  /home/apease/Programs/stanford-ner-2014-10-26/classifiers/english.all.3class.distsim.crf.ser.gz " +
-                //                 "-loadClassifier  /home/apease/Programs/stanford-ner-2014-10-26/classifiers/english.nowiki.3class.distsim.crf.ser.gz " +
-                //                 "-loadClassifier  /home/apease/Programs/stanford-ner-2014-10-26/classifiers/english.conll.4class.distsim.crf.ser.gz " +
+                //                 "-loadClassifier " + System.getProperty("user.home") + "/Programs/stanford-ner-2014-10-26/classifiers/english.all.3class.distsim.crf.ser.gz " +
+                //                 "-loadClassifier " + System.getProperty("user.home") + "/Programs/stanford-ner-2014-10-26/classifiers/english.nowiki.3class.distsim.crf.ser.gz " +
+                //                 "-loadClassifier " + System.getProperty("user.home") + "/Programs/stanford-ner-2014-10-26/classifiers/english.conll.4class.distsim.crf.ser.gz " +
                 "-loadClassifier " + stanfordCore + "/classifiers/english.muc.7class.distsim.crf.ser.gz " +
                 "-textFile " + infile;
         System.out.println("INFO in NER.extractEntities(): executing: " + execString);

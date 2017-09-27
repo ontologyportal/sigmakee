@@ -1,44 +1,43 @@
 /** This code is copyright Articulate Software (c) 2003.  Some
- portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
- license.  This software is released under the GNU Public License
- <http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
- by use of this code, to credit Articulate Software and Teknowledge in any
- writings, briefings, publications, presentations, or other representations
- of any software which incorporates, builds on, or uses this code.  Please
- cite the following article in any publication with references:
+portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
+license.  This software is released under the GNU Public License
+<http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
+by use of this code, to credit Articulate Software and Teknowledge in any
+writings, briefings, publications, presentations, or other representations
+of any software which incorporates, builds on, or uses this code.  Please
+cite the following article in any publication with references:
 
- Pease, A., (2003). The Sigma Ontology Development Environment, in Working
- Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
- August 9, Acapulco, Mexico. see also
- http://sigmakee.sourceforge.net
+Pease, A., (2003). The Sigma Ontology Development Environment, in Working
+Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+August 9, Acapulco, Mexico. see also
+http://sigmakee.sourceforge.net
 
- Note that this class, and therefore, Sigma, depends upon several terms
- being present in the ontology in order to function as intended.  They are:
- and or forall exists
- domain
- EnglishLanguage
- equal
- format
- instance
- inverse
- Predicate
- Relation
- SetOrClass
- subclass
- subrelation
- termFormat
- valence
- VariableArityRelation
- */
+Note that this class, and therefore, Sigma, depends upon several terms
+being present in the ontology in order to function as intended.  They are:
+  and or forall exists
+  domain
+  EnglishLanguage
+  equal
+  format
+  instance
+  inverse
+  Predicate
+  Relation
+  SetOrClass
+  subclass
+  subrelation
+  termFormat
+  valence
+  VariableArityRelation
+*/
 
 /*************************************************************************************************/
 package com.articulate.sigma;
 
 /*
-Copyright 2014-2015 IPsoft
+Author: Adam Pease apease@articulatesoftware.com
 
-Author: Adam Pease adam.pease@ipsoft.com
-Author: Sofia Athenikos sofia.athenikos@ipsoft.com
+some portions copyright Teknowledge, IPsoft
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -77,14 +76,10 @@ public class KB {
 
     private boolean isVisible = true;
 
-    /**
-     * The inference engine process for this KB.
-     */
+    /** The inference engine process for this KB. */
     public EProver eprover;
 
-    /**
-     * The name of the knowledge base.
-     */
+    /** The name of the knowledge base. */
     public String name;
 
     /**
@@ -93,9 +88,7 @@ public class KB {
      */
     public ArrayList<String> constituents = new ArrayList<String>();
 
-    /**
-     * The natural language in which axiom paraphrases should be presented.
-     */
+    /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";
 
     /**
@@ -104,9 +97,7 @@ public class KB {
      */
     public String kbDir = null;
 
-    /**
-     * The instance of the CELT process.
-     */
+    /** The instance of the CELT process. */
     public CELT celt = null;
 
     /**
@@ -114,9 +105,7 @@ public class KB {
      */
     public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
 
-    /**
-     * The String constant that is the suffix for files of user assertions.
-     */
+    /** The String constant that is the suffix for files of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
 
     /**
@@ -146,21 +135,16 @@ public class KB {
      */
     private HashMap<String, HashMap<String, String>> formatMap = new HashMap<String, HashMap<String, String>>();
 
-    /**
-     * The natural language strings for terms in the KB. It is a HashMap of
+    /** The natural language strings for terms in the KB. It is a HashMap of
      * language keys and HashMap values. The interior HashMap is term name keys
      * and String values.
      */
     private HashMap<String, HashMap<String, String>> termFormatMap = new HashMap<String, HashMap<String, String>>();
 
-    /**
-     * Errors found during loading of the KB constituents.
-     */
+    /** Errors found during loading of the KB constituents. */
     public TreeSet<String> errors = new TreeSet<String>();
 
-    /**
-     * Warnings found during loading of the KB constituents.
-     */
+    /** Warnings found during loading of the KB constituents. */
     public TreeSet<String> warnings = new TreeSet<String>();
 
     /**
@@ -179,8 +163,7 @@ public class KB {
 
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 
-    /**
-     * ************************************************************* Constructor
+    /*************************************************************** Constructor
      * which takes the name of the KB and the location where KBs preprocessed
      * for EProver should be placed.
      */
@@ -195,8 +178,7 @@ public class KB {
                 if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
                     celt = new CELT();
             }
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             System.out.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
@@ -208,15 +190,13 @@ public class KB {
         isVisible = visibility;
     }
 
-    /**
-     * ************************************************************* Perform a
+    /*************************************************************** Perform a
      * deep copy of the kb input
      *
      * @param kbIn
      * @throws IOException
      */
     public KB(KB kbIn) throws IOException {
-
         this.isVisible = kbIn.isVisible;
 
         if (kbIn.eprover != null) {
@@ -276,12 +256,10 @@ public class KB {
     }
 
     public boolean isVisible() {
-
         return isVisible;
     }
 
-    /**
-     * ************************************************************* Constructor
+    /*************************************************************** Constructor
      */
     public KB(String n) {
 
@@ -294,15 +272,13 @@ public class KB {
                 if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
                     celt = new CELT();
             }
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             System.out.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
     }
 
-    /**
-     * ************************************************************ Returns a
+    /************************************************************** Returns a
      * SortedSet of Strings, which are all the terms in the KB.
      */
     public SortedSet<String> getTerms() {
@@ -310,12 +286,12 @@ public class KB {
         return this.terms;
     }
 
-    /**
-     * ************************************************** REswitch determines if
+    /**************************************************** REswitch determines if
      * a String is a RegEx or not based on its use of RE metacharacters.
      * "1"=nonRE, "2"=RE
      *
-     * @param term A String
+     * @param term
+     *            A String
      * @return "1" or "2"
      */
     public String REswitch(String term) {
@@ -327,12 +303,12 @@ public class KB {
         return "1";
     }
 
-    /**
-     * ************************************************* Only called in
+    /*************************************************** Only called in
      * BrowseBody.jsp when a single match is found. Purpose is to simplify a
      * RegEx to its only matching term
      *
-     * @param term a String
+     * @param term
+     *            a String
      * @return modified term a String
      */
     public String simplifyTerm(String term) {
@@ -342,12 +318,12 @@ public class KB {
         return term;
     }
 
-    /**
-     * ************************************************** Takes a term
+    /**************************************************** Takes a term
      * (interpreted as a Regular Expression) and returns true if any term in the
      * KB has a match with the RE.
      *
-     * @param term A String
+     * @param term
+     *            A String
      * @return true or false.
      */
     public boolean containsRE(String term) {
@@ -355,12 +331,12 @@ public class KB {
         return (getREMatch(term).size() > 0 ? true : false);
     }
 
-    /**
-     * ************************************************** Takes a term
+    /**************************************************** Takes a term
      * (interpreted as a Regular Expression) and returns an ArrayList containing
      * every term in the KB that has a match with the RE.
      *
-     * @param term A String
+     * @param term
+     *            A String
      * @return An ArrayList of terms that have a match to term
      */
     public ArrayList<String> getREMatch(String term) {
@@ -384,8 +360,7 @@ public class KB {
         }
     }
 
-    /**
-     * ************************************************************ Sets the
+    /************************************************************** Sets the
      * synchronized SortedSet of all the terms in the KB to be kbTerms.
      */
     public void setTerms(SortedSet<String> newTerms) {
@@ -397,8 +372,7 @@ public class KB {
         return;
     }
 
-    /**
-     * ************************************************************* Get an
+    /*************************************************************** Get an
      * ArrayList of Strings containing the language identifiers of available
      * natural language formatting templates.
      *
@@ -423,8 +397,7 @@ public class KB {
         return al;
     }
 
-    /**
-     * ************************************************************* Remove from
+    /*************************************************************** Remove from
      * the given set any item which is a superclass of another item in the set.
      *
      * @param set
@@ -448,8 +421,7 @@ public class KB {
         return returnSet;
     }
 
-    /**
-     * ************************************************************* Arity
+    /*************************************************************** Arity
      * errors should already have been trapped in addConstituent() unless a
      * relation is used before it is defined. This routine is a comprehensive
      * re-check.
@@ -480,8 +452,7 @@ public class KB {
         // formulaMap.remove(toRemove.get(i));
     }
 
-    /**
-     * ************************************************************* Returns the
+    /*************************************************************** Returns the
      * type (SUO-KIF SetOrClass name) for any argument in argPos position of an
      * assertion formed with the SUO-KIF Relation reln. If no argument type
      * value is directly stated for reln, this method tries to find a value
@@ -505,8 +476,7 @@ public class KB {
         return className;
     }
 
-    /**
-     * ************************************************************* Returns the
+    /*************************************************************** Returns the
      * type (SUO-KIF SetOrClass name) for any argument in argPos position of an
      * assertion formed with the SUO-KIF Relation reln. If no argument type
      * value is directly stated for reln, this method tries to find a value
@@ -528,8 +498,7 @@ public class KB {
         return className;
     }
 
-    /**
-     * ************************************************************* Determine
+    /*************************************************************** Determine
      * whether a particular term is an immediate instance, which has a statement
      * of the form (instance term otherTerm). Note that this does not count for
      * terms such as Attribute(s) and Relation(s), which may be defined as
@@ -542,8 +511,7 @@ public class KB {
         return askWithRestriction(1, term, 0, "instance");
     }
 
-    /**
-     * ************************************************************* Returns
+    /*************************************************************** Returns
      * true if i is an instance of c, else returns false.
      *
      * @param i A String denoting an instance.
@@ -557,8 +525,7 @@ public class KB {
         return kbCache.isInstanceOf(i, c);
     }
 
-    /**
-     * ************************************************************* Returns
+    /*************************************************************** Returns
      * true if i is c, is an instance of c, or is subclass of c, or is
      * subAttribute of c, else returns false.
      *
@@ -571,8 +538,7 @@ public class KB {
         return i.equals(c) || isInstanceOf(i, c) || isSubclass(i, c) || isSubAttribute(i, c);
     }
 
-    /**
-     * ************************************************************* Returns
+    /*************************************************************** Returns
      * true if i is an instance of Function in any loaded KB, else returns
      * false.
      *
@@ -599,8 +565,7 @@ public class KB {
         return false;
     }
 
-    /**
-     * ************************************************************* Returns
+    /*************************************************************** Returns
      * true if i is an instance of c in any loaded KB, else returns false.
      *
      * @param i A String denoting an instance.
@@ -630,8 +595,7 @@ public class KB {
         return (al != null && al.size() > 0);
     }
 
-    /**
-     * ************************************************************* Determine
+    /*************************************************************** Determine
      * whether a particular class or instance "child" is a child of the given
      * "parent".
      *
@@ -652,8 +616,7 @@ public class KB {
         return false;
     }
 
-    /**
-     * ************************************************************* Returns
+    /*************************************************************** Returns
      * true if the subclass cache supports the conclusion that c1 is a subclass
      * of c2, else returns false.
      *
@@ -668,8 +631,7 @@ public class KB {
         return false;
     }
 
-    /**
-     * ************************************************************* Returns
+    /*************************************************************** Returns
      * true if the KB cache supports the conclusion that c1 is a subAttribute of
      * c2, else returns false.
      *
@@ -685,8 +647,7 @@ public class KB {
         return false;
     }
 
-    /**
-     * ************************************************************* Converts
+    /*************************************************************** Converts
      * all Formula objects in the input List to ArrayList tuples.
      *
      * @param formulaList A list of Formulas.
@@ -707,8 +668,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Converts
+    /* ************************************************************* Converts
      * all Strings in the input List to Formula objects.
      *
      * @param strings A list of Strings.
@@ -728,8 +688,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Converts a
+    /*************************************************************** Converts a
      * literal (List object) to a String.
      *
      * @param literal A List representing a SUO-KIF formula.
@@ -750,8 +709,7 @@ public class KB {
         return b.toString();
     }
 
-    /**
-     * ************************************************************* Converts a
+    /*************************************************************** Converts a
      * literal (List object) to a Formula.
      *
      * @param lit A List representing a SUO-KIF formula.
@@ -768,8 +726,7 @@ public class KB {
         return f;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the terms (Strings) that correspond to targetArgnum
      * in the Formulas obtained from the method call askWithRestriction(argnum1,
      * term1, argnum2, term2).
@@ -803,8 +760,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the terms (Strings) that correspond to targetArgnum
      * in the Formulas obtained from the method call askWithRestriction(argnum1,
      * term1, argnum2, term2).
@@ -818,8 +774,7 @@ public class KB {
         return getTermsViaAskWithRestriction(argnum1, term1, argnum2, term2, targetArgnum, null);
     }
 
-    /**
-     * ************************************************************* Returns the
+    /*************************************************************** Returns the
      * first term found that corresponds to targetArgnum in the Formulas
      * obtained from the method call askWithRestriction(argnum1, term1, argnum2,
      * term2).
@@ -836,8 +791,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * *************************************************************
+    /***************************************************************
      *
      * @return an ArrayList of Formulas in which the two terms provided appear
      * in the indicated argument positions. If there are no Formula(s)
@@ -879,8 +833,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList of Formulas in which the two terms provided appear in the
      * indicated argument positions. If there are no Formula(s) matching the
      * given terms and respective argument positions, return an empty ArrayList.
@@ -967,8 +920,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the SUO-KIF terms that match the request.
      *
      * @return An ArrayList of terms, or an empty ArrayList if no matches can be
@@ -987,8 +939,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Returns the
+    /*************************************************************** Returns the
      * first SUO-KIF terms that matches the request, or null.
      *
      * @return A term (String), or null.
@@ -1003,8 +954,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the terms (Strings) that correspond to targetArgnum
      * in the ground atomic Formulae in which knownArg is in the argument
      * position knownArgnum. The ArrayList returned will contain no duplicate
@@ -1033,8 +983,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * *************************************************************
+    /***************************************************************
      */
     private ArrayList<Formula> stringsToFormulas(ArrayList<String> strings) {
 
@@ -1052,8 +1001,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the Formulas that match the request.
      *
      * @param kind   May be one of "ant", "cons", "stmt", or "arg"
@@ -1092,8 +1040,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the Formulae retrieved, possibly via multiple asks
      * that recursively use relation and all of its subrelations. Note that the
      * Formulas might be formed with different predicates, but all of the
@@ -1143,8 +1090,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing SUO-KIF constants, possibly retrieved via multiple
      * asks that recursively use relation and all of its subrelations.
      *
@@ -1217,8 +1163,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing SUO-KIF constants, possibly retrieved via multiple
      * asks that recursively use relation and all of its subrelations.
      *
@@ -1243,8 +1188,7 @@ public class KB {
         return getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm, targetArgnum, useInverses, null);
     }
 
-    /**
-     * ************************************************************* Returns the
+    /*************************************************************** Returns the
      * first SUO-KIF constant found via asks using relation and its
      * subrelations.
      *
@@ -1278,8 +1222,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Returns an
+    /*************************************************************** Returns an
      * ArrayList containing the transitive closure of relation starting from
      * idxTerm in position idxArgnum. The result does not contain idxTerm.
      *
@@ -1319,8 +1262,7 @@ public class KB {
         return ans;
     }
 
-    /**
-     * ************************************************************* Merges a
+    /*************************************************************** Merges a
      * KIF object containing a single formula into the current KB.
      *
      * @param kif      A KIF object.
@@ -1382,8 +1324,7 @@ public class KB {
         return formulasPresent;
     }
 
-    /**
-     * ************************************************************* Rename
+    /*************************************************************** Rename
      * term2 as term1 throughout the knowledge base. This is an operation with
      * side effects - the term names in the KB are changed.
      */
@@ -1402,8 +1343,7 @@ public class KB {
         }
     }
 
-    /**
-     * ************************************************************* Writes a
+    /*************************************************************** Writes a
      * single user assertion (String) to the end of a file.
      *
      * @param formula A String representing a SUO-KIF Formula.
@@ -1434,8 +1374,7 @@ public class KB {
         return flen;
     }
 
-    /**
-     * ************************************************************* Writes all
+    /* ************************************************************* Writes all
      * the terms in the knowledge base to a file
      */
     public void writeTerms() throws IOException {
@@ -1461,8 +1400,7 @@ public class KB {
         }
     }
 
-    /**
-     * ************************************************************* Adds a
+    /*************************************************************** Adds a
      * formula to the knowledge base. Returns an XML formatted String that
      * contains the response of the inference engine. It should be of the form
      * "<assertionResponse>...</assertionResponse>" where the body should be "
@@ -1571,8 +1509,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Submits a
+    /*************************************************************** Submits a
      * query to the inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
@@ -1621,8 +1558,7 @@ public class KB {
         return null;
     }
 
-    /**
-     * ************************************************************* Submits a
+    /*************************************************************** Submits a
      * query to the inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
@@ -1668,8 +1604,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Submits a
+    /*************************************************************** Submits a
      * query to the inference engine. Returns a list of answers from inference
      * engine. If no proof is found, return null;
      *
@@ -1752,8 +1687,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Submits a
+    /************************************************************** Submits a
      * query to the SInE inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
@@ -1785,8 +1719,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * ************************************************************* Submits a
+    /************************************************************** Submits a
      * query to the LEO inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
@@ -1842,10 +1775,10 @@ public class KB {
                     String line = null;
                     /*
                      * readLine is a bit quirky : it returns the content of a
-					 * line MINUS the newline. it returns null only for the END
-					 * of the stream. it returns an empty String if two newlines
-					 * appear in a row.
-					 */
+                     * line MINUS the newline. it returns null only for the END
+                     * of the stream. it returns an empty String if two newlines
+                     * appear in a row.
+                     */
                     while ((line = userAssertedInput.readLine()) != null)
                         selFs.add(line);
                 }
@@ -1899,8 +1832,7 @@ public class KB {
         return result;
     }
 
-    /**
-     * *************************************************************** Takes a
+    /***************************************************************** Takes a
      * term and returns true if the term occurs in the KB.
      *
      * @param term A String.
@@ -1915,8 +1847,7 @@ public class KB {
         return false;
     }
 
-    /**
-     * *************************************************************** Takes a
+    /***************************************************************** Takes a
      * formula string and returns true if the corresponding Formula occurs in
      * the KB.
      *
@@ -1928,8 +1859,7 @@ public class KB {
         return formulaMap.containsKey(formula.intern());
     }
 
-    /**
-     * *************************************************************** Count the
+    /***************************************************************** Count the
      * number of terms in the knowledge base in order to present statistics to
      * the user.
      *
@@ -1940,9 +1870,8 @@ public class KB {
         return getTerms().size();
     }
 
-    /**
-     * *************************************************************** Count the
-     * number of relations in the knowledge base in order to present statistics
+    /*****************************************************************
+     * Count the number of relations in the knowledge base in order to present statistics
      * to the user.
      *
      * @return The int(eger) number of relations in the knowledge base.
@@ -1952,9 +1881,8 @@ public class KB {
         return kbCache.relations.size();
     }
 
-    /**
-     * *************************************************************** Count the
-     * number of formulas in the knowledge base in order to present statistics
+    /*****************************************************************
+     * Count the number of formulas in the knowledge base in order to present statistics
      * to the user.
      *
      * @return The int(eger) number of formulas in the knowledge base.
@@ -1964,9 +1892,8 @@ public class KB {
         return formulaMap.size();
     }
 
-    /**
-     * *************************************************************** An
-     * accessor providing a TreeSet of un-preProcessed String representations of
+    /*****************************************************************
+     * An accessor providing a TreeSet of un-preProcessed String representations of
      * Formulae.
      *
      * @return A TreeSet of Strings.
@@ -1976,9 +1903,8 @@ public class KB {
         return new TreeSet<String>(formulaMap.keySet());
     }
 
-    /**
-     * *************************************************************** An
-     * accessor providing a Formula
+    /*****************************************************************
+     * An accessor providing a Formula
      */
     public Formula getFormulaByKey(String key) {
 
@@ -1989,9 +1915,8 @@ public class KB {
         return f;
     }
 
-    /**
-     * *************************************************************** Count the
-     * number of rules in the knowledge base in order to present statistics to
+    /*****************************************************************
+     * Count the number of rules in the knowledge base in order to present statistics to
      * the user. Note that the number of rules is a subset of the number of
      * formulas.
      *
@@ -2009,9 +1934,8 @@ public class KB {
         return count;
     }
 
-    /**
-     * *************************************************************** Create an
-     * ArrayList of the specific size, filled with empty strings.
+    /*****************************************************************
+     * Create an ArrayList of the specific size, filled with empty strings.
      */
     private ArrayList<String> arrayListWithBlanks(int size) {
 
@@ -2021,9 +1945,8 @@ public class KB {
         return al;
     }
 
-    /**
-     * *************************************************************** Get the
-     * alphabetically nearest terms to the given term, which is not in the KB.
+    /** ***************************************************************
+     * Get the alphabetically nearest terms to the given term, which is not in the KB.
      * Elements 0-(k-1) should be alphabetically lesser and k-(2*k-1)
      * alphabetically greater. If the term is at the beginning or end of the
      * alphabet, fill in blank items with the empty string: "".
@@ -2057,9 +1980,8 @@ public class KB {
         return al;
     }
 
-    /**
-     * *************************************************************** Get the
-     * alphabetically nearest terms to the given term, which is not in the KB.
+    /*****************************************************************
+     * Get the alphabetically nearest terms to the given term, which is not in the KB.
      * Elements 0-14 should be alphabetically lesser and 15-29 alphabetically
      * greater. If the term is at the beginning or end of the alphabet, fill in
      * blank items with the empty string: "".
@@ -2069,9 +1991,8 @@ public class KB {
         return getNearestKTerms(term, 15);
     }
 
-    /**
-     * *************************************************************** Get the
-     * neighbors of this initial uppercase term (class or function).
+    /*****************************************************************
+     * Get the neighbors of this initial uppercase term (class or function).
      */
     public ArrayList<String> getNearestRelations(String term) {
 
@@ -2079,9 +2000,8 @@ public class KB {
         return getNearestTerms(term);
     }
 
-    /**
-     * *************************************************************** Get the
-     * neighbors of this initial lowercase term (relation).
+    /*****************************************************************
+     * Get the neighbors of this initial lowercase term (relation).
      */
     public ArrayList<String> getNearestNonRelations(String term) {
 
@@ -2089,9 +2009,8 @@ public class KB {
         return getNearestTerms(term);
     }
 
-    /**
-     * *************************************************************** Get the
-     * alphabetically num lower neighbor of this initial term, which must exist
+    /*****************************************************************
+     * Get the alphabetically num lower neighbor of this initial term, which must exist
      * in the current KB otherwise an empty string is returned.
      */
     public String getAlphaBefore(String term, int num) {
@@ -2112,9 +2031,8 @@ public class KB {
         return (String) tal.get(i);
     }
 
-    /**
-     * *************************************************************** Get the
-     * alphabetically num higher neighbor of this initial term, which must exist
+    /*****************************************************************
+     * Get the alphabetically num higher neighbor of this initial term, which must exist
      * in the current KB otherwise an empty string is returned.
      */
     public String getAlphaAfter(String term, int num) {
@@ -2135,9 +2053,8 @@ public class KB {
         return (String) tal.get(i);
     }
 
-    /**
-     * *************************************************************** This List
-     * is used to limit the number of warning messages logged by
+    /****************************************************************
+     * This List is used to limit the number of warning messages logged by
      * loadFormatMaps(lang). If an attempt to load format or termFormat values
      * for lang is unsuccessful, the list is checked for the presence of lang.
      * If lang is not in the list, a warning message is logged and lang is added
@@ -2147,12 +2064,12 @@ public class KB {
      */
     protected ArrayList<String> loadFormatMapsAttempted = new ArrayList<String>();
 
-    /**
-     * *************************************************************** Populates
-     * the format maps for language lang.
+    /****************************************************************
+     * Populates the format maps for language lang.
      *
      * @see termFormatMap is a HashMap of language keys and HashMap values. The
-     * interior HashMaps are term keys and format string values.
+     *      interior HashMaps are term keys and format string values.
+     *
      * @see formatMap is the same but for relation format strings.
      */
     public void loadFormatMaps(String lang) {
@@ -2200,9 +2117,8 @@ public class KB {
         language = lang;
     }
 
-    /**
-     * *************************************************************** Clears
-     * all loaded format and termFormat maps, for all languages.
+    /*****************************************************************
+     * Clears all loaded format and termFormat maps, for all languages.
      */
     protected void clearFormatMaps() {
 
@@ -2228,16 +2144,15 @@ public class KB {
         return;
     }
 
-    /**
-     * *************************************************************** This
-     * method creates a dictionary (Map) of SUO-KIF term symbols -- the keys --
+    /*****************************************************************
+     * This method creates a dictionary (Map) of SUO-KIF term symbols -- the keys --
      * and a natural language string for each key that is the preferred name for
      * the term -- the values -- in the context denoted by lang. If the Map has
      * already been built and the language hasn't changed, just return the
      * existing map. This is a case of "lazy evaluation".
      *
      * @return An instance of Map where the keys are terms and the values are
-     * format strings.
+     *         format strings.
      */
     public HashMap<String, String> getTermFormatMap(String lang) {
 
@@ -2251,15 +2166,14 @@ public class KB {
         return (HashMap<String, String>) termFormatMap.get(lang);
     }
 
-    /**
-     * *************************************************************** This
-     * method creates an association list (Map) of the natural language format
+    /*****************************************************************
+     * This method creates an association list (Map) of the natural language format
      * string and the relation name for which that format string applies. If the
      * map has already been built and the language hasn't changed, just return
      * the existing map. This is a case of "lazy evaluation".
      *
      * @return An instance of Map where the keys are relation names and the
-     * values are format strings.
+     *         values are format strings.
      */
     public HashMap<String, String> getFormatMap(String lang) {
 
@@ -2273,9 +2187,8 @@ public class KB {
         return formatMap.get(lang);
     }
 
-    /**
-     * *************************************************************** Deletes
-     * user assertions, both in the files and in the constituents list.
+    /*****************************************************************
+     * Deletes user assertions, both in the files and in the constituents list.
      */
     public void deleteUserAssertions() throws IOException {
 
@@ -2292,9 +2205,8 @@ public class KB {
         }
     }
 
-    /**
-     * *************************************************************** Deletes
-     * the user assertions key in the constituents map, and then reloads the
+    /*****************************************************************
+     * Deletes the user assertions key in the constituents map, and then reloads the
      * KBs.
      */
     public void deleteUserAssertionsAndReload() {
@@ -2316,12 +2228,12 @@ public class KB {
         }
     }
 
-    /**
-     * ************************************************************* Add a new
-     * KB constituent by reading in the file, and then merging the formulas with
+    /***************************************************************
+     * Add a new KB constituent by reading in the file, and then merging the formulas with
      * the existing set of formulas.
      *
-     * @param filename - The full path of the file being added
+     * @param filename
+     *            - The full path of the file being added
      */
     public void addConstituent(String filename) {
         // , boolean buildCachesP, boolean loadEProverP, boolean performArity) {
@@ -2412,9 +2324,8 @@ public class KB {
         // loadEProver();
     }
 
-    /**
-     * *************************************************************** Reload
-     * all the KB constituents.
+    /*****************************************************************
+     * Reload all the KB constituents.
      */
     public String reload() {
 
@@ -2459,11 +2370,11 @@ public class KB {
         return "";
     }
 
-    /**
-     * *************************************************************** Write a
-     * KIF file consisting of all the formulas in the knowledge base.
+    /*****************************************************************
+     * Write a KIF file consisting of all the formulas in the knowledge base.
      *
-     * @param fname - the name of the file to write, including full path.
+     * @param fname
+     *            - the name of the file to write, including full path.
      */
     public void writeFile(String fname) throws IOException {
 
@@ -2504,9 +2415,8 @@ public class KB {
         }
     }
 
-    /**
-     * ************************************************************* Create the
-     * XML configuration element.
+    /***************************************************************
+     * Create the XML configuration element.
      */
     public SimpleElement writeConfiguration() {
 
@@ -2522,20 +2432,20 @@ public class KB {
         return se;
     }
 
-    /**
-     * ************************************************************* A HashMap
-     * for holding compiled regular expression patterns. The map is initialized
+    /***************************************************************
+     * A HashMap for holding compiled regular expression patterns. The map is initialized
      * by calling compilePatterns().
      */
     private static HashMap<String, ArrayList> REGEX_PATTERNS = null;
 
-    /**
-     * *************************************************************** This
-     * method returns a compiled regular expression Pattern object indexed by
+    /*****************************************************************
+     * This method returns a compiled regular expression Pattern object indexed by
      * key.
      *
-     * @param key A String that is the retrieval key for a compiled regular
+     * @param key
+     *            A String that is the retrieval key for a compiled regular
      *            expression Pattern.
+     *
      * @return A compiled regular expression Pattern instance.
      */
     public static Pattern getCompiledPattern(String key) {
@@ -2548,13 +2458,14 @@ public class KB {
         return null;
     }
 
-    /**
-     * *************************************************************** This
-     * method returns the int value that identifies the regular expression
+    /*****************************************************************
+     * This method returns the int value that identifies the regular expression
      * binding group to be returned when there is a match.
      *
-     * @param key A String that is the retrieval key for the binding group index
+     * @param key
+     *            A String that is the retrieval key for the binding group index
      *            associated with a compiled regular expression Pattern.
+     *
      * @return An int that indexes a binding group.
      */
     public static int getPatternGroupIndex(String key) {
@@ -2567,9 +2478,8 @@ public class KB {
         return -1;
     }
 
-    /**
-     * *************************************************************** This
-     * method compiles and stores regular expression Pattern objects and binding
+    /*****************************************************************
+     * This method compiles and stores regular expression Pattern objects and binding
      * group indexes as two cell ArrayList objects. Each ArrayList is indexed by
      * a String retrieval key.
      *
@@ -2579,12 +2489,12 @@ public class KB {
 
         if (REGEX_PATTERNS == null) {
             REGEX_PATTERNS = new HashMap<String, ArrayList>();
-            String[][] patternArray = {{"row_var", "\\@ROW\\d*", "0"},
+            String[][] patternArray = { { "row_var", "\\@ROW\\d*", "0" },
                     // { "open_lit", "\\(\\w+\\s+\\?\\w+\\s+.\\w+\\s*\\)", "0"
                     // },
-                    {"open_lit", "\\(\\w+\\s+\\?\\w+[a-zA-Z_0-9-?\\s]+\\)", "0"},
-                    {"pred_var_1", "\\(holds\\s+(\\?\\w+)\\W", "1"}, {"pred_var_2", "\\((\\?\\w+)\\W", "1"},
-                    {"var_with_digit_suffix", "(\\D+)\\d*", "1"}};
+                    { "open_lit", "\\(\\w+\\s+\\?\\w+[a-zA-Z_0-9-?\\s]+\\)", "0" },
+                    { "pred_var_1", "\\(holds\\s+(\\?\\w+)\\W", "1" }, { "pred_var_2", "\\((\\?\\w+)\\W", "1" },
+                    { "var_with_digit_suffix", "(\\D+)\\d*", "1" } };
             String pName = null;
             Pattern p = null;
             Integer groupN = null;
@@ -2602,22 +2512,27 @@ public class KB {
         return;
     }
 
-    /**
-     * *************************************************************** This
-     * method finds regular expression matches in an input string using a
+    /*****************************************************************
+     * This method finds regular expression matches in an input string using a
      * compiled Pattern and binding group index retrieved with patternKey. If
      * the ArrayList accumulator is provided, match results are added to it and
      * it is returned. If accumulator is not provided (is null), then a new
      * ArrayList is created and returned if matches are found.
      *
-     * @param input       The input String in which matches are sought.
-     * @param patternKey  A String used as the retrieval key for a regular expression
-     *                    Pattern object, and an int index identifying a binding group.
-     * @param accumulator An optional ArrayList to which matches are added. Note that if
-     *                    accumulator is provided, it will be the return value even if
-     *                    no new matches are found in the input String.
+     * @param input
+     *            The input String in which matches are sought.
+     *
+     * @param patternKey
+     *            A String used as the retrieval key for a regular expression
+     *            Pattern object, and an int index identifying a binding group.
+     *
+     * @param accumulator
+     *            An optional ArrayList to which matches are added. Note that if
+     *            accumulator is provided, it will be the return value even if
+     *            no new matches are found in the input String.
+     *
      * @return An ArrayList, or null if no matches are found and an accumulator
-     * is not provided.
+     *         is not provided.
      */
     public static ArrayList<String> getMatches(String input, String patternKey, ArrayList<String> accumulator) {
 
@@ -2647,34 +2562,37 @@ public class KB {
         return ans;
     }
 
-    /**
-     * *************************************************************** This
-     * method finds regular expression matches in an input string using a
+    /*****************************************************************
+     * This method finds regular expression matches in an input string using a
      * compiled Pattern and binding group index retrieved with patternKey, and
      * returns the results, if any, in an ArrayList.
      *
-     * @param input      The input String in which matches are sought.
-     * @param patternKey A String used as the retrieval key for a regular expression
-     *                   Pattern object, and an int index identifying a binding group.
+     * @param input
+     *            The input String in which matches are sought.
+     *
+     * @param patternKey
+     *            A String used as the retrieval key for a regular expression
+     *            Pattern object, and an int index identifying a binding group.
+     *
      * @return An ArrayList, or null if no matches are found.
      */
     public static ArrayList<String> getMatches(String input, String patternKey) {
-
         return KB.getMatches(input, patternKey, null);
     }
 
-    /**
-     * *************************************************************** This
-     * method retrieves Formulas by asking the query expression queryLit, and
+    /*****************************************************************
+     * This method retrieves Formulas by asking the query expression queryLit, and
      * returns the results, if any, in an ArrayList.
      *
-     * @param queryLit The query, which is assumed to be a List (atomic literal)
-     *                 consisting of a single predicate and its arguments. The
-     *                 arguments could be variables, constants, or a mix of the two,
-     *                 but only the first constant encountered in a left to right
-     *                 sweep over the literal will be used in the actual query.
+     * @param queryLit
+     *            The query, which is assumed to be a List (atomic literal)
+     *            consisting of a single predicate and its arguments. The
+     *            arguments could be variables, constants, or a mix of the two,
+     *            but only the first constant encountered in a left to right
+     *            sweep over the literal will be used in the actual query.
+     *
      * @return An ArrayList of Formula objects, or an empty ArrayList if no
-     * answers are retrieved.
+     *         answers are retrieved.
      */
     public ArrayList<Formula> askWithLiteral(List<String> queryLit) {
 
@@ -2734,18 +2652,19 @@ public class KB {
         return ans;
     }
 
-    /**
-     * *************************************************************** This
-     * method retrieves formulas by asking the query expression queryLit, and
+    /*****************************************************************
+     * This method retrieves formulas by asking the query expression queryLit, and
      * returns the results, if any, in an ArrayList.
      *
-     * @param queryLit The query, which is assumed to be an atomic literal consisting
-     *                 of a single predicate and its arguments. The arguments could
-     *                 be variables, constants, or a mix of the two, but only the
-     *                 first constant encountered in a left to right sweep over the
-     *                 literal will be used in the actual query.
+     * @param queryLit
+     *            The query, which is assumed to be an atomic literal consisting
+     *            of a single predicate and its arguments. The arguments could
+     *            be variables, constants, or a mix of the two, but only the
+     *            first constant encountered in a left to right sweep over the
+     *            literal will be used in the actual query.
+     *
      * @return An ArrayList of Formula objects, or an empty ArrayList if no
-     * answers are retrieved.
+     *         answers are retrieved.
      */
     public ArrayList<Formula> askWithLiteral(Formula queryLit) {
 
@@ -2753,13 +2672,14 @@ public class KB {
         return askWithLiteral(input);
     }
 
-    /**
-     * *************************************************************** This
-     * method retrieves the upward transitive closure of all Class names
+    /*****************************************************************
+     * This method retrieves the upward transitive closure of all Class names
      * contained in the input set. The members of the input set are not included
      * in the result set.
      *
-     * @param classNames A Set object containing SUO-KIF class names (Strings).
+     * @param classNames
+     *            A Set object containing SUO-KIF class names (Strings).
+     *
      * @return A Set of SUO-KIF class names, which could be empty.
      */
     public Set<String> getAllSuperClasses(Set<String> classNames) {
@@ -2773,11 +2693,11 @@ public class KB {
         return ans;
     }
 
-    /**
-     * *************************************************************** This
-     * method retrieves all instances of the classes named in the input set.
+    /*****************************************************************
+     * This method retrieves all instances of the classes named in the input set.
      *
-     * @param classNames A Set of String, containing SUO-KIF class names
+     * @param classNames
+     *            A Set of String, containing SUO-KIF class names
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
     protected TreeSet<String> getAllInstances(TreeSet<String> classNames) {
@@ -2794,11 +2714,11 @@ public class KB {
         return ans;
     }
 
-    /**
-     * *************************************************************** This
-     * method retrieves all instances of the class named in the input String.
+    /*****************************************************************
+     * This method retrieves all instances of the class named in the input String.
      *
-     * @param className The name of a SUO-KIF Class.
+     * @param className
+     *            The name of a SUO-KIF Class.
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
     public TreeSet<String> getAllInstances(String className) {
@@ -2811,21 +2731,21 @@ public class KB {
         return new TreeSet<String>();
     }
 
-    /**
-     * *************************************************************** This
-     * method tries to find or compute a valence for the input relation.
+    /*****************************************************************
+     * This method tries to find or compute a valence for the input relation.
      *
-     * @param relnName A String, the name of a SUO-KIF Relation.
+     * @param relnName
+     *            A String, the name of a SUO-KIF Relation.
      * @return An int value. -1 means that no valence value could be found. 0
-     * means that the relation is a VariableArityRelation. 1-5 are the
-     * standard SUO-KIF valence values.
+     *         means that the relation is a VariableArityRelation. 1-5 are the
+     *         standard SUO-KIF valence values.
      */
     public int getValence(String relnName) {
 
         if (kbCache.valences.get(relnName) == null) {
             if (Formula.isLogicalOperator(relnName)) // logical operator arity
-                // is checked in
-                // KIF.parse()
+                                                        // is checked in
+                                                        // KIF.parse()
                 return -1;
             System.out.println("Error in KB.getValence(): No valence found for " + relnName);
             return -1;
@@ -2834,8 +2754,7 @@ public class KB {
             return kbCache.valences.get(relnName);
     }
 
-    /**
-     * ***************************************************************
+    /*****************************************************************
      *
      * @return an ArrayList containing all predicates in this KB.
      */
@@ -2844,23 +2763,23 @@ public class KB {
         return new ArrayList<String>(kbCache.instances.get("Predicate"));
     }
 
-    /**
-     * ***************************************************************
+    /*****************************************************************
      *
-     * @param obj Any object
+     * @param obj
+     *            Any object
+     *
      * @return true if obj is a String representation of a LISP empty list, else
-     * false.
+     *         false.
      */
     public static boolean isEmptyList(Object obj) {
-
         return (StringUtil.isNonEmptyString(obj) && Formula.empty((String) obj));
     }
 
-    /**
-     * *************************************************************** A static
-     * utility method.
+    /*****************************************************************
+     * A static utility method.
      *
-     * @param obj Presumably, a String.
+     * @param obj
+     *            Presumably, a String.
      * @return true if obj is a SUO-KIF variable, else false.
      */
     public static boolean isVariable(String obj) {
@@ -2871,11 +2790,11 @@ public class KB {
         return false;
     }
 
-    /**
-     * *************************************************************** A static
-     * utility method.
+    /*****************************************************************
+     * A static utility method.
      *
-     * @param obj A String.
+     * @param obj
+     *            A String.
      * @return true if obj is a SUO-KIF logical quantifier, else false.
      */
     public static boolean isQuantifier(String obj) {
@@ -2883,22 +2802,21 @@ public class KB {
         return (StringUtil.isNonEmptyString(obj) && (obj.equals("forall") || obj.equals("exists")));
     }
 
-    /**
-     * *************************************************************** A static
-     * utility method.
+    /*****************************************************************
+     * A static utility method.
      *
-     * @param obj Presumably, a String.
+     * @param obj
+     *            Presumably, a String.
      * @return true if obj is a SUO-KIF commutative logical operator, else
-     * false.
+     *         false.
      */
     public static boolean isCommutative(String obj) {
 
         return (StringUtil.isNonEmptyString(obj) && (obj.equals("and") || obj.equals("or")));
     }
 
-    /**
-     * ************************************************************* Hyperlink
-     * terms identified with '&%' to the URL that brings up that term in the
+    /***************************************************************
+     * Hyperlink terms identified with '&%' to the URL that brings up that term in the
      * browser. Handle (and ignore) suffixes on the term. For example
      * "&%Processes" would get properly linked to the term "Process", if present
      * in the knowledge base.
@@ -2953,9 +2871,8 @@ public class KB {
         return formatted;
     }
 
-    /**
-     * ************************************************************* Save the
-     * contents of the current KB to a file.
+    /***************************************************************
+     * Save the contents of the current KB to a file.
      */
     public String writeInferenceEngineFormulas(TreeSet<String> forms) {
 
@@ -3002,11 +2919,11 @@ public class KB {
         return filename;
     }
 
-    /**
-     * ************************************************************* Creates
-     * InferenceEngine and loads all of the constituents into it.
+    /***************************************************************
+     * Creates InferenceEngine and loads all of the constituents into it.
      *
-     * @param factory Factory object used to create new InferenceEngine.
+     * @param factory
+     *            Factory object used to create new InferenceEngine.
      * @return InferenceEngine object with all constituents loaded.
      */
     public InferenceEngine createInferenceEngine(InferenceEngine.EngineFactory factory) {
@@ -3032,9 +2949,8 @@ public class KB {
         return res;
     }
 
-    /**
-     * ************************************************************* Starts
-     * EProver and collects, preprocesses and loads all of the constituents into
+    /***************************************************************
+     * Starts EProver and collects, preprocesses and loads all of the constituents into
      * it.
      */
     public void loadEProver() {
@@ -3067,8 +2983,7 @@ public class KB {
         return;
     }
 
-    /**
-     * ***************************************************************
+    /*****************************************************************
      * Preprocess the knowledge base to TPTP. This includes "holds" prefixing,
      * ticking nested formulas, expanding row variables, and translating
      * mathematical relation operators. All the real work is done in
@@ -3101,7 +3016,7 @@ public class KB {
             // System.out.println("INFO in KB.preProcess(): f : " + f);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             ArrayList<Formula> processed = fp.preProcess(f, false, this); // not
-            // queries
+                                                                            // queries
             if (tptpParseP) {
                 try {
                     SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
@@ -3140,9 +3055,7 @@ public class KB {
         return newTreeSet;
     }
 
-    /**
-     * ***************************************************************
-     *
+    /*****************************************************************
      * @return a defensive copy of loadFormatMapsAttempted.
      */
     public ArrayList<String> getLoadFormatMapsAttempted() {
@@ -3150,9 +3063,7 @@ public class KB {
         return Lists.newArrayList(loadFormatMapsAttempted);
     }
 
-    //Edited by Infosys Ltd
     public List<Pair> getSortedTermFrequency() {
-
         List<Pair> termFrequencies = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
             termFrequencies.add(new Pair(entry.getValue(), entry.getKey()));
@@ -3160,10 +3071,8 @@ public class KB {
         Collections.sort(termFrequencies, Collections.reverseOrder());
         return termFrequencies;
     }
-    // Edit END
 
-    /**
-     * *************************************************************
+    /***************************************************************
      */
     public static void main(String[] args) {
 
@@ -3185,9 +3094,9 @@ public class KB {
         // kb.generateRandomProof();
         // kb.instanceOfInstanceP();
 
-		/*
+        /*
          * String foo = "(rel bar \"test\")"; Formula f = new Formula();
-		 * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
-		 */
+         * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
+         */
     }
 }
