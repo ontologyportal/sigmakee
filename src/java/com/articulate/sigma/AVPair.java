@@ -7,12 +7,29 @@ software which incorporates, builds on, or uses this code.*/
 
 package com.articulate.sigma;
 
-
+/*****************************************************************
+ */
 public class AVPair implements Comparable {
 
     public String attribute = "";  // this is the sort field for comparison
     public String value = "";
 
+    /*****************************************************************
+     */
+    public AVPair() {
+
+    }
+
+    /*****************************************************************
+     */
+    public AVPair(String attrib, String val) {
+
+        attribute = attrib;
+        value = val;
+    }
+
+    /*****************************************************************
+     */
     public int compareTo(Object avp) throws ClassCastException {
 
         if (!avp.getClass().getName().equalsIgnoreCase("com.articulate.sigma.AVPair"))
@@ -24,6 +41,8 @@ public class AVPair implements Comparable {
         return attribute.compareTo(((AVPair) avp).attribute);
     }
 
+    /*****************************************************************
+     */
     public String toString() {
 
         return "[" + attribute + "," + value + "]";
