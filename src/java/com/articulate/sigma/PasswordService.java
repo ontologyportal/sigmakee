@@ -253,7 +253,7 @@ public final class PasswordService {
 
     /** ***************************************************************
      * Read an XML-formatted configuration file. 
-     * @deprecated
+     * @Deprecated
      */
     private void processUserFile(String configuration) {
 

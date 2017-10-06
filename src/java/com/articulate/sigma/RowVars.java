@@ -57,10 +57,10 @@ public class RowVars {
                     int arity = kb.kbCache.valences.get(pred).intValue();
                     if (arities.containsKey(pred)) {
                         if (arity < arities.get(rowvar).intValue())
-                            arities.put(rowvar, new Integer(arity));
+                            arities.put(rowvar, Integer.valueOf(arity));
                     }
                     else
-                        arities.put(rowvar, new Integer(arity));
+                        arities.put(rowvar, Integer.valueOf(arity));
                 }
             }
         }
@@ -105,10 +105,10 @@ public class RowVars {
                     int arity = kb.kbCache.valences.get(pred).intValue();
                     if (arities.containsKey(pred)) {
                         if (arity < arities.get(rowvar).intValue())
-                            arities.put(rowvar, new Integer(arity)-nonRowVar);
+                            arities.put(rowvar, Integer.valueOf(arity)-nonRowVar);
                     }
                     else if (arity > 0)
-                        arities.put(rowvar, new Integer(arity)-nonRowVar);
+                        arities.put(rowvar, Integer.valueOf(arity)-nonRowVar);
                 }
             }
         }

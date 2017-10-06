@@ -170,7 +170,7 @@ public class EditGUI {
         for (int i = 0; i < relations.size(); i++) {
             String r = relations.get(i);
             int a = kb.kbCache.valences.get(r);
-            arity.put(r,new Integer(a));
+            arity.put(r,Integer.valueOf(a));
         }
 
         for (int i = 0; i < relations.size(); i++) {
@@ -221,7 +221,7 @@ public class EditGUI {
         for (int i = 0; i < relations.size(); i++) {
             String r = relations.get(i);
             int a = kb.kbCache.valences.get(r);
-            arity.put(r,new Integer(a));
+            arity.put(r,Integer.valueOf(a));
         }
 
         for (int i = 0; i < relations.size(); i++) {

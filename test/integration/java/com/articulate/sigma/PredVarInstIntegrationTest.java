@@ -1,9 +1,9 @@
 package com.articulate.sigma;
 
 import com.google.common.collect.Sets;
-import jdk.nashorn.internal.ir.annotations.Ignore;
 
 import java.util.Set;
+import org.junit.Ignore;
 
 import static org.junit.Assert.assertEquals;
 

@@ -176,7 +176,7 @@ public class SUMOformulaToTPTPformula {
      */
     private static void incrementTOS(Stack<Integer> countStack) {
 
-        countStack.push(new Integer((Integer)countStack.pop()+1));
+        countStack.push(Integer.valueOf((Integer) countStack.pop() + 1));
     }
 
     /** ***************************************************************
@@ -232,7 +232,7 @@ public class SUMOformulaToTPTPformula {
             StringBuilder tptpFormula = new StringBuilder();
 
             parenLevel = 0;
-            countStack.push(new Integer(0));
+            countStack.push(Integer.valueOf(0));
             lastWasOpen = false;
             inQuantifierVars = false;
             inHOL = false;
@@ -273,7 +273,7 @@ public class SUMOformulaToTPTPformula {
                     tptpFormula.append("(");          //----()s around all operator expressions
                     if (arity == 1) {                 //----Output unary as prefix
                         tptpFormula.append(translateWord(st,false));                        
-                        countStack.push(new Integer(0));   //----Note the new operator (dummy) with 0 operands so far
+                        countStack.push(Integer.valueOf(0));   //----Note the new operator (dummy) with 0 operands so far
                         operatorStack.push(",");
                         //----Check if the next thing will be the quantified variables
                         if (st.sval.equals("forall") || st.sval.equals("exists"))
@@ -281,7 +281,7 @@ public class SUMOformulaToTPTPformula {
                     } 
                     else if (arity == 2) {    //----Binary operator
                         //----Note the new operator with 0 operands so far
-                        countStack.push(new Integer(0));
+                        countStack.push(Integer.valueOf(0));
                         operatorStack.push(translateWord(st,false));
                     }
                     lastWasOpen = false;                    
@@ -312,7 +312,7 @@ public class SUMOformulaToTPTPformula {
                                 tptpFormula.append("'");                            
                             tptpFormula.append(translateWord(st,true));   //----Predicate or function and (
                             tptpFormula.append("(");                            
-                            countStack.push(new Integer(0));              //----Note the , for between arguments with 0 arguments so far
+                            countStack.push(Integer.valueOf(0));              //----Note the , for between arguments with 0 arguments so far
                             operatorStack.push(",");
                         }
                         //----Argument or quantified variable

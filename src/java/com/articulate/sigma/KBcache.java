@@ -898,7 +898,7 @@ public class KBcache {
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
             signatures.put(rel,domains);
-            valences.put(rel, new Integer(maxIndex));
+            valences.put(rel, Integer.valueOf(maxIndex));
         }
         inheritDomains();
     }

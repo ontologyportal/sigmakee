@@ -189,7 +189,7 @@ public class TPTP3ProofProcessor {
 		int comma1 = withoutWrapper.indexOf(",");
 		String id = withoutWrapper.substring(0,comma1).trim();
 		// System.out.println("ID       : " + id);
-		Integer intID = new Integer(idCounter++);
+		Integer intID = Integer.valueOf(idCounter++);
 		idTable.put(id,intID);
 		ps.number = intID;
 
@@ -557,10 +557,10 @@ public class TPTP3ProofProcessor {
 		String ps3 = "cnf(c_0_14,negated_conjecture,($false), " +
 				"inference(eval_answer_literal,[status(thm)], [inference(spm,[status(thm)],[c_0_12, c_0_13, theory(equality)]), theory(answers)]), ['proof']).";
 		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-		tpp.idTable.put("c_0_0", new Integer(0));
-		tpp.idTable.put("c_0_3", new Integer(1));
-		tpp.idTable.put("c_0_12", new Integer(2));
-		tpp.idTable.put("c_0_13", new Integer(3));
+		tpp.idTable.put("c_0_0", Integer.valueOf(0));
+		tpp.idTable.put("c_0_3", Integer.valueOf(1));
+		tpp.idTable.put("c_0_12", Integer.valueOf(2));
+		tpp.idTable.put("c_0_13", Integer.valueOf(3));
 		System.out.println(tpp.parseProofStep(ps1));
 		System.out.println();
 		System.out.println(tpp.parseProofStep(ps1));

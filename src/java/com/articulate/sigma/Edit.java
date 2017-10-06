@@ -29,7 +29,7 @@ public class Edit {
         if (editorCommand != null && editorCommand != "") {
             execString.append(editorCommand + " " + filename);
             if (lineNumberCommand != null && lineNumberCommand != "")
-                execString.append(" " + lineNumberCommand + (new Integer(lineNumber)).toString());
+                execString.append(" " + lineNumberCommand + (Integer.valueOf(lineNumber)).toString());
             execString.append("')\">");
         }
 

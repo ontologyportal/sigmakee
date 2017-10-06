@@ -394,7 +394,7 @@ public class PredVarInst {
                     //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
                     //        " with arglist: " + arglist);
                     ans.add(arg0);
-                    predVarArity.put(arg0,new Integer(arglist.size()));
+                    predVarArity.put(arg0,Integer.valueOf(arglist.size()));
                 }
                 else {
                     //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not a predicate var: " + arg0);

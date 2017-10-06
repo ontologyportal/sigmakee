@@ -280,7 +280,7 @@ public class KIF {
                             // ONLY in
                             // NORMAL_PARSE_MODE
                             String validArgs = f.validArgs((file != null ? file.getName() : null),
-                                    (file != null ? new Integer(f.startLine) : null));
+                                    (file != null ? Integer.valueOf(f.startLine) : null));
                             if (StringUtil.emptyString(validArgs))
                                 validArgs = f.badQuantification();
                             if (StringUtil.isNonEmptyString(validArgs)) {
