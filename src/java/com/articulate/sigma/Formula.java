@@ -11,6 +11,10 @@ publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment, in
 Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed
 Systems, August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
+
+Authors:
+Adam Pease
+Infosys LTD.
 */
 
 package com.articulate.sigma;

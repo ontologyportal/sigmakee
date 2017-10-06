@@ -53,6 +53,10 @@ You should have received a copy of the GNU General Public License
 along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
+
+Authors:
+Adam Pease
+Infosys LTD.
 */
 
 import com.articulate.sigma.trans.*;
@@ -1592,7 +1596,7 @@ public class KB {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     eprover.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"), maxAnswers < 1 ? 1 : maxAnswers);
                 }
                 catch (IOException e) {
                     e.printStackTrace();

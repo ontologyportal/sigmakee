@@ -9,6 +9,10 @@ code.  Please cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
+
+Authors:
+Adam Pease
+Infosys LTD.
 */
 
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
@@ -153,11 +157,9 @@ public class EProver {
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
-        // Edited by Infosys LTD
-        
+              
         // To make sigma work on windows. 
-        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
-                       
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
@@ -168,7 +170,7 @@ public class EProver {
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
-        // Edit End
+
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -192,8 +194,7 @@ public class EProver {
             this.terminate();
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
-        // Edited by Infosys LTD
-        
+
         // To make sigma work on windows
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
                
@@ -207,7 +208,7 @@ public class EProver {
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
-        // Edit End
+
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -216,6 +217,43 @@ public class EProver {
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
+    
+    
+    /** *************************************************************
+     * @author Infosys LTD.
+     * Create a running instance of EProver based on existing batch
+     * specification file.
+     *
+     * @param executable A File object denoting the platform-specific
+     * EProver executable.
+     * @param maxAnswers - Limit the answers upto maxAnswers only
+     * @throws IOException
+     */
+    public EProver (String executable,int maxAnswers) throws IOException {
+        if (this._eprover != null)
+            this.terminate();
+        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        // To make sigma work on windows
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                eproverPath));
+        System.out.println("EProver(): command: " + commands);
+        _builder = new ProcessBuilder(commands);
+        _builder.redirectErrorStream(false);
+        _eprover = _builder.start();
+        System.out.println("EProver(): process: " + _eprover);
+        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
+        _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
+    }
+    
     
     /** *************************************************************
      * Add an assertion for inference.
