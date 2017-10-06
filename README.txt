@@ -1,14 +1,22 @@
 Introduction
 ============
 
-You can follow the steps below to do a manual installation on linux. This procedure assumes that you start from
-your home directory and are happy with having directories created there. The sed command below attempts to modify
-~/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths differ, then you may need to
-edit your config.xml manually. If you are running tomcat on vagrant or another VM, you may need to change the port
-value from 8080 .  E will only work if your $TMPDIR is set correctly.  No particular version of tomcat is required.
-If you load a different version of tomcat, be sure to change $CATALINA_HOME and your paths to conform to the version.
-If you use a different mirror or version you'll need to change the wget commend below. Change "theuser" below to your
-user name.
+Please read these notes thoroughly.  Most installation issues result from not
+carefully following the instructions.
+
+You can follow the steps below to do a manual installation on linux or Mac. This
+procedure assumes that you start from your home directory and are happy with
+having directories created there. The sed command below attempts to modify
+~/.sigmakee/KBs/config.xml to conform to your local paths.  If your paths
+differ, then you may need to edit your config.xml manually. If you are running
+tomcat on vagrant or another VM, you may need to change the port value from 8080.
+If you are running on a server, rather than your localhost you'll need to set
+the hostname parameter in your config.xml file. E will only work if your $TMPDIR
+is set correctly.  No particular version of tomcat is required. If you load a
+different version of tomcat, be sure to change $CATALINA_HOME and your paths to
+conform to the version. If you use a different mirror or version you'll need to
+change the wget commend below and Oracle Java appears to now have a key embedded
+in their URL that will change every time. Change "theuser" below to your user name.
 
 
 System preparation on Linux
@@ -25,10 +33,6 @@ add to sudoers file
 
 install unzip
   sudo apt-get install unzip
-
-  cd KBs
-  cp ~/workspace/sigmakee/config.xml .
-
   sudo apt-get update
 
 may need to create a .bashrc
@@ -40,12 +44,14 @@ handy to add stuff to .bashrc
   echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
   echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
 
-
 You may need to download Java and set your
 JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
 The following command line version may work
   wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
     http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
+
+but you also may need to go to the web site, accept the license, then copy the download link
+into this command
 
 Linux Installation
 ==================
@@ -53,13 +59,13 @@ Linux Installation
 mkdir workspace
 mkdir Programs
 cd Programs
-wget 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.16/bin/apache-tomcat-8.5.16.zip'
+wget 'http://ftp.wayne.edu/apache/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
 wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
+wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
-unzip apache-tomcat-8.5.16.zip
-rm apache-tomcat-8.5.16.zip
-cd ~/Programs/apache-tomcat-8.5.16/bin
+unzip apache-tomcat-8.5.23.zip
+rm apache-tomcat-8.5.23.zip
+cd ~/Programs/apache-tomcat-8.5.23/bin
 chmod 777 *
 cd ~/workspace/
 sudo apt-get install git
@@ -72,7 +78,7 @@ mkdir KBs
 cp -R ~/workspace/sumo/* KBs
 me="$(whoami)"
 cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
-sed -i "s/theuser/$me/g" config.xml
+sed -i "s/theuser/$me/g" KBs/config.xml
 cd ~/Programs
 gunzip WordNet-3.0.tar.gz
 tar -xvf WordNet-3.0.tar
@@ -88,7 +94,7 @@ sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.16" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 sudo add-apt-repository universe
@@ -130,13 +136,13 @@ install Homebrew from http://brew.sh
 mkdir workspace
 mkdir Programs
 cd Programs
-curl -O 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.16/bin/apache-tomcat-8.5.16.zip'
+curl -O 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
 curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.9/E.tgz'
+curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
-unzip apache-tomcat-8.5.16.zip
-rm apache-tomcat-8.5.16.zip
-cd ~/Programs/apache-tomcat-8.5.16/bin
+unzip apache-tomcat-8.5.23.zip
+rm apache-tomcat-8.5.23.zip
+cd ~/Programs/apache-tomcat-8.5.23/bin
 chmod 777 *
 cd ~/workspace/
 sudo apt-get install git
@@ -165,7 +171,7 @@ brew install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.16" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 brew install ant
