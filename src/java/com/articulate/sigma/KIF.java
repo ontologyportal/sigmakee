@@ -10,6 +10,10 @@
  * Pease, A., (2003). The Sigma Ontology Development Environment,
  * in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  * August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforget.net
+ * 
+ * Authors:
+ * Adam Pease
+ * Infosys LTD.
  */
 package com.articulate.sigma;
 
@@ -50,10 +54,10 @@ public class KIF {
     /** The set of all terms in the knowledge base. This is a set of Strings. */
     public TreeSet<String> terms = new TreeSet<String>();
     
-    // Edited by Infosys
+   
     /** A hashMap to store term frequencies for each term in knowledge base */
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
-    //Edit END
+    
 
     /**
      * A HashMap of ArrayLists of Formulas. Each String key points to a list of
@@ -387,12 +391,12 @@ public class KIF {
                         // not
                         // terms
                         terms.add(st.sval); // collect all terms
-                        // Edited by Infosys
+                        
                         if (!termFrequency.containsKey(st.sval)) {
                             termFrequency.put(st.sval, 0);
                         }
                         termFrequency.put(st.sval, termFrequency.get(st.sval) + 1);
-                        // Edit END
+                        
                         String key = createKey(st.sval, inAntecedent, inConsequent, argumentNum, parenLevel);
                         keySet.add(key); // Collect all the keys until the end
                         // of the statement is reached.
