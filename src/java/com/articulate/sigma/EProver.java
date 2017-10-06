@@ -9,6 +9,10 @@ code.  Please cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
+
+Authors:
+Adam Pease
+Infosys LTD.
 */
 
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
@@ -153,11 +157,9 @@ public class EProver {
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
-        // Edited by Infosys LTD
-        
+              
         // To make sigma work on windows. 
-        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
-                       
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
@@ -168,7 +170,7 @@ public class EProver {
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
-        // Edit End
+
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -192,8 +194,7 @@ public class EProver {
             this.terminate();
 
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
-        // Edited by Infosys LTD
-        
+
         // To make sigma work on windows
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
                
@@ -207,7 +208,7 @@ public class EProver {
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
-        // Edit End
+
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
