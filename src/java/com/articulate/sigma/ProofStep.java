@@ -39,7 +39,7 @@ public class ProofStep {
 
      /** The number assigned to this proof step, initially by EProver and
       *  then normalized by ProofStep.normalizeProofStepNumbers() */
-    public Integer number = new Integer(0);
+    public Integer number = Integer.valueOf(0);
 
      /** An ArrayList of Integer(s), which reference prior proof steps from
       *  which this axiom is derived. Note that the numbering is what
@@ -63,23 +63,23 @@ public class ProofStep {
             //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): numberingMap: " + numberingMap);
             ProofStep ps = (ProofStep) proofSteps.get(i);
             //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): Checking proof step: " + ps);
-            Integer oldIndex = new Integer(ps.number);
+            Integer oldIndex = Integer.valueOf(ps.number);
             if (numberingMap.containsKey(oldIndex)) 
                 ps.number = (Integer) numberingMap.get(oldIndex);
             else {
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): adding new step: " + newIndex);
-                ps.number = new Integer(newIndex);            
-                numberingMap.put(oldIndex,new Integer(newIndex++));
+                ps.number = Integer.valueOf(newIndex);
+                numberingMap.put(oldIndex,Integer.valueOf(newIndex++));
             }
             for (int j = 0; j < ps.premises.size(); j++) {
                 Integer premiseNum = ps.premises.get(j);
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): old premise num: " + premiseNum);
                 Integer newNumber = null;
                 if (numberingMap.get(premiseNum) != null) 
-                    newNumber = new Integer((Integer) numberingMap.get(premiseNum));
+                    newNumber = Integer.valueOf((Integer) numberingMap.get(premiseNum));
                 else {
-                    newNumber = new Integer(newIndex++);
-                    numberingMap.put(premiseNum,new Integer(newNumber));
+                    newNumber = Integer.valueOf(newIndex++);
+                    numberingMap.put(premiseNum,Integer.valueOf(newNumber));
                 }
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): new premise num: " + newNumber);
                 ps.premises.set(j,newNumber);
@@ -111,7 +111,7 @@ public class ProofStep {
         int counter = 1;
         for (int i = 0; i < proofSteps.size(); i++) {
             ProofStep ps = (ProofStep) proofSteps.get(i);
-            Integer index = new Integer(ps.number);
+            Integer index = Integer.valueOf(ps.number);
             reverseFormulaMap.put(index,ps);
             String s = Clausifier.normalizeVariables(ps.axiom);
             if (formulaMap.keySet().contains(s) && ps.premises.size()==1) {   // If the step is a duplicate, relate the current step number
@@ -127,7 +127,7 @@ public class ProofStep {
         }
         for (int i = 0; i < dedupedProofSteps.size(); i++) { 
             ProofStep ps = (ProofStep) dedupedProofSteps.get(i);            
-        	Integer newIndex = new Integer(ps.number);
+        	Integer newIndex = Integer.valueOf(ps.number);
         	if (numberingMap.keySet().contains(newIndex))
         		newIndex = (Integer) numberingMap.get(newIndex);
         	ProofStep psNew = new ProofStep();
@@ -142,9 +142,9 @@ public class ProofStep {
         		Integer premiseNum = ps.premises.get(j);
         		Integer newNumber = null;
         		if (numberingMap.get(premiseNum) != null) 
-        			newNumber = new Integer((Integer) numberingMap.get(premiseNum));
+        			newNumber = Integer.valueOf((Integer) numberingMap.get(premiseNum));
         		else 
-        			newNumber = new Integer(premiseNum);                
+        			newNumber = Integer.valueOf(premiseNum);
         		newPremises.add(newNumber);                    
         	}
         	psNew.premises = newPremises;

@@ -563,7 +563,7 @@ public class ProofProcessor {
 					 axioms.put(m.group(1),line);
                      Integer i = counts.get(m.group(1));
                      if (i == null)
-                         counts.put(m.group(1),new Integer(1));
+                         counts.put(m.group(1),Integer.valueOf(1));
                      else {
                          i++;
                          counts.put(m.group(1), i);

@@ -958,11 +958,11 @@ public class DB {
                 if (newCountMap.keySet().contains(SUMO)) {
                     int val1 = newCountMap.get(SUMO).intValue();
                     int val2 = countMap.get(s).intValue();
-                    newCountMap.put(SUMO,new Integer(val1 + val2));
+                    newCountMap.put(SUMO,Integer.valueOf(val1 + val2));
                 }
                 else {
                     int val2 = countMap.get(s).intValue();
-                    newCountMap.put(SUMO,new Integer(val2));
+                    newCountMap.put(SUMO,Integer.valueOf(val2));
                 }
             }
             if (newCountMap.keySet().size() % 100 == 0)
@@ -1015,10 +1015,10 @@ public class DB {
                     String synset = it2.next();
                     if (countMap.keySet().contains(synset)) {
                         Integer in = countMap.get(synset);
-                        countMap.put(synset,new Integer(in.intValue() + h.senses.get(synset).intValue()));
+                        countMap.put(synset,Integer.valueOf(in.intValue() + h.senses.get(synset).intValue()));
                     }
                     else
-                        countMap.put(synset,new Integer(1));
+                        countMap.put(synset,Integer.valueOf(1));
                     if (i % 100 == 0)
                         System.out.print('.');
                     i++;
@@ -1045,7 +1045,7 @@ public class DB {
                     if (!h.SUMO.keySet().contains(SUMO))
                         h.SUMO.put(SUMO,h.senses.get(s));
                     else
-                        h.SUMO.put(SUMO,new Integer(h.senses.get(s).intValue() + h.SUMO.get(SUMO).intValue()));
+                        h.SUMO.put(SUMO,Integer.valueOf(h.senses.get(s).intValue() + h.SUMO.get(SUMO).intValue()));
                 }
             }
         }
@@ -1585,7 +1585,7 @@ public class DB {
 	            int newTotal = total;
 	            if (scores.keySet().contains(term))
 	                newTotal = total + scores.get(term).intValue();
-	            scores.put(term,new Integer(newTotal));
+	            scores.put(term,Integer.valueOf(newTotal));
             }
         }
         return scores;
@@ -1672,7 +1672,7 @@ public class DB {
     		if (!totalSent.keySet().contains(key)) 
     			result.put(key, sent.get(key));
     		else
-    			result.put(key, new Integer(sent.get(key).intValue() + 
+    			result.put(key, Integer.valueOf(sent.get(key).intValue() +
     					                    result.get(key).intValue()));
     	}
     	return result;

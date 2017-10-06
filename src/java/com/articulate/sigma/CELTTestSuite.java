@@ -116,7 +116,7 @@ public class CELTTestSuite {
                     if (!odd)
                         result = result.append("<tr><td valign=top>" + (new Integer(count)).toString());
                     else
-                        result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (new Integer(count)).toString());
+                        result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (Integer.valueOf(count)).toString());
                     count++;
                     odd = !odd;
                     result = result.append(". " + sentence + "</td>");
@@ -137,9 +137,9 @@ public class CELTTestSuite {
                     Formula f = new Formula();
                     f.read(expectedAnswer);
                     if (!odd)
-                        result = result.append("<tr><td valign=top>" + (new Integer(count)).toString());
+                        result = result.append("<tr><td valign=top>" + (Integer.valueOf(count)).toString());
                     else
-                        result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (new Integer(count)).toString());
+                        result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (Integer.valueOf(count)).toString());
                     count++;
                     odd = !odd;
                     result = result.append(". " + sentence + "</td>");

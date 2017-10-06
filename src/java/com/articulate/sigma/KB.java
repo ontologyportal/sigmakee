@@ -2506,7 +2506,7 @@ public class KB {
             for (int i = 0; i < patternArray.length; i++) {
                 pName = patternArray[i][0];
                 p = Pattern.compile(patternArray[i][1]);
-                groupN = new Integer(patternArray[i][2]);
+                groupN = Integer.valueOf(patternArray[i][2]);
                 pVal = new ArrayList();
                 pVal.add(p);
                 pVal.add(groupN);

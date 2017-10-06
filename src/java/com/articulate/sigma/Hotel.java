@@ -182,7 +182,7 @@ public class Hotel {
                 oldVal = conceptSentiment.get(term).intValue();
                 val = val + oldVal;
             }
-            conceptSentiment.put(term,new Integer(val));
+            conceptSentiment.put(term,Integer.valueOf(val));
         }
     }
 
@@ -248,7 +248,7 @@ public class Hotel {
         for (int i = 0; i < hotels.size(); i++) {
             Hotel h = hotels.get(i);
             for (int k = 2; k < header.size(); k++)
-                h.buckets.put(header.get(k),new Float(0));
+                h.buckets.put(header.get(k),Float.valueOf(0));
             Iterator<String> it = h.amenities.keySet().iterator();
             while (it.hasNext()) {  // go through all the amenities
                 String amenity = it.next();
@@ -270,7 +270,7 @@ public class Hotel {
                                 if (!StringUtil.emptyString(bucketValue)) {
                                     Float addValue = Float.parseFloat(bucketValue);
                                     Float newTotal = currentValue.floatValue() + addValue;
-                                    h.buckets.put(bucket,new Float(newTotal));
+                                    h.buckets.put(bucket,Float.valueOf(newTotal));
                                 }
                             }
                         }
@@ -478,7 +478,7 @@ public class Hotel {
                 String columnName = it2.next();
                 Integer value = h.SUMO.get(columnName);
                 Integer oldValue = columnNumbers.get(columnName);
-                Integer newValue = new Integer(value.intValue() + oldValue.intValue());
+                Integer newValue = Integer.valueOf(value.intValue() + oldValue.intValue());
                 columnNumbers.put(columnName, newValue);
             }
         }
@@ -563,7 +563,7 @@ public class Hotel {
         return result;
     }
     /** *******************************************************************
-     * @param h is a DOM element for one hotel
+     * @param e is a DOM element for one hotel
      * @return a Hotel
      */
     public static Hotel processOneXMLHotel(Element e) {
@@ -1094,7 +1094,7 @@ public class Hotel {
         while (it.hasNext()) {
             String sense = it.next();
             if (senses.keySet().contains(sense))
-                senses.put(sense,new Integer(wnsenses.get(sense).intValue() + senses.get(sense).intValue()));
+                senses.put(sense,Integer.valueOf(wnsenses.get(sense).intValue() + senses.get(sense).intValue()));
             else
                 senses.put(sense,wnsenses.get(sense));
         }

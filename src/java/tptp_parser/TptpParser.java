@@ -2140,7 +2140,7 @@ TptpParserOutput.UnaryConnective connective
 		}
 		}
 		}
-		lit = out.createLiteral(new Boolean(polarity[0]), af);
+		lit = out.createLiteral(Boolean.valueOf(polarity[0]), af);
 		return lit;
 	}
 	
@@ -2206,7 +2206,7 @@ TptpParserOutput.UnaryConnective connective
 		
 		b=tptp_sign();
 		af=atomic_formula(out, polarity);
-		lit = out.createLiteral(new Boolean(b == polarity[0]), af);
+		lit = out.createLiteral(Boolean.valueOf(b == polarity[0]), af);
 		return lit;
 	}
 	

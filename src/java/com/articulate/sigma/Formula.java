@@ -346,9 +346,9 @@ public class Formula implements Comparable {
         int hc = theFormula.hashCode();
         String result = null;
         if (hc < 0)
-            result = "N" + (new Integer(hc)).toString().substring(1) + fname;
+            result = "N" + (Integer.valueOf(hc)).toString().substring(1) + fname;
         else
-            result = (new Integer(hc)).toString() + fname;
+            result = (Integer.valueOf(hc)).toString() + fname;
         return result;
     }
 
@@ -2563,7 +2563,7 @@ public class Formula implements Comparable {
     public static String textFormat(String input) {
 
         Formula f = new Formula(input);
-        return f.format("", "  ", new Character((char) 10).toString());
+        return f.format("", "  ", Character.valueOf((char) 10).toString());
     }
 
     /** ***************************************************************
@@ -2571,7 +2571,7 @@ public class Formula implements Comparable {
      */
     public String toString() {
 
-        return format("", "  ", new Character((char) 10).toString());
+        return format("", "  ", Character.valueOf((char) 10).toString());
     }
 
     /** ***************************************************************
@@ -2579,7 +2579,7 @@ public class Formula implements Comparable {
      */
     public String toStringMeta() {
 
-        return format("", "  ", new Character((char) 10).toString()) +
+        return format("", "  ", Character.valueOf((char) 10).toString()) +
                 "[" + sourceFile + " " + startLine + "-" + endLine + "]";
     }
 

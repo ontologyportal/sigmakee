@@ -258,7 +258,7 @@ public class InterfaceTPTP {
 			}
 			//----Need to offer automode
 			URLParameters.put("System___System",systemChosen);
-			URLParameters.put("TimeLimit___TimeLimit", new Integer(timeout));
+			URLParameters.put("TimeLimit___TimeLimit", Integer.valueOf(timeout));
 			URLParameters.put("ProblemSource","UPLOAD");
 			URLParameters.put("UPLOADProblem",new File(problemFile));
 			URLParameters.put("SubmitButton","RunSelectedSystems");

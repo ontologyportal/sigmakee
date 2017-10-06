@@ -484,7 +484,7 @@ public class WordNet {
             String targetSynset = m.group(2);
             String targetPOS = m.group(3);
             //String sourceTarget = m.group(4);
-            targetPOS = (new Character(WordNetUtilities.posLetterToNumber(targetPOS.charAt(0)))).toString();
+            targetPOS = (Character.valueOf(WordNetUtilities.posLetterToNumber(targetPOS.charAt(0)))).toString();
             pointers = m.replaceFirst("");
             m = regexPatterns[3].matcher(pointers);
             ptr = WordNetUtilities.convertWordNetPointer(ptr);
@@ -1667,17 +1667,17 @@ public class WordNet {
             String synset = WSD.findWordSenseInContext(word,al);
             if (synset != null && synset != "") {
                 if (result.get(synset) == null)
-                    result.put(synset,new Integer(1));
+                    result.put(synset,Integer.valueOf(1));
                 else
-                    result.put(synset,new Integer(result.get(synset).intValue() + 1));
+                    result.put(synset,Integer.valueOf(result.get(synset).intValue() + 1));
             }
             else {
                 synset = WSD.getBestDefaultSense(word);
                 if (!StringUtil.emptyString(synset)) {
                     if (result.get(synset) == null)
-                        result.put(synset,new Integer(1));
+                        result.put(synset,Integer.valueOf(1));
                     else
-                        result.put(synset,new Integer(result.get(synset).intValue() + 1));
+                        result.put(synset,Integer.valueOf(result.get(synset).intValue() + 1));
                 }
             }
             /**if (SUMO == null || SUMO == "")

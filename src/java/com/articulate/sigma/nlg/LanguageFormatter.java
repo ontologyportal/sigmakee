@@ -989,10 +989,10 @@ public class LanguageFormatter {
         if (typeMap.keySet().contains(varType)) {
             occurrenceCounter = typeMap.get(varType);
             occurrenceCounter++;
-            typeMap.put(varType,new Integer(occurrenceCounter));
+            typeMap.put(varType,Integer.valueOf(occurrenceCounter));
         }
         else
-            typeMap.put(varType,new Integer(1));
+            typeMap.put(varType,Integer.valueOf(1));
         int count = 1;
         while (found) {
             if (result.contains(varString) && count < 20) {

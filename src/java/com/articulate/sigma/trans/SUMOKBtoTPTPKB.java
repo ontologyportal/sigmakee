@@ -206,11 +206,11 @@ public class SUMOKBtoTPTPKB {
             Formula f2 = (Formula) o2;
             int fileCompare = f1.sourceFile.compareTo(f2.sourceFile);
             if (fileCompare == 0) {
-                fileCompare = (new Integer(f1.startLine))
-                        .compareTo(new Integer(f2.startLine));
+                fileCompare = (Integer.valueOf(f1.startLine))
+                        .compareTo(Integer.valueOf(f2.startLine));
                 if (fileCompare == 0) {
-                    fileCompare = (new Long(f1.endFilePosition))
-                            .compareTo(new Long(f2.endFilePosition));
+                    fileCompare = (Long.valueOf(f1.endFilePosition))
+                            .compareTo(Long.valueOf(f2.endFilePosition));
                 }
             }
             return fileCompare;

@@ -323,7 +323,7 @@ public class Mapping {
                                         score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));                            
                                     if (score > 0 && score < Integer.MAX_VALUE) {
                                         if (score < threshold) {                                
-                                            tm.put(new Integer(score), term2);
+                                            tm.put(Integer.valueOf(score), term2);
                                             mapCount++;
                                         }
                                     }
