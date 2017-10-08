@@ -221,6 +221,7 @@ public class StreamTokenizer_s {
      * @see        java.io.InputStreamReader
      * @see        java.io.StreamTokenizer_s#StreamTokenizer_s(java.io.Reader)
      */
+    @Deprecated
     public StreamTokenizer_s(InputStream is) {
 	this();
         if (is == null) {
