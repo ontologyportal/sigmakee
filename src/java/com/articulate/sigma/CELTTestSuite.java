@@ -114,7 +114,7 @@ public class CELTTestSuite {
                     Formula c = new Formula();
                     c.read(celtResult);
                     if (!odd)
-                        result = result.append("<tr><td valign=top>" + (new Integer(count)).toString());
+                        result = result.append("<tr><td valign=top>" + (Integer.valueOf(count)).toString());
                     else
                         result = result.append("<tr bgcolor=#eeeeee><td valign=top>" + (Integer.valueOf(count)).toString());
                     count++;
