@@ -10,7 +10,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
  */
 
 import com.articulate.sigma.nlg.NLGUtils;
@@ -106,7 +106,12 @@ public class HTMLformatter {
         String port = KBmanager.getMgr().getPref("port");
         if (port == null)
             port = "8080";
-        return "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        String https = KBmanager.getMgr().getPref("https");
+        if (https == null || !https.equals("true"))
+            https = "http";
+        else
+            https = "https";
+        return https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
     }
     
     /** *************************************************************
@@ -278,15 +283,15 @@ public class HTMLformatter {
             for (int i = 0; i < numPictures; i++) {
                 Formula f = pictures.get(i);
                 String url = f.getArgument(2);
-                if (url.startsWith("\"http://upload.wikimedia.org")) {
+                if (url.startsWith("\"https://upload.wikimedia.org")) {
                     String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
                     if (imageFile.matches("\\d+px-.*"))
                         imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
-                    String domain = "http://simple.wikipedia.org/";
+                    String domain = "https://simple.wikipedia.org/";
                     if (url.indexOf("/en/") > -1)
-                        domain = "http://en.wikipedia.org/";
+                        domain = "https://en.wikipedia.org/";
                     if (url.indexOf("/commons/") > -1)
-                        domain = "http://commons.wikimedia.org/";
+                        domain = "https://commons.wikimedia.org/";
                     show.append("<a href=\"" + domain + "wiki/Image:" +
                             imageFile + "\"><img width=\"100\" src=" + url + "></a>\n" );
                 }

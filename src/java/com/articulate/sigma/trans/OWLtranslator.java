@@ -115,7 +115,7 @@ public class OWLtranslator {
      *  term name Strings. */
     private HashMap SUMOYAGOMap = new HashMap();
     private TreeMap axiomMap = new TreeMap();
-    private static String termPrefix = ""; //"http://sigma.ontologyportal.org:4010/OWL.jsp";
+    private static String termPrefix = "";
     
     private static int _debugLevelCounter = 0;
 
@@ -548,9 +548,6 @@ public class OWLtranslator {
             String st = f.createID();
             pw.println("  <kbd:axiom rdf:resource=\"#axiom-" + st + "\"/>");
         }
-        //pw.println("  <fullDefinition rdf:datatype=\"&xsd;anyURI\">" + 
-        //           "http://sigma.ontologyportal.org:4010/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=" +
-        //           term + "</fullDefinition>");
     }
 
     /** ***************************************************************
@@ -675,7 +672,7 @@ public class OWLtranslator {
         if (YAGO != null) {        
             pw.println("  <owl:sameAs rdf:resource=\"http://dbpedia.org/resource/" + YAGO + "\" />");
             pw.println("  <owl:sameAs rdf:resource=\"http://yago-knowledge.org/resource/" + YAGO + "\" />");
-            pw.println("  <rdfs:seeAlso rdf:resource=\"http://en.wikipedia.org/wiki/" + YAGO + "\" />");
+            pw.println("  <rdfs:seeAlso rdf:resource=\"https://en.wikipedia.org/wiki/" + YAGO + "\" />");
         }                    
     }
 

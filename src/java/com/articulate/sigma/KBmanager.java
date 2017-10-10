@@ -169,7 +169,8 @@ public class KBmanager {
             preferences.put("userBrowserLimit","25");
             preferences.put("adminBrowserLimit","200");
             preferences.put("port","8080");            
-            preferences.put("hostname","localhost");  
+            preferences.put("hostname","localhost");
+            preferences.put("https","false");
             
             // Default logging things
             preferences.put("logDir", logDir.getCanonicalPath());
