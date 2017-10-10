@@ -54,7 +54,7 @@ public class RewriteRuleColorSettingsPage implements ColorSettingsPage {
     public String getDemoText() {
         return "# You are reading the \".properties\" entry.\n" +
                 "! The exclamation mark can also mark text as comments.\n" +
-                "website = http://en.wikipedia.org/\n" +
+                "website = https://en.wikipedia.org/\n" +
                 "language = English\n" +
                 "# The backslash below tells the application to continue reading\n" +
                 "# the value onto the next line.\n" +
