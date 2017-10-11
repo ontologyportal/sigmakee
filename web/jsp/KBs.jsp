@@ -193,7 +193,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
               first = false;
           }
           kb = (KB) KBmanager.getMgr().getKB(kbName2);
-          HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language;
+          HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language;
 %>
           <TR VALIGN="center" <%= odd==false? "bgcolor=#eeeeee":""%>>
             <TD><%=kbName2%></TD>
