@@ -10,7 +10,7 @@ publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, in
 Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed
-Systems, August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
+Systems, August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
 Authors:
 Adam Pease
@@ -2594,7 +2594,7 @@ public class Formula implements Comparable {
     /** ***************************************************************
      * Format a formula for HTML presentation.
      */
-    public String htmlFormat(KB kb) {
+    public String htmlFormat(KB kb, String href) {
 
         String fKbHref = "";
         KBmanager mgr = KBmanager.getMgr();
@@ -2604,7 +2604,7 @@ public class Formula implements Comparable {
         String port = mgr.getPref("port");
         if (StringUtil.emptyString(port))
             port = "8080";
-        String kbHref = ("http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kb.name);
+        String kbHref = (href + "/sigma/Browse.jsp?kb=" + kb.name);
         fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
         return fKbHref;
     }

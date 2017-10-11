@@ -729,7 +729,7 @@ public class HTMLformatter {
                 Formula f = new Formula();
                 f.theFormula = end;
                 //end = f.htmlFormat(kbHref);
-                end = f.htmlFormat(kb);
+                end = f.htmlFormat(kb,kbHref);
             }
             else
                 begin = err;
