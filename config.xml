@@ -9,6 +9,7 @@
   <preference name="inferenceTestDir" value="~/.sigmakee/KBs/tests" />
   <preference name="baseDir" value="/home/theuser/.sigmakee" />
   <preference name="hostname" value="localhost" />
+  <preference name="https" value="false" />
   <preference name="logLevel" value="warning" />
   <preference name="systemsDir" value="~/workspace/sigma/sigma" />
   <preference name="userBrowserLimit" value="25" />

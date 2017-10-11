@@ -10,7 +10,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
  	String ccheckPage = request.getParameter("page");
  	if (ccheckPage == null)
@@ -25,7 +25,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   	Map theMap = null;
   	HttpSession hsObj = request.getSession();   
   	hsObj.setMaxInactiveInterval(-1);
-  	kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
+  	kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
   	InterfaceTPTP.init();
   	ArrayList<String> systemListBuiltIn = InterfaceTPTP.systemListBuiltIn;
   	ArrayList<String> systemListLocal = InterfaceTPTP.systemListLocal;

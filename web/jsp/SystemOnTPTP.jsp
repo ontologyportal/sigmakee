@@ -10,7 +10,7 @@
 
      Pease, A., (2003). The Sigma Ontology Development Environment,
      in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-     August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+     August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
      */
     //----Check if Builtin Systems exist
     String systemsDir = KBmanager.getMgr().getPref("systemsDir");
@@ -258,7 +258,7 @@
                 String port = KBmanager.getMgr().getPref("port");
                 if ((port == null) || port.equals(""))
                     port = "8080";
-                String kbHref = "http://" + hostname + ":" + port
+                String kbHref = HTMLformatter.createHrefStart()
                         + "/sigma/Browse.jsp?kb=" + kbName;
                 out.println("Status: ");
                 out.println(kb.tell(stmt) + "<P>\n"    + statement.htmlFormat(kbHref));
@@ -542,7 +542,7 @@
                                 String port = KBmanager.getMgr().getPref("port");
                                 if ((port == null) || port.equals(""))
                                     port = "8080";
-                                String libHref = "http://" + hostname + ":" + port + "/sigma/lib";
+                                String libHref = HTMLformatter.createHrefStart() + "/sigma/lib";
                                 out.println("<APPLET CODE=\"IDVApplet\" archive=\""
                                         + libHref + "/IDV.jar," + libHref + "/TptpParser.jar,"
                                         + libHref + "/antlr-2.7.5.jar,"    + libHref

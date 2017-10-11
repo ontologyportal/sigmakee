@@ -9,7 +9,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 */
  show = new StringBuffer();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
@@ -26,7 +26,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
  else if (KBPOS == null && term != null)
  	KBPOS = kb.REswitch(term);
  
- HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
+ HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
 
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm) && StringUtil.emptyString(relREmatch))        // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
@@ -80,7 +80,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                                 term + "\" in language " + language);
          if (KBmanager.getMgr().getPref("userRole") != null &&
                  KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
-             show.append(" [<a href=\"http://" + hostname + ":" + port + "/sigma/InstFiller.jsp?lang=" + language +
+             show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?lang=" + language +
         	    	 "&flang=" + flang + "&kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
          }
          show.append(HTMLformatter.showMap(kb,term));
@@ -93,7 +93,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
              if (language.equals("EnglishLanguage")) 
                  show.append(WordNetUtilities.formatWords(tm,kbName));
              else 
-                 show.append(OMWordnet.formatWords(term,kbName,language,"http://" + hostname + ":" + port + "/sigma/"));             
+                 show.append(OMWordnet.formatWords(term,kbName,language,HTMLformatter.createHrefStart() + "/sigma/"));
              show.append("</small></td>");
          }
          else
@@ -122,14 +122,14 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
                  "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td></tr>" +
                  "</table><br>\n");
      if (!parentPage.equals("TreeView.jsp"))
-         show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" +
+         show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" +
                      "?lang=" + language + "&flang=" + flang + "&kb=" + kbName +
                      "&term=" + term + "\">Show full definition with tree view</a></small><br>\n");
 
-     show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/SimpleBrowse.jsp" +
+     show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/SimpleBrowse.jsp" +
                  "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" +
                  "&term=" + term + "\">Show simplified definition (without tree view)</a></small><br>\n");
-     show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" +
+     show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" +
                  "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" +
                  "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
  }

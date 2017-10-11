@@ -15,7 +15,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
 %>
 </HEAD>
@@ -157,8 +157,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
             Mapping.mappings = new TreeMap();
         }
     }
-    String kbHref1 = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbname1 + "&term=";
-    String kbHref2 = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbname2 + "&term=";
+    String kbHref1 = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?kb=" + kbname1 + "&term=";
+    String kbHref2 = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?kb=" + kbname2 + "&term=";
 %>
 
 <table width="95%" cellspacing="0" cellpadding="0">

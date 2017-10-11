@@ -15,14 +15,14 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
   String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
   String formattedFormula = null;
   Map theMap = null;
-  kbHref = "http://" + hostname + ":" + port + "/sigma/WordNet.jsp?lang=" + language + "&kb=" + kbName;
+  kbHref = HTMLformatter.createHrefStart() + "/sigma/WordNet.jsp?lang=" + language + "&kb=" + kbName;
   try {
        WordNet.initOnce();
   }

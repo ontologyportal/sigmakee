@@ -100,6 +100,14 @@ public class HTMLformatter {
      */
     public static String createKBHref(String kbName, String language) {
     
+        return createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+    }
+
+    /** *************************************************************
+     *  Create the HTML for a link, taking care of http/https, hostname and port
+     */
+    public static String createHrefStart() {
+
         String hostname = KBmanager.getMgr().getPref("hostname");
         if (hostname == null)
             hostname = "localhost";
@@ -107,13 +115,14 @@ public class HTMLformatter {
         if (port == null)
             port = "8080";
         String https = KBmanager.getMgr().getPref("https");
+        System.out.println("Info in KBmanager.createHrefStart(): " + https);
         if (https == null || !https.equals("true"))
             https = "http";
         else
             https = "https";
-        return https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
+        return https + "://" + hostname + ":" + port;
     }
-    
+
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
@@ -139,7 +148,8 @@ public class HTMLformatter {
         // System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.premises);
         if (step.inferenceType!=null && step.inferenceType.equals("assume_negation")) {
             result.append("[Negated Query]");
-        } else {
+        }
+        else {
             for (int i = 0; i < step.premises.size(); i++) {
                 Integer stepNum = (Integer) step.premises.get(i);
                 result.append(stepNum.toString() + " ");
@@ -304,6 +314,8 @@ public class HTMLformatter {
         return show.toString();
     }
 
+    /** *************************************************************
+     */
     public static String showNeighborTerms(KB kb, String term) {
     	return HTMLformatter.showNeighborTerms(kb, term, term);
     }

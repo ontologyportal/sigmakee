@@ -11,7 +11,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
   String word = request.getParameter("word");
   String writeProlog = request.getParameter("writeProlog");
@@ -76,15 +76,15 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           out.println(WordNet.wn.displayByKey(kbName,key,params));  
   if (synset != null && synset.length() < 9) {
       String OMWsynset = synset + "-" + WordNetUtilities.posNumberToLetter(POS.charAt(0));
-      out.println("\n<a href=\"http://" + hostname + ":" + port + "/sigma/OMW.jsp?" + 
+      out.println("\n<a href=\"" + HTMLformatter.createHrefStart()" + "/sigma/OMW.jsp?" +
               "kb=" + kbName + "&synset=" + OMWsynset + "\">Show Open Multilingual Wordnet links</a><p>\n");         
 	  synset = POS + synset;
   }
   if (synset != null && synset != "")
-  	  out.println("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
+  	  out.println("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" +
                   "kb=" + kbName + "&term=WN30-" + synset + "\">Show OWL translation</a></small><p>\n");              
   else if (word != null && word != "")
-  	  out.println("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/OWL.jsp?" + 
+  	  out.println("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" +
                   "kb=" + kbName + "&term=WN30Word-" + word + "\">Show OWL translation</a></small><p>\n");   
   
 %>

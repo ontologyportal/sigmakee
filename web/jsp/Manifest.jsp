@@ -294,7 +294,7 @@ if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref
     </FORM>
 
 <% } 
-  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?";
+  HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?";
   String er = KBmanager.getMgr().getError();
   if (!kb.errors.isEmpty()) {
       TreeSet<String> errors = kb.errors;

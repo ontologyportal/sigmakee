@@ -8,7 +8,7 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
  show = new StringBuffer();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
@@ -18,7 +18,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  
  Map theMap = null;     // Map of natural language format strings.
 
- HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
+ HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&simple=yes&kb=" + kbName;
 
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm))       // Show statistics only when no term is specified.
      show.append(HTMLformatter.showStatistics(kb));
@@ -87,14 +87,14 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                 "</table><BR>\n");
 
     if (!parentPage.equals("TreeView.jsp")) 
-        show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
+        show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" +
                     "?lang=" + language + "&simple=yes&kb=" + kbName + 
                     "&term=" + term + "\">Show simplified definition with tree view</a></small><br>\n");
     
-    show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/Browse.jsp" + 
+    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" +
                 "?lang=" + language + "&kb=" + kbName + "&simple=no" + 
                 "&term=" + term + "\">Show full definition (without tree view)</a></small><br>\n");
-    show.append("\n<small><a href=\"http://" + hostname + ":" + port + "/sigma/TreeView.jsp" + 
+    show.append("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/TreeView.jsp" +
                 "?lang=" + language + "&kb=" + kbName + "&simple=no" + 
                 "&term=" + term + "\">Show full definition (with tree view)</a></small><br>\n");
  }

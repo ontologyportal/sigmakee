@@ -25,7 +25,7 @@ August 9, Acapulco, Mexico.
   String kbHref = null;
   String formattedFormula = null;
   Map theMap = null;
-  kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
+  kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
 %>
 <form action="Diag.jsp">
     <table width="95%" cellspacing="0" cellpadding="0">
