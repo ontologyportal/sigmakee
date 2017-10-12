@@ -2597,13 +2597,6 @@ public class Formula implements Comparable {
     public String htmlFormat(KB kb, String href) {
 
         String fKbHref = "";
-        KBmanager mgr = KBmanager.getMgr();
-        String hostname = mgr.getPref("hostname");
-        if (StringUtil.emptyString(hostname))
-            hostname = "localhost";
-        String port = mgr.getPref("port");
-        if (StringUtil.emptyString(port))
-            port = "8080";
         String kbHref = (href + "/sigma/Browse.jsp?kb=" + kb.name);
         fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
         return fKbHref;
