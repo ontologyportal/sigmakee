@@ -711,7 +711,6 @@ public class HTMLformatter {
      * a colon, and then the axiom.  There must be no other colon
      * characters.
      */
-    //public static String formatErrors(KB kb, String kbHref) {
     public static String formatErrorsWarnings(TreeSet<String> list, KB kb) {
         
         System.out.println("INFO in HTMLformatter.formatErrors(): href: " + kbHref);
