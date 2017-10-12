@@ -76,7 +76,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           out.println(WordNet.wn.displayByKey(kbName,key,params));  
   if (synset != null && synset.length() < 9) {
       String OMWsynset = synset + "-" + WordNetUtilities.posNumberToLetter(POS.charAt(0));
-      out.println("\n<a href=\"" + HTMLformatter.createHrefStart()" + "/sigma/OMW.jsp?" +
+      out.println("\n<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OMW.jsp?" +
               "kb=" + kbName + "&synset=" + OMWsynset + "\">Show Open Multilingual Wordnet links</a><p>\n");         
 	  synset = POS + synset;
   }
