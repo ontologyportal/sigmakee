@@ -9,7 +9,7 @@ package com.articulate.delphi;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import sun.misc.BASE64Encoder;
+import java.util.Base64;
 import sun.misc.CharacterEncoder;
 import java.util.*;
 import java.io.*;
@@ -59,7 +59,7 @@ public final class PasswordService {
             System.out.println(e.getMessage());
         }
         byte raw[] = md.digest(); 
-        String hash = (new BASE64Encoder()).encode(raw);
+        String hash = Base64.getEncoder().encode(raw).toString();
         System.out.println("PasswordService.encrypt(): output: " + hash);
         return hash; 
     }
