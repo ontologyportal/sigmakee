@@ -44,6 +44,7 @@ public final class PasswordService {
      */
     public synchronized String encrypt(String plaintext) {
 
+        System.out.println("PasswordService.encrypt(): input: " + plaintext);
         MessageDigest md = null;
         try {
             md = MessageDigest.getInstance("SHA");
@@ -58,7 +59,8 @@ public final class PasswordService {
             System.out.println(e.getMessage());
         }
         byte raw[] = md.digest(); 
-        String hash = (new BASE64Encoder()).encode(raw); 
+        String hash = (new BASE64Encoder()).encode(raw);
+        System.out.println("PasswordService.encrypt(): output: " + hash);
         return hash; 
     }
 
@@ -72,16 +74,16 @@ public final class PasswordService {
     }
 
     /** ***************************************************************** 
-     * Take a user name and unencrypted password and compare it to an
+     * Take a user name and an encrypted password and compare it to an
      * existing collection of users with encrypted passwords.
      */
     public boolean authenticate(String username, String pass) {
 
         if (users.containsKey(username)) {
             User user = (User) users.get(username);
-            System.out.println("INFO in PasswordService.authenticate(): Reading: " + username + " " + encrypt(pass));
+            System.out.println("INFO in PasswordService.authenticate(): Input: " + username + " " + pass);
             System.out.println("INFO in PasswordService.authenticate(): Reading: " + user.username + " " + user.password);
-            if (encrypt(pass).equals(user.password)) {
+            if (pass.equals(user.password)) {
                 return true;
             }
             else
@@ -111,7 +113,7 @@ public final class PasswordService {
         File f = new File(fname);
         if (!f.exists()) 
             return "";
-        //System.out.println("INFO in PasswordService.readUserFile(): Reading: " + fname);
+        System.out.println("INFO in PasswordService.readUserFile(): Reading: " + fname);
         BufferedReader br = new BufferedReader(new FileReader(fname));
 
         try {
@@ -127,7 +129,7 @@ public final class PasswordService {
             if (br != null) 
                 br.close();
         }
-        //System.out.println(xml.toString());
+        System.out.println(xml.toString());
         return xml.toString();
     }
 
@@ -138,9 +140,9 @@ public final class PasswordService {
 
         users = new HashMap();
         BasicXMLparser config = new BasicXMLparser(configuration);
-        //System.out.println("INFO in PasswordService.processUserFile(): Initializing.");
-        //System.out.print("INFO in PasswordService.processUserFile(): Number of users:");
-        //System.out.println(config.elements.size());
+        System.out.println("INFO in PasswordService.processUserFile(): Initializing.");
+        System.out.print("INFO in PasswordService.processUserFile(): Number of users:");
+        System.out.println(config.elements.size());
         for (int i = 0; i < config.elements.size(); i++) {
             BasicXMLelement element = (BasicXMLelement) config.elements.get(i);
             if (element.tagname.equalsIgnoreCase("user")) {
@@ -169,8 +171,10 @@ public final class PasswordService {
             while (it.hasNext()) {
                 String username = (String) it.next();
                 User user = (User) users.get(username);
+                System.out.println("PasswordService.writeUserFile(): writing user: " + user);
                 pw.print(user.toXML());
             }
+            System.out.println("PasswordService.writeUserFile(): " + users.size() + " records written");
         }
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + fname + ". " + e.getMessage());
@@ -230,10 +234,75 @@ public final class PasswordService {
         }
     }
 
+    /** *****************************************************************
+     */
+    public void login() {
+
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+
+        String login = c.readLine("Enter your login: ");
+        char [] password = c.readPassword("Enter your password: ");
+        if (userExists(login)) {
+            boolean valid = authenticate(login,password.toString());
+            if (valid)
+                System.out.println(getUser(login));
+            else
+                System.out.println("Invalid username/password");
+        }
+        else
+            System.out.println("User " + login + " does not exist");
+    }
+
+    /** *****************************************************************
+     */
+    public void register() {
+
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+
+        String login = c.readLine("Enter your login: ");
+        char [] password = c.readPassword("Enter your password: ");
+        if (userExists(login))
+            System.out.println("User " + login + " already exists");
+        else {
+            User u = new User();
+            u.username = login;
+            u.password = password.toString();
+            addUser(u);
+        }
+    }
+
+    /** *****************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("PasswordService: ");
+        System.out.println("-h    show this help message");
+        System.out.println("-l    login");
+        System.out.println("-r    register a new username and password (fail if username taken)");
+    }
+
     /** ***************************************************************** 
      */
     public static void main(String args[]) {
 
+        PasswordService ps = new PasswordService();
+        System.out.println("test encrypted: " + ps.encrypt("test"));
+        if (args != null) {
+            if (args.length > 0 && args[0].equals("-r"))
+                ps.register();
+            if (args.length > 0 && args[0].equals("-l"))
+                ps.login();
+        }
+        else
+            showHelp();
     }
 
 }

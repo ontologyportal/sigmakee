@@ -41,8 +41,10 @@ public class User {
 
         username = (String) xml.attributes.get("name");
         password = (String) xml.attributes.get("password");
+        System.out.println("User.fromXML(): stored password: " + password);
         try {
             password = URLDecoder.decode(password,"UTF-8");
+            System.out.println("User.fromXML(): decoded stored password: " + password);
         }
         catch (UnsupportedEncodingException uee) {
             System.out.println("Error in User.fromXML(): Unsupported encoding exception: " + uee.getMessage());
@@ -75,6 +77,8 @@ public class User {
         StringBuffer result = new StringBuffer();
 
         try {
+            System.out.println("User.toXML(): password: " + password);
+            System.out.println("User.fromXML(): XML-encoded password: " + URLEncoder.encode(password,"UTF-8"));
             result.append("<user name='" + username + "' password='" + 
                        URLEncoder.encode(password,"UTF-8") + "' role='" + getRole() + "'>\n");
         }

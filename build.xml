@@ -135,6 +135,7 @@
 
 <path id="core.sourcepath">
     <pathelement path="src/java/com/articulate/sigma"/>
+    <pathelement path="src/java/com/articulate/delphi"/>
 	<pathelement path="test/corpus/java/com/articulate/sigma"/>
 	<pathelement path="test/unit/java/com/articulate/sigma"/>
 	<pathelement path="test/integration/java/com/articulate/sigma"/>
