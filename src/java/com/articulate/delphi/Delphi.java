@@ -274,16 +274,16 @@ public class Delphi {
     public static void main(String args[]) {
 
         ArrayList ar = new ArrayList();
-        ar.add(new Integer(34)); ar.add(new Integer(47)); ar.add(new Integer(1));
-        ar.add(new Integer(15)); ar.add(new Integer(57)); ar.add(new Integer(24));
-        ar.add(new Integer(20)); ar.add(new Integer(11)); ar.add(new Integer(19));
-        ar.add(new Integer(50)); ar.add(new Integer(28)); ar.add(new Integer(37));
+        ar.add(Integer.valueOf(34)); ar.add(Integer.valueOf(47)); ar.add(Integer.valueOf(1));
+        ar.add(Integer.valueOf(15)); ar.add(Integer.valueOf(57)); ar.add(Integer.valueOf(24));
+        ar.add(Integer.valueOf(20)); ar.add(Integer.valueOf(11)); ar.add(Integer.valueOf(19));
+        ar.add(Integer.valueOf(50)); ar.add(Integer.valueOf(28)); ar.add(Integer.valueOf(37));
 
         System.out.println(Delphi.outsideInterquartile(ar,6));
         
         ar = new ArrayList();
-        ar.add(new Integer(1)); ar.add(new Integer(3)); ar.add(new Integer(5));
-        ar.add(new Integer(7)); ar.add(new Integer(9)); ar.add(new Integer(11));
+        ar.add(Integer.valueOf(1)); ar.add(Integer.valueOf(3)); ar.add(Integer.valueOf(5));
+        ar.add(Integer.valueOf(7)); ar.add(Integer.valueOf(9)); ar.add(Integer.valueOf(11));
 
         System.out.println(Delphi.outsideInterquartile(ar,6));
     }
