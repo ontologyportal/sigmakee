@@ -10,7 +10,6 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
-import sun.misc.CharacterEncoder;
 import java.util.*;
 import java.io.*;
 import java.text.*;
