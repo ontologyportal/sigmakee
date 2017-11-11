@@ -15,17 +15,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.wordNet.MultiWords;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -42,7 +32,7 @@ import static com.articulate.sigma.WordNetUtilities.isValidKey;
  *  @author Ian Niles
  *  @author Adam Pease
  */
-public class WordNet {
+public class WordNet implements Serializable {
 
     public static WordNet wn  = new WordNet();
     
@@ -1688,6 +1678,32 @@ public class WordNet {
         return result;
     }
 
+    /** ***************************************************************
+     *  Load the most recently save serialized version.
+     */
+    public static void loadSerialized() {
+
+        wn = null;
+        try {
+            // Reading the object from a file
+            FileInputStream file = new FileInputStream(baseDir + File.separator + "wn.ser");
+            ObjectInputStream in = new ObjectInputStream(file);
+            // Method for deserialization of object
+            wn = (WordNet) in.readObject();
+            in.close();
+            file.close();
+            System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
+            initNeeded = false;
+        }
+        catch(IOException ex) {
+            System.out.println("Error in WordNet.loadSerialized(): IOException is caught");
+            ex.printStackTrace();
+        }
+        catch(ClassNotFoundException ex) {
+            System.out.println("Error in WordNet.loadSerialized(): ClassNotFoundException is caught");
+            ex.printStackTrace();
+        }
+    }
 
     /** ***************************************************************
      *  Read the WordNet files only on initialization of the class.
@@ -1699,18 +1715,23 @@ public class WordNet {
                 if ((WordNet.baseDir == "") || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
                 baseDirFile = new File(WordNet.baseDir);
-                wn = new WordNet();
-                wn.makeFileMap();
-                wn.compileRegexPatterns();
-                wn.readNouns();
-                wn.readVerbs();
-                wn.readAdjectives();
-                wn.readAdverbs();
-                wn.readWordCoFrequencies();
-                wn.readStopWords();
-                wn.readSenseIndex(null);
-                wn.readSenseCount();
-                initNeeded = false;
+                if (KBmanager.getMgr().getPref("loadFresh").equals("false")) {
+                    loadSerialized();
+                }
+                else {
+                    wn = new WordNet();
+                    wn.makeFileMap();
+                    wn.compileRegexPatterns();
+                    wn.readNouns();
+                    wn.readVerbs();
+                    wn.readAdjectives();
+                    wn.readAdverbs();
+                    wn.readWordCoFrequencies();
+                    wn.readStopWords();
+                    wn.readSenseIndex(null);
+                    wn.readSenseCount();
+                    initNeeded = false;
+                }
                 DB.readSentimentArray();                
             }
         }
