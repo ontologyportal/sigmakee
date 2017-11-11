@@ -15,6 +15,10 @@ import java.io.*;
 import java.text.*;
 import com.articulate.sigma.*;
 
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 /** *****************************************************************
  * A class that encrypts a string and checks it against another stored
  * encrypted string, in order to validate a user login.
@@ -258,6 +262,42 @@ public final class PasswordService {
 
     /** *****************************************************************
      */
+    public void mailModerator(String sendrmailid) {
+
+        String destmailid = "sigmamoderator@gmail.com";
+        final String uname = "sigmamoderator";
+        final String pwd = System.getenv("SIGMA_EMAIL_PASS");
+        String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
+        Properties propvls = new Properties();
+        propvls.put("mail.smtp.auth", "true");
+        propvls.put("mail.smtp.starttls.enable", "true");
+        propvls.put("mail.smtp.host", smtphost);
+        propvls.put("mail.smtp.port", "587");
+        //Create a Session object & authenticate uid and pwd
+        Session sessionobj = Session.getInstance(propvls,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(uname, pwd);
+                    }
+                });
+        try {
+            //Create MimeMessage object & set values
+            Message messageobj = new MimeMessage(sessionobj);
+            messageobj.setFrom(new InternetAddress(sendrmailid));
+            messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(destmailid));
+            messageobj.setSubject("This is test Subject");
+            messageobj.setText("Checking sending emails by using JavaMail APIs");
+            //Now send the message
+            Transport.send(messageobj);
+            System.out.println("Your email sent successfully....");
+        }
+        catch (MessagingException exp) {
+            throw new RuntimeException(exp);
+        }
+    }
+
+    /** *****************************************************************
+     */
     public void register() {
 
         Console c = System.console();
@@ -286,6 +326,7 @@ public final class PasswordService {
         System.out.println("-h    show this help message");
         System.out.println("-l    login");
         System.out.println("-r    register a new username and password (fail if username taken)");
+        System.out.println("-e    test email");
     }
 
     /** ***************************************************************** 
@@ -299,6 +340,8 @@ public final class PasswordService {
                 ps.register();
             if (args.length > 0 && args[0].equals("-l"))
                 ps.login();
+            if (args.length > 0 && args[0].equals("-e"))
+                ps.mailModerator("billybob@nowhere.com");
         }
         else
             showHelp();
