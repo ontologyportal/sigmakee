@@ -35,7 +35,7 @@ import com.google.common.collect.Sets;
 import java.io.*;
 import java.util.*;
 
-public class KBcache {
+public class KBcache implements Serializable {
 
     public KB kb = null;
 
@@ -292,7 +292,7 @@ public class KBcache {
     /** ***************************************************************
      * Record instances and their explicitly defined parent classes
      */
-    void buildDirectInstances() {
+    public void buildDirectInstances() {
     	
         ArrayList<Formula> forms = kb.ask("arg", 0, "instance");
         for (int i = 0; i < forms.size(); i++) {
@@ -423,7 +423,7 @@ public class KBcache {
      * in turn then is an instance of the given class.
      * TODO: make sure that direct instances are recorded too
      */
-    void buildTransInstOf() {
+    public void buildTransInstOf() {
     
         Iterator<String> titer = insts.iterator();     // Iterate through the temporary list of instances built 
                                                        // during creation of the @see children map
@@ -473,7 +473,65 @@ public class KBcache {
         }
         buildDirectInstances();
     }
-    
+
+    /** ***************************************************************
+     * @return the most specific parent of a set of classes
+     */
+    public String mostSpecificParent(HashSet<String> p1) {
+
+        HashMap<String,HashSet<String>> subclasses = children.get("subclass");
+        TreeSet<AVPair> countIndex = new TreeSet<AVPair>();
+        Iterator<String> it = p1.iterator();
+        while (it.hasNext()) {
+            String cl = it.next();
+            HashSet<String> classes = subclasses.get(cl);
+            int count = classes.size();
+            String countString = Integer.toString(count);
+            countString = StringUtil.fillString(countString,'0',10,true);
+            AVPair avp = new AVPair(countString,cl);
+            countIndex.add(avp);
+        }
+        return countIndex.first().value;
+    }
+
+    /** ***************************************************************
+     * @return the most specific parent of the two parameters or null if
+     * there is no common parent.  TODO: Take into
+     * account that there are instances, classes, relations, and attributes,
+     */
+    public String getCommonParent(String t1, String t2) {
+
+        HashSet<String> p1 = new HashSet<>();
+        HashSet<String> p2 = new HashSet<>();
+        if (kb.isInstance(t1)) {
+            HashSet<String> temp = getParentClassesOfInstance(t1);
+            if (temp != null)
+                p1.addAll(temp);
+        }
+        else {
+            HashSet<String> temp = getParentClasses(t1);
+            if (temp != null)
+                p1.addAll(temp);
+        }
+        if (kb.isInstance(t2)) {
+            HashSet<String> temp = getParentClassesOfInstance(t2);
+            if (temp != null)
+                p2.addAll(temp);
+        }
+        else {
+            HashSet<String> temp = getParentClasses(t2);
+            if (temp != null)
+                p2.addAll(temp);
+        }
+        p1.retainAll(p2);
+        if (p1.isEmpty())
+            return null;
+        if (p1.size() == 1)
+            return p1.iterator().next();
+
+        return mostSpecificParent(p1);
+    }
+
     /** ***************************************************************
      * return parent classes for the given cl from subclass expressions.
      */
@@ -1179,32 +1237,29 @@ public class KBcache {
      */
     public static void main(String[] args) {
 
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
-            System.out.println("**** Finished loading KB ***");
-            KBcache nkbc = kb.kbCache;
-            String term = "Object";
-            HashSet<String> classes = nkbc.getChildClasses(term);
-            HashSet<String> instances = nkbc.getChildInstances(term);
-            System.out.println("number of classes: " + classes.size());
-            System.out.println("KBcache.main(): children of " + term + ": " +
-                    classes);
-            System.out.println("number of instances: " + instances.size());
-            System.out.println("KBcache.main(): instances of " + term + ": " +
-                   instances);
-            term = "Process";
-            classes = nkbc.getChildClasses(term);
-            instances = nkbc.getChildInstances(term);
-            System.out.println("number of classes: " + classes.size());
-            System.out.println("KBcache.main(): children of " + term + ": " +
-                    classes);
-            System.out.println("number of instances: " + instances.size());
-            System.out.println("KBcache.main(): instances of " + term + ": " +
-                    instances);
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println("**** Finished loading KB ***");
+        KBcache nkbc = kb.kbCache;
+        String term = "Object";
+        HashSet<String> classes = nkbc.getChildClasses(term);
+        HashSet<String> instances = nkbc.getChildInstances(term);
+        System.out.println("number of classes: " + classes.size());
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        System.out.println("number of instances: " + instances.size());
+        System.out.println("KBcache.main(): instances of " + term + ": " +
+               instances);
+        term = "Process";
+        classes = nkbc.getChildClasses(term);
+        instances = nkbc.getChildInstances(term);
+        System.out.println("number of classes: " + classes.size());
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        System.out.println("number of instances: " + instances.size());
+        System.out.println("KBcache.main(): instances of " + term + ": " +
+                instances);
 
-        //nkbc.buildCaches();
-        //nkbc.buildRelationsSet();
-        //System.out.println("KBcache.main(): " + nkbc.getInstancesForType("Corporation"));
-        //nkbc.showState();
+        System.out.println("KBcache.main(): " + nkbc.getCommonParent("Kicking","Pushing"));
     }
 }
