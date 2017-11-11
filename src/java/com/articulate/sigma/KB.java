@@ -1691,8 +1691,8 @@ public class KB {
         return result;
     }
 
-    /************************************************************** Submits a
-     * query to the SInE inference engine. Returns an XML formatted String that
+    /**************************************************************
+     * Submits a query to the SInE inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
      *
@@ -1723,8 +1723,8 @@ public class KB {
         return result;
     }
 
-    /************************************************************** Submits a
-     * query to the LEO inference engine. Returns an XML formatted String that
+    /**************************************************************
+     * Submits a query to the LEO inference engine. Returns an XML formatted String that
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
      *
@@ -1836,8 +1836,79 @@ public class KB {
         return result;
     }
 
-    /***************************************************************** Takes a
-     * term and returns true if the term occurs in the KB.
+    /*****************************************************************
+     */
+    public int termDepth(String term) {
+
+        //System.out.println("KB.termDepth(): " + term);
+        if (!terms.contains(term)) {
+            System.out.println("KB.termDepth(): no such term " + term);
+            return 0;
+        }
+        if (term.equals("Entity") || StringUtil.isNumeric(term))
+            return 0;
+        if (!kbCache.subclassOf(term,"Entity") && !kbCache.transInstOf(term,"Entity"))
+            return 0;
+        Set<String> rents = immediateParents(term);
+        for (String s : rents)
+            return 1 + termDepth(s);
+        return 0;
+    }
+
+    /*****************************************************************
+     */
+    public HashSet<String> immediateParents(String term) {
+
+        //System.out.println("KB.immediateParents(): " + term);
+        HashSet<String> result = new HashSet<>();
+        if (!terms.contains(term)) {
+            System.out.println("KB.immediateParents(): no such term " + term);
+            return result;
+        }
+        ArrayList<Formula> forms = askWithRestriction(0,"subclass",1,term);
+        forms.addAll(askWithRestriction(0,"instance",1,term));
+        forms.addAll(askWithRestriction(0,"subrelation",1,term));
+        forms.addAll(askWithRestriction(0,"subAttribute",1,term));
+        Iterator<Formula> it = forms.iterator();
+        while (it.hasNext()) {
+            Formula f = it.next();
+            if (!f.isCached())
+                result.add(f.getArgument(2));
+        }
+        //System.out.println("KB.immediateParents(): result: " + result);
+        return result;
+    }
+
+    /*****************************************************************
+     * Analogous to compareTo(), return -1,0 or 1 depending on whether
+     * the first term is "smaller", equal to or "greater" than the
+     * second, respectively.  A term that is the parent of another
+     * is "smaller".  If not a parent of the other, the smaller term
+     * is that which is fewer "levels" from their common parent.
+     * Therefore, terms that are not the same can still be "equal"
+     * if they're at the same level of the taxonomy.
+     */
+    public int compareTerms(String t1, String t2) {
+
+        if (t1.equals(t2))
+            return 0;
+        if (kbCache.subAttributeOf(t1,t2) || kbCache.subclassOf(t1,t2))
+            return -1;
+        if (kbCache.subAttributeOf(t2,t1) || kbCache.subclassOf(t2,t1))
+            return 1;
+        String p = kbCache.getCommonParent(t1,t2);
+        boolean found = false;
+        int depthT1 = termDepth(t1);
+        int depthT2 = termDepth(t2);
+        if (depthT1 == depthT2)
+            return 0;
+        if (depthT1 > depthT2)
+            return 1;
+        return -1;
+    }
+
+    /*****************************************************************
+     * Takes a term and returns true if the term occurs in the KB.
      *
      * @param term A String.
      * @return true or false.
@@ -1851,8 +1922,8 @@ public class KB {
         return false;
     }
 
-    /***************************************************************** Takes a
-     * formula string and returns true if the corresponding Formula occurs in
+    /*****************************************************************
+     * Takes a formula string and returns true if the corresponding Formula occurs in
      * the KB.
      *
      * @param formula A String.
@@ -3082,9 +3153,10 @@ public class KB {
 
         // generateTPTPTestAssertions();
         // testTPTP(args);
+        KB kb = null;
         try {
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            kb = KBmanager.getMgr().getKB("SUMO");
             kb.writeTerms();
             // System.out.println("KB.main(): " + kb.isChildOf("Africa",
             // "Region"));
@@ -3097,6 +3169,11 @@ public class KB {
         // kb.generateSemanticNetwork();
         // kb.generateRandomProof();
         // kb.instanceOfInstanceP();
+        System.out.println("KB.main(): termDepth of Object: " + kb.termDepth("Object"));
+        System.out.println("KB.main(): termDepth of Table: " + kb.termDepth("Table"));
+        System.out.println("KB.main(): termDepth of immediateSubclass: " + kb.termDepth("immediateSubclass"));
+        System.out.println("KB.main(): termDepth of Wagon: " + kb.termDepth("Wagon"));
+        System.out.println("KB.main(): termDepth of Foo: " + kb.termDepth("Foo"));
 
         /*
          * String foo = "(rel bar \"test\")"; Formula f = new Formula();
