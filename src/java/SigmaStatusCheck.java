@@ -18,7 +18,7 @@ public class SigmaStatusCheck {
     private static File emailSentFile = new File("/emailSent.txt"); //Will create a file object called emailSent.txt located in the root directory
     
     /** ***************************************************************
-     *  checkURL checks whether an inputed URL contains the string "SUMO" somewhere in it's HTML body
+     *  checkURL checks whether a URL contains the string "SUMO" somewhere in its HTML body
      *  @param targetURL is a URL to be checked
      *  @returns boolean true if the URL contains "SUMO" and false otherwise
      */
@@ -55,17 +55,17 @@ public class SigmaStatusCheck {
             
                 //send email
                 Properties props = new Properties();
-                props.put("mail.smtp.host", "owa.mygazoo.com");
-                props.put("mail.from", "stephen.pinto@reardencommerce.com");
+                props.put("mail.smtp.host", "smtp.office365.com");
+                props.put("mail.from", "notify@articulatesoftware.com");
                 Session session = Session.getInstance(props, null);
 
                 MimeMessage msg = new MimeMessage(session);
                 msg.setFrom();
                 msg.setRecipients(Message.RecipientType.TO,
-                                  "stephen.pinto@reardencommerce.com");
+                                  "apease@articulatesoftware.com");
                 msg.setSubject("SIGMA IS DOWN");
                 msg.setSentDate(new Date());
-                msg.setText("The Sigma main page at http://sigma.ontologyportal.org:4010/sigma/KBs.jsp is down.");
+                msg.setText("The Sigma main page at http://sigma.ontologyportal.org:8080/sigma/KBs.jsp is down.");
                 Transport.send(msg);
                 System.out.println("Email Sent");
             } 
