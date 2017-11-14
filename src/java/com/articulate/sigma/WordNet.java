@@ -9,6 +9,10 @@ code.  Please cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+
+ Authors:
+ Adam Pease
+ Infosys LTD.
  */
 
 package com.articulate.sigma;
@@ -35,7 +39,7 @@ import static com.articulate.sigma.WordNetUtilities.isValidKey;
 public class WordNet implements Serializable {
 
     public static WordNet wn  = new WordNet();
-    
+
     /* A map of language name to wordnets */
     public static HashMap<String,WordNet> wns = new HashMap<String,WordNet>();
     public static String baseDir = "";
@@ -147,7 +151,7 @@ public class WordNet implements Serializable {
     public MultiWords multiWords = new MultiWords();
 
     //private Pattern p;
-    private Matcher m;
+    private transient Matcher m;
 
     public static final int NOUN                = 1;
     public static final int VERB                = 2;
@@ -1679,6 +1683,23 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
+    public static boolean serializedOld() {
+
+        File serfile = new File(baseDir + File.separator + "wn.ser");
+        Date saveDate = new Date(serfile.lastModified());
+        for (String f : wnFilenames.values()) {
+            File file = new File(f);
+            Date fileDate = new Date(file.lastModified());
+            if (saveDate.compareTo(fileDate) < 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
      *  Load the most recently save serialized version.
      */
     public static void loadSerialized() {
@@ -1690,6 +1711,12 @@ public class WordNet implements Serializable {
             ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
             wn = (WordNet) in.readObject();
+            if (serializedOld()) {
+                wn = null;
+                System.out.println("WordNet.loadSerialized(): serialized file is older than sources, " +
+                        "reloding from sources.");
+                return;
+            }
             in.close();
             file.close();
             System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
@@ -1706,6 +1733,54 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
+     *  save serialized version.
+     */
+    public static void serialize() {
+
+        try {
+            // Reading the object from a file
+            FileOutputStream file = new FileOutputStream(baseDir + File.separator + "wn.ser");
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            // Method for deserialization of object
+            out.writeObject(wn);
+            out.close();
+            file.close();
+            System.out.println("WordNet.serialize(): WN has been serialized ");
+            initNeeded = false;
+        }
+        catch(IOException ex) {
+            System.out.println("Error in WordNet.serialize(): IOException is caught");
+            ex.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     *  Read the WordNet files only on initialization of the class.
+     */
+    private static void loadFresh() {
+
+        try {
+            wn = new WordNet();
+            wn.makeFileMap();
+            wn.compileRegexPatterns();
+            wn.readNouns();
+            wn.readVerbs();
+            wn.readAdjectives();
+            wn.readAdverbs();
+            wn.readWordCoFrequencies();
+            wn.readStopWords();
+            wn.readSenseIndex(null);
+            wn.readSenseCount();
+            serialize(); // always create a serialized version of the latest load from source
+        }
+        catch (Exception ex) {
+            System.out.println("Error in WordNet.initOnce(): ");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
      *  Read the WordNet files only on initialization of the class.
      */
     public static void initOnce() {
@@ -1717,19 +1792,11 @@ public class WordNet implements Serializable {
                 baseDirFile = new File(WordNet.baseDir);
                 if (KBmanager.getMgr().getPref("loadFresh").equals("false")) {
                     loadSerialized();
+                    if (wn == null)
+                        loadFresh();
                 }
                 else {
-                    wn = new WordNet();
-                    wn.makeFileMap();
-                    wn.compileRegexPatterns();
-                    wn.readNouns();
-                    wn.readVerbs();
-                    wn.readAdjectives();
-                    wn.readAdverbs();
-                    wn.readWordCoFrequencies();
-                    wn.readStopWords();
-                    wn.readSenseIndex(null);
-                    wn.readSenseCount();
+                    loadFresh();
                     initNeeded = false;
                 }
                 DB.readSentimentArray();                
@@ -3268,8 +3335,6 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
-     *  A method used only for testing.  It should not be called
-     *  during normal operation.
      */
     public static void checkWordsToSenses() {
 
@@ -3293,12 +3358,40 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
+     */
+    public static void getEntailments() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        }
+        catch (Exception ioe ) {
+            System.out.println("Error in WordNet.getEntailments(): ");
+            System.out.println(ioe.getMessage());
+        }
+        for (String s : wn.relations.keySet()) {
+            Collection<AVPair> values = wn.relations.get(s);
+            for (AVPair avp : values) {
+                if (avp.attribute.equals("entailment")) {
+                    String s1 = wn.synsetsToWords.get(s).toString();
+                    String s2 = wn.synsetsToWords.get(avp.value).toString();
+                    String sumo1 = wn.getSUMOMapping(s);
+                    String sumo2 = wn.getSUMOMapping(avp.value);
+                    System.out.println(s + " " + s1 + " " + sumo1 + " " +
+                            " entails " + avp.value + " " + s2 + " " + sumo2);
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
         
         //testWordFreq();    
-        checkWordsToSenses();
+        //checkWordsToSenses();
+        //getEntailments();
+        KBmanager.getMgr().initializeOnce();
     }
 }

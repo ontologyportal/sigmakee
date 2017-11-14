@@ -11,6 +11,10 @@ code.  Please cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment, 
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
+
+ Authors:
+ Adam Pease
+ Infosys LTD.
 */
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
@@ -23,7 +27,7 @@ import java.util.*;
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
  */
-public class KBmanager {
+public class KBmanager implements Serializable {
 
     /** ***************************************************************
      * A numeric (bitwise) constant used to signal whether type
@@ -92,6 +96,95 @@ public class KBmanager {
         return this.sigmaServer;
     }
     */
+
+    /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
+    public static boolean serializedExists() {
+
+        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        File serfile = new File(kbDir + File.separator + "kbmanager.ser");
+        return serfile.exists();
+    }
+
+    /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
+    public static boolean serializedOld() {
+
+        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        File configFile = new File(kbDir + File.separator + "config.xml");
+        Date configDate = new Date(configFile.lastModified());
+        File serfile = new File(kbDir + File.separator + "kbmanager.ser");
+        Date saveDate = new Date(serfile.lastModified());
+        if (saveDate.compareTo(configDate) < 0)
+            return true;
+        for (KB thekb : manager.kbs.values()) {
+            for (String f : thekb.constituents) {
+                File file = new File(f);
+                Date fileDate = new Date(file.lastModified());
+                if (saveDate.compareTo(fileDate) < 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     *  Load the most recently save serialized version.
+     */
+    public static void loadSerialized() {
+
+        manager = null;
+        try {
+            // Reading the object from a file
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileInputStream file = new FileInputStream(kbDir + File.separator + "kbmanager.ser");
+            ObjectInputStream in = new ObjectInputStream(file);
+            // Method for deserialization of object
+            manager = (KBmanager) in.readObject();
+            if (serializedOld()) {
+                manager = null;
+                System.out.println("KBmanager.loadSerialized(): serialized file is older than sources, " +
+                        "reloding from sources.");
+                return;
+            }
+            in.close();
+            file.close();
+            System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
+        }
+        catch(IOException ex) {
+            System.out.println("Error in KBmanager.loadSerialized(): IOException is caught");
+            ex.printStackTrace();
+        }
+        catch(ClassNotFoundException ex) {
+            System.out.println("Error in KBmanager.loadSerialized(): ClassNotFoundException is caught");
+            ex.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     *  save serialized version.
+     */
+    public static void serialize() {
+
+        try {
+            // Reading the object from a file
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "kbmanager.ser");
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            // Method for deserialization of object
+            out.writeObject(manager);
+            out.close();
+            file.close();
+            System.out.println("KBmanager.serialize(): KBmanager has been serialized ");
+        }
+        catch(IOException ex) {
+            System.out.println("Error in KBmanager.serialize(): IOException is caught");
+            ex.printStackTrace();
+        }
+    }
 
     /** ***************************************************************
      * Set default attribute values if not in the configuration file.
@@ -476,16 +569,21 @@ public class KBmanager {
             return false;
         try {
             initializing = true;
-            if (StringUtil.isNonEmptyString(configFileDir)) {    
-                setDefaultAttributes();
-                SimpleElement configuration = readConfiguration(configFileDir);
-                if (configuration == null) 
-                    throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
-                setConfiguration(configuration);
+            if (serializedExists() && !serializedOld())
+                loadSerialized();
+            else {
+                if (StringUtil.isNonEmptyString(configFileDir)) {
+                    setDefaultAttributes();
+                    SimpleElement configuration = readConfiguration(configFileDir);
+                    if (configuration == null)
+                        throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
+                    setConfiguration(configuration);
+                }
+                else
+                    setDefaultAttributes();
+                performedInit = true;
+                serialize();
             }
-            else
-                setDefaultAttributes();
-            performedInit = true;
         }
         catch (Exception ex) {
         	System.out.println(ex.getMessage());

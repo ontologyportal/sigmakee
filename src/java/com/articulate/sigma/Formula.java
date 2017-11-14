@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.Serializable;
 import java.util.*;
 
 /** ************************************************************
@@ -31,7 +32,7 @@ import java.util.*;
  * formatting for presentation as well as pre-processing for sending
  * to the inference engine.
  */
-public class Formula implements Comparable {
+public class Formula implements Comparable, Serializable {
 
     public static final String AND    = "and";
     public static final String OR     = "or";

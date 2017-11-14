@@ -28,11 +28,12 @@ import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class MultiWords {
+public class MultiWords implements Serializable {
 
     /** A Multimap of String keys and String values.
      * The String key is the first word of a multi-word WordNet "word", such as "table_tennis",

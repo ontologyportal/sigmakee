@@ -1,19 +1,13 @@
 package com.articulate.sigma;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.io.*;
+import java.util.*;
 
 import com.articulate.sigma.KB;
 
-public class OMWordnet {
+import static com.articulate.sigma.WordNet.baseDir;
+
+public class OMWordnet implements Serializable {
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -26,17 +20,23 @@ code.  Please cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
+
+ Authors:
+ Adam Pease
+ Infosys LTD.
  */
     // String key of language name
     // Interior key of a 9-digit WordNet synset and value of and ArrayList of 
     // non-English synset Strings
-    public static HashMap<String,HashMap<String,ArrayList<String>>> wordnets = 
+    public HashMap<String,HashMap<String,ArrayList<String>>> wordnets =
             new HashMap<String,HashMap<String,ArrayList<String>>>();
-    public static HashMap<String,HashMap<String,ArrayList<String>>> glosses = 
+    public HashMap<String,HashMap<String,ArrayList<String>>> glosses =
             new HashMap<String,HashMap<String,ArrayList<String>>>();
-    public static HashMap<String,HashMap<String,ArrayList<String>>> examples = 
+    public HashMap<String,HashMap<String,ArrayList<String>>> examples =
             new HashMap<String,HashMap<String,ArrayList<String>>>();
-    
+
+    public static OMWordnet omw = new OMWordnet();
+
     /** *************************************************************
      */
     private static char getOMWMappingSuffix(String SUMOmapping) {
@@ -106,11 +106,11 @@ August 9, Acapulco, Mexico.
         
         //System.out.println("INFO in WordNetUtilities.readOMWformat(): creating table entry for " + langName);
         HashMap<String,ArrayList<String>> wordnet = new HashMap<String,ArrayList<String>>();
-        wordnets.put(langName,wordnet);
+        OMWordnet.omw.wordnets.put(langName,wordnet);
         HashMap<String,ArrayList<String>> gloss = new HashMap<String,ArrayList<String>>();
-        glosses.put(langName,gloss);
+        OMWordnet.omw.glosses.put(langName,gloss);
         HashMap<String,ArrayList<String>> example = new HashMap<String,ArrayList<String>>();
-        examples.put(langName,example);
+        OMWordnet.omw.examples.put(langName,example);
         File inputf = new File(inputFileWithPath);
         if (!inputf.exists()) return;
         String line = "";
@@ -237,13 +237,92 @@ August 9, Acapulco, Mexico.
             return synset;
         }
         return synset.substring(0,synset.length()-2);
-    }    
-    
+    }
+
+    /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
+    public static boolean serializedOld() {
+
+        File serfile = new File(baseDir + File.separator + "omw.ser");
+        Date saveDate = new Date(serfile.lastModified());
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
+        for (int i = 0; i < lcodes.size(); i++) {
+            String filename = kbDir + File.separator + "OMW" +
+                    File.separator + lcodes.get(i)  + File.separator +
+                    "wn-data-" + lcodes.get(i) + ".tab";
+            File file = new File(filename);
+            Date fileDate = new Date(file.lastModified());
+            if (saveDate.compareTo(fileDate) < 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     *  Load the most recently save serialized version.
+     */
+    public static void loadSerialized() {
+
+        omw = null;
+        try {
+            // Reading the object from a file
+            FileInputStream file = new FileInputStream(baseDir + File.separator + "omw.ser");
+            ObjectInputStream in = new ObjectInputStream(file);
+            // Method for deserialization of object
+            omw = (OMWordnet) in.readObject();
+            if (serializedOld()) {
+                omw = null;
+                System.out.println("OMWordnet.loadSerialized(): serialized file is older than sources, " +
+                        "reloding from sources.");
+                return;
+            }
+            in.close();
+            file.close();
+            System.out.println("OMWordnet.loadSerialized(): OMW has been deserialized ");
+        }
+        catch(IOException ex) {
+            System.out.println("Error in OMWordnet.loadSerialized(): IOException is caught");
+            ex.printStackTrace();
+        }
+        catch(ClassNotFoundException ex) {
+            System.out.println("Error in OMWordnet.loadSerialized(): ClassNotFoundException is caught");
+            ex.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     *  save serialized version.
+     */
+    public static void serialize() {
+
+        try {
+            // Reading the object from a file
+            FileOutputStream file = new FileOutputStream(baseDir + File.separator + "omw.ser");
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            // Method for deserialization of object
+            out.writeObject(omw);
+            out.close();
+            file.close();
+            System.out.println("OMWordnet.serialize(): OMW has been serialized ");
+        }
+        catch(IOException ex) {
+            System.out.println("Error in OMWordNet.serialize(): IOException is caught");
+            ex.printStackTrace();
+        }
+    }
+
     /** *************************************************************
      * Assumes a fixed set of files in the KBs directory.
      */
     public static void readOMWfiles() {
-        
+
+        loadSerialized();
+        if (omw != null)
+            return;
+        omw = new OMWordnet();
         String kbDir = KBmanager.getMgr().getPref("kbDir");  
         System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
         for (int i = 0; i < lcodes.size(); i++) {
@@ -253,6 +332,7 @@ August 9, Acapulco, Mexico.
             System.out.print(filename);
             readOMWformat(filename,lcodes.get(i));            
         }
+        serialize();
         System.out.println();
     }
     
@@ -292,7 +372,7 @@ August 9, Acapulco, Mexico.
     public static String formatWords(String term, String kbName, String lang, String href) {
 
         //System.out.println("INFO in OMWordnet.formatWords(): " + term + " " + lang);
-        HashMap<String,ArrayList<String>> wordnet = wordnets.get(languageToCode(lang));
+        HashMap<String,ArrayList<String>> wordnet = omw.wordnets.get(languageToCode(lang));
         if (wordnet == null || wordnet.size() == 0)
             return "";
         StringBuffer result = new StringBuffer();
@@ -348,9 +428,9 @@ August 9, Acapulco, Mexico.
         for (int i = 0; i < lnames.size(); i++) {
             name = lnames.get(i);
             id = lcodes.get(i);
-            words = wordnets.get(id).get(synset);
-            exams = examples.get(id).get(synset);
-            defs = glosses.get(id).get(synset);
+            words = omw.wordnets.get(id).get(synset);
+            exams = omw.examples.get(id).get(synset);
+            defs = omw.glosses.get(id).get(synset);
             if (words != null || exams != null || defs != null) {
                 sb.append("<tr><td><strong>" + name.substring(0,name.length()-8) + "</strong></td>\n");
                 sb.append("<td>");
