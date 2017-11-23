@@ -11,7 +11,7 @@ function getWidth() {
     if (self.innerWidth) {
        return self.innerWidth;
     }
-    else if (document.documentElement && document.documentElement.clientHeight){
+    else if (document.documentElement && document.documentElement.clientHeight) {
         return document.documentElement.clientWidth;
     }
     else if (document.body) {
@@ -27,18 +27,19 @@ function setWidth(id) {
 </script>
 
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
-code.  Please cite the following article in any publication with references:
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
+
   // If the request parameter can appear more than once in the query string, get all values
   String[] values = request.getParameterValues("columns");
   //if (values != null) {
@@ -103,7 +104,12 @@ August 9, Acapulco, Mexico.
         <tr>
         <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
         <TD>&nbsp;</TD>
-        <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"></td>
+        <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
+         <b>Graph</b><%
+                      if (!StringUtil.emptyString(username))
+                          out.println(" : Welcome " + username);
+                      else
+                          out.println("<a href=\"login.html\">log in</a>"); %></td>
         </tr>
        </table>
     </td>
@@ -156,7 +162,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
    			  String fname = null;
    			  boolean graphAvailable = false;
    			  
-   			  if (term != null && relation != null && kb != null && userRole.equalsIgnoreCase("administrator")) {
+   			  if (term != null && relation != null && kb != null && role.equalsIgnoreCase("admin")) {
    			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
    			      try {
    			          graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
@@ -189,7 +195,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
   <table border="0">
   <tr>
   <td>View format:</td>
-  <% if (userRole.equalsIgnoreCase("administrator")) { %>
+  <% if (role.equalsIgnoreCase("admin")) { %>
          <td><input type="radio" name="view" value="graph" <%= (view.equals("graph")) ? "checked" : "" %>>graph</td>
   <% } %>
   <td><input type="radio" name="view" value="text" <%= (view.equals("text")) ? "checked" : "" %>>text</td>

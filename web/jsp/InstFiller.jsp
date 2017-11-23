@@ -43,14 +43,17 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
           <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <b>Instance Filler</b></td>
+              <b>Instance Filler</b><%
+                  if (!StringUtil.emptyString(username))
+                      out.println(" : Welcome " + username);
+                  else
+                      out.println("<a href=\"login.html\">log in</a>"); %></td>
           <td valign="bottom"></td>
           <td>
           <span class="navlinks">
           <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
 <%
-              if (kb.inferenceEngine != null && KBmanager.getMgr().getPref("userRole") != null &&
-                  KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+              if (kb.inferenceEngine != null && role != null && role.equalsIgnoreCase("admin")) {
                   out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\">Ask/Tell</a>&nbsp;|&nbsp;");
               }
 %>

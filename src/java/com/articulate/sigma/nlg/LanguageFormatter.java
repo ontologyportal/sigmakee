@@ -96,7 +96,6 @@ public class LanguageFormatter {
     }
 
     /***********************************************************************************
-     *
      */
     private void init() {
         // Get special versions of variable maps.
@@ -446,7 +445,7 @@ public class LanguageFormatter {
                 String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
                 String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
                         "   Formula:\n       " + temp + "\n";
-                System.out.println(msg);
+                System.out.println("LanguageFormatter " + msg);
             }
         }
     }
@@ -481,8 +480,9 @@ public class LanguageFormatter {
      * @return The natural language paraphrase as a String, or null if the predicate was not a logical operator.
      */
     private String paraphraseLogicalOperator(String stmt, boolean isNegMode, int depth) {
+
         try {
-            if (NLGUtils.keywordMap == null) {
+            if (NLGUtils.getKeywordMap() == null) {
                 System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
@@ -560,23 +560,20 @@ public class LanguageFormatter {
 
                     }
                 }
-
-            } catch (IllegalArgumentException ex) {
+            }
+            catch (IllegalArgumentException ex) {
                 ex.printStackTrace();
-            } finally {
+            }
+            finally {
                 // Pop the stack.
                 theStack.pop(inElement);
             }
-
             theStack.pushCurrTranslatedStateDown(stmt);
-
             // If this clause has successfully been generated into informal language, then we can drop any remaining quantifiers and mark
             // the entire clause as translated.
             theStack.setCurrTranslatedIfQuantified();
-
             // Do formal NLG in case informal NLG fails.
             return generateFormalNaturalLanguage(args, pred, isNegMode);
-
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -588,7 +585,6 @@ public class LanguageFormatter {
         if (args.isEmpty())     {
             return "";
         }
-
         String COMMA = NLGUtils.getKeyword(",", language);
         //String QUESTION = getKeyword("?",language);
         String IF = NLGUtils.getKeyword("if", language);
@@ -766,7 +762,6 @@ public class LanguageFormatter {
 
             return sb.toString();
         }
-
         return "";
     }
 
@@ -953,7 +948,6 @@ public class LanguageFormatter {
         }
         return ans;
     }
-
 
     /** **************************************************************
      * Replace variables with types, and articles appropriate to how many times

@@ -78,8 +78,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
          else
              System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
                                 term + "\" in language " + language);
-         if (KBmanager.getMgr().getPref("userRole") != null &&
-                 KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+         if (role != null && role.equalsIgnoreCase("admin")) {
              show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?lang=" + language +
         	    	 "&flang=" + flang + "&kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
          }
@@ -103,8 +102,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
      show.append ("</b></font></td></tr></table>\n");
 
      int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
-     if (KBmanager.getMgr().getPref("userRole") != null &&
-         KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+     if (role != null && !role.equalsIgnoreCase("guest")) {
          limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
      }
 

@@ -349,7 +349,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
   </DIV>
     <INPUT type="submit" name="request" value="Ask">
 
-<% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
+<% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <INPUT type="submit" name="request" value="Tell"><BR>
 <% } %>
 </FORM>

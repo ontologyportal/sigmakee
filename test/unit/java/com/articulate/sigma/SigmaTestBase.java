@@ -24,7 +24,7 @@ public class SigmaTestBase {
 
         KBmanager manager = KBmanager.getMgr();
         SimpleElement configuration = null;
-        if (! manager.initialized) {
+        if (!manager.initialized) {
             try {
                 SimpleDOMParser sdp = new SimpleDOMParser();
                 //sdp.setSkipProlog(false);
@@ -34,11 +34,9 @@ public class SigmaTestBase {
                 e.printStackTrace();
             }
 
-            manager.initializing = true;
             KBmanager.getMgr().setDefaultAttributes();
             KBmanager.getMgr().setConfiguration(configuration);
             manager.initialized = true;
-            manager.initializing = false;
         }
         kb = KBmanager.getMgr().getKB("SUMO");
         checkConfiguration();

@@ -33,7 +33,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   String action = "";
   String status = "";
 
-  if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+  if (role == null || !role.equalsIgnoreCase("admin")) {
        response.sendRedirect("KBs.jsp");     
   }
   else {
@@ -86,7 +86,12 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
             <tr>
             <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
             <TD>&nbsp;</TD>
-            <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"></td>
+            <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
+            <%
+              if (!StringUtil.emptyString(username))
+                  out.println(" : Welcome " + username);
+              else
+                  out.println("<a href=\"login.html\">log in</a>"); %></td>
             </tr>
            </table>
         </td>

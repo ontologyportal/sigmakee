@@ -6,21 +6,113 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.StringUtil;
 import com.google.common.collect.Maps;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 /**
  * Utilities and variables used by LanguageFormatter and other NLG classes.
  */
-public class NLGUtils {
+public class NLGUtils implements Serializable {
 
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     //private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath() + File.separator + "WordNetMappings";
     private static final String PHRASES_FILENAME = "Translations/language.txt";
-    static HashMap<String,HashMap<String,String>> keywordMap;
+    private static NLGUtils nlg = null;
+    private HashMap<String,HashMap<String,String>> keywordMap;
+
+    /** *************************************************************
+     */
+    public static void init(String kbDir) {
+
+        System.out.println("NLGUtils.init(): initializing with " + kbDir);
+        nlg = new NLGUtils();
+        nlg.readKeywordMap(kbDir);
+    }
+
+    /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
+    public static boolean serializedExists() {
+
+        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
+        System.out.println("NLGUtils.serializedExists(): " + serfile.exists());
+        return serfile.exists();
+    }
+
+    /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
+    public static boolean serializedOld() {
+
+        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        String phrasesFilename = kbDir + File.separator + PHRASES_FILENAME;
+        File phrasesFile = new File(phrasesFilename);
+        if (!phrasesFile.exists()) {
+            System.out.println("NLGUtils.serializeOld(): Cannot read " + phrasesFilename);
+        }
+        Date configDate = new Date(phrasesFile.lastModified());
+        File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
+        Date saveDate = new Date(serfile.lastModified());
+        if (saveDate.compareTo(configDate) < 0)
+            return true;
+        return false;
+    }
+
+    /** ***************************************************************
+     *  Load the most recently save serialized version.
+     */
+    public static void loadSerialized() {
+
+        System.out.println("NLGUtils.loadSerialized()");
+        nlg = null;
+        try {
+            // Reading the object from a file
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
+            ObjectInputStream in = new ObjectInputStream(file);
+            // Method for deserialization of object
+            nlg = (NLGUtils) in.readObject();
+            if (serializedOld()) {
+                nlg = null;
+                System.out.println("NLGUtils.loadSerialized(): serialized file is older than sources, " +
+                        "reloding from sources.");
+                return;
+            }
+            in.close();
+            file.close();
+            System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
+        }
+        catch (Exception ex) {
+            System.out.println("Error in NLGUtils.loadSerialized(): IOException is caught");
+            ex.printStackTrace();
+            nlg = null;
+            return;
+        }
+    }
+
+    /** ***************************************************************
+     *  save serialized version.
+     */
+    public static void serialize() {
+
+        try {
+            // Reading the object from a file
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
+            ObjectOutputStream out = new ObjectOutputStream(file);
+            System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
+            // Method for deserialization of object
+            out.writeObject(nlg);
+            out.close();
+            file.close();
+            System.out.println("NLGUtils.serialize(): NLGUtils has been serialized: " + nlg);
+        }
+        catch (IOException ex) {
+            System.out.println("Error in NLGUtils.serialize(): IOException is caught");
+            ex.printStackTrace();
+        }
+    }
 
     /** *************************************************************
      */
@@ -52,6 +144,7 @@ public class NLGUtils {
      * @return
      */
     public static String resolveFormatSpecifiers(String template, String href) {
+
         String anchorStart = ("<a href=\"" + href + "&term=");
 
         StringBuilder sb = new StringBuilder(template);
@@ -130,20 +223,20 @@ public class NLGUtils {
         }
 
         StringBuilder result = new StringBuilder();
-        String comma = NLGUtils.getKeyword(",", language);
+        String comma = nlg.getKeyword(",", language);
         String space = " ";
         String[] arr = strseq.split(space);
         int lastIdx = (arr.length - 1);
         for (int i = 0; i < arr.length; i++) {
             String val = arr[i];
             if (i > 0) {
-                if(val.equals(NLGUtils.getKeyword("and", language))) {
+                if (val.equals(nlg.getKeyword("and", language))) {
                     // Make behavior for lists that include "and" the same as for those that don't.
                     continue;
                 }
                 if (i == lastIdx) {
                     result.append(space);
-                    result.append(NLGUtils.getKeyword("and", language));
+                    result.append(nlg.getKeyword("and", language));
                 }
                 else {
                     result.append(comma);
@@ -172,26 +265,34 @@ public class NLGUtils {
      *  English phrase, and the interior HashMap has a key of the two letter
      *  language identifier.
      */
-    public static HashMap<String,HashMap<String,String>> readKeywordMap(String dir) {
+    public static void readKeywordMap(String dir) {
+
+        System.out.println("NLGUtils.readKeywordMap():");
+        nlg = null;
+        if (serializedExists() && !serializedOld())
+            loadSerialized();
+        if (nlg != null)
+            return;
+
         System.out.println("INFO in NLGUtils.readKeywordMap(" + dir + "/" +
                 PHRASES_FILENAME + ")");
 
-        if(dir == null || dir.isEmpty())    {
+        if (dir == null || dir.isEmpty())    {
             throw new IllegalArgumentException("Parameter dir is null or empty.");
         }
 
         File dirFile = new File(dir);
-        if(! dirFile.exists())  {
+        if (!dirFile.exists())  {
             throw new IllegalArgumentException("Parameter dir points to non-existent path: " + dir);
         }
 
-        if (keywordMap == null)
-            keywordMap = new HashMap<>();
+        if (getKeywordMap() == null)
+            setKeywordMap(new HashMap<>());
         int lc = 0;
         BufferedReader br = null;
         File phrasesFile = null;
         try {
-            if (keywordMap.isEmpty()) {
+            if (getKeywordMap().isEmpty()) {
                 System.out.println("Filling keywordMap");
 
                 phrasesFile = new File(dirFile, PHRASES_FILENAME);
@@ -220,7 +321,7 @@ public class NLGUtils {
                             int plLen = phraseList.size();
                             for (int i = 0; i < plLen; i++)
                                 phrasesByLang.put(languageKeys.get(i), phraseList.get(i));
-                            keywordMap.put(key.intern(), phrasesByLang);
+                            getKeywordMap().put(key.intern(), phrasesByLang);
                         }
                     }
                     else {
@@ -243,12 +344,10 @@ public class NLGUtils {
             catch (Exception ex2) {
                 ex2.printStackTrace();
             }
-            System.out.println("EXIT NLGUtils.readKeywordMap(" + dir + ")");
-            //return keywordMap;
+            System.out.println("EXIT NLGUtils.readKeywordMap(" + dir + ") with size " + getKeywordMap().keySet().size());
         }
-
-        return keywordMap;
-
+        serialize();
+        return;
     }
 
     /** **************************************************************
@@ -263,39 +362,39 @@ public class NLGUtils {
 
         String ordinal = "";
         switch (occurrence) {
-        case 3: ordinal = NLGUtils.getKeyword("third", language); break;
-        case 4: ordinal = NLGUtils.getKeyword("fourth", language); break;
-        case 5: ordinal = NLGUtils.getKeyword("fifth", language); break;
-        case 6: ordinal = NLGUtils.getKeyword("sixth", language); break;
-        case 7: ordinal = NLGUtils.getKeyword("seventh", language); break;
-        case 8: ordinal = NLGUtils.getKeyword("eighth", language); break;
-        case 9: ordinal = NLGUtils.getKeyword("ninth", language); break;
-        case 10: ordinal = NLGUtils.getKeyword("tenth", language); break;
-        case 11: ordinal = NLGUtils.getKeyword("eleventh", language); break;
-        case 12: ordinal = NLGUtils.getKeyword("twelfth", language); break;
+        case 3: ordinal = nlg.getKeyword("third", language); break;
+        case 4: ordinal = nlg.getKeyword("fourth", language); break;
+        case 5: ordinal = nlg.getKeyword("fifth", language); break;
+        case 6: ordinal = nlg.getKeyword("sixth", language); break;
+        case 7: ordinal = nlg.getKeyword("seventh", language); break;
+        case 8: ordinal = nlg.getKeyword("eighth", language); break;
+        case 9: ordinal = nlg.getKeyword("ninth", language); break;
+        case 10: ordinal = nlg.getKeyword("tenth", language); break;
+        case 11: ordinal = nlg.getKeyword("eleventh", language); break;
+        case 12: ordinal = nlg.getKeyword("twelfth", language); break;
         }
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
         if (count == 1 && occurrence == 2)
-            return NLGUtils.getKeyword("another", language);
+            return nlg.getKeyword("another", language);
         if (count > 1) {
             if (occurrence == 1) {
                 if (isArabic)
                     return ordinal;
                 else
-                    return (NLGUtils.getKeyword("the", language));
+                    return (nlg.getKeyword("the", language));
             }
             else if (occurrence > 2) {
                 if (isArabic)
                     return ordinal;
                 else
-                    return (NLGUtils.getKeyword("the", language) + " " + ordinal);
+                    return (nlg.getKeyword("the", language) + " " + ordinal);
             }
             else {
                 if (isArabic)
-                    return (NLGUtils.getKeyword("the", language) + " " + NLGUtils.getKeyword("other", language));
+                    return (nlg.getKeyword("the", language) + " " + nlg.getKeyword("other", language));
                 else
-                    return (NLGUtils.getKeyword("the", language) + " " + NLGUtils.getKeyword("other", language));
+                    return (nlg.getKeyword("the", language) + " " + nlg.getKeyword("other", language));
             }
         }
         // count = 1 (first occurrence of a type)
@@ -307,7 +406,7 @@ public class NLGUtils {
                 return "a " + ordinal;
         }
         else if (isArabic) {
-            String defArt = NLGUtils.getKeyword("the", language);
+            String defArt = nlg.getKeyword("the", language);
             if (ordinal.startsWith(defArt)) {
                 // remove the definite article
                 ordinal = ordinal.substring(defArt.length());
@@ -355,25 +454,34 @@ public class NLGUtils {
     }
 
     /** **************************************************************
-     * Return a defensive copy of the keyword map.
      */
     public static HashMap<String, HashMap<String, String>> getKeywordMap() {
-        if (keywordMap == null)     {
+
+        if (NLGUtils.nlg == null || NLGUtils.nlg.keywordMap == null) {
             return null;
         }
-        return Maps.newHashMap(keywordMap);
+        return NLGUtils.nlg.keywordMap;
+    }
+
+    /** **************************************************************
+     */
+    public static void setKeywordMap(HashMap<String, HashMap<String, String>> themap) {
+
+        if (NLGUtils.nlg == null)
+            NLGUtils.nlg = new NLGUtils();
+        NLGUtils.nlg.keywordMap = themap;
     }
 
     /** ***************************************************************
      */
-    static String getKeyword(String englishWord, String language) {
+    public static String getKeyword(String englishWord, String language) {
 
         String ans = "";
-        if (keywordMap == null) {
+        if (getKeywordMap() == null) {
             System.out.println("Error in NLGUtils.getKeyword(): keyword map is null");
             return ans;
         }
-        HashMap<String,String> hm = keywordMap.get(englishWord);
+        HashMap<String,String> hm = getKeywordMap().get(englishWord);
         if (hm != null) {
             String tmp = hm.get(language);
             if (tmp != null)
@@ -418,7 +526,7 @@ public class NLGUtils {
      * @return A format string with all relevant argument pointers
      * expanded.
      */
-    static String expandStar(Formula f, String strFormat, String lang) {
+    public static String expandStar(Formula f, String strFormat, String lang) {
 
         String result = strFormat;
         ArrayList<String> problems = new ArrayList<>();
@@ -511,7 +619,7 @@ public class NLGUtils {
                             lbi = p1;
                             if (lbi < slen) { lb = strFormat.substring(lbi, (lbi + 1)); }
                         }
-                        String AND = getKeyword("and", lang);
+                        String AND = nlg.getKeyword("and", lang);
                         if (StringUtil.emptyString(AND))
                             AND = "+";
                         int nAdded = 0;
@@ -591,6 +699,7 @@ public class NLGUtils {
                                                 boolean addFullStop,
                                                 String language) {
 
+        //System.out.println("NLGUtils.upcaseFirstVisibleChar(): " + nlg);
         String ans = htmlParaphrase;
         try {
             if (StringUtil.isNonEmptyString(htmlParaphrase)) {
@@ -632,7 +741,7 @@ public class NLGUtils {
                         }
                     }
                     if (addFullStop) {
-                        String fs = getKeyword(".", language);
+                        String fs = nlg.getKeyword(".", language);
                         if (StringUtil.isNonEmptyString(fs)) {
                             String ss = "";
                             sbLen = sb.length();
@@ -668,11 +777,9 @@ public class NLGUtils {
 
     /**************************************************************************************************************
      * Return true if the given list includes "Process", or if one of its elements is a subclass of Process.
-     * @param vals
-     * @param kb
-     * @return
      */
     public static boolean containsProcess(Collection<String> vals, KB kb) {
+
         for (String val : vals)  {
             if (val.equals("Process") || kb.isSubclass(val, "Process"))  {
                 return true;

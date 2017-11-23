@@ -321,11 +321,16 @@ public class Graph {
                                   int limitInt, String inst, String fname) throws IOException {
 
         FileWriter fw = null;
-        PrintWriter pw = null; 
+        PrintWriter pw = null;
+        String dir = System.getenv("CATALINA_HOME") + File.separator + "webapps" +
+                File.separator + "sigma" + File.separator + "graph";
         String filename = System.getenv("CATALINA_HOME") + File.separator + "webapps" +
                 File.separator + "sigma" + File.separator + "graph" + File.separator + fname;
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         try {
+            File dirfile = new File(dir);
+            if (!dirfile.exists())
+                dirfile.mkdir();
             fw = new FileWriter(filename + ".dot");
             pw = new PrintWriter(fw);
             HashSet<String> result = new HashSet<String>();
@@ -357,7 +362,7 @@ public class Graph {
             return true;
         }
         catch (java.io.IOException e) {
-            String err = "Error writing file " + filename + "\n" + e.getMessage();
+            String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
             errors.add(err);
             throw new IOException(err);
         }

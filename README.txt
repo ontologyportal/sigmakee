@@ -224,6 +224,21 @@ set([u'-1', u'-3', u'-6', u'-7235', u'.5', u'<=>', u'=>', u'AAA-Rating', u'AAM',
 Look at com.articulate.sigma.KBmanager.pythonServer() to expose the API of more classes
 than just com.articulate.sigma.KB
 
+
+Account Management
+======================
+
+Create the account database with
+
+java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.delphi.PasswordService -c
+
+Then create the administrator account and password
+
+java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.delphi.PasswordService -c
+
+You can use Sigma without being administrator, but you'll have limited use of its functionality.
+
+
 Old Installation Notes
 ======================
 

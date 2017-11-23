@@ -35,7 +35,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     String refetch = request.getParameter("refetch");
     String result = "";
 
-    if (KBmanager.getMgr().getPref("userRole") == null || !KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { 
+    if (role == null || !role.equalsIgnoreCase("admin")) {
     	saveAs = null;
     	saveFile = null;
     	constituent = null;
@@ -67,7 +67,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
             // requested this on the Preferences page.
             if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
                 System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas");
-                SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+                com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
                 skbtptpkb.kb = kb;
                 skbtptpkb.tptpParse();
             }
@@ -77,7 +77,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
             String tptpFile = null;
             try {
                 tptpfcp = tptpf.getCanonicalPath();
-                SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+                com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
         		skbtptpkb.kb = kb;
                 tptpFile = skbtptpkb.writeTPTPFile(tptpfcp, null, onlyPlainFOL, "");
             }
@@ -90,7 +90,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
   				result = "Could not write a TPTP file";
         }
         else if (saveAs.equalsIgnoreCase("OWL")) {
-            OWLtranslator ot = new OWLtranslator();
+            com.articulate.sigma.trans.OWLtranslator ot = new com.articulate.sigma.trans.OWLtranslator();
             ot.kb = KBmanager.getMgr().getKB(kbName);
             File owlFile = new File(kbDirFile, (saveFile + ".owl"));
             String ofcp = null;
@@ -181,7 +181,11 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
         <tr>
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"></td>
+          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><%
+           if (!StringUtil.emptyString(username))
+               out.println(" : Welcome " + username);
+           else
+               out.println("<a href=\"login.html\">log in</a>"); %></td>
         </tr>
       </table>
     </td>
@@ -217,7 +221,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
           <TD><%=aConstituent%>&nbsp;</TD>
           <TD>
 
-          <% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
+          <% if (role != null && role.equalsIgnoreCase("admin")) { %>
                 <A href="Manifest.jsp?delete=true&constituent=<%=aConstituent%>&kb=<%=kbName%>">Remove</A>            
           <%     } %>
           </TD>
@@ -233,7 +237,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 <P>
 
 <%
-if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+if (role != null && role.equalsIgnoreCase("admin")) {
 //	if (Files.isDirectory(Paths.get(new File(kbDirFile, ".git")))) {
 %>
 		<hr><b>Refetch constituents (git pull)</b>
@@ -253,7 +257,7 @@ if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref
 </form>
 <P>
 
-<% if (KBmanager.getMgr().getPref("userRole") != null && KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) { %>
+<% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <hr><b>Add a new constituent</b>
     <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
         <input type="hidden" name="kb" value=<%=kbName%>><br> 

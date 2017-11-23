@@ -37,7 +37,11 @@ August 9, Acapulco, Mexico.
         <tr>
         <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
         <TD>&nbsp;</TD>
-        <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"></td>
+        <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><%
+         if (!StringUtil.emptyString(username))
+             out.println(" : Welcome " + username);
+         else
+             out.println("<a href=\"login.html\">log in</a>"); %></td>
         </tr>
        </table>
     </td>
@@ -65,7 +69,12 @@ out.println(HTMLformatter.createKBMenu(kbName));
   <input type="submit" name="submit" value="submit">
 </form>
   <table width="95%">
-  <%= HTMLformatter.formatFormulaList(forms,"",  kb, language,  flang, 0, 0, "") %>
+  <%
+  if (forms == null || forms.size() == 0)
+      out.println("<b>No intersection of terms " + term1 + " and " + term2 + " found.</b><P>");
+  else
+      out.println(HTMLformatter.formatFormulaList(forms,"",  kb, language,  flang, 0, 0, ""));
+  %>
   </table>
 <p>
 

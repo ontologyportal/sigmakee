@@ -65,7 +65,6 @@ public class KBmanager implements Serializable {
     public static boolean initialized = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
-    public boolean initializing = false;
 
     public KBmanager() {
     }
@@ -83,19 +82,6 @@ public class KBmanager implements Serializable {
     public String getError() {
         return error;
     }
-
-    /* Future:
-    private SigmaServer sigmaServer = null;
-
-    public void setSigmaServer(SigmaServer ss) {
-        this.sigmaServer = ss;
-        return;
-    }
-
-    public SigmaServer getSigmaServer() {
-        return this.sigmaServer;
-    }
-    */
 
     /** ***************************************************************
      *  Check whether sources are newer than serialized version.
@@ -153,14 +139,13 @@ public class KBmanager implements Serializable {
             in.close();
             file.close();
             System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
+            initialized = true;
         }
-        catch(IOException ex) {
+        catch (Exception ex) {
             System.out.println("Error in KBmanager.loadSerialized(): IOException is caught");
             ex.printStackTrace();
-        }
-        catch(ClassNotFoundException ex) {
-            System.out.println("Error in KBmanager.loadSerialized(): ClassNotFoundException is caught");
-            ex.printStackTrace();
+            manager = null;
+            return;
         }
     }
 
@@ -180,7 +165,7 @@ public class KBmanager implements Serializable {
             file.close();
             System.out.println("KBmanager.serialize(): KBmanager has been serialized ");
         }
-        catch(IOException ex) {
+        catch (IOException ex) {
             System.out.println("Error in KBmanager.serialize(): IOException is caught");
             ex.printStackTrace();
         }
@@ -368,6 +353,7 @@ public class KBmanager implements Serializable {
                     String filename = it.next();
                     try {
                         //kb.addConstituent(filename, false, false, false);
+                        System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
                         kb.addConstituent(filename);
                     } 
                     catch (Exception e1) {
@@ -491,7 +477,8 @@ public class KBmanager implements Serializable {
      * empty configuration file if none exists.
      */
     protected SimpleElement readConfiguration(String configDirPath) {
-        
+
+        System.out.println("KBmanager.readConfiguration()");
         SimpleElement configuration = null;
         BufferedReader br = null;
         try {
@@ -564,14 +551,23 @@ public class KBmanager implements Serializable {
      */
     public boolean initializeOnce(String configFileDir) {
 
+        KBmanager.getMgr().setPref("kbDir",configFileDir);
         boolean performedInit = false;
         if (initialized)
             return false;
         try {
-            initializing = true;
-            if (serializedExists() && !serializedOld())
+            System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
+            if (serializedExists() && !serializedOld()) {
                 loadSerialized();
-            else {
+                WordNet.wn.initOnce();
+                NLGUtils.init(configFileDir);
+                OMWordnet.readOMWfiles();
+                if (manager != null)
+                    performedInit = true;
+            }
+            if (!serializedExists() || serializedOld() || manager == null) { // if there was an error loading the serialized file, then reload from sources
+                System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
+                KBmanager.getMgr().setPref("kbDir",configFileDir); // need to restore config file path
                 if (StringUtil.isNonEmptyString(configFileDir)) {
                     setDefaultAttributes();
                     SimpleElement configuration = readConfiguration(configFileDir);
@@ -583,14 +579,14 @@ public class KBmanager implements Serializable {
                     setDefaultAttributes();
                 performedInit = true;
                 serialize();
+                initialized = true;
             }
         }
         catch (Exception ex) {
         	System.out.println(ex.getMessage());
             ex.printStackTrace();
-        }        
-        initialized = true;
-        initializing = false;           
+        }
+        System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
         return performedInit;
     }
 
@@ -600,11 +596,12 @@ public class KBmanager implements Serializable {
      */
     public void setConfiguration(SimpleElement configuration) {
 
+        System.out.println("Info in KBmanager.setConfiguration():");
         preferencesFromXML(configuration);
         kbsFromXML(configuration);
         String kbDir = (String) preferences.get("kbDir");
-        //System.out.println("Info in KBmanager.initializeOnce(): Using kbDir: " + kbDir);
-        NLGUtils.readKeywordMap(kbDir);
+        System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
+        NLGUtils.init(kbDir);
         WordNet.wn.initOnce();
         OMWordnet.readOMWfiles();
         if (kbs != null && kbs.size() > 0) {
@@ -785,9 +782,6 @@ public class KBmanager implements Serializable {
 
         manager = new KBmanager();
         manager.initialized = false;
-        String userRole = PasswordService.getInstance().getUser(username).getRole();
-        manager.setPref("userName",username);
-        manager.setPref("userRole", userRole);     
         return manager;
     }
     

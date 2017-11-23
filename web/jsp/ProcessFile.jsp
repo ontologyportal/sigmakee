@@ -16,7 +16,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
   System.out.println("ENTER ProcessFile.jsp");
   // KBmanager mgr = KBmanager.getMgr();
-  if (!mgr.getPref("userRole").equalsIgnoreCase("administrator")) {
+  if (!role.equalsIgnoreCase("admin")) {
        System.out.println("EXIT ProcessFile.jsp 1");
        response.sendRedirect("KBs.jsp");     
   }

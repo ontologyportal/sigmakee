@@ -3257,6 +3257,10 @@ public class WordNet implements Serializable {
      */
     public void termFormatsToSynsets(KB kb) {
 
+        if (kb == null) {
+            System.out.println("INFO in WordNet.termFormatsToSynsets(): KB is null");
+            return;
+        }
         origMaxNounSynsetID = maxNounSynsetID;
         origMaxVerbSynsetID = maxVerbSynsetID;
 

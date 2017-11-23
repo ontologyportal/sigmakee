@@ -76,8 +76,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
         show.append ("</b></FONT></td></tr></table>\n");
 
     int limit = 25;
-    if (KBmanager.getMgr().getPref("userRole") != null && 
-        KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+    if (role != null && !role.equalsIgnoreCase("guest")) {
         limit = 200;
     }
     show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, language,flang,start,limit,arg,type));

@@ -6,15 +6,20 @@ other representations of any software which incorporates, builds on, or uses thi
 code.  */
 package com.articulate.sigma;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.*;
+import java.io.*;
+
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
 
 /** *****************************************************************
  * A class that encrypts a string and checks it against another stored
@@ -22,368 +27,278 @@ import java.util.List;
  */
 public final class PasswordService {
 
-    private static final String CHARSET = "UTF-8";
-    private static final String USERS_FILENAME = "users.txt";
-    protected static final String ADMIN_ROLE = "administrator";
-    protected static final String USER_ROLE = "user";
-    private static final String DELIMITER1 = ":";
-    private static final String DELIMITER2 = "0xyz1";
-    private static final String USER_DELIMITER = "1uuuxuuu2";
-    private static PasswordService INSTANCE = null;
-    private static HashMap<String, User> users = new HashMap<String, User>();
+    private static PasswordService instance;
+    private static HashMap users = new HashMap();
+    public static final String JDBCString = "jdbc:h2:~/var/passwd";
+    public static String UserName = "";
+    public Connection conn = null;
   
     /** ***************************************************************** 
-     * Use the static factory method getInstance().
+     * Create an instance of PasswordService
      */
-    private PasswordService() {
-    }
+    public PasswordService() {
 
-    /** ***************************************************************** 
-     * Encrypts a string with a deterministic algorithm.
-     */
-    public String encrypt(String plaintext) {
-        return StringUtil.encrypt(plaintext, CHARSET);
-    }
-
-    /** ***************************************************************** 
-     */
-    public static PasswordService getInstance() {
         try {
-            synchronized (users) {
-                if (INSTANCE == null) {
-                    INSTANCE = new PasswordService();
-                    // Future:
-                    // SigmaServer ss = KBmanager.getMgr().getSigmaServer();
-                    // INSTANCE.setUsersFileDirectory(ss.getWebDirectory());
-                }
-                if (INSTANCE.users.isEmpty()) {
-                    INSTANCE.readUserFile();
-
-                    // If no user file exists, create one and initialize
-                    // it with user "admin".
-                    if (INSTANCE.users.isEmpty()) {
-                        User admin = new User();
-                        admin.setUsername("admin");
-                        admin.setPassword(INSTANCE.encrypt("admin"));
-                        admin.setRole(INSTANCE.encrypt(ADMIN_ROLE));
-                        INSTANCE.addUser(admin);
-                    }
-                }
-            }
+            Class.forName("org.h2.Driver");
+            conn = DriverManager.getConnection(JDBCString, UserName, "");
+            System.out.println("main(): Opened DB " + JDBCString);
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
+        catch (Exception e) {
+            System.out.println("Error in main(): " + e.getMessage());
+            e.printStackTrace();
         }
-        return INSTANCE;
-    }
-
-    private File usersFileDirectory = null;
-
-    public void setUsersFileDirectory(File dir) {
-        usersFileDirectory = dir;
-        return;
-    }
-
-    public File getUsersFileDirectory() {
-        return this.usersFileDirectory;
     }
 
     /** *****************************************************************
-     * Accepts as input a base 64 String consisting of a user name and
-     * password.  Returns true if the user can be authenticated, else
-     * returns false.
-     *
-     * @param String A concatenated user name and password in base 64
-     * representation
-     *
-     * @return True if the user can be authenticated, else false
+     * Encrypts a string with a deterministic algorithm.  Thanks to
+     * https://howtodoinjava.com/security/how-to-generate-secure-password-hash-md5-sha-pbkdf2-bcrypt-examples/
      */
-    protected boolean isUserAuthenticated(String usernamePassword64) {
-        boolean ans = false;
+    public synchronized String encrypt(String plaintext) {
+
+        plaintext = plaintext.trim();
+        String generatedPassword = null;
+        //System.out.println("PasswordService.encrypt(): input: '" + plaintext + "'");
         try {
-            List<String> pair = toNamePasswordPairFrom64(usernamePassword64);
-            String username = pair.get(0);
-            String password = pair.get(1);
-            if (StringUtil.isNonEmptyString(password)) {
-                ans = encrypt(password).equals(getUser(username).getPassword());
-            }
+            // Create MessageDigest instance for MD5
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+            //Add password bytes to digest
+            md.update(plaintext.getBytes());
+            //Get the hash's bytes
+            byte[] bytes = md.digest();
+            //This bytes[] has bytes in decimal format. Convert it to hexadecimal format
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < bytes.length; i++)
+                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+            //Get complete hashed password in hex format
+            generatedPassword = sb.toString();
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
+        catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
         }
-        return ans;
+        //System.out.println("PasswordService.encrypt(): output: " + generatedPassword);
+        return generatedPassword;
+    }
+
+    /** ***************************************************************** 
+     */
+    public static synchronized PasswordService getInstance() {
+
+        if (instance == null)
+            instance = new PasswordService();
+        return instance;        
     }
 
     /** *****************************************************************
-     * Accepts as input a base 64 String consisting of a user name and
-     * password.  Breaks and decodes the input String, if possible,
-     * and returns a List containing a user name String and an
-     * encrypted password String.
-     *
-     * @param usernamePassword64 A base 64 encoded String consisting
-     * of a user name and an encrypted password
-     *
-     * @return A two-element List consisting of a user name and an
-     * encrypted password.  Both the user name and the encrypted
-     * password could be empty Strings if decoding of the input String
-     * fails.
+     * Take a user name and an encrypted password and compare it to an
+     * existing collection of users with encrypted passwords.
      */
-    protected ArrayList<String> toNamePasswordPairFrom64(String usernamePassword64) {
-        ArrayList<String> pair = new ArrayList<String>();
-        try {
-            String authtype = "Basic ";
-            int bidx = usernamePassword64.indexOf(authtype);
-            if (bidx != -1)
-                usernamePassword64 = usernamePassword64.substring(bidx + authtype.length());
-            String usernamePassword = StringUtil.fromBase64(usernamePassword64, CHARSET);
-            int idx1 = usernamePassword.indexOf(DELIMITER1);
-            int d1len = DELIMITER1.length();
-            String username = "";
-            String password = "";
-            if (idx1 != -1) {
-                username = usernamePassword.substring(0, idx1);
-                User user = getUser(username);
-                if (user != null) {
-                    int idx2 = (idx1 + d1len);
-                    password = ((idx2 < usernamePassword.length())
-                                ? usernamePassword.substring(idx2)
-                                : "");
-                }
-            }
-            pair.add(username);
-            pair.add(password);
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return pair;
-    }
+    public boolean authenticate(String username, String pass) {
 
-    /** ***************************************************************** 
-     */
-    public User getUser(String username) {
-        User result = null;
-        synchronized (users) {
-            result = users.get(username);
-        }
-        return result;
-    }
-
-    /** ***************************************************************** 
-     */
-    protected User getUserFromNamePassword64(String namepass64) {
-        User u = null;
-        try {
-            u = getUser(toNamePasswordPairFrom64(namepass64).get(0));
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return u;
-    }
-
-    /** ***************************************************************
-     * Read a text file consisting of partly encrypted user password
-     * and role authorization data.
-     */
-    private void readUserFile() {
-        System.out.println("ENTER PasswordService.readUserFile()");
-        BufferedReader br = null;
-        File f = null;
-        String canonicalPath = null;
-        try {
-            File fdir = getUsersFileDirectory(); // new File(KBmanager.getMgr().getPref("kbDir"));
-            f = new File(fdir, USERS_FILENAME);
-            canonicalPath = f.getCanonicalPath();
-            if (f.canRead()) {
-                br = new BufferedReader(new FileReader(f));
-                StringBuilder sb = new StringBuilder();
-                users.clear();
-                int i = -1;
-                while ((i = br.read()) != -1) {
-                    sb.append((char) i);
-                }
-                if (sb.length() > 0) {
-                    String filestr = StringUtil.fromBase64(sb.toString(), CHARSET);
-                    List<String> userStrs = Arrays.asList(filestr.split(USER_DELIMITER));
-                    for (String udata : userStrs) {
-                        if (StringUtil.isNonEmptyString(udata)) {
-                            List<String> u_p_r = Arrays.asList(udata.split(DELIMITER2));
-                            if (u_p_r.size() > 2) {
-                                User user = new User();
-                                String userName = u_p_r.get(0);
-                                String password = u_p_r.get(1);
-                                String role = u_p_r.get(2);
-                                System.out.println("  > userName == " + userName);
-                                user.setUsername(userName);
-                                System.out.println("  > password == " + password);
-                                user.setPassword(password);
-                                System.out.println("  > role == " + role);
-                                user.setRole(role);
-                                users.put(userName, user);
-                            }
-                        }
-                    }
-                }
-            }
-            else {
-                System.out.println("WARNING in PasswordService.readUserFile()");
-                System.out.println("  > Cannot read " + canonicalPath);
-            }
-        }
-        catch (Exception ex) {
-            System.out.println("ERROR in PasswordService.readUserFile()");
-            System.out.println("  > f == " + canonicalPath);
-            System.out.println("  > " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        finally {
-            try {
-                if (br != null) 
-                    br.close();
-            }
-            catch (Exception e1) {
-                e1.printStackTrace();
-            }
-        }
-        //System.out.println(xml.toString());
-        System.out.println("EXIT PasswordService.readUserFile()");
-        return;
-    }
-
-    /** ***************************************************************
-     * Read an XML-formatted configuration file. 
-     * @Deprecated
-     */
-    private void processUserFile(String configuration) {
-
-        if (users == null) users = new HashMap();
-        users.clear();
-        BasicXMLparser config = new BasicXMLparser(configuration);
-        //System.out.println("INFO in PasswordService.processUserFile(): Initializing.");
-        //System.out.print("INFO in PasswordService.processUserFile(): Number of users:");
-        //System.out.println(config.elements.size());
-        for (int i = 0; i < config.elements.size(); i++) {
-            BasicXMLelement element = (BasicXMLelement) config.elements.get(i);
-            if (element.tagname.equalsIgnoreCase("user")) {
-                User user = new User();
-                user.fromXML(element);
-                users.put(user.getUsername(),user);
+        if (userExists(username)) {
+            User user = User.fromDB(conn,username);
+            //System.out.println("INFO in PasswordService.authenticateDB(): Input: " + username + " " + pass);
+            //System.out.println("INFO in PasswordService.authenticateDB(): Reading: " + user.username + " " + user.password);
+            if (pass.equals(user.password)) {
+                return true;
             }
             else
-                System.out.println("Error in PasswordService.processUserFile(): Bad element: " 
-                                   + element.tagname);
-        }        
-    }
-
-    /** ***************************************************************** 
-     */
-    protected void writeUserFile() {
-        System.out.println("ENTER PasswordService.writeUserFile()");
-        PrintWriter pw = null;
-        File usersFile = null;
-        String canonicalPath = null;
-        try {
-            File ufDir = getUsersFileDirectory(); // new File(KBmanager.getMgr().getPref("kbDir"));
-            usersFile = new File(ufDir, USERS_FILENAME);
-            canonicalPath = usersFile.getCanonicalPath();
-            pw = new PrintWriter(new FileWriter(usersFile));
-            StringBuilder sb = new StringBuilder();
-            User u = null;
-            String password = null;
-            String role = null;
-            for (String username : users.keySet()) {
-                u = users.get(username);
-                password = u.getPassword();
-                role = u.getRole();
-                System.out.println("  > username == " + username);
-                sb.append(username);
-                sb.append(DELIMITER2);
-                System.out.println("  > password == " + password);
-                sb.append(u.getPassword());
-                sb.append(DELIMITER2);
-                System.out.println("  > role == " + role);
-                sb.append(u.getRole());
-                sb.append(USER_DELIMITER);
-            }
-            String udata = StringUtil.toBase64(sb.toString(), CHARSET);
-            System.out.println("  > udata == " + udata);
-            pw.println(udata);
+                return false;
         }
-        catch (Exception ex) {
-            System.out.println("Error writing file " 
-                               + ((usersFile == null)
-                                  ? USERS_FILENAME
-                                  : canonicalPath)
-                               + ": " 
-                               + ex.getMessage());
-            ex.printStackTrace();
-        }
-        finally {
-            if (pw != null) {
-                pw.close();
-            }
-        }
-        return;
+        else
+            return false;
     }
 
     /** *****************************************************************
      */
     public boolean userExists(String username) {
-        return (getUser(username) != null);
-    }
 
-    /** *****************************************************************
-     */
-    public void updateUser(User user) {
-        try {        
-            synchronized (users) {
-                String uname = user.getUsername();
-                if (userExists(uname)) {
-                    users.put(uname, user);
-                    writeUserFile();
-                }
-                else {
-                    System.out.println("ERROR in PasswordService.updateUser(" + uname + ")");
-                    System.out.println("  > User " + uname + " does not exist");
-                }
-            }
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT * FROM USERS where username='" + username + "';");
+            return res.next();
         }
         catch (Exception e) {
+            System.out.println("Error in userExistsDB(): " + e.getMessage());
             e.printStackTrace();
         }
-        return;
+        return true;
     }
 
     /** *****************************************************************
      */
     public void addUser(User user) {
-        try {
-            synchronized (users) {
-                String uname = user.getUsername();
-                if (userExists(uname)) {
-                    System.out.println("ERROR in PasswordService.addUser(" + uname + ")");
-                    System.out.println("  > User " + uname + " already exists");
-                }
-                else {
-                    users.put(uname, user);
-                    writeUserFile();
-                }
+
+        if (userExists(user.username)) {
+            System.out.println("Error in PasswordService.addUser():  User " + user.username + " already exists.");
+            return;
+        }
+        user.toDB(conn);
+    }
+
+    /** *****************************************************************
+     */
+    public void login() {
+
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+
+        String username = c.readLine("Enter your username: ");
+        String password = new String(c.readPassword("Enter your password: "));
+        //System.out.println("password: " + password);
+        if (userExists(username)) {
+            boolean valid = authenticate(username,encrypt(password));
+            if (valid) {
+                //System.out.println(User.fromDB(conn, username));
+                System.out.println("login successful");
             }
+            else
+                System.out.println("Invalid username/password");
         }
-        catch (Exception e) {
-            e.printStackTrace();
+        else
+            System.out.println("User " + username + " does not exist");
+    }
+
+    /** *****************************************************************
+     */
+    public void mailModerator(User user) {
+
+        String destmailid = user.attributes.get("email");
+        String from = "sigmamoderator@gmail.com";
+        String firstName = user.attributes.get("firstName");
+        String lastName = user.attributes.get("lastName");
+        String notRobot = user.attributes.get("notRobot");
+        String registrId = user.attributes.get("registrId");
+
+        final String uname = "sigmamoderator";
+
+        String host = KBmanager.getMgr().getPref("hostname");
+        String port = KBmanager.getMgr().getPref("port");
+        String appURL = "";
+        try {
+            appURL = "ModeratorApproval.jsp?user=" +
+                    uname + "&id=" + URLEncoder.encode(registrId, "UTF-8");
+            if (!StringUtil.emptyString(host) && !StringUtil.emptyString(port))
+                appURL = "https://" + host + ":" + port + "/sigma/" + appURL;
         }
-        return;
+        catch (UnsupportedEncodingException uee) {
+            uee.printStackTrace();
+        }
+
+        final String pwd = System.getenv("SIGMA_EMAIL_PASS");
+        String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
+        Properties propvls = new Properties();
+        propvls.put("mail.smtp.auth", "true");
+        propvls.put("mail.smtp.starttls.enable", "true");
+        propvls.put("mail.smtp.host", smtphost);
+        propvls.put("mail.smtp.port", "587");
+        //Create a Session object & authenticate uid and pwd
+        Session sessionobj = Session.getInstance(propvls,
+                new javax.mail.Authenticator() {
+                    protected PasswordAuthentication getPasswordAuthentication() {
+                        return new PasswordAuthentication(uname, pwd);
+                    }
+                });
+        try {
+            //Create MimeMessage object & set values
+            Message messageobj = new MimeMessage(sessionobj);
+            messageobj.setFrom(new InternetAddress(from));
+            messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(destmailid));
+            messageobj.setSubject("Registration request from " + firstName + " " + lastName);
+            messageobj.setText("Thank you for registering on ontologyportal!  " +
+                    "Reply to this message to complete registration by submitting your request to the moderator.\n\n" +
+                    "Dear Moderator, please approve this <a href=\"" + appURL + "\">request</a>");
+            Transport.send(messageobj);
+        }
+        catch (MessagingException exp) {
+            throw new RuntimeException(exp);
+        }
+    }
+
+    /** *****************************************************************
+     */
+    public void register() {
+
+        System.out.println("Register");
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+        String login = c.readLine("Enter your login: ");
+        String password = new String(c.readPassword("Enter your password: "));
+        if (userExists(login))
+            System.out.println("User " + login + " already exists");
+        else {
+            String email = new String(c.readLine("Enter your email address: "));
+            User u = new User();
+            u.username = login;
+            u.password = encrypt(password);
+            u.role = "guest";
+            u.attributes.put("email",email);
+            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            addUser(u);
+            mailModerator(u);
+        }
+    }
+
+    /** *****************************************************************
+     */
+    public void createAdmin() {
+
+        System.out.println("Create admin");
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+        String login = c.readLine("Enter your login: ");
+        String password = new String(c.readPassword("Enter your password: "));
+        if (userExists(login))
+            System.out.println("User " + login + " already exists");
+        else {
+            String email = new String(c.readLine("Enter your email address: "));
+            User u = new User();
+            u.username = login;
+            u.password = encrypt(password);
+            u.role = "admin";
+            u.attributes.put("email",email);
+            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            addUser(u);
+        }
+    }
+
+    /** *****************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("PasswordService: ");
+        System.out.println("-h    show this help message");
+        System.out.println("-l    login");
+        System.out.println("-r    register a new username and password (fail if username taken)");
+        System.out.println("-c    create db");
+        System.out.println("-a    create admin user");
     }
 
     /** ***************************************************************** 
      */
     public static void main(String args[]) {
 
-        PasswordService ps = PasswordService.getInstance();
-        System.out.println(ps.encrypt("password"));
-
+        PasswordService ps = new PasswordService();
+        if (args != null) {
+            if (args.length > 0 && args[0].equals("-r"))
+                ps.register();
+            if (args.length > 0 && args[0].equals("-l"))
+                ps.login();
+            if (args.length > 0 && args[0].equals("-c"))
+                User.createDB();
+            if (args.length > 0 && args[0].equals("-a"))
+                ps.createAdmin();
+        }
+        else
+            showHelp();
     }
 
 }

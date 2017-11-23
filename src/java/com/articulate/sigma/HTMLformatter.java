@@ -115,7 +115,7 @@ public class HTMLformatter {
         if (port == null)
             port = "8080";
         String https = KBmanager.getMgr().getPref("https");
-        System.out.println("Info in KBmanager.createHrefStart(): " + https);
+        System.out.println("Info in HTMLformatter.createHrefStart(): https is " + https);
         if (https == null || !https.equals("true"))
             https = "http";
         else
@@ -515,7 +515,7 @@ public class HTMLformatter {
         if (forms.size() < localLimit || localLimit == 0)
             localLimit = forms.size();
         for (int i = start; i < localLimit; i++) {
-        	System.out.println(forms.get(i).getClass().getName());
+        	//System.out.println("formatFormulaList(): " + forms.get(i).getClass().getName());
         	String strForm = forms.get(i).theFormula;
         	//System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             Formula f = (Formula) kb.formulaMap.get(strForm);

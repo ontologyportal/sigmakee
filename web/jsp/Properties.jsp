@@ -16,7 +16,11 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
         <tr>
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"></td>
+          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><%
+           if (!StringUtil.emptyString(username))
+             out.println(" : Welcome " + username);
+           else
+             out.println("<a href=\"login.html\">log in</a>"); %></td>
         </tr>
       </table>
     </td>

@@ -140,7 +140,11 @@
   <TR>
   <TD ALIGN=LEFT VALIGN=TOP><IMG SRC="pixmaps/sigmaSymbol-gray.gif"></TD>
   <TD ALIGN=LEFT VALIGN=TOP><img src="pixmaps/logoText-gray.gif"><BR>
-      <B>SystemOnTPTP Interface</B></TD>
+      <B>SystemOnTPTP Interface</B><%
+         if (!StringUtil.emptyString(username))
+           out.println(" : Welcome " + username);
+         else
+           out.println("<a href=\"login.html\">log in</a>"); %></TD>
   <TD VALIGN=BOTTOM></TD>
   <TD> <FONT FACE="Arial, Helvetica" SIZE=-1>
        [ <A HREF="KBs.jsp"><B>Home</B></A>&nbsp;|&nbsp;
@@ -234,9 +238,8 @@
   <INPUT TYPE=SUBMIT NAME="request" value="Test">
   <INPUT TYPE=SUBMIT NAME="request" value="Ask">
 <%
-    if (KBmanager.getMgr().getPref("userRole") != null
-            && KBmanager.getMgr().getPref("userRole")
-                    .equalsIgnoreCase("administrator")) {
+    if (role != null
+            && role.equalsIgnoreCase("admin")) {
 %>
     <INPUT type="submit" name="request" value="Tell"><BR>
 <%

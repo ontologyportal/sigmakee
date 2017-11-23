@@ -87,7 +87,11 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     <TABLE width="95%" cellspacing="0" cellpadding="0">
       <TR>
           <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
-          <TD align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><B>Inference Interface</B></TD>
+          <TD align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><B>Inference Interface</B><%
+             if (!StringUtil.emptyString(username))
+                 out.println(" : Welcome " + username);
+             else
+                 out.println("<a href=\"login.html\">log in</a>"); %></TD>
           <TD valign="bottom"></TD>
           <TD>
             <font FACE="Arial, Helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A></b>&nbsp;|&nbsp;

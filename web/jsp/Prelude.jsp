@@ -11,99 +11,85 @@
 <html xmlns="https://www.w3.org/1999/xhtml" lang="en-US" xml:lang="en-US">
 <%
 
-//  import="com.articulate.sigma.*,java.text.ParseException,java.net.URLConnection,javax.servlet.http.HttpServletRequest, java.net.URL,com.oreilly.servlet.*,com.oreilly.servlet.multipart.*,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-/** This code is copyright Articulate Software (c) 2003-2011.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
-  ArrayList<String> userPages = new ArrayList<String>();
-  userPages.add("AllPictures.jsp");
-  userPages.add("Browse.jsp");
-  userPages.add("BrowseExtra.jsp");
-  userPages.add("Graph.jsp");
-  userPages.add("Intersect.jsp");
-  userPages.add("KBs.jsp");
-  userPages.add("Manifest.jsp");
-  userPages.add("OWL.jsp");
-  userPages.add("OMW.jsp");
-  userPages.add("SimpleBrowse.jsp");
-  userPages.add("TreeView.jsp");
-  userPages.add("WordNet.jsp");
-  String URLString = request.getRequestURL().toString();
-  String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
-String userName = request.getParameter("userName");
-String password = request.getParameter("password");
+ArrayList<String> userPages = new ArrayList<String>();
+userPages.add("AllPictures.jsp");
+userPages.add("Browse.jsp");
+userPages.add("BrowseExtra.jsp");
+userPages.add("Graph.jsp");
+userPages.add("Intersect.jsp");
+userPages.add("KBs.jsp");
+userPages.add("Manifest.jsp");
+userPages.add("OWL.jsp");
+userPages.add("OMW.jsp");
+userPages.add("SimpleBrowse.jsp");
+userPages.add("TreeView.jsp");
+userPages.add("WordNet.jsp");
+String URLString = request.getRequestURL().toString();
+String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
+
+String username = (String) session.getAttribute("user");
+String role = (String) session.getAttribute("role");
+System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
 KBmanager mgr = KBmanager.getMgr();
-if (StringUtil.isNonEmptyString(userName)) {
-    mgr.setPref("userName",userName);
-    if (StringUtil.isNonEmptyString(password)) {
-        mgr.setPref("userRole",
-                    (userName.equalsIgnoreCase("admin") && password.equalsIgnoreCase("admin"))
-                    ? "administrator"
-                    : "user");
-    }
-}
-userName = mgr.getPref("userName");
-String userRole = mgr.getPref("userRole");
-if (StringUtil.emptyString(userName) || StringUtil.emptyString(userRole)) {
-    response.sendRedirect("login.html");
-    return;
+
+if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
+    role = "guest";
 }
 
-if (mgr.initializing) {
+if (!KBmanager.initialized) {
+    KBmanager.getMgr().initializeOnce();
+    System.out.println("Prelude.jsp: initializing.  Redirecting to init.jsp.");
     response.sendRedirect("init.jsp");
     return;
 }
 
-if (!userRole.equalsIgnoreCase("administrator") && !userPages.contains(pageString)) { 
+if (!role.equalsIgnoreCase("admin") && !userPages.contains(pageString)) {
     mgr.setError("You are not authorized to visit " + pageString);
     response.sendRedirect("KBs.jsp");
     return;
 }
 
-%>
-
-<%
-if (StringUtil.isNonEmptyString(userName)) {
-    String simple = request.getParameter("simple");
-    if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
-        out.println("");
-        out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\" />");
-    }
+String simple = request.getParameter("simple");
+if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
+    out.println("");
+    out.println("<link rel=\"stylesheet\" type=\"text/css\" href=\"simple.css\" />");
 }
 
- String kbName = request.getParameter("kb");
- if (kbName == null || StringUtil.emptyString(kbName)) 
-     kbName = "SUMO";
+String kbName = request.getParameter("kb");
+if (kbName == null || StringUtil.emptyString(kbName))
+    kbName = "SUMO";
 
- KB kb = null;
- if (kbName != null && StringUtil.isNonEmptyString(kbName)) {
-     kb = KBmanager.getMgr().getKB(kbName);
-     if (kb != null)
-         TaxoModel.kbName = kbName;
- }
- else
-     response.sendRedirect("login.html");
+KB kb = null;
+if (kbName != null && StringUtil.isNonEmptyString(kbName)) {
+    kb = KBmanager.getMgr().getKB(kbName);
+    if (kb != null)
+        TaxoModel.kbName = kbName;
+}
+else
+    response.sendRedirect("login.html");
 
- String language = ""; // natural language for NL generation
- String flang = request.getParameter("flang");    // formal language
- flang = HTMLformatter.processFormalLanguage(flang);
- language = request.getParameter("lang");
- language = HTMLformatter.processNaturalLanguage(language,kb);
- String hostname = KBmanager.getMgr().getPref("hostname");
- if (hostname == null)
-     hostname = "localhost";
- String port = KBmanager.getMgr().getPref("port");
- if (port == null)
-     port = "8080";
+String language = ""; // natural language for NL generation
+String flang = request.getParameter("flang");    // formal language
+flang = HTMLformatter.processFormalLanguage(flang);
+language = request.getParameter("lang");
+language = HTMLformatter.processNaturalLanguage(language,kb);
+String hostname = KBmanager.getMgr().getPref("hostname");
+if (hostname == null)
+    hostname = "localhost";
+String port = KBmanager.getMgr().getPref("port");
+if (port == null)
+    port = "8080";
 %>
