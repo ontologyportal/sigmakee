@@ -373,7 +373,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
                       // If we reach this point, the only action required is that a TPTP translation be
                       // generated and stored in the Formula.theTPTPFormula field for each formula.
                       System.out.println("INFO in Properties.jsp: generating TPTP for all formulas");
-                      SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
+                      com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
                       skbtptpkb.kb = kb;
                       skbtptpkb.tptpParse();
                   }
