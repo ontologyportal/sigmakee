@@ -102,6 +102,8 @@ sudo apt-get update
 sudo apt-get install ant
 ant
 
+Follow the steps in section "Account Management" below to set up accounts
+
 To test run
 
   java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
@@ -177,6 +179,8 @@ cd ~/workspace/sigmakee
 brew install ant
 ant
 
+Follow the steps in section "Account Management" below to set up accounts
+
 To test run
 
   java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
@@ -234,9 +238,21 @@ java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.d
 
 Then create the administrator account and password
 
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.delphi.PasswordService -c
+java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.delphi.PasswordService -a
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
+
+You'll also need to set a few parameters in your config.xml file
+
+  <preference name="dbUser" value="sa" />
+  <preference name="loadFresh" value="false" />
+
+To handle the account registration feature, you'll need to have an email account and supply the
+password in the .bashrc file where your Sigma installation is runnning.  Gmail might be convenient
+for this
+
+export SIGMA_EMAIL_PASS="my_pass"
+export SIGMA_EMAIL_SERVER="smtp.gmail.com"
 
 
 Old Installation Notes
