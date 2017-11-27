@@ -32,7 +32,10 @@ if (ps.userExists(userName)) {
     if (ps.encrypt(password).equals(u.password)) {
         session.setAttribute("user",u.username);
         session.setAttribute("role",u.role);
-        System.out.println("Successful login for " + u.username);
+        ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
+        siblingContext.setAttribute("user",u.username);
+        siblingContext.setAttribute("role",u.role);
+        System.out.println("login.jsp: Successful login for " + u.username);
         response.sendRedirect("KBs.jsp");
     }
     else {
