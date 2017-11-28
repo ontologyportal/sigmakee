@@ -123,6 +123,7 @@ public class WNdiagnostics {
             String POS = synset.substring(0,1);
             String term = "";
             synset = synset.substring(1);
+            //System.out.println("synsetsWithoutFoundTerms(): " + synset + " " + POS + " " + term + " ");
             switch (POS.charAt(0)) {
             case '1': 
                 term = (String) WordNet.wn.nounSUMOHash.get(synset);
@@ -137,15 +138,13 @@ public class WNdiagnostics {
                 term = (String) WordNet.wn.adverbSUMOHash.get(synset);
                 break;
             }
-            if (term != null) {
-                synchronized (kb.getTerms()) {
-                    ArrayList<String> termList = WordNetUtilities.convertTermList(term);
-                    for (int i = 0; i < termList.size(); i++) {
-                        String newterm = (String) termList.get(i);
-                        if (newterm.charAt(0) != '(') {
-                            if (!kb.getTerms().contains(newterm)) 
-                                result.add(POS+synset);                     
-                        }
+            if (!StringUtil.emptyString(term)) {
+                ArrayList<String> termList = WordNetUtilities.convertTermList(term);
+                for (int i = 0; i < termList.size(); i++) {
+                    String newterm = (String) termList.get(i);
+                    if (newterm.charAt(0) != '(') {
+                        if (!kb.getTerms().contains(newterm))
+                            result.add(POS + synset);
                     }
                 }
             }
