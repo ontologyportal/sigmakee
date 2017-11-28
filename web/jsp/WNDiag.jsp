@@ -1,4 +1,3 @@
-<%@ page import="com.articulate.sigma.wordNet.WNdiagnostics" %>
 <%@ include file="Prelude.jsp" %>
 <html>                                             
 <head><title> WordNet Diagnostics </title></head>
