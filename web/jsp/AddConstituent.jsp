@@ -14,7 +14,7 @@
     http://github.com/ontologyportal
 */
 
-if (!mgr.getPref("role").equalsIgnoreCase("admin"))
+if (!role.equalsIgnoreCase("admin"))
     response.sendRedirect("KBs.jsp");     
 else {
     String kbDir = mgr.getPref("kbDir");

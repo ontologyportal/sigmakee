@@ -1,7 +1,7 @@
 <%@ include    file="Prelude.jsp" %>
 
 <% 
-if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
+if (!role.equalsIgnoreCase("admin"))
     response.sendRedirect("KBs.jsp");     
 %>
 <HTML>
@@ -16,11 +16,8 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
         <tr>
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><%
-           if (!StringUtil.emptyString(username))
-             out.println(" : Welcome " + username);
-           else
-             out.println("<a href=\"login.html\">log in</a>"); %></td>
+          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
+            <%=welcomeString%></td>
         </tr>
       </table>
     </td>

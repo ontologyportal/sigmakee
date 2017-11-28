@@ -1,25 +1,29 @@
-
 <%@ include file="Prelude.jsp" %>
 <html>                                             
   <head>
-    <title> Knowledge base Browser</title>
+    <title> Knowledge base Diagnostics</title>
   </head>
-
   <body bgcolor="#FFFFFF">
 
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
-code.  Please cite the following article in any publication with references:
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
+
+if (!role.equals("admin") && !role.equals("user")) {
+    response.sendRedirect("KBs.jsp");
+    return;
+}
+
   System.out.println("INFO in Diag.jsp: Running diagnostics");
   long t0 = System.currentTimeMillis();
   String kbHref = null;
@@ -33,11 +37,7 @@ August 9, Acapulco, Mexico.
             <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
             <td>&nbsp;</td>
             <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-                <b>Knowledge Base Diagnostics</b><%
-                   if (!StringUtil.emptyString(username))
-                       out.println(" : Welcome " + username);
-                   else
-                       out.println("<a href=\"login.html\">log in</a>"); %></td>
+                <b>Knowledge Base Diagnostics</b><%=welcomeString%></td>
             <td valign="bottom"></td>
             <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
                 <A href="AskTell.jsp?kb=<%=kbName %>&lang=<%=language %>"><b>Ask/Tell</b></A>&nbsp;|&nbsp;

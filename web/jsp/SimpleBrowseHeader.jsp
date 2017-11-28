@@ -20,11 +20,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
           <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <B>Simplified Browsing Interface</B><%
-                if (!StringUtil.emptyString(username))
-                  out.println(" : Welcome " + username);
-                else
-                  out.println("<a href=\"login.html\">log in</a>"); %></td>
+              <B>Simplified Browsing Interface</B> <%=welcomeString%></td>
           <td valign="bottom"></td>
           <td><b>[ <a href="KBs.jsp">Home</b></a>
               <B>]</B> <br>

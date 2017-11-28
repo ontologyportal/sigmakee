@@ -1,18 +1,19 @@
 <%@ include file="Prelude.jsp" %>
 
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
-code.  Please cite the following article in any publication with references:
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
+
     out.println("<html>");
     out.println("  <head>");
     out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
@@ -22,16 +23,8 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     String kbDir = mgr.getPref("kbDir");
     System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
     System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
-    // String username = (String) session.getAttribute("user");
     System.out.println("KBs.jsp: username: " + username);
-    // String role = (String) session.getAttribute("role"); // in Prelude.jsp
     boolean isAdministrator = role.equalsIgnoreCase("admin");
-
-    // Set a default greeting.
-    String greeting = ("Welcome " + (StringUtil.isNonEmptyString(username)
-                                     ? username
-                                     : " to Sigma") + "!");
-
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
     boolean performedInit = KBmanager.getMgr().initializeOnce();
 
@@ -44,7 +37,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                     <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
                     <td>&nbsp;&nbsp;</td>
                     <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <b><%=greeting%></b></td>
+                        <b><%=welcomeString%></b></td>
                 </tr>
             </table>
         </td>

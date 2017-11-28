@@ -1,7 +1,6 @@
 <%@ include file="Prelude.jsp" %>
 
 <%
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -181,11 +180,8 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
         <tr>
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><%
-           if (!StringUtil.emptyString(username))
-               out.println(" : Welcome " + username);
-           else
-               out.println("<a href=\"login.html\">log in</a>"); %></td>
+          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
+            <%=welcomeString%></td>
         </tr>
       </table>
     </td>

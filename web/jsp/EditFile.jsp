@@ -17,13 +17,11 @@ August 9, Acapulco, Mexico.
   // @param file: the file name.
   // @param line: the line number in the file the cursor should point to at start.
 
-if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
-       response.sendRedirect("KBs.jsp");     
-
-  String file = request.getParameter("file");
-  String line = request.getParameter("line");
-  String srcText = "";
-
+if (!role.equalsIgnoreCase("admin"))
+    response.sendRedirect("KBs.jsp");
+String file = request.getParameter("file");
+String line = request.getParameter("line");
+String srcText = "";
 %>
 
 <HTML>
@@ -49,11 +47,9 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
 </table>
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
-
 <SCRIPT LANGUAGE=JavaScript>
 
-   function update_onclick(){
-
+   function update_onclick() {
        alert("in javascript");
        document.updateForm.action = "edit_file.jsp";
        document.updateForm.method = "Post";
@@ -61,7 +57,6 @@ if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))
    }
 
    function textAreaOnChange() {
-
        document.updateForm.sourceChanged.value = "true";
    }
 

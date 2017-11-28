@@ -1,7 +1,7 @@
 <%@ page import="com.articulate.sigma.wordNet.WNdiagnostics" %>
 <%@ include file="Prelude.jsp" %>
 <html>                                             
-<head><title> Knowledge base Browser </title></head>
+<head><title> WordNet Diagnostics </title></head>
 <body BGCOLOR="#FFFFFF">
 
 <%
@@ -17,6 +17,11 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
+
+if (!role.equals("admin") && !role.equals("user")) {
+    response.sendRedirect("KBs.jsp");
+    return;
+}
   StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
   String kbHref = null;
   String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
@@ -39,11 +44,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
             <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
             <td>&nbsp;</td>
             <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-                <B>Knowledge Base Diagnostics</B><%
-                   if (!StringUtil.emptyString(username))
-                     out.println(" : Welcome " + username);
-                   else
-                     out.println("<a href=\"login.html\">log in</a>"); %></td>
+                <B>Knowledge Base Diagnostics</B> <%=welcomeString%></td>
             <td valign="bottom"></td>
             <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
                 <A href="AskTell.jsp?kb=<%=kbName %>&lang=<%=language %>"><b>Ask/Tell</b></A>&nbsp;|&nbsp;
@@ -51,9 +52,9 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
                 <B>]</B> <br>
                 <img src="pixmaps/1pixel.gif" HEIGHT="3"><br>
                 <b>KB:&nbsp;
-<%
-out.println(HTMLformatter.createKBMenu(kbName));  
-%>              
+                    <%
+                    out.println(HTMLformatter.createKBMenu(kbName));
+                    %>
                 </b>
                 <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
             </td>

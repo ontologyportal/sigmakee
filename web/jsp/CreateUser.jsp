@@ -11,6 +11,19 @@
 <body>
 
 <%
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
+
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
+*/
+
 KBmanager.getMgr().initializeOnce();
 String firstName = request.getParameter("firstName");
 String lastName = request.getParameter("lastName");

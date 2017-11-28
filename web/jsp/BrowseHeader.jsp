@@ -1,17 +1,17 @@
 <%
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
+
  KBPOS = request.getParameter("KBPOS");
  term = request.getParameter("term");
  
@@ -27,11 +27,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
           <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <b>Browsing Interface</b><%
-              if (!StringUtil.emptyString(username))
-                out.println(" : Welcome " + username);
-              else
-                out.println("<a href=\"login.html\">log in</a>"); %></td>
+              <b>Browsing Interface</b><%=welcomeString%></td>
           <td valign="bottom"></td>
           <td>
           <span class="navlinks">

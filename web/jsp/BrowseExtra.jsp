@@ -1,16 +1,16 @@
 <%@ include file="Prelude.jsp" %>
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 
   @param start is the number of the element to being displaying, in the case where
          there are more statements to display than the maximum allowed for a given
@@ -21,11 +21,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
   @param term is the term name to display
   @param lang is the language in which to generate paraphrases
 */
-%>
 
-<%
  StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
-  String formattedFormula = null;
+ String formattedFormula = null;
  int start = 0;
  String startString = request.getParameter("start");
  if (!StringUtil.emptyString(startString))

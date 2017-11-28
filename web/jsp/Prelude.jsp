@@ -43,6 +43,9 @@ String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
 String username = (String) session.getAttribute("user");
 String role = (String) session.getAttribute("role");
 System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
+String welcomeString = "<a href=\"login.html\">log in</a>";
+if (!StringUtil.emptyString(username))
+    welcomeString = " : Welcome " + username;
 KBmanager mgr = KBmanager.getMgr();
 
 if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
@@ -56,7 +59,7 @@ if (!KBmanager.initialized) {
     return;
 }
 
-if (!role.equalsIgnoreCase("admin") && !userPages.contains(pageString)) {
+if (role.equalsIgnoreCase("guest") && !userPages.contains(pageString)) {
     mgr.setError("You are not authorized to visit " + pageString);
     response.sendRedirect("KBs.jsp");
     return;

@@ -1,27 +1,30 @@
-
 <%@ include file="Prelude.jsp" %>
 
 <HTML>
 <HEAD>
-<TITLE>Sigma Knowledge Engineering Environment - Main</TITLE>
-<%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
-code.  Please cite the following article in any publication with references:
+<TITLE>Sigma Knowledge Engineering Environment - Mapping</TITLE>
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
+
+if (!role.equalsIgnoreCase("admin")) {
+    response.sendRedirect("login.html");
+    return;
+}
 %>
 </HEAD>
 <script type="text/javascript">
     // Toggle the checked status of all the equivalence checkboxes
-    function ToggleAllEq(theForm,cb){
+    function ToggleAllEq(theForm,cb) {
 
         var check = false;
         if (cb.checked) {
@@ -37,7 +40,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
     // Toggle the checked status of just the best mapping for
     // each term.
-    function ToggleBestEq(theForm,cb){
+    function ToggleBestEq(theForm,cb) {
 
         var check = false;
         if (cb.checked) {
@@ -52,7 +55,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     }
 
     // Toggle the checked status of all the equivalence checkboxes
-    function ToggleAllSub(theForm,cb){
+    function ToggleAllSub(theForm,cb) {
 
         var check = false;
         if (cb.checked) {
@@ -68,7 +71,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
     // Toggle the checked status of just the best mapping for
     // each term.
-    function ToggleBestSub(theForm,cb){
+    function ToggleBestSub(theForm,cb) {
 
         var check = false;
         if (cb.checked) {
@@ -85,7 +88,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     // Set the time estimate value.
     // This is confusing code - I'm using JSP code to write the JavaScript
     // array definition that holds KB term counts.
-    function SetEstimate(theForm){
+    function SetEstimate(theForm) {
 
         <%
             Iterator iter = KBmanager.getMgr().getKBnames().iterator();
@@ -126,7 +129,6 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
              cbset.add(elem);         
     }
     System.out.println("INFO in Mapping.jsp");
-    String prefUserName = KBmanager.getMgr().getPref("userName");
     String matchMethod = request.getParameter("matchMethod");
     if (matchMethod == null) 
         matchMethod = "Substring";
@@ -168,11 +170,8 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
                 <tr>
                     <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
                     <td>&nbsp;&nbsp;</td>
-                    <td align="left" valign="top"><img src="pixmaps/logoText.gif"><br><%
-                        if (!StringUtil.emptyString(username))
-                            out.println(" : Welcome " + username);
-                        else
-                            out.println("<a href=\"login.html\">log in</a>"); %></td>
+                    <td align="left" valign="top"><img src="pixmaps/logoText.gif"><br>
+                      <%=welcomeString%></td>
                 </tr>                
             </table>
         </td>

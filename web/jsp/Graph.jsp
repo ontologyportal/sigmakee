@@ -105,11 +105,7 @@ function setWidth(id) {
         <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
         <TD>&nbsp;</TD>
         <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-         <b>Graph</b><%
-                      if (!StringUtil.emptyString(username))
-                          out.println(" : Welcome " + username);
-                      else
-                          out.println("<a href=\"login.html\">log in</a>"); %></td>
+         <b>Graph</b><%=welcomeString %></td>
         </tr>
        </table>
     </td>

@@ -23,7 +23,7 @@ import="com.articulate.delphi.PasswordService,com.articulate.delphi.User,com.art
 */
 
 String role = (String) session.getAttribute("role");
-if (StringUtil.emptyString(role) || !role.equals("administrator"))
+if (StringUtil.emptyString(role) || !role.equals("admin"))
     response.sendRedirect("login.html");
 
 String user = request.getParameter("user");

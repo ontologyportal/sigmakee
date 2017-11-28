@@ -1,4 +1,4 @@
-<%@ page import = "com.articulate.sigma.StringUtil,com.articulate.sigma.KBmanager, java.io.*,java.util.*" %>
+<%@ include	file="Prelude.jsp" %>
 
 <html>
    <body>
@@ -21,10 +21,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
     out.println("    <title>Sigma Knowledge Engineering Environment - Initializing</title>");
     out.println("  </head>");
     out.println("  <body bgcolor=\"#FFFFFF\">");
-    String username = (String) session.getAttribute("user");
-    String greeting = ("Welcome " + (StringUtil.isNonEmptyString(username)
-                                     ? username
-                                     : " to Sigma") + "!");
 
     if (KBmanager.initialized) {
         System.out.println("init.jsp: initialized.  Redirecting to KBs.jsp.");
@@ -45,11 +41,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
                     <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
                     <td>&nbsp;&nbsp;</td>
                     <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <b><%
-                             if (!StringUtil.emptyString(username))
-                                 out.println(" : Welcome " + username);
-                             else
-                                 out.println("<a href=\"login.html\">log in</a>"); %></b></td>
+                        <b> <%=welcomeString%>></b></td>
                 </tr>
             </table>
         </td>

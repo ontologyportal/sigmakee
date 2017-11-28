@@ -1,18 +1,25 @@
 <%@ include	file="Prelude.jsp" %>
 
 <%
-/** This code is copyright Rearden Commerce (c) 2011.  Some portions
-copyright Articulate Software (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Rearden Commerce
-and Articulate Software in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+/** This code is copyright Teknowledge (c) 2003, Rearden Commerce (c) 2011,
+    Articulate Software (c) 2003-2017, Infosys (c) 2017-present.
+
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
+
+if (!role.equalsIgnoreCase("admin")) {
+    response.sendRedirect("login.html");
+    return;
+}
+
   String submit = request.getParameter("submit");
   String term = request.getParameter("term");
   if (StringUtil.emptyString(term))
@@ -43,11 +50,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
           <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
           <td>&nbsp;</td>
           <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <b>Instance Filler</b><%
-                  if (!StringUtil.emptyString(username))
-                      out.println(" : Welcome " + username);
-                  else
-                      out.println("<a href=\"login.html\">log in</a>"); %></td>
+              <b>Instance Filler</b> <%=welcomeString%></td>
           <td valign="bottom"></td>
           <td>
           <span class="navlinks">

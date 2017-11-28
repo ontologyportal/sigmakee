@@ -20,10 +20,8 @@ Infosys LTD.
 
 package com.articulate.sigma;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.URL;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -1520,7 +1518,23 @@ public class StringUtil {
         }
         return result.toString();
     }
-    
+
+    /** *****************************************************************
+     */
+    public static boolean urlExists(String URLName) {
+
+        boolean result = false;
+        try {
+            URL url = new URL("ftp://ftp1.freebsd.org/pub/FreeBSD/");
+            InputStream input = url.openStream();
+            return true;
+        }
+        catch (Exception ex) {
+            System.out.println("error in StringUtil.urlExists()");
+        }
+        return false;
+    }
+
     /** *****************************************************************
      */
     public static void main(String args[]) {

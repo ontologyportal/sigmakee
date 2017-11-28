@@ -1,6 +1,10 @@
 Introduction
 ============
 
+Sigma is an integrated development environment for logical theories that
+extend the Suggested Upper Merged Ontology.  There is a public installation
+with read-only functions enabled linked from http://www.ontologyportal.org
+
 Please read these notes thoroughly.  Most installation issues result from not
 carefully following the instructions.
 
@@ -249,11 +253,17 @@ You'll also need to set a few parameters in your config.xml file
 
 To handle the account registration feature, you'll need to have an email account and supply the
 password in the .bashrc file where your Sigma installation is runnning.  Gmail might be convenient
-for this
+for this.  Change the password "my_pass" to your password on Gmail (or other service that you specify)
 
 export SIGMA_EMAIL_PASS="my_pass"
 export SIGMA_EMAIL_SERVER="smtp.gmail.com"
 
+There are three types of user roles: "guest", "user" and "admin".  Guests are users who have not
+registered.  They can access read-only functions that are not computationally expensive.
+Registered users are granted access to computationally more expensive features.  Admin users
+have access to all Sigma functions.  Currently, this control is hard coded into the JSP pages
+that will check for user roles.  At some point in the future this may be changed to a more flexible
+scheme of access rights driven from a file or database mapping roles to allowed functions.
 
 Old Installation Notes
 ======================
@@ -297,3 +307,140 @@ run the following additional steps
 > java  -Xmx2500m -classpath  /home/vagrant/workspace/sigma/sigma/build/classes:/home/vagrant/workspace/sigma/sigma/build/lib/*  com.articulate.sigma.semRewrite.Interpreter -i
 
 
+User Interface
+=====================
+
+There's not enough documentation on Sigma so I'm starting a bit here in preparation for a real
+manual.
+
+Sigma has a number of functions controlled through its JSP-based interface.  
+
+AddConstituent.jsp - adds a constituent SUO-KIF file to a knowledge base.  Accessible only to
+admin users.  It just responds to a command from another page and has no UI of its own.
+Redirects back to KBs.jsp when done.
+
+AllPictures.jsp - shows all the pictures linked to a term at once.  Accessible to all users.
+
+ApproveUser.jsp - handles approving a new user.  Accessible only to admin users. Redirects
+to KB.jsp once acknowledge.
+
+AskTell.jsp - interface to the local theorem provers. Accessible only to admin users. This function
+has not been well maintained and the interfaces to SystemOnTPTP and LEO-II may be out of date.
+
+BrowseBody.jsp - shows terms, axioms, lexicon links, etc
+
+BrowseExtra.jsp - includes Prelude.jsp and Postlude.jsp
+
+BrowseHeader.jsp - primary ontology browser controls including term and word search, as well as
+the menu for selecting natural language and formal language
+
+Browse.jsp - top level browsing JSP that includes Prelude.jsp, BrowseHeader.jsp, BrowseBody.jsp
+and Postlude.jsp.  Really just a shell for the included JSPs
+
+CCheck.jsp - interface to KBmanager.initiateCCheck() that initiates consistency checking of a KB.
+Handles selection of which theorem prover to use, and several parameters.  Includes Prelude.jsp
+and Postlude.jsp
+
+CELT.jsp - Obsolete.  Handles invocation of the Controlled English to Logic Translation system,
+which is now superceded by the Semantic Rewriting approach in the sigmanlp project.
+
+CreateUser.jsp - handles a request from a user to create an account.  Creates a guest account
+and sends mail to the moderator for approval.  Has no UI.
+
+Diag.jsp - Interface to run tests in Diagnostics.java.  Depends on Prelude.jsp and Postlude.jsp.
+Accessible for "admin" and "user" but not unregistered guest users
+
+EditFile.jsp - Obsolete
+
+EditStmt.jsp - Obsolete
+
+Graph.jsp - Create graphs of binary relationships as a graphical view and as indented text.
+Relies on Prelude.jsp and Postlude.jsp
+
+InferenceTestSuite.jsp - run a suite of inference tests with the prover and parameters selected.
+Depends on Prelude.jsp and Postlude.jsp.  Accessible only for admin users.
+
+init.jsp - A status page with periodic automatic refresh to catch requests to Sigma during the
+process of initialization.
+
+InstFiller.jsp - Page to allow simple editing of ground formulas.  Deprecated.  Accessible only
+for admin users. Depends on Prelude.jsp and Postlude.jsp.
+
+Intersect.jsp - Find appearances of two or more terms in the same axiom.  Depends on
+Prelude.jsp and Postlude.jsp.
+
+KBs.jsp - Main entry point for creating or selecting a knowledge base.  Some functions are
+available for "admin" or "user" roles but not "guest". Depends on Prelude.jsp and Postlude.jsp.
+
+login.html - login page for Sigma that handles existing accounts and new account registration.
+Existing accounts are dispatched to login.jsp and registrations are dispatched to
+Registration.jsp
+
+login.jsp - handle the login process by using PasswordService.jsp to validate a login against
+an H2 database of account info.  This page has no UI.
+
+Manifest.jsp - UI for handling loading and saving KB constituents including saving in various
+exportable formats, such as OWL. Depends on Prelude.jsp and Postlude.jsp. Most functionality
+is limited to admin users.
+
+Mapping.jsp - Use some simple string matching approaches to suggest equivalences between terms
+in two files.  Depends on Prelude.jsp and Postlude.jsp. Access limited to admin users.
+
+MiscUtilities.jsp - Depends on Prelude.jsp and Postlude.jsp. Most functionality
+is limited to admin users. Little utilities to generate dot graph files and OWL versions of
+the Open Multilingual Wordnet content.
+
+ModeratorApproval.jsp - Functionality is limited to admin users. Dispatches to ApproveUser.jsp
+when user clicks "ok".
+
+OMW.jsp - Display results from the many languages in Open Multilingual Wordnet linked to
+WordNet synsets. Depends on Prelude.jsp and Postlude.jsp.
+
+OWL.jsp - Display all the axioms for a given term in OWL format, if expressible in that
+language.
+
+Postlude.jsp - Encapsulates footing information displayed on most pages.
+
+Prelude.jsp - Encapsulates header information displayed on most pages.
+
+ProcessFile.jsp - No UI. Called from MiscUtilities.jsp to generate KIF from other
+formats. Calls DocGen.dataFileToKifFile() to do the real work. Depends on Prelude.jsp and
+Postlude.jsp. Access limited to admin users.
+
+Properties.jsp - An interface for setting many of Sigma's parameters.  Some of these are
+also accessible from the browsing interface, such as the language for the natural
+language paraphrases. Depends on Prelude.jsp and Postlude.jsp. Access limited to admin users.
+
+Register.jsp - An interface to allow people to submit a request for registration and
+priviledges beyond that of unregistered guest users.  Calls on CreateUser.jsp
+
+Save.jsp - not used
+
+SimpleBrowseBody.jsp - Analogue to BrowseBody.jsp but showing only simple axioms in a simple
+and non-technical language
+
+SimpleBrowseHeader.jsp - Analogue to BrowseHeader.jsp for simple axioms
+
+SimpleBrowse.jsp - Analogue to Browse.jsp for simple axioms
+
+SystemOnTPTP.jsp - Interface to the SystemOnTPTP system hosted as U. Miami that collects
+dozens of theorem provers with a common programmatic interface.  This code has not been
+maintained so use at your own risk. Depends on Prelude.jsp and Postlude.jsp. Access
+limited to admin users.
+
+TreeView.jsp - A simple tree view of the taxonomic structure of the ontology with collapsable
+nodes.  Uses the SimpleBrowse.jsp code to display axioms for any node in the taxonomy.
+
+WNDiag.jsp - Diagnostics for WordNet. Depends on Prelude.jsp and Postlude.jsp. Accessible
+for "admin" and "user" but not unregistered guest users.
+
+WordNet.jsp - show synsets and SUMO-WordNet mappings for a word. Depends on Prelude.jsp
+and Postlude.jsp.
+
+WordSenseFile.jsp - show word sense disambiguation and sentiment analysis results for a
+file of text.  Calls WordNet.wn.sumoFileDisplay() for the real work. Depends on
+Prelude.jsp and Postlude.jsp.
+
+WordSense.jsp - show word sense disambiguation and sentiment analysis results for a
+sentence.  Calls WordNet.wn.sumoSentenceDisplay() for the real work. Depends on
+Prelude.jsp and Postlude.jsp.

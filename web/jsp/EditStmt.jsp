@@ -1,25 +1,23 @@
-
 <%@include file="Prelude.jsp" %>
 <%
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
-code.  Please cite the following article in any publication with references:
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
 
   // @param file: the file name.
   // @param line: the line number in the file the cursor should point to at start.
 
-if (!KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator"))         
-       response.sendRedirect("KBs.jsp");     
+if (!role.equalsIgnoreCase("admin"))
+    response.sendRedirect("KBs.jsp");
 
 System.out.println("ENTER EditStmt.jsp");
   String formID = request.getParameter("formID");
@@ -33,10 +31,10 @@ System.out.println("  kb == " + kbEdit.name);
   Formula form = kbEdit.getFormulaByKey(formID);
 System.out.println("  form == " + form);
 if ((form != null) && StringUtil.isNonEmptyString(text)) {
-      form.theFormula = text;
-      kbEdit.rehashFormula(form,formID);
-      formID = form.createID();
-  }
+    form.theFormula = text;
+    kbEdit.rehashFormula(form,formID);
+    formID = form.createID();
+}
 %>
 
 <HTML>
@@ -62,8 +60,7 @@ if ((form != null) && StringUtil.isNonEmptyString(text)) {
 <br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 <script language="JavaScript">
 <!--
-   function update_onclick(){
-
+   function update_onclick() {
        alert("in javascript");
        document.updateForm.action = "edit_file.jsp";
        document.updateForm.method = "Post";
@@ -71,7 +68,6 @@ if ((form != null) && StringUtil.isNonEmptyString(text)) {
    }
 
    function textAreaOnChange() {
-
        document.updateForm.sourceChanged.value = "true";
    }
 -->

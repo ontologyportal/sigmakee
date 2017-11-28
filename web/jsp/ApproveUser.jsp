@@ -23,8 +23,10 @@
 */
 
 String role = (String) session.getAttribute("role");
-if (!role.equals("admin"))
+if (!role.equals("admin")) {
     response.sendRedirect("login.html");
+    return;
+}
 
 String user = request.getParameter("user");
 
@@ -32,7 +34,6 @@ PasswordService ps = new PasswordService();
 User u = User.fromDB(ps.conn, user);
 u.role = "user";
 u.toDB(ps.conn);
-
 %>
 
 <b>User approved.</b><P>

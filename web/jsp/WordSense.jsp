@@ -1,17 +1,17 @@
 <%@ include file="Prelude.jsp" %>
 
 <%
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
 */
 
 String sentence = request.getParameter("sentence");
@@ -21,7 +21,7 @@ StringBuffer show = new StringBuffer();
 String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
 
 if (sentence != null && sentCounter == null) {
-	if (WordNet.wn.isFile(sentence)==false) // This will fail if the input is not supposed to be a file path but contains a / or \
+	if (WordNet.wn.isFile(sentence) == false) // This will fail if the input is not supposed to be a file path but contains a / or \
 		show.append(WordNet.wn.sumoSentenceDisplay(sentence, sentence, params));
 	else 
 		show.append(WordNet.wn.sumoFileDisplay(sentence, "0", params));
@@ -41,13 +41,11 @@ if (sentence != null && sentCounter != null)
         <table cellspacing=0 cellpadding=0>
             <tr><td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
                 <td>&nbsp;</td><td align="left" valign="top"><img src="pixmaps/logoText-gray.gif">
-<BR><%
-  if (!StringUtil.emptyString(username))
-    out.println(" : Welcome " + username);
-  else
-    out.println("<a href=\"login.html\">log in</a>"); %></td></tr></table>
+                    <BR> <%=welcomeString%></td></tr></table>
         </td><td valign="bottom"></td><td>
-<font face="Arial,helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A> ]</b></FONT></td></tr></table>
+            <font face="Arial,helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A> ]</b></FONT></td>
+    </tr>
+</table>
 
 <h3>SUMO Word Sense/Sentiment Analysis Tool</h3>
 <P>This tool provides context sensitive sense and sentiment analysis of whole sentences. Enter either a sentence or a full pathname for a .txt file.
