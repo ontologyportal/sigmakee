@@ -206,8 +206,11 @@ public class WordNetUtilities {
 
         ArrayList<String> result = new ArrayList<String>();
         String[] list = termList.split(" ");
-        for (int i = 0; i < list.length; i++)
-            result.add(getBareSUMOTerm(list[i]));
+        for (int i = 0; i < list.length; i++) {
+            String t = getBareSUMOTerm(list[i]);
+            if (!StringUtil.emptyString(t))
+                result.add(t);
+        }
         return result;
     }
 
