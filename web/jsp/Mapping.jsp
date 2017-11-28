@@ -3,6 +3,7 @@
 <HTML>
 <HEAD>
 <TITLE>Sigma Knowledge Engineering Environment - Mapping</TITLE>
+<%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
     Infosys (c) 2017-present.
 
