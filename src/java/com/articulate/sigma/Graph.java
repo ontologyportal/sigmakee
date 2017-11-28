@@ -318,7 +318,7 @@ public class Graph {
      *                 in the graph.
      */
     public boolean createDotGraph(KB kb, String term, String relation, int above, int below,
-                                  String fname) throws IOException {
+                                  boolean instBool, String fname) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null;

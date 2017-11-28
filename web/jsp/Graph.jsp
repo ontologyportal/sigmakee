@@ -162,7 +162,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
    			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
    			      try {
    			          graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
-   			                                            Integer.parseInt(down),limitInt,inst,fname);
+   			                                            Integer.parseInt(down),instBool,fname);
    			      }
    			      catch (Exception ex) {
    			          graphAvailable = false;
