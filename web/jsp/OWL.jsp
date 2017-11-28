@@ -17,7 +17,7 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
- if (KBmanager.getMgr().initializing) {
+ if (KBmanager.getMgr().initialized) {
      response.sendRedirect("init.jsp");
      return;
  }
