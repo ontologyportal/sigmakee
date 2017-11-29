@@ -44,7 +44,7 @@
         <td>
         <span class="navlinks">
           <%
-              if (role != null && role.equalsIgnoreCase("admin")                                                                                                                                                                                  ) {
+              if (role != null && role.equalsIgnoreCase("admin")) {
                   out.println("<b>[&nbsp<a href=\"Properties.jsp\">Preferences</a> ]</b>");
               }
           %>

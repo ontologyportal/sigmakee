@@ -240,10 +240,9 @@
   <INPUT TYPE=SUBMIT NAME="request" value="Test">
   <INPUT TYPE=SUBMIT NAME="request" value="Ask">
 <%
-    if (role != null
-            && role.equalsIgnoreCase("admin")) {
+    if (role != null && role.equalsIgnoreCase("admin")) {
 %>
-    <INPUT type="submit" name="request" value="Tell"><BR>
+        <INPUT type="submit" name="request" value="Tell"><BR>
 <%
     }
 %>

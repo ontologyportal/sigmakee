@@ -39,7 +39,7 @@
 %>
               <a href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>&term=<%=term %>">Graph</a>&nbsp;|&nbsp;
 <%
-              if (role != null && role.equalsIgnoreCase("admin"))                                                                                                                                                                                  ) {
+              if (role != null && role.equalsIgnoreCase("admin")) {
                   out.println("|&nbsp;<a href=\"Properties.jsp\">Preferences</a>");
               }
 %>
