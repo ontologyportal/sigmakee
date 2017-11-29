@@ -43,7 +43,7 @@ String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
 String username = (String) session.getAttribute("user");
 String role = (String) session.getAttribute("role");
 System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
-String welcomeString = "<a href=\"login.html\">log in</a>";
+String welcomeString = " : Welcome guest : <a href=\"login.html\">log in</a>";
 if (!StringUtil.emptyString(username))
     welcomeString = " : Welcome " + username;
 KBmanager mgr = KBmanager.getMgr();
