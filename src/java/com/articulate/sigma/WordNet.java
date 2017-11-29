@@ -1774,7 +1774,7 @@ public class WordNet implements Serializable {
             serialize(); // always create a serialized version of the latest load from source
         }
         catch (Exception ex) {
-            System.out.println("Error in WordNet.initOnce(): ");
+            System.out.println("Error in WordNet.loadFresh(): ");
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
@@ -1789,6 +1789,7 @@ public class WordNet implements Serializable {
             if (initNeeded == true) {
                 if ((WordNet.baseDir == "") || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
+                System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
                 baseDirFile = new File(WordNet.baseDir);
                 if (KBmanager.getMgr().getPref("loadFresh").equals("false")) {
                     loadSerialized();
