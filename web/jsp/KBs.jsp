@@ -43,7 +43,11 @@
         </td>
         <td>
         <span class="navlinks">
-          <b>[&nbsp;<a href="Properties.jsp">Preferences</a>&nbsp;]</b>
+          <%
+              if (role != null && role.equalsIgnoreCase("admin")                                                                                                                                                                                  ) {
+                  out.println("<b>[&nbsp<a href=\"Properties.jsp\">Preferences</a> ]</b>");
+              }
+          %>
         </span>
         </td>
     </tr>

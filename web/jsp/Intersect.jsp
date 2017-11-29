@@ -46,7 +46,10 @@
     </td>
     <td>
       <font face="Arial,helvetica" SIZE=-1><b>[ <a href="KBs.jsp">Home</a></b>
-      <b><a href="Properties.jsp">Prefs</a></B> <B>]</B></font><BR>
+        <% if (role != null && role.equalsIgnoreCase("admin")) { %>
+              <b> <a href="Properties.jsp">Prefs</a></B>
+        <% } %>
+      <B>]</B></font><BR>
       <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font>
 
 <%
