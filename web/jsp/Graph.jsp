@@ -113,7 +113,11 @@ function setWidth(id) {
     </td>
     <td>
       <font face="Arial,helvetica" SIZE=-1><b>[ <a href="KBs.jsp">Home</a></b>
-      <b><a href="Properties.jsp">Prefs</a></B> <B>]</B></font><BR>
+      <b>
+      <% if (role != null && role.equalsIgnoreCase("admin")) { %>
+             <a href="Properties.jsp">Prefs</a></B>
+      <% } %>
+      <B>]</B></font><BR>
       <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font>
 
 <%
