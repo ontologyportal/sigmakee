@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII"
-    import="com.articulate.sigma.KBmanager,com.articulate.sigma.StringUtil,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
+    import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
     pageEncoding="US-ASCII"%>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
