@@ -189,6 +189,7 @@ public final class PasswordService {
 
         final String pwd = System.getenv("SIGMA_EMAIL_PASS");
         String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
+        System.out.println("mailModerator(): host: " + smtphost);
         Properties propvls = new Properties();
         propvls.put("mail.smtp.auth", "true");
         propvls.put("mail.smtp.starttls.enable", "true");
