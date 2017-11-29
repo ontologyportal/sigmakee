@@ -512,12 +512,10 @@ public class KIF {
         return len;
     }
 
-    /**
-     * *************************************************************** Read a
-     * KIF file.
+    /****************************************************************
+     * Read a KIF file.
      *
-     * @param fname
-     *            - the full pathname of the file.
+     * @param fname - the full pathname of the file.
      */
     public void readFile(String fname) throws Exception {
 
@@ -525,6 +523,13 @@ public class KIF {
         Exception exThr = null;
         try {
             this.file = new File(fname);
+            if (!this.file.exists()) {
+                String errString =  " error file " + fname + "does not exist";
+                KBmanager.getMgr()
+                        .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
+                System.out.println("Error in KIF.readFile(): " + errString);
+                return;
+            }
             this.filename = file.getCanonicalPath();
             fr = new FileReader(file);
             parse(fr);
