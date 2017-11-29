@@ -1046,7 +1046,7 @@ public class KB implements Serializable {
      *               if the kind is "ant", "cons" or "stmt".
      * @return An ArrayList of Formula(s), which will be empty if no match
      * found.
-     * @see KIF.createKey()
+     * see KIF.createKey()
      */
     public ArrayList<Formula> ask(String kind, int argnum, String term) {
 
@@ -2187,10 +2187,10 @@ public class KB implements Serializable {
     /****************************************************************
      * Populates the format maps for language lang.
      *
-     * @see termFormatMap is a HashMap of language keys and HashMap values. The
+     * see termFormatMap is a HashMap of language keys and HashMap values. The
      *      interior HashMaps are term keys and format string values.
      *
-     * @see formatMap is the same but for relation format strings.
+     * see formatMap is the same but for relation format strings.
      */
     public void loadFormatMaps(String lang) {
 
@@ -2382,6 +2382,8 @@ public class KB implements Serializable {
                 error.append(" at line " + ((ParseException) ex1).getErrorOffset());
             error.append(" in file " + canonicalPath);
             errors.add(error.toString());
+            System.out.println("Error in KB.addConstituent(): " + error.toString());
+            ex1.printStackTrace();
         }
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
             if (!termFrequency.containsKey(entry.getKey())) {
