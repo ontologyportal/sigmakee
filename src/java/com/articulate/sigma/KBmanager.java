@@ -63,6 +63,7 @@ public class KBmanager implements Serializable {
     private HashMap<String,String> preferences = new HashMap<String,String>();
     public HashMap<String,KB> kbs = new HashMap<String,KB>();
     public static boolean initialized = false;
+    public static boolean initializing = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
 
@@ -546,6 +547,10 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce(String configFileDir) {
 
+        if (initializing) {
+            return;
+        }
+        initializing = true;
         KBmanager.getMgr().setPref("kbDir",configFileDir);
         if (initialized)
             return;
@@ -557,6 +562,7 @@ public class KBmanager implements Serializable {
                 NLGUtils.init(configFileDir);
                 OMWordnet.readOMWfiles();
                 if (manager != null) {
+                    initializing = false;
                     initialized = true;
                 }
             }
@@ -574,6 +580,7 @@ public class KBmanager implements Serializable {
                     setDefaultAttributes();
                 System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
                 serialize();
+                initializing = false;
                 initialized = true;
             }
         }
