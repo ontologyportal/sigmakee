@@ -536,11 +536,12 @@ public class KBmanager implements Serializable {
      * Reads in the KBs and other parameters defined in the XML
      * configuration file, or uses the default parameters.  
      */
-    public boolean initializeOnce() {
+    public void initializeOnce() {
         
         System.out.println("Info in KBmanager.initializeOnce()");
         String base = System.getenv("SIGMA_HOME");
-        return initializeOnce(base + File.separator + "KBs");
+        initializeOnce(base + File.separator + "KBs");
+        return;
     }
 
     /** ***************************************************************
@@ -549,21 +550,22 @@ public class KBmanager implements Serializable {
      * configFileDir is not null and a configuration file can be read
      * from the directory, reinitialization is forced.
      */
-    public boolean initializeOnce(String configFileDir) {
+    public void initializeOnce(String configFileDir) {
 
         KBmanager.getMgr().setPref("kbDir",configFileDir);
-        boolean performedInit = false;
         if (initialized)
-            return false;
+            return;
         try {
+            initialized = false;
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             if (serializedExists() && !serializedOld()) {
                 loadSerialized();
                 WordNet.wn.initOnce();
                 NLGUtils.init(configFileDir);
                 OMWordnet.readOMWfiles();
-                if (manager != null)
-                    performedInit = true;
+                if (manager != null) {
+                    initialized = true;
+                }
             }
             if (!serializedExists() || serializedOld() || manager == null) { // if there was an error loading the serialized file, then reload from sources
                 System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
@@ -577,7 +579,6 @@ public class KBmanager implements Serializable {
                 }
                 else
                     setDefaultAttributes();
-                performedInit = true;
                 serialize();
                 initialized = true;
             }
@@ -585,9 +586,10 @@ public class KBmanager implements Serializable {
         catch (Exception ex) {
         	System.out.println(ex.getMessage());
             ex.printStackTrace();
+            return;
         }
         System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
-        return performedInit;
+        return;
     }
 
     /** ***************************************************************
