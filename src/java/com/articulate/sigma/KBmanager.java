@@ -333,6 +333,7 @@ public class KBmanager implements Serializable {
                 }
             }
         }
+        System.out.println("kbsFromXML(): Completed loading KBs");
     }
     
     /** ***************************************************************
@@ -493,14 +494,7 @@ public class KBmanager implements Serializable {
                 kbDir.mkdir();
                 preferences.put("kbDir", kbDir.getCanonicalPath());
             }
-            String username = (String) preferences.get("userName");
-            String userrole = (String) preferences.get("userRole");
-            String config_file = ((StringUtil.isNonEmptyString(username)
-                                   && StringUtil.isNonEmptyString(userrole)
-                                   && userrole.equalsIgnoreCase("administrator") 
-                                   && !username.equalsIgnoreCase("admin"))
-                                  ? (username + "_")
-                                  : "") + CONFIG_FILE;
+            String config_file = CONFIG_FILE;
             File configFile = new File(kbDir, config_file);
             File global_config = new File(kbDir, CONFIG_FILE);
             if (!configFile.exists()) {
@@ -556,7 +550,6 @@ public class KBmanager implements Serializable {
         if (initialized)
             return;
         try {
-            initialized = false;
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             if (serializedExists() && !serializedOld()) {
                 loadSerialized();
@@ -579,6 +572,7 @@ public class KBmanager implements Serializable {
                 }
                 else
                     setDefaultAttributes();
+                System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
                 serialize();
                 initialized = true;
             }
