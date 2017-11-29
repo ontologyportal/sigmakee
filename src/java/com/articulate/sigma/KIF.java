@@ -23,9 +23,8 @@ import java.io.*;
 import java.text.ParseException;
 import java.util.*;
 
-/**
- * ***************************************************************** A class
- * designed to read a file in SUO-KIF format into memory. See
+/******************************************************************
+ * A class designed to read a file in SUO-KIF format into memory. See
  * <http://sigmakee.cvs.sourceforge.net/viewvc/sigmakee/sigma/suo-kif.pdf> for a
  * language specification. readFile() and writeFile() are the primary entry
  * points and parse() does all the real work.
@@ -34,17 +33,15 @@ import java.util.*;
  */
 public class KIF {
 
-    /**
-     * *************************************************************** A numeric
-     * constant denoting normal parse mode, in which syntax constraints are
+    /*****************************************************************
+     * A numeric constant denoting normal parse mode, in which syntax constraints are
      * enforced.
      */
     public static final int NORMAL_PARSE_MODE = 1;
     public static int count = 0;
 
-    /**
-     * *************************************************************** A numeric
-     * constant denoting relaxed parse mode, in which fewer syntax constraints
+    /****************************************************************
+     * A numeric constant denoting relaxed parse mode, in which fewer syntax constraints
      * are enforced than in NORMAL_PARSE_MODE.
      */
     public static final int RELAXED_PARSE_MODE = 2;
@@ -76,13 +73,6 @@ public class KIF {
      */
     public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();
 
-    /**
-     * A "raw" HashSet of unique Strings which are the formulas from the file
-     * without any further processing, in the order which they appear in the
-     * file.
-     */
-    // public LinkedHashSet<String> formulaSet = new LinkedHashSet<String>();
-
     private String filename;
     private File file;
     private int totalLinesForComments = 0;
@@ -92,18 +82,7 @@ public class KIF {
     /** errors generated during parsing */
     public TreeSet<String> errorSet = new TreeSet<String>();
 
-    /**
-     * ***************************************************************
-     *
-     * public String getFilename() { return this.filename; }
-     *
-     * /** ***************************************************************
-     *
-     * public void setFilename(String canonicalPath) { this.filename =
-     * canonicalPath; return; }
-     *
-     * /** ***************************************************************
-     *
+    /*****************************************************************
      * @return int Returns an integer value denoting the current parse mode.
      */
     public int getParseMode() {
@@ -111,9 +90,8 @@ public class KIF {
         return this.parseMode;
     }
 
-    /**
-     * *************************************************************** Sets the
-     * current parse mode to the input value mode.
+    /***************************************************************** 
+     * Sets the current parse mode to the input value mode.
      *
      * @param mode
      *            An integer value denoting a parsing mode.
@@ -124,9 +102,8 @@ public class KIF {
         this.parseMode = mode;
     }
 
-    /**
-     * *************************************************************** This
-     * routine sets up the StreamTokenizer_s so that it parses SUO-KIF. = < >
+    /****************************************************************
+     * This routine sets up the StreamTokenizer_s so that it parses SUO-KIF. = < >
      * are treated as word characters, as are normal alphanumerics. ; is the
      * line comment character and " is the quote character.
      */
@@ -151,8 +128,7 @@ public class KIF {
         st.eolIsSignificant(true);
     }
 
-    /**
-     * ***************************************************************
+    /*****************************************************************
      */
     private void display(StreamTokenizer_s st, boolean inRule, boolean inAntecedent, boolean inConsequent,
                          int argumentNum, int parenLevel, String key) {
@@ -179,9 +155,8 @@ public class KIF {
         result.append(key);
     }
 
-    /**
-     * *************************************************************** This
-     * method has the side effect of setting the contents of formulaMap and
+    /*****************************************************************
+     * This method has the side effect of setting the contents of formulaMap and
      * formulas as it parses the file. It throws a ParseException with file line
      * numbers if fatal errors are encountered during parsing. Keys in variable
      * "formulas" include the string representation of the formula.
@@ -438,9 +413,8 @@ public class KIF {
         return warningSet;
     }
 
-    /**
-     * *************************************************************** This
-     * routine creates a key that relates a token in a logical statement to the
+    /*****************************************************************
+     * This routine creates a key that relates a token in a logical statement to the
      * entire statement. It prepends to the token a string indicating its
      * position in the statement. The key is of the form type-[num]-term, where
      * [num] is only present when the type is "arg", meaning a statement in
@@ -450,17 +424,12 @@ public class KIF {
      * parentheses. An example key would be arg-0-instance for a appearance of
      * the term "instance" in a statement in the predicate position.
      *
-     * @param sval
-     *            - the token such as "instance", "Human" etc.
-     * @param inAntecedent
-     *            - whether the term appears in the antecedent of a rule.
-     * @param inConsequent
-     *            - whether the term appears in the consequent of a rule.
-     * @param argumentNum
-     *            - the argument position in which the term appears. The
+     * @param sval            - the token such as "instance", "Human" etc.
+     * @param inAntecedent    - whether the term appears in the antecedent of a rule.
+     * @param inConsequent    - whether the term appears in the consequent of a rule.
+     * @param argumentNum     - the argument position in which the term appears. The
      *            predicate position is argument 0. The first argument is 1 etc.
-     * @param parenLevel
-     *            - if the paren level is > 1 then the term appears nested in a
+     * @param parenLevel      - if the paren level is > 1 then the term appears nested in a
      *            statement and the argument number is ignored.
      */
     private String createKey(String sval, boolean inAntecedent, boolean inConsequent, int argumentNum, int parenLevel) {
@@ -492,14 +461,11 @@ public class KIF {
         return (key);
     }
 
-    /**
-     * *************************************************************** Count the
-     * number of appearances of a certain character in a string.
+    /*****************************************************************
+     * Count the number of appearances of a certain character in a string.
      *
-     * @param str
-     *            - the string to be tested.
-     * @param c
-     *            - the character to be counted.
+     * @param str - the string to be tested.
+     * @param c   - the character to be counted.
      */
     private int countChar(String str, char c) {
 
@@ -555,12 +521,10 @@ public class KIF {
         return;
     }
 
-    /**
-     * *************************************************************** Write a
-     * KIF file.
+    /****************************************************************
+     * Write a KIF file.
      *
-     * @param fname
-     *            - the name of the file to write, including full path.
+     * @param fname - the name of the file to write, including full path.
      */
     public void writeFile(String fname) {
 
@@ -590,9 +554,8 @@ public class KIF {
         return;
     }
 
-    /**
-     * *************************************************************** Parse a
-     * single formula.
+    /*****************************************************************
+     * Parse a single formula.
      */
     public String parseStatement(String formula) {
 
@@ -613,9 +576,8 @@ public class KIF {
         return null;
     }
 
-    /**
-     * *************************************************************** Writes
-     * the TPTP output to a file.
+    /*****************************************************************
+     * Writes the TPTP output to a file.
      */
     public static void tptpOutputTest(String filename) throws IOException {
 
@@ -665,9 +627,8 @@ public class KIF {
         }
     }
 
-    /**
-     * *************************************************************** Test
-     * method for this class.
+    /*****************************************************************
+     * Test method for this class.
      */
     public static void main(String[] args) throws IOException {
 
