@@ -1788,7 +1788,7 @@ public class WordNet implements Serializable {
         try {
             if (initNeeded == true) {
                 if ((WordNet.baseDir == "") || (WordNet.baseDir == null))
-                    WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
+                    WordNet.baseDir = System.getenv("SIGMA_HOME") + File.separator + "WordNetMappings";
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
                 baseDirFile = new File(WordNet.baseDir);
                 if (KBmanager.getMgr().getPref("loadFresh").equals("false")) {
