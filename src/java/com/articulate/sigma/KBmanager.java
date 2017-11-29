@@ -558,10 +558,10 @@ public class KBmanager implements Serializable {
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             if (serializedExists() && !serializedOld()) {
                 loadSerialized();
-                WordNet.wn.initOnce();
-                NLGUtils.init(configFileDir);
-                OMWordnet.readOMWfiles();
                 if (manager != null) {
+                    WordNet.wn.initOnce();
+                    NLGUtils.init(configFileDir);
+                    OMWordnet.readOMWfiles();
                     initializing = false;
                     initialized = true;
                 }
