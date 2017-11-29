@@ -238,11 +238,11 @@ Account Management
 
 Create the account database with
 
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.delphi.PasswordService -c
+java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.PasswordService -c
 
 Then create the administrator account and password
 
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.delphi.PasswordService -a
+java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.PasswordService -a
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
 
