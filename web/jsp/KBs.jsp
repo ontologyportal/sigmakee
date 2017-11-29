@@ -26,9 +26,9 @@
     System.out.println("KBs.jsp: username: " + username);
     boolean isAdministrator = role.equalsIgnoreCase("admin");
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
-    boolean performedInit = KBmanager.getMgr().initializeOnce();
-
+    KBmanager.getMgr().initializeOnce();
 %>
+
 <table width="95%" cellspacing="0" cellpadding="0">
     <tr>
         <td valign="top">
