@@ -49,7 +49,7 @@ u.toDB(ps.conn);
     </TD>
   </TR>
 </table>
-<\form>
+</form>
 
 </body>
 </html>
