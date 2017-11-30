@@ -166,7 +166,7 @@ public final class PasswordService {
     public void mailModerator(User user) {
 
         String destmailid = user.attributes.get("email");
-        String from = "sigmamoderator@gmail.com";
+        String from = System.getenv("SIGMA_EMAIL_ADDRESS");
         String firstName = user.attributes.get("firstName");
         String lastName = user.attributes.get("lastName");
         String username = user.username;
