@@ -5,7 +5,7 @@ import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpSe
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
-<title>Approve User</title>
+<title>Moderator Approval</title>
 </head>
 <body>
 <%
@@ -51,7 +51,7 @@ if (u == null || !u.attributes.get("registrId").equals(id)) {
     </TD>
   </TR>
 </table>
-<\form>
+</form>
 
 </body>
 </html>
