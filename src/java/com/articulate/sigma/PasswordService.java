@@ -180,10 +180,15 @@ public final class PasswordService {
         String port = KBmanager.getMgr().getPref("port");
         String appURL = "";
         try {
+            String https = KBmanager.getMgr().getPref("https");
+            if (https == null || !https.equals("true"))
+                https = "http";
+            else
+                https = "https";
             appURL = "ModeratorApproval.jsp?user=" +
                     username + "&id=" + URLEncoder.encode(registrId, "UTF-8");
             if (!StringUtil.emptyString(host) && !StringUtil.emptyString(port))
-                appURL = "https://" + host + ":" + port + "/sigma/" + appURL;
+                appURL = https + "://" + host + ":" + port + "/sigma/" + appURL;
         }
         catch (UnsupportedEncodingException uee) {
             uee.printStackTrace();
