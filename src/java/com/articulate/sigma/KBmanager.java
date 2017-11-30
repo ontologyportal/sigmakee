@@ -97,6 +97,31 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      *  Check whether sources are newer than serialized version.
      */
+    public static boolean serializedOld(SimpleElement configuration) {
+
+        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        File configFile = new File(kbDir + File.separator + "config.xml");
+        Date configDate = new Date(configFile.lastModified());
+        File serfile = new File(kbDir + File.separator + "kbmanager.ser");
+        Date saveDate = new Date(serfile.lastModified());
+        if (saveDate.compareTo(configDate) < 0)
+            return true;
+        ArrayList<ArrayList<String>> kbFilenames = kbFilenamesFromXML(configuration);
+        for (ArrayList<String> thekb : kbFilenames) { // iterate through the kbs
+            for (String f : thekb) { // iterate through the constituents
+                File file = new File(f);
+                Date fileDate = new Date(file.lastModified());
+                if (saveDate.compareTo(fileDate) < 0) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     *  Check whether sources are newer than serialized version.
+     */
     public static boolean serializedOld() {
 
         String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
@@ -336,7 +361,46 @@ public class KBmanager implements Serializable {
         }
         System.out.println("kbsFromXML(): Completed loading KBs");
     }
-    
+
+    /** ***************************************************************
+     * Note that filenames that are not full paths are prefixed with the
+     * value of preference kbDir
+     */
+    private static ArrayList<ArrayList<String>> kbFilenamesFromXML(SimpleElement configuration) {
+
+        ArrayList<ArrayList<String>> result = new ArrayList<>();
+        if (!configuration.getTagName().equals("configuration"))
+            System.out.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: " + configuration.getTagName());
+        else {
+            for (int i = 0; i < configuration.getChildElements().size(); i++) {
+                SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
+                if (element.getTagName().equals("kb")) {
+                    ArrayList<String> kb = new ArrayList<>();
+                    result.add(kb);
+                    boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
+                    for (int j = 0; j < element.getChildElements().size(); j++) {
+                        SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
+                        if (!kbConst.getTagName().equals("constituent"))
+                            System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
+                        String filename = (String) kbConst.getAttribute("filename");
+                        if (!filename.startsWith((File.separator)))
+                            filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
+                        if (!StringUtil.emptyString(filename)) {
+                            if (filename.endsWith(KB._cacheFileSuffix)) {
+                                if (useCacheFile)
+                                    kb.add(filename);
+                            }
+                            else
+                                kb.add(filename);
+                        }
+                    }
+                }
+            }
+        }
+        System.out.println("kbsFilenamesFromXML(): Completed loading KBs");
+        return result;
+    }
+
     /** ***************************************************************
      */
     public boolean loadKB(String kbName, List<String> constituents) {
@@ -556,7 +620,10 @@ public class KBmanager implements Serializable {
             return;
         try {
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
-            if (serializedExists() && !serializedOld()) {
+            SimpleElement configuration = readConfiguration(configFileDir);
+            if (configuration == null)
+                throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
+            if (serializedExists() && !serializedOld(configuration)) {
                 loadSerialized();
                 if (manager != null) {
                     WordNet.wn.initOnce();
@@ -571,9 +638,6 @@ public class KBmanager implements Serializable {
                 KBmanager.getMgr().setPref("kbDir",configFileDir); // need to restore config file path
                 if (StringUtil.isNonEmptyString(configFileDir)) {
                     setDefaultAttributes();
-                    SimpleElement configuration = readConfiguration(configFileDir);
-                    if (configuration == null)
-                        throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
                     setConfiguration(configuration);
                 }
                 else
