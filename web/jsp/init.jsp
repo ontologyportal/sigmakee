@@ -45,7 +45,7 @@ import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpSe
                     <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
                     <td>&nbsp;&nbsp;</td>
                     <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <b> <%=welcomeString%>></b></td>
+                        <b></b></td>
                 </tr>
             </table>
         </td>
