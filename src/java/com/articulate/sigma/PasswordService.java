@@ -169,17 +169,19 @@ public final class PasswordService {
         String from = "sigmamoderator@gmail.com";
         String firstName = user.attributes.get("firstName");
         String lastName = user.attributes.get("lastName");
+        String username = user.username;
         String notRobot = user.attributes.get("notRobot");
         String registrId = user.attributes.get("registrId");
-
-        final String uname = "sigmamoderator";
+        final String pwd = System.getenv("SIGMA_EMAIL_PASS");
+        final String uname = System.getenv("SIGMA_EMAIL_USER");
+        System.out.println("mailModerator(): uname: " + uname); // the system username for the email server
 
         String host = KBmanager.getMgr().getPref("hostname");
         String port = KBmanager.getMgr().getPref("port");
         String appURL = "";
         try {
             appURL = "ModeratorApproval.jsp?user=" +
-                    uname + "&id=" + URLEncoder.encode(registrId, "UTF-8");
+                    username + "&id=" + URLEncoder.encode(registrId, "UTF-8");
             if (!StringUtil.emptyString(host) && !StringUtil.emptyString(port))
                 appURL = "https://" + host + ":" + port + "/sigma/" + appURL;
         }
@@ -187,7 +189,6 @@ public final class PasswordService {
             uee.printStackTrace();
         }
 
-        final String pwd = System.getenv("SIGMA_EMAIL_PASS");
         String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
         System.out.println("mailModerator(): host: " + smtphost);
         Properties propvls = new Properties();
