@@ -91,6 +91,7 @@ public class KBmanager implements Serializable {
 
         String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
         File serfile = new File(kbDir + File.separator + "kbmanager.ser");
+        System.out.println("KBmanager.serializedExists(): " + serfile.exists());
         return serfile.exists();
     }
 
@@ -105,6 +106,7 @@ public class KBmanager implements Serializable {
         Date configDate = new Date(configFile.lastModified());
         File serfile = new File(kbDir + File.separator + "kbmanager.ser");
         Date saveDate = new Date(serfile.lastModified());
+        System.out.println("KBmanager.serializedOld(config): save date: " + saveDate.toString());
         if (saveDate.compareTo(configDate) < 0)
             return true;
         ArrayList<ArrayList<String>> kbFilenames = kbFilenamesFromXML(configuration);
@@ -132,6 +134,7 @@ public class KBmanager implements Serializable {
         Date configDate = new Date(configFile.lastModified());
         File serfile = new File(kbDir + File.separator + "kbmanager.ser");
         Date saveDate = new Date(serfile.lastModified());
+        System.out.println("KBmanager.serializedOld(): save date: " + saveDate.toString());
         if (saveDate.compareTo(configDate) < 0)
             return true;
         for (KB thekb : manager.kbs.values()) {
