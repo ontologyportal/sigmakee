@@ -76,9 +76,11 @@
                  tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";
              show.append("(" + tfmValue + ")");
          }
-         else
-             System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
-                                term + "\" in language " + language);
+         else {
+             if (language != null && language.equals("EnglishLanguage"))
+                 System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
+                                     term + "\" in language " + language);
+         }
          if (role != null && role.equalsIgnoreCase("admin")) {
              show.append(" [<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/InstFiller.jsp?lang=" + language +
         	    	 "&flang=" + flang + "&kb=" + kbName + "&term=" + term + "\">assert facts</a>]<br>");
