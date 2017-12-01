@@ -99,6 +99,7 @@ public class KBmanager implements Serializable {
      */
     public static boolean serializedOld(SimpleElement configuration) {
 
+        System.out.println("KBmanager.serializedOld(config): ");
         String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
@@ -116,6 +117,7 @@ public class KBmanager implements Serializable {
                 }
             }
         }
+        System.out.println("KBmanager.serializedOld(config): returning false (not old)");
         return false;
     }
 
@@ -124,6 +126,7 @@ public class KBmanager implements Serializable {
      */
     public static boolean serializedOld() {
 
+        System.out.println("KBmanager.serializedOld(): ");
         String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
@@ -140,6 +143,7 @@ public class KBmanager implements Serializable {
                 }
             }
         }
+        System.out.println("KBmanager.serializedOld(): returning false");
         return false;
     }
 
@@ -397,7 +401,7 @@ public class KBmanager implements Serializable {
                 }
             }
         }
-        System.out.println("kbsFilenamesFromXML(): Completed loading KBs");
+        System.out.println("kbsFilenamesFromXML(): Completed loading KB names");
         return result;
     }
 
