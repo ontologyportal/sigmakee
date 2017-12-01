@@ -115,7 +115,7 @@ public class HTMLformatter {
         if (port == null)
             port = "8080";
         String https = KBmanager.getMgr().getPref("https");
-        System.out.println("Info in HTMLformatter.createHrefStart(): https is " + https);
+        //System.out.println("Info in HTMLformatter.createHrefStart(): https is " + https);
         if (https == null || !https.equals("true"))
             https = "http";
         else
