@@ -334,7 +334,7 @@ public class KBmanager implements Serializable {
      * Note that filenames that are not full paths are prefixed with the
      * value of preference kbDir
      */
-    private void kbsFromXML(SimpleElement configuration) {
+    private static void kbsFromXML(SimpleElement configuration) {
         
         if (!configuration.getTagName().equals("configuration")) 
         	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
@@ -343,7 +343,7 @@ public class KBmanager implements Serializable {
                 SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
                 if (element.getTagName().equals("kb")) {
                     String kbName = (String) element.getAttribute("name");
-                    addKB(kbName);
+                    KBmanager.getMgr().addKB(kbName);
                     ArrayList<String> constituentsToAdd = new ArrayList<String>();
                     boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
                     for (int j = 0; j < element.getChildElements().size(); j++) {
@@ -352,7 +352,7 @@ public class KBmanager implements Serializable {
                         	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                         String filename = (String) kbConst.getAttribute("filename");
                         if (!filename.startsWith((File.separator)))
-                            filename = getPref("kbDir") + File.separator + filename;
+                            filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
                             if (filename.endsWith(KB._cacheFileSuffix)) {
                                 if (useCacheFile) 
@@ -362,7 +362,7 @@ public class KBmanager implements Serializable {
                                 constituentsToAdd.add(filename);                            
                         }
                     }
-                    loadKB(kbName, constituentsToAdd);
+                    KBmanager.getMgr().loadKB(kbName, constituentsToAdd);
                 }
             }
         }
@@ -640,7 +640,7 @@ public class KBmanager implements Serializable {
                     initialized = true;
                 }
             }
-            if (!serializedExists() || serializedOld() || manager == null) { // if there was an error loading the serialized file, then reload from sources
+            if (manager == null || !serializedExists() || serializedOld()) { // if there was an error loading the serialized file, then reload from sources
                 System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
                 KBmanager.getMgr().setPref("kbDir",configFileDir); // need to restore config file path
                 if (StringUtil.isNonEmptyString(configFileDir)) {
@@ -683,6 +683,7 @@ public class KBmanager implements Serializable {
             while (it.hasNext()) {
                 String kbName = it.next();
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
+                KB kb = KBmanager.getMgr().getKB("SUMO");
                 WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
             }
         }
