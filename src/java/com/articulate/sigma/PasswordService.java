@@ -137,6 +137,43 @@ public final class PasswordService {
 
     /** *****************************************************************
      */
+    public Set<String> userIDs() {
+
+        HashSet<String> result = new HashSet<>();
+        try {
+            Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT username FROM USERS;");
+            while (!res.isLast()) {
+                res.next();
+                result.add(res.getString(1));
+            }
+        }
+        catch (Exception e) {
+            System.out.println("Error in userIDs(): " + e.getMessage());
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /** *****************************************************************
+     */
+    public void deleteUser(String uname) {
+
+        HashSet<String> result = new HashSet<>();
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.execute("delete FROM USERS where username='" + uname + "';");
+        }
+        catch (Exception e) {
+            System.out.println("Error in deleteUser(): " + e.getMessage());
+            e.printStackTrace();
+            return;
+        }
+        System.out.println("PasswordService.deleteUser(): deleted user " + uname);
+    }
+
+    /** *****************************************************************
+     */
     public void login() {
 
         Console c = System.console();
@@ -282,11 +319,14 @@ public final class PasswordService {
     public static void showHelp() {
 
         System.out.println("PasswordService: ");
-        System.out.println("-h    show this help message");
-        System.out.println("-l    login");
-        System.out.println("-r    register a new username and password (fail if username taken)");
-        System.out.println("-c    create db");
-        System.out.println("-a    create admin user");
+        System.out.println("-h    show this Help message");
+        System.out.println("-l    Login");
+        System.out.println("-r    Register a new username and password (fail if username taken)");
+        System.out.println("-c    Create db");
+        System.out.println("-a    create Admin user");
+        System.out.println("-u    show User IDs");
+        System.out.println("-f <id>    find user with given ID");
+        System.out.println("-d <id>    Delete user with given ID");
     }
 
     /** ***************************************************************** 
@@ -297,12 +337,22 @@ public final class PasswordService {
         if (args != null) {
             if (args.length > 0 && args[0].equals("-r"))
                 ps.register();
-            if (args.length > 0 && args[0].equals("-l"))
+            else if (args.length > 0 && args[0].equals("-l"))
                 ps.login();
-            if (args.length > 0 && args[0].equals("-c"))
+            else if (args.length > 0 && args[0].equals("-c"))
                 User.createDB();
-            if (args.length > 0 && args[0].equals("-a"))
+            else if (args.length > 0 && args[0].equals("-a"))
                 ps.createAdmin();
+            else if (args.length > 0 && args[0].equals("-u"))
+                System.out.println(ps.userIDs());
+            else if (args.length > 1 && args[0].equals("-f"))
+                System.out.println(User.fromDB(ps.conn,args[1]));
+            else if (args.length > 1 && args[0].equals("-d"))
+                ps.deleteUser(args[1]);
+            else {
+                System.out.println("unrecognized command\n");
+                showHelp();
+            }
         }
         else
             showHelp();
