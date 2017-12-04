@@ -38,7 +38,7 @@ userPages.add("SimpleBrowse.jsp");
 userPages.add("TreeView.jsp");
 userPages.add("WordNet.jsp");
 String URLString = request.getRequestURL().toString();
-String pageString = URLString.substring(URLString.lastIndexOf("/") + 1);
+String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
 String username = (String) session.getAttribute("user");
 String role = (String) session.getAttribute("role");
@@ -60,8 +60,8 @@ if (!KBmanager.initialized) {
     return;
 }
 
-if (role.equalsIgnoreCase("guest") && !userPages.contains(pageString)) {
-    mgr.setError("You are not authorized to visit " + pageString);
+if (role.equalsIgnoreCase("guest") && !userPages.contains(pageURLString)) {
+    mgr.setError("You are not authorized to visit " + pageURLString);
     response.sendRedirect("KBs.jsp");
     return;
 }
