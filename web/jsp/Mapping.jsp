@@ -163,25 +163,11 @@ if (!role.equalsIgnoreCase("admin")) {
     String kbHref1 = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?kb=" + kbname1 + "&term=";
     String kbHref2 = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?kb=" + kbname2 + "&term=";
 %>
-
-<table width="95%" cellspacing="0" cellpadding="0">
-    <tr>
-        <td valign="top">
-            <table cellspacing="0" cellpadding="0">
-                <tr>
-                    <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="left" valign="top"><img src="pixmaps/logoText.gif"><br>
-                      <%=welcomeString%></td>
-                </tr>                
-            </table>
-        </td>
-        <td><font face="Arial,helvetica" SIZE=-1>
-        <b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|
-            &nbsp;<A href="Properties.jsp">Preferences</b></A>&nbsp;</FONT> ]</b></FONT></td>
-    </tr>
-</table>
-<br>
+    <%
+        String pageName = "Mapping";
+        String pageString = "Mapping";
+    %>
+    <%@include file="CommonHeader.jsp" %>
 
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
   <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>

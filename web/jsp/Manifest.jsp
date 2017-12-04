@@ -173,26 +173,12 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 <TITLE>Sigma Knowledge Engineering Environment - Constituents of <%=kbName %></TITLE>
 </HEAD>
 <BODY BGCOLOR=#FFFFFF>
-<table width=95% cellspacing=0 cellpadding=0>
-  <tr>
-    <td valign="top">
-      <table cellspacing=0 cellpadding=0>
-        <tr>
-          <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-          <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-            <%=welcomeString%></td>
-        </tr>
-      </table>
-    </td>
-    <td valign="bottom"></td>
-    <td>
-    <span class="navlinks">
-        <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;]</b>
-    </span>
-    </td>
-  </tr>
-</table>
+    <%
+        String pageName = "Manifest";
+        String pageString = "Manifest";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <b>Files which are the <I>constituents</I> of the <B><%=kbName %></b> knowledge base </b>

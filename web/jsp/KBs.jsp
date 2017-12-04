@@ -29,30 +29,13 @@
     KBmanager.getMgr().initializeOnce();
 %>
 
-<table width="95%" cellspacing="0" cellpadding="0">
-    <tr>
-        <td valign="top">
-            <table cellspacing="0" cellpadding="0">
-                <tr>
-                    <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <b><%=welcomeString%></b></td>
-                </tr>
-            </table>
-        </td>
-        <td>
-        <span class="navlinks">
-          <%
-              if (role != null && role.equalsIgnoreCase("admin")) {
-                  out.println("<b>[&nbsp<a href=\"Properties.jsp\">Preferences</a> ]</b>");
-              }
-          %>
-        </span>
-        </td>
-    </tr>
-</table>
-<br><table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
+    <%
+        String pageName = "KBs";
+        String pageString = "Knowledge Bases";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
+<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%

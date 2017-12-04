@@ -142,25 +142,13 @@
   <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF">
 
   <FORM name="SystemOnTPTP" ID="SystemOnTPTP" action="SystemOnTPTP.jsp" METHOD="POST">
-  <TABLE width="95%" cellspacing="0" cellpadding="0">
-  <TR>
-  <TD ALIGN=LEFT VALIGN=TOP><IMG SRC="pixmaps/sigmaSymbol-gray.gif"></TD>
-  <TD ALIGN=LEFT VALIGN=TOP><img src="pixmaps/logoText-gray.gif"><BR>
-      <B>SystemOnTPTP Interface</B> <%=welcomeString%></TD>
-  <TD VALIGN=BOTTOM></TD>
-  <TD> <FONT FACE="Arial, Helvetica" SIZE=-1>
-       [ <A HREF="KBs.jsp"><B>Home</B></A>&nbsp;|&nbsp;
-         <A HREF="Graph.jsp?kb=<%=kbName%>&lang=<%=language%>"><B>Graph</B></A>&nbsp;|&nbsp;
-         <A HREF="Properties.jsp"><B>Prefs</B></A>&nbsp;]&nbsp;
-         <B>KB</B>:&nbsp;
-<%
-    out.println(HTMLformatter.createKBMenu(kbName));
-%>
-         <B>Language:</B>&nbsp;<%=HTMLformatter.createMenu("lang", language,
-                    kb.availableLanguages())%>
-         <BR></TD>
-  </TR>
-  </TABLE>
+
+    <%
+        String pageName = "SystemOnTPTP";
+        String pageString = "SystemOnTPTP";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
 
   <IMG SRC='pixmaps/1pixel.gif' WIDTH=1 HEIGHT=1 BORDER=0><BR>
   <TEXTAREA ROWS=5 COLS=70" NAME="stmt"><%=stmt%></TEXTAREA><BR>

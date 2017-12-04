@@ -247,27 +247,11 @@ if (!role.equalsIgnoreCase("admin")) {
 
 <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
 <FORM name="AskTell" ID="AskTell" action="AskTell.jsp" METHOD="POST">
-    <TABLE width="95%" cellspacing="0" cellpadding="0">
-      <TR>
-          <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
-          <TD align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><B>Inference Interface</B></TD>
-          <TD valign="bottom"></TD>
-          <TD>
-            <font FACE="Arial, Helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A></b>&nbsp;|&nbsp;
-            <A href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>"><B>Graph</B></A>&nbsp;|&nbsp;                                                      
-            <b><A href="Properties.jsp">Prefs</A></b>&nbsp;]&nbsp;
-            <b>KB:&nbsp;
-<%
-            ArrayList kbnames = new ArrayList();
-            kbnames.addAll(KBmanager.getMgr().getKBnames());
-            out.println(HTMLformatter.createMenu("kb",kbName,kbnames)); 
-%>              
-            </b>
-            <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-          <BR>
-          </TD>
-      </TR>
-    </TABLE><br>
+    <%
+        String pageName = "AskTell";
+        String pageString = "Inference Interface";
+    %>
+    <%@include file="CommonHeader.jsp" %>
     
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>

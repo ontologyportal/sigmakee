@@ -156,26 +156,11 @@ if (!role.equalsIgnoreCase("admin")) {
 %>
 <BODY style="face=Arial,Helvetica" BGCOLOR=#FFFFFF>
 <FORM name="AskTell" ID="AskTell" action="InferenceTestSuite.jsp" METHOD="POST">
-    <TABLE width="95%" cellspacing="0" cellpadding="0">
-      <TR>
-          <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
-          <TD align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><B>Inference Test Suite</B>
-            <%=welcomeString%></TD>
-          <TD valign="bottom"></TD>
-          <TD>
-            <font FACE="Arial, Helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A></b>&nbsp;|&nbsp;
-            <A href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>"><B>Graph</B></A>&nbsp;|&nbsp;                                                      
-            <b><A href="Properties.jsp">Prefs</A></b>&nbsp;]&nbsp;
-            <b>KB:&nbsp;
-<%
-            out.println(HTMLformatter.createKBMenu(kbName)); 
-%>              
-            </b>
-            <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-          <BR>
-          </TD>
-      </TR>
-    </TABLE><br>
+    <%
+        String pageName = "InferenceTestSuite";
+        String pageString = "Inference Test Suite";
+    %>
+    <%@include file="CommonHeader.jsp" %>
     
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>

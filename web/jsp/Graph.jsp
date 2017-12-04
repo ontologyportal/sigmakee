@@ -97,37 +97,13 @@ function setWidth(id) {
 %>
 
 <form action="Graph.jsp">
-<table width=95% cellspacing=0 cellpadding=0>
-  <tr>
-    <td valign="top">
-      <table cellspacing=0 cellpadding=0>
-        <tr>
-        <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-        <TD>&nbsp;</TD>
-        <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-         <b>Graph</b><%=welcomeString %></td>
-        </tr>
-       </table>
-    </td>
-    <td valign="bottom">
-    </td>
-    <td>
-      <font face="Arial,helvetica" SIZE=-1><b>[ <a href="KBs.jsp">Home</a></b>
-      <b>
-      <% if (role != null && role.equalsIgnoreCase("admin")) { %>
-             <a href="Properties.jsp">Prefs</a></B>
-      <% } %>
-      <B>]</B></font><BR>
-      <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font>
 
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>              
-            </b>
-            <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-    </td>
-  </tr>
-</table><BR>
+    <%
+        String pageName = "Graph";
+        String pageString = "KB Graph";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
       <font face="Arial,helvetica"><b>Relation: </b>
@@ -166,7 +142,7 @@ out.println(HTMLformatter.createKBMenu(kbName));
    			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
    			      try {
    			          graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
-   			                                            Integer.parseInt(down),false,fname);
+   			                                            Integer.parseInt(down),fname);
    			      }
    			      catch (Exception ex) {
    			          graphAvailable = false;

@@ -45,45 +45,13 @@ if (!role.equalsIgnoreCase("admin")) {
 </head>
 <BODY BGCOLOR=#FFFFFF>
 <form action="InstFiller.jsp" method="GET">
-  <table width="95%" cellspacing="0" cellpadding="0">
-      <tr>
-          <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-          <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <b>Instance Filler</b> <%=welcomeString%></td>
-          <td valign="bottom"></td>
-          <td>
-          <span class="navlinks">
-          <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
-<%
-              if (kb.inferenceEngine != null && role != null && role.equalsIgnoreCase("admin")) {
-                  out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\">Ask/Tell</a>&nbsp;|&nbsp;");
-              }
-%>
-              <a href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>&term=<%=term %>">Graph</a>&nbsp;|&nbsp;
-<%
-              if (KBmanager.getMgr().getPref("userRole") != null &&
-                  KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
-                  out.println("<a href=\"Properties.jsp\">Preferences</a>");
-              }
-%>
-             &nbsp;]
-           </b>
-           </span>
-           <br>
-              <img src="pixmaps/1pixel.gif" height="3"> <br>
-              <b>KB:&nbsp;</b>
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>
-              <% if (kb != null) { %>
-              <b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %>
-              <% } %>
-              <P><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
-          </td>
-      </tr>
-  </table>
-  <br>
+
+    <%
+        String pageName = "InstFiller";
+        String pageString = "Instance Filler";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
   <table cellspacing="0" cellpadding="0">
       <tr>
           <td align="left">

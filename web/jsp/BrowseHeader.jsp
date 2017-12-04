@@ -22,44 +22,12 @@
 %>
 
 <form action="<%=parentPage%>">
-  <table width="95%" cellspacing="0" cellpadding="0">
-      <tr>
-          <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-          <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <b>Browsing Interface</b><%=welcomeString%></td>
-          <td valign="bottom"></td>
-          <td>
-          <span class="navlinks">
-          <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
-<%
-              if (kb.eprover != null && role != null && role.equalsIgnoreCase("admin")) {
-                  out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\">Ask/Tell</a>&nbsp;|&nbsp;");
-              }
-%>
-              <a href="Graph.jsp?kb=<%=kbName %>&lang=<%=language %>&term=<%=term %>">Graph</a>&nbsp;|&nbsp;
-<%
-              if (role != null && role.equalsIgnoreCase("admin")) {
-                  out.println("|&nbsp;<a href=\"Properties.jsp\">Preferences</a>");
-              }
-%>
-             &nbsp;]
-           </b>
-           </span>
-           <br>
-              <img src="pixmaps/1pixel.gif" height="3"> <br>
-              <b>KB:&nbsp;</b>
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>
-              <% if (kb != null) { %>
-              <b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %>
-              <% } %>
-              <P><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>              
-          </td>
-      </tr>
-  </table>
-  <br>
+    <%
+        String pageName = "Browse";
+        String pageString = "Browsing Interface";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
   <table cellspacing="0" cellpadding="0">
       <tr>
           <td align="right"><b>KB Term:&nbsp;</b></td>

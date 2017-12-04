@@ -79,35 +79,11 @@
 %>
 
 <form action="MiscUtilities.jsp">
-    <table width=95% cellspacing=0 cellpadding=0>
-      <tr>
-        <td valign="top">
-          <table cellspacing=0 cellpadding=0>
-            <tr>
-            <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-            <TD>&nbsp;</TD>
-            <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <%=welcomeString%></td>
-            </tr>
-           </table>
-        </td>
-        <td valign="bottom">
-        </td>
-        <td>
-          <span class="navlinks">
-          <b>[&nbsp;<a href="KBs.jsp">Home</a>&nbsp;|&nbsp;
-          <a href="Properties.jsp">Preferences</a>&nbsp;]</b>
-          </span>
-          <br>
-          <b>KB:&nbsp;</b>
-          <%
-          out.println(HTMLformatter.createKBMenu(kbName)); 
-          %>              
-          &nbsp;<b>Language:&nbsp;</b><%= HTMLformatter.createMenu("lang",language,KBmanager.getMgr().allAvailableLanguages()) %>
-        </td>
-      </tr>
-    </table>
-<p>
+    <%
+        String pageName = "MiscUtilities";
+        String pageString = "MiscUtilities";
+    %>
+    <%@include file="CommonHeader.jsp" %>
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>

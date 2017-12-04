@@ -26,14 +26,12 @@
   <title>Sigma WordNet mapping browser</title>
 </head>
 <BODY BGCOLOR=#FFFFFF>
-<table width=95% cellspacing=0 cellpadding=0>
-    <tr><td valign="top">
-        <table cellspacing=0 cellpadding=0>
-            <tr><td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-                <td>&nbsp;</td><td align="left" valign="top"><img src="pixmaps/logoText-gray.gif">
-                    <BR> <%=welcomeString%></td></tr></table>
-        </td><td valign="bottom"></td><td>
-<font face="Arial,helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A> ]</b></FONT></td></tr></table>
+
+    <%
+        String pageName = "WordNet";
+        String pageString = "WordNet mapping browser";
+    %>
+    <%@include file="CommonHeader.jsp" %>
 
 <h3>SUMO Search Tool</h3>
 <P>This tool relates English terms to concepts from the

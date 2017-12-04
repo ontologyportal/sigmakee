@@ -15,28 +15,13 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 %>
 
 <FORM action="<%=parentPage%>">
-  <table width="95%" cellspacing="0" cellpadding="0">
-      <tr>
-          <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-          <td>&nbsp;</td>
-          <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-              <B>Simplified Browsing Interface</B> <%=welcomeString%></td>
-          <td valign="bottom"></td>
-          <td><b>[ <a href="KBs.jsp">Home</b></a>
-              <B>]</B> <br>
-              <img src="pixmaps/1pixel.gif" HEIGHT="3"><br>
-              <b>KB:&nbsp;
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>
-              </b>
-              <% if (kb != null) { %>
-              <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-              <% } %>
-          </td>
-      </tr>
-  </table>
-  <br>
+
+    <%
+        String pageName = "Simple";
+        String pageString = "Simple Browser";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
   <table cellspacing="0" cellpadding="0">
       <tr>
           <td WIDTH="100"><font face="Arial,helvetica"><b>KB Term:&nbsp;</b></font></TD>

@@ -77,28 +77,12 @@ String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
 <HEAD><TITLE> Knowledge base Browser</TITLE></HEAD>
 <BODY BGCOLOR="#FFFFFF">
 <FORM action="CCheck.jsp">
-    <table width="95%" cellspacing="0" cellpadding="0">
-        <tr>
-            <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-            <td>&nbsp;</td>
-            <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-                <B>Knowledge Base Diagnostics</B><%=welcomeString%></td>
-            <td valign="bottom"></td>
-            <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
-                <A href="AskTell.jsp?kb=<%=kbName %>&lang=<%=language %>"><b>Ask/Tell</b></A>&nbsp;|&nbsp;
-                <a href="Properties.jsp"><b>Prefs</b></a>&nbsp;
-                <B>]</B> <br>
-                <img src="pixmaps/1pixel.gif" HEIGHT="3"><br>
-                <b>KB:&nbsp;
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>              
-                </b>
-                <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-            </td>
-        </tr>
-    </table>
-    <br>
+    <%
+        String pageName = "CCheck";
+        String pageString = "Knowledge Based Consistency Check";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
 <%
 show = new StringBuffer();
 int pageNum = Integer.parseInt(ccheckPage);

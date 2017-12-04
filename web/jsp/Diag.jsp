@@ -32,28 +32,11 @@ if (!role.equals("admin") && !role.equals("user")) {
   kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
 %>
 <form action="Diag.jsp">
-    <table width="95%" cellspacing="0" cellpadding="0">
-        <tr>
-            <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-            <td>&nbsp;</td>
-            <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-                <b>Knowledge Base Diagnostics</b><%=welcomeString%></td>
-            <td valign="bottom"></td>
-            <td><b>[ <a href="KBs.jsp">Home</b></a>&nbsp;|&nbsp;
-                <A href="AskTell.jsp?kb=<%=kbName %>&lang=<%=language %>"><b>Ask/Tell</b></A>&nbsp;|&nbsp;
-                <a href="Properties.jsp"><b>Prefs</b></a>&nbsp;
-                <b>]</b> <br>
-                <img src="pixmaps/1pixel.gif" height="3"><br>
-                <b>KB:&nbsp;
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>              
-                </b>
-                <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-            </td>
-        </tr>
-    </table>
-    <br>
+    <%
+        String pageName = "Diag";
+        String pageString = "Knowledge Base Diagnostics";
+    %>
+    <%@include file="CommonHeader.jsp" %>
 </form>
 
 <a href="WNDiag.jsp?kb=<%=kbName%>">Run WordNet diagnostics</a><p>

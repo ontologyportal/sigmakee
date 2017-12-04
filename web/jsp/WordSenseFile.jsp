@@ -73,18 +73,12 @@ catch (Exception e) {
   <title>Sigma Word Sense/Sentiment Analysis Tool</title>
 </head>
 <BODY BGCOLOR=#FFFFFF>
-<table width=95% cellspacing=0 cellpadding=0>
-    <tr><td valign="top">
-        <table cellspacing=0 cellpadding=0>
-            <tr><td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-                <td>&nbsp;</td><td align="left" valign="top"><img src="pixmaps/logoText-gray.gif">
-                    <BR> <%=welcomeString%></td>
-            </tr>
-        </table>
-    </td><td valign="bottom"></td><td>
-        <font face="Arial,helvetica" SIZE=-1><b>[ <A href="KBs.jsp">Home</A> ]</b></FONT></td>
-    </tr>
-</table>
+
+    <%
+        String pageName = "WordSenseFile";
+        String pageString = "SUMO Word Sense/Sentiment Analysis Tool";
+    %>
+    <%@include file="CommonHeader.jsp" %>
 
 <h3>SUMO Word Sense/Sentiment Analysis Tool</h3>
 <P>This tool provides context sensitive sense and sentiment analysis of whole sentences. Enter either a sentence or a full pathname for a .txt file.

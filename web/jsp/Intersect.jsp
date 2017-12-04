@@ -30,36 +30,13 @@
 %>
 
 <form action="Intersect.jsp">
-<table width=95% cellspacing=0 cellpadding=0>
-  <tr>
-    <td valign="top">
-      <table cellspacing=0 cellpadding=0>
-        <tr>
-        <td align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></td>
-        <TD>&nbsp;</TD>
-        <td align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br>
-          <%=welcomeString%></td>
-        </tr>
-       </table>
-    </td>
-    <td valign="bottom">
-    </td>
-    <td>
-      <font face="Arial,helvetica" SIZE=-1><b>[ <a href="KBs.jsp">Home</a></b>
-        <% if (role != null && role.equalsIgnoreCase("admin")) { %>
-              <b> <a href="Properties.jsp">Prefs</a></B>
-        <% } %>
-      <B>]</B></font><BR>
-      <font face="Arial,helvetica" SIZE=-1><b>KB:</b></font>
 
-<%
-out.println(HTMLformatter.createKBMenu(kbName)); 
-%>              
-            </b>
-            <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
-    </td>
-  </tr>
-</table><BR>
+    <%
+        String pageName = "Intersect";
+        String pageString = "Term Intersection";
+    %>
+    <%@include file="CommonHeader.jsp" %>
+
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
   Term 1: <input type="text" size="30" name="term1" value="<%=term1 %>">

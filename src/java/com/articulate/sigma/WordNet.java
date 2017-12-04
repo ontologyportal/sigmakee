@@ -1354,6 +1354,8 @@ public class WordNet implements Serializable {
      */
     public String sumoSentenceDisplay(String input, String context, String params) {
 
+        if (StringUtil.emptyString(input))
+            return "Empty input";
         try {
             ArrayList<String> sentenceList = splitToArrayListSentence(input);
             StringBuffer result = new StringBuffer();
@@ -1490,6 +1492,9 @@ public class WordNet implements Serializable {
     public String sumoFileDisplay(String pathname, String counter, String params) {
         
         try {
+            File file = new File(pathname);
+            if (file.exists() && file.length() == 0)
+                return null;
             FileInputStream fileStream = new FileInputStream(pathname);
             DataInputStream dataStream = new DataInputStream(fileStream);
             BufferedReader reader = new BufferedReader(new InputStreamReader(dataStream));
