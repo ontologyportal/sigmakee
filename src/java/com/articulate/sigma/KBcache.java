@@ -83,10 +83,12 @@ public class KBcache implements Serializable {
     
     /** Relation name keys and argument types with 0th arg always ""
      * except in the case of Functions where the 0th arg will be the
-     * function range..
+     * function range.
      Variable arity relations may have a type for the last argument,
      which will be the type repeated for all extended arguments.
-     Note that types can be functions, rather than just terms. **/
+     Note that types can be functions, rather than just terms. Note that
+     types (when there's a domainSubclass etc) are designated by a
+     '+' appended to the class name. **/
     public HashMap<String,ArrayList<String>> signatures =
             new HashMap<String,ArrayList<String>>();
     
