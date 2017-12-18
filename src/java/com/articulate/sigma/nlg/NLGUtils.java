@@ -1,9 +1,6 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.*;
 import com.google.common.collect.Maps;
 
 import java.io.*;
@@ -19,6 +16,8 @@ public class NLGUtils implements Serializable {
     private static final String PHRASES_FILENAME = "Translations/language.txt";
     private static NLGUtils nlg = null;
     private HashMap<String,HashMap<String,String>> keywordMap;
+    // a list of format parameters or words and the sentence words they match with
+    public static HashMap<String,String> outputMap = new HashMap<>();
 
     /** *************************************************************
      */
@@ -507,6 +506,7 @@ public class NLGUtils implements Serializable {
                                         Map<String,String> termMap, KB kb, String language) {
 
         LanguageFormatter languageFormatter = new LanguageFormatter(stmt, phraseMap, termMap, kb, language);
+        outputMap = languageFormatter.outputMap;
         return languageFormatter.htmlParaphrase(href);
     }
 
