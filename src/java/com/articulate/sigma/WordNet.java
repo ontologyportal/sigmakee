@@ -1636,6 +1636,10 @@ public class WordNet implements Serializable {
      */
     public boolean isStopWord(String word) {
 
+        if (stopwords.size() < 1) {
+            System.out.println("Error in WordNet.isStopWord(): stopwords list not loaded");
+            return false;
+        }
         if (StringUtil.emptyString(word))
             return false;
         if (stopwords.contains(word.trim().toLowerCase())) 
