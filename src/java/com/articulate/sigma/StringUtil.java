@@ -739,7 +739,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with all internal double quote characters
      * removed
@@ -764,7 +763,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with all sequences of two double quote
      * characters have been replaced by a left slash character
@@ -788,6 +786,15 @@ public class StringUtil {
             ans = sb.toString();
         }
         return ans;
+    }
+
+    /****************************************************************
+     */
+    public static String removeDoubleSpaces(String s) {
+
+        if (emptyString(s))
+            return s;
+        return s.replaceAll(" [ ]+"," ");
     }
 
     /****************************************************************
