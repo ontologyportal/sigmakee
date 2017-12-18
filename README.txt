@@ -57,6 +57,12 @@ The following command line version may work
 but you also may need to go to the web site, accept the license, then copy the download link
 into this command
 
+On AWS it helps to be reminded of which server you're on.  I use machine size as a reminder with
+
+export HOST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
+PS1="$HOST_TYPE:"PS1
+
+
 Linux Installation
 ==================
 
@@ -128,6 +134,7 @@ again.
 9090 for Vagrant
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+
 
 Apple install notes
 ===================
@@ -213,6 +220,7 @@ java  -Xmx2500m -classpath
   ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
   org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
+
 python Interface
 ================
 
@@ -264,6 +272,7 @@ Registered users are granted access to computationally more expensive features. 
 have access to all Sigma functions.  Currently, this control is hard coded into the JSP pages
 that will check for user roles.  At some point in the future this may be changed to a more flexible
 scheme of access rights driven from a file or database mapping roles to allowed functions.
+
 
 Old Installation Notes
 ======================
