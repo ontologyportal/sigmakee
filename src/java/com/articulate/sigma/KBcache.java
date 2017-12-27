@@ -1263,5 +1263,10 @@ public class KBcache implements Serializable {
                 instances);
 
         System.out.println("KBcache.main(): " + nkbc.getCommonParent("Kicking","Pushing"));
+        List<Formula> forms = kb.ask("arg",0,"subrelation");
+        for (Formula f : forms) {
+            String rel = f.getArgument(1);
+            System.out.println("is " + rel + " a relation: " + kb.isInstanceOf(rel,"Relation"));
+        }
     }
 }
