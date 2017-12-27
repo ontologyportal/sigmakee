@@ -2,6 +2,7 @@ package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
 import com.google.common.collect.Maps;
+import edu.stanford.nlp.ling.CoreLabel;
 
 import java.io.*;
 import java.util.*;
@@ -17,7 +18,7 @@ public class NLGUtils implements Serializable {
     private static NLGUtils nlg = null;
     private HashMap<String,HashMap<String,String>> keywordMap;
     // a list of format parameters or words and the sentence words they match with
-    public static HashMap<String,String> outputMap = new HashMap<>();
+    public static ArrayList<CoreLabel> outputMap = new ArrayList<>();
 
     /** *************************************************************
      */
