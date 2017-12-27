@@ -38,6 +38,7 @@ import static com.articulate.sigma.WordNetUtilities.isValidKey;
  */
 public class WordNet implements Serializable {
 
+    public static boolean debug = false;
     public static WordNet wn  = new WordNet();
 
     /* A map of language name to wordnets */
@@ -1636,14 +1637,19 @@ public class WordNet implements Serializable {
      */
     public boolean isStopWord(String word) {
 
+        if (debug) System.out.println("WordNet.isStopWord(): word: " + word);
         if (stopwords.size() < 1) {
             System.out.println("Error in WordNet.isStopWord(): stopwords list not loaded");
             return false;
         }
-        if (StringUtil.emptyString(word))
+        if (StringUtil.emptyString(word)) {
+            System.out.println("Error in WordNet.isStopWord(): empty input");
             return false;
-        if (stopwords.contains(word.trim().toLowerCase())) 
+        }
+        if (stopwords.contains(word.trim().toLowerCase())) {
+            if (debug) System.out.println("isStopWord(): contains: "  + stopwords.contains(word));
             return true;
+        }
         return false;
     }
 
