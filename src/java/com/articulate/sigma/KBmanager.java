@@ -618,13 +618,10 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce(String configFileDir) {
 
-        if (initializing) {
+        if (initializing || initialized)
             return;
-        }
         initializing = true;
         KBmanager.getMgr().setPref("kbDir",configFileDir);
-        if (initialized)
-            return;
         try {
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             SimpleElement configuration = readConfiguration(configFileDir);
@@ -683,7 +680,6 @@ public class KBmanager implements Serializable {
             while (it.hasNext()) {
                 String kbName = it.next();
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
-                KB kb = KBmanager.getMgr().getKB("SUMO");
                 WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
             }
         }
