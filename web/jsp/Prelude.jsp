@@ -44,9 +44,13 @@ String username = (String) session.getAttribute("user");
 String role = (String) session.getAttribute("role");
 if (username != null && role != null)
     System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
+else
+    System.out.println("Prelude.jsp: null username or role");
 String welcomeString = " : Welcome guest : <a href=\"login.html\">log in</a>";
 if (!StringUtil.emptyString(username))
     welcomeString = " : Welcome " + username;
+System.out.println("Prelude.jsp: KBmanager initialized  " + KBmanager.initialized);
+System.out.println("Prelude.jsp: KBmanager initializing  " + KBmanager.initializing);
 KBmanager mgr = KBmanager.getMgr();
 
 if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
