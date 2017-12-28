@@ -35,6 +35,7 @@ if (ps.userExists(userName)) {
         ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
         siblingContext.setAttribute("user",u.username);
         siblingContext.setAttribute("role",u.role);
+        System.out.println("login.jsp: Set sibling context");
         System.out.println("login.jsp: Successful login for " + u.username + " with role " + u.role);
         response.sendRedirect("KBs.jsp");
     }
