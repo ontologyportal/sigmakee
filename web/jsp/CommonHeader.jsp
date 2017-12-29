@@ -12,7 +12,7 @@
     http://github.com/ontologyportal
 
     This page is designed to be included in others and must have the following variables set:
-    pageName, pageString, role
+    pageName, pageString, role, language, kb
 
     welcomString should be derived from Prelude.jsp
 */
