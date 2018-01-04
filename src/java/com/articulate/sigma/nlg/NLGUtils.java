@@ -18,7 +18,7 @@ public class NLGUtils implements Serializable {
     private static NLGUtils nlg = null;
     private HashMap<String,HashMap<String,String>> keywordMap;
     // a list of format parameters or words and the sentence words they match with
-    public static ArrayList<CoreLabel> outputMap = new ArrayList<>();
+    public static HashMap<String,CoreLabel> outputMap = new HashMap<>();
 
     /** *************************************************************
      */
@@ -162,6 +162,7 @@ public class NLGUtils implements Serializable {
         int dj = -1;
         int dk = -1;
         int dl = -1;
+        int digit = -1;
         // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
         while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
             prevti = ti;
@@ -178,6 +179,7 @@ public class NLGUtils implements Serializable {
             dk = sb.indexOf(dktok, dj);
             if (dk == -1)
                 break;
+
             String displayName = sb.substring(dj, dk);
             if (StringUtil.emptyString(displayName))
                 displayName = termName;
@@ -191,7 +193,10 @@ public class NLGUtils implements Serializable {
             if (dl > sblen)
                 break;
             int rsblen = rsb.length();
-            sb = sb.replace(ti, dl, rsb.toString());
+            if (Character.isDigit(sb.toString().charAt(dk+1)))
+                sb = sb.replace(ti, dl+1, rsb.toString()); // replace the argument number
+            else
+                sb = sb.replace(ti, dl, rsb.toString());
             sblen = sb.length();
             ti = (ti + rsblen);
             if (ti >= sblen)
