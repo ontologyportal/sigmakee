@@ -40,94 +40,101 @@ public class KBcache implements Serializable {
     public KB kb = null;
 
     private static boolean debug = false;
-    
-    /** The String constant that is the suffix for files of cached assertions. */
-    public static final String _cacheFileSuffix      = "_Cache.kif";
-    
-    /** all the relations in the kb **/
+
+    // The String constant that is the suffix for files of cached assertions.
+    public static final String _cacheFileSuffix = "_Cache.kif";
+
+    // all the relations in the kb
     public HashSet<String> relations = new HashSet<String>();
-    
-    /** all the transitive relations in the kb **/
+
+    // all the transitive relations in the kb
     public HashSet<String> transRels = new HashSet<String>();
 
-    /** all the transitive relations between instances in the kb **/
+    // all the transitive relations between instances in the kb
     public HashSet<String> instTransRels = new HashSet<String>();
-    
+
     /** All the cached "parent" relations of all transitive relations
-     * meaning the relations between all first arguments and the 
+     * meaning the relations between all first arguments and the
      * transitive closure of second arguments.  The external HashMap
      * pairs relation name String keys to values that are the parent
      * relationships.  The interior HashMap is the set of terms and
-     * their transitive closure of parents. */
-    public HashMap<String,HashMap<String,HashSet<String>>> parents = 
-            new HashMap<String,HashMap<String,HashSet<String>>>();
-    
+     * their transitive closure of parents.
+     */
+    public HashMap<String, HashMap<String, HashSet<String>>> parents =
+            new HashMap<String, HashMap<String, HashSet<String>>>();
+
     /** Parent relations from instances, including those that are
      * transitive through (instance,instance) relations, such as
-     * subAttribute and subrelation */
-    public HashMap<String,HashSet<String>> instances = 
-            new HashMap<String,HashSet<String>>();
-    
+     * subAttribute and subrelation
+     */
+    public HashMap<String, HashSet<String>> instances =
+            new HashMap<String, HashSet<String>>();
+
     /** A temporary list of instances built during creation of the
-    children map, in order to efficiently create the instances map **/
+     * children map, in order to efficiently create the instances map
+     **/
     public HashSet<String> insts = new HashSet<String>();
-    
+
     /** All the cached "child" relations of all transitive relations
-     * meaning the relations between all first arguments and the 
+     * meaning the relations between all first arguments and the
      * transitive closure of second arguments.  The external HashMap
      * pairs relation name String keys to values that are the child
      * relationships.  The interior HashMap is the set of terms and
-     * their transitive closure of children. */
-    public HashMap<String,HashMap<String,HashSet<String>>> children = 
-            new HashMap<String,HashMap<String,HashSet<String>>>();
-    
+     * their transitive closure of children.
+     */
+    public HashMap<String, HashMap<String, HashSet<String>>> children =
+            new HashMap<String, HashMap<String, HashSet<String>>>();
+
     /** Relation name keys and argument types with 0th arg always ""
      * except in the case of Functions where the 0th arg will be the
      * function range.
-     Variable arity relations may have a type for the last argument,
-     which will be the type repeated for all extended arguments.
-     Note that types can be functions, rather than just terms. Note that
-     types (when there's a domainSubclass etc) are designated by a
-     '+' appended to the class name. **/
-    public HashMap<String,ArrayList<String>> signatures =
-            new HashMap<String,ArrayList<String>>();
-    
-    /** The number of arguments to each relation.  Variable arity is -1 **/
-    public HashMap<String,Integer> valences = new HashMap<String,Integer>();
+     * Variable arity relations may have a type for the last argument,
+     * which will be the type repeated for all extended arguments.
+     * Note that types can be functions, rather than just terms. Note that
+     * types (when there's a domainSubclass etc) are designated by a
+     * '+' appended to the class name.
+     **/
+    public HashMap<String, ArrayList<String>> signatures =
+            new HashMap<String, ArrayList<String>>();
+
+    // The number of arguments to each relation.  Variable arity is -1
+    public HashMap<String, Integer> valences = new HashMap<String, Integer>();
 
     /** Disjoint relations which were explicitly defined in "partition", "disjoint",
-     "disjointDecomposition" and "exhaustiveDecomposition" expressions **/
+     * "disjointDecomposition" and "exhaustiveDecomposition" expressions
+     **/
     public HashMap<String, HashSet<String>> explicitDisjointRelations = new HashMap<>();
 
-    /** ***************************************************************
+    /****************************************************************
      * empty constructor for testing only
      */
     public KBcache() {
+
     }
 
-    /** ***************************************************************
+    /****************************************************************
      */
     public KBcache(KB kb) {
-        
+
         this.kb = kb;
     }
 
-    /** ***************************************************************
+    /****************************************************************
      */
     public KBcache(KBcache kbCacheIn, KB kbIn) {
 
         this.kb = kbIn;
-        if (kbCacheIn.relations != null)   {
+        if (kbCacheIn.relations != null) {
             this.relations = Sets.newHashSet(kbCacheIn.relations);
         }
-        if (kbCacheIn.transRels != null)   {
+        if (kbCacheIn.transRels != null) {
             this.transRels = Sets.newHashSet(kbCacheIn.transRels);
         }
-        if (kbCacheIn.instTransRels != null)   {
+        if (kbCacheIn.instTransRels != null) {
             this.instTransRels = Sets.newHashSet(kbCacheIn.instTransRels);
         }
-        if (kbCacheIn.parents != null)   {
-            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.parents.entrySet())    {
+        if (kbCacheIn.parents != null) {
+            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.parents.entrySet()) {
                 String outerKey = outerEntry.getKey();
 
                 HashMap<String, HashSet<String>> newInnerMap = Maps.newHashMap();
@@ -141,18 +148,18 @@ public class KBcache implements Serializable {
                 this.parents.put(outerKey, newInnerMap);
             }
         }
-        if (kbCacheIn.instances != null)   {
+        if (kbCacheIn.instances != null) {
             for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.instances.entrySet()) {
                 String key = entry.getKey();
                 HashSet<String> newSet = Sets.newHashSet(entry.getValue());
                 this.instances.put(key, newSet);
             }
         }
-        if (kbCacheIn.insts != null)   {
+        if (kbCacheIn.insts != null) {
             this.insts = Sets.newHashSet(kbCacheIn.insts);
         }
-        if (kbCacheIn.children != null)   {
-            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.children.entrySet())    {
+        if (kbCacheIn.children != null) {
+            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.children.entrySet()) {
                 String outerKey = outerEntry.getKey();
 
                 HashMap<String, HashSet<String>> newInnerMap = Maps.newHashMap();
@@ -167,23 +174,31 @@ public class KBcache implements Serializable {
             }
         }
 
-        if (kbCacheIn.signatures != null)   {
+        if (kbCacheIn.signatures != null) {
             for (Map.Entry<String, ArrayList<String>> entry : kbCacheIn.signatures.entrySet()) {
                 String key = entry.getKey();
                 ArrayList<String> newSet = Lists.newArrayList(entry.getValue());
                 this.signatures.put(key, newSet);
             }
         }
-        if (kbCacheIn.valences != null)   {
+        if (kbCacheIn.valences != null) {
             this.valences = Maps.newHashMap(kbCacheIn.valences);
         }
-        if (kbCacheIn.explicitDisjointRelations != null)   {
+        if (kbCacheIn.explicitDisjointRelations != null) {
             for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.explicitDisjointRelations.entrySet()) {
                 String key = entry.getKey();
                 HashSet<String> newSet = Sets.newHashSet(entry.getValue());
                 this.explicitDisjointRelations.put(key, newSet);
             }
         }
+    }
+
+    /**************************************************************
+     * An ArrayList utility method
+     */
+    public int getArity(String rel) {
+
+        return valences.get(rel);
     }
 
     /** ***************************************************************
