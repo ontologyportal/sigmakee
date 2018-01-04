@@ -37,7 +37,7 @@ public class LanguageFormatter {
     public static boolean debug = false;
 
     // a list of format parameters or words and the sentence words they match with
-    public static ArrayList<CoreLabel> outputMap = new ArrayList<>();
+    public static HashMap<String,CoreLabel> outputMap = new HashMap<>();
     private final String statement;
 
     private final Map<String, String> phraseMap;
@@ -104,7 +104,7 @@ public class LanguageFormatter {
     public LanguageFormatter(String stmt, Map<String, String> phraseMap, Map<String, String> termMap,
                              KB kb, String language) {
 
-        outputMap = new ArrayList<>();
+        outputMap = new HashMap<>();
         this.statement = stmt;
         this.phraseMap = phraseMap;
         this.termMap = termMap;
@@ -181,6 +181,7 @@ public class LanguageFormatter {
                 if (! informalNLG.isEmpty())    {
                     // Resolve variables.
                     informalNLG = LanguageFormatter.variableReplace(informalNLG, variableToInstanceMapNLG, variableTypesNLG, kb, language);
+                    if (debug) System.out.println("LanguageFormatter.htmlParaphrase():  " + informalNLG);
                     template = informalNLG;
                 }
             }
@@ -221,9 +222,11 @@ public class LanguageFormatter {
                 if (!instanceMap.isEmpty() || !classMap.isEmpty() ) {
                     //if ((instanceMap != null && !instanceMap.isEmpty()) || (classMap != null && !classMap.isEmpty()))
                     template = variableReplace(template, instanceMap, classMap, kb, language);
+                    if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): template: " + template);
                 }
                 // Get rid of the percentage signs.
                 nlFormat = NLGUtils.resolveFormatSpecifiers(template, href);
+                if (debug) System.out.println("LanguageFormatter.htmlParaphrase(): nlFormat: " + nlFormat);
             }
         }
         catch (Exception ex) {
@@ -843,7 +846,7 @@ public class LanguageFormatter {
                 para = arg;
             else
                 para = paraphraseStatement(arg, isNegMode, 1);
-
+            if (debug) System.out.println("para: " + para);
             //outputMap.add(new AVPair(pred + "-" + argPointer, para));
             //System.out.println("para: " + para);
             //if (!Formula.atom(para)) {
@@ -874,7 +877,7 @@ public class LanguageFormatter {
             CoreLabel cl = new CoreLabel();
             cl.setValue(para);
             cl.set(RelationArgumentAnnotation.class,num);
-            outputMap.add(cl);
+            outputMap.put(para,cl);
             num++;
             argPointer = ("%" + num);
         }
@@ -981,7 +984,7 @@ public class LanguageFormatter {
                 cl.setIndex(tokenNum);
                 if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl);
                 if (debug) System.out.println("LanguageFormatter.createObjectMap(): termBuffer: " + termBuffer);
-                outputMap.add(cl);
+                outputMap.put(termBuffer.toString(),cl);
                 termBuffer = new StringBuffer();
                 tokenNum++;
                 index++;
@@ -1011,23 +1014,30 @@ public class LanguageFormatter {
                 int phraseEnd = form.indexOf("\"",phraseStart);
                 String phrase = form.substring(phraseStart,phraseEnd);
                 phrase = StringUtil.removeDoubleSpaces(phrase);
+                int argnum = -1;
+                if (Character.isDigit(form.charAt(phraseEnd+1)))
+                    argnum = Integer.parseInt(Character.toString(form.charAt(phraseEnd+1)));
                 String[] phraseWords = phrase.split(" ");
                 for (String s : phraseWords) {
                     CoreLabel cl = new CoreLabel();
                     cl.setOriginalText(s);
                     cl.setValue(s);
                     cl.setIndex(tokenNum);
+                    cl.set(RelationArgumentAnnotation.class,argnum);
                     if (!kb.isInstanceOf(term,"Relation"))
                         cl.setCategory(term);
                     else
                         if (debug) System.out.println("LanguageFormatter.createObjectMap(): " + term + " is a relation");
+                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): argnum: " +  cl.get(RelationArgumentAnnotation.class));
                     if (debug) System.out.println("LanguageFormatter.createObjectMap(): category: " + term);
-                    outputMap.add(cl);
-                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl);
+                    outputMap.put(cl.toString(),cl);
+                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl.toString());
                     //outputMap.put(s + "-" + Integer.toString(tokenNum),term);
                     tokenNum++;
                 }
                 index = phraseEnd + 1;
+                if (argnum != -1)
+                    index++;
                 if (index < form.length()-1 && form.charAt(index) == ' ')
                     index++;
             }
@@ -1055,17 +1065,29 @@ public class LanguageFormatter {
                                                 String varPretty, String language,
                                                 boolean isClass, HashMap<String,Integer> typeMap) {
 
+        String argNumStr = "";
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): form " + form);
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): varString " + varString);
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): varType " + varType);
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): varPretty " + varPretty);
+        if (outputMap.keySet().contains(varString)) {
+            CoreLabel cl = outputMap.get(varString);
+            cl.setOriginalText(varPretty);
+            cl.setValue(varPretty);
+            if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): arg num " +
+                    cl.get(RelationArgumentAnnotation.class));
+            argNumStr = Integer.toString(cl.get(RelationArgumentAnnotation.class));
+            outputMap.put(varString, cl); // create a "dummy" CoreLabel to hold the variable value
+        }
         if (form.indexOf("?") < 0) // if there are variables, the replacements are not done yet
             createObjectMap(form);
         String result = form;
         // Make necessary changes if the variable is a quoted string, i.e. a name.
+
         if (varPretty == null && varType.matches("\".*\""))    {
             String name = varType.substring(1, varType.length() - 1);
             result = result.replaceAll("\\?" + varString.substring(1), name);
+            if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): result " + result);
             return result;
         }
 
@@ -1095,7 +1117,7 @@ public class LanguageFormatter {
                         replacement = (NLGUtils.getKeyword("kind of", language) + " " + varPretty);
                     result =
                         result.replaceFirst(("\\?" + varString.substring(1)),
-                                ("\\&\\%" + varType + "\\$\"" + replacement + "\""));
+                                ("\\&\\%" + varType + "\\$\"" + replacement + "\"" + argNumStr));
                 }
                 else {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
@@ -1110,12 +1132,13 @@ public class LanguageFormatter {
                     }
                 }
                 result = result.replaceFirst(("\\?" + varString.substring(1)),
-                        ("\\&\\%" + varType + "\\$\"" + replacement + "\""));
+                        ("\\&\\%" + varType + "\\$\"" + replacement + "\"" + argNumStr));
             }
             else
                 found = false;
             count++;
         }
+        if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): result (2) " + result);
         return result;
     }
 
@@ -1156,6 +1179,7 @@ public class LanguageFormatter {
                 }         
             }
         }
+        if (debug) System.out.println("LanguageFormatter.variableReplace(): " + result);
         return result;
     }
 
