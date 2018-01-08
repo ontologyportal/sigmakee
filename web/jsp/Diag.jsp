@@ -53,6 +53,12 @@ if (!role.equals("admin") && !role.equals("user")) {
   out.println(HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
   out.println(HTMLformatter.termList(disjoint,kbHref));
 
+  // relations without format
+  ArrayList<String> termsWithoutFormat = Diagnostics.relationsWithoutFormat(kb);
+  out.println("<br>");
+  out.println(HTMLformatter.htmlDivider("Warning: Relations without format"));
+  out.println(HTMLformatter.termList(termsWithoutFormat,kbHref));
+
   // Terms without documentation
   ArrayList<String> termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
   out.println("<br>");
