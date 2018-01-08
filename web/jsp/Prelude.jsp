@@ -66,6 +66,7 @@ if (!KBmanager.initialized) {
 
 if (role.equalsIgnoreCase("guest") && !userPages.contains(pageURLString)) {
     mgr.setError("You are not authorized to visit " + pageURLString);
+    System.out.println("Prelude.jsp: Redirecting to KBs.jsp.");
     response.sendRedirect("KBs.jsp");
     return;
 }
@@ -77,17 +78,13 @@ if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
 }
 
 String kbName = request.getParameter("kb");
-if (kbName == null || StringUtil.emptyString(kbName))
+if (StringUtil.emptyString(kbName))
     kbName = "SUMO";
 
 KB kb = null;
-if (kbName != null && StringUtil.isNonEmptyString(kbName)) {
-    kb = KBmanager.getMgr().getKB(kbName);
-    if (kb != null)
-        TaxoModel.kbName = kbName;
-}
-else
-    response.sendRedirect("login.html");
+kb = KBmanager.getMgr().getKB(kbName);
+if (kb != null)
+    TaxoModel.kbName = kbName;
 
 String language = ""; // natural language for NL generation
 String flang = request.getParameter("flang");    // formal language
