@@ -27,11 +27,8 @@
     boolean isAdministrator = role.equalsIgnoreCase("admin");
     System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
     KBmanager.getMgr().initializeOnce();
-%>
-
-    <%
-        String pageName = "KBs";
-        String pageString = "Knowledge Bases";
+    String pageName = "KBs";
+    String pageString = "Knowledge Bases";
     %>
     <%@include file="CommonHeader.jsp" %>
 
