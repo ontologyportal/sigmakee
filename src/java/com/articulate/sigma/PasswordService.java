@@ -6,6 +6,8 @@ other representations of any software which incorporates, builds on, or uses thi
 code.  */
 package com.articulate.sigma;
 
+import org.h2.tools.Server;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
@@ -29,7 +31,9 @@ public final class PasswordService {
 
     private static PasswordService instance;
     private static HashMap users = new HashMap();
-    public static final String JDBCString = "jdbc:h2:~/var/passwd";
+
+    // open the password DB as a server so both Sigma and SigmaNLP can access at once
+    public static final String JDBCString = "jdbc:h2:tcp://localhost/~/var/passwd";
     public static String UserName = "";
     public Connection conn = null;
   
@@ -40,6 +44,7 @@ public final class PasswordService {
 
         try {
             Class.forName("org.h2.Driver");
+            Server server = Server.createTcpServer().start();
             conn = DriverManager.getConnection(JDBCString, UserName, "");
             System.out.println("main(): Opened DB " + JDBCString);
         }
