@@ -193,7 +193,7 @@ public class NLGUtils implements Serializable {
             if (dl > sblen)
                 break;
             int rsblen = rsb.length();
-            if (Character.isDigit(sb.toString().charAt(dk+1)))
+            if (dk != -1 && (dk+1) < sb.toString().length() && Character.isDigit(sb.toString().charAt(dk+1)))
                 sb = sb.replace(ti, dl+1, rsb.toString()); // replace the argument number
             else
                 sb = sb.replace(ti, dl, rsb.toString());
