@@ -64,6 +64,7 @@ public class KBmanager implements Serializable {
     public HashMap<String,KB> kbs = new HashMap<String,KB>();
     public static boolean initialized = false;
     public static boolean initializing = false;
+    public static boolean debug = false;
     private int oldInferenceBitValue = -1;
     private String error = "";
 
@@ -153,7 +154,7 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      *  Load the most recently save serialized version.
      */
-    public static void loadSerialized() {
+    public static boolean loadSerialized() {
 
         manager = null;
         try {
@@ -162,13 +163,13 @@ public class KBmanager implements Serializable {
             FileInputStream file = new FileInputStream(kbDir + File.separator + "kbmanager.ser");
             ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
-            manager = (KBmanager) in.readObject();
-            if (serializedOld()) {
-                manager = null;
-                System.out.println("KBmanager.loadSerialized(): serialized file is older than sources, " +
-                        "reloding from sources.");
-                return;
-            }
+            KBmanager temp = (KBmanager) in.readObject();
+            //if (serializedOld()) {
+            //    System.out.println("KBmanager.loadSerialized(): serialized file is older than sources, " +
+            //            "reloading from sources.");
+            //    return false;
+            //}
+            manager = temp;
             in.close();
             file.close();
             System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
@@ -177,9 +178,9 @@ public class KBmanager implements Serializable {
         catch (Exception ex) {
             System.out.println("Error in KBmanager.loadSerialized(): IOException is caught");
             ex.printStackTrace();
-            manager = null;
-            return;
+            return false;
         }
+        return true;
     }
 
     /** ***************************************************************
@@ -328,6 +329,8 @@ public class KBmanager implements Serializable {
                 }
             }
         }
+        if (debug) System.out.println("KBmanager.preferencesFromXML(): number of preferences: " +
+                preferences.keySet().size());
     }
     
     /** ***************************************************************
@@ -618,18 +621,27 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce(String configFileDir) {
 
-        if (initializing || initialized)
+        boolean loaded = false;
+        if (initializing || initialized) {
+            System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
+            System.out.println("Info in KBmanager.initializeOnce(): initializing is " + initializing);
+            System.out.println("Info in KBmanager.initializeOnce(): returning ");
             return;
+        }
         initializing = true;
         KBmanager.getMgr().setPref("kbDir",configFileDir);
+        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
+                preferences.keySet().size());
         try {
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             SimpleElement configuration = readConfiguration(configFileDir);
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
             if (serializedExists() && !serializedOld(configuration)) {
-                loadSerialized();
-                if (manager != null) {
+                if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old ");
+                loaded = loadSerialized();
+                if (loaded) {
+                    if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
                     WordNet.wn.initOnce();
                     NLGUtils.init(configFileDir);
                     OMWordnet.readOMWfiles();
@@ -637,8 +649,11 @@ public class KBmanager implements Serializable {
                     initialized = true;
                 }
             }
-            if (manager == null || !serializedExists() || serializedOld()) { // if there was an error loading the serialized file, then reload from sources
+            if (!loaded) { // if there was an error loading the serialized file, then reload from sources
                 System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
+                if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
+                        preferences.keySet().size());
+                manager = this;
                 KBmanager.getMgr().setPref("kbDir",configFileDir); // need to restore config file path
                 if (StringUtil.isNonEmptyString(configFileDir)) {
                     setDefaultAttributes();
@@ -658,6 +673,8 @@ public class KBmanager implements Serializable {
             return;
         }
         System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
+        if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
+                preferences.keySet().size());
         return;
     }
 
@@ -685,6 +702,8 @@ public class KBmanager implements Serializable {
         }
         else
             System.out.println("Error in KBmanager.setConfiguration(): No kbs");
+        if (debug) System.out.println("KBmanager.setConfiguration(): number of preferences: " +
+                preferences.keySet().size());
     }
 
     /** ***************************************************************
@@ -841,20 +860,20 @@ public class KBmanager implements Serializable {
      */
     public static KBmanager getMgr() {
 
-        if (manager == null) 
-            manager = new KBmanager();        
+        //if (manager == null)
+        //    manager = new KBmanager();
         return manager;
     }
 
     /** ***************************************************************
      * Reset the one instance of KBmanager from its class variable.
-     */
+
     public static KBmanager newMgr(String username) {
 
         manager = new KBmanager();
         manager.initialized = false;
         return manager;
-    }
+    } */
     
     /** ***************************************************************
      * Get the Set of KB names in this manager.
@@ -886,7 +905,21 @@ public class KBmanager implements Serializable {
         }
         return result;
     }
-    
+
+    /** ***************************************************************
+     * Print all peferences to stdout
+     */
+    public void printPrefs() {
+
+        System.out.println("KBmanager.printPrefs()");
+        if (preferences == null || preferences.size() == 0)
+            System.out.println("KBmanager.printPrefs(): preference list is empty");
+        for (String key : preferences.keySet()) {
+            String value = preferences.get(key);
+            System.out.println(key + " : " + value);
+        }
+    }
+
     /** ***************************************************************
      * Get the preference corresponding to the given kef.
      */    
