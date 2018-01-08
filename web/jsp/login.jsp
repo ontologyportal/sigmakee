@@ -29,7 +29,7 @@ String password = request.getParameter("password");
 PasswordService ps = new PasswordService();
 if (ps.userExists(userName)) {
     User u = User.fromDB(ps.conn,userName);
-    if (ps.encrypt(password).equals(u.password)) {
+    if (u != null && ps.encrypt(password).equals(u.password)) {
         session.setAttribute("user",u.username);
         session.setAttribute("role",u.role);
         ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
