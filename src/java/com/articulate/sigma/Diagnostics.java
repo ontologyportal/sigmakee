@@ -296,6 +296,20 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Find all relational terms that are missing an NLG format expression
+     */
+    public static ArrayList<String> relationsWithoutFormat(KB kb) {
+
+        ArrayList<String> result = new ArrayList<>();
+        for (String rel : kb.kbCache.relations) {
+            ArrayList<Formula> forms = kb.askWithRestriction(0,"format",2,rel);
+            if (forms == null || forms.size() == 0)
+                result.add(rel);
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * Find all terms which do not appear in any implication (rule).
      */
     public static ArrayList<String> termsWithoutRules(KB kb) {
