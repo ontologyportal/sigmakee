@@ -1,6 +1,6 @@
 <%@ page
    language="java"
-   import="com.articulate.sigma.*,java.text.ParseException,java.net.URLConnection,java.net.URL,ClientHttpRequest.*,com.oreilly.servlet.*,com.oreilly.servlet.multipart.*,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
+   import="com.articulate.sigma.*,com.articulate.sigma.trans.OWLtranslator,java.text.ParseException,java.net.URLConnection,java.net.URL,ClientHttpRequest.*,com.oreilly.servlet.*,com.oreilly.servlet.multipart.*,java.util.*,java.io.*, tptp_parser.*, TPTPWorld.*"
    pageEncoding="UTF-8"
    contentType="text/xml;charset=UTF-8"
 %>
