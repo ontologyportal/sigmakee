@@ -45,7 +45,8 @@
         out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
 %>
         </b>
-        <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>
+        <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>&nbsp;
+        <P><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
       <BR>
       </TD>
   </TR>
