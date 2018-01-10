@@ -17,7 +17,10 @@ Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
- if (KBmanager.getMgr().initialized) {
+ System.out.println("in OWL.jsp");
+
+ if (!KBmanager.getMgr().initialized) {
+     System.out.println("OWL.jsp: kb manager not initialized, redirecting");
      response.sendRedirect("init.jsp");
      return;
  }
@@ -27,13 +30,15 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
      kbName = "SUMO";
 
  KB kb = null;
- if (kbName != null && StringUtil.isNonEmptyString(kbName)) {
+ if (!StringUtil.emptyString(kbName)) {
      kb = KBmanager.getMgr().getKB(kbName);
      if (kb != null)
          TaxoModel.kbName = kbName;
  }
- else
+ else {
+     System.out.println("OWL.jsp: empty kb name, redirecting");
      response.sendRedirect("login.html");
+ }
  String term = request.getParameter("term");
  if (term == null) term = "Process";
  OWLtranslator.initOnce(kbName);
