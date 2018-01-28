@@ -25,6 +25,8 @@ import java.util.regex.Pattern;
 import com.google.common.collect.*;
 import com.articulate.sigma.KB;
 
+import static com.articulate.sigma.WSD.readFileIntoArray;
+
 /** ***************************************************************
  *  @author Adam Pease
  */
@@ -2027,6 +2029,163 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * get all synsets corresponding to a SUMO term
+     */
+    public static ArrayList<String> getSynsetsFromSUMO(String sumo) {
+
+        return WordNet.wn.SUMOHash.get(sumo);
+    }
+
+    /** ***************************************************************
+     * get all synsets corresponding to a list of SUMO terms
+     */
+    public static HashSet<String> getSynsetsFromSUMOList(Collection<String> sumo) {
+
+        HashSet<String> result = new HashSet<>();
+        for (String s : sumo) {
+            ArrayList<String> synsets = WordNet.wn.SUMOHash.get(s);
+            if (synsets != null)
+                result.addAll(synsets);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * get all words corresponding to a list of synsets
+     */
+    public static HashSet<String> getWordsFromSynsetList(Collection<String> synsets) {
+
+        HashSet<String> result = new HashSet<>();
+        for (String s : synsets) {
+            ArrayList<String> words = WordNet.wn.getWordsFromSynset(s);
+            if (words != null)
+                result.addAll(words);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     */
+    private static void findWordIntersections(HashMap<String,HashSet<String>> words) {
+
+        HashSet<String> inverses = new HashSet<>();
+        for (String s1 : words.keySet()) {
+            for (String s2 : words.keySet()) {
+                if (!s1.equals(s2) && !inverses.contains(s2 + "_" + s1)) {
+                    HashSet<String> temp = new HashSet<>();
+                    temp.addAll(words.get(s1));
+                    temp.retainAll(words.get(s2));
+                    if (temp.size() > 0) {
+                        System.out.println(s1 + " : " + s2 + "\n" + temp + "\n\n");
+                    }
+                    inverses.add(s1 + "_" + s2);
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public static HashMap<String,HashSet<String>> sensorySynsets() {
+
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println("INFO in WordNetUtilities.sensorySynsets(): ");
+        // Hearing, Seeing, Smelling, TactilePerception, Tasting
+        // OlfactoryAttribute, SoundAttribute, TasteAttribute, TextureAttribute, VisualAttribute
+        HashSet<String> tasteTerms = new HashSet<>();
+        HashSet<String> smellTerms = new HashSet<>();
+        HashSet<String> sightTerms = new HashSet<>();
+        HashSet<String> touchTerms = new HashSet<>();
+        HashSet<String> soundTerms = new HashSet<>();
+
+        HashSet<String> temp = kb.kbCache.getChildClasses("Tasting");
+        if (temp != null)
+            tasteTerms.addAll(temp);
+        tasteTerms.add("Tasting");
+        temp = kb.getAllSub("TasteAttribute","subAttribute");
+        if (temp != null)
+            tasteTerms.addAll(temp);
+        tasteTerms.add("TasteAttribute");
+
+        temp = kb.kbCache.getChildClasses("Hearing");
+        if (temp != null)
+            soundTerms.addAll(temp);
+        soundTerms.add("Hearing");
+        temp = kb.kbCache.getChildClasses("RadiatingSound");
+        if (temp != null)
+            soundTerms.addAll(temp);
+        soundTerms.add("RadiatingSound");
+        temp = kb.kbCache.getChildClasses("Music");
+        if (temp != null)
+            soundTerms.addAll(temp);
+        soundTerms.add("Music");
+        temp = kb.getAllSub("SoundAttribute","subAttribute");
+        if (temp != null)
+            soundTerms.addAll(temp);
+        soundTerms.add("SoundAttribute");
+
+        temp = kb.kbCache.getChildClasses("Smelling");
+        if (temp != null)
+            smellTerms.addAll(temp);
+        smellTerms.add("Smelling");
+        temp = kb.getAllSub("OlfactoryAttribute","subAttribute");
+        if (temp != null)
+            smellTerms.addAll(temp);
+        smellTerms.add("OlfactoryAttribute");
+
+        temp = kb.kbCache.getChildClasses("Seeing");
+        if (temp != null)
+            sightTerms.addAll(temp);
+        sightTerms.add("Seeing");
+        temp = kb.kbCache.getChildClasses("RadiatingLight");
+        if (temp != null)
+            sightTerms.addAll(temp);
+        sightTerms.add("RadiatingLight");
+        temp = kb.getAllSub("VisualAttribute","subAttribute");
+        if (temp != null)
+            sightTerms.addAll(temp);
+        sightTerms.add("VisualAttribute");
+
+        temp = kb.kbCache.getChildClasses("Touching");
+        if (temp != null)
+            touchTerms.addAll(temp);
+        touchTerms.add("Touching");
+        temp = kb.getAllSub("TextureAttribute","subAttribute");
+        if (temp != null)
+            touchTerms.addAll(temp);
+        touchTerms.add("TextureAttribute");
+        temp = kb.getAllSub("TemperatureAttribute","subAttribute");
+        if (temp != null)
+            touchTerms.addAll(temp);
+        touchTerms.add("TemperatureAttribute");
+        temp = kb.getAllSub("ShapeAttribute","subAttribute");
+        if (temp != null)
+            touchTerms.addAll(temp);
+        touchTerms.add("ShapeAttribute");
+
+        HashSet<String> tasteSynsets = getSynsetsFromSUMOList(tasteTerms);
+        HashSet<String> smellSynsets = getSynsetsFromSUMOList(smellTerms);
+        HashSet<String> sightSynsets = getSynsetsFromSUMOList(sightTerms);
+        HashSet<String> touchSynsets = getSynsetsFromSUMOList(touchTerms);
+        HashSet<String> soundSynsets = getSynsetsFromSUMOList(soundTerms);
+        HashMap<String,HashSet<String>> words = new HashMap<>();
+        words.put("taste",getWordsFromSynsetList(tasteSynsets));
+        words.put("smell",getWordsFromSynsetList(smellSynsets));
+        words.put("sight",getWordsFromSynsetList(sightSynsets));
+        words.put("touch",getWordsFromSynsetList(touchSynsets));
+        words.put("sound",getWordsFromSynsetList(soundSynsets));
+        return words;
+    }
+
+    /** ***************************************************************
+     */
+    public static void synestheticSynsets() {
+
+        HashMap<String,HashSet<String>> words = sensorySynsets();
+        findWordIntersections(words);
+    }
+
+    /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
      */
@@ -2085,17 +2244,54 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * Compare Lievers list of synesthetic words with those derived from
+     * SUMO-WordNet
+     */
+    public static void synesthesiaCompare() {
+
+        ArrayList<ArrayList<String>> lieversFile = readFileIntoArray(System.getenv("CORPORA") +
+                File.separator + "LieversLexiconList.txt");
+        HashMap<String,HashSet<String>> words = sensorySynsets();
+        HashSet<String> lievers = new HashSet<>();
+        for (ArrayList<String> al : lieversFile) {
+            lievers.addAll(al);
+        }
+        HashSet<String> sumo = new HashSet<>();
+        for (HashSet<String> hs : words.values()) {
+            sumo.addAll(hs);
+        }
+        System.out.println("synesthesiaCompare(): lievers list: " + lievers);
+        System.out.println("count: " + lievers.size());
+        System.out.println("synesthesiaCompare(): sumo list: " + sumo);
+        System.out.println("count: " + sumo.size());
+
+        HashSet<String> lieversOverlap = new HashSet<>();
+        lieversOverlap.addAll(lievers);
+        System.out.println("synesthesiaCompare(): lievers list overlap: " + lieversOverlap.retainAll(sumo));
+        System.out.println("count: " + lieversOverlap.size());
+
+        HashSet<String> sumoDiff = new HashSet<>();
+        sumoDiff.addAll(sumo);
+        System.out.println("synesthesiaCompare(): sumo not in lievers: " + sumoDiff.removeAll(lievers));
+        System.out.println("count: " + sumoDiff.size());
+
+        System.out.println("synesthesiaCompare(): lievers not in sumo: " + lievers.removeAll(sumo));
+        System.out.println("count: " + lievers.size());
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
         KBmanager.getMgr().initializeOnce();
-        String synset = "105786372";
-        System.out.println(getAllHyponyms(synset));
-        System.out.println(collapseSenses());
-        if (args.length > 0)
-            generateHyponymSets(args[0]);
+        synesthesiaCompare();
+        //String synset = "105786372";
+        //System.out.println(getAllHyponyms(synset));
+        //System.out.println(collapseSenses());
+        //if (args.length > 0)
+        //    generateHyponymSets(args[0]);
         //testIsValidKey();
     }
 }
