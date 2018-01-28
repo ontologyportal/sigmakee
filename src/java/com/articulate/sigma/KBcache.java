@@ -574,6 +574,18 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     * return child term for the given cl from rel expressions.
+     */
+    public HashSet<String> getChildTerms(String cl, String rel) {
+
+        HashMap<String,HashSet<String>> ps = children.get(rel);
+        if (ps != null)
+            return ps.get(cl);
+        else
+            return null;
+    }
+
+    /** ***************************************************************
      * return child classes for the given cl from subclass expressions.
      */
     public HashSet<String> getChildInstances(String cl) {
