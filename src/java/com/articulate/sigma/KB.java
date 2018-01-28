@@ -1303,6 +1303,40 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Add all members of one collection to another.  If the argument
+     * is null, do nothing.
+     */
+    public void addAllSafe(Collection c1, Collection c2) {
+
+        if (c1 != null && c2 != null)
+            c1.addAll(c2);
+    }
+
+    /***************************************************************
+     * Get all children of the given term following instance and
+     * subclass relations as well as the indicated rel
+     */
+    public HashSet<String> getAllSub(String term, String rel) {
+
+        //System.out.println("KB.getAllSub(): "  + term + " : " + rel);
+        HashSet<String> result = new HashSet<>();
+        result.add(term);
+        HashSet<String> oldResult = new HashSet<>();
+        while (!result.equals(oldResult)) {
+            //System.out.println("KB.getAllSub(): "  + result);
+            oldResult = new HashSet<>();
+            oldResult.addAll(result);
+            for (String s : result) {
+                addAllSafe(result,kbCache.getChildTerms(s,"subclass"));
+                addAllSafe(result,kbCache.getChildTerms(s,"instance"));
+                addAllSafe(result,kbCache.getChildTerms(s,rel));
+                addAllSafe(result,kbCache.getInstancesForType(s));
+            }
+        }
+        return result;
+    }
+
+    /***************************************************************
      * Merges a
      * KIF object containing a single formula into the current KB.
      *
@@ -3185,6 +3219,8 @@ public class KB implements Serializable {
         return Lists.newArrayList(loadFormatMapsAttempted);
     }
 
+    /*****************************************************************
+     */
     public List<Pair> getSortedTermFrequency() {
         List<Pair> termFrequencies = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
@@ -3204,7 +3240,8 @@ public class KB implements Serializable {
         try {
             KBmanager.getMgr().initializeOnce();
             kb = KBmanager.getMgr().getKB("SUMO");
-            kb.writeTerms();
+            System.out.println(kb.getAllSub("ColorAttribute","subAttribute"));
+            //kb.writeTerms();
             // System.out.println("KB.main(): " + kb.isChildOf("Africa",
             // "Region"));
             // kb.askEProver("(subclass ?X Object)",30,1);
@@ -3216,12 +3253,13 @@ public class KB implements Serializable {
         // kb.generateSemanticNetwork();
         // kb.generateRandomProof();
         // kb.instanceOfInstanceP();
+        /*
         System.out.println("KB.main(): termDepth of Object: " + kb.termDepth("Object"));
         System.out.println("KB.main(): termDepth of Table: " + kb.termDepth("Table"));
         System.out.println("KB.main(): termDepth of immediateSubclass: " + kb.termDepth("immediateSubclass"));
         System.out.println("KB.main(): termDepth of Wagon: " + kb.termDepth("Wagon"));
         System.out.println("KB.main(): termDepth of Foo: " + kb.termDepth("Foo"));
-
+*/
         /*
          * String foo = "(rel bar \"test\")"; Formula f = new Formula();
          * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
