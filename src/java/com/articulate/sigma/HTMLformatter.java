@@ -506,7 +506,8 @@ public class HTMLformatter {
      */
     public static String formatFormulaList(ArrayList<Formula> forms, String header, KB kb,
             String language, String flang, int start, int localLimit, String limitString) {
-    	
+
+        HashSet<String> printedForms = new HashSet<>();
         boolean traditionalLogic = false;
         if (flang.equals("traditionalLogic"))
             traditionalLogic = true;        
@@ -517,6 +518,9 @@ public class HTMLformatter {
         for (int i = start; i < localLimit; i++) {
         	//System.out.println("formatFormulaList(): " + forms.get(i).getClass().getName());
         	String strForm = forms.get(i).theFormula;
+        	if (printedForms.contains(strForm))
+        	    continue;
+        	printedForms.add(strForm);
         	//System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             Formula f = (Formula) kb.formulaMap.get(strForm);
             if (f == null) {
