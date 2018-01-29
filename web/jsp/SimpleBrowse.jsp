@@ -44,7 +44,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 <%
  String parentPage = "SimpleBrowse.jsp";
  StringBuffer show = null;
- String simple = "yes";
+ simple = "yes";
 %>
 
 <%@ include file="SimpleBrowseBody.jsp" %>

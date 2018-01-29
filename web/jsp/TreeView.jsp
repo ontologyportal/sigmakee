@@ -57,8 +57,7 @@
  String down = request.getParameter("down");
  if (StringUtil.isNonEmptyString(down)) 
      TaxoModel.collapseParentNodes(down);
- 
- String simple = request.getParameter("simple");
+
  String kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
  "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
 
