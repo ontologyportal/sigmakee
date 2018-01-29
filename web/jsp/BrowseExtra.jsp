@@ -33,7 +33,6 @@
  if (!StringUtil.emptyString(argString))
      arg = Integer.decode(argString).intValue();
  String type = request.getParameter("type");
- String term = request.getParameter("term");
  Map theMap = null;     // Map of natural language format strings.
 
  HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp" + "?lang=" + language + "?flang=" + flang + "&kb=" + kbName;

@@ -27,7 +27,6 @@
   String graphDir = KBmanager.getMgr().getPref("graphDir");
   File kbDirFile = new File(kbDir);
   String namespace = "";
-  String term = "";
   String relation = "";
   String ontology = "";
   String filename = "";
@@ -56,7 +55,6 @@
       if (StringUtil.emptyString(ontology) || ontology.equalsIgnoreCase("null"))
           ontology = "";
 
-      term = request.getParameter("term");
       relation = request.getParameter("relation");
       filename = request.getParameter("filename");
       action = request.getParameter("action");

@@ -30,10 +30,9 @@
  String relTerm = request.getParameter("relation");
  String relREmatch = request.getParameter("relREmatch");
  String nonRelREmatch = request.getParameter("nonRelREmatch");
- 
- String term = request.getParameter("term");
- if (!StringUtil.isNonEmptyString(term)) 
-   term = TaxoModel.defaultTerm;
+
+ if (StringUtil.emptyString(term))
+     term = TaxoModel.defaultTerm;
 
  if (StringUtil.emptyString(nonRelTerm))
  	nonRelTerm = "";

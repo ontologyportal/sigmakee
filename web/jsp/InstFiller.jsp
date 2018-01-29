@@ -19,9 +19,7 @@ if (!role.equalsIgnoreCase("admin")) {
     response.sendRedirect("login.html");
     return;
 }
-
   String submit = request.getParameter("submit");
-  String term = request.getParameter("term");
   if (StringUtil.emptyString(term))
       term = "UnitedStates";
   Enumeration params = request.getParameterNames();

@@ -97,4 +97,7 @@ if (hostname == null)
 String port = KBmanager.getMgr().getPref("port");
 if (port == null)
     port = "8080";
+String term = request.getParameter("term");
+if (StringUtil.emptyString(term))
+    term = "";
 %>

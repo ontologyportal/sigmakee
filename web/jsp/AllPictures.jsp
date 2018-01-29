@@ -19,10 +19,6 @@
  * kb       = <name>   - the name of the knowledge base
  * lang     = <lang>   - the name of the language used to display axiom paraphrases
  * */
-
- String term = request.getParameter("term");
- if (StringUtil.emptyString(term))
-     term = "";
 %>
 <html>
 <HEAD><TITLE>Knowledge Base Picture Browser - <%=term%></TITLE></HEAD>

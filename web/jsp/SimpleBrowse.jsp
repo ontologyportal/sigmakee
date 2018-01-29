@@ -1,7 +1,6 @@
 <%@ include file="Prelude.jsp" %>
 <html>
 <%
-String term = request.getParameter("term");
 String nonRelTerm = request.getParameter("nonrelation");
 String relTerm = request.getParameter("relation");
 String relREmatch = request.getParameter("relREmatch");

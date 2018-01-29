@@ -31,7 +31,8 @@
             if (kb.eprover != null && role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("AskTell")))
                 out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
             if (pageName == null || !pageName.equals("Graph"))
-                out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
+                out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" +
+                "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
             if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("NLP")))
                 out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))

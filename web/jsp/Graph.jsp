@@ -53,7 +53,6 @@ function setWidth(id) {
   int limitInt = 100;
   if (view == null)
   	view = "text";
-  String term = request.getParameter("term");
   if (term == null || term.equals("null")) term = "Process";
   String relation = request.getParameter("relation");
   if (relation == null || relation.equals("null") || relation.equals("")) {

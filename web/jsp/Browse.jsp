@@ -19,7 +19,6 @@
  * kb       = <name>   - the name of the knowledge base
  * lang     = <lang>   - the name of the language used to display axiom paraphrases
  * */
- String term = request.getParameter("term");
  String nonRelTerm = request.getParameter("nonrelation");
  String relTerm = request.getParameter("relation");
  String relREmatch = request.getParameter("relREmatch");
