@@ -19,6 +19,10 @@
     KBPOS = "1";
  else if (KBPOS == null && term != null)
  	KBPOS = kb.REswitch(term);
+
+  String POS = request.getParameter("POS");
+  if (POS == null)
+      POS = "0";
 %>
 
 <form action="<%=parentPage%>">
@@ -58,7 +62,11 @@
           <img src="pixmaps/1pixel.gif" width="3"></td>
       <td align="left" valign="top">
           <select name="POS">
-              <option value="1">Noun <option value="2">Verb <option value="3">Adjective <option value="4">Adverb
+              <option <%= POS.equals("0")?"selected":"" %> value="0">Any
+              <option <%= POS.equals("1")?"selected":"" %> value="1">Noun
+              <option <%= POS.equals("2")?"selected":"" %> value="2">Verb
+              <option <%= POS.equals("3")?"selected":"" %> value="3">Adjective
+              <option <%= POS.equals("4")?"selected":"" %> value="4">Adverb
           </select>
       </td>
       <td align="left" valign="top">
