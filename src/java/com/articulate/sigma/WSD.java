@@ -11,6 +11,7 @@ public class WSD {
 
     public static int threshold = 5;
     public static int gap = 5;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * Collect all the SUMO terms that are found in the sentence.
@@ -265,7 +266,8 @@ public class WSD {
                 return result;
             }
             if (senseKeys == null) {
-                System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word +
+                if (debug)
+                    System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word +
                         "' not in lexicon as part of speech " + POS);
                 return result;
             }
