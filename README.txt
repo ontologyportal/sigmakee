@@ -307,12 +307,12 @@ run the following additional steps
 > cd ~
 > mkdir Programs
 > cd Programs
-> cp /vagrant/Downloads/stanford-corenlp-full-2015-12-09.zip .
-> unzip stanford-corenlp-full-2015-12-09.zip
-> cd stanford-corenlp-full-2015-12-09
+> cp /vagrant/Downloads/stanford-corenlp-full-2018-01-31.zip .
+> unzip stanford-corenlp-full-2018-01-31.zip
+> cd stanford-corenlp-full-2018-01-31
 > export SIGMA_HOME="/home/vagrant/.sigmakee"
-> jar -xf stanford-corenlp-3.6.0-models.jar
-> cd ~/Programs/stanford-corenlp-full-2015-12-09
+> jar -xf stanford-corenlp-3.9.0-models.jar
+> cd ~/Programs/stanford-corenlp-full-2018-01-31
 > java  -Xmx2500m -classpath  /home/vagrant/workspace/sigma/sigma/build/classes:/home/vagrant/workspace/sigma/sigma/build/lib/*  com.articulate.sigma.semRewrite.Interpreter -i
 
 
