@@ -254,10 +254,10 @@ public final class PasswordService {
             //Create MimeMessage object & set values
             Message messageobj = new MimeMessage(sessionobj);
             messageobj.setFrom(new InternetAddress(from));
-            messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(from));
+            messageobj.setRecipients(Message.RecipientType.TO,InternetAddress.parse(destmailid));
             messageobj.setSubject("Registration request from " + firstName + " " + lastName);
-            messageobj.setText("Thank you for registering on ontologyportal!  " +
-                    "Reply to this message to complete registration by submitting your request to the moderator.\n\n" +
+            messageobj.setText("Thank you for registering on ontologyportal " + firstName + " " + lastName + ". " +
+                    "Please reply to this message to complete your registration, which will submit your request to the moderator.\n\n" +
                     "Dear Moderator, please approve this <a href=\"" + appURL + "\">request</a>");
             Transport.send(messageobj);
         }
