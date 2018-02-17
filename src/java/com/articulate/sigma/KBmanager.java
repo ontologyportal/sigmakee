@@ -608,6 +608,7 @@ public class KBmanager implements Serializable {
     public void initializeOnce() {
         
         System.out.println("Info in KBmanager.initializeOnce()");
+        //Thread.dumpStack();
         String base = System.getenv("SIGMA_HOME");
         initializeOnce(base + File.separator + "KBs");
         return;
