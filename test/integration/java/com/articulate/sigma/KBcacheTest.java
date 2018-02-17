@@ -1,15 +1,31 @@
 package com.articulate.sigma;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class KBcacheTest extends IntegrationTestBase {
 
+    /** *************************************************************
+     */
+    @Test
+    public void testIsParentOf1() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("parents of Shirt (as instance): " + cache.getParentClassesOfInstance("Shirt"));
+        System.out.println("parents of Shirt: " + cache.parents.get("subclass").get("Shirt"));
+        System.out.println("childOfP(\"Shirt\", \"WearableItem\"): " + cache.childOfP("subclass", "WearableItem","Shirt"));
+        System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"WearableItem\"): " + SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
+        System.out.println("SigmaTestBase.kb.childOf(Shirt, WearableItem): " + SigmaTestBase.kb.childOf("Shirt", "WearableItem"));
+        assertTrue(SigmaTestBase.kb.kbCache.parents.get("subclass").get("Shirt").contains("WearableItem"));
+    }
+
+    /** *************************************************************
+     */
     @Test
     public void testbuildParents() {
 
@@ -31,6 +47,8 @@ public class KBcacheTest extends IntegrationTestBase {
         assertEquals(expected, actual);
     }
 
+    /** *************************************************************
+     */
     @Test
     public void testbuildChildren() {
 
@@ -52,6 +70,8 @@ public class KBcacheTest extends IntegrationTestBase {
         assertEquals(expected, actual);
     }
 
+    /** *************************************************************
+     */
     @Test
     public void testbuildTransInstOf() {
 
@@ -76,24 +96,56 @@ public class KBcacheTest extends IntegrationTestBase {
         assertEquals(expected, actual);
     }
 
+    /** *************************************************************
+     */
     @Test
     public void testIsChildOf1() {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
-        System.out.println("parents of CitizenryFn: " + cache.getParentClassesOfInstance("CitizenryFn"));
-        System.out.println("parents of CitizenryFn: " + cache.parents.get("CitizenryFn"));
+        System.out.println("parents of CitizenryFn (as instance): " + cache.getParentClassesOfInstance("CitizenryFn"));
+        System.out.println("parents of CitizenryFn: " + cache.parents.get("subclass").get("CitizenryFn"));
         assertTrue(SigmaTestBase.kb.isChildOf("CitizenryFn", "Function"));
     }
 
+    /** *************************************************************
+     */
     @Test
     public void testIsChildOf2() {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
-        System.out.println("parents of Attorney: " + cache.getParentClassesOfInstance("Attorney"));
-        System.out.println("parents of Attorney: " + cache.parents.get("Attorney"));
+        System.out.println("parents of Attorney (as instance): " + cache.getParentClassesOfInstance("Attorney"));
+        System.out.println("parents of Attorney: " + cache.parents.get("subclass").get("Attorney"));
         assertTrue(SigmaTestBase.kb.isChildOf("Attorney", "Attribute"));
     }
 
+    /** *************************************************************
+     */
+    @Test
+    public void testIsChildOf3() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("parents of Shirt (as instance): " + cache.getParentClassesOfInstance("Shirt"));
+        System.out.println("parents of Shirt: " + cache.parents.get("subclass").get("Shirt"));
+        System.out.println("childOfP(\"Shirt\", \"WearableItem\"): " + cache.childOfP("subclass", "WearableItem","Shirt"));
+        System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"WearableItem\"): " + SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
+        assertTrue(SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testIsChildOf4() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("parents of Shirt (as instance): " + cache.getParentClassesOfInstance("Shirt"));
+        System.out.println("parents of Shirt: " + cache.parents.get("subclass").get("Shirt"));
+        System.out.println("childOfP(\"Shirt\", \"Process\"): " + cache.childOfP("subclass", "Process","Shirt"));
+        System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"Process\"): " + SigmaTestBase.kb.isChildOf("Shirt", "Process"));
+        assertFalse(SigmaTestBase.kb.isChildOf("Shirt", "Process"));
+    }
+
+    /** *************************************************************
+     */
     @Test
     public void testTransitiveRelations() {
 
