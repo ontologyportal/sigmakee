@@ -39,7 +39,7 @@ public class KBcache implements Serializable {
 
     public KB kb = null;
 
-    private static boolean debug = false;
+    public static boolean debug = false;
 
     // The String constant that is the suffix for files of cached assertions.
     public static final String _cacheFileSuffix = "_Cache.kif";
@@ -221,17 +221,22 @@ public class KBcache implements Serializable {
      */
     public boolean childOfP(String rel, String parent, String child) {
 
+        if (debug) System.out.println("INFO in KBcache.childOfP(): relation, parent, child: "
+                + rel + " " + parent + " " + child);
         if (parent.equals(child)) {
             return false;
         }
         HashMap<String,HashSet<String>> childMap = children.get(rel);
-        HashSet<String> childSet = (childMap != null) ? childMap.get(parent) : null;
-
+        if (childMap == null)
+            return false;
+        HashSet<String> childSet = childMap.get(parent);
+        if (debug) System.out.println("INFO in KBcache.childOfP(): children of " + parent + " : " + childSet);
         if (childSet == null) {
         	if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
                 + rel + " " + parent + " " + child);
         	return false;
         }
+        if (debug) System.out.println("INFO in KBcache.childOfP(): child set contains " + child + " : " + childSet.contains(child));
         if (childSet.contains(child))
             return true;
         else
@@ -1273,27 +1278,28 @@ public class KBcache implements Serializable {
         String term = "Object";
         HashSet<String> classes = nkbc.getChildClasses(term);
         HashSet<String> instances = nkbc.getChildInstances(term);
-        System.out.println("number of classes: " + classes.size());
+        System.out.println("number of child classes of " + term + ": " + classes.size());
         System.out.println("KBcache.main(): children of " + term + ": " +
                 classes);
-        System.out.println("number of instances: " + instances.size());
+        System.out.println("number of instances of " + term + ": " + instances.size());
         System.out.println("KBcache.main(): instances of " + term + ": " +
                instances);
         term = "Process";
         classes = nkbc.getChildClasses(term);
         instances = nkbc.getChildInstances(term);
-        System.out.println("number of classes: " + classes.size());
+        System.out.println("number of classes of " + term + ": " + classes.size());
         System.out.println("KBcache.main(): children of " + term + ": " +
                 classes);
-        System.out.println("number of instances: " + instances.size());
+        System.out.println("number of instances of " + term + ": " + instances.size());
         System.out.println("KBcache.main(): instances of " + term + ": " +
                 instances);
 
         System.out.println("KBcache.main(): " + nkbc.getCommonParent("Kicking","Pushing"));
-        List<Formula> forms = kb.ask("arg",0,"subrelation");
+        /* List<Formula> forms = kb.ask("arg",0,"subrelation");
         for (Formula f : forms) {
             String rel = f.getArgument(1);
             System.out.println("is " + rel + " a relation: " + kb.isInstanceOf(rel,"Relation"));
         }
+        */
     }
 }
