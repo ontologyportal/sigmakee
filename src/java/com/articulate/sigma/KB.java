@@ -548,8 +548,8 @@ public class KB implements Serializable {
      * true if i is c, is an instance of c, or is subclass of c, or is
      * subAttribute of c, else returns false.
      *
-     * @param i A String denoting an instance.
-     * @param c A String denoting a Class.
+     * @param i A String denoting a class or instance.
+     * @param c A String denoting the parent Class.
      * @return true or false.
      */
     public boolean isChildOf(String i, String c) {
@@ -644,13 +644,13 @@ public class KB implements Serializable {
      * of c2, else returns false.
      *
      * @param c1 A String, the name of a SetOrClass.
-     * @param c2 A String, the name of a SetOrClass.
+     * @param parent A String, the name of a SetOrClass.
      * @return boolean
      */
-    public boolean isSubclass(String c1, String c2) {
+    public boolean isSubclass(String c1, String parent) {
 
-        if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(c2))
-            return kbCache.childOfP("subclass", c2, c1);
+        if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(parent))
+            return kbCache.childOfP("subclass", parent, c1);
         return false;
     }
 
@@ -660,13 +660,13 @@ public class KB implements Serializable {
      * c2, else returns false.
      *
      * @param c1 A String, the name of a SetOrClass.
-     * @param c2 A String, the name of a SetOrClass.
+     * @param parent A String, the name of a SetOrClass.
      * @return boolean
      */
-    public boolean isSubAttribute(String c1, String c2) {
+    public boolean isSubAttribute(String c1, String parent) {
 
-        if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(c2)) {
-            return kbCache.childOfP("subAttribute", c2, c1);
+        if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(parent)) {
+            return kbCache.childOfP("subAttribute", parent, c1);
         }
         return false;
     }
