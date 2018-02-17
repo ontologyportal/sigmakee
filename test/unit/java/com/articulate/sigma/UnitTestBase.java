@@ -38,7 +38,8 @@ public class UnitTestBase  extends SigmaTestBase {
     @BeforeClass
     public static void setup()  {
 
-        System.out.println("UnitTestBase.setup(): reading config file: " + CONFIG_FILE_PATH);
+        System.out.println("UnitTestBase.setup(): reading test config file: " + CONFIG_FILE_PATH);
+        System.out.println("***** UnitTestBase.setup(): warning! Note that only KB files in the test config file will be loaded! ***** ");
         long startTime = System.currentTimeMillis();
         SigmaTestBase.doSetUp(xmlReader);
         long endTime = System.currentTimeMillis();
