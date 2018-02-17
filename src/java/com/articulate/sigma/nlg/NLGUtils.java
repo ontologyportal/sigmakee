@@ -272,24 +272,21 @@ public class NLGUtils implements Serializable {
      */
     public static void readKeywordMap(String dir) {
 
+        if (dir == null || dir.isEmpty())    {
+            throw new IllegalArgumentException("Parameter dir is null or empty.");
+        }
+        File dirFile = new File(dir);
+        if (!dirFile.exists())  {
+            throw new IllegalArgumentException("Parameter dir points to non-existent path: " + dir);
+        }
         System.out.println("NLGUtils.readKeywordMap():");
         nlg = null;
         if (serializedExists() && !serializedOld())
             loadSerialized();
         if (nlg != null)
             return;
-
         System.out.println("INFO in NLGUtils.readKeywordMap(" + dir + "/" +
                 PHRASES_FILENAME + ")");
-
-        if (dir == null || dir.isEmpty())    {
-            throw new IllegalArgumentException("Parameter dir is null or empty.");
-        }
-
-        File dirFile = new File(dir);
-        if (!dirFile.exists())  {
-            throw new IllegalArgumentException("Parameter dir points to non-existent path: " + dir);
-        }
 
         if (getKeywordMap() == null)
             setKeywordMap(new HashMap<>());
