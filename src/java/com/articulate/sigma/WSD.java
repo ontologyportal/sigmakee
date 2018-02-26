@@ -637,7 +637,7 @@ public class WSD {
             FileReader r = new FileReader(file);
             lr = new LineNumberReader(r);
             while ((line = lr.readLine()) != null) {
-                System.out.println(line);
+                //System.out.println(line);
                 String[] ls = line.split(" ");
                 ArrayList<String> al = new ArrayList<String>();
                 al.add(line);
