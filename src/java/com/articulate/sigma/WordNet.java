@@ -2286,8 +2286,22 @@ public class WordNet implements Serializable {
             return true;
         if (pos == ADVERB && adverbSynsetHash.containsKey(word))
             return true;
+        if (pos == ADJECTIVE_SATELLITE && adjectiveSynsetHash.containsKey(word))
+            return true;
         else
             return false;
+    }
+
+    /** ***************************************************************
+     * Does WordNet contain the given word.
+     */
+    public boolean containsWord(String word) {
+
+        for (int i = 0; i <= 5; i++) {
+            if (containsWord(word,i))
+                return true;
+        }
+        return false;
     }
 
     /** ***************************************************************
