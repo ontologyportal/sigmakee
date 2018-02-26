@@ -545,6 +545,20 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Returns
+     * true if i is an Attribute, else returns false.
+     *
+     * @param i A String denoting an possible instance of Attribute.
+     * @return true or false.
+     */
+    public boolean isAttribute(String i) {
+
+        if (kbCache == null)
+            return false;
+        return kbCache.isInstanceOf(i, "Attribute");
+    }
+
+    /***************************************************************
+     * Returns
      * true if i is c, is an instance of c, or is subclass of c, or is
      * subAttribute of c, else returns false.
      *
@@ -1319,19 +1333,23 @@ public class KB implements Serializable {
     public HashSet<String> getAllSub(String term, String rel) {
 
         //System.out.println("KB.getAllSub(): "  + term + " : " + rel);
+        ArrayList<String> temp = new ArrayList<>();
         HashSet<String> result = new HashSet<>();
-        result.add(term);
+        temp.add(term);
         HashSet<String> oldResult = new HashSet<>();
         while (!result.equals(oldResult)) {
             //System.out.println("KB.getAllSub(): "  + result);
             oldResult = new HashSet<>();
-            oldResult.addAll(result);
+            oldResult.addAll(temp);
             for (String s : result) {
-                addAllSafe(result,kbCache.getChildTerms(s,"subclass"));
-                addAllSafe(result,kbCache.getChildTerms(s,"instance"));
-                addAllSafe(result,kbCache.getChildTerms(s,rel));
-                addAllSafe(result,kbCache.getInstancesForType(s));
+                addAllSafe(temp,kbCache.getChildTerms(s,"subclass"));
+                addAllSafe(temp,kbCache.getChildTerms(s,"instance"));
+                addAllSafe(temp,kbCache.getChildTerms(s,rel));
+                addAllSafe(temp,kbCache.getInstancesForType(s));
             }
+            result.addAll(temp);
+            temp = new ArrayList<>();
+            temp.addAll(result);
         }
         return result;
     }
