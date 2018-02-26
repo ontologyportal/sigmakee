@@ -145,7 +145,7 @@ public class MultiWords implements Serializable {
 
     /** ***************************************************************
      */
-    private static String rootFormOf(String word) {
+    public static String rootFormOf(String word) {
 
         String rootWord = word;
 
