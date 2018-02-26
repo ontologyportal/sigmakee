@@ -22,8 +22,9 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import com.articulate.sigma.wordNet.MultiWords;
 import com.google.common.collect.*;
-import com.articulate.sigma.KB;
 
 import static com.articulate.sigma.WSD.readFileIntoArray;
 
@@ -36,7 +37,6 @@ public class WordNetUtilities {
     /** POS-prefixed mappings from a new synset number to the old
      *  one. */
     public static HashMap<String,String> mappings = new HashMap<String,String>();
-
     public static int TPTPidCounter = 1;
     public static int errorCount = 0;
 
@@ -1114,7 +1114,7 @@ public class WordNetUtilities {
                 System.out.println("(externalImage " + term + " \"" + url + "\")");
                 //}
             }
-        } 
+        }
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
@@ -1131,7 +1131,7 @@ public class WordNetUtilities {
     /** ***************************************************************
      */
     private static boolean excludedStringsForMeronymy(String s1, String s2) {
-        
+
         if (s1.indexOf("genus_") > -1 ||
             s2.indexOf("genus_") > -1 ||
             s1.indexOf("order_") > -1 ||
@@ -1172,7 +1172,7 @@ public class WordNetUtilities {
                     String valuewordlist = WordNet.wn.synsetsToWords.get(value).toString();
                     if (!excludedStringsForMeronymy(keywordlist,valuewordlist)) {
                         System.out.println("; " + WordNet.wn.synsetsToWords.get(key)); //ArrayList<String>
-                        System.out.println("; " + WordNet.wn.synsetsToWords.get(value));                    
+                        System.out.println("; " + WordNet.wn.synsetsToWords.get(value));
                         if (SUMO1 != null && SUMO2 != null)
                             System.out.println("(" + avp.attribute + " " + SUMO2.substring(2,SUMO2.length()-1) +
                                     " " + SUMO1.substring(2,SUMO1.length()-1) + ")");
@@ -1187,7 +1187,7 @@ public class WordNetUtilities {
      * the average Levenshtein distance for each ID.
      */
     public static void searchCoherence(String fileWithPath) {
-    
+
         String line;
         String lastT = "";
         String id = "";
@@ -1231,11 +1231,11 @@ public class WordNetUtilities {
             ioe.printStackTrace();
         }
     }
-    
+
     /** *************************************************************
      */
     public static void commentSentiment(String fileWithPath) {
-    	
+
         String line;
         try {
             File f = new File(fileWithPath);
@@ -1257,29 +1257,29 @@ public class WordNetUtilities {
             ioe.printStackTrace();
         }
     }
-    
+
     /** ***************************************************************
      */
     private static void writeTPTPWordNetClassDefinitions(PrintWriter pw) throws IOException {
 
-        ArrayList<String> WordNetClasses = 
+        ArrayList<String> WordNetClasses =
             new ArrayList<String>(Arrays.asList("s__Synset","s__NounSynset","s__VerbSynset","s__AdjectiveSynset","s__AdverbSynset"));
         Iterator<String> it = WordNetClasses.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
             if (!term.equals("s__Synset")) {
-                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__subclass(" + term + ",s__Synset))).");   
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__subclass(" + term + ",s__Synset))).");
                 String POS = term.substring(0,term.indexOf("Synset"));
-                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
-                        ",axiom,(s__documentation(" + term + ",s__EnglishLanguage,\"A group of " + POS + 
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
+                        ",axiom,(s__documentation(" + term + ",s__EnglishLanguage,\"A group of " + POS +
                         "s having the same meaning.\"))).");
             }
         }
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__WordSense,s__EnglishLanguage,\"A particular sense of a word.\"))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__Word,s__EnglishLanguage,\"A particular word.\"))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__VerbFrame,s__EnglishLanguage,\"A string template showing allowed form of use of a verb.\"))).");
     }
 
@@ -1326,21 +1326,21 @@ public class WordNetUtilities {
         for (int i = 0; i < VerbFrames.size(); i ++) {
             String frame = VerbFrames.get(i);
             String numString = String.valueOf(i);
-            if (numString.length() == 1) 
-                numString = "0" + numString;           
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+            if (numString.length() == 1)
+                numString = "0" + numString;
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                     ",axiom,(s__documentation(s__WN30VerbFrame_" + numString + ",s__EnglishLanguage,\"" + frame + "\"))).");
         }
     }
 
     protected static ArrayList<String> WordNetRelations = new ArrayList<String>(Arrays.asList("antonym",
-            "hypernym", "instance_hypernym", "hyponym", "instance_hyponym", 
-            "member_holonym", "substance_holonym", "part_holonym", "member_meronym", 
-            "substance_meronym", "part_meronym", "attribute", "derivationally_related", 
-            "domain_topic", "member_topic", "domain_region", "member_region", 
-            "domain_usage", "member_usage", "entailment", "cause", "also_see", 
+            "hypernym", "instance_hypernym", "hyponym", "instance_hyponym",
+            "member_holonym", "substance_holonym", "part_holonym", "member_meronym",
+            "substance_meronym", "part_meronym", "attribute", "derivationally_related",
+            "domain_topic", "member_topic", "domain_region", "member_region",
+            "domain_usage", "member_usage", "entailment", "cause", "also_see",
             "verb_group", "similar_to", "participle", "pertainym"));
-    
+
     /** ***************************************************************
      */
     private static void writeTPTPWordNetRelationDefinitions(PrintWriter pw) throws IOException {
@@ -1350,7 +1350,7 @@ public class WordNetUtilities {
             String rel = (String) it.next();
             String tag = null;
             if (rel.equals("antonym") || rel.equals("similar-to") ||
-                rel.equals("verb-group") || rel.equals("derivationally-related")) 
+                rel.equals("verb-group") || rel.equals("derivationally-related"))
                 pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + rel + "__m,s__SymmetricRelation))).");
             else
                 pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + rel + "__m,s__BinaryRelation))).");
@@ -1358,65 +1358,65 @@ public class WordNetUtilities {
             pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__domain(s__" + rel + "__m,2,s__Synset))).");
         }
 
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__instance(s__word__m,s__BinaryRelation))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__word__m,1,s__Synset))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__word__m,2,s__Literal))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__word__m,s__EnglishLanguage,\"A relation between a WordNet synset and a word " +
                    "which is a member of the synset\"))).");
 
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__instance(s__singular__m,s__BinaryRelation))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__singular__m,1,s__Word))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__singular__m,2,s__Literal))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__singular__m,s__EnglishLanguage,\"A relation between a WordNet synset and a word " +
                    "which is a member of the synset.\"))).");
 
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__instance(s__infinitive__m,s__BinaryRelation))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__infinitive__m,1,s__Word))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__infinitive__m,2,s__Literal))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__infinitive__m,s__EnglishLanguage,\"A relation between a word " +
                    " in its past tense and infinitive form.\"))).");
 
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__instance(s__senseKey__m,s__BinaryRelation))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__senseKey__m,1,s__Word))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__senseKey__m,2,s__WordSense))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__senseKey__m,s__EnglishLanguage,\"A relation between a word " +
                    "and a particular sense of the word.\"))).");
 
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__instance(s__synset__m,s__BinaryRelation))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__synset__m,1,s__WordSense))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__synset__m,2,s__Synset))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__synset__m,s__EnglishLanguage,\"A relation between a sense of a particular word " +
                    "and the synset in which it appears.\"))).");
 
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__instance(s__verbFrame__m,s__BinaryRelation))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__verbFrame__m,1,s__WordSense))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__domain(s__verbFrame__m,2,s__VerbFrame))).");
-        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + 
+        pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                 ",axiom,(s__documentation(s__verbFrame__m,s__EnglishLanguage,\"A relation between a verb word sense and a template that "+
-                   "describes the use of the verb in a sentence.\"))).");      
+                   "describes the use of the verb in a sentence.\"))).");
     }
 
     /** ***************************************************************
@@ -1436,12 +1436,12 @@ public class WordNetUtilities {
               case '3': parent = "AdjectiveSynset"; break;
               case '4': parent = "AdverbSynset"; break;
             }
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__WN30_" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__WN30_" +
                     synset + ",s__" + parent + "))).\n");
             for (int i = 0; i < al.size(); i++) {
                 String word = al.get(i);
                 String wordAsID = StringUtil.StringToPrologID(word);
-                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__word(s__WN30_" + 
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__word(s__WN30_" +
                         synset + ",s__WN30Word_" + wordAsID + "))).\n");
             }
             String doc = null;
@@ -1459,7 +1459,7 @@ public class WordNetUtilities {
                 for (int i = 0; i < al2.size(); i++) {
                     AVPair avp = al2.get(i);
                     String rel = StringUtil.StringToPrologID(avp.attribute);
-                    pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__" + rel + "(s__WN30_" + 
+                    pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__" + rel + "(s__WN30_" +
                             synset + ",s__WN30_" + avp.value + "))).\n");
                 }
             }
@@ -1475,9 +1475,9 @@ public class WordNetUtilities {
         while (it.hasNext()) {
             String plural = it.next();
             String singular = WordNet.wn.exceptionNounHash.get(plural);
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" +
                     StringUtil.StringToPrologID(singular) + ",s__Word))).\n");
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__singular(s__" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__singular(s__" +
                     StringUtil.StringToPrologID(singular) + ",s__" + StringUtil.StringToPrologID(plural) + "))).\n");
             //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
             //        StringUtil.StringToPrologID(singular) + ",s__EnglishLanguage,\"'" + 
@@ -1488,9 +1488,9 @@ public class WordNetUtilities {
         while (it.hasNext()) {
             String past = it.next();
             String infinitive = (String) WordNet.wn.exceptionVerbHash.get(past);
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" +
                     StringUtil.StringToPrologID(infinitive) + ",s__Word))).\n");
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__past(s__" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__past(s__" +
                     StringUtil.StringToPrologID(infinitive) + ",s__" + StringUtil.StringToPrologID(past) + "))).\n");
             //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
             //        StringUtil.StringToPrologID(past) + ",s__EnglishLanguage,\"'" + 
@@ -1506,7 +1506,7 @@ public class WordNetUtilities {
         String wordAsID = StringUtil.StringToPrologID(word);
         pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__WN30Word_" + wordAsID + ",s__Word))).\n");
         String wordOrPhrase = "word";
-        if (word.indexOf("_") != -1) 
+        if (word.indexOf("_") != -1)
             wordOrPhrase = "phrase";
         //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30Word_" + 
         //        wordAsID + ",s__EnglishLanguage,\"The English " + wordOrPhrase + " '" + word + "'\"))).\n");
@@ -1514,7 +1514,7 @@ public class WordNetUtilities {
         if (senses != null) {
             for (int i = 0; i < senses.size(); i++) {
                 String sense = StringUtil.StringToPrologID(senses.get(i));
-                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__senseKey(s__WN30Word_" + 
+                pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__senseKey(s__WN30Word_" +
                         wordAsID + ",s__WN30WordSense_" + sense + "))).\n");
             }
         }
@@ -1541,7 +1541,7 @@ public class WordNetUtilities {
         while (it.hasNext()) {
             String sense = it.next();
             String synset = StringUtil.StringToPrologID(WordNet.wn.senseIndex.get(sense));
-            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + 
+            pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" +
                     StringUtil.StringToPrologID(sense) + ",s__WordSense))).\n");
             //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
             //        StringUtil.StringToPrologID(sense) + ",s__EnglishLanguage,\"The WordNet word sense '" + 
@@ -1556,7 +1556,7 @@ public class WordNetUtilities {
                 if (frames != null) {
                     for (int i = 0; i < frames.size(); i++) {
                         String frame = frames.get(i);
-                        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__verbFrame(s__" + 
+                        pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__verbFrame(s__" +
                                 StringUtil.StringToPrologID(sense) + ",\"" + frame + "\"))).\n");
                     }
                 }
@@ -1807,7 +1807,7 @@ public class WordNetUtilities {
         HashSet<String> result = new HashSet<String>();
         ArrayList<String> sensekeys = WordNet.wn.wordsToSenseKeys.get(word);
         if (sensekeys == null) {
-            System.out.println("Error in WordNetUtilities.wordsToSynsets(): no synset for : " + word);
+            //System.out.println("Error in WordNetUtilities.wordsToSynsets(): no synset for : " + word);
             return null;
         }
         for (String s : sensekeys) {
@@ -2066,8 +2066,29 @@ public class WordNetUtilities {
 
     /** ***************************************************************
      */
-    private static void findWordIntersections(HashMap<String,HashSet<String>> words) {
+    public static String rootFormOf(String word) {
 
+        String rootWord = word;
+
+        String nounroot = WordNet.wn.nounRootForm(word, word.toLowerCase());
+        String verbroot = WordNet.wn.verbRootForm(word, word.toLowerCase());
+
+        if (!StringUtil.emptyString(nounroot) && !nounroot.equals(word))
+            rootWord = nounroot;
+        else if (!StringUtil.emptyString(verbroot) && !verbroot.equals(word)) {
+            rootWord = verbroot;
+        }
+
+        return rootWord;
+    }
+    /** ***************************************************************
+     * Find all words which are more than one list of words pertaining
+     * to a given human sense (as well as a list of emotions and a list
+     * of thought words)
+     */
+    private static HashSet<String> findWordIntersections(HashMap<String,HashSet<String>> words) {
+
+        HashSet<String> synesthesiaWords = new HashSet<>();
         HashSet<String> inverses = new HashSet<>();
         for (String s1 : words.keySet()) {
             for (String s2 : words.keySet()) {
@@ -2077,18 +2098,42 @@ public class WordNetUtilities {
                     temp.retainAll(words.get(s2));
                     if (temp.size() > 0) {
                         System.out.println(s1 + " : " + s2 + "\n" + temp + "\n\n");
+                        synesthesiaWords.addAll(temp);
                     }
                     inverses.add(s1 + "_" + s2);
                 }
             }
         }
+        return synesthesiaWords;
     }
 
     /** ***************************************************************
+     * result is a side effect on "orig"
      */
-    public static HashMap<String,HashSet<String>> sensorySynsets() {
+    private static void addTermAndSubs(KB kb, HashSet<String> orig, String term) {
+
+        HashSet<String> newterms = null;
+        if (kb.isAttribute(term))
+            newterms = kb.getAllSub(term,"subAttribute");
+        else
+            newterms = kb.kbCache.getChildClasses(term);
+        if (newterms != null)
+            orig.addAll(newterms);
+        orig.add(term);
+    }
+
+    public static boolean withThoughtEmotion = false;
+
+    /** ***************************************************************
+     * Find all words associated with sensory, psychological and
+     * emotional concepts.  Return a set of words with String keys
+     * as to the human sense plus "emotion" and "thought"
+     */
+    public static HashMap<String,HashSet<String>> sensoryWords() {
 
         KB kb = KBmanager.getMgr().getKB("SUMO");
+        KBcache cache = kb.kbCache;
+        System.out.println();
         System.out.println("INFO in WordNetUtilities.sensorySynsets(): ");
         // Hearing, Seeing, Smelling, TactilePerception, Tasting
         // OlfactoryAttribute, SoundAttribute, TasteAttribute, TextureAttribute, VisualAttribute
@@ -2098,91 +2143,156 @@ public class WordNetUtilities {
         HashSet<String> touchTerms = new HashSet<>();
         HashSet<String> soundTerms = new HashSet<>();
 
-        HashSet<String> temp = kb.kbCache.getChildClasses("Tasting");
-        if (temp != null)
-            tasteTerms.addAll(temp);
-        tasteTerms.add("Tasting");
-        temp = kb.getAllSub("TasteAttribute","subAttribute");
-        if (temp != null)
-            tasteTerms.addAll(temp);
-        tasteTerms.add("TasteAttribute");
+        HashSet<String> perceptionTerms = new HashSet<>();
 
-        temp = kb.kbCache.getChildClasses("Hearing");
-        if (temp != null)
-            soundTerms.addAll(temp);
-        soundTerms.add("Hearing");
-        temp = kb.kbCache.getChildClasses("RadiatingSound");
-        if (temp != null)
-            soundTerms.addAll(temp);
-        soundTerms.add("RadiatingSound");
-        temp = kb.kbCache.getChildClasses("Music");
-        if (temp != null)
-            soundTerms.addAll(temp);
-        soundTerms.add("Music");
-        temp = kb.getAllSub("SoundAttribute","subAttribute");
-        if (temp != null)
-            soundTerms.addAll(temp);
-        soundTerms.add("SoundAttribute");
+        HashSet<String> emotionTerms = new HashSet<>();
+        HashSet<String> thoughtTerms = new HashSet<>();
 
-        temp = kb.kbCache.getChildClasses("Smelling");
-        if (temp != null)
-            smellTerms.addAll(temp);
-        smellTerms.add("Smelling");
-        temp = kb.getAllSub("OlfactoryAttribute","subAttribute");
-        if (temp != null)
-            smellTerms.addAll(temp);
-        smellTerms.add("OlfactoryAttribute");
+        addTermAndSubs(kb, tasteTerms, "Tasting");
+        addTermAndSubs(kb, tasteTerms, "TasteAttribute");
 
-        temp = kb.kbCache.getChildClasses("Seeing");
-        if (temp != null)
-            sightTerms.addAll(temp);
-        sightTerms.add("Seeing");
-        temp = kb.kbCache.getChildClasses("RadiatingLight");
-        if (temp != null)
-            sightTerms.addAll(temp);
-        sightTerms.add("RadiatingLight");
-        temp = kb.getAllSub("VisualAttribute","subAttribute");
-        if (temp != null)
-            sightTerms.addAll(temp);
-        sightTerms.add("VisualAttribute");
+        addTermAndSubs(kb, soundTerms, "Hearing");
+        addTermAndSubs(kb, soundTerms, "RadiatingSound");
+        addTermAndSubs(kb, soundTerms, "Music");
+        addTermAndSubs(kb, soundTerms, "MusicalInstrument");
+        addTermAndSubs(kb, soundTerms, "MusicGenre");
+        addTermAndSubs(kb, soundTerms, "MusicalGroup");
+        addTermAndSubs(kb, soundTerms, "SoundAttribute");
 
-        temp = kb.kbCache.getChildClasses("Touching");
-        if (temp != null)
-            touchTerms.addAll(temp);
-        touchTerms.add("Touching");
-        temp = kb.getAllSub("TextureAttribute","subAttribute");
-        if (temp != null)
-            touchTerms.addAll(temp);
-        touchTerms.add("TextureAttribute");
-        temp = kb.getAllSub("TemperatureAttribute","subAttribute");
-        if (temp != null)
-            touchTerms.addAll(temp);
-        touchTerms.add("TemperatureAttribute");
-        temp = kb.getAllSub("ShapeAttribute","subAttribute");
-        if (temp != null)
-            touchTerms.addAll(temp);
-        touchTerms.add("ShapeAttribute");
+        addTermAndSubs(kb, smellTerms, "Smelling");
+        addTermAndSubs(kb, smellTerms, "OlfactoryAttribute");
+
+        addTermAndSubs(kb, sightTerms, "Seeing");
+        addTermAndSubs(kb, sightTerms, "RadiatingLight");
+        addTermAndSubs(kb, sightTerms, "VisualAttribute");
+
+        addTermAndSubs(kb, touchTerms, "Touching");
+        addTermAndSubs(kb, touchTerms, "TextureAttribute");
+        addTermAndSubs(kb, touchTerms, "TemperatureAttribute");
+        addTermAndSubs(kb, touchTerms, "ShapeAttribute");
+
+        addTermAndSubs(kb, perceptionTerms, "PerceptualAttribute");
+
+        addTermAndSubs(kb, thoughtTerms, "PsychologicalProcess");
+        addTermAndSubs(kb, thoughtTerms, "PsychologicalAttribute");
+
+        addTermAndSubs(kb, emotionTerms, "EmotionalState");
 
         HashSet<String> tasteSynsets = getSynsetsFromSUMOList(tasteTerms);
         HashSet<String> smellSynsets = getSynsetsFromSUMOList(smellTerms);
         HashSet<String> sightSynsets = getSynsetsFromSUMOList(sightTerms);
         HashSet<String> touchSynsets = getSynsetsFromSUMOList(touchTerms);
         HashSet<String> soundSynsets = getSynsetsFromSUMOList(soundTerms);
+        HashSet<String> perceptionSynsets = getSynsetsFromSUMOList(perceptionTerms);
+        HashSet<String> emotionSynsets = getSynsetsFromSUMOList(emotionTerms);
+        HashSet<String> thoughtSynsets = getSynsetsFromSUMOList(thoughtTerms);
+
         HashMap<String,HashSet<String>> words = new HashMap<>();
         words.put("taste",getWordsFromSynsetList(tasteSynsets));
         words.put("smell",getWordsFromSynsetList(smellSynsets));
         words.put("sight",getWordsFromSynsetList(sightSynsets));
         words.put("touch",getWordsFromSynsetList(touchSynsets));
         words.put("sound",getWordsFromSynsetList(soundSynsets));
+
+        if (withThoughtEmotion) {
+            words.put("perception",getWordsFromSynsetList(perceptionSynsets));
+            words.put("emotion", getWordsFromSynsetList(emotionSynsets));
+            words.put("thought", getWordsFromSynsetList(thoughtSynsets));
+        }
         return words;
     }
 
     /** ***************************************************************
+     * Find all the words that exhibit links to multiple sensory modes
+     * in SUMO
      */
-    public static void synestheticSynsets() {
+    public static HashSet<String> synestheticSynsets(HashMap<String,HashSet<String>> words) {
 
-        HashMap<String,HashSet<String>> words = sensorySynsets();
-        findWordIntersections(words);
+        HashSet<String> synWords = findWordIntersections(words);
+        System.out.println();
+        System.out.println("synesthesiaCompare(): synWords list: " + synWords);
+        System.out.println("count of synWords list: " + synWords.size());
+        return synWords;
+    }
+
+    /** ***************************************************************
+     */
+    private static String removeIsh(String s) {
+
+        if (s.endsWith("ish")) {
+            String result = s.substring(0, s.length() - 3);
+            System.out.println("WordNetUtilities.removeIsh(): " + s + " : " + result);
+            return result;
+        }
+        else
+            return s;
+    }
+
+    /** ***************************************************************
+     * Compare Lievers list of synesthetic words with those derived from
+     * SUMO-WordNet
+     */
+    public static void synesthesiaCompare(HashMap<String,HashSet<String>> words,
+                                          HashSet<String> synwords) {
+
+        System.out.println();
+        ArrayList<ArrayList<String>> lieversFile = readFileIntoArray(System.getenv("CORPORA") +
+                File.separator + "LieversLexiconList.txt");
+        TreeSet<String> lievers = new TreeSet<>();
+        TreeSet<String> lieversRoots = new TreeSet<>();
+        for (ArrayList<String> al : lieversFile) {
+            lievers.addAll(al);
+        }
+        for (String s : lievers) {
+            String root = MultiWords.rootFormOf(s);
+            if (WordNet.wn.containsWord(removeIsh(root)))
+                root = removeIsh(root);
+            if (root != null && !lievers.contains(root) && WordNet.wn.containsWord(root))
+                lieversRoots.add(root);
+            else
+                lieversRoots.add(s);
+        }
+        lievers = new TreeSet<>();
+        lievers.addAll(lieversRoots);
+
+        TreeSet<String> sumo = new TreeSet<>();
+        for (HashSet<String> hs : words.values()) {
+            sumo.addAll(hs);
+        }
+        System.out.println("synesthesiaCompare(): lievers list: " + lievers);
+        System.out.println("count of lievers list: " + lievers.size());
+        System.out.println();
+        System.out.println("synesthesiaCompare(): sumo list: " + sumo);
+        System.out.println("count of sumo list: " + sumo.size());
+
+        TreeSet<String> lieversOverlap = new TreeSet<>();
+        lieversOverlap.addAll(lievers);
+        System.out.println();
+        System.out.println("synesthesiaCompare(): lievers list overlap: " + lieversOverlap.retainAll(sumo));
+        System.out.println("count: " + lieversOverlap.size());
+
+        TreeSet<String> sumoDiff = new TreeSet<>();
+        sumoDiff.addAll(sumo);
+        sumoDiff.removeAll(lievers);
+        System.out.println();
+        System.out.println("synesthesiaCompare(): sumo not in lievers: " + sumoDiff);
+        System.out.println("count: " + sumoDiff.size());
+
+        TreeSet<String> lieversSynNonOverlap = new TreeSet<>();
+        lieversSynNonOverlap.addAll(lievers);
+        lieversSynNonOverlap.removeAll(synwords);
+        System.out.println();
+        System.out.println("synesthesiaCompare(): lievers not in sumo syn: " + lieversSynNonOverlap);
+        System.out.println("count: " + lieversSynNonOverlap.size());
+
+        lievers.removeAll(sumo);
+        TreeSet<String> newlievers = new TreeSet<>();
+        for (String s : lievers)
+            if (!sensoryOrMentalWord(s))
+                newlievers.add(s);
+        System.out.println();
+        System.out.println("synesthesiaCompare(): lievers not in sumo: " + newlievers);
+        System.out.println("count: " + lievers.size());
     }
 
     /** ***************************************************************
@@ -2244,39 +2354,72 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
-     * Compare Lievers list of synesthetic words with those derived from
-     * SUMO-WordNet
+     * test if a word is sensory or mental and return true if so
      */
-    public static void synesthesiaCompare() {
+    public static boolean sensoryOrMentalWord(String word) {
 
-        ArrayList<ArrayList<String>> lieversFile = readFileIntoArray(System.getenv("CORPORA") +
-                File.separator + "LieversLexiconList.txt");
-        HashMap<String,HashSet<String>> words = sensorySynsets();
-        HashSet<String> lievers = new HashSet<>();
-        for (ArrayList<String> al : lieversFile) {
-            lievers.addAll(al);
+        String[] parents = {"Tasting", "TasteAttribute", "Hearing", "RadiatingSound",
+                "Music", "MusicalInstrument", "MusicGenre", "MusicalGroup", "SoundAttribute", "Smelling",
+                "OlfactoryAttribute", "Seeing", "RadiatingLight", "VisualAttribute",
+                "Touching", "TextureAttribute", "PerceptualAttribute", "TemperatureAttribute",
+                "ShapeAttribute", "PsychologicalProcess","PsychologicalAttribute", "EmotionalState"};
+
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+
+        if (testWordDebug) System.out.println("WordNetUtilities.testWord(): word: " + word);
+        HashSet<String> synsets = wordsToSynsets(word);
+        if (synsets == null)
+            return false;
+        String root = MultiWords.rootFormOf(word);
+        HashSet<String> rootSynsets = wordsToSynsets(root);
+        if (rootSynsets != null)
+            synsets.addAll(rootSynsets);
+        if (testWordDebug) System.out.println("WordNetUtilities.testWord(): synsets: " + synsets);
+        HashSet<String> terms = new HashSet<>();
+        for (String s : synsets) {
+            terms.add(WordNet.wn.getSUMOMapping(s));
         }
-        HashSet<String> sumo = new HashSet<>();
-        for (HashSet<String> hs : words.values()) {
-            sumo.addAll(hs);
+        if (testWordDebug) System.out.println("WordNetUtilities.testWord(): terms: " + terms);
+        String parent = null;
+        String child = null;
+        for (String s : parents) {
+            for (String t : terms) {
+                String bare = getBareSUMOTerm(t);
+                if (bare != null && s != null && kb.childOf(bare,s)) {
+                    parent = s;
+                    child = bare;
+                }
+            }
         }
-        System.out.println("synesthesiaCompare(): lievers list: " + lievers);
-        System.out.println("count: " + lievers.size());
-        System.out.println("synesthesiaCompare(): sumo list: " + sumo);
-        System.out.println("count: " + sumo.size());
+        if (parent != null && child != null) {
+            if (testWordDebug)
+                System.out.println("WordNetUtilities.testWord(): word: " + word +
+                    " mapping to term " + child + " has parent sensory or mental term " + parent);
+            return true;
+        }
+        return false;
+    }
 
-        HashSet<String> lieversOverlap = new HashSet<>();
-        lieversOverlap.addAll(lievers);
-        System.out.println("synesthesiaCompare(): lievers list overlap: " + lieversOverlap.retainAll(sumo));
-        System.out.println("count: " + lieversOverlap.size());
+    private static boolean testWordDebug = false;
 
-        HashSet<String> sumoDiff = new HashSet<>();
-        sumoDiff.addAll(sumo);
-        System.out.println("synesthesiaCompare(): sumo not in lievers: " + sumoDiff.removeAll(lievers));
-        System.out.println("count: " + sumoDiff.size());
+    /** ***************************************************************
+     */
+    public static void testWord() {
 
-        System.out.println("synesthesiaCompare(): lievers not in sumo: " + lievers.removeAll(sumo));
-        System.out.println("count: " + lievers.size());
+        testWordDebug = true;
+        sensoryOrMentalWord("burning");
+        sensoryOrMentalWord("audible");
+        sensoryOrMentalWord("chug");
+        sensoryOrMentalWord("pianola");
+    }
+
+    /** ***************************************************************
+     */
+    public static void testSynesthesia() {
+
+        HashMap<String,HashSet<String>> sensoryWords = sensoryWords();
+        HashSet<String> synwords = synestheticSynsets(sensoryWords);
+        synesthesiaCompare(sensoryWords,synwords);
     }
 
     /** ***************************************************************
@@ -2285,8 +2428,15 @@ public class WordNetUtilities {
      */
     public static void main (String[] args) {
 
+        withThoughtEmotion = false;
         KBmanager.getMgr().initializeOnce();
-        synesthesiaCompare();
+
+        //testWord();
+
+        testSynesthesia();
+        withThoughtEmotion = true;
+        testSynesthesia();
+
         //String synset = "105786372";
         //System.out.println(getAllHyponyms(synset));
         //System.out.println(collapseSenses());
