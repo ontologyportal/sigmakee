@@ -146,14 +146,28 @@ public class User {
         }
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
+     * toggle user role between 'guest' and 'user'
      */
-    public void setRole(String newRole) {
+    public void toggleRole(Connection conn) {
 
-        if (newRole.equals("user") || newRole.equals("administrator"))
-            role = newRole;
-        else
-            System.out.println("Error in User.setRole(): Bad role name: " + newRole);
+        String newRole = role;
+        if (role.equals("user"))
+            newRole = "guest";
+        else if (role.equals("guest"))
+            newRole = "user";
+        try {
+            String str = "update users set role='" + newRole + "' where username='" + this.username + "';";
+            //System.out.println("toDB(): " + str);
+            Statement stmt = conn.createStatement();
+            stmt.execute(str);
+            System.out.println("User.toggleRole(): " + this.username + " is now a " + newRole);
+        }
+        catch (Exception e) {
+            System.out.println("Error in toDB(): " + e.getMessage());
+            e.printStackTrace();
+        }
+
     }
 
     /** ***************************************************************** 
