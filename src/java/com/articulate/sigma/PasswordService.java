@@ -321,15 +321,36 @@ public final class PasswordService {
 
     /** *****************************************************************
      */
+    public void changeUserRole(String id) {
+
+        System.out.println("Toggle user role between guest and user");
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+        String login = c.readLine("Enter admin login: ");
+        String password = new String(c.readPassword("Enter admin password: "));
+        if (userExists(login) && authenticate(login,encrypt(password))) {
+            User u = User.fromDB(conn,id);
+            u.toggleRole(conn);
+        }
+        else
+            System.out.println("invalid login");
+    }
+
+    /** *****************************************************************
+     */
     public static void showHelp() {
 
         System.out.println("PasswordService: ");
         System.out.println("-h    show this Help message");
         System.out.println("-l    Login");
-        System.out.println("-r    Register a new username and password (fail if username taken)");
         System.out.println("-c    Create db");
         System.out.println("-a    create Admin user");
         System.out.println("-u    show User IDs");
+        System.out.println("-r    Register a new username and password (fail if username taken)");
+        System.out.println("-o <id>    change user rOle");
         System.out.println("-f <id>    find user with given ID");
         System.out.println("-d <id>    Delete user with given ID");
     }
@@ -354,6 +375,8 @@ public final class PasswordService {
                 System.out.println(User.fromDB(ps.conn,args[1]));
             else if (args.length > 1 && args[0].equals("-d"))
                 ps.deleteUser(args[1]);
+            else if (args.length > 1 && args[0].equals("-o"))
+                ps.changeUserRole(args[1]);
             else {
                 System.out.println("unrecognized command\n");
                 showHelp();
