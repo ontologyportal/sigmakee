@@ -21,6 +21,7 @@ public class SingleJUnitTestRunner {
 
         try {
             String[] classAndMethod = args[0].split("#");
+            System.out.println("running test: " + classAndMethod[0] + " : " + classAndMethod[1]);
             Request request = Request.method(Class.forName(classAndMethod[0]),
                     classAndMethod[1]);
 
