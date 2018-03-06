@@ -181,11 +181,11 @@ make
 make install
 cd ~
 brew install graphviz
-echo "export SIGMA_HOME=~/.sigmakee" >> .bash-profile
-echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bash-profile
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bash-profile
-source .bash-profile
+echo "export SIGMA_HOME=~/.sigmakee" >> .bash_profile
+echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bash_profile
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bash_profile
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bash_profile
+source .bash_profile
 cd ~/workspace/sigmakee
 brew install ant
 ant
