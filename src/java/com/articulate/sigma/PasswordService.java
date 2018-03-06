@@ -125,8 +125,8 @@ public final class PasswordService {
         catch (Exception e) {
             System.out.println("Error in userExistsDB(): " + e.getMessage());
             e.printStackTrace();
+            return false;
         }
-        return true;
     }
 
     /** *****************************************************************
@@ -321,6 +321,31 @@ public final class PasswordService {
 
     /** *****************************************************************
      */
+    public void createUser(String user) {
+
+        System.out.println("Create user " +user);
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            System.exit(1);
+        }
+        String password = new String(c.readPassword("Enter user password: "));
+        if (userExists(user))
+            System.out.println("User " + user + " already exists");
+        else {
+            String email = new String(c.readLine("Enter your email address: "));
+            User u = new User();
+            u.username = user;
+            u.password = encrypt(password);
+            u.role = "user";
+            u.attributes.put("email",email);
+            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            addUser(u);
+        }
+    }
+
+    /** *****************************************************************
+     */
     public void changeUserRole(String id) {
 
         System.out.println("Toggle user role between guest and user");
@@ -351,6 +376,7 @@ public final class PasswordService {
         System.out.println("-u    show User IDs");
         System.out.println("-r    Register a new username and password (fail if username taken)");
         System.out.println("-o <id>    change user rOle");
+        System.out.println("-n <id>    create New guest user");
         System.out.println("-f <id>    find user with given ID");
         System.out.println("-d <id>    Delete user with given ID");
     }
@@ -373,6 +399,8 @@ public final class PasswordService {
                 System.out.println(ps.userIDs());
             else if (args.length > 1 && args[0].equals("-f"))
                 System.out.println(User.fromDB(ps.conn,args[1]));
+            else if (args.length > 1 && args[0].equals("-n"))
+                ps.createUser(args[1]);
             else if (args.length > 1 && args[0].equals("-d"))
                 ps.deleteUser(args[1]);
             else if (args.length > 1 && args[0].equals("-o"))
