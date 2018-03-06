@@ -46,7 +46,15 @@ if (ps.userExists(userName)) {
 }
 else {
     System.out.println("Bad login attempt in login.jsp - no such user: " + userName);
-    response.sendRedirect("login.html");
+    System.out.println("logging in as guest");
+    session.setAttribute("user","guest");
+    session.setAttribute("role","guest");
+    ServletContext siblingContext = request.getSession().getServletContext().getContext("/sigma");
+    siblingContext.setAttribute("user","guest");
+    siblingContext.setAttribute("role","guest");
+    System.out.println("login.jsp: Set sibling context");
+    System.out.println("login.jsp: Successful login for " + u.username + " with role " + u.role);
+    response.sendRedirect("KBs.jsp");
 }
 %>
 
