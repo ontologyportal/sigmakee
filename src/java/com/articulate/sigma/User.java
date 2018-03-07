@@ -39,13 +39,15 @@ public class User {
      */
     public static void createDB() {
 
+        System.out.println("Error in User.createDB(): creating database");
+        Statement stmt = null;
         Connection conn = null;
         try {
             Class.forName("org.h2.Driver");
             conn = DriverManager.getConnection(PasswordService.JDBCString, PasswordService.UserName, "");
             System.out.println("User.createDB(): Opened DB " + PasswordService.JDBCString);
             String str = "drop table if exists users;";
-            Statement stmt = conn.createStatement();
+            stmt = conn.createStatement();
             stmt.execute(str);
             str = "create table users(username varchar(20), password varchar(40), role varchar(10));";
             stmt = conn.createStatement();
@@ -62,6 +64,8 @@ public class User {
             str = "create table projects(username varchar(20), project varchar(50));";
             stmt = conn.createStatement();
             stmt.execute(str);
+            stmt.close();
+            conn.close();
         }
         catch (Exception e) {
             System.out.println("Error in User.createDB(): " + e.getMessage());
@@ -104,6 +108,7 @@ public class User {
                 user.projects.add(proj);
             }
             //System.out.println("fromDB(): " + user);
+            stmt.close();
             return user;
         }
         catch (Exception e) {
@@ -137,6 +142,7 @@ public class User {
                 stmt = conn.createStatement();
                 stmt.execute(str);
             }
+            stmt.close();
         }
         catch (Exception e) {
             System.out.println("Error in toDB(): " + e.getMessage());
@@ -160,6 +166,7 @@ public class User {
             Statement stmt = conn.createStatement();
             stmt.execute(str);
             System.out.println("User.toggleRole(): " + this.username + " is now a " + newRole);
+            stmt.close();
         }
         catch (Exception e) {
             System.out.println("Error in toDB(): " + e.getMessage());
