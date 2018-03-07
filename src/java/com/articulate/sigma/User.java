@@ -43,21 +43,19 @@ public class User {
         try {
             Class.forName("org.h2.Driver");
             conn = DriverManager.getConnection(PasswordService.JDBCString, PasswordService.UserName, "");
-            System.out.println("main(): Opened DB " + PasswordService.JDBCString);
+            System.out.println("User.createDB(): Opened DB " + PasswordService.JDBCString);
             String str = "drop table if exists users;";
             Statement stmt = conn.createStatement();
             stmt.execute(str);
             str = "create table users(username varchar(20), password varchar(40), role varchar(10));";
             stmt = conn.createStatement();
             stmt.execute(str);
-
             str = "drop table if exists attributes;";
             stmt = conn.createStatement();
             stmt.execute(str);
             str = "create table attributes(username varchar(20), key varchar(50), value varchar(50));";
             stmt = conn.createStatement();
             stmt.execute(str);
-
             str = "drop table if exists projects;";
             stmt = conn.createStatement();
             stmt.execute(str);
@@ -66,7 +64,7 @@ public class User {
             stmt.execute(str);
         }
         catch (Exception e) {
-            System.out.println("Error in main(): " + e.getMessage());
+            System.out.println("Error in User.createDB(): " + e.getMessage());
             e.printStackTrace();
         }
     }
