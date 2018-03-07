@@ -22,6 +22,8 @@ conform to the version. If you use a different mirror or version you'll need to
 change the wget commend below and Oracle Java appears to now have a key embedded
 in their URL that will change every time. Change "theuser" below to your user name.
 
+If your installation isn't working and you're getting funny "null"s in your paths
+try opening permissions on your $SIGMA_HOME, $CATALINA_HOME and $SIGMA_SRC directories.
 
 System preparation on Linux
 ==========================
