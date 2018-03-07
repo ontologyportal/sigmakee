@@ -23,6 +23,8 @@ import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import static java.lang.System.exit;
+
 /** *****************************************************************
  * A class that encrypts a string and checks it against another stored
  * encrypted string, in order to validate a user login.
@@ -42,14 +44,23 @@ public final class PasswordService {
      */
     public PasswordService() {
 
+        boolean nodb = false;
+        try {
+            conn = DriverManager.getConnection(JDBCString + ";IFEXISTS=TRUE",UserName,"");
+        }
+        catch(Exception e) {
+            nodb = true;
+        }
         try {
             Class.forName("org.h2.Driver");
             Server server = Server.createTcpServer().start();
             conn = DriverManager.getConnection(JDBCString, UserName, "");
             System.out.println("main(): Opened DB " + JDBCString);
+            if (nodb)
+                User.createDB();
         }
         catch (Exception e) {
-            System.out.println("Error in main(): " + e.getMessage());
+            System.out.println("Error in PasswordService(): " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -120,6 +131,7 @@ public final class PasswordService {
         try {
             Statement stmt = conn.createStatement();
             ResultSet res = stmt.executeQuery("SELECT * FROM USERS where username='" + username + "';");
+            stmt.close();
             return res.next();
         }
         catch (Exception e) {
@@ -168,6 +180,7 @@ public final class PasswordService {
         try {
             Statement stmt = conn.createStatement();
             stmt.execute("delete FROM USERS where username='" + uname + "';");
+            stmt.close();
         }
         catch (Exception e) {
             System.out.println("Error in deleteUser(): " + e.getMessage());
@@ -184,7 +197,7 @@ public final class PasswordService {
         Console c = System.console();
         if (c == null) {
             System.err.println("No console.");
-            System.exit(1);
+            exit(1);
         }
 
         String username = c.readLine("Enter your username: ");
@@ -274,7 +287,7 @@ public final class PasswordService {
         Console c = System.console();
         if (c == null) {
             System.err.println("No console.");
-            System.exit(1);
+            exit(1);
         }
         String login = c.readLine("Enter your login: ");
         String password = new String(c.readPassword("Enter your password: "));
@@ -301,7 +314,7 @@ public final class PasswordService {
         Console c = System.console();
         if (c == null) {
             System.err.println("No console.");
-            System.exit(1);
+            exit(1);
         }
         String login = c.readLine("Enter your login: ");
         String password = new String(c.readPassword("Enter your password: "));
@@ -327,7 +340,7 @@ public final class PasswordService {
         Console c = System.console();
         if (c == null) {
             System.err.println("No console.");
-            System.exit(1);
+            exit(1);
         }
         String password = new String(c.readPassword("Enter user password: "));
         if (userExists(user))
@@ -352,7 +365,7 @@ public final class PasswordService {
         Console c = System.console();
         if (c == null) {
             System.err.println("No console.");
-            System.exit(1);
+            exit(1);
         }
         String login = c.readLine("Enter admin login: ");
         String password = new String(c.readPassword("Enter admin password: "));
@@ -385,33 +398,43 @@ public final class PasswordService {
      */
     public static void main(String args[]) {
 
-        PasswordService ps = new PasswordService();
-        if (args != null) {
-            if (args.length > 0 && args[0].equals("-r"))
-                ps.register();
-            else if (args.length > 0 && args[0].equals("-l"))
-                ps.login();
-            else if (args.length > 0 && args[0].equals("-c"))
-                User.createDB();
-            else if (args.length > 0 && args[0].equals("-a"))
-                ps.createAdmin();
-            else if (args.length > 0 && args[0].equals("-u"))
-                System.out.println(ps.userIDs());
-            else if (args.length > 1 && args[0].equals("-f"))
-                System.out.println(User.fromDB(ps.conn,args[1]));
-            else if (args.length > 1 && args[0].equals("-n"))
-                ps.createUser(args[1]);
-            else if (args.length > 1 && args[0].equals("-d"))
-                ps.deleteUser(args[1]);
-            else if (args.length > 1 && args[0].equals("-o"))
-                ps.changeUserRole(args[1]);
-            else {
-                System.out.println("unrecognized command\n");
-                showHelp();
+        try {
+            PasswordService ps = new PasswordService();
+            if (args != null) {
+                if (args.length > 0 && args[0].equals("-r"))
+                    ps.register();
+                else if (args.length > 0 && args[0].equals("-l"))
+                    ps.login();
+                else if (args.length > 0 && args[0].equals("-c"))
+                    User.createDB();
+                else if (args.length > 0 && args[0].equals("-a"))
+                    ps.createAdmin();
+                else if (args.length > 0 && args[0].equals("-u"))
+                    System.out.println(ps.userIDs());
+                else if (args.length > 1 && args[0].equals("-f"))
+                    System.out.println(User.fromDB(ps.conn, args[1]));
+                else if (args.length > 1 && args[0].equals("-n"))
+                    ps.createUser(args[1]);
+                else if (args.length > 1 && args[0].equals("-d"))
+                    ps.deleteUser(args[1]);
+                else if (args.length > 1 && args[0].equals("-o"))
+                    ps.changeUserRole(args[1]);
+                else {
+                    System.out.println("unrecognized command\n");
+                    showHelp();
+                }
             }
+            else
+                showHelp();
+            ps.conn.createStatement().execute("SHUTDOWN");
+            ps.conn.close();
         }
-        else
-            showHelp();
+        catch (Exception e) {
+            System.out.println("Error in main(): " + e.getMessage());
+            e.printStackTrace();
+        }
+        System.out.println("completed PasswordService.main(): ");
+        exit(0);
     }
 
 }
