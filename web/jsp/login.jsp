@@ -53,7 +53,7 @@ else {
     siblingContext.setAttribute("user","guest");
     siblingContext.setAttribute("role","guest");
     System.out.println("login.jsp: Set sibling context");
-    System.out.println("login.jsp: Successful login for " + u.username + " with role " + u.role);
+    System.out.println("login.jsp: Successful login for guest with role guest");
     response.sendRedirect("KBs.jsp");
 }
 %>
