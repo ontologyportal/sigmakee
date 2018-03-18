@@ -12,8 +12,11 @@ import static org.junit.Assert.*;
 
 public class FormulaTest {
 
+    /** ***************************************************************
+     */
     @Test
     public void testFormulaRead() {
+
         String stmt = "(domain date 1 Physical)";
         Formula f = new Formula(stmt);
         assertEquals(stmt, f.theFormula);
@@ -30,8 +33,11 @@ public class FormulaTest {
 
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testRecursiveCdrSimple() {
+
         String stmt = "(exists (?M))";
         Formula f = new Formula(stmt);
 
@@ -56,8 +62,11 @@ public class FormulaTest {
         assertEquals("()", cdrF.theFormula);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testRecursiveCdrComplex() {
+
         String stmt = "(time JohnsBirth (MonthFn ?M (YearFn 2000)))";
         Formula f = new Formula(stmt);
 
@@ -175,8 +184,11 @@ public class FormulaTest {
         assertFalse(f1.isSimpleClause());
     }
 */
+    /** ***************************************************************
+     */
     @Test
     public void testCollectQuantifiedVariables() {
+
         List<String> expected = Lists.newArrayList("?T", "?Z");
 
         Formula f1 = new Formula();
@@ -203,8 +215,11 @@ public class FormulaTest {
         assertEquals(expected, f1.collectQuantifiedVariables());
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testCollectAllVariables() {
+
         Set<String> expected = Sets.newHashSet("?C", "?T", "?H", "?W", "?Y", "?Z");
 
         Formula f1 = new Formula();
@@ -231,8 +246,11 @@ public class FormulaTest {
         assertEquals(expected, f1.collectAllVariables());
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testUnquantifiedVariables() {
+
         List<String> expected = Lists.newArrayList("?C", "?W", "?H", "?Y");
 
         Formula f1 = new Formula();
@@ -259,8 +277,11 @@ public class FormulaTest {
         assertEquals(expected, f1.collectUnquantifiedVariables());
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testTerms() {
+
         Set<String> expected = Sets.newHashSet("holdsDuring", "MultiplicationFn", "WealthFn", "?T", "Muslim", "?W",
                 "Obligation", "attribute", "?Y", "equal", "?Z", "agent", "and", "Year", "patient", "=>", "modalAttribute",
                 "during", "?C", "monetaryValue", "FullyFormed", "greaterThan", "exists", "?H", "Zakat", "instance",
@@ -290,8 +311,11 @@ public class FormulaTest {
         assertEquals(expected, f1.collectTerms());
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testReplaceVar() {
+
         Formula expected = new Formula();
         expected.read("(<=> (instance part TransitiveRelation) (forall (?INST1 ?INST2 ?INST3) (=> (and (part ?INST1 ?INST2) (part ?INST2 ?INST3)) (part ?INST1 ?INST3))))");
 
@@ -302,8 +326,11 @@ public class FormulaTest {
         assertEquals(expected, f1.replaceVar("?REL", "part"));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexVarsDuringWhenFn1() {
+
         List<String> expected = Lists.newArrayList("?Y", "(WhenFn ?H)");
 
         Formula f1 = new Formula();
@@ -312,8 +339,11 @@ public class FormulaTest {
         assertEquals(expected, f1.complexArgumentsToArrayList(1));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexVarsDuringWhenFn2() {
+
         List<String> expected = Lists.newArrayList("(WhenFn ?H)");
 
         Formula f1 = new Formula();
@@ -322,8 +352,11 @@ public class FormulaTest {
         assertEquals(expected, f1.complexArgumentsToArrayList(2));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexVarsInstance1() {
+
         List<String> expected = Lists.newArrayList("?DRIVE", "Driving");
 
         Formula f1 = new Formula();
@@ -332,8 +365,11 @@ public class FormulaTest {
         assertEquals(expected, f1.complexArgumentsToArrayList(1));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexVarsInstance2() {
+
         List<String> expected = Lists.newArrayList("Driving");
 
         Formula f1 = new Formula();
@@ -342,8 +378,11 @@ public class FormulaTest {
         assertEquals(expected, f1.complexArgumentsToArrayList(2));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexVarsInstanceGovernmentFn1() {
+
         List<String> expected = Lists.newArrayList("(GovernmentFn ?Place)", "StateGovernment)");
 
         Formula f1 = new Formula();
@@ -352,8 +391,11 @@ public class FormulaTest {
         assertEquals(expected, f1.complexArgumentsToArrayList(1));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexVarsInstanceGovernmentFn2() {
+
         List<String> expected = Lists.newArrayList("StateGovernment)");
 
         Formula f1 = new Formula();
@@ -362,8 +404,11 @@ public class FormulaTest {
         assertEquals(expected, f1.complexArgumentsToArrayList(2));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testBigArgs() {
+
         String expected = "";
 
         Formula f1 = new Formula();
@@ -378,8 +423,11 @@ public class FormulaTest {
         assertEquals(expected, f1.validArgs());
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testArgumentsToArrayListGivenComplex0() {
+
         String stmt = "(exists (?D ?H)\n" +
                 "               (and\n" +
                 "                   (instance ?D Driving)\n" +
@@ -393,8 +441,11 @@ public class FormulaTest {
         assertEquals(null, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testArgumentsToArrayListGivenComplex1() {
+
         String stmt = "(exists (?D ?H)\n" +
                 "               (and\n" +
                 "                   (instance ?D Driving)\n" +
@@ -408,8 +459,11 @@ public class FormulaTest {
         assertEquals(null, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testArgumentsToArrayListAnd0() {
+
         String stmt = "(and\n" +
                 "(instance ?D Driving)\n" +
                 "(instance ?H Human)\n" +
@@ -422,8 +476,11 @@ public class FormulaTest {
         assertEquals(null, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testArgumentsToArrayInstance0() {
+
         String stmt = "(instance ?D Driving)";
 
         Formula f = new Formula(stmt);
@@ -434,8 +491,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListDriving0() {
+
         String stmt = "(exists (?D ?H)\n" +
                 "               (and\n" +
                 "                   (instance ?D Driving)\n" +
@@ -454,8 +514,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListDriving1() {
+
         String stmt = "(exists (?D ?H)\n" +
                 "               (and\n" +
                 "                   (instance ?D Driving)\n" +
@@ -474,8 +537,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListDriving2() {
+
         String stmt = "(exists (?D ?H)\n" +
                 "               (and\n" +
                 "                   (instance ?D Driving)\n" +
@@ -494,8 +560,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListDriving3() {
+
         String stmt = "(exists (?D ?H)\n" +
                 "               (and\n" +
                 "                   (instance ?D Driving)\n" +
@@ -509,8 +578,11 @@ public class FormulaTest {
         assertEquals(null, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListAnd0() {
+
         String stmt = "(and\n" +
                 "           (instance ?D Driving)\n" +
                 "           (instance ?H Human)\n" +
@@ -524,8 +596,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListAnd1() {
+
         String stmt = "(and\n" +
                 "           (instance ?D Driving)\n" +
                 "           (instance ?H Human)\n" +
@@ -539,8 +614,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListAnd2() {
+
         String stmt = "(and\n" +
                 "           (instance ?D Driving)\n" +
                 "           (instance ?H Human)\n" +
@@ -554,8 +632,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListAnd3() {
+
         String stmt = "(and\n" +
                 "           (instance ?D Driving)\n" +
                 "           (instance ?H Human)\n" +
@@ -569,8 +650,11 @@ public class FormulaTest {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComplexArgumentsToArrayListAnd4() {
+
         String stmt = "(and\n" +
                 "           (instance ?D Driving)\n" +
                 "           (instance ?H Human)\n" +
@@ -583,6 +667,8 @@ public class FormulaTest {
         assertEquals(null, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testReplaceQuantifierVars() throws Exception {
 
@@ -602,7 +688,6 @@ public class FormulaTest {
         vars.add("Drosophila");
         Formula actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
         assertTrue(actual.logicallyEquals(expected));
-
 
         stmt = "(exists (?JOHN ?KICKS ?CART)\n" +
                 "  (and\n" +
@@ -628,7 +713,6 @@ public class FormulaTest {
         vars.add("Cart_1");
         actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
         assertTrue(actual.logicallyEquals(expected));
-
 
         stmt = "(exists (?ENTITY)\n" +
                 "         (and \n" +
