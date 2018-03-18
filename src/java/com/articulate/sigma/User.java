@@ -65,7 +65,7 @@ public class User {
             stmt = conn.createStatement();
             stmt.execute(str);
             stmt.close();
-            conn.close();
+            //conn.close();
         }
         catch (Exception e) {
             System.out.println("Error in User.createDB(): " + e.getMessage());
