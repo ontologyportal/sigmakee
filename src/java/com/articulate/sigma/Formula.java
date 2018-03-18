@@ -2275,6 +2275,19 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
+     * Returns true if formula is a simple binary relation (note
+     * that because the argument list includes the predicate, which is
+     * argument 0, there will be three elements)
+     */
+    public boolean isBinary() {
+
+        ArrayList<String> l = argumentsToArrayList(0);
+        if (l == null)
+            return false;
+        return argumentsToArrayList(0).size() == 3;
+    }
+
+    /** ***************************************************************
      * Returns true if term is a SUO-KIF function, else returns false.
      * Note that this test is purely syntactic, and could fail for
      * functions that do not adhere to the convention of ending all
