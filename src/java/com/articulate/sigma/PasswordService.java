@@ -12,10 +12,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
-import java.sql.Statement;
+import java.sql.*;
 import java.util.*;
 import java.io.*;
 
@@ -35,29 +32,23 @@ public final class PasswordService {
     private static HashMap users = new HashMap();
 
     // open the password DB as a server so both Sigma and SigmaNLP can access at once
-    public static final String JDBCString = "jdbc:h2:tcp://localhost/~/var/passwd";
-    public static String UserName = "";
+    //public static final String JDBCString = "jdbc:h2:tcp://localhost/~/var/passwd";
+    public static final String JDBCString = "jdbc:h2:~/var/passwd";
+    public static String UserName = "sumo";
     public Connection conn = null;
+    public static Server server = null;
   
     /** ***************************************************************** 
      * Create an instance of PasswordService
      */
     public PasswordService() {
 
-        boolean nodb = false;
+        System.out.println("PasswordService()");
         try {
-            conn = DriverManager.getConnection(JDBCString + ";IFEXISTS=TRUE",UserName,"");
-        }
-        catch(Exception e) {
-            nodb = true;
-        }
-        try {
+            //server = Server.createTcpServer().start();
             Class.forName("org.h2.Driver");
-            Server server = Server.createTcpServer().start();
             conn = DriverManager.getConnection(JDBCString, UserName, "");
             System.out.println("main(): Opened DB " + JDBCString);
-            if (nodb)
-                User.createDB();
         }
         catch (Exception e) {
             System.out.println("Error in PasswordService(): " + e.getMessage());
@@ -131,8 +122,10 @@ public final class PasswordService {
         try {
             Statement stmt = conn.createStatement();
             ResultSet res = stmt.executeQuery("SELECT * FROM USERS where username='" + username + "';");
-            stmt.close();
-            return res.next();
+            boolean result = res.next();
+            res.close();
+            //stmt.close();
+            return result;
         }
         catch (Exception e) {
             System.out.println("Error in userExistsDB(): " + e.getMessage());
@@ -398,8 +391,9 @@ public final class PasswordService {
      */
     public static void main(String args[]) {
 
+        PasswordService ps = null;
         try {
-            PasswordService ps = new PasswordService();
+            ps = new PasswordService();
             if (args != null) {
                 if (args.length > 0 && args[0].equals("-r"))
                     ps.register();
@@ -428,10 +422,23 @@ public final class PasswordService {
                 showHelp();
             ps.conn.createStatement().execute("SHUTDOWN");
             ps.conn.close();
+            System.out.println("PasswordService.main(): Closed DB");
         }
-        catch (Exception e) {
+        catch(Exception e) {
             System.out.println("Error in main(): " + e.getMessage());
+            //Handle errors for Class.forName
             e.printStackTrace();
+        }
+        finally {
+            //finally block used to close resources
+            try {
+                if (ps.conn != null)
+                    ps.conn.close();
+                //Server.shutdownTcpServer(JDBCString,"", true, true);
+            }
+            catch(SQLException se){
+                se.printStackTrace();
+            }
         }
         System.out.println("completed PasswordService.main(): ");
         exit(0);
