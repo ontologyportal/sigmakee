@@ -10,6 +10,22 @@ import java.util.function.BiPredicate;
  */
 public class FormulaUtil {
 
+    /** ***************************************************************
+     * Must check that this is a simple clause before calling!
+     */
+    public static String toProlog(Formula f) {
+
+        StringBuffer sb = new StringBuffer();
+        sb.append(f.car() + "(");
+        for (int i = 1; i < f.argumentsToArrayList(0).size(); i ++) {
+            if (i != 1)
+                sb.append(",");
+            sb.append(f.getArgument(i));
+        }
+        sb.append(")");
+        return sb.toString();
+    }
+
     /*******************************************************************************************
      * Generates all permutations of the given size which are valid according to the given callback function.
      * @param size
