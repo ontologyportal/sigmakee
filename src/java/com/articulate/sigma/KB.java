@@ -663,6 +663,18 @@ public class KB implements Serializable {
      */
     public boolean isSubclass(String c1, String parent) {
 
+        if (StringUtil.emptyString(c1)) {
+            System.out.println("Error in KB.isSubclass(): empty c1");
+            Thread.dumpStack();
+            return false;
+        }
+        if (StringUtil.emptyString(parent)) {
+            System.out.println("Error in KB.isSubclass(): empty parent");
+            Thread.dumpStack();
+            return false;
+        }
+        if (c1.equals(parent))
+            return true;
         if (StringUtil.isNonEmptyString(c1) && StringUtil.isNonEmptyString(parent))
             return kbCache.childOfP("subclass", parent, c1);
         return false;
