@@ -15,6 +15,9 @@ Systems, August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 Authors:
 Adam Pease
 Infosys LTD.
+
+Formula is an important class that contains information and operations
+about individual SUO-KIF formulas.
 */
 
 package com.articulate.sigma;
@@ -118,7 +121,7 @@ public class Formula implements Comparable, Serializable {
     /** Warnings found during execution. */
     public TreeSet<String> warnings = new TreeSet<String>();
 
-    /** The formula. */
+    /** The formula in textual forms. */
     public String theFormula;
 	
     public static final String termMentionSuffix  = "__m";
@@ -126,53 +129,15 @@ public class Formula implements Comparable, Serializable {
     public static final String termSymbolPrefix   = "s__";
     public static final String termVariablePrefix = "V__";
 
-    /** ***************************************************************
-     *  Returns the platform-specific line separator String
-     */
-    public String getLineSeparator() {
-        return System.getProperty("line.separator");
-    }
-
     public String getSourceFile() {
         return this.sourceFile;
     }
 
-    public void setSourceFile(String filename) {
-        this.sourceFile = filename;
-        return;
-    }
+    public void setSourceFile(String filename) { this.sourceFile = filename; }
 
 	public TreeSet<String> getErrors() {
 		return this.errors;
 	}
-	
-    /** ***************************************************************
-     * Should be false if this Formula occurs in and was loaded from
-     * sourceFile.  Should be true if this Formula does not actually
-     * occur in sourceFile but was computed (derived) from at least
-     * some Formulae in sourceFile, possibly in combination with other
-     * Formulae not is sourceFile.
-     */
-    private boolean isComputed = false;
-
-    /** ***************************************************************
-     * Should return false if this Formula occurs in and was loaded
-     * from sourceFile.  Should return true if this Formula does not
-     * actually occur in sourceFile but was computed (derived) from at
-     * least some Formulae in sourceFile, possibly in combination with
-     * other Formulae not is sourceFile.
-     */
-    public boolean getIsComputed() {
-        return isComputed;
-    }
-
-    /** ***************************************************************
-     * Sets the value of isComputed to val.
-     */
-    public void setIsComputed(boolean val) {
-        isComputed = val;
-        return;
-    }
 
     /** ***************************************************************
      * A list of TPTP formulas (Strings) that together constitute the
@@ -214,8 +179,12 @@ public class Formula implements Comparable, Serializable {
     private ArrayList theClausalForm = null;
 
     /** *****************************************************************
+     * Constructor to build a formula from an existing formula.  This isn't
+     * a complete deepCopy() since it leaves out the errors and warnings
+     * variables
      */
 	public Formula(Formula f) {
+
 		this.endLine = f.endLine;
 		this.startLine = f.startLine;
 		this.sourceFile = f.sourceFile.intern();
@@ -228,6 +197,7 @@ public class Formula implements Comparable, Serializable {
 	}	
 
     /** *****************************************************************
+     * Just set the textual version of the formula
      */
 	public Formula(String f) {
 		theFormula = f;
@@ -297,21 +267,6 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Returns the variable in this Formula that corresponds to the
-     * clausal form variable passed as input.
-     *
-     * @return A SUO-KIF variable (String), which may be just the
-     * input variable.
-     
-    public String getOriginalVar(String var) {
-
-        Map varmap = getVarMap();
-        if (varmap == null)
-            return var;
-        return Clausifier.getOriginalVar(var, varmap);
-    }
-*/
-    /** ***************************************************************
      * This constant indicates the maximum predicate arity supported
      * by the current implementation of Sigma.
      */
@@ -322,17 +277,6 @@ public class Formula implements Comparable, Serializable {
      */
     public void read(String s) {
         theFormula = s;
-    }
-
-    /** ***************************************************************
-     */
-    public static String integerToPaddedString(int i, int digits) {
-
-        String result = Integer.toString(i);
-        while (result.length() < digits) {
-            result = "0" + result;
-        }
-        return result;
     }
 
     /** ***************************************************************
@@ -354,18 +298,12 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Copy the Formula.  This is in effect a deep copy.
+     * Copy the Formula.  This is in effect a deep copy although it ignores
+     * the errors and warnings variables.
      */
     public Formula copy() {
 
-        Formula result = new Formula();
-        if (sourceFile != null)
-            result.sourceFile = sourceFile.intern();
-        result.startLine = startLine;
-        result.endLine = endLine;
-        if (theFormula != null)
-            result.theFormula = theFormula.intern();
-        return result;
+        return new Formula(this);
     }
 
     /** ***************************************************************
@@ -1034,7 +972,7 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * If equals is overridedden, hashCode must use the same
+     * If equals is overridden, hashCode must use the same
      * "significant" fields.
      */
     public int hashCode() {
@@ -1045,7 +983,8 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      * Test if the contents of the formula are equal to the
-     * argument. Normalize all variables.
+     * argument. Normalize all variables so that formulas can be equal
+     * independent of their variable names, which have no semantics.
      */
     @Override
 	public boolean equals(Object o) {
@@ -1090,20 +1029,29 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Tests if this is logically equal with the parameter formula. It employs three equality tests starting with the
+     * Tests if this is logically equal with the parameter formula. It
+     * employs three equality tests starting with the
      * fastest and finishing with the slowest:
      *
-     *  - string comparisons: if the strings of the two formulae are equal return true as the formulae are also equal,
+     *  - string comparisons: if the strings of the two formulae are
+     *  equal return true as the formulae are also equal,
      *  otherwise try comparing them by more complex means
      *
-     *  - compare the predicate structure of the formulae (deepEquals(...)): this comparison only checks if the two formulae
-     *  have an equal structure of predicates disregarding variable equivalence. Example:
-     *              (and (instance ?A Human) (instance ?A Mushroom)) according to deepEquals(...) would be equal to
-     *              (and (instance ?A Human) (instance ?B Mushroom)) even though the first formula refers only one variable
-     *  but the second one refers two, and as such they are not logically equal. This method generates false positives, but
-     *  only true negatives. If the result of the comparison is false, we return false, otherwise keep trying.
+     *  - compare the predicate structure of the formulae (deepEquals(...)):
+     *  this comparison only checks if the two formulae
+     *  have an equal structure of predicates disregarding variable
+     *  equivalence. Example:
+     *     (and (instance ?A Human) (instance ?A Mushroom)) according
+     *     to deepEquals(...) would be equal to
+     *     (and (instance ?A Human) (instance ?B Mushroom)) even though
+     *     the first formula refers only one variable
+     *  but the second one refers two, and as such they are not logically
+     *  equal. This method generates false positives, but
+     *  only true negatives. If the result of the comparison is false,
+     *  we return false, otherwise keep trying.
      *
-     *  - try to logically unify the formulae by matching the predicates and the variables
+     *  - try to logically unify the formulae by matching the predicates
+     *  and the variables
      *
      * @param f
      * @return
@@ -1123,8 +1071,10 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** *****************************************************************
-     *  Compares this formula with the parameter by trying to compare the predicate structure of th two and logically
-     *  unify their variables. The helper method mapFormulaVariables(....) returns a logical mapping between the variables
+     *  Compares this formula with the parameter by trying to compare the
+     *  predicate structure of th two and logically
+     *  unify their variables. The helper method mapFormulaVariables(....)
+     *  returns a logical mapping between the variables
      *  of two formulae of one exists.
      *
      * @param f
@@ -1138,26 +1088,35 @@ public class Formula implements Comparable, Serializable {
         //the normalizeParameterOrder method should be moved to Clausifier
         KB kb = KBmanager.getMgr().getKB("SUMO");
 
-        HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap = new HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>>();
+        HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap =
+                new HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>>();
         List<Set<VariableMapping>> result = mapFormulaVariables(f1, f2, kb, memoMap);
         return result != null;
     }
 
     /** *****************************************************************
-     * Compares two formulae by recursively traversing its predicate structure and by building possible variable maps
-     * between the variables of the two formulae. If a complete mapping is possible, it is returned.
-     *   Each recursive call returns a list of sets of variable pairs. Each pair is a variable from the first formula and
-     * its potential corresponding variable in the second formula. Each set is a potential complete mapping between all
-     * the variables in the first formula and the ones in the second. The returned list contains all possible sets, so
-     * in essence all possible valid mappings of variables between the two formulas. The method will reconcile the list
-     * returned by all one level deeper recursive calls and return the list of sets which offer no contradictions.
+     * Compares two formulae by recursively traversing its predicate
+     * structure and by building possible variable maps
+     * between the variables of the two formulae. If a complete mapping
+     * is possible, it is returned.
+     * Each recursive call returns a list of sets of variable pairs.
+     * Each pair is a variable from the first formula and
+     * its potential corresponding variable in the second formula. Each
+     * set is a potential complete mapping between all
+     * the variables in the first formula and the ones in the second. The
+     * returned list contains all possible sets, so
+     * in essence all possible valid mappings of variables between the two
+     * formulas. The method will reconcile the list
+     * returned by all one level deeper recursive calls and return the list
+     * of sets which offer no contradictions.
      *
      * Note: for clauses with commutative
      *
      * @param f1
      * @param f2
      * @param kb
-     * @param memoMap a memo-ization mechanism designed to reduce the number of recursive calls in "dynamic programming"
+     * @param memoMap a memo-ization mechanism designed to reduce the number
+     *                of recursive calls in "dynamic programming"
      *                fashion
      * @return
      *  null - if the formulas cannot be equals (due to having different predicates for example)
@@ -1282,6 +1241,7 @@ public class Formula implements Comparable, Serializable {
      * Test if the contents of the formula are equal to the argument.
      */
     public boolean deepEquals(Formula f) {
+
         //null and simple string equality tests
         if (f == null) {
             return false;
@@ -1548,12 +1508,14 @@ public class Formula implements Comparable, Serializable {
                 }
 
                 for (int i = 2 ; i < f.listLength(); i++) {
-                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)), varFlag, unquantifiedVariables, quantifiedVariables);
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)),
+                            varFlag, unquantifiedVariables, quantifiedVariables);
                 }
             }
             else {
                 for (int i = 1; i < f.listLength(); i++) {
-                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)), varFlag, unquantifiedVariables, quantifiedVariables);
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)),
+                            varFlag, unquantifiedVariables, quantifiedVariables);
                 }
             }
 
@@ -1568,14 +1530,15 @@ public class Formula implements Comparable, Serializable {
                     }
                 }
                 else {
-                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(arg), varFlag, unquantifiedVariables, quantifiedVariables);
+                    collectQuantifiedUnquantifiedVariablesRecurse(new Formula(arg),
+                            varFlag, unquantifiedVariables, quantifiedVariables);
                 }
             }
         }
     }
 
     /** ***************************************************************
-     * Collects all variables in this Formula.  Returns an ArrayList
+     * Collects all variables in this Formula.  Returns an Set
      * of String variable names (with initial '?').  Note that 
      * duplicates are not removed.
      *
@@ -1783,26 +1746,6 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      * @param kb - The KB used to compute variable arity relations.
-     *
-     * @return Returns true if this Formula contains any variable
-     * arity relations, else returns false.
-     
-    protected boolean containsVariableArityRelation(KB kb) {
-
-        HashSet<String> relns = gatherRelationConstants();
-
-        Iterator<String> it = relns.iterator();
-        while (it.hasNext()) {
-            String r = it.next();
-            HashSet classes = kb.kbCache.instances.get(r);
-            if (classes != null && classes.contains("VariableArityRelation"))
-                return true;
-        }
-        return false;
-    }
-*/
-    /** ***************************************************************
-     * @param kb - The KB used to compute variable arity relations.
      * @param relationMap is a Map of String keys and values where
      *                    the key is the renamed relation and the
      *                    value is the original name.  This is set
@@ -1932,17 +1875,6 @@ public class Formula implements Comparable, Serializable {
         return relations;
     }
 
-    /** ***************************************************************
-     * Convert an ArrayList of Formulas to an ArrayList of Strings.
-     
-    private ArrayList<String> formulasToStrings(ArrayList<Formula> list) {
-
-        ArrayList<String> result = new ArrayList<String>();
-        for (int i = 0; i < list.size(); i++) 
-            result.add(((Formula) list.get(i)).theFormula);        
-        return result;
-    }
-*/
     /** ***************************************************************
      * Test whether a Formula is a functional term.  Note this assumes
      * the textual convention of all functions ending with "Fn".
@@ -2268,7 +2200,7 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Returns true if formula has variable, else returns false.
+     * Returns true if formula does not have variables, else returns false.
      */
     public boolean isGround() {
         return isGround(theFormula);
