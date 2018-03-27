@@ -11,7 +11,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
  */
 
-package com.articulate.sigma;
+package com.articulate.sigma.wordNet;
 
 import java.io.File;
 import java.io.FileReader;
@@ -23,10 +23,10 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.wordNet.MultiWords;
+import com.articulate.sigma.*;
 import com.google.common.collect.*;
 
-import static com.articulate.sigma.WSD.readFileIntoArray;
+import static com.articulate.sigma.wordNet.WSD.readFileIntoArray;
 
 /** ***************************************************************
  *  @author Adam Pease

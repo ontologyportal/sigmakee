@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.wordNet.WordNet;
+import com.articulate.sigma.wordNet.WordNetUtilities;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
