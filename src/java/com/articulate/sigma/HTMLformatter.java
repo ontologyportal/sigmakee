@@ -17,6 +17,7 @@ import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPutil;
+import com.articulate.sigma.wordNet.WordNetUtilities;
 
 import java.io.File;
 import java.util.*;
