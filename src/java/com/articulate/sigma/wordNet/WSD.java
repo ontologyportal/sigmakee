@@ -1,11 +1,10 @@
-package com.articulate.sigma;
+package com.articulate.sigma.wordNet;
 
 import java.io.*;
 import java.util.*;
 
+import com.articulate.sigma.*;
 import com.google.common.collect.Lists;
-
-import static com.articulate.sigma.WordNetUtilities.isValidKey;
 
 public class WSD {
 
