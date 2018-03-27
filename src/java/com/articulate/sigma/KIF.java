@@ -50,11 +50,9 @@ public class KIF {
 
     /** The set of all terms in the knowledge base. This is a set of Strings. */
     public TreeSet<String> terms = new TreeSet<String>();
-    
-   
+
     /** A hashMap to store term frequencies for each term in knowledge base */
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
-    
 
     /**
      * A HashMap of ArrayLists of Formulas. Each String key points to a list of
@@ -213,14 +211,12 @@ public class KIF {
                         continue;
                     }
                     else { // Found a first end of line character.
-                        isEOL = true; // Turn on flag, to watch for a second
-                        // consecutive one.
+                        isEOL = true; // Turn on flag, to watch for a second consecutive one.
                         continue;
                     }
                 }
                 else if (isEOL)
-                    isEOL = false; // Turn off isEOL if a non-space token
-                // encountered
+                    isEOL = false; // Turn off isEOL if a non-space token encountered
                 if (st.ttype == 40) { // Open paren
                     if (parenLevel == 0) {
                         // lineStart = st.lineno();
@@ -238,8 +234,7 @@ public class KIF {
                         }
                     }
                     if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0))
-                        expression.append(" "); // add back whitespace that ST
-                    // removes
+                        expression.append(" "); // add back whitespace that ST removes
                     expression.append("(");
                 }
                 else if (st.ttype == 41) { // ) - close paren
@@ -255,9 +250,7 @@ public class KIF {
                             System.out.println(warning);
                             duplicateCount++;
                         }
-                        if (mode == NORMAL_PARSE_MODE) { // Check arg validity
-                            // ONLY in
-                            // NORMAL_PARSE_MODE
+                        if (mode == NORMAL_PARSE_MODE) { // Check arg validity ONLY in NORMAL_PARSE_MODE
                             String validArgs = f.validArgs((file != null ? file.getName() : null),
                                     (file != null ? Integer.valueOf(f.startLine) : null));
                             if (StringUtil.emptyString(validArgs))
@@ -269,22 +262,14 @@ public class KIF {
                                 throw new ParseException(errStr, f.startLine);
                             }
                         }
-                        keySet.add(f.theFormula); // Make the formula itself a
-                        // key
+                        keySet.add(f.theFormula); // Make the formula itself a key
                         keySet.add(f.createID());
                         f.endLine = st.lineno() + totalLinesForComments;
                         Iterator<String> it = keySet.iterator();
                         while (it.hasNext()) { // Add the expression but ...
                             String fkey = it.next();
                             if (formulas.containsKey(fkey)) {
-                                if (!formulaMap.keySet().contains(f.theFormula)) { // don't
-                                    // add
-                                    // keys
-                                    // if
-                                    // formula
-                                    // is
-                                    // already
-                                    // present
+                                if (!formulaMap.keySet().contains(f.theFormula)) { // don't add keys if formula is already present
                                     ArrayList<String> list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.theFormula)) {
                                         System.out.println("Error in KIF.parse(): Storing empty formula from line: "
@@ -311,8 +296,6 @@ public class KIF {
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
-                        // lineStart = (st.lineno() + 1); // start next
-                        // statement from next line
                         expression = new StringBuilder();
                         keySet.clear();
                     }
@@ -347,8 +330,7 @@ public class KIF {
                 }
                 else if (st.ttype == StreamTokenizer.TT_WORD) { // a token
                     if ((st.sval.equals("=>") || st.sval.equals("<=>")) && parenLevel == 1)
-                        inRule = true; // implications in statements aren't
-                    // rules
+                        inRule = true; // implications in statements aren't rules
                     if (parenLevel < 2) // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
                     if (lastVal != 40) // add back whitespace that ST removes
@@ -359,12 +341,8 @@ public class KIF {
                         errorSet.add(errStr);
                         throw new ParseException(errStr, f.startLine);
                     }
-                    // Build the terms list and special keys ONLY if in
-                    // NORMAL_PARSE_MODE
-                    if ((mode == NORMAL_PARSE_MODE) && (st.sval.charAt(0) != '?') && (st.sval.charAt(0) != '@')) { // Variables
-                        // are
-                        // not
-                        // terms
+                    // Build the terms list and special keys ONLY if in NORMAL_PARSE_MODE
+                    if ((mode == NORMAL_PARSE_MODE) && (st.sval.charAt(0) != '?') && (st.sval.charAt(0) != '@')) { // Variables are not terms
                         terms.add(st.sval); // collect all terms
                         
                         if (!termFrequency.containsKey(st.sval)) {
@@ -373,16 +351,10 @@ public class KIF {
                         termFrequency.put(st.sval, termFrequency.get(st.sval) + 1);
                         
                         String key = createKey(st.sval, inAntecedent, inConsequent, argumentNum, parenLevel);
-                        keySet.add(key); // Collect all the keys until the end
-                        // of the statement is reached.
+                        keySet.add(key); // Collect all the keys until the end of the statement is reached.
                     }
                 }
-                else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow
-                    // '`'
-                    // in
-                    // relaxed
-                    // parse
-                    // mode
+                else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow '`' in relaxed parse mode
                     expression.append(" `");
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
                     errStr = (errStart + ": Illegal character near line " + f.startLine);
@@ -398,9 +370,7 @@ public class KIF {
             }
         }
         catch (Exception ex) {
-            String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors
-            // depends
-            // on :
+            String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors depends on :
             warningSet.add("Warning in KIF.parse() " + message);
             ex.printStackTrace();
         }
