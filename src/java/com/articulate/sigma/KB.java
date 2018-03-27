@@ -60,6 +60,7 @@ Infosys LTD.
 */
 
 import com.articulate.sigma.trans.*;
+import com.articulate.sigma.wordNet.OMWordnet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -515,17 +516,31 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Determine
-     * whether a particular term is an immediate instance, which has a statement
+     * Determine whether a particular term is an immediate instance, which has a statement
      * of the form (instance term otherTerm). Note that this does not count for
      * terms such as Attribute(s) and Relation(s), which may be defined as
      * subAttribute(s) or subrelation(s) of another instance. If the term is not
      * an instance, return an empty ArrayList. Otherwise, return an ArrayList of
      * the Formula(s) in which the given term is defined as an instance.
+     * Note! This does not return instances of the given term, but rather the
+     * terms of which the given term is an instance.
      */
     public ArrayList<Formula> instancesOf(String term) {
 
         return askWithRestriction(1, term, 0, "instance");
+    }
+
+    /***************************************************************
+     * Get all instances of a given term
+     */
+    public Set<String> instances(String term) {
+
+        Set<String> result = new HashSet<>();
+        ArrayList<Formula> forms = askWithRestriction(2, term, 0, "instance");
+        for (Formula f : forms) {
+            result.add(f.getArgument(1));
+        }
+        return result;
     }
 
     /***************************************************************
