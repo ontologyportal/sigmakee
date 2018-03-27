@@ -1,11 +1,12 @@
-package com.articulate.sigma;
+package com.articulate.sigma.wordNet;
 
 import java.io.*;
 import java.util.*;
 
 import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
 
-import static com.articulate.sigma.WordNet.baseDir;
+import static com.articulate.sigma.wordNet.WordNet.baseDir;
 
 public class OMWordnet implements Serializable {
 
