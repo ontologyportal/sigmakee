@@ -19,6 +19,8 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.wordNet.OMWordnet;
+import com.articulate.sigma.wordNet.WordNet;
 import py4j.GatewayServer;
 
 import java.io.*;
@@ -414,8 +416,7 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      */
     public boolean loadKB(String kbName, List<String> constituents) {
-        
-        boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
+
         KB kb = null;
         try {
             if (existsKB(kbName))
@@ -428,7 +429,6 @@ public class KBmanager implements Serializable {
                 while (it.hasNext()) {
                     String filename = it.next();
                     try {
-                        //kb.addConstituent(filename, false, false, false);
                         System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
                         kb.addConstituent(filename);
                     } 
@@ -439,7 +439,6 @@ public class KBmanager implements Serializable {
                     }
                 }
             }
-            //writeConfiguration();
         } 
         catch (Exception e) {
         	System.out.println("Error in KBmanager.loadKB(): Unable to save configuration: " + e.getMessage());
@@ -447,18 +446,10 @@ public class KBmanager implements Serializable {
             return false;
         }
 
-        // build kb cache when "cache" = "yes"
-        //if (useCacheFile) {
-        // always build the cache
-            kb.kbCache = new KBcache(kb);
-            kb.kbCache.buildCaches();
-            kb.checkArity();
-        //}
-        //else {
-        //    kb.kbCache = new KBcache(kb);
-            // kb.checkArity needs the cache, so don't call it.
-       // }
-        // load inference engine only when "TPTP" = "yes"
+        kb.kbCache = new KBcache(kb);
+        kb.kbCache.buildCaches();
+        kb.checkArity();
+
         if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
             kb.loadEProver();
         return true;
