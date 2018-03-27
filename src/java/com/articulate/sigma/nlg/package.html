@@ -9,14 +9,8 @@
 </head>
 <body bgcolor="white">
 
-Provides classes for the Sigma knowledge engineering environment version developed
-at Articulate Software Inc.  The core class is KB.java which handles data structures
-and operations on a knowledge base, including importing the individual KIF files
-which comprise a knowledge base.  KBmanager is class which has a static variable that
-contains what should be the only instance of KBmanager.  KBmanager may contain several
-KBs.  KIF reads KIF files into a KB object.  NLformatter handles generation of natural
-language paraphrases from logic.  EProver handles the interface to the E theorem
-prover. <P>
+Provides classes for natural language generation in the Sigma knowledge engineering environment version developed
+at Articulate Software Inc.  The core class is LanguageFormatter.java<P>
 
   This code is copyright Articulate Software (c) 2003-2017, Infosys 2018-.  Some portions
 copyright Teknowledge (c) 2003, IPsoft 2015 and reused under the terms of the GNU license.
@@ -32,10 +26,7 @@ Integrated Development Environment for
 Logical Theories</a>. AI Communications 26, pp79-97.<P>
 
 <!-- Put @see and @since tags down here. -->
-@see com.articulate.sigma.KB
-@see com.articulate.sigma.KBmanager
-@see com.articulate.sigma.KIF
-@see com.articulate.sigma.EProver
+@see com.articulate.sigma.nlg.LanguageFormatter
 
 </body>
 </html>
