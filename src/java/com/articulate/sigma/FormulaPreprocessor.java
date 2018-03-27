@@ -962,11 +962,9 @@ public class FormulaPreprocessor {
             // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
             // passing each to preProcessRecurse for further processing.
             if (!accumulator.isEmpty()) {
-                //boolean addSortals = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
                 Formula fnew = null;
                 String theNewFormula = null;
                 Iterator<Formula> it = accumulator.iterator();
-                int counter = 0;
                 while (it.hasNext()) {
                     fnew = (Formula) it.next();
                     FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -974,14 +972,10 @@ public class FormulaPreprocessor {
                     fnew.read(theNewFormula);
                     //if (debug) System.out.println("preProcess: fnew: " + fnew);
                     form.errors.addAll(fnew.getErrors());
-                    //if (isOkForInference(fnew,isQuery, kb)) {
-                        fnew.sourceFile = form.sourceFile;
-                        if (!StringUtil.emptyString(theNewFormula))
-                            results.add(fnew);
-                        if (debug) System.out.println("preProcess: results: " + results);
-                   // }
-                    //else
-                    //    form.errors.add("Formula rejected for inference: " + f.theFormula);
+                    fnew.sourceFile = form.sourceFile;
+                    if (!StringUtil.emptyString(theNewFormula))
+                        results.add(fnew);
+                    if (debug) System.out.println("preProcess: results: " + results);
                 }
             }
         }
