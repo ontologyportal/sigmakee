@@ -21,7 +21,6 @@
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.UnitTestBase;
-import com.articulate.sigma.WordNet;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 

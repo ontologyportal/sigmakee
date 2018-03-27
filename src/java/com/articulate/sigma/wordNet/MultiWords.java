@@ -22,8 +22,6 @@
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.StringUtil;
-import com.articulate.sigma.WSD;
-import com.articulate.sigma.WordNet;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
