@@ -17,17 +17,17 @@ import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.text.*;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import com.articulate.sigma.wordNet.WordNet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.articulate.sigma.WordNetUtilities;
+import com.articulate.sigma.wordNet.WordNetUtilities;
 
 /** ***************************************************************
  */
@@ -1617,7 +1617,7 @@ public class Hotel {
         System.out.println("INFO in readJSONHotels()");
         KBmanager.getMgr().initializeOnce();
         System.out.println("INFO in readJSONHotels(): completed KB initialization");
-        WordNet.wn.initOnce();        
+        WordNet.wn.initOnce();
         System.out.println("INFO in readJSONHotels(): complete reading WordNet files");
         
         long t1 = System.currentTimeMillis();
