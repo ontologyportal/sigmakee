@@ -1837,7 +1837,6 @@ public class Clausifier  {
      */
     public Formula clausify() {
 
-        Formula ans = null;
         thisFormula = equivalencesOut();
         thisFormula = implicationsOut();
         thisFormula = negationsIn();
