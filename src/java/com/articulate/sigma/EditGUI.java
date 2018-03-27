@@ -25,7 +25,7 @@ import java.util.Iterator;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-import com.articulate.sigma.KB;
+import com.articulate.sigma.wordNet.WordNet;
 
 /** A class that generates a GUI for elements of the ontology. */
 public class EditGUI {
