@@ -41,7 +41,11 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import com.articulate.sigma.KB;
+
+import com.articulate.sigma.wordNet.WSD;
+import com.articulate.sigma.wordNet.WordNet;
+import com.articulate.sigma.wordNet.WordNetUtilities;
+
 /** A class to interface with databases and database-like formats,
 such as spreadsheets. */
 public class DB {
