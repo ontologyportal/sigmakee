@@ -15,16 +15,16 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
  Infosys LTD.
  */
 
-package com.articulate.sigma;
+package com.articulate.sigma.wordNet;
 
-import com.articulate.sigma.wordNet.MultiWords;
+import com.articulate.sigma.*;
 
 import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.articulate.sigma.WordNetUtilities.isValidKey;
+import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
 
 /** ***************************************************************
  *  This program finds and displays SUMO terms that are related in meaning to the English
