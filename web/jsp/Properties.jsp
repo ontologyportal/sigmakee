@@ -32,15 +32,14 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
   boolean changed = false;
-
-  boolean ieChanged = false;
+  boolean reload = false;
   String inferenceEngine = request.getParameter("inferenceEngine");
   String iePref = KBmanager.getMgr().getPref("inferenceEngine");
   if (iePref == null) iePref = "";
   if (inferenceEngine != null) {
       if (!inferenceEngine.equals(iePref)) {
           changed = true;
-          ieChanged = true;
+          reload = true;
           KBmanager.getMgr().setPref("inferenceEngine",inferenceEngine);
       }
   }
@@ -86,6 +85,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   String cache = request.getParameter("cache");
   if (cache != null) {
       changed = true;
+      reload = true;
       KBmanager.getMgr().setPref("cache",cache);
   }
   else {
@@ -97,6 +97,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   String holdsPrefix = request.getParameter("holdsPrefix");
   if (holdsPrefix != null) {
       changed = true;
+      reload = true;
       KBmanager.getMgr().setPref("holdsPrefix",holdsPrefix);
   }
   else {
@@ -142,6 +143,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   String TPTP = request.getParameter("TPTP");
   if (TPTP != null) {
       changed = true;
+      reload = true;
       KBmanager.getMgr().setPref("TPTP",TPTP);
   }
   else {
@@ -175,6 +177,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   String typePrefix = request.getParameter("typePrefix");
   if (typePrefix != null) {
       changed = true;
+      reload = true;
       KBmanager.getMgr().setPref("typePrefix",typePrefix);
   }
   else {
@@ -297,74 +300,18 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
   // Force retranslation and new inference engine creation if inference
   // parameters have changed.
-  int oldBitVal = KBmanager.getMgr().getOldInferenceBitValue();
-  int newBitVal = KBmanager.getMgr().getInferenceBitValue();
-  boolean bitsChanged = false;
+
   HashSet<String> kbNames = KBmanager.getMgr().getKBnames();
-  String akbName = null;
-  KB akb = null;
   Iterator<String> it = null;
   if ((kbNames != null) && !(kbNames.isEmpty())) {
-      if (oldBitVal != newBitVal) {
-          if (oldBitVal != -1) 
-              bitsChanged = true;
-          KBmanager.getMgr().setOldInferenceBitValue(newBitVal);
-      }
-      if (ieChanged || bitsChanged) {
-          boolean useTypePrefixChanged = ((oldBitVal & KBmanager.USE_TYPE_PREFIX)
-                        != (newBitVal & KBmanager.USE_TYPE_PREFIX));
-          boolean useHoldsPrefixChanged = ((oldBitVal & KBmanager.USE_HOLDS_PREFIX)
-                         != (newBitVal & KBmanager.USE_HOLDS_PREFIX));
-          boolean useCacheChanged = ((oldBitVal & KBmanager.USE_CACHE)
-                       != (newBitVal & KBmanager.USE_CACHE));
-          boolean useTptpTurnedOn = ((oldBitVal & KBmanager.USE_TPTP)
-                       < (newBitVal & KBmanager.USE_TPTP));
+      if (reload) {
           it = kbNames.iterator();
           while (it.hasNext()) {
-              akbName = (String) it.next();
-              akb = KBmanager.getMgr().getKB(akbName);
+              String akbName = (String) it.next();
+              KB akb = KBmanager.getMgr().getKB(akbName);
               if (akb != null) {
-                  boolean callReload = false;
-                  boolean callLoadEProver = false;
-                  boolean callCache = false;
-                  boolean callTptpParse = false;
-                  if (useCacheChanged) {
-                      callLoadEProver = true;
-                      int oldCacheSetting = (oldBitVal & KBmanager.USE_CACHE);
-                      int newCacheSetting = (newBitVal & KBmanager.USE_CACHE);
-                      boolean cachingTurnedOn = (newCacheSetting > oldCacheSetting);
-                      if (cachingTurnedOn) 
-                          callCache = true;                    
-                      // We know the cache setting has changed, so if caching has not been newly set to "yes",
-                      // it must have been newly set to "no", and we should reload everything.
-                      else 
-                          callReload = true;                    
-                  }
-                  if (ieChanged || useTypePrefixChanged || useHoldsPrefixChanged) 
-                      callLoadEProver = true;                        
-                  if (callReload) {
-                      System.out.println("INFO in Properties.jsp: reloading the entire KB");
-                      kb.reload();
-                  }
-                  else if (callCache) {
-                      System.out.println("INFO in Properties.jsp: writing the cache file and reloading EProver");                      
-                      kb.kbCache = new KBcache(kb);
-                      kb.kbCache.buildCaches();
-                      kb.kbCache.writeCacheFile();
-                      kb.loadEProver();
-                  }
-                  else if (callLoadEProver) {
-                      System.out.println("INFO in Properties.jsp: reloading EProver");
-                      kb.loadEProver();
-                  }
-                  else if (useTptpTurnedOn) {
-                      // If we reach this point, the only action required is that a TPTP translation be
-                      // generated and stored in the Formula.theTPTPFormula field for each formula.
-                      System.out.println("INFO in Properties.jsp: generating TPTP for all formulas");
-                      com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
-                      skbtptpkb.kb = kb;
-                      skbtptpkb.tptpParse();
-                  }
+                  System.out.println("INFO in Properties.jsp: reloading the entire KB");
+                  akb.reload();
               }
           }
       }
