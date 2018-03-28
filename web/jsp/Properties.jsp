@@ -11,8 +11,8 @@ if (!role.equalsIgnoreCase("admin"))
 <BODY BGCOLOR=#FFFFFF>
 
     <%
-        String pageName = "OMW";
-        String pageString = "Open Multilingual Wordnet";
+        String pageName = "Preferences";
+        String pageString = "Preferences";
     %>
     <%@include file="CommonHeader.jsp" %>
 
