@@ -1210,7 +1210,7 @@ public class DB {
      */
     public static ArrayList<String> getFoodWordSenses(ArrayList<String> al) {
 
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String foodSynset1 = "107555863"; // food, solid_food
         String foodSynset2 = "100004475"; // being, organism
         //System.out.println("INFO in DB.getFoodWordSenses()");

@@ -54,10 +54,10 @@ public class UnitTestBase  extends SigmaTestBase {
     @AfterClass
     public static void checkKBCount() {
 
-        if (KBmanager.getMgr().getKB("SUMO").constituents.size() > NUM_KIF_FILES) { // include cache file
+        if (KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).constituents.size() > NUM_KIF_FILES) { // include cache file
             System.out.println("FAILURE: This test is running with the wrong configuration. Please investigate immediately, since the problem does not consistently appear.");
             System.out.println("  Because this test is changing the configuration, other tests may fail, even if this one passes.");
-            System.out.println("  Nbr kif files: " + KBmanager.getMgr().getKB("SUMO").constituents.size());
+            System.out.println("  Nbr kif files: " + KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).constituents.size());
             fail();
         }
     }

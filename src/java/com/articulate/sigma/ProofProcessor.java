@@ -598,10 +598,11 @@ public class ProofProcessor {
 
     	  try {
     		  KBmanager.getMgr().initializeOnce();
-    		  KB kb = KBmanager.getMgr().getKB("SUMO");
+    		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     		  String stmt = "(subclass ?X Entity)";
     		  String result = kb.ask(stmt, 30, 3) + " ";
-    		  result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n","SUMO","EnglishLanguage");
+    		  result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n",
+					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");
     		  System.out.println(result);
     	  } 
     	  catch (Exception ex) {

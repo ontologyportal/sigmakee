@@ -1193,7 +1193,7 @@ public class LanguageFormatter {
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(and (instance ?GUIE1 GUIElement) (hasGUEState ?GUIE1 GUE_ActiveState)" +
@@ -1214,7 +1214,7 @@ public class LanguageFormatter {
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         String stmt = "(exists (?D ?H)\n" +
                 "   (and\n" +
@@ -1282,7 +1282,7 @@ public class LanguageFormatter {
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         debug = true;
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(exists (?FINANCIALTRANSACTION1 ?AGENT2 ) (broker ?FINANCIALTRANSACTION1 ?AGENT2 ))";

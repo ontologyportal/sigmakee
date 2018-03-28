@@ -482,7 +482,7 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse() {
         
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         
         String teststr = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";

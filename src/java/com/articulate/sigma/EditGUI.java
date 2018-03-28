@@ -373,7 +373,7 @@ public class EditGUI {
         catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println(genInstPage(kb,"UnitedStates",""));
     }
 

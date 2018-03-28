@@ -825,7 +825,7 @@ public class Diagnostics {
 
         //try {
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println(termsNotBelowEntity(kb));
 
         //}

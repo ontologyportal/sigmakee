@@ -31,28 +31,24 @@ import java.util.*;
  */
 public class KBmanager implements Serializable {
 
-    /** ***************************************************************
-     * A numeric (bitwise) constant used to signal whether type
+    /** A numeric (bitwise) constant used to signal whether type
      * prefixes (sortals) should be added during formula
      * preprocessing.
      */    
     public static final int USE_TYPE_PREFIX  = 1;
 
-    /** ***************************************************************
-     * A numeric (bitwise) constant used to signal whether holds
+    /** A numeric (bitwise) constant used to signal whether holds
      * prefixes should be added during formula preprocessing.
      */    
     public static final int USE_HOLDS_PREFIX = 2;
 
-    /** ***************************************************************
-     * A numeric (bitwise) constant used to signal whether the closure
+    /** A numeric (bitwise) constant used to signal whether the closure
      * of instance and subclass relastions should be "cached out" for
      * use by the inference engine.
      */    
     public static final int USE_CACHE        = 4;
 
-    /** ***************************************************************
-     * A numeric (bitwise) constant used to signal whether formulas
+    /*** A numeric (bitwise) constant used to signal whether formulas
      * should be translated to TPTP format during the processing of KB
      * constituent files.
      */    
@@ -70,6 +66,23 @@ public class KBmanager implements Serializable {
     private int oldInferenceBitValue = -1;
     private String error = "";
 
+    public static final List<String> configKeys =
+            Arrays.asList("sumokbname", "testOutputDir", "TPTPDisplay", "semRewrite",
+                    "inferenceEngine", "inferenceTestDir", "baseDir", "hostname",
+                    "logLevel", "systemsDir", "dbUser", "loadFresh", "userBrowserLimit",
+                    "adminBrowserLimit", "https", "graphWidth", "overwrite", "typePrefix",
+                    "graphDir", "nlpTools","TPTP","cache","editorCommand","graphVizDir",
+                    "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
+                    "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
+                    "englishPCFG");
+
+    public static final List<String> fileKeys =
+            Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
+                    "systemsDir","graphVizDir", "kbDir", "celtdir", "tptpHomeDir", "logDir",
+                    "englishPCFG");
+
+    /** ***************************************************************
+     */
     public KBmanager() {
     }
     
@@ -251,7 +264,8 @@ public class KBmanager implements Serializable {
             preferences.put("graphVizDir", graphVizDir.getCanonicalPath());
           
             File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
-            graphDir.mkdir();
+            if (!graphDir.exists())
+                graphDir.mkdir();
             preferences.put("graphDir", graphDir.getCanonicalPath());
             
             // There is no foolproof way to determine the actual
@@ -285,6 +299,7 @@ public class KBmanager implements Serializable {
             preferences.put("port","8080");            
             preferences.put("hostname","localhost");
             preferences.put("https","false");
+            preferences.put("sumokbname","SUMO");
             
             // Default logging things
             preferences.put("logDir", logDir.getCanonicalPath());
@@ -340,7 +355,8 @@ public class KBmanager implements Serializable {
      * value of preference kbDir
      */
     private static void kbsFromXML(SimpleElement configuration) {
-        
+
+        boolean SUMOKBexists = false;
         if (!configuration.getTagName().equals("configuration")) 
         	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
         else {
@@ -348,6 +364,8 @@ public class KBmanager implements Serializable {
                 SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
                 if (element.getTagName().equals("kb")) {
                     String kbName = (String) element.getAttribute("name");
+                    if (kbName.equals(getMgr().getPref("sumokbname")))
+                        SUMOKBexists = true;
                     KBmanager.getMgr().addKB(kbName);
                     ArrayList<String> constituentsToAdd = new ArrayList<String>();
                     boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
@@ -372,6 +390,8 @@ public class KBmanager implements Serializable {
             }
         }
         System.out.println("kbsFromXML(): Completed loading KBs");
+        if (!SUMOKBexists)
+            System.out.println("Error in KBmanager.fromXML(): no SUMO kb.  Some Sigma functions will not work.");
     }
 
     /** ***************************************************************
@@ -407,6 +427,8 @@ public class KBmanager implements Serializable {
                         }
                     }
                 }
+                else
+                    System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
             }
         }
         System.out.println("kbsFilenamesFromXML(): Completed loading KB names");
@@ -466,6 +488,10 @@ public class KBmanager implements Serializable {
                 SimpleElement element = (SimpleElement) configuration.getChildElements().get(i);
                 if (element.getTagName().equals("preference")) {
                     String name = (String) element.getAttribute("name");
+                    if (!configKeys.contains(name)) {
+                        System.out.println("Error in KBmanager.fromXML(): Bad key: " + name);
+                        // continue; // set it anyway
+                    }
                     String value = (String) element.getAttribute("value");
                     preferences.put(name,value);
                 }
@@ -786,8 +812,7 @@ public class KBmanager implements Serializable {
         while (it.hasNext()) {
         	String key = it.next();
         	String value = preferences.get(key);
-            if (Arrays.asList("kbDir","celtdir","inferenceEngine",
-            		"inferenceTestDir","leoExecutable").contains(key))
+            if (fileKeys.contains(key))
                 value = escapeFilename(value);
             if (!Arrays.asList("userName", "userRole").contains(key)) {
                 SimpleElement preference = new SimpleElement("preference");
@@ -856,16 +881,6 @@ public class KBmanager implements Serializable {
         //    manager = new KBmanager();
         return manager;
     }
-
-    /** ***************************************************************
-     * Reset the one instance of KBmanager from its class variable.
-
-    public static KBmanager newMgr(String username) {
-
-        manager = new KBmanager();
-        manager.initialized = false;
-        return manager;
-    } */
     
     /** ***************************************************************
      * Get the Set of KB names in this manager.
@@ -913,10 +928,14 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Get the preference corresponding to the given kef.
+     * Get the preference corresponding to the given key
      */    
     public String getPref(String key) {
-        
+
+        if (!configKeys.contains(key)) {
+            System.out.println("Error in KBmanager.getPref(): bad key: " + key);
+            return "";
+        }
         String ans = (String) preferences.get(key);
         if (ans == null) 
             ans = "";        
@@ -927,54 +946,12 @@ public class KBmanager implements Serializable {
      * Set the preference to the given value.
      */
     public void setPref(String key, String value) {
-        
-        preferences.put(key,value);
-    }
 
-    /** ***************************************************************
-     * Returns an int value, the bitwise interpretation of which
-     * indicates the current configuration of inference parameter
-     * (preference) settings.  The int value is computed from the
-     * KBmanager preferences at the time this method is evaluated.
-     *
-     * @return An int value indicating the current configuration of
-     * inference parameters, according to KBmanager preference
-     * settings.
-     */
-    public int getInferenceBitValue() {
-        
-        int bv = 0;
-        String[] keys = { "typePrefix", "holdsPrefix", "cache", "TPTP" };
-        int[] vals = { USE_TYPE_PREFIX, USE_HOLDS_PREFIX, USE_CACHE, USE_TPTP };
-        String pref = null;
-        for (int i = 0; i < keys.length; i++) {
-            pref = this.getPref( keys[i] );
-            if (!StringUtil.emptyString(pref) && pref.equalsIgnoreCase("yes")) 
-                bv += vals[i];            
+        if (!configKeys.contains(key)) {
+            System.out.println("Error in KBmanager.setPref(): bad key: " + key);
+            return;
         }
-        return bv;
-    }
-
-    /** ***************************************************************
-     * Returns the last cached inference bit value setting.
-     *
-     * @return An int value indicating the inference parameter
-     * configuration at the time the value was set.
-     */
-    public int getOldInferenceBitValue() {
-        
-        return this.oldInferenceBitValue;
-    }
-
-    /** ***************************************************************
-     * Sets the value of the private variable oldInferenceBitValue.
-     *
-     * @return void
-     */
-    public void setOldInferenceBitValue (int bv) {
-        
-        this.oldInferenceBitValue = bv;
-        return;
+        preferences.put(key,value);
     }
 
     /** ***************************************************************
@@ -995,7 +972,7 @@ public class KBmanager implements Serializable {
         catch (Exception e ) {
             System.out.println(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         GatewayServer server = new GatewayServer(kb);
         server.start();
         System.out.println("KBmanager.pythonServer(): completed initialization, server running");
@@ -1026,7 +1003,7 @@ public class KBmanager implements Serializable {
             catch (Exception e) {
                 System.out.println(e.getMessage());
             }
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Formula f = new Formula();
             f.read("(=> (and (wears ?A ?C) (part ?P ?C)) (wears ?A ?P))");
             FormulaPreprocessor fp = new FormulaPreprocessor();

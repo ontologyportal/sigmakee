@@ -479,7 +479,7 @@ public class InferenceTestSuite {
         try {
             KBmanager.getMgr().initializeOnce();
             KBmanager.getMgr().setPref("inferenceTestDir",System.getProperty("user.home") + "/infTest");
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println(InferenceTestSuite.test(kb, "STP2", 10));
         } catch (Exception e) {
             System.out.println("Error in InferenceTestSuite.main()");

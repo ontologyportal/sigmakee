@@ -366,7 +366,7 @@ public class KButilities {
             int counter = 0;
             System.out.println("INFO in KB.generateTPTPTestAssertions()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
             Iterator<String> it = kb.terms.iterator();
             while (it.hasNext()) {
@@ -406,7 +406,7 @@ public class KButilities {
         try {
             System.out.println("INFO in KB.generateRelationList()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("INFO in KB.generateRelationList(): printing predicates");
             Iterator<String> it = kb.terms.iterator();
             while (it.hasNext()) {
@@ -456,7 +456,7 @@ public class KButilities {
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         //countRelations(kb);
         //checkURLs(kb);
         //validatePictureList();

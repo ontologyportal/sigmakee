@@ -1970,7 +1970,7 @@ public class THF {
         THF thf = new THF();
         KBmanager kbmgr = KBmanager.getMgr();
         kbmgr.initializeOnce();
-        KB kb = kbmgr.getKB("SUMO");  
+        KB kb = kbmgr.getKB(KBmanager.getMgr().getPref("sumokbname"));
         THFdebug = false;  /* set this to true for lots of debug output */
         //THFdebug = true;  /* set this to true for lots of debug output */	
         List<Formula> testFormulas = new ArrayList<Formula>();

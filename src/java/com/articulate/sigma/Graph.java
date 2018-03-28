@@ -322,8 +322,7 @@ public class Graph {
 
         FileWriter fw = null;
         PrintWriter pw = null;
-        String dir = System.getenv("CATALINA_HOME") + File.separator + "webapps" +
-                File.separator + "sigma" + File.separator + "graph";
+        String dir = KBmanager.getMgr().getPref("graphDir");
         String filename = System.getenv("CATALINA_HOME") + File.separator + "webapps" +
                 File.separator + "sigma" + File.separator + "graph" + File.separator + fname;
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
@@ -438,7 +437,7 @@ public class Graph {
 
         try {
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Graph g = new Graph();
             String start = "Process";
             String relation = "subclass";

@@ -30,7 +30,7 @@ public class InferenceTest {
     public static void setKB() {
 
         KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB("SUMO");
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     }
 
     /** ***************************************************************

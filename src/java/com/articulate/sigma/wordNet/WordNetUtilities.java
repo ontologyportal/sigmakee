@@ -584,7 +584,7 @@ public class WordNetUtilities {
         PrintWriter pw = null;
         LineNumberReader lr = null;
         try {
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
             pw = new PrintWriter(fw);
 
@@ -2131,7 +2131,7 @@ public class WordNetUtilities {
      */
     public static HashMap<String,HashSet<String>> sensoryWords() {
 
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         KBcache cache = kb.kbCache;
         System.out.println();
         System.out.println("INFO in WordNetUtilities.sensorySynsets(): ");
@@ -2364,7 +2364,7 @@ public class WordNetUtilities {
                 "Touching", "TextureAttribute", "PerceptualAttribute", "TemperatureAttribute",
                 "ShapeAttribute", "PsychologicalProcess","PsychologicalAttribute", "EmotionalState"};
 
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         if (testWordDebug) System.out.println("WordNetUtilities.testWord(): word: " + word);
         HashSet<String> synsets = wordsToSynsets(word);

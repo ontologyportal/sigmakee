@@ -1272,7 +1272,7 @@ public class KBcache implements Serializable {
     public static void main(String[] args) {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("**** Finished loading KB ***");
         KBcache nkbc = kb.kbCache;
         String term = "Object";

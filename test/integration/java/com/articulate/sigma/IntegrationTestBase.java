@@ -54,7 +54,7 @@ public class IntegrationTestBase extends SigmaTestBase {
 
         //SigmaTestBase.doSetUp(xmlReader);
         KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB("SUMO");
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         kbBackup = new KB(kb);
         checkConfiguration();
         long endTime = System.currentTimeMillis();
@@ -71,11 +71,11 @@ public class IntegrationTestBase extends SigmaTestBase {
     public static void resetAllForInference() throws IOException {
 
         kb = new KB(kbBackup);
-        KBmanager.getMgr().kbs.put("SUMO", kb);
+        KBmanager.getMgr().kbs.put(KBmanager.getMgr().getPref("sumokbname"), kb);
         kb.deleteUserAssertions();
 
         // Remove the assertions in the files.
-        File userAssertionsFile = new File(KB_PATH, "SUMO" + kb._userAssertionsString);
+        File userAssertionsFile = new File(KB_PATH, KBmanager.getMgr().getPref("sumokbname") + kb._userAssertionsString);
         if (userAssertionsFile.exists()) {
             userAssertionsFile.delete();
             userAssertionsFile.createNewFile();

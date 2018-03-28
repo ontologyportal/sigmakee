@@ -1499,7 +1499,7 @@ public class OWLtranslator {
         OWLtranslator ot = new OWLtranslator();
         try {
             KBmanager.getMgr().initializeOnce();
-            ot.kb = KBmanager.getMgr().getKB("SUMO");
+            ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             ot.createAxiomMap();
             ot.writeDefsAsFiles();
             ot.readYAGOSUMOMappings();

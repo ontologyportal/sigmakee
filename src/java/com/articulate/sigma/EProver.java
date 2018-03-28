@@ -457,7 +457,7 @@ public class EProver {
         try {
             System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("------------- INFO in EProver.main() completed initialization--------");
             EProver eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"),
                     KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");

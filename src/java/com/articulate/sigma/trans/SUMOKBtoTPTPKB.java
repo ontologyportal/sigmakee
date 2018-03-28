@@ -422,7 +422,7 @@ public class SUMOKBtoTPTPKB {
                 /* not needed since initialization will create the tptp file
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
 
-        skbtptpkb.kb = KBmanager.getMgr().getKB("SUMO");
+        skbtptpkb.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
         String fileWritten = skbtptpkb.writeTPTPFile(filename, null, true, "none");
         if (StringUtil.isNonEmptyString(fileWritten))

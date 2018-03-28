@@ -3284,7 +3284,7 @@ public class KB implements Serializable {
         KB kb = null;
         try {
             KBmanager.getMgr().initializeOnce();
-            kb = KBmanager.getMgr().getKB("SUMO");
+            kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println(kb.getAllSub("ColorAttribute","subAttribute"));
             //kb.writeTerms();
             // System.out.println("KB.main(): " + kb.isChildOf("Africa",

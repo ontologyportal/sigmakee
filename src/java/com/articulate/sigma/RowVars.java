@@ -326,7 +326,7 @@ public class RowVars {
         System.out.println("Info in RowVars.main(): " + findRowVars(f));
         KBmanager.getMgr().initializeOnce();
         System.out.println("Info in RowVars.main(): finished initialization");
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         RowVars.DEBUG = true;
         System.out.println("Info in RowVars.main(): " + getRowVarRelations(f));
     }

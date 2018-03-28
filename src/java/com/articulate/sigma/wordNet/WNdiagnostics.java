@@ -98,7 +98,7 @@ public class WNdiagnostics {
     public static ArrayList<String> nonRelationTermsWithoutSynsets() {
 
         ArrayList<String> result = new ArrayList<String>();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         Iterator<String> it = kb.terms.iterator();
         while (it.hasNext()) {
             String term = (String) it.next();
@@ -194,7 +194,7 @@ public class WNdiagnostics {
                             String bareSUMOterm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
                             String bareTargetSUMO = WordNetUtilities.getBareSUMOTerm(targetSUMO);
                             if (sumoTerm != null) {
-                                KB kb = KBmanager.getMgr().getKB("SUMO");
+                                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                                 HashSet<String> SUMOtaxonomy = new HashSet<String>();
                                 String arrow = "->";
                                 if (avp.attribute.equals("hypernym")) 

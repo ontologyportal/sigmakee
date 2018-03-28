@@ -187,8 +187,8 @@ public class Formula implements Comparable, Serializable {
 
 		this.endLine = f.endLine;
 		this.startLine = f.startLine;
-		this.sourceFile = f.sourceFile.intern();
-		this.theFormula = f.theFormula.intern();
+		this.sourceFile = f.sourceFile;
+		this.theFormula = f.theFormula;
 	}
 	
     /** *****************************************************************
@@ -1086,7 +1086,7 @@ public class Formula implements Comparable, Serializable {
         Formula f2 = Clausifier.clausify(f);
 
         //the normalizeParameterOrder method should be moved to Clausifier
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap =
                 new HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>>();
@@ -1256,7 +1256,7 @@ public class Formula implements Comparable, Serializable {
         Formula f2 = Clausifier.clausify(f);
 
         //the normalizeParameterOrder method should be moved to Clausifier
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         String normalized1 = Formula.normalizeParameterOrder(f1.theFormula, kb, true);
         String normalized2 = Formula.normalizeParameterOrder(f2.theFormula, kb, true);
@@ -2727,7 +2727,7 @@ public class Formula implements Comparable, Serializable {
     public static void testIsSimpleClause() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     	Formula f1 = new Formula();
     	f1.read("(not (instance ?X Human))");
     	System.out.println("Simple clause? : " + f1.isSimpleClause(kb) + "\n" + f1 + "\n");

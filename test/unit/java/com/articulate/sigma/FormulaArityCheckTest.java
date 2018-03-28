@@ -28,15 +28,6 @@ import static org.junit.Assert.assertNull;
 
 public class FormulaArityCheckTest extends UnitTestBase {
 
-//    KB kb;
-
-//    public FormulaArityCheckTest() {
-//
-//        KBmanager kbm = KBmanager.getMgr();
-//        kbm.initializeOnce();
-//        kb = kbm.getKB("SUMO");
-//    }
-
     @Test
     public void testArityCheck1() {
 

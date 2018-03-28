@@ -37,7 +37,7 @@ public class SigmaTestBase {
             KBmanager.getMgr().setConfiguration(configuration);
             manager.initialized = true;
         }
-        kb = KBmanager.getMgr().getKB("SUMO");
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         checkConfiguration();
     }
 
