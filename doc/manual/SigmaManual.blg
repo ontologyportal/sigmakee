@@ -1,0 +1,46 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: SigmaManual.aux
+The style file: apalike.bst
+Database file #1: SigmaManual.bib
+You've used 22 entries,
+            1935 wiz_defined-function locations,
+            602 strings with 7589 characters,
+and the built_in function-call counts, 8554 in all, are:
+= -- 837
+> -- 332
+< -- 22
++ -- 109
+- -- 107
+* -- 654
+:= -- 1479
+add.period$ -- 73
+call.type$ -- 22
+change.case$ -- 156
+chr.to.int$ -- 22
+cite$ -- 22
+duplicate$ -- 370
+empty$ -- 626
+format.name$ -- 145
+if$ -- 1734
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 25
+newline$ -- 113
+num.names$ -- 70
+pop$ -- 164
+preamble$ -- 1
+purify$ -- 160
+quote$ -- 0
+skip$ -- 275
+stack$ -- 0
+substring$ -- 494
+swap$ -- 61
+text.length$ -- 5
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 122
+warning$ -- 0
+while$ -- 65
+width$ -- 0
+write$ -- 288

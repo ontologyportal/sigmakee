@@ -1,0 +1,11 @@
+import com.articulate.sigma.*;
+
+public class MySigma {
+
+    public static void main(String[] args) {
+
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println(kb.askWithRestriction(2, "PrimaryColor", 0, "instance"));
+    }
+}

@@ -1,0 +1,135 @@
+\begin{thebibliography}{}
+
+\bibitem[Bechhofer et~al., 2004]{bechhofer2004owl}
+Bechhofer, S., van Harmelen, F., Hendler, J., Horrocks, I., McGuinness, D.,
+  Patel-Schneider, P., Stein, L., Dean, M., and Schreiber, G. (2004).
+\newblock {\em OWL Web Ontology Language Reference, World Wide Web Consortium,
+  Recommendation {REC}-owl-ref-20040210}.
+\newblock World Wide Web Consortium.
+
+\bibitem[Deng et~al., 2009]{deng2009}
+Deng, J., Dong, W., Socher, R., Li, L.~J., Li, K., and Fei-Fei, L. (2009).
+\newblock {\em (2009)}.
+\newblock ImageNet: A Large-Scale Hierarchical Image Database.
+
+\bibitem[Fellbaum, 1998]{fellbaum1998wordnet}
+Fellbaum, C. (1998).
+\newblock {\em WordNet: An Electronic Lexical Database}.
+\newblock Language, Speech, and Communication. MIT Press.
+
+\bibitem[Hayes and Menzel, 2001]{hayes2001}
+Hayes, P. and Menzel, C. (2001).
+\newblock {\em (2001)}.
+\newblock A Semantics for Knowledge Interchange Format, in Working Notes of the
+  {IJCAI}-2001 Workshop on the {IEEE} Standard Upper Ontology.
+
+\bibitem[Hoder and Voronkov, 2011]{DBLP:conf/cade/HoderV11}
+Hoder, K. and Voronkov, A. (2011).
+\newblock Sine qua non for large theory reasoning.
+\newblock In {\em Proceedings of CADE-23}, Lecture Notes in Computer Science,
+  pages 299--314, Wrocław, Poland. Springer.
+
+\bibitem[Hurd, 2003]{hurd2003firstorder}
+Hurd, J. (2003).
+\newblock First-order proof tactics in higher-order logic theorem provers.
+\newblock In Archer, M., Vito, D., B., and Munoz, C., editors, {\em Proceedings
+  of the 1st {International} {Workshop} on {Design} and {Application} of
+  {Strategies}/Tactics in higher-order {Logics}, number {NASA}/CP-2003-212448
+  in {NASA} {Technical} {Reports}}, pages 56--68. NASA.
+
+\bibitem[Li, 2004]{li2004lom}
+Li, J. (2004).
+\newblock Lom: A lexicon-based ontology mapping tool.
+\newblock In {\em Proceedings of the 2004 {Performance} {Metrics} for
+  {Intelligent} {Systems} conference ({PerMIS})}, pages 321--325. NIST.
+
+\bibitem[Niles and Pease, 2003]{np03}
+Niles, I. and Pease, A. (2003).
+\newblock {Linking Lexicons and Ontologies: Mapping WordNet to the Suggested
+  Upper Merged Ontology}.
+\newblock In {\em {Proceedings of the IEEE International Conference on
+  Information and Knowledge Engineering}}, pages 412--416.
+
+\bibitem[Pease, 2003]{p03}
+Pease, A. (2003).
+\newblock {The Sigma Ontology Development Environment}.
+\newblock {\em Working Notes of the IJCAI-2003 Workshop on Ontology and
+  Distributed Systems}, 71.
+
+\bibitem[Pease, 2009]{Pease2009}
+Pease, A. (2009).
+\newblock Standard upper ontology knowledge interchange format.
+\newblock
+  \url{http://sigmakee.cvs.sourceforge.net/*checkout*/sigmakee/sigma/suo-kif.pdf}.
+
+\bibitem[Pease, 2013]{SigmaWeb}
+Pease, A. (2013).
+\newblock Sigma web site.
+\newblock \url{http://sigmakee.sourceforge.net}.
+
+\bibitem[Pease and Benzmüller, 2010]{pb10}
+Pease, A. and Benzmüller, C. (2010).
+\newblock {Ontology Archaeology: Mining a Decade of Effort on the Suggested
+  Upper Merged Ontology}.
+\newblock {\em The ECAI-10 Workshop on Automated Reasoning about Context and
+  Ontology Evolution}.
+
+\bibitem[Pease and Li, 2010]{pl10}
+Pease, A. and Li, J. (2010).
+\newblock {Controlled English to Logic Translation}.
+\newblock In Poli, R., Healy, M., and Kameas, A., editors, {\em {Theory and
+  Applications of Ontology}}. Springer.
+
+\bibitem[Pease and Sutcliffe, 2007]{ps07}
+Pease, A. and Sutcliffe, G. (2007).
+\newblock {First Order Reasoning on a Large Ontology}.
+\newblock In {\em {Proceedings of the CADE-21 workshop on Empirically
+  Successful Automated Reasoning on Large Theories (ESARLT)}}.
+
+\bibitem[Pease et~al., 2010]{psst10}
+Pease, A., Sutcliffe, G., Siegel, N., and Trac, S. (2010).
+\newblock {Large Theory Reasoning with SUMO at CASC}.
+\newblock {\em {AI Communications, Special issue on Practical Aspects of
+  Automated Reasoning}}, 23(2-3):137--144.
+
+\bibitem[Riazanov and Voronkov, 2002]{RV:AICOM-2002}
+Riazanov, A. and Voronkov, A. (2002).
+\newblock {The Design and Implementation of VAMPIRE}.
+\newblock {\em Journal of AI Communications}, 15(2/3):91--110.
+
+\bibitem[Russel and Norvig, 2009]{RN:AI-2009}
+Russel, S.~J. and Norvig, P. (2009).
+\newblock {\em {Artificial Intelligence: A Modern Approach}}.
+\newblock Prentice Hall, 3rd edition.
+
+\bibitem[Schulz, 2002]{Schulz:AICOM-2002}
+Schulz, S. (2002).
+\newblock {E -- A Brainiac Theorem Prover}.
+\newblock {\em Journal of AI Communications}, 15(2/3):111--126.
+
+\bibitem[Sevcenko, 2003]{DBLP:conf/kes/Sevcenko03}
+Sevcenko, M. (2003).
+\newblock Knowledge support for modeling and simulation.
+\newblock In {\em Proceedings of the 7th INternational Conference,
+  Knowledge-Based Intelligent Information and Engineering Systems, KES 2003},
+  pages 99--103, Oxford, UK. Springer Berlin Heidelberg.
+
+\bibitem[Sutcliffe, 2009]{Sutcliffe:JAR-2009}
+Sutcliffe, G. (2009).
+\newblock {The TPTP Problem Library and Associated Infrastructure: The FOF and
+  CNF Parts, v3.5.0}.
+\newblock {\em Journal of Automated Reasoning}, 43(4):337--362.
+
+\bibitem[Trac et~al., 2007]{trac2007}
+Trac, S., Puzis, Y., and Sutcliffe, G. (2007).
+\newblock An interactive derivation viewer.
+\newblock {\em Electronic Notes in Theoretical Computer Science ({ENTCS})},
+  174(2).
+
+\bibitem[Trac et~al., 2008]{tsp08}
+Trac, S., Sutcliffe, G., and Pease, A. (2008).
+\newblock {Integration of the TPTPWorld into SigmaKEE}.
+\newblock In {\em {Proceedings of IJCAR '08 Workshop on Practical Aspects of
+  Automated Reasoning (PAAR-2008)}}. CEUR Workshop Proceedings.
+
+\end{thebibliography}

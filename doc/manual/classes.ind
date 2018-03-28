@@ -1,0 +1,75 @@
+\begin{theindex}
+
+  \item CCheck, 43
+  \item CCheckManager, 43
+  \item Clausifier, 26
+
+  \indexspace
+
+  \item Diagnostics, 39
+
+  \indexspace
+
+  \item EProver, 40
+
+  \indexspace
+
+  \item Formula, 26
+  \item FormulaPreprocessor, 16, 20, 22, 26
+
+  \indexspace
+
+  \item Graph, 47
+
+  \indexspace
+
+  \item HTMLformatter, 46
+
+  \indexspace
+
+  \item InferenceEngine, 40
+
+  \indexspace
+
+  \item KBcache, 17
+  \item KBmanager, 13, 14
+  \item KIF, 14, 15
+
+  \indexspace
+
+  \item LanguageFormatter, 34
+
+  \indexspace
+
+  \item PredVarInst, 22
+  \item ProofProcessor, 44
+  \item ProofStep, 44
+
+  \indexspace
+
+  \item RowVars, 24
+
+  \indexspace
+
+  \item SInE, 40
+  \item SUMOformulaToTPTPformula, 26
+  \item SUMOKBtoTPTPKB, 26
+  \item SystemOnTPTP, 41
+
+  \indexspace
+
+  \item TaxoModel, 47
+  \item TaxoNode, 47
+  \item THF, 24
+
+  \indexspace
+
+  \item Vampire, 41
+
+  \indexspace
+
+  \item WNdiagnostics, 40
+  \item WordNetUtilities, 46
+  \item WSD, 18
+
+\end{theindex}
