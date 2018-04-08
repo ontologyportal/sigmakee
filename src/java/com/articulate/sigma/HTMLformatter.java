@@ -1029,7 +1029,7 @@ public class HTMLformatter {
         } catch (Exception ex ) {
             System.out.println(ex.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("INFO in HTMLformatter.main()");
         ArrayList<Formula> forms = KButilities.termIntersection(kb,"ShapeChange","ShapeAttribute");
         /* should get from Merge.kif 15034-15041
