@@ -2026,7 +2026,9 @@ public class Formula implements Comparable, Serializable {
         	argnum++;        	
             if (listP(arg)) {
             	Formula f = new Formula(arg);
-                if (!kb.isFunction(f.car()))
+                if (kb != null && !kb.isFunction(f.car()))
+                    return false;
+                if (kb == null && !f.car().endsWith("Fn")) // in case just testing without a kb
                     return false;
             }
         } while (!StringUtil.emptyString(arg));
