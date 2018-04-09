@@ -22,8 +22,7 @@ sudo apt-get install certbot
 in place of your first and last name.  Note also that when asked to create a password
 for the keystore this has to be given in plain text to your tomcat configuration file,
 so make this a unique password.  That seems odd to me, so there must be a better way.
-I chose the default of making the password for the tomcat key the same as the keystore.
-I don't really know what they are and what they are for.
+The password for the tomcat key must the same as the keystore.
 
 ~$ sudo keytool -genkey -alias tomcat -keyalg RSA -keystore ~/.keystore -keysize 2048
 
