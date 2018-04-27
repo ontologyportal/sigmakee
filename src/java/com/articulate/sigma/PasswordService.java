@@ -6,7 +6,7 @@ other representations of any software which incorporates, builds on, or uses thi
 code.  */
 package com.articulate.sigma;
 
-import org.h2.tools.Server;
+//import org.h2.tools.Server;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -36,7 +36,7 @@ public final class PasswordService {
     public static final String JDBCString = "jdbc:h2:~/var/passwd";
     public static String UserName = "sumo";
     public Connection conn = null;
-    public static Server server = null;
+    //public static Server server = null;
   
     /** ***************************************************************** 
      * Create an instance of PasswordService
