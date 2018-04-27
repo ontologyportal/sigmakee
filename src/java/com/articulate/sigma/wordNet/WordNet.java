@@ -42,7 +42,7 @@ public class WordNet implements Serializable {
     public static WordNet wn  = new WordNet();
 
     /* A map of language name to wordnets */
-    public static HashMap<String,WordNet> wns = new HashMap<String,WordNet>();
+    //public static HashMap<String,WordNet> wns = new HashMap<String,WordNet>();
     public static String baseDir = "";
     public static File baseDirFile = null;
     public static boolean initNeeded = true;
@@ -278,7 +278,7 @@ public class WordNet implements Serializable {
      * strings in regexPatternStrings and puts the resulting compiled
      * Pattern objects in the Pattern[] regexPatterns.
      */
-    private void compileRegexPatterns() {
+    public void compileRegexPatterns() {
         
         System.out.println("INFO in WordNet.compileRegexPatterns(): compiling patterns");
         regexPatterns = new Pattern[regexPatternStrings.length];
@@ -1212,7 +1212,7 @@ public class WordNet implements Serializable {
         }
         catch (Exception i) {
             System.out.println();
-            System.out.println( "Error in WordNet.readSenseIndex() reading file "
+            System.out.println("Error in WordNet.readSenseIndex() reading file "
                     + canonicalPath + ": " + i.getMessage());
             i.printStackTrace();
         }
