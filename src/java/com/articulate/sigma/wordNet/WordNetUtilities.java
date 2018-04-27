@@ -95,6 +95,28 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    public static String posAlphaKeyToWord(String alphaKey) {
+
+        if (alphaKey.equals("NN")) return "noun";
+        else if (alphaKey.equals("VB")) return "verb";
+        else if (alphaKey.equals("JJ")) return "adjective";
+        else if (alphaKey.equals("RB")) return "adverb";
+        return "adjective_satellite";
+    }
+
+    /** ***************************************************************
+     */
+    public static String posWordToAlphaKey(String word) {
+
+        if (word.equals("noun")) return "NN";
+        else if (word.equals("verb")) return "VB";
+        else if (word.equals("adjective")) return "JJ";
+        else if (word.equals("adverb")) return "RB";
+        return "AS";
+    }
+
+    /** ***************************************************************
      * Extract the POS from a word_POS_num sense key.  Should be an
      * alpha key, such as "VB".
      */
@@ -121,6 +143,20 @@ public class WordNetUtilities {
             return "";
         }
         return senseKey.substring(0, lastUS - 3);
+    }
+
+    /** ***************************************************************
+     * Extract the sense number from a word_POS_num sense key.
+     */
+    public static String getNumFromKey (String senseKey) {
+
+        int lastUS = senseKey.lastIndexOf("_");
+        if (lastUS < 0) {
+            System.out.println("Info in WordNetUtilities.getNumFromKey(): missing num: " + senseKey);
+            new Exception().printStackTrace();
+            return "";
+        }
+        return senseKey.substring(lastUS + 1,senseKey.length());
     }
 
     /** ***************************************************************
@@ -330,7 +366,7 @@ public class WordNetUtilities {
         else if (penn.equals("WP")) return '0';	// 34.	WP	Wh-pronoun
         else if (penn.equals("WP$")) return '0';	// 35.	WP$	Possessive wh-pronoun
         else if (penn.equals("WRB")) return '0';	// 36.	WRB	Wh-adverb
-
+        else if (penn.equals("``")) return '0';
         else { System.out.println("Error in WordNetUtilities.posPennToNumber(): bad tag: " + penn); new Throwable().printStackTrace(System.out); }
         return '0';
     }
@@ -454,7 +490,8 @@ public class WordNetUtilities {
      *  @return is a boolean indicating whether the result of the substitution
      *  was found in the hashtable.
      */
-    public static boolean substTest(String result, String match, String subst, HashMap<String,HashSet<String>> hash) {
+    public static boolean substTest(String result, String match, String subst,
+                                    HashMap<String,HashSet<String>> hash) {
 
         Pattern p = Pattern.compile(match);
         Matcher m = p.matcher(result);
@@ -578,7 +615,8 @@ public class WordNetUtilities {
      * Routine called by mergeUpdates which does the bulk of the work.
      * Should not be called during normal interactive running of Sigma.
      */
-    private static void processMergers (HashMap<String,String> hm, String fileName, String pattern, String posNum) throws IOException {
+    private static void processMergers (HashMap<String,String> hm, String fileName,
+                                        String pattern, String posNum) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null;
@@ -637,7 +675,7 @@ public class WordNetUtilities {
      * mapping for that synset, replace the old term. This is a utility
      * that is not normally called from the interactive Sigma system.
      */
-    public static void mergeUpdates () throws IOException {
+    public static void mergeUpdates() throws IOException {
 
         HashMap<String,String> hm = new HashMap<String,String>();
 
@@ -1466,7 +1504,6 @@ public class WordNetUtilities {
         }
     }
 
-
     /** ***************************************************************
      */
     private static void writeTPTPWordNetExceptions(PrintWriter pw) throws IOException {
@@ -2081,6 +2118,7 @@ public class WordNetUtilities {
 
         return rootWord;
     }
+
     /** ***************************************************************
      * Find all words which are more than one list of words pertaining
      * to a given human sense (as well as a list of emotions and a list
@@ -2423,11 +2461,24 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    public static void testGetPOS() {
+
+        String s = "four-lane_AS_1";
+        String POS = WordNetUtilities.getPOSfromKey(s);
+        String posWord = WordNetUtilities.posAlphaKeyToWord(POS);
+        System.out.println("testGetPOS(): "  + s + " " + POS + " " + posWord);
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
+        testGetPOS();
+
+        /*
         withThoughtEmotion = false;
         KBmanager.getMgr().initializeOnce();
 
@@ -2436,7 +2487,7 @@ public class WordNetUtilities {
         testSynesthesia();
         withThoughtEmotion = true;
         testSynesthesia();
-
+*/
         //String synset = "105786372";
         //System.out.println(getAllHyponyms(synset));
         //System.out.println(collapseSenses());
