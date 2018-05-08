@@ -538,6 +538,7 @@ public class KBmanager implements Serializable {
      * configuration file if none exists.
      */
     public static void copyFile(File in, File out) {
+
         try (FileInputStream fis = new FileInputStream(in);
              FileOutputStream fos = new FileOutputStream(out)
         ){
@@ -810,7 +811,8 @@ public class KBmanager implements Serializable {
              PrintWriter pw = new PrintWriter(fw)
         ) {
             pw.println(configXML.toFileString());
-        } catch (java.io.IOException e) {
+        }
+        catch (java.io.IOException e) {
             System.out.println("Error writing file " + canonicalPath + ".\n " + e.getMessage());
             throw new IOException("Error writing file " + canonicalPath + ".\n " + e.getMessage());
         }
@@ -821,6 +823,7 @@ public class KBmanager implements Serializable {
      * Get the KB that has the given name.
      */
     public KB getKB(String name) {
+
         if (!kbs.containsKey(name))
         	System.out.println("KBmanager.getKB(): KB " + name + " not found.");
         return kbs.get(name);
@@ -856,6 +859,7 @@ public class KBmanager implements Serializable {
      * Get the Set of KB names in this manager.
      */
     public HashSet<String> getKBnames() {
+
         HashSet<String> names = new HashSet<String>();
         for (String kbName : kbs.keySet()) {
             KB kb = getKB(kbName);
