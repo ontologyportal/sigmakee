@@ -537,13 +537,10 @@ public class KBmanager implements Serializable {
      * called "configuration".  It also creates the KBs directory and an empty
      * configuration file if none exists.
      */
-    public static void copyFile(File in, File out) { 
-        
-        FileInputStream fis  = null;
-        FileOutputStream fos = null;
-        try {
-            fis = new FileInputStream(in);
-            fos = new FileOutputStream(out);
+    public static void copyFile(File in, File out) {
+        try (FileInputStream fis = new FileInputStream(in);
+             FileOutputStream fos = new FileOutputStream(out)
+        ){
             byte[] buf = new byte[1024];  
             int i = 0;  
             while ((i = fis.read(buf)) != -1) {  
@@ -554,15 +551,6 @@ public class KBmanager implements Serializable {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        finally {  
-            try {
-                if (fis != null) fis.close();  
-                if (fos != null) fos.close();  
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-            }
-        }  
         return;
     }
 
@@ -579,7 +567,6 @@ public class KBmanager implements Serializable {
 
         System.out.println("KBmanager.readConfiguration()");
         SimpleElement configuration = null;
-        BufferedReader br = null;
         try {
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
@@ -603,23 +590,15 @@ public class KBmanager implements Serializable {
                 else 
                     writeConfiguration();
             }
-            br = new BufferedReader(new FileReader(configFile));
-            SimpleDOMParser sdp = new SimpleDOMParser();
-            configuration = sdp.parse(br);
+            try (BufferedReader br = new BufferedReader(new FileReader(configFile))) {
+                SimpleDOMParser sdp = new SimpleDOMParser();
+                configuration = sdp.parse(br);
+            }
         }
         catch (Exception ex) {
             System.out.println("ERROR in KBmanager.readConfiguration(" + configDirPath
                                + "):\n" + "  Exception parsing configuration file \n" + ex.getMessage());
             ex.printStackTrace();
-        }
-        finally {
-            try {
-                if (br != null) 
-                    br.close();                
-            }
-            catch (Exception ex2) {
-                ex2.printStackTrace();
-            }
         }
         return configuration;
     }
@@ -717,9 +696,7 @@ public class KBmanager implements Serializable {
         WordNet.wn.initOnce();
         OMWordnet.readOMWfiles();
         if (kbs != null && kbs.size() > 0) {
-            Iterator<String> it = kbs.keySet().iterator();
-            while (it.hasNext()) {
-                String kbName = it.next();
+            for (String kbName : kbs.keySet()) {
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
                 WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
             }
@@ -799,12 +776,10 @@ public class KBmanager implements Serializable {
     public void writeConfiguration() throws IOException {
         
         System.out.println("INFO in KBmanager.writeConfiguration()");
-        FileWriter fw = null;
-        PrintWriter pw = null;
-        String dir = (String) preferences.get("kbDir");
+        String dir = preferences.get("kbDir");
         File fDir = new File(dir);
-        String username = (String) preferences.get("userName");
-        String userrole = (String) preferences.get("userRole");
+        String username = preferences.get("userName");
+        String userrole = preferences.get("userRole");
         String config_file = (((username != null) 
                                && userrole.equalsIgnoreCase("administrator") 
                                && !username.equalsIgnoreCase("admin"))
@@ -814,10 +789,10 @@ public class KBmanager implements Serializable {
         String canonicalPath = file.getCanonicalPath();
 
         SimpleElement configXML = new SimpleElement("configuration");
-        Iterator<String> it = preferences.keySet().iterator();
-        while (it.hasNext()) {
-        	String key = it.next();
-        	String value = preferences.get(key);
+
+        for (Map.Entry<String, String> element : preferences.entrySet()) {
+            String key = element.getKey();
+            String value = element.getValue();
             if (fileKeys.contains(key))
                 value = escapeFilename(value);
             if (!Arrays.asList("userName", "userRole").contains(key)) {
@@ -827,27 +802,17 @@ public class KBmanager implements Serializable {
                 configXML.addChildElement(preference);
             }
         }
-        Iterator<String> it2 = kbs.keySet().iterator();
-        while (it2.hasNext()) {
-        	String key = it2.next();
-            KB kb = kbs.get(key);
-            SimpleElement kbXML = kb.writeConfiguration();            
+        for (KB kb : kbs.values()) {
+            SimpleElement kbXML = kb.writeConfiguration();
             configXML.addChildElement(kbXML);
         }
-        try {
-            fw = new FileWriter(file);
-            pw = new PrintWriter(fw);
+        try (FileWriter fw = new FileWriter(file);
+             PrintWriter pw = new PrintWriter(fw)
+        ) {
             pw.println(configXML.toFileString());
-        }
-        catch (java.io.IOException e) {                                                
+        } catch (java.io.IOException e) {
             System.out.println("Error writing file " + canonicalPath + ".\n " + e.getMessage());
             throw new IOException("Error writing file " + canonicalPath + ".\n " + e.getMessage());
-        }
-        finally {
-            if (pw != null) 
-                pw.close();            
-            if (fw != null) 
-                fw.close();            
         }
         return;
     }
@@ -856,10 +821,9 @@ public class KBmanager implements Serializable {
      * Get the KB that has the given name.
      */
     public KB getKB(String name) {
-
         if (!kbs.containsKey(name))
         	System.out.println("KBmanager.getKB(): KB " + name + " not found.");
-        return (KB) kbs.get(name.intern());
+        return kbs.get(name);
     }
 
     /** ***************************************************************
@@ -892,14 +856,12 @@ public class KBmanager implements Serializable {
      * Get the Set of KB names in this manager.
      */
     public HashSet<String> getKBnames() {
-        
-        HashSet<String> names = new HashSet<String>();        
-        Iterator<String> it = kbs.keySet().iterator();
-        while (it.hasNext()) {
-            String kbName = (String) it.next();
-            KB kb = (KB) getKB(kbName);
-            if (kb.isVisible())
+        HashSet<String> names = new HashSet<String>();
+        for (String kbName : kbs.keySet()) {
+            KB kb = getKB(kbName);
+            if (kb.isVisible()) {
                 names.add(kbName);
+            }
         }
         return names;
     }
@@ -920,7 +882,7 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Print all peferences to stdout
+     * Print all preferences to stdout
      */
     public void printPrefs() {
 
