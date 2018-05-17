@@ -38,6 +38,26 @@ public class MultiWords implements Serializable {
      * where words are separated by underscores.  The values are
      * the whole multi-word. The same head word can appear in many multi-words.*/
     public Multimap<String, String> multiWord = HashMultimap.create();
+    
+    public Multimap<String, String> dbPediaMultiWord = HashMultimap.create();
+
+    public void addDBPediaMultiWord(String word) {
+    	System.out.println("INFO in MultiWords.addDBPediaMultiWord(): word: " + word);
+    	if (StringUtil.emptyString(word)) {
+    		System.out.println("Error in MultiWords.addDBPediaMultiWord(): word is null");
+    		return;
+    	}
+    
+    	if (word.indexOf("_") >= 0) {
+    		String firstWord = word.substring(0, word.indexOf(95));
+    		if (firstWord.indexOf(",") >= 0) // strip the comma
+    			firstWord = firstWord.substring(0, firstWord.length() - 1);
+    			dbPediaMultiWord.put(firstWord, word);
+    		}
+    		else {
+    			System.out.println("Error in MultiWords.addDBPediaMultiWord(): Not a multi-word: " + word);
+    		}
+    }
 
     /** ***************************************************************
      * Add a multi-word string to the multiWord member variable.
@@ -55,6 +75,8 @@ public class MultiWords implements Serializable {
             //System.out.println("INFO in MultiWords.addMultiWord(): first word: " + firstWord);
             //if (firstWord.equals("four"))
             //    System.out.println("INFO in MultiWords.addMultiWord(): word: " + word);
+            System.out.println("INFO in MultiWords.addMultiWord(): first word: " + firstWord);
+            System.out.println("INFO in MultiWords.addMultiWord(): word: " + word);
             multiWord.put(firstWord, word);
         }
         else

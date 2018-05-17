@@ -10,7 +10,7 @@ public class WSD {
 
     public static int threshold = 5;
     public static int gap = 5;
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     /** ***************************************************************
      * Collect all the SUMO terms that are found in the sentence.
@@ -420,7 +420,7 @@ public class WSD {
             }
             //System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
         }
-        if (bestSense == "") {
+        if ("".equals(bestSense)) { // String comparison issue fixed
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
             ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
             if (al == null)
@@ -437,6 +437,12 @@ public class WSD {
                     //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
                     return result;
                 }  
+            }
+            else {
+            	String sense = (String)WordNet.wn.dbpSUMOSenseKeys.get(word);
+            	System.out.println("INFO in WSD.getBestDefaultSense(): word: " + word + ", dbpSUMOSenseKeys: " + sense);
+            	if (!"".equals(sense))
+            	return "1" + sense;
             }
         }
         else {
