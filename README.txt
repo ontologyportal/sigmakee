@@ -32,7 +32,7 @@ try opening permissions on your $SIGMA_HOME, $CATALINA_HOME and $SIGMA_SRC direc
 Container-Based installation
 ==========================
 
-First install docker if you don't have it already
+First, install docker if you don't have it already
 
 sudo apt-get update
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
@@ -80,6 +80,24 @@ vagrant ssh
 then
 
 Access from a browser with http://localhost:8888/sigma/login.html . Use admin for username and admin for password
+
+To build a new docker container follow these steps where $SIGMA_SRC is your sigmakee git repo path.
+First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+Note that if you don't download that exact version, you'll need to edit sigmastart.sh so that the filename
+matches.
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install docker-ce
+mkdir images
+cd images
+cp $SIGMA_SRC/docker/* .
+sudo docker build -t sigmakee2018:latest .
+sudo docker run -it -d -p 4000:8080 --name trial04 sigmakee2018 "./sigmastart.sh"
 
 System preparation on Linux
 ==========================
