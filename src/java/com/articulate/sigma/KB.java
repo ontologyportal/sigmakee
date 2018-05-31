@@ -87,63 +87,47 @@ public class KB implements Serializable {
     /** The name of the knowledge base. */
     public String name;
 
-    /**
-     * An ArrayList of Strings that are the full canonical pathnames of the
-     * files that comprise the KB.
-     */
+    /* An ArrayList of Strings that are the full canonical pathnames of the
+     * files that comprise the KB.    */
     public ArrayList<String> constituents = new ArrayList<String>();
 
     /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";
 
-    /**
-     * The location of preprocessed KIF files, suitable for loading into
-     * EProver.
-     */
+    /* The location of preprocessed KIF files, suitable for loading into
+     * EProver.     */
     public String kbDir = null;
 
     /** The instance of the CELT process. */
     public transient CELT celt = null;
 
-    /**
-     * A synchronized SortedSet of Strings, which are all the terms in the KB.
-     */
+    /* A synchronized SortedSet of Strings, which are all the terms in the KB.     */
     public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
 
     /** The String constant that is the suffix for files of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
 
-    /**
-     * The String constant that is the suffix for files of cached assertions.
-     */
+    /* The String constant that is the suffix for files of cached assertions.     */
     public static final String _cacheFileSuffix = "_Cache.kif";
 
-    /**
-     * A Map of all the Formula objects in the KB. Each key is a String
+    /* A Map of all the Formula objects in the KB. Each key is a String
      * representation of a Formula. Each value is the Formula object
-     * corresponding to the key.
-     */
+     * corresponding to the key.     */
     public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();
 
-    /**
-     * A HashMap of ArrayLists of String formulae, containing all the formulae
+    /* A HashMap of ArrayLists of String formulae, containing all the formulae
      * in the KB. Keys are the formula itself, a formula ID, and term indexes
      * created in KIF.createKey(). The actual formula can be retrieved by using
-     * the returned String as the key for the variable formulaMap
-     */
+     * the returned String as the key for the variable formulaMap     */
     public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();
 
-    /**
-     * The natural language formatting strings for relations in the KB. It is a
+    /* The natural language formatting strings for relations in the KB. It is a
      * HashMap of language keys and HashMap values. The interior HashMap is term
-     * name keys and String values.
-     */
+     * name keys and String values.     */
     private HashMap<String, HashMap<String, String>> formatMap = new HashMap<String, HashMap<String, String>>();
 
-    /** The natural language strings for terms in the KB. It is a HashMap of
-     * language keys and HashMap values. The interior HashMap is term name keys
-     * and String values.
-     */
+    /* language keys and HashMap values. The interior HashMap is term name keys
+     * and String values.     */
     private HashMap<String, HashMap<String, String>> termFormatMap = new HashMap<String, HashMap<String, String>>();
 
     /** Errors found during loading of the KB constituents. */
@@ -152,24 +136,20 @@ public class KB implements Serializable {
     /** Warnings found during loading of the KB constituents. */
     public TreeSet<String> warnings = new TreeSet<String>();
 
-    /**
-     * Future: If true, the contents of the KB have been modified without
-     * updating the caches
-     */
+    /* Future: If true, the contents of the KB have been modified without
+     * updating the caches     */
     public boolean modifiedContents = false;
 
-    /**
-     * If true, assertions of the form (predicate x x) will be included in the
-     * relation cache tables.
-     */
+    /* If true, assertions of the form (predicate x x) will be included in the
+     * relation cache tables.     */
     private boolean cacheReflexiveAssertions = false;
 
     public KBcache kbCache = null;
 
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 
-    /*************************************************************** Constructor
-     * which takes the name of the KB and the location where KBs preprocessed
+    /***************************************************************
+     * Constructor which takes the name of the KB and the location where KBs preprocessed
      * for EProver should be placed.
      */
     public KB(String n, String dir) {
@@ -615,6 +595,17 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * @param i A String denoting an instance.
+     * @return true or false.
+     */
+    public boolean isRelation(String i) {
+
+        if (kbCache != null && kbCache.relations != null && kbCache.relations.contains(i))
+            return true;
+        return false;
+    }
+
+    /***************************************************************
      * Returns
      * true if i is an instance of c in any loaded KB, else returns false.
      *
@@ -636,8 +627,7 @@ public class KB implements Serializable {
         return false;
     }
 
-    /**
-     * *************************************************************
+    /***************************************************************
      */
     public boolean isInstance(String term) {
 
