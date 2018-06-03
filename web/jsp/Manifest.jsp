@@ -242,18 +242,18 @@ if (role != null && role.equalsIgnoreCase("admin")) {
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <hr><b>Add a new constituent</b>
     <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
-        <input type="hidden" name="kb" value=<%=kbName%>><br> 
-  <table>
-    <tr>
-      <td>
-        <b>KB Constituent:</b>&nbsp;
-      </td>
-      <td>
-        <input type="file" name="constituent">
-      </td>
-    </tr>
-  </table>
-        <input type="submit" name="submit" value="Load">
+      <input type="hidden" name="kb" value=<%=kbName%>><br>
+      <table>
+        <tr>
+          <td>
+            <b>KB Constituent:</b>&nbsp;
+          </td>
+          <td>
+            <input type="file" name="constituent">
+          </td>
+        </tr>
+      </table>
+      <input type="submit" name="submit" value="Load">
     </form>
 
     <hr>
