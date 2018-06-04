@@ -97,7 +97,22 @@ mkdir images
 cd images
 cp $SIGMA_SRC/docker/* .
 sudo docker build -t sigmakee2018:latest .
-sudo docker run -it -d -p 4000:8080 --name trial04 sigmakee2018 "./sigmastart.sh"
+
+to push the image to dockerhub
+
+>:~/images$ sudo docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+sigmakee2018        v2                  3356b45132f1        13 minutes ago      1.52GB
+
+>:~/images$ sudo docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                    NAMES
+f01091e8cf73        sigmakee2018:v2     "./sigmastart.sh"   14 minutes ago      Up 14 minutes       0.0.0.0:4000->8080/tcp   trial04
+>:~/images$ sudo docker commit f01091e8cf73 sigmakee2018:v2
+
+sudo docker login
+sudo docker commit f01091e8cf73 sigmakee2018:v2
+sudo docker tag 3356b45132f1 apease/sigmakee2018:v2
+sudo docker push apease/sigmakee2018:v2
 
 System preparation on Linux
 ==========================
