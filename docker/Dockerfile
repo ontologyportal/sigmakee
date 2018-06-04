@@ -1,3 +1,4 @@
+#June 3, 2018:  Revision to redue the space used up by this image
 FROM centos:latest
 MAINTAINER Adam Pease
 
@@ -6,17 +7,13 @@ RUN yum install -y  \
     git \
     sudo \
     unzip \
-    wget; yum -y clean all 
-
+    wget \
 # Install make and gcc
-RUN yum install -y \
     make \
-    gcc; yum -y clean all
-
+    gcc \
 # Handle sup. packages
-RUN yum install -y \
     graphviz \
-    ant; yum -y clean all
+    ant; yum clean all
 
 # Add the sumo user and add to wheel (i.e., make sudoer no pwd)
 RUN useradd sumo && \
@@ -26,7 +23,7 @@ RUN useradd sumo && \
 
 # Add java to the image
 COPY jdk-8u171-linux-x64.rpm .
-RUN rpm -ivh jdk-8u171-linux-x64.rpm 
+RUN rpm -ivh jdk-8u171-linux-x64.rpm && rm jdk-8u171-linux-x64.rpm
 
 # Copy in the BASHRC
 COPY bashrc .
@@ -51,9 +48,12 @@ RUN su -l sumo -c "mkdir /home/sumo/workspace; mkdir /home/sumo/Programs/; mkdir
     su -l sumo -c "sed -i 's/theuser/sumo/g' /home/sumo/.sigmakee/KBs/config.xml" && \
     su -l sumo -c "sed -i 's/~/\/home\/sumo/g' /home/sumo/.sigmakee/KBs/config.xml" && \
     su -l sumo -c "cd /home/sumo/Programs; gunzip WordNet-3.0.tar.gz; tar -xvf WordNet-3.0.tar; cp WordNet-3.0/dict/* /home/sumo/.sigmakee/KBs/WordNetMappings/" && \
-    su -l sumo -c "rm -f *.tgz; rm -f *.zip; rm -f *.gz" && \
     su -l sumo -c "cd /home/sumo/Programs/E; ./configure; make; make install; cd /home/sumo" && \
     su -l sumo -c "source /home/sumo/.bashrc; cd /home/sumo/workspace/sigmakee; ant" && \
+    #The following line removes a bunch of stuff - I think it is fine.
+    su -l sumo -c "rm -Rf /home/sumo/Programs/bins; rm -Rf /home/sumo/Programs/*.tar; rm -Rf /home/sumo/workspace"
     # This test may not be necessary - but for now keeping it in.
-    su -l sumo -c "java -Xmx5g -classpath /home/sumo/workspace/sigmakee/build/classes:/home/sumo/workspace/sigmakee/build/lib/* com.articulate.sigma.KB 2>/home/sumo/testerror.log"
+    # Removing this test probably
+    # Note - put it above the previous line (before removing workspace i you want it to run).
+    # su -l sumo -c "java -Xmx2500m -classpath /home/sumo/workspace/sigmakee/build/classes:/home/sumo/workspace/sigmakee/build/lib/* com.articulate.sigma.KB 2>/home/sumo/testerror.log"
 # Done for now!
