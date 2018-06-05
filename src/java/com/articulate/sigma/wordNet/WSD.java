@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.dbpedia.DBPedia;
 import com.google.common.collect.Lists;
 
 public class WSD {
@@ -422,28 +423,33 @@ public class WSD {
         }
         if ("".equals(bestSense)) { // String comparison issue fixed
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
-            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
-            if (al == null)
-                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
-
-            //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
-            if (al != null) {
-                Iterator<String> it = al.iterator();
-                while (it.hasNext()) {
-                    String key = it.next();
-                    String POS = WordNetUtilities.getPOSfromKey(key);
-                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                    String result = numPOS + WordNet.wn.senseIndex.get(key);
-                    //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
-                    return result;
-                }  
-            }
-            else {
-            	String sense = (String)WordNet.wn.dbpSUMOSenseKeys.get(word);
+        	
+        	if("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
+        	{
+        		String sense = (String)DBPedia.dbp.dbpSUMOSenseKeys.get(word);
             	System.out.println("INFO in WSD.getBestDefaultSense(): word: " + word + ", dbpSUMOSenseKeys: " + sense);
             	if (!"".equals(sense))
             	return "1" + sense;
-            }
+        	}
+        	else
+        	{
+	            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
+	            if (al == null)
+	                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
+	
+	            //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
+	            if (al != null) {
+	                Iterator<String> it = al.iterator();
+	                while (it.hasNext()) {
+	                    String key = it.next();
+	                    String POS = WordNetUtilities.getPOSfromKey(key);
+	                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
+	                    String result = numPOS + WordNet.wn.senseIndex.get(key);
+	                    //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
+	                    return result;
+	                }  
+	            }
+        	}
         }
         else {
             //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + bestSense);
