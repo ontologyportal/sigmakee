@@ -75,7 +75,7 @@ public class KBmanager implements Serializable {
                     "graphDir", "nlpTools","TPTP","cache","editorCommand","graphVizDir",
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
-                    "englishPCFG");
+                    "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
