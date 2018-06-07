@@ -258,6 +258,11 @@ public class WordNet implements Serializable {
      */
     private void makeFileMap() {
 
+    	/* DBPedia related, these files are read like any other files using getWnFile(),
+    	 so the files should be placed under WordNet.baseDir */
+    	wnFilenames.put("dbpedia_words",    "DBpediaStrings.ttl");
+    	wnFilenames.put("dbpedia_SUMO",     "DBPediaSUMO.ttl");
+    	
         wnFilenames.put("noun_mappings",    "WordNetMappings30-noun.txt" );
         wnFilenames.put("verb_mappings",    "WordNetMappings30-verb.txt" );
         wnFilenames.put("adj_mappings",     "WordNetMappings30-adj.txt" );
@@ -1778,6 +1783,7 @@ public class WordNet implements Serializable {
             wn = new WordNet();
             wn.makeFileMap();
             wn.compileRegexPatterns();
+            
             wn.readNouns();
             wn.readVerbs();
             wn.readAdjectives();

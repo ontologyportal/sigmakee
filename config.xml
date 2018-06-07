@@ -1,13 +1,19 @@
 <configuration >
+<preference name="nlpTools" value="yes" />
+  <!-- MultiWord annotator for use - WordNet or DBPedia, for WordNet provide wnmw, for DBPedia give dbpmw -->
+  <preference name="multiWordAnnotatorType" value="dbpmw" />
+  <!-- DBPedia dictionary files directory -->
+  <preference name="dbpediaSrcDir" value="~/dbpedia" />
+
   <preference name="sumokbname" value="SUMO" />
   <preference name="testOutputDir" value="~/.sigmakee/KBs/tests" />
   <preference name="TPTPDisplay" value="no" />
   <preference name="inferenceEngine" value="~/Programs/E/PROVER/e_ltb_runner" />
   <!--  Added config for eproverPath to read eprover's path on Windows OS.
    If sigma is running on linux it is ignored. Added by Infosys LTD. -->
-  <preference name="eproverPath" value="/cygdrive/d/EPROVER_BIN/eprover" />  
+  <preference name="eproverPath" value="~/Programs/E/EPROVER_BIN/eprover" />  
   <preference name="inferenceTestDir" value="~/.sigmakee/KBs/tests" />
-  <preference name="baseDir" value="/home/theuser/.sigmakee" />
+  <preference name="baseDir" value="~/.sigmakee" />
   <preference name="hostname" value="localhost" />
   <preference name="https" value="false" />
   <preference name="logLevel" value="warning" />

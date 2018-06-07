@@ -1,9 +1,27 @@
+/** This code is copyright Articulate Software (c) 2003-2007.  Some portions
+copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+Users of this code also consent, by use of this code, to credit Articulate Software
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
+code.  Please cite the following article in any publication with references:
+
+Pease, A., (2003). The Sigma Ontology Development Environment,
+in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+
+ Authors:
+ Adam Pease
+ Infosys LTD.
+ */
+
 package com.articulate.sigma.wordNet;
 
 import java.io.*;
 import java.util.*;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.dbpedia.DBPedia;
 import com.google.common.collect.Lists;
 
 public class WSD {
@@ -420,24 +438,35 @@ public class WSD {
             }
             //System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
         }
-        if (bestSense == "") {
+        if ("".equals(bestSense)) { // String comparison issue fixed
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
-            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
-            if (al == null)
-                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
-
-            //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
-            if (al != null) {
-                Iterator<String> it = al.iterator();
-                while (it.hasNext()) {
-                    String key = it.next();
-                    String POS = WordNetUtilities.getPOSfromKey(key);
-                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
-                    String result = numPOS + WordNet.wn.senseIndex.get(key);
-                    //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
-                    return result;
-                }  
-            }
+        	
+        	if ("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
+        	{
+        		String sense = (String)DBPedia.dbp.dbpSUMOSenseKeys.get(word);
+            	if(debug) System.out.println("INFO in WSD.getBestDefaultSense(): word: " + word + ", dbpSUMOSenseKeys: " + sense);
+            	if (!"".equals(sense))
+            	return "1" + sense;
+        	}
+        	else
+        	{
+	            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
+	            if (al == null)
+	                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
+	
+	            //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
+	            if (al != null) {
+	                Iterator<String> it = al.iterator();
+	                while (it.hasNext()) {
+	                    String key = it.next();
+	                    String POS = WordNetUtilities.getPOSfromKey(key);
+	                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
+	                    String result = numPOS + WordNet.wn.senseIndex.get(key);
+	                    if(debug) System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
+	                    return result;
+	                }  
+	            }
+        	}
         }
         else {
             //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + bestSense);

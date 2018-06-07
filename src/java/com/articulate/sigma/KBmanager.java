@@ -1,14 +1,12 @@
-package com.articulate.sigma;
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
@@ -17,7 +15,10 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
  Infosys LTD.
 */
 
+package com.articulate.sigma;
+
 import com.articulate.sigma.CCheckManager.CCheckStatus;
+import com.articulate.sigma.dbpedia.DBPedia;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
@@ -34,27 +35,27 @@ public class KBmanager implements Serializable {
     /** A numeric (bitwise) constant used to signal whether type
      * prefixes (sortals) should be added during formula
      * preprocessing.
-     */    
+     */
     public static final int USE_TYPE_PREFIX  = 1;
 
     /** A numeric (bitwise) constant used to signal whether holds
      * prefixes should be added during formula preprocessing.
-     */    
+     */
     public static final int USE_HOLDS_PREFIX = 2;
 
     /** A numeric (bitwise) constant used to signal whether the closure
      * of instance and subclass relastions should be "cached out" for
      * use by the inference engine.
-     */    
+     */
     public static final int USE_CACHE        = 4;
 
     /*** A numeric (bitwise) constant used to signal whether formulas
      * should be translated to TPTP format during the processing of KB
      * constituent files.
-     */    
+     */
     public static final int USE_TPTP         = 8;
     private static CCheckManager ccheckManager = new CCheckManager();
-    
+
     private static KBmanager manager = new KBmanager();
     protected static final String CONFIG_FILE = "config.xml";
 
@@ -74,7 +75,7 @@ public class KBmanager implements Serializable {
                     "graphDir", "nlpTools","TPTP","cache","editorCommand","graphVizDir",
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
-                    "englishPCFG");
+                    "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
@@ -85,7 +86,7 @@ public class KBmanager implements Serializable {
      */
     public KBmanager() {
     }
-    
+
     /** ***************************************************************
      * Set an error string for file loading.
      */
@@ -224,7 +225,7 @@ public class KBmanager implements Serializable {
      * Set default attribute values if not in the configuration file.
      */
     public void setDefaultAttributes() {
-        
+
         try {
             String sep = File.separator;
             String base = System.getenv("SIGMA_HOME");
@@ -247,27 +248,27 @@ public class KBmanager implements Serializable {
             File inferenceTestDir = new File(kbDir, "tests");
             File logDir = new File(baseDir, "logs");
             logDir.mkdirs();
-           
+
             // The links for the test results files will be broken if
             // they are not put under [Tomcat]/webapps/sigma.
             // Unfortunately, we don't know where [Tomcat] is.
             File testOutputDir = new File(tomcatRootDir,
                                           ("webapps" + sep + "sigma" + sep + "tests"));
             preferences.put("baseDir",baseDir.getCanonicalPath());
-            preferences.put("tptpHomeDir",tptpHomeDir.getCanonicalPath());
-            preferences.put("systemsDir",systemsDir.getCanonicalPath());
-            preferences.put("kbDir",kbDir.getCanonicalPath());
-            preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());  
+			preferences.put("tptpHomeDir",tptpHomeDir.getCanonicalPath());
+			preferences.put("systemsDir",systemsDir.getCanonicalPath());
+			preferences.put("kbDir",kbDir.getCanonicalPath());
+			preferences.put("inferenceTestDir",inferenceTestDir.getCanonicalPath());
             preferences.put("testOutputDir",testOutputDir.getCanonicalPath());
-            
+
             File graphVizDir = new File("/usr/bin");
             preferences.put("graphVizDir", graphVizDir.getCanonicalPath());
-          
+
             File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
             if (!graphDir.exists())
                 graphDir.mkdir();
             preferences.put("graphDir", graphDir.getCanonicalPath());
-            
+
             // There is no foolproof way to determine the actual
             // inferenceEngine path without asking the user.  But we
             // can make an educated guess.
@@ -285,26 +286,26 @@ public class KBmanager implements Serializable {
                   : new File(leoExec));
             preferences.put("inferenceEngine",ieExecFile.getCanonicalPath());
             preferences.put("leoExecutable",leoExecFile.getCanonicalPath());
-            preferences.put("loadCELT","no");  
-            preferences.put("showcached","yes");  
+            preferences.put("loadCELT","no");
+            preferences.put("showcached","yes");
             preferences.put("typePrefix","no");
 
             // If no then instantiate variables in predicate position.
-            preferences.put("holdsPrefix","no");  
+            preferences.put("holdsPrefix","no");
             preferences.put("cache","yes");
-            preferences.put("TPTP","yes");  
-            preferences.put("TPTPDisplay","no");  
+            preferences.put("TPTP","yes");
+            preferences.put("TPTPDisplay","no");
             preferences.put("userBrowserLimit","25");
             preferences.put("adminBrowserLimit","200");
-            preferences.put("port","8080");            
+            preferences.put("port","8080");
             preferences.put("hostname","localhost");
             preferences.put("https","false");
             preferences.put("sumokbname","SUMO");
-            
+
             // Default logging things
             preferences.put("logDir", logDir.getCanonicalPath());
             preferences.put("logLevel", "warning");
-            
+
         }
         catch (Exception ex) {
             System.out.println("Error in KBmanager.setDefaultAttributes(): " + Arrays.toString(ex.getStackTrace()));
@@ -313,28 +314,28 @@ public class KBmanager implements Serializable {
         return;
     }
 
-    /** *************************************************************** 
+    /** ***************************************************************
      */
     public static CCheckStatus initiateCCheck(KB kb, String chosenEngine, String systemChosen, String location,
             String language, int timeout) {
-        
-        return ccheckManager.performConsistencyCheck(kb, chosenEngine, systemChosen, location, language, timeout);        
+
+        return ccheckManager.performConsistencyCheck(kb, chosenEngine, systemChosen, location, language, timeout);
     }
 
-    public static String ccheckResults(String kbName) {        
-        return ccheckManager.ccheckResults(kbName); 
+    public static String ccheckResults(String kbName) {
+        return ccheckManager.ccheckResults(kbName);
     }
-    
-    public static CCheckStatus ccheckStatus(String kbName) {  
-        return ccheckManager.ccheckStatus(kbName);            
+
+    public static CCheckStatus ccheckStatus(String kbName) {
+        return ccheckManager.ccheckStatus(kbName);
         //return HTMLformatter.formatConsistencyCheck(msg, ccheckManager.ccheckResults(kb.name), language, page);
     }
-        
-    /** ***************************************************************  
+
+    /** ***************************************************************
      */
     private void preferencesFromXML(SimpleElement configuration) {
-        
-        if (!configuration.getTagName().equals("configuration")) 
+
+        if (!configuration.getTagName().equals("configuration"))
         	System.out.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + configuration.getTagName());
         else {
             for (int i = 0; i < configuration.getChildElements().size(); i++) {
@@ -349,7 +350,7 @@ public class KBmanager implements Serializable {
         if (debug) System.out.println("KBmanager.preferencesFromXML(): number of preferences: " +
                 preferences.keySet().size());
     }
-    
+
     /** ***************************************************************
      * Note that filenames that are not full paths are prefixed with the
      * value of preference kbDir
@@ -357,7 +358,7 @@ public class KBmanager implements Serializable {
     private static void kbsFromXML(SimpleElement configuration) {
 
         boolean SUMOKBexists = false;
-        if (!configuration.getTagName().equals("configuration")) 
+        if (!configuration.getTagName().equals("configuration"))
         	System.out.println("Error in KBmanager.kbsFromXML(): Bad tag: " + configuration.getTagName());
         else {
             for (int i = 0; i < configuration.getChildElements().size(); i++) {
@@ -371,18 +372,18 @@ public class KBmanager implements Serializable {
                     boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
                     for (int j = 0; j < element.getChildElements().size(); j++) {
                         SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
-                        if (!kbConst.getTagName().equals("constituent")) 
+                        if (!kbConst.getTagName().equals("constituent"))
                         	System.out.println("Error in KBmanager.kbsFromXML(): Bad tag: " + kbConst.getTagName());
                         String filename = (String) kbConst.getAttribute("filename");
                         if (!filename.startsWith((File.separator)))
                             filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
                             if (filename.endsWith(KB._cacheFileSuffix)) {
-                                if (useCacheFile) 
-                                    constituentsToAdd.add(filename);                                
+                                if (useCacheFile)
+                                    constituentsToAdd.add(filename);
                             }
-                            else 
-                                constituentsToAdd.add(filename);                            
+                            else
+                                constituentsToAdd.add(filename);
                         }
                     }
                     KBmanager.getMgr().loadKB(kbName, constituentsToAdd);
@@ -459,7 +460,7 @@ public class KBmanager implements Serializable {
                     try {
                         System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
                         kb.addConstituent(filename);
-                    } 
+                    }
                     catch (Exception e1) {
                     	System.out.println("Error in KBmanager.loadKB():  " + e1.getMessage());
                     	e1.printStackTrace();
@@ -467,7 +468,7 @@ public class KBmanager implements Serializable {
                     }
                 }
             }
-        } 
+        }
         catch (Exception e) {
         	System.out.println("Error in KBmanager.loadKB(): Unable to save configuration: " + e.getMessage());
         	e.printStackTrace();
@@ -482,12 +483,12 @@ public class KBmanager implements Serializable {
             kb.loadEProver();
         return true;
     }
-    
+
     /** ***************************************************************
      */
     private void fromXML(SimpleElement configuration) {
 
-        if (!configuration.getTagName().equals("configuration")) 
+        if (!configuration.getTagName().equals("configuration"))
         	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
         else {
             for (int i = 0; i < configuration.getChildElements().size(); i++) {
@@ -509,22 +510,22 @@ public class KBmanager implements Serializable {
                         boolean useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
                         for (int j = 0; j < element.getChildElements().size(); j++) {
                             SimpleElement kbConst = (SimpleElement) element.getChildElements().get(j);
-                            if (!kbConst.getTagName().equals("constituent")) 
+                            if (!kbConst.getTagName().equals("constituent"))
                             	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                             String filename = (String) kbConst.getAttribute("filename");
                             if (!StringUtil.emptyString(filename)) {
                                 if (filename.endsWith(KB._cacheFileSuffix)) {
-                                    if (useCacheFile) 
-                                        constituentsToAdd.add(filename);                                    
+                                    if (useCacheFile)
+                                        constituentsToAdd.add(filename);
                                 }
-                                else 
-                                    constituentsToAdd.add(filename);                                
+                                else
+                                    constituentsToAdd.add(filename);
                             }
                         }
                         loadKB(kbName, constituentsToAdd);
                     }
-                    else 
-                    	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());                    
+                    else
+                    	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
                 }
             }
         }
@@ -533,7 +534,7 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      * Read an XML-formatted configuration file. The method initializeOnce()
      * sets the preferences based on the contents of the configuration file.
-     * This routine has the side effect of setting the variable 
+     * This routine has the side effect of setting the variable
      * called "configuration".  It also creates the KBs directory and an empty
      * configuration file if none exists.
      */
@@ -572,8 +573,8 @@ public class KBmanager implements Serializable {
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
                 kbDirStr = (String) preferences.get("kbDir");
-                if (StringUtil.emptyString(kbDirStr)) 
-                    kbDirStr = System.getProperty("user.dir");                
+                if (StringUtil.emptyString(kbDirStr))
+                    kbDirStr = System.getProperty("user.dir");
             }
             File kbDir = new File(kbDirStr);
             if (!kbDir.exists()) {
@@ -588,7 +589,7 @@ public class KBmanager implements Serializable {
                     copyFile(global_config, configFile);
                     configFile = global_config;
                 }
-                else 
+                else
                     writeConfiguration();
             }
             try (BufferedReader br = new BufferedReader(new FileReader(configFile))) {
@@ -606,10 +607,10 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      * Reads in the KBs and other parameters defined in the XML
-     * configuration file, or uses the default parameters.  
+     * configuration file, or uses the default parameters.
      */
     public void initializeOnce() {
-        
+
         System.out.println("Info in KBmanager.initializeOnce()");
         //Thread.dumpStack();
         String base = System.getenv("SIGMA_HOME");
@@ -646,7 +647,11 @@ public class KBmanager implements Serializable {
                 loaded = loadSerialized();
                 if (loaded) {
                     if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
-                    WordNet.wn.initOnce();
+                    WordNet.initOnce();
+
+                    if("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
+                    	DBPedia.initOnce();
+
                     NLGUtils.init(configFileDir);
                     OMWordnet.readOMWfiles();
                     initializing = false;
@@ -667,6 +672,10 @@ public class KBmanager implements Serializable {
                     setDefaultAttributes();
                 System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
                 serialize();
+
+                if("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
+                	DBPedia.initOnce();
+
                 initializing = false;
                 initialized = true;
             }
@@ -714,9 +723,9 @@ public class KBmanager implements Serializable {
      */
     public static String escapeFilename(String fname) {
 
-        StringBuilder newstring = new StringBuilder("");        
+        StringBuilder newstring = new StringBuilder("");
         for (int i = 0; i < fname.length(); i++) {
-            if (fname.charAt(i) == 92 && fname.charAt(i+1) != 92) 
+            if (fname.charAt(i) == 92 && fname.charAt(i+1) != 92)
                 newstring = newstring.append("\\\\");
             if (fname.charAt(i) == 92 && fname.charAt(i+1) == 92) {
                 newstring = newstring.append("\\\\");
@@ -733,13 +742,13 @@ public class KBmanager implements Serializable {
      * @param name - the name of the KB
      */
     public void addKB(String name) {
-        addKB(name, true);        
+        addKB(name, true);
     }
 
     public void addKB(String name, boolean isVisible) {
-    	
+
         KB kb = new KB(name,(String) preferences.get("kbDir"), isVisible);
-        kbs.put(name.intern(),kb); 
+        kbs.put(name.intern(),kb);
     }
 
     /** ***************************************************************
@@ -749,10 +758,10 @@ public class KBmanager implements Serializable {
     public String removeKB(String name) {
 
         KB kb = (KB) kbs.get(name);
-        if (kb == null) 
-            return "KB " + name + " does not exist and cannot be removed.";        
+        if (kb == null)
+            return "KB " + name + " does not exist and cannot be removed.";
         try {
-            if (kb.eprover != null) 
+            if (kb.eprover != null)
                 kb.eprover.terminate();
         }
         catch (Exception ioe) {
@@ -771,11 +780,11 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Write the current configuration of the system.  Call 
+     * Write the current configuration of the system.  Call
      * writeConfiguration() on each KB object to write its manifest.
      */
     public void writeConfiguration() throws IOException {
-        
+
         System.out.println("INFO in KBmanager.writeConfiguration()");
         String dir = preferences.get("kbDir");
         File fDir = new File(dir);
@@ -784,7 +793,7 @@ public class KBmanager implements Serializable {
         String config_file = (((username != null) 
                                && userrole.equalsIgnoreCase("administrator") 
                                && !username.equalsIgnoreCase("admin"))
-                              ? username + "_" 
+                              ? username + "_"
                               : "") + CONFIG_FILE;
         File file = new File(fDir, config_file);
         String canonicalPath = file.getCanonicalPath();
@@ -839,12 +848,12 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      * Remove the KB that has the given name.
-     */       
+     */
     public void remove(String name) {
 
         kbs.remove(name);
     }
-    
+
     /** ***************************************************************
      * Get the one instance of KBmanager from its class variable.
      */
@@ -854,7 +863,7 @@ public class KBmanager implements Serializable {
         //    manager = new KBmanager();
         return manager;
     }
-    
+
     /** ***************************************************************
      * Get the Set of KB names in this manager.
      */
@@ -869,7 +878,7 @@ public class KBmanager implements Serializable {
         }
         return names;
     }
-    
+
     /** ***************************************************************
      * Get the the complete list of languages available in all KBs
      */
@@ -901,7 +910,7 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      * Get the preference corresponding to the given key
-     */    
+     */
     public String getPref(String key) {
 
         if (!configKeys.contains(key)) {
@@ -909,11 +918,11 @@ public class KBmanager implements Serializable {
             return "";
         }
         String ans = (String) preferences.get(key);
-        if (ans == null) 
-            ans = "";        
+        if (ans == null)
+            ans = "";
         return ans;
     }
-    
+
     /** ***************************************************************
      * Set the preference to the given value.
      */
