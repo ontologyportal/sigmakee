@@ -39,8 +39,16 @@ public class MultiWords implements Serializable {
      * the whole multi-word. The same head word can appear in many multi-words.*/
     public Multimap<String, String> multiWord = HashMultimap.create();
     
+    /** A Multimap of String keys and String values.
+     * The String key is the first word of a multi-word DBPedia "word", such as "Grand_Canyon",
+     * where words are separated by underscores.  The values are
+     * the whole multi-word. The same head word can appear in many multi-words.*/
     public Multimap<String, String> dbPediaMultiWord = HashMultimap.create();
 
+    /** 
+     * Add a multi-word string to the multiWord member variable.
+     * @param word should already have had any spaces replaced by underscores
+     */
     public void addDBPediaMultiWord(String word) {
     	System.out.println("INFO in MultiWords.addDBPediaMultiWord(): word: " + word);
     	if (StringUtil.emptyString(word)) {
