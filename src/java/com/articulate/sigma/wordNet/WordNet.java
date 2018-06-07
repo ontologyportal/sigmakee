@@ -38,7 +38,7 @@ import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
  */
 public class WordNet implements Serializable {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
     public static WordNet wn  = new WordNet();
 
     /* A map of language name to wordnets */
@@ -246,16 +246,8 @@ public class WordNet implements Serializable {
         "(\\w)\\'d",
 
         // 25: WordNet.removePunctuation()
-        "(\\w)\\'ve",
-        
-        // 26: DBpediaStrings.ttl
-        "^(dbp:)(.*)(rdfs:.*)(\")([a-zA-Z]*)(\")(.*\\.)$",
-        
-        // 27: DBPediaSUMO.ttl
-        "^(dbp:)(.*)(rdf:.*)(sumo:)(.*)(\\.)$"
+        "(\\w)\\'ve"
     };
-    
-    public Hashtable<String, String> dbpSUMOSenseKeys = new Hashtable<String, String>();
 
     public MultiWords getMultiWords() {
 
@@ -592,38 +584,6 @@ public class WordNet implements Serializable {
         System.out.println("Error in WordNet.getSUMOMapping: improper first character for synset: " + synset);
         Thread.dumpStack();
         return null;
-    }
-    
-    private void readDBPedia() throws IOException {
-    	System.out.println("INFO in WordNet.readDBPedia(): Reading DBpediaStrings.ttl");
-    	try(LineNumberReader lr = new LineNumberReader(new FileReader(getWnFile("dbpedia_words", null)))) {
-    		lr.readLine();
-    		lr.readLine();
-    		lr.readLine();
-    		lr.readLine();
-    		String line;
-    		while ((line = lr.readLine()) != null) {
-    			m = regexPatterns[26].matcher(line);
-    			if ((m.matches()) && (m.group(2).indexOf("_") >= 0))
-    				multiWords.addDBPediaMultiWord(m.group(2).trim());
-    		}
-    	}
-    }
-
-    private void readDBPediaSUMO() throws IOException {
-    	System.out.println("INFO in WordNet.readDBPedia(): Reading DBPediaSUMO.ttl");
-    	try(LineNumberReader lr = new LineNumberReader(new FileReader(getWnFile("dbpedia_SUMO", null)))) {
-    		lr.readLine();
-    		lr.readLine();
-    		lr.readLine();
-    		lr.readLine();
-    		String line;
-    		while ((line = lr.readLine()) != null) {
-    			m = regexPatterns[27].matcher(line);
-    			if (m.matches())
-    				this.dbpSUMOSenseKeys.put(m.group(2).trim(), m.group(5).trim());
-    		}
-    	}
     }
 
     /** ***************************************************************
@@ -1823,10 +1783,6 @@ public class WordNet implements Serializable {
             wn = new WordNet();
             wn.makeFileMap();
             wn.compileRegexPatterns();
-            
-            // DBPedia related
-            wn.readDBPedia();
-            wn.readDBPediaSUMO();
             
             wn.readNouns();
             wn.readVerbs();
