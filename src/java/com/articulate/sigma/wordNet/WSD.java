@@ -28,7 +28,7 @@ public class WSD {
 
     public static int threshold = 5;
     public static int gap = 5;
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * Collect all the SUMO terms that are found in the sentence.
