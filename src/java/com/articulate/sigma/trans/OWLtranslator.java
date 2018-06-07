@@ -692,7 +692,7 @@ public class OWLtranslator {
             propType = "FunctionalProperty";
         pw.println("<owl:"+ propType + " rdf:about=\"#" + term + "\">");
         ArrayList argTypes = kb.askWithRestriction(0,"domain",1,term);  // domain expressions for term.
-        ArrayList subs = kb.askWithRestriction(0,"subrelation",1,term);  // subrelation expressions for term.
+
         if (argTypes.size() > 0) {
             for (int i = 0; i < argTypes.size(); i++) {
                 Formula form = (Formula) argTypes.get(i);
@@ -706,6 +706,7 @@ public class OWLtranslator {
                     pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
             }
         }
+
         ArrayList ranges = kb.askWithRestriction(0,"range",1,term);  // domain expressions for term.
         if (ranges.size() > 0) {
             Formula form = (Formula) ranges.get(0);
@@ -713,6 +714,7 @@ public class OWLtranslator {
             if (Formula.atom(argType) && !form.isCached())
                 pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
         }
+
         ArrayList inverses = kb.askWithRestriction(0,"inverse",1,term);  // inverse expressions for term.
         if (inverses.size() > 0) {
             Formula form = (Formula) inverses.get(0);
@@ -720,6 +722,8 @@ public class OWLtranslator {
             if (Formula.atom(arg) && !form.isCached())
                 pw.println("  <owl:inverseOf rdf:resource=\"" + (arg.equals("Entity") ? "&owl;Thing" : "#" + arg) + "\" />");
         }
+
+        ArrayList subs = kb.askWithRestriction(0,"subrelation",1,term);  // subrelation expressions for term.
         if (subs.size() > 0) {
             for (int i = 0; i < subs.size(); i++) {
                 Formula form = (Formula) subs.get(i);

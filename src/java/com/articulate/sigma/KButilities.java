@@ -23,12 +23,7 @@ import java.io.PrintWriter;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,7 +64,22 @@ public class KButilities {
     public static boolean isInstance(KB kb, String term) {
         return !kb.isInstanceOf(term,"Class");
     }
-    
+
+    /** *************************************************************
+     */
+    public static String getDocumentation(KB kb, String term) {
+
+        ArrayList<Formula> forms = kb.askWithRestriction(0,"documentation",1,term);
+        if (forms == null || forms.size() == 0)
+            return null;
+        Formula form = forms.get(0);
+        if (form == null)
+            return null;
+        if (form.argumentsToArrayList(0).size() < 3)
+            return null;
+        return form.getArgument(3);
+    }
+
     /** *************************************************************
      * Get all formulas that contain both terms. 
      */

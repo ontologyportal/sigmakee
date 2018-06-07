@@ -5,7 +5,11 @@ Sigma is an integrated development environment for logical theories that
 extend the Suggested Upper Merged Ontology.  There is a public installation
 with read-only functions enabled linked from http://www.ontologyportal.org
 
-Please read these notes thoroughly.  Most installation issues result from not
+The easiest install is with the Docker container system.  The next section below
+describes how to do this.
+
+Please read these notes thoroughly if you want to do a native install not
+with a container.  Most installation issues result from not
 carefully following the instructions.
 
 You can follow the steps below to do a manual installation on linux or Mac. This
@@ -24,6 +28,91 @@ in their URL that will change every time. Change "theuser" below to your user na
 
 If your installation isn't working and you're getting funny "null"s in your paths
 try opening permissions on your $SIGMA_HOME, $CATALINA_HOME and $SIGMA_SRC directories.
+
+Container-Based installation
+==========================
+
+First, install docker if you don't have it already
+
+sudo apt-get update
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install docker-ce
+
+Then get the docker image and run it
+
+Pull with
+sudo docker pull apease/sigmakee2018:first
+
+Run with
+sudo docker run -it -d -p 4000:8080 --name trial04 apease/sigmakee2018:first "./sigmastart.sh"
+
+Access from a browser with http://localhost:4000/sigma/login.html . Use admin for username and admin for password
+
+If you want an additional level of system independence and security, you can also
+run the docker image in a virtual machine.  For Vagrant you would do the following -
+
+Install it if you haven't already -
+
+sudo apt-get install vagrant
+
+then get a virtual machine image -
+
+vagrant box add ubuntu/xenial64
+vagrant init ubuntu/xenial64
+
+You'll need to add two commands to the Vagrantfile configuration
+
+config.vm.network "forwarded_port", guest: 4000, host: 8888
+config.vm.provider "virtualbox" do |vb|
+  vb.memory = "5000"
+end
+
+Then execute the following
+
+vagrant up
+vagrant ssh
+
+then
+
+Access from a browser with http://localhost:8888/sigma/login.html . Use admin for username and admin for password
+
+To build a new docker container follow these steps where $SIGMA_SRC is your sigmakee git repo path.
+First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+Note that if you don't download that exact version, you'll need to edit sigmastart.sh so that the filename
+matches.
+
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+sudo add-apt-repository \
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+   $(lsb_release -cs) \
+   stable"
+sudo apt-get update
+sudo apt-get install docker-ce
+mkdir images
+cd images
+cp $SIGMA_SRC/docker/* .
+sudo docker build -t sigmakee2018:latest .
+
+to push the image to dockerhub
+
+>:~/images$ sudo docker images
+REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
+sigmakee2018        v2                  3356b45132f1        13 minutes ago      1.52GB
+
+>:~/images$ sudo docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                    NAMES
+f01091e8cf73        sigmakee2018:v2     "./sigmastart.sh"   14 minutes ago      Up 14 minutes       0.0.0.0:4000->8080/tcp   trial04
+>:~/images$ sudo docker commit f01091e8cf73 sigmakee2018:v2
+
+sudo docker login
+sudo docker commit f01091e8cf73 sigmakee2018:v2
+sudo docker tag 3356b45132f1 apease/sigmakee2018:v2
+sudo docker push apease/sigmakee2018:v2
 
 System preparation on Linux
 ==========================
@@ -132,8 +221,6 @@ Debugging
 
 - If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
 again.
-- If you are repeatedly getting 404s, check the port value in ~/.sigmakee/KBs/config.xml. 8080 for local,
-9090 for Vagrant
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
@@ -209,8 +296,6 @@ Point your browser at http://localhost:8080/sigma/login.html
 Debugging
 - If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
 again.
-- If you are repeatedly getting 404s, check the port value in ~/.sigmakee/KBs/config.xml. 8080 for local,
-9090 for Vagrant
 - If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
 from ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
