@@ -1,3 +1,20 @@
+/** This code is copyright Articulate Software (c) 2003-2007.  Some portions
+copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
+This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+Users of this code also consent, by use of this code, to credit Articulate Software
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
+code.  Please cite the following article in any publication with references:
+
+Pease, A., (2003). The Sigma Ontology Development Environment,
+in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
+
+ Authors:
+ Adam Pease
+ Infosys LTD.
+ */
+
 package com.articulate.sigma.wordNet;
 
 import java.io.*;
@@ -424,10 +441,10 @@ public class WSD {
         if ("".equals(bestSense)) { // String comparison issue fixed
             //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
         	
-        	if("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
+        	if ("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
         	{
         		String sense = (String)DBPedia.dbp.dbpSUMOSenseKeys.get(word);
-            	System.out.println("INFO in WSD.getBestDefaultSense(): word: " + word + ", dbpSUMOSenseKeys: " + sense);
+            	if(debug) System.out.println("INFO in WSD.getBestDefaultSense(): word: " + word + ", dbpSUMOSenseKeys: " + sense);
             	if (!"".equals(sense))
             	return "1" + sense;
         	}
@@ -445,7 +462,7 @@ public class WSD {
 	                    String POS = WordNetUtilities.getPOSfromKey(key);
 	                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
 	                    String result = numPOS + WordNet.wn.senseIndex.get(key);
-	                    //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
+	                    if(debug) System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
 	                    return result;
 	                }  
 	            }
