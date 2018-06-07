@@ -3,24 +3,24 @@
   <!-- MultiWord annotator for use - WordNet or DBPedia, for WordNet provide wnmw, for DBPedia give dbpmw -->
   <preference name="multiWordAnnotatorType" value="dbpmw" />
   <!-- DBPedia dictionary files directory -->
-  <preference name="dbpediaSrcDir" value="$SIGMA_HOME/dbpedia" />
+  <preference name="dbpediaSrcDir" value="~/dbpedia" />
 
   <preference name="sumokbname" value="SUMO" />
-  <preference name="testOutputDir" value="$SIGMA_HOME/.sigmakee/KBs/tests" />
+  <preference name="testOutputDir" value="~/.sigmakee/KBs/tests" />
   <preference name="TPTPDisplay" value="no" />
-  <preference name="inferenceEngine" value="$SIGMA_HOME/Programs/E/PROVER/e_ltb_runner" />
+  <preference name="inferenceEngine" value="~/Programs/E/PROVER/e_ltb_runner" />
   <!--  Added config for eproverPath to read eprover's path on Windows OS.
    If sigma is running on linux it is ignored. Added by Infosys LTD. -->
-  <preference name="eproverPath" value="$SIGMA_HOME/Programs/E/EPROVER_BIN/eprover" />  
-  <preference name="inferenceTestDir" value="$SIGMA_HOME/.sigmakee/KBs/tests" />
-  <preference name="baseDir" value="$SIGMA_HOME/.sigmakee" />
+  <preference name="eproverPath" value="~/Programs/E/EPROVER_BIN/eprover" />  
+  <preference name="inferenceTestDir" value="~/.sigmakee/KBs/tests" />
+  <preference name="baseDir" value="~/.sigmakee" />
   <preference name="hostname" value="localhost" />
   <preference name="https" value="false" />
   <preference name="logLevel" value="warning" />
-  <preference name="systemsDir" value="$SIGMA_HOME/workspace/sigma/sigma" />
+  <preference name="systemsDir" value="~/workspace/sigma/sigma" />
   <preference name="userBrowserLimit" value="25" />
   <preference name="adminBrowserLimit" value="200" />
-  <preference name="SemRewrite" value="$SIGMA_HOME/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
+  <preference name="SemRewrite" value="~/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
   <preference name="typePrefix" value="yes" />
   <preference name="graphDir" value="graph" />
   <preference name="graphWidth" value="600" />
@@ -28,17 +28,17 @@
   <preference name="cache" value="yes" />
   <preference name="editorCommand" value="" />
   <preference name="graphVizDir" value="/usr/bin" />
-  <preference name="kbDir" value="$SIGMA_HOME/.sigmakee/KBs" />
+  <preference name="kbDir" value="~/.sigmakee/KBs" />
   <preference name="loadCELT" value="no" />
   <preference name="celtdir" value="" />
   <preference name="lineNumberCommand" value="" />
   <preference name="prolog" value="" />
   <preference name="port" value="8080" />
-  <preference name="tptpHomeDir" value="$SIGMA_HOME/workspace/sigma/sigma" />
+  <preference name="tptpHomeDir" value="~/workspace/sigma/sigma" />
   <preference name="showcached" value="no" />
   <preference name="leoExecutable" value="" />
   <preference name="holdsPrefix" value="no" />
-  <preference name="logDir" value="$SIGMA_HOME/.sigmakee/logs" />
+  <preference name="logDir" value="~/.sigmakee/logs" />
   <kb name="SUMO" >
     <constituent filename="english_format.kif" />
     <constituent filename="domainEnglishFormat.kif" />
