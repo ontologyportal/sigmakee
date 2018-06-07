@@ -126,7 +126,7 @@ public class DBPedia implements Serializable {
 
     private void readDBPedia() throws IOException {
     	System.out.println("INFO in WordNet.readDBPedia(): Reading DBpediaStrings.ttl");
-    	try(LineNumberReader lr = new LineNumberReader(new FileReader(getWnFile("dbpedia_words", null)))) {
+    	try (LineNumberReader lr = new LineNumberReader(new FileReader(getWnFile("dbpedia_words", null)))) {
     		lr.readLine();
     		lr.readLine();
     		lr.readLine();
@@ -142,7 +142,7 @@ public class DBPedia implements Serializable {
 
     private void readDBPediaSUMO() throws IOException {
     	System.out.println("INFO in WordNet.readDBPedia(): Reading DBPediaSUMO.ttl");
-    	try(LineNumberReader lr = new LineNumberReader(new FileReader(getWnFile("dbpedia_SUMO", null)))) {
+    	try (LineNumberReader lr = new LineNumberReader(new FileReader(getWnFile("dbpedia_SUMO", null)))) {
     		lr.readLine();
     		lr.readLine();
     		lr.readLine();
