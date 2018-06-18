@@ -23,9 +23,9 @@ public class CaseRoleTest extends IntegrationTestBase {
         KBcache cache = SigmaTestBase.kb.kbCache;
 
         // Collect all expected instances for "CaseRole", by running KBcache.buildTransInstOf()
-        cache.instances = new HashMap<>();
+        cache.instanceOf = new HashMap<>();
         cache.buildTransInstOf();
-        HashMap<String, HashSet<String>> expectedInstancesMap = cache.instances;
+        HashMap<String, HashSet<String>> expectedInstancesMap = cache.instanceOf;
         TreeSet<String> expectedInstancesForCaseRole = new TreeSet<>();
         for (String inst : expectedInstancesMap.keySet()) {
             HashSet<String> parentClasses = expectedInstancesMap.get(inst);
@@ -34,9 +34,9 @@ public class CaseRoleTest extends IntegrationTestBase {
         }
 
         // Collect all actual instances for "CaseRole", by running KBcache.buildDirectInstances()
-        cache.instances = new HashMap<>();
+        cache.instanceOf = new HashMap<>();
         cache.buildDirectInstances();
-        HashMap<String, HashSet<String>> actualInstancesMap = cache.instances;
+        HashMap<String, HashSet<String>> actualInstancesMap = cache.instanceOf;
         TreeSet<String> actualInstancesForCaseRole = new TreeSet<>();
         for (String inst : actualInstancesMap.keySet()) {
             HashSet<String> parentClasses = actualInstancesMap.get(inst);
