@@ -2951,7 +2951,7 @@ public class KB implements Serializable {
      */
     public ArrayList<String> collectPredicates() {
 
-        return new ArrayList<String>(kbCache.instances.get("Predicate"));
+        return new ArrayList<String>(kbCache.instanceOf.get("Predicate"));
     }
 
     /*****************************************************************
