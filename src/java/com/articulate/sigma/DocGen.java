@@ -461,7 +461,7 @@ public class DocGen {
                 // Ontology, using predicate subsumption to take
                 // advantage of any predicates that have been
                 // liked with SUMO's predicates.
-                for (it = kb.kbCache.instances.get("Ontology")
+                for (it = kb.kbCache.instanceOf.get("Ontology")
                         .iterator(); it.hasNext();) {
                     candidates.add((String) it.next());
                 }
@@ -559,8 +559,8 @@ public class DocGen {
                 codedIdentifiers = new TreeSet();
             }
             if (codedIdentifiers.isEmpty()) {
-                Set codes = kb.kbCache.instances.get("CodedIdentifier");
-                Set classNames = kb.kbCache.instances.get("CodedIdentifier");
+                Set codes = kb.kbCache.instanceOf.get("CodedIdentifier");
+                Set classNames = kb.kbCache.instanceOf.get("CodedIdentifier");
                 classNames.add("CodedIdentifier");
                 Object[] namesArr = classNames.toArray();
                 if (namesArr != null) {
@@ -2347,7 +2347,7 @@ public class DocGen {
                         kb = (KB) it.next();
                         reduce.addAll(kb.getTermsViaAsk(0,"inNamespace",2));
                         reduce.addAll(kb.getTermsViaAsk(0,"ontologyNamespace",2));
-                        reduce.addAll(kb.kbCache.instances.get("Namespace"));
+                        reduce.addAll(kb.kbCache.instanceOf.get("Namespace"));
                     }
                     if (!reduce.isEmpty()) 
                         namespaces.addAll(reduce);
@@ -2399,7 +2399,7 @@ public class DocGen {
                     if (StringUtil.isNonEmptyString(ontology)) {
                         reduce.addAll(getOntologyNamespaces(kb, ontology));
                     }
-                    reduce.addAll(kb.kbCache.instances.get("Namespace"));
+                    reduce.addAll(kb.kbCache.instanceOf.get("Namespace"));
                     namespaces.addAll(reduce);
                     if (namespaces.size() > 1)
                         sortByTermLength(namespaces);
@@ -2578,7 +2578,7 @@ public class DocGen {
             cached = (ArrayList) getRelationsByKB().get(kb);
             if (cached == null) {
                 TreeSet predSet = new TreeSet();
-                Set classNames = kb.kbCache.instances.get("Predicate");
+                Set classNames = kb.kbCache.instanceOf.get("Predicate");
                 classNames.add("Predicate");
                 classNames.add("BinaryPredicate");
                 Iterator it = classNames.iterator();
@@ -3989,7 +3989,7 @@ public class DocGen {
                         }
                     }
                 }
-                instances.addAll(kb.kbCache.instances.get(term));
+                instances.addAll(kb.kbCache.instanceOf.get(term));
                 Set instSet = new HashSet();
                 for (Iterator its = instances.iterator(); its.hasNext();) {
                     inst = (String) its.next();
@@ -6285,7 +6285,7 @@ public class DocGen {
      */
     protected static boolean isInstanceOf(KB kb, String i, String c) {
 
-        return kb.kbCache.instances.get(i).contains(c);
+        return kb.kbCache.instanceOf.get(i).contains(c);
     }
 
     /** *************************************************************
