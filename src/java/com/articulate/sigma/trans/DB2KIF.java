@@ -1,13 +1,12 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.DB;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.StringUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.*;
 
 /*
 copyright 2018- Infosys
@@ -42,9 +41,11 @@ public class DB2KIF {
     public static HashMap<String,String> symbol2Term = new HashMap<>();
 
     // relation keys and key value pairs of first argument and a set of prohibited second arguments
+    // When the first argument doesn't matter, include a value for that argument of "*"
     HashMap<String,HashMap<String,HashSet<String>>> badValues = new HashMap<>();
 
     // relation keys and key value pairs of first argument and a set of possible allowed second arguments
+    // When the first argument doesn't matter, include a value for that argument of "*"
     HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
 
     // relation keys and key value pairs of argument number and maximum value
@@ -59,7 +60,12 @@ public class DB2KIF {
 
     String defaultRowType = "Human";
 
+    public static KB kb = null;
+
     /** *****************************************************************
+     * A convenience method that gets the minimum expected value for
+     * the given argument to a relation.  Return null if there is no
+     * such value specified for the relation and argument number.
      */
     public Double getMin(String rel, int arg) {
 
@@ -75,6 +81,9 @@ public class DB2KIF {
     }
 
     /** *****************************************************************
+     * A convenience method that gets the maximum expected value for
+     * the given argument to a relation.  Return null if there is no
+     * such value specified for the relation and argument number.
      */
     public Double getMax(String rel, int arg) {
 
@@ -92,6 +101,9 @@ public class DB2KIF {
     }
 
     /** *****************************************************************
+     * A convenience method that gets the set of expected values for
+     * the given argument to a relation.  Return null if there are no
+     * such values specified for the relation and argument number.
      */
     public HashSet<String> getGood(String rel, String arg) {
 
@@ -107,6 +119,9 @@ public class DB2KIF {
     }
 
     /** *****************************************************************
+     * A convenience method that gets the set of values not expected for
+     * the given argument to a relation.  Return null if there are no
+     * such values specified for the relation and argument number.
      */
     public HashSet<String> getBad(String rel, String arg) {
 
@@ -122,6 +137,41 @@ public class DB2KIF {
     }
 
     /** *****************************************************************
+     * A convenience method that sets the  value for a given
+     * relation and "*" or "any" first argument.  Note that valSet could
+     * be either the goodValues or the badValues set.
+     */
+    private void addValueForAny(String rel, String arg, HashMap<String,HashMap<String,HashSet<String>>> valSet) {
+
+        //HashMap<String,HashMap<String,HashSet<String>>>
+        HashMap<String,HashSet<String>> forRel = valSet.get(rel);
+        if (forRel == null) {
+            forRel = new HashMap<String, HashSet<String>>();
+            valSet.put(rel, forRel);
+        }
+        HashSet<String> forAny = forRel.get("*");
+        if (forAny == null) {
+            forAny = new HashSet<String>();
+            forRel.put("*",forAny);
+        }
+        forAny.add(arg);
+    }
+
+    /** *****************************************************************
+     * A convenience method that sets the  value for a given
+     * relation and "*" or "any" first argument.  Note that valSet could
+     * be either the goodValues or the badValues set.
+     */
+    private void addValuesForAny(String rel, Collection<String> args, HashMap<String,HashMap<String,HashSet<String>>> valSet) {
+
+        for (String s : args)
+            addValueForAny(rel,s,valSet);
+    }
+
+    /** *****************************************************************
+     * Check values in a spreadsheet format where the columns have been
+     * mapped to relations and there is a set of good and bad values
+     * compiled for the arguments to those relations.
      */
     public String clean(ArrayList<ArrayList<String>> cells) {
 
@@ -204,6 +254,7 @@ public class DB2KIF {
     }
 
     /** *****************************************************************
+     * Create some sample good and bad values for testing
      */
     public static void initSampleValues(DB2KIF dbkif) {
 
@@ -229,16 +280,53 @@ public class DB2KIF {
     }
 
     /** *****************************************************************
+     * Take statements in SUMO and generate sets of good or bad values
+     * for relations
      */
     public static void initValues(DB2KIF dbkif) {
 
-
+        kb = KBmanager.getMgr().getKB("SUMO");
+        for (String r : column2Rel.values()) {
+            String t = kb.getArgType(r,2);
+            if (StringUtil.emptyString(t))
+                continue;
+            HashSet<String> insts = new HashSet<String>();
+            if (kb.isInstance(t)) {
+                HashMap<String,HashSet<String>> temp = kb.kbCache.children.get("subAttribute");
+                if (insts != null)
+                    insts = temp.get(t);
+                else
+                    System.out.println("Error in DB2KIF.initValues(): null set of subAttributes");
+            }
+            else {
+                Collection<String> cls = kb.kbCache.getInstancesForType(t);
+                if (cls != null)
+                    insts.addAll(cls);
+                System.out.println("DB2KIF.initValues(): instances: " + cls);
+                for (String c : cls) {
+                    HashSet<String> children = kb.kbCache.children.get("subAttribute").get(c);
+                    if (children != null)
+                        insts.addAll(children);
+                }
+            }
+            // relation keys and key value pairs of first argument and a set of possible allowed second arguments
+            // HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
+            System.out.println("DB2KIF.initValues(): for " + r + " : " + insts);
+            dbkif.addValuesForAny(r,insts,dbkif.goodValues);
+        }
     }
 
     /** *****************************************************************
      */
     public static void main (String[] args) {
 
+        KBmanager.getMgr().initializeOnce();
+        DB2KIF dbkif = new DB2KIF();
+        String fname = System.getenv("CORPORA") + File.separator + "UICincome" + File.separator + "adult.data-AP-small.txt.csv";
+        ArrayList<ArrayList<String>> cells = DB.readSpreadsheet(fname,null,false,',');
+        dbkif.column2Rel.put("color","color");
+        initValues(dbkif);
+        /*
         ArrayList<String> result = new ArrayList<>();
         String fname = System.getenv("CORPORA") + File.separator + "UICincome" + File.separator + "adult.data-AP-small.txt.csv";
         if (args != null && args.length > 0)
@@ -246,8 +334,8 @@ public class DB2KIF {
         ArrayList<ArrayList<String>> cells = DB.readSpreadsheet(fname,null,false,',');
         if (cells.size() < 3)
             System.exit(0);
-        DB2KIF dbkif = new DB2KIF();
         initSampleValues(dbkif);
         System.out.println(dbkif.clean(cells));
+        */
     }
 }
