@@ -1376,9 +1376,9 @@ public class Formula implements Comparable, Serializable {
             ArrayList<String> erList = complexArgumentsToArrayList(0);
             for (String s : erList) {
                 if (s.indexOf('(') != -1 && !StringUtil.quoted(s)) {
-                    String err = "Error in Formula.argumentsToArrayList() complex formula: " + this.toString();
-                    errors.add(err);
-                    System.out.println(err);
+                    //String err = "Error in Formula.argumentsToArrayList() complex formula: " + this.toString();
+                    //errors.add(err);
+                    //System.out.println(err);
                     return null;
                 }
             }
