@@ -709,6 +709,7 @@ public class KBmanager implements Serializable {
             for (String kbName : kbs.keySet()) {
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
                 WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
+                WordNet.wn.serialize(); // have to serialize it again if there are new synsets
             }
         }
         else
