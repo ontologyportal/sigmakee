@@ -12,7 +12,6 @@ package com.articulate.sigma;
  August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
  */
 
-import java.security.InvalidParameterException;
 import java.util.*;
 
 public class PredVarInst {
@@ -758,7 +757,7 @@ public class PredVarInst {
         }
         else
             System.out.println("INFO in PredVarInst.test() not variable arity: ");
-        System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.instances.get("partition"));
+        System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.instanceOf.get("partition"));
         System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.insts.contains("partition"));
         //String formStr = "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (?REL1 ?INST1 ?INST2) (?REL2 ?INST2 ?INST1))))";
         String formStr = "(<=> (instance ?REL TransitiveRelation) " +
