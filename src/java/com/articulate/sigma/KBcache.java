@@ -65,10 +65,15 @@ public class KBcache implements Serializable {
 
     /** Parent relations from instances, including those that are
      * transitive through (instance,instance) relations, such as
-     * subAttribute and subrelation
+     * subAttribute and subrelation.  May not do what you think
+     * since the key is the child (instance)
      */
-    public HashMap<String, HashSet<String>> instances =
+    public HashMap<String, HashSet<String>> instanceOf =
             new HashMap<String, HashSet<String>>();
+
+    // all the instances of a class key, including through subrelation
+    // and subAttribute
+    public HashMap<String, HashSet<String>> instances = new HashMap<>();
 
     /** A temporary list of instances built during creation of the
      * children map, in order to efficiently create the instances map
@@ -148,11 +153,11 @@ public class KBcache implements Serializable {
                 this.parents.put(outerKey, newInnerMap);
             }
         }
-        if (kbCacheIn.instances != null) {
-            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.instances.entrySet()) {
+        if (kbCacheIn.instanceOf != null) {
+            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.instanceOf.entrySet()) {
                 String key = entry.getKey();
                 HashSet<String> newSet = Sets.newHashSet(entry.getValue());
-                this.instances.put(key, newSet);
+                this.instanceOf.put(key, newSet);
             }
         }
         if (kbCacheIn.insts != null) {
@@ -252,8 +257,8 @@ public class KBcache implements Serializable {
      */
     public boolean isInstanceOf(String i, String c) {
 
-        if (instances.containsKey(i)) {
-            HashSet<String> hashSet = instances.get(i);
+        if (instanceOf.containsKey(i)) {
+            HashSet<String> hashSet = instanceOf.get(i);
             if (hashSet.contains(c))
                 return true;
             else
@@ -272,7 +277,7 @@ public class KBcache implements Serializable {
      */
     public boolean transInstOf(String child, String parent) {
     
-        HashSet<String> prents = instances.get(child);
+        HashSet<String> prents = instanceOf.get(child);
         if (prents != null)
             return prents.contains(parent);
         else
@@ -312,6 +317,18 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     */
+    public void addInstance(String child, String parent) {
+
+        HashSet<String> is = instances.get(parent);
+        if (is == null) {
+            is = new HashSet<>();
+            instances.put(parent, is);
+        }
+        is.add(child);
+    }
+
+    /** ***************************************************************
      * Record instances and their explicitly defined parent classes
      */
     public void buildDirectInstances() {
@@ -321,14 +338,15 @@ public class KBcache implements Serializable {
             Formula f = forms.get(i);
             String child = f.getArgument(1);
             String parent = f.getArgument(2);
+            addInstance(child,parent);
             HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
             HashSet<String> iset = new HashSet<String>();
-            if (instances.get(child) != null)
-                iset = instances.get(child);
+            if (instanceOf.get(child) != null)
+                iset = instanceOf.get(child);
             iset.add(parent);
             if (superclasses != null && superclasses.get(parent) != null)
                 iset.addAll(superclasses.get(parent));
-        	instances.put(child, iset);
+        	instanceOf.put(child, iset);
         }
     }
 
@@ -469,11 +487,11 @@ public class KBcache implements Serializable {
                                     String cl = f2.getArgument(2);
                                     HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                                     HashSet<String> pset = new HashSet<String>();
-                                    if (instances.get(child) != null)
-                                        pset = instances.get(child);
+                                    if (instanceOf.get(child) != null)
+                                        pset = instanceOf.get(child);
                                     pset.add(cl);
                                     pset.addAll(superclasses.get(cl));
-                                    instances.put(child, pset);
+                                    instanceOf.put(child, pset);
                                 }
                             }
                         }
@@ -485,11 +503,11 @@ public class KBcache implements Serializable {
                 	String cl = f.getArgument(2);
                     HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                     HashSet<String> iset = new HashSet<String>();
-                    if (instances.get(child) != null)
-                        iset = instances.get(child);
+                    if (instanceOf.get(child) != null)
+                        iset = instanceOf.get(child);
                     iset.add(cl);
                     iset.addAll(superclasses.get(cl));
-                	instances.put(child, iset);
+                	instanceOf.put(child, iset);
                 }
             }            
         }
@@ -614,11 +632,11 @@ public class KBcache implements Serializable {
      *
      * For example, if we know (instance UnitedStates Nation), then
      * getParentClassesOfInstances(UnitedStates) returns Nation and its
-     * super claasses from subclass expressions.
+     * super classes from subclass expressions.
      */
     public HashSet<String> getParentClassesOfInstance(String cl) {
         
-        HashSet<String> ps = instances.get(cl);
+        HashSet<String> ps = instanceOf.get(cl);
         if (ps != null)
             return ps;
         else
@@ -630,16 +648,55 @@ public class KBcache implements Serializable {
      *
      * For example, given the class "Nation", getInstancesForType(Nation)
      * returns all instances, like "America", "Austria", "Albania", etc.
-     */
+
     public HashSet<String> getInstancesForType(String cl) {
 
         HashSet<String> instancesForType = new HashSet<>();
-        for (String inst : instances.keySet()) {
-            HashSet<String> parents = instances.get(inst);
+        for (String inst : instanceOf.keySet()) {
+            HashSet<String> parents = instanceOf.get(inst);
             if (parents.contains(cl))
                 instancesForType.add(inst);
         }
         return instancesForType;
+    } */
+
+    /** ***************************************************************
+     * Get all instances for the given input class
+     *
+     * For example, given the class "Nation", getInstancesForType(Nation)
+     * returns all instances, like "America", "Austria", "Albania", etc.
+     *
+     * Follow instances through transitive relations if applicable from
+     * the set of [subAttribute, subrelation].
+     *
+     * TODO: do we need a DownwardHeritableRelation so that this
+     * list doesn't need to be hardcoded?
+     */
+    public HashSet<String> getInstancesForType(String cl) {
+
+        HashSet<String> instancesForType = new HashSet<>();
+        HashMap<String,HashSet<String>> ps = children.get("subclass");
+        HashSet<String> classes = ps.get(cl);
+        if (classes == null)
+            classes = new HashSet<>();
+        classes.add(cl);
+        for (String c : classes) {
+            HashSet<String> is = instances.get(c);
+            if (is != null)
+                instancesForType.addAll(is);
+        }
+        HashSet<String> instancesForType2 = new HashSet<>();
+        HashMap<String,HashSet<String>> attr = children.get("subAttribute");
+        HashMap<String,HashSet<String>> arel = children.get("subrelation");
+        for (String i : instancesForType) {
+            HashSet<String> temp = attr.get(i);
+            if (temp != null)
+                instancesForType2.addAll(temp);
+            temp = arel.get(i);
+            if (temp != null)
+                instancesForType2.addAll(temp);
+        }
+        return instancesForType2;
     }
 
     /** ***************************************************************
@@ -1081,10 +1138,10 @@ public class KBcache implements Serializable {
                     }
                 }                
             }
-            it = instances.keySet().iterator();
+            it = instanceOf.keySet().iterator();
             while (it.hasNext()) {
                 String inst = it.next();
-                HashSet<String> valSet = instances.get(inst);
+                HashSet<String> valSet = instanceOf.get(inst);
                 Iterator<String> it2 = valSet.iterator();
                 while (it2.hasNext()) {
                     String parent = it2.next();
@@ -1141,6 +1198,7 @@ public class KBcache implements Serializable {
         Iterator<String> it = transRels.iterator();
         while (it.hasNext()) {
             String rel = it.next();
+            //System.out.println("KBcache.buildInstTransRels(): -------------------: " + rel);
             boolean instrel = true;
             ArrayList<String> sig = signatures.get(rel);
             if (sig == null) {
@@ -1148,7 +1206,10 @@ public class KBcache implements Serializable {
             }
             else {
                 for (int i = 0; i < sig.size(); i++) {
-                    if (sig.get(i).endsWith("+")) {
+                    String signatureElement = sig.get(i);
+                    //System.out.println("KBcache.buildInstTransRels(): " + signatureElement);
+                    if (signatureElement.endsWith("+") || signatureElement.equals("SetOrClass")) {
+                        //System.out.println("KBcache.buildInstTransRels(): " + rel + " is between classes");
                         instrel = false;
                         break;
                     }
@@ -1173,7 +1234,7 @@ public class KBcache implements Serializable {
         buildDirectInstances();
         buildDisjointRelationsMap(); // find relations under partition definition
         writeCacheFile();
-        System.out.println("INFO in KBcache.buildCaches(): size: " + instances.keySet().size());
+        System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
     }
 
     /** ***************************************************************
@@ -1184,8 +1245,8 @@ public class KBcache implements Serializable {
 
         if (signatures.keySet().contains(oldPred))
             signatures.put(pred,signatures.get(oldPred));
-        if (instances.keySet().contains(oldPred))
-            instances.put(pred,instances.get(oldPred));
+        if (instanceOf.keySet().contains(oldPred))
+            instanceOf.put(pred, instanceOf.get(oldPred));
         valences.put(pred,arity);
     }
         ;
@@ -1260,10 +1321,10 @@ public class KBcache implements Serializable {
         System.out.println();
         System.out.println();
         System.out.println("-------------- instances ----------------");
-        Iterator<String> it6 = this.instances.keySet().iterator();
+        Iterator<String> it6 = this.instanceOf.keySet().iterator();
         while (it6.hasNext()) {
             String inst = it6.next();
-            System.out.println(inst + ": " + this.instances.get(inst));
+            System.out.println(inst + ": " + this.instanceOf.get(inst));
         }
     }
 
@@ -1275,6 +1336,7 @@ public class KBcache implements Serializable {
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("**** Finished loading KB ***");
         KBcache nkbc = kb.kbCache;
+        /*
         String term = "Object";
         HashSet<String> classes = nkbc.getChildClasses(term);
         HashSet<String> instances = nkbc.getChildInstances(term);
@@ -1295,6 +1357,16 @@ public class KBcache implements Serializable {
                 instances);
 
         System.out.println("KBcache.main(): " + nkbc.getCommonParent("Kicking","Pushing"));
+*/
+
+        System.out.println("KBcache.main(): transRels: " + nkbc.transRels);
+        System.out.println("KBcache.main(): instTransRels: " + nkbc.instTransRels);
+        System.out.println("KBcache.main(): subclass signature: " + nkbc.signatures.get("subclass"));
+        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.instanceOf.get("PrimaryColor"));
+        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.instanceOf.get("ColorAttribute"));
+        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.getInstancesForType("PrimaryColor"));
+        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.getInstancesForType("ColorAttribute"));
+        System.out.println("KBcache.main(): FormOfGovernment: " + nkbc.getInstancesForType("FormOfGovernment"));
         /* List<Formula> forms = kb.ask("arg",0,"subrelation");
         for (Formula f : forms) {
             String rel = f.getArgument(1);
