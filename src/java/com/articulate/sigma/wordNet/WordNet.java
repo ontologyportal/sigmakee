@@ -615,7 +615,7 @@ public class WordNet implements Serializable {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
                 line = line.trim();
-                if(!processNounLine(line)) {
+                if (!processNounLine(line)) {
                     System.out.println();
                     System.out.println( "Error in WordNet.readNouns(): No match in "
                             + nounFile.getCanonicalPath() + " for line " + line );
@@ -681,6 +681,7 @@ public class WordNet implements Serializable {
      */
     protected void setMaxNounSynsetID(String synset) {
 
+        System.out.println("WordNet.setMaxNounSynsetID(): " + synset);
         if (WordNetUtilities.isValidSynset8(synset))
             maxNounSynsetID = synset;
     }
@@ -701,13 +702,13 @@ public class WordNet implements Serializable {
         m = regexPatterns[6].matcher(line);
         boolean anyAreNull = false;
         if (m.matches()) {
-            for ( int i = 1 ; i < 5 ; i++ ) {
+            for (int i = 1 ; i < 5 ; i++) {
                 anyAreNull = (m.group(i) == null);
-                if ( anyAreNull ) {
+                if (anyAreNull) {
                     break;
                 }
             }
-            if ( ! anyAreNull ) {
+            if (!anyAreNull ) {
                 addSUMOMapping(m.group(4),"1" + m.group(1));
                 setMaxNounSynsetID(m.group(1));
                 nounDocumentationHash.put(m.group(1),m.group(3)); // 1-synset, 2-pointers, 3-docu, 4-SUMO term
@@ -1741,6 +1742,9 @@ public class WordNet implements Serializable {
             file.close();
             System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
             initNeeded = false;
+            System.out.println("INFO in WordNet.loadSerialized(): origMaxNounSynsetID: " +
+                    wn.origMaxNounSynsetID + " maxNounSynsetID: " +
+                    wn.maxNounSynsetID);
         }
         catch(IOException ex) {
             System.out.println("Error in WordNet.loadSerialized(): IOException is caught");
@@ -1757,6 +1761,10 @@ public class WordNet implements Serializable {
      */
     public static void serialize() {
 
+        System.out.println("INFO in WordNet.serialize(): origMaxNounSynsetID: " +
+                wn.origMaxNounSynsetID + " and: " + wn.maxNounSynsetID);
+        if (StringUtil.emptyString(wn.origMaxNounSynsetID))
+            System.out.println("Error in WordNet.serialize(): empty max synset id");
         try {
             // Reading the object from a file
             FileOutputStream file = new FileOutputStream(baseDir + File.separator + "wn.ser");
@@ -1779,6 +1787,7 @@ public class WordNet implements Serializable {
      */
     private static void loadFresh() {
 
+        System.out.println("WordNet.loadFresh(): ");
         try {
             wn = new WordNet();
             wn.makeFileMap();
@@ -1788,6 +1797,8 @@ public class WordNet implements Serializable {
             wn.readVerbs();
             wn.readAdjectives();
             wn.readAdverbs();
+            wn.origMaxNounSynsetID = wn.maxNounSynsetID;
+            wn.origMaxVerbSynsetID = wn.maxVerbSynsetID;
             wn.readWordCoFrequencies();
             wn.readStopWords();
             wn.readSenseIndex(null);
@@ -1860,6 +1871,8 @@ public class WordNet implements Serializable {
         String kbString = "&kb=" + sumokbname;
 
         if (synsetBlock != null) {
+            System.out.println("sumoDisplay(): origMaxNounSynsetID: " + origMaxNounSynsetID);
+            System.out.println("sumoDisplay(): maxNounSynsetID: " + maxNounSynsetID);
             result.append("<i>According to WordNet, the " + type + " \"" + word + "\" has ");
             result.append(synsetBlock.size() + " sense(s).</i><P>\n\n");
             Iterator<String> it = synsetBlock.iterator();
@@ -3216,7 +3229,20 @@ public class WordNet implements Serializable {
         verbSynsetHash.put(tf,synsets);
         return synsetID;
     }
-   
+
+    /** ***************************************************************
+     */
+    private String createNewSenseIndexKey(String base) {
+
+        char num = '1';
+        String key = base + num;
+        while (senseIndex.keySet().contains(key) || reverseSenseIndex.values().contains(key)) {
+            num++;
+            key = base + num;
+        }
+        return key;
+    }
+
     /** ***************************************************************
      * Generate a new synset from a termFormat statement
      * @param form is the entire termFormat statement
@@ -3253,12 +3279,8 @@ public class WordNet implements Serializable {
         synsetsToWords.put(synsetID,words);
         
         String letterPOS = WordNetUtilities.posNumberToLetters(pos);
-        char num = '1';
-        String key = tf + "_" + letterPOS + "_" + num; // FIXME: Note! This will cause a bug if there's a name clash
-        while (senseIndex.keySet().contains(key) || reverseSenseIndex.values().contains(key)) {
-            num++;
-            key = tf + "_" + letterPOS + "_" + num;
-        }
+
+        String key = createNewSenseIndexKey(tf + "_" + letterPOS + "_");
         senseIndex.put(key,synsetID.substring(1)); // senseIndex requires un-prefixed synset #
         reverseSenseIndex.put(synsetID,key);
         ArrayList<String> keys = new ArrayList<String>();
@@ -3297,8 +3319,12 @@ public class WordNet implements Serializable {
             System.out.println("INFO in WordNet.termFormatsToSynsets(): KB is null");
             return;
         }
-        origMaxNounSynsetID = maxNounSynsetID;
-        origMaxVerbSynsetID = maxVerbSynsetID;
+        System.out.println("INFO in WordNet.termFormatsToSynsets(): changing origMaxNounSynsetID from: " +
+                origMaxNounSynsetID + " to: " + maxNounSynsetID);
+        if (!StringUtil.emptyString(maxNounSynsetID))
+            origMaxNounSynsetID = maxNounSynsetID;
+        if (!StringUtil.emptyString(maxVerbSynsetID))
+            origMaxVerbSynsetID = maxVerbSynsetID;
 
         //System.out.println("INFO in WordNet.termFormatsToSynsets()");
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
@@ -3325,6 +3351,8 @@ public class WordNet implements Serializable {
             }
             synsetFromTermFormat(form,tf,SUMOterm,kb);
         }
+        System.out.println("INFO in WordNet.termFormatsToSynsets(): result (orig,max): " +
+                origMaxNounSynsetID + " and: " + maxNounSynsetID);
     }
     
     /** ***************************************************************
@@ -3424,6 +3452,16 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("Semantic Rewriting with SUMO, Sigma and E");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -w \"...\" - find a word in WordNet");
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
@@ -3432,6 +3470,13 @@ public class WordNet implements Serializable {
         //testWordFreq();    
         //checkWordsToSenses();
         //getEntailments();
+        System.out.println("INFO in WordNet.main()");
         KBmanager.getMgr().initializeOnce();
+        if (args != null && args.length > 1 && args[0].equals("-w")) {
+            String result = wn.page(StringUtil.removeEnclosingQuotes(args[1]),0,"SUMO","","");
+            System.out.println(StringUtil.removeHTML(result));
+        }
+        else
+            showHelp();
     }
 }
