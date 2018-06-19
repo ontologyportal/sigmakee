@@ -343,6 +343,28 @@ public class StringUtil {
     }
 
     /****************************************************************
+     * Remove characters other than JavaIdentifiers and capitalize
+     * any character following a non-alpha character
+     */
+    public static String toCamelCase(String input) {
+
+        StringBuffer sb = new StringBuffer();
+        char lastChar = ' ';
+        for (char c : input.toCharArray()) {
+            if (lastChar == '\\')
+                continue;
+            if (Character.isAlphabetic(c) && !Character.isAlphabetic(lastChar))
+                sb.append(Character.toUpperCase(c));
+            else {
+                if (Character.isJavaIdentifierPart(c))
+                    sb.append(c);
+            }
+            lastChar = c;
+        }
+        return sb.toString();
+    }
+
+    /****************************************************************
      * Removes all balanced ASCII double-quote characters from each
      * end of the String s, if any are present.
      */
