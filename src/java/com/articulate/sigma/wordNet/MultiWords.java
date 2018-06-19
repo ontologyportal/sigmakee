@@ -83,8 +83,8 @@ public class MultiWords implements Serializable {
             //System.out.println("INFO in MultiWords.addMultiWord(): first word: " + firstWord);
             //if (firstWord.equals("four"))
             //    System.out.println("INFO in MultiWords.addMultiWord(): word: " + word);
-            System.out.println("INFO in MultiWords.addMultiWord(): first word: " + firstWord);
-            System.out.println("INFO in MultiWords.addMultiWord(): word: " + word);
+            //System.out.println("INFO in MultiWords.addMultiWord(): first word: " + firstWord);
+            //System.out.println("INFO in MultiWords.addMultiWord(): word: " + word);
             multiWord.put(firstWord, word);
         }
         else
