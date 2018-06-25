@@ -81,6 +81,19 @@ public class KButilities {
     }
 
     /** *************************************************************
+     * convert the numerical result of compare() to text
+     */
+    public static String eqNum2Text(int val) {
+
+        switch (val) {
+            case -1 : return "is shallower than";
+            case 0 : return "is equal to";
+            case 1 : return "is deeper than";
+        }
+        return "error bad value from KButilities.eqNum2Text()";
+    }
+
+    /** *************************************************************
      * Get all formulas that contain both terms. 
      */
     public static ArrayList<Formula> termIntersection(KB kb, String term1, String term2) {
