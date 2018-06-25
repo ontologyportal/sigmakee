@@ -148,6 +148,8 @@ public class KB implements Serializable {
 
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 
+    public static boolean debug = false;
+
     /***************************************************************
      * Constructor which takes the name of the KB and the location where KBs preprocessed
      * for EProver should be placed.
@@ -1951,6 +1953,8 @@ public class KB implements Serializable {
     }
 
     /*****************************************************************
+     * Count the number of "levels" deep the term is in taxonomic
+     * relations from Entity
      */
     public int termDepth(String term) {
 
@@ -2002,18 +2006,23 @@ public class KB implements Serializable {
      * Therefore, terms that are not the same can still be "equal"
      * if they're at the same level of the taxonomy.
      */
-    public int compareTerms(String t1, String t2) {
+    public int compareTermDepth(String t1, String t2) {
 
+        if (debug) System.out.println("KB.compareTermDepth(): ");
+        if (debug) System.out.println("KB.compareTermDepth(): subattribute: " + kbCache.subAttributeOf(t1,t2));
+        if (debug) System.out.println("KB.compareTermDepth(): subclass: " + kbCache.subclassOf(t1,t2));
         if (t1.equals(t2))
             return 0;
-        if (kbCache.subAttributeOf(t1,t2) || kbCache.subclassOf(t1,t2))
-            return -1;
         if (kbCache.subAttributeOf(t2,t1) || kbCache.subclassOf(t2,t1))
+            return -1;
+        if (kbCache.subAttributeOf(t1,t2) || kbCache.subclassOf(t1,t2))
             return 1;
-        String p = kbCache.getCommonParent(t1,t2);
-        boolean found = false;
+        //String p = kbCache.getCommonParent(t1,t2);
+        //boolean found = false;
         int depthT1 = termDepth(t1);
         int depthT2 = termDepth(t2);
+        if (debug) System.out.println("KB.compareTermDepth(): term depth of " + t1 + " is " + depthT1);
+        if (debug) System.out.println("KB.compareTermDepth(): term depth of " + t2 + " is " + depthT2);
         if (depthT1 == depthT2)
             return 0;
         if (depthT1 > depthT2)
@@ -3257,6 +3266,7 @@ public class KB implements Serializable {
     /*****************************************************************
      */
     public List<Pair> getSortedTermFrequency() {
+
         List<Pair> termFrequencies = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : termFrequency.entrySet()) {
             termFrequencies.add(new Pair(entry.getValue(), entry.getKey()));
@@ -3267,7 +3277,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      */
-    public static void main(String[] args) {
+    public static void test() {
 
         // generateTPTPTestAssertions();
         // testTPTP(args);
@@ -3299,5 +3309,38 @@ public class KB implements Serializable {
          * String foo = "(rel bar \"test\")"; Formula f = new Formula();
          * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
          */
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("KB class");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t - run test");
+        System.out.println("  -c <term1> <term2> - compare term depth");
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) throws IOException {
+
+        System.out.println("INFO in Interpreter.main()");
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        if (args != null && args.length > 2 && args[0].equals("-c")) {
+            int eqrel = kb.compareTermDepth(args[1],args[2]);
+            String eqText = KButilities.eqNum2Text(eqrel);
+            System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));
+            System.out.println("KB.main() term depth of " + args[2] + " : " + kb.termDepth(args[2]));
+            System.out.println("KB.main() eqrel " + eqrel);
+            System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            showHelp();
+        }
+        else
+            test();
     }
 }
