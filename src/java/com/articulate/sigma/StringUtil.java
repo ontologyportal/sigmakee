@@ -278,7 +278,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param obj Any object
      * @return true if obj is a non-empty String, else false.
      */
@@ -288,7 +287,6 @@ public class StringUtil {
     }
 
     /***************************************************************
-     *
      * @param s An input Object, expected to be a String.
      * @return true if s == null or s is an empty String, else false.
      */
@@ -300,7 +298,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @return just the first n characters of the string.  If returning
      * less than the full string, append "..."
      */
@@ -525,7 +522,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with space characters normalized to match the
      * conventions for written English text.  All linefeeds and
@@ -621,7 +617,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with all double quote characters properly
      * escaped with a left slash character.
@@ -647,7 +642,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with all escape characters properly
      * escaped with a left slash character.
@@ -673,7 +667,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with all left slash characters removed
      */
@@ -699,7 +692,34 @@ public class StringUtil {
     }
 
     /***************************************************************
-     *
+     * @param str A String
+     * @return A String in which each sequence of slash-escape chars
+     * is replaced by a space.
+     */
+    public static String removeEscapes(String str) {
+
+        String ans = str;
+        if (isNonEmptyString(str)) {
+            StringBuilder sb = new StringBuilder();
+            char prevCh = 'x';
+            char ch = 'x';
+            int strlen = str.length();
+            for (int i = 0; i < strlen; i++) {
+                ch = str.charAt(i);
+                if (Character.isAlphabetic(ch) && (prevCh == '\\')) {
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+                else {
+                    sb.append(ch);
+                    prevCh = ch;
+                }
+            }
+            ans = sb.toString();
+        }
+        return ans;
+    }
+
+    /***************************************************************
      * @param str A String
      * @return A String in which each sequence of two or more
      * slash-escape chars is replaced by one slash-escape char.
@@ -726,7 +746,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return A String with all internal escaped double quote
      * characters removed
@@ -855,7 +874,6 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
      * @param str A String
      * @return true if str contains any non-ASCII characters, else
      * false.
@@ -866,17 +884,25 @@ public class StringUtil {
     }
 
     /****************************************************************
-     *
+     * @param str A String
+     * @return A String with all non-ASCII characters replaced by the given char.
+     */
+    public static String replaceNonAsciiChars(String str, char c) {
+
+        String ans = str;
+        if (isNonEmptyString(ans)) {
+            ans = ans.replaceAll("[^\\p{ASCII}]", Character.toString(c));
+        }
+        return ans;
+    }
+
+    /****************************************************************
      * @param str A String
      * @return A String with all non-ASCII characters replaced by "x".
      */
     public static String replaceNonAsciiChars(String str) {
 
-        String ans = str;
-        if (isNonEmptyString(ans)) {
-            ans = ans.replaceAll("[^\\p{ASCII}]", "x");
-        }
-        return ans;
+        return replaceNonAsciiChars(str,'x');
     }
 
     /***************************************************************
