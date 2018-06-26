@@ -557,7 +557,8 @@ public class KB implements Serializable {
     /***************************************************************
      * Returns
      * true if i is c, is an instance of c, or is subclass of c, or is
-     * subAttribute of c, else returns false.
+     * subAttribute of c, else returns false. Note that every class is
+     * a child of itself
      *
      * @param i A String denoting a class or instance.
      * @param c A String denoting the parent Class.
