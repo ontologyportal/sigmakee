@@ -327,6 +327,32 @@ public final class PasswordService {
 
     /** *****************************************************************
      */
+    public void createAdmin3(String user, String p, String e) {
+
+        System.out.println("Create admin");
+        Console c = System.console();
+        if (c == null) {
+            System.err.println("No console.");
+            exit(1);
+        }
+        String login = user;
+        String password = p;
+        if (userExists(login))
+            System.out.println("Error: User " + login + " already exists");
+        else {
+            String email = e;
+            User u = new User();
+            u.username = login;
+            u.password = encrypt(password);
+            u.role = "admin";
+            u.attributes.put("email",email);
+            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            addUser(u);
+        }
+    }
+
+    /** *****************************************************************
+     */
     public void createUser(String user) {
 
         System.out.println("Create user " +user);
@@ -379,12 +405,14 @@ public final class PasswordService {
         System.out.println("-l    Login");
         System.out.println("-c    Create db");
         System.out.println("-a    create Admin user");
+
         System.out.println("-u    show User IDs");
         System.out.println("-r    Register a new username and password (fail if username taken)");
-        System.out.println("-o <id>    change user rOle");
-        System.out.println("-n <id>    create New guest user");
-        System.out.println("-f <id>    find user with given ID");
-        System.out.println("-d <id>    Delete user with given ID");
+        System.out.println("-a3 <u> <p> <e>  create Admin user");
+        System.out.println("-o <id>          change user rOle");
+        System.out.println("-n <id>          create New guest user");
+        System.out.println("-f <id>          find user with given ID");
+        System.out.println("-d <id>          Delete user with given ID");
     }
 
     /** ***************************************************************** 
@@ -403,6 +431,8 @@ public final class PasswordService {
                     User.createDB();
                 else if (args.length > 0 && args[0].equals("-a"))
                     ps.createAdmin();
+                else if (args.length > 3 && args[0].equals("-a3"))
+                    ps.createAdmin3(args[1],args[2],args[3]);
                 else if (args.length > 0 && args[0].equals("-u"))
                     System.out.println(ps.userIDs());
                 else if (args.length > 1 && args[0].equals("-f"))
