@@ -330,11 +330,6 @@ public final class PasswordService {
     public void createAdmin3(String user, String p, String e) {
 
         System.out.println("Create admin");
-        Console c = System.console();
-        if (c == null) {
-            System.err.println("No console.");
-            exit(1);
-        }
         String login = user;
         String password = p;
         if (userExists(login))
