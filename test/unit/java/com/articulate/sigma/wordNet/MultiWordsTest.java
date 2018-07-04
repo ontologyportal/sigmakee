@@ -31,8 +31,34 @@ import static org.junit.Assert.assertEquals;
 
 public class MultiWordsTest extends UnitTestBase {
 
+    /** ***************************************************************
+     */
     @Test
-    public void testVerbMultiWord() {
+    public void testVerbMultiWordKickBucket1() {
+
+        List<String> input = Lists.newArrayList("kick", "the", "bucket");
+        List<String> synset = Lists.newArrayList();
+        String w = WordNet.wn.getMultiWords().findMultiWord(input);
+        String s = WordNetUtilities.wordsToSynsets(w).iterator().next();
+        assertEquals("200358431", s);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testVerbMultiWordKickBucket2() {
+
+        List<String> input = Lists.newArrayList("kick", "the", "bucket", "down", "the", "road");
+        List<String> synset = Lists.newArrayList();
+        String w = WordNet.wn.getMultiWords().findMultiWord(input);
+        String s = WordNetUtilities.wordsToSynsets(w).iterator().next();
+        assertEquals("200358431", s);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testVerbMultiWordCatsAndDogs1() {
 
         List<String> input = Lists.newArrayList("many", "raining", "cats", "and", "dogs", "and", "sheep");
         List<String> synset = Lists.newArrayList();
@@ -40,46 +66,88 @@ public class MultiWordsTest extends UnitTestBase {
 
         assertEquals(0, endIndex);
         assertEquals(0, synset.size());
+    }
 
-        synset.clear();
-        endIndex = WordNet.wn.getMultiWords().findMultiWord(input, 1, synset);
+    /** ***************************************************************
+     */
+    @Test
+    public void testVerbMultiWordCatsAndDogs2() {
+
+        List<String> input = Lists.newArrayList("many", "raining", "cats", "and", "dogs", "and", "sheep");
+        List<String> synset = Lists.newArrayList();
+        int endIndex = WordNet.wn.getMultiWords().findMultiWord(input, 1, synset);
 
         assertEquals(5, endIndex);
         assertEquals(1, synset.size());
+    }
 
+    /** ***************************************************************
+     */
+    @Test
+    public void testVerbMultiWordCatsAndDogs3() {
 
-        input = Lists.newArrayList("cats", "and", "dogs", "and", "sheep");
-
-        synset.clear();
-        endIndex = WordNet.wn.getMultiWords().findMultiWord("rain", "rain", input, synset);
+        ArrayList<String> input = Lists.newArrayList("cats", "and", "dogs", "and", "sheep");
+        List<String> synset = Lists.newArrayList();
+        int endIndex = WordNet.wn.getMultiWords().findMultiWord("rain", "rain", input, synset);
 
         assertEquals(4, endIndex);
         assertEquals(1, synset.size());
+        assertEquals("202758033", synset.get(0));
+    }
 
-        synset.clear();
+    /** ***************************************************************
+     */
+    @Test
+    public void testVerbMultiWordCatsAndDogs4() {
+
+        ArrayList<String> input = Lists.newArrayList("cats", "and", "dogs", "and", "sheep");
+        List<String> synset = Lists.newArrayList();
         // Incorrect root form
-        endIndex = WordNet.wn.getMultiWords().findMultiWord("raining", "raining", input, synset);
+        int endIndex = WordNet.wn.getMultiWords().findMultiWord("raining", "raining", input, synset);
 
         assertEquals(0, endIndex);
         assertEquals(0, synset.size());
     }
 
+    /** ***************************************************************
+     */
     @Test
-    public void testNounMultiWord() {
+    public void testVerbMultiWordCatsAndDogs5() {
+
+        ArrayList<String> input = Lists.newArrayList("raining", "cats", "and", "dogs", "and", "sheep");
+        List<String> synset = Lists.newArrayList();
+        // Incorrect root form
+        String result = WordNet.wn.getMultiWords().findMultiWord(input);
+
+        assertEquals("raining_cats_and_dogs",result);
+        //WordNet.wn.getSUMO
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testNounMultiWord1() {
 
         ArrayList<String> input = Lists.newArrayList("father");
-
         ArrayList<String> synset = Lists.newArrayList();
         // Incorrect root form
         int endIndex = WordNet.wn.getMultiWords().findMultiWord("found", "found", input, synset);
 
         assertEquals(0, endIndex);
         assertEquals(0, synset.size());
+    }
 
-        synset.clear();
-        endIndex = WordNet.wn.getMultiWords().findMultiWord("founding", "founding", input, synset);
+    /** ***************************************************************
+     */
+    @Test
+    public void testNounMultiWord2() {
+
+        ArrayList<String> input = Lists.newArrayList("father");
+        ArrayList<String> synset = Lists.newArrayList();
+        int endIndex = WordNet.wn.getMultiWords().findMultiWord("founding", "founding", input, synset);
 
         assertEquals(2, endIndex);
         assertEquals(1, synset.size());
+        assertEquals("110107303",synset.get(0));
     }
 }
