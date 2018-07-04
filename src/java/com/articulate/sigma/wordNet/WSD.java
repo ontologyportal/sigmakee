@@ -21,7 +21,6 @@ import java.io.*;
 import java.util.*;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.dbpedia.DBPedia;
 import com.google.common.collect.Lists;
 
 public class WSD {
@@ -92,24 +91,26 @@ public class WSD {
      */
     public static ArrayList<String> collectWordSenses(String text) {
 
-        //System.out.println("INFO in WordNet.collectWordSenses(): " + text);
+        if (debug) System.out.println("INFO in WordNet.collectWordSenses(): " + text);
         String newtext = StringUtil.removeHTML(text);
         newtext = StringUtil.removePunctuation(newtext);
         String context = newtext;
         text = newtext;
         ArrayList<String> result = new ArrayList<String>();
-        String wordResult = "";
         ArrayList<String> al = WordNet.splitToArrayList(text);
         ArrayList<String> alcon = WordNet.splitToArrayList(context);
         for (int i = 0; i < al.size(); i++) {
             String word = (String) al.get(i);
-            ArrayList<String> multiWordResult = new ArrayList<String>();
-            int wordIndex = WordNet.wn.getMultiWords().findMultiWord(al, i, multiWordResult);
-            if (wordIndex != i) {
+            //ArrayList<String> multiWordResult = new ArrayList<String>();
+            //int wordIndex = WordNet.wn.getMultiWords().findMultiWord(al, i, multiWordResult);
+            List<String> sublist = al.subList(i,al.size());
+            String multiWord = WordNet.wn.getMultiWords().findMultiWord(sublist);
+            if (!StringUtil.emptyString(multiWord)) {
                 //String theMultiWord = WordNet.wn.synsetsToWords.get(multiWordResult.get(0)).get(0);
-                result.add(multiWordResult.get(0));
-                //wordResult = wordResult + " " + theMultiWord;
-                i = wordIndex;
+                Collection<String> synsets = WordNetUtilities.wordsToSynsets(multiWord);
+                if (synsets != null && synsets.size() > 0)
+                    result.add(synsets.iterator().next());
+                i = i + StringUtil.countChars(multiWord,'_');
             }
             else {
                 if (!WordNet.wn.isStopWord(word)) {
@@ -128,10 +129,59 @@ public class WSD {
                 }
             }
         }
-        //System.out.println("INFO in WordNet.collectWordSenses(): result: " + result);
+        if (debug) System.out.println("INFO in WordNet.collectWordSenses(): result: " + result);
         return result;
     }
-    
+
+    /** ***************************************************************
+     * Return the best guess at the synset for the given word in the
+     * context of the sentence.  @return the 9-digit synset but only
+     * if there's a reasonable amount of data, otherwise return the most
+     * frequent sense.  In all cases, filter by the given SUMO term, and
+     * pick the next best synset according to context cooccurrence frequency
+     * or word frequency if the top scoring synset doesn't fit the given
+     * SUMO type. TODO - create an option to prefer the SUMO term but fall
+     * back to the best other option if not such synset is found
+     */
+    public static String findWordSenseInContextWithDomain(String word, List<String> words, String sumo) {
+
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        if (kb == null)
+            sumo = null;
+        if (debug) System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
+        int bestScore = -1;
+        String bestSynset = "";
+        TreeSet<AVPair> al = new TreeSet<>();
+        for (int i = 1; i <= 4; i++) {
+            String newWord = "";
+            if (i == 1)
+                newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
+            if (i == 2)
+                newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
+            if (newWord != null && newWord != "")
+                word = newWord;
+            al.addAll(findWordSensePOS(word, words, i));
+        }
+        if (al != null && al.size() > 0) {
+            Iterator<AVPair> synsetIt = al.descendingIterator();
+            boolean done = false;
+            while (synsetIt.hasNext()) {
+                AVPair avp = synsetIt.next();
+                String foundSUMO = WordNet.wn.getSUMOMapping(avp.value);
+                int score = Integer.parseInt(avp.attribute);
+                if (StringUtil.emptyString(sumo) || kb.isChildOf(foundSUMO,sumo)) {
+                    bestScore = score;
+                    bestSynset = avp.value;
+                    done = true;
+                }
+            }
+        }
+        if (bestScore > 5)
+            return bestSynset;
+        else
+            return getBestDefaultSenseWithDomain(word,sumo);
+    }
+
     /** ***************************************************************
      * Return the best guess at the synset for the given word in the
      * context of the sentence.  @return the 9-digit synset but only
@@ -140,7 +190,7 @@ public class WSD {
      */
     public static String findWordSenseInContext(String word, List<String> words) {
 
-        //System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
+        if (debug) System.out.println("INFO in findWordSenseInContext(): word, words: " + word + ", " + words);
         int bestScore = -1;
         String bestSynset = "";
         for (int i = 1; i <= 4; i++) {
@@ -158,8 +208,8 @@ public class WSD {
                 bestSynset = avp1.value;
             }
         }
-        //System.out.println("INFO in findWordSenseInContext(): best synset: " + bestSynset);
-        //System.out.println("INFO in findWordSenseInContext(): best score: " + bestScore);
+        if (debug) System.out.println("INFO in findWordSenseInContext(): best synset: " + bestSynset);
+        if (debug) System.out.println("INFO in findWordSenseInContext(): best score: " + bestScore);
         if (bestScore > 5)
             return bestSynset;
         else
@@ -176,8 +226,8 @@ public class WSD {
      */
     public static String findWordSenseInContextWithPos(String word, List<String> words, int pos, boolean lemma) {
 
-        //System.out.println("INFO in WSD.findWordSenseInContextWithPos(): word, words: " +
-        //        word + ", " + words);
+        if (debug) System.out.println("INFO in WSD.findWordSenseInContextWithPos(): word, words: " +
+                word + ", " + words);
         int bestScore = -1;
         int nextBestScore = -1;
         String bestSynset = "";
@@ -394,17 +444,20 @@ public class WSD {
     /** ***************************************************************
      * Get the POS-prefixed synset that represents the best guess at
      * meaning for a word.  If there is no wordFrequency entry for the
-     * given word then it returns any sense. @return a 9 digit synset number
+     * given word then it returns any sense. @return a 9 digit synset number.
+     * Require that the synset have a mapping to SUMO that is a subclass or
+     * instance of @param sumo.  Ignore @param sumo if it's an empty string.
      */
-    public static String getBestDefaultSense(String word) {
+    public static String getBestDefaultSenseWithDomain(String word, String sumo) {
 
-        //System.out.println("INFO in WSD.getBestDefaultSense(1): " + word);
+        if (debug) System.out.println("INFO in WSD.getBestDefaultSense(1): " + word);
+        KB kb = KBmanager.getMgr().getKB("SUMO");
         if (StringUtil.isDigitString(word))
             return null;
         String bestSense = "";
         int bestScore = -1;
         for (int pos = 1; pos <= 4; pos++) {
-            //System.out.println("INFO in WSD.getBestDefaultSense(): pos: " + pos);
+            if (debug) System.out.println("INFO in WSD.getBestDefaultSense(): pos: " + pos);
             String newWord = "";
             if (pos == 1)
                 newWord = WordNet.wn.nounRootForm(word,word.toLowerCase());
@@ -412,67 +465,57 @@ public class WSD {
                 newWord = WordNet.wn.verbRootForm(word,word.toLowerCase());
             if (newWord == "")
                 newWord = word;
-            //System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord + " POS: " + pos);
+            if (debug) System.out.println("INFO in WSD.getBestDefaultSense(): word: " + newWord + " POS: " + pos);
             if (newWord != null) {
                 TreeSet<AVPair> senseKeys = WordNet.wn.wordFrequencies.get(newWord.toLowerCase());
                 if (senseKeys != null) {
                     Iterator<AVPair> it = senseKeys.descendingIterator();
                     while (it.hasNext()) {
                         AVPair avp = it.next();
-                        //System.out.println("INFO in WSD.getBestDefaultSense(): avp: " + avp);
-                        //String POS = WordNetUtilities.getPOSfromKey(avp.value);
-                        //String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                        String foundSUMO = WordNet.wn.getSUMOMapping(avp.value);
                         String numPOS = avp.value.substring(0,1);
                         int count = Integer.parseInt(avp.attribute.trim());
-                        if (Integer.toString(pos).equals(numPOS) && count > bestScore) {     
-                        	//String baseSyn = WordNet.wn.senseIndex.get(avp.value);
-                            //System.out.println("INFO in WSD.getBestDefaultSense(): baseSyn: " + baseSyn);
-                        	//if (!StringUtil.emptyString(baseSyn)) {
-                        	//	bestSense = numPOS + WordNet.wn.senseIndex.get(avp.value);
+                        if (Integer.toString(pos).equals(numPOS) && count > bestScore &&
+                                (StringUtil.emptyString(sumo) || kb.isChildOf(foundSUMO,sumo))) {
                             bestSense = avp.value;
                             bestScore = count;
-                        	//}
                         }
-                    }        
+                    }
                 }
             }
-            //System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
+            if (debug) System.out.println("INFO in WSD.getBestDefaultSense(): best sense: " + bestSense + " best score: " + bestScore);
         }
-        if ("".equals(bestSense)) { // String comparison issue fixed
-            //System.out.println("INFO in WSD.getBestDefaultSense(): no frequencies for " + word);
-        	
-        	if ("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
-        	{
-        		String sense = (String)DBPedia.dbp.dbpSUMOSenseKeys.get(word);
-            	if(debug) System.out.println("INFO in WSD.getBestDefaultSense(): word: " + word + ", dbpSUMOSenseKeys: " + sense);
-            	if (!"".equals(sense))
-            	return "1" + sense;
-        	}
-        	else
-        	{
-	            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
-	            if (al == null)
-	                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
-	
-	            //System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
-	            if (al != null) {
-	                Iterator<String> it = al.iterator();
-	                while (it.hasNext()) {
-	                    String key = it.next();
-	                    String POS = WordNetUtilities.getPOSfromKey(key);
-	                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
-	                    String result = numPOS + WordNet.wn.senseIndex.get(key);
-	                    if(debug) System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
-	                    return result;
-	                }  
-	            }
-        	}
+        if (StringUtil.emptyString(bestSense)) {
+            ArrayList<String> al = WordNet.wn.wordsToSenseKeys.get(word);
+            if (al == null)
+                al = WordNet.wn.wordsToSenseKeys.get(word.toLowerCase());
+            if (debug) System.out.println("INFO in WSD.getBestDefaultSense(): senses: " + al);
+            if (al != null) {
+                Iterator<String> it = al.iterator();
+                while (it.hasNext()) {
+                    String key = it.next();
+                    String POS = WordNetUtilities.getPOSfromKey(key);
+                    String numPOS = WordNetUtilities.posLettersToNumber(POS);
+                    String result = numPOS + WordNet.wn.senseIndex.get(key);
+                    String foundSUMO = WordNet.wn.getSUMOMapping(result);
+                    if (debug) System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + result);
+                    if (StringUtil.emptyString(sumo) || kb.isChildOf(foundSUMO,sumo))
+                        return result;
+                }
+            }
         }
         else {
-            //System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + bestSense);
+            if (debug) System.out.println("INFO in WSD.getBestDefaultSense(): returning: " + bestSense);
             return bestSense;
         }
         return "";
+    }
+
+    /** ***************************************************************
+     */
+    public static String getBestDefaultSense(String word) {
+
+        return getBestDefaultSenseWithDomain(word,"");
     }
     
     /** ***************************************************************
@@ -546,102 +589,6 @@ public class WSD {
                 return numPOS + WordNet.wn.senseIndex.get(key);
         }  
         return synset;
-    }
-
-    /** ***************************************************************
-     *  Read the SICK data set
-     *  http://clic.cimec.unitn.it/composes/sick.html
-     */
-    public static ArrayList<ArrayList<String>> readSick() {
-
-        System.out.println("In WSD.readSick(): Reading SICK file ");
-        ArrayList<ArrayList<String>> result = new ArrayList<ArrayList<String>>();
-        LineNumberReader lr = null;
-        try {
-            // pair_ID sentence_A sentence_B entailment_label relatedness_score entailment_AB entailment_BA sentence_A_original
-            // sentence_B_original sentence_A_dataset sentence_B_dataset SemEval_set
-            String line;
-            String f = System.getProperty("user.home") + "/ontology/SICK/SICK.txt";
-            File sickFile = new File(f);
-            if (sickFile == null) {
-                System.out.println("Error in WSD.readSick(): The file does not exist in " + f );
-                return null;
-            }
-            long t1 = System.currentTimeMillis();
-            FileReader r = new FileReader(sickFile);
-            lr = new LineNumberReader(r);
-            while ((line = lr.readLine()) != null) {
-                System.out.println(line);
-                //if (lr.getLineNumber() % 1000 == 0)
-                //    System.out.print('.');
-                String[] ls = line.split("\t");
-                ArrayList<String> al = new ArrayList<String>(Arrays.asList(ls));
-                result.add(al);
-            }
-        }
-        catch (IOException ex) {
-            System.out.println("Error in WSD.readSick()");
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
-        }
-        return result;
-    }
-
-    /** ***************************************************************
-     *  Extract SUMO terms from the SICK data set
-     *  http://clic.cimec.unitn.it/composes/sick.html
-     */
-    public static void collectSUMOFromSICK() {
-
-        FileWriter fw = null;
-        PrintWriter pw = null;
-        String fname = System.getProperty("user.home") + "/ontology/SICK/SickOut.txt";
-
-        try {
-            fw = new FileWriter(fname);
-            pw = new PrintWriter(fw);
-
-            KBmanager.getMgr().initializeOnce();
-
-            WordNet.initOnce();
-            ArrayList<ArrayList<String>> sickAr = readSick();
-            System.out.println("collectSUMOFromSICK: size of array" + sickAr.size());
-            for (int i = 0; i < sickAr.size(); i++) {
-                ArrayList<String> al = sickAr.get(i);
-                System.out.println("WSD.collectSUMOFromSICK():  line " + i);
-                if (al.size() > 2) {
-                    System.out.println("WSD.collectSUMOFromSICK(): at line " + al.get(0));
-                    String sentA = al.get(1);
-                    String sumoA = collectSUMOFromWords(sentA).toString();
-                    String sentB = al.get(2);
-                    String sumoB = collectSUMOFromWords(sentB).toString();
-                    pw.println(sentA);
-                    pw.println(sumoA);
-                    pw.println(sentB);
-                    pw.println(sumoB);
-                }
-            }
-        }
-        catch (Exception ex) {
-            System.out.println("Error in WSD.collectSUMOFromSICK()");
-            System.out.println(ex.getMessage());
-            ex.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) {
-                    pw.close();
-                }
-                if (fw != null) {
-                    fw.close();
-                }
-            }
-            catch (Exception ex) {
-                System.out.println("Error in WSD.collectSUMOFromSICK()");
-                System.out.println(ex.getMessage());
-                ex.printStackTrace();
-            }
-        }
     }
 
     /** ***************************************************************
