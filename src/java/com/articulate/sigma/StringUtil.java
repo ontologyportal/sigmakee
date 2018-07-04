@@ -590,6 +590,20 @@ public class StringUtil {
         return s;
     }
 
+    /***************************************************************
+     */
+    public static int countChars(String s, char c) {
+
+        if (emptyString(s))
+            return 0;
+        int count = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == c)
+                count++;
+        }
+        return count;
+    }
+
     /****************************************************************
      * Convert an arbitrary string to a legal Prolog identifier by
      * substituting dashes for illegal characters.
@@ -698,7 +712,7 @@ public class StringUtil {
      */
     public static String removeEscapes(String str) {
 
-        String ans = str;
+        String ans = str.replaceAll("\\u[0-9A-F]{4}"," ");
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
@@ -706,7 +720,7 @@ public class StringUtil {
             int strlen = str.length();
             for (int i = 0; i < strlen; i++) {
                 ch = str.charAt(i);
-                if (Character.isAlphabetic(ch) && (prevCh == '\\')) {
+                if (Character.isAlphabetic(ch) && (prevCh == '\\') && sb.length() > 0) {
                     sb.deleteCharAt(sb.length() - 1);
                 }
                 else {
@@ -716,6 +730,7 @@ public class StringUtil {
             }
             ans = sb.toString();
         }
+
         return ans;
     }
 
@@ -1093,6 +1108,16 @@ public class StringUtil {
     public static boolean isDigitString(String input) {
 
         return isNonEmptyString(input) && !input.matches(".*\\D+.*");
+    }
+
+    /****************************************************************
+     */
+    public static boolean isPunct(String s) {
+
+        if (Pattern.matches("\\p{Punct}", s))
+            return true;
+        else
+            return false;
     }
 
     /****************************************************************
