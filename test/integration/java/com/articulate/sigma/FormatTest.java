@@ -8,8 +8,11 @@ import static junit.framework.TestCase.assertTrue;
 
 public class FormatTest extends IntegrationTestBase {
 
+    /****************************************************************
+     */
     @Test
     public void testNegativePositiveFormat() {
+
         Map<String, String> phraseMap = SigmaTestBase.kb.getFormatMap("EnglishLanguage");
 
         StringBuilder problems = new StringBuilder("\n");
@@ -29,8 +32,11 @@ public class FormatTest extends IntegrationTestBase {
         assertTrue(problems.toString(), problems.toString().trim().isEmpty());
     }
 
+    /****************************************************************
+     */
     @Test
     public void testFormatMatchingCharacters() {
+
         Map<String, String> phraseMap = SigmaTestBase.kb.getFormatMap("EnglishLanguage");
 
         StringBuilder problems = new StringBuilder("\n");
