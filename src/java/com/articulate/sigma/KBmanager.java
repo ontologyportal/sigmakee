@@ -18,7 +18,6 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 package com.articulate.sigma;
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
-import com.articulate.sigma.dbpedia.DBPedia;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
@@ -648,10 +647,6 @@ public class KBmanager implements Serializable {
                 if (loaded) {
                     if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
                     WordNet.initOnce();
-
-                    if("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
-                    	DBPedia.initOnce();
-
                     NLGUtils.init(configFileDir);
                     OMWordnet.readOMWfiles();
                     initializing = false;
@@ -672,10 +667,6 @@ public class KBmanager implements Serializable {
                     setDefaultAttributes();
                 System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
                 serialize();
-
-                if("dbpmw".equals(KBmanager.getMgr().getPref("multiWordAnnotatorType")))
-                	DBPedia.initOnce();
-
                 initializing = false;
                 initialized = true;
             }
