@@ -257,11 +257,6 @@ public class WordNet implements Serializable {
     /** ***************************************************************
      */
     private void makeFileMap() {
-
-    	/* DBPedia related, these files are read like any other files using getWnFile(),
-    	 so the files should be placed under WordNet.baseDir */
-    	wnFilenames.put("dbpedia_words",    "DBpediaStrings.ttl");
-    	wnFilenames.put("dbpedia_SUMO",     "DBPediaSUMO.ttl");
     	
         wnFilenames.put("noun_mappings",    "WordNetMappings30-noun.txt" );
         wnFilenames.put("verb_mappings",    "WordNetMappings30-verb.txt" );
@@ -383,7 +378,7 @@ public class WordNet implements Serializable {
      */
     private void addToSynsetsToWords(String word, String synsetStr, String POS) {
 
-        if (word.indexOf('_') >= 0)
+        if (word.indexOf('_') > 0)
             multiWords.addMultiWord(word);
         ArrayList<String> al = synsetsToWords.get(POS + synsetStr);
         if (al == null) {
@@ -681,7 +676,7 @@ public class WordNet implements Serializable {
      */
     protected void setMaxNounSynsetID(String synset) {
 
-        System.out.println("WordNet.setMaxNounSynsetID(): " + synset);
+        //System.out.println("WordNet.setMaxNounSynsetID(): " + synset);
         if (WordNetUtilities.isValidSynset8(synset))
             maxNounSynsetID = synset;
     }
@@ -3345,7 +3340,7 @@ public class WordNet implements Serializable {
             String tf = form.getArgument(3).substring(1); // remove first quote
             tf = tf.substring(0,tf.length()-1); // remove last quote
             tf = tf.replaceAll(" ", "_");
-            if (tf.indexOf("_") > -1) { 
+            if (tf.indexOf("_") > 0) {
                 //System.out.println("INFO in WordNet.termFormatsToSynsets() multiword:" + tf + " SUMO: " + SUMOterm);
                 multiWords.addMultiWord(tf);
             }
