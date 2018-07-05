@@ -46,10 +46,10 @@ sudo apt-get install docker-ce
 Then get the docker image and run it
 
 Pull with
-sudo docker pull apease/sigmakee2018:first
+sudo docker pull apease/sigmakee2018:v2
 
 Run with
-sudo docker run -it -d -p 4000:8080 --name trial04 apease/sigmakee2018:first "./sigmastart.sh"
+sudo docker run -it -d -p 4000:8080 --name trial04 apease/sigmakee2018:v2 "./sigmastart.sh"
 
 Access from a browser with http://localhost:4000/sigma/login.html . Use admin for username and admin for password
 
