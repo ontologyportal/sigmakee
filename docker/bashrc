@@ -6,6 +6,6 @@ export PATH=$PATH:$JAVA_HOME/bin
 export SIGMA_HOME=/home/sumo/.sigmakee
 export ONTOLOGYPORTAL_GIT=/home/sumo/workspace
 export CATALINA_OPTS="$CATALINA_OPTS -Xms500M -Xmx5000M" 
-export CATALINA_HOME=/home/sumo/Programs/apache-tomcat-8.5.31
+export CATALINA_HOME=/home/sumo/Programs/apache-tomcat-9.0.10
 export JAVA_TOOL_OPTIONS=-Dfile.encoding=UTF8
 
