@@ -36,13 +36,13 @@ RUN chmod u+x sigmastart.sh
 
 #Copy bashrc into the image and create a bunch of required directories
 RUN su -l sumo -c "mkdir /home/sumo/workspace; mkdir /home/sumo/Programs/; mkdir /home/sumo/Programs/bins" && \
-    su -l sumo -c "cd /home/sumo/Programs; wget http://mirrors.advancedhosters.com/apache/tomcat/tomcat-8/v8.5.31/bin/apache-tomcat-8.5.31.zip" && \
+    su -l sumo -c "cd /home/sumo/Programs; wget http://www-us.apache.org/dist/tomcat/tomcat-9/v9.0.10/bin/apache-tomcat-9.0.10.zip" && \
     su -l sumo -c "cd /home/sumo/Programs; wget http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" && \
     su -l sumo -c "cd /home/sumo/Programs; wget http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz" && \
     su -l sumo -c "cd /home/sumo/Programs; tar -xvzf E.tgz" && \
-    su -l sumo -c "cd /home/sumo/Programs; unzip apache-tomcat-8.5.31.zip" && \
-    su -l sumo -c "cd /home/sumo/Programs; mv E.tgz bins; mv apache-tomcat-8.5.31.zip bins" && \
-    su -l sumo -c "cd /home/sumo/Programs/apache-tomcat-8.5.31/bin/; chmod 777 *" && \
+    su -l sumo -c "cd /home/sumo/Programs; unzip apache-tomcat-9.0.10.zip" && \
+    su -l sumo -c "cd /home/sumo/Programs; mv E.tgz bins; mv apache-tomcat-9.0.10.zip bins" && \
+    su -l sumo -c "cd /home/sumo/Programs/apache-tomcat-9.0.10/bin/; chmod 777 *" && \
     su -l sumo -c "cd /home/sumo/workspace; git clone https://github.com/ontologyportal/sigmakee; git clone https://github.com/ontologyportal/sumo" && \
     su -l sumo -c "cd /home/sumo; mkdir .sigmakee; cd .sigmakee; mkdir KBs; cp -R /home/sumo/workspace/sumo/* KBs; cp /home/sumo/workspace/sigmakee/config.xml /home/sumo/.sigmakee/KBs" && \
     su -l sumo -c "sed -i 's/theuser/sumo/g' /home/sumo/.sigmakee/KBs/config.xml" && \
