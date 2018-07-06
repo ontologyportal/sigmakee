@@ -46,12 +46,12 @@ sudo apt-get install docker-ce
 Then get the docker image and run it
 
 Pull with
-sudo docker pull apease/sigmakee2018:v2
+sudo docker pull apease/sigmakee2018:latest
 
 Run with
-sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee2018:v2 "./sigmastart.sh"
+sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee2018:latest "./sigmastart.sh"
 
-Access from a browser with http://localhost:4000/sigma/login.html . Use admin for username and admin for password
+Access from a browser with http://localhost:8080/sigma/login.html . Use admin for username and admin for password
 
 If you want an additional level of system independence and security, you can also
 run the docker image in a virtual machine.  For Vagrant you would do the following -
@@ -67,7 +67,7 @@ vagrant init ubuntu/xenial64
 
 You'll need to add two commands to the Vagrantfile configuration
 
-config.vm.network "forwarded_port", guest: 4000, host: 8888
+config.vm.network "forwarded_port", guest: 8080, host: 8888
 config.vm.provider "virtualbox" do |vb|
   vb.memory = "5000"
 end
@@ -84,7 +84,7 @@ Access from a browser with http://localhost:8888/sigma/login.html . Use admin fo
 To build a new docker container follow these steps where $SIGMA_SRC is your sigmakee git repo path.
 First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
 Note that if you don't download that exact version, you'll need to edit sigmastart.sh so that the filename
-matches.
+matches.  You'll also need to make changes to track the latest Tomcat, in the bashrc and Dockerfile
 
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 sudo add-apt-repository \
@@ -100,19 +100,30 @@ sudo docker build -t sigmakee2018:latest .
 
 to push the image to dockerhub
 
->:~/images$ sudo docker images
-REPOSITORY          TAG                 IMAGE ID            CREATED             SIZE
-sigmakee2018        v2                  3356b45132f1        13 minutes ago      1.52GB
+>:~/images$ sudo docker login
+Login with your Docker ID to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com to create one.
+Username (apease):
+Password:
+Login Succeeded
 
 >:~/images$ sudo docker ps
 CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                    NAMES
-f01091e8cf73        sigmakee2018:v2     "./sigmastart.sh"   14 minutes ago      Up 14 minutes       0.0.0.0:4000->8080/tcp   trial04
->:~/images$ sudo docker commit f01091e8cf73 sigmakee2018:v2
+1f7d0cef7874        51a041125329        "./sigmastart.sh"   56 minutes ago      Up 56 minutes       0.0.0.0:4000->8080/tcp   trial11
+>:~/images$ sudo docker tag 51a041125329 apease/sigmakee2018:latest
+>:~/images$ sudo docker push apease/sigmakee2018:latest
+The push refers to a repository [docker.io/apease/sigmakee2018]
+ab5e94769be7: Pushed
+1c15947f83dc: Pushed
+c2007c9776df: Pushed
+829ef5b0378d: Pushed
+6fd852e99bda: Pushed
+85c7d96adccb: Pushed
+6b2f14c09222: Pushed
+9a9a3d9cc4bc: Pushed
+38c81b36edfb: Pushed
+bcc97fbfc9e1: Pushed
+latest: digest: sha256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx size: 2417
 
-sudo docker login
-sudo docker commit f01091e8cf73 sigmakee2018:v2
-sudo docker tag 3356b45132f1 apease/sigmakee2018:v2
-sudo docker push apease/sigmakee2018:v2
 
 System preparation on Linux
 ==========================
