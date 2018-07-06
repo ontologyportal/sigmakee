@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Set;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
+import com.articulate.sigma.wordNet.*;
 
 import static org.junit.Assert.*;
 
