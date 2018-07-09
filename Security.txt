@@ -18,6 +18,15 @@ sudo add-apt-repository ppa:certbot/certbot
 sudo apt-get update
 sudo apt-get install certbot
 
+1a.  Note that in step 6 below you'll set up your Tomcat to accept a particular key, as the value of
+keystorePass in your $TOMCAT_HOME/conf/server.xml file
+
+    <Connector protocol="org.apache.coyote.http11.Http11NioProtocol"
+           port="8443" maxThreads="200"
+           scheme="https" secure="true" SSLEnabled="true"
+           keystoreFile="${user.home}/.keystore" keystorePass="myplaintext"
+           clientAuth="false" sslProtocol="TLS"/>
+
 2. Use the java keytool command to create a keystore.  You have to use your domain name
 in place of your first and last name.  Note also that when asked to create a password
 for the keystore this has to be given in plain text to your tomcat configuration file,
@@ -55,7 +64,10 @@ request.csr
 allowed but since my server is Ubuntu and the Apache webserver is already installed and
 running, I chose the method of having the CertBot write a file to my web root.  You'll
 see your Linux account id instead of "theuser" in the commands below and you'll need
-to replace www.foo.org with your domain name.
+to replace www.foo.org with your domain name.  Note that you must be on the same machine
+as the domain you enter for this to work, since the command will be writing the
+change file to your web root and then accessing the file through your web server on that
+domain.
 
 -------------------------------------------------------------------------------
 ~$ sudo certbot certonly --csr request.csr
