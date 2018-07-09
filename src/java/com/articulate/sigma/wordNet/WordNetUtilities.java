@@ -1865,6 +1865,29 @@ public class WordNetUtilities {
         return WordNet.wn.getWordsFromSynset(s).get(0);
     }
 
+
+    /** ***************************************************************
+     * Is the given 9 digit sysnset one constructed from SUMO termFormat
+     * expressions?
+     */
+    public static boolean nonWNsynset(String s) {
+
+        if (s.charAt(0) == '1') {
+            if (s.substring(1).compareTo(WordNet.wn.origMaxNounSynsetID) > 0)
+                return true;
+            else
+                return false;
+        }
+        else if (s.charAt(0) == '2') {
+            if (s.substring(1).compareTo(WordNet.wn.origMaxVerbSynsetID) > 0)
+                return true;
+            else
+                return false;
+        }
+        else
+            return false;
+    }
+
     /** ***************************************************************
      */
     private static void addSenseSet(Hashtable<String,String> SUMOhash,
