@@ -42,7 +42,8 @@ public class MultiWords implements Serializable {
     public static boolean debug = false;
 
     /** ***************************************************************
-     * Add a multi-word string to the multiWord member variable.
+     * Add a multi-word string to the multiWord member variable.  Convert
+     * the wordDelimit to underscores
      */
     public void addMultiWord(String word, char wordDelimit) {
 
@@ -53,7 +54,8 @@ public class MultiWords implements Serializable {
         }
         if (word.indexOf(wordDelimit) >= 0) {
             String firstWord = word.substring(0, word.indexOf(wordDelimit));
-            multiWord.put(firstWord, word);
+            String newWord = word.replace(wordDelimit,'_');
+            multiWord.put(firstWord, newWord);
         }
         else {
             System.out.println("Error in MultiWords.addMultiWord(): Not a multi-word: " + word);
