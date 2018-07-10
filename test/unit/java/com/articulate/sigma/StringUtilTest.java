@@ -3,13 +3,16 @@ package com.articulate.sigma;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-/**
- *
- */
 public class StringUtilTest {
+
+    /** *****************************************************************
+     */
     @Test
-    public void testFilterHtml()   {
+    public void testFilterHtml() {
+
         String input = "<ul><li>if for all <a href=\"&term=Entity\">an entity</a> <a href=\"&term=Entity\">the entity</a> is an <a href=\"&term=element\">element</a> of <a href=\"&term=Set\">a  set</a> if and only if <a href=\"&term=Entity\">the entity</a> is an <a href=\"&term=element\">element</a> of <a href=\"&term=Set\">another set</a>,</li><li>then <a href=\"&term=Set\">the set</a> is <a href=\"&term=equal\">equal</a> to <a href=\"&term=Set\">the other set</a></li></ul>";
         String actual = StringUtil.filterHtml(input);
         String expected = "if for all an entity the entity is an element of a set if and only if the entity is an element of another set, " +
@@ -17,4 +20,23 @@ public class StringUtilTest {
         assertEquals(expected, actual);
     }
 
+    /** *****************************************************************
+     */
+    @Test
+    public void testIsInteger() {
+
+        assertTrue(StringUtil.isInteger("53"));
+        assertFalse(StringUtil.isInteger("53.0"));
+    }
+
+    /** *****************************************************************
+     */
+    @Test
+    public void testIsNumeric() {
+
+        assertTrue(StringUtil.isNumeric("53"));
+        assertTrue(StringUtil.isNumeric("53.0"));
+        assertFalse(StringUtil.isNumeric("Hello!"));
+        assertTrue(StringUtil.isNumeric("0.000001"));
+    }
 }
