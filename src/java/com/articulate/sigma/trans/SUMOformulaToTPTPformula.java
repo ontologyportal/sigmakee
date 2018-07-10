@@ -38,6 +38,8 @@ public class SUMOformulaToTPTPformula {
             if (StringUtil.isNumeric(result) && hideNumbers) {
                 if (result.indexOf(".") > -1)
                     result = result.replace('.','_');
+                if (result.indexOf("-") > -1)
+                    result = result.replace('-','_');
                 result = "n__" + result;
             }
         }
