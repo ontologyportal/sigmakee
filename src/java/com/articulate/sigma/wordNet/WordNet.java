@@ -53,7 +53,7 @@ public class WordNet implements Serializable {
      * will be used by methods in this file. */
     private static Pattern[] regexPatterns = null;
 
-    public HashMap<String,HashSet<String>> nounSynsetHash = new HashMap<>();   // Words in root form are  String keys,
+    public HashMap<String,HashSet<String>> nounSynsetHash = new HashMap<>();   // Words in root form are String keys,
     public HashMap<String,HashSet<String>> verbSynsetHash = new HashMap<>();   // String values are 8-digit synset lists.
     public HashMap<String,HashSet<String>> adjectiveSynsetHash = new HashMap<>();
     public HashMap<String,HashSet<String>> adverbSynsetHash = new HashMap<>();
@@ -2130,6 +2130,45 @@ public class WordNet implements Serializable {
         result.append(sumoDisplay(synsetBlock, mixedCase, "adjective", sumokbname,synset,params));
 
         return (result.toString());
+    }
+
+    /** ***************************************************************
+     * Prepend a POS number to a set of 8 digit synsets
+     *
+     * @return an ArrayList of 9 digit synset Strings
+     */
+    public HashSet<String> prependPOS(HashSet<String> synsets, String POS) {
+
+        HashSet<String> result = new HashSet<>();
+        for (String s : synsets)
+            result.add(POS + s);
+        return result;
+    }
+
+    /** ***************************************************************
+     * Get all the synsets for a given word. Print an error if this
+     * routine gives a result and getSenseKeysFromWord() doesn't
+     *
+     * @return an ArrayList of 9 digit synset Strings
+     */
+    public HashSet<String> getSynsetsFromWord(String word) {
+
+        HashSet<String> result = new HashSet<>();
+        HashSet<String> nouns = nounSynsetHash.get(word);
+        if (nouns != null)
+            result.addAll(prependPOS(nouns,"1"));
+        HashSet<String> verbs = verbSynsetHash.get(word);
+        if (verbs != null)
+            result.addAll(prependPOS(verbs,"1"));
+        HashSet<String> adj = adjectiveSynsetHash.get(word);
+        if (adj != null)
+            result.addAll(prependPOS(adj,"1"));
+        HashSet<String> adv = adverbSynsetHash.get(word);
+        if (adv != null)
+            result.addAll(prependPOS(adv,"1"));
+        if (result.size() > 0 && getSenseKeysFromWord(word).keySet().size() == 0)
+            System.out.println("Error in WordNet.getSynsetsFromWord(): synset but no sense key for word: " + word);
+        return result;
     }
 
     /** ***************************************************************
