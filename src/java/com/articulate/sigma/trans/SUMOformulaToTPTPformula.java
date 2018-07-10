@@ -17,6 +17,7 @@ public class SUMOformulaToTPTPformula {
 
     public Formula _f = null;
     public static boolean debug = false;
+    public static boolean hideNumbers = true;
 
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
@@ -31,8 +32,14 @@ public class SUMOformulaToTPTPformula {
         String result = null;
         try {
             result = translateWord_1(st, hasArguments);
+            if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): " + result);
             if (result.equals("$true__m") || result.equals("$false__m")) 
-                result = "'" + result + "'";            
+                result = "'" + result + "'";
+            if (StringUtil.isNumeric(result) && hideNumbers) {
+                if (result.indexOf(".") > -1)
+                    result = result.replace('.','_');
+                result = "n__" + result;
+            }
         }
         catch (Exception ex) {
             System.out.println("Error in SUMOformulaToTPTPformula.translateWord(): " + ex.getMessage());
@@ -531,11 +538,28 @@ public class SUMOformulaToTPTPformula {
                 "        (MultiplicationFn ?W 0.025)))) Obligation)) ",false));
                 */
     }
-    
+
+    /** ***************************************************************
+     * A test method.
+     */
+    public static void testTptpParse2() {
+
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+        String teststr = "\n" +
+                "(<=>\n" +
+                "    (instance ?NUMBER NegativeRealNumber)\n" +
+                "    (and\n" +
+                "        (lessThan ?NUMBER 0)\n" +
+                "        (instance ?NUMBER RealNumber)))";
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr, false));
+    }
+
     /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
-        testTptpParse();
+        testTptpParse2();
     }
 }
