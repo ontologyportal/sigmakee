@@ -15,6 +15,7 @@ import static org.junit.Assert.assertEquals;
  * at the start of the original PredVarInst.test( ) method is. Should these tests somehow reflect that?
  */
 public class PredVarInstTest extends UnitTestBase  {
+
     private static final String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
             "(forall (?INST1 ?INST2 ?INST3) " +
             "(=> (and (?REL ?INST1 ?INST2) " +
@@ -28,9 +29,11 @@ public class PredVarInstTest extends UnitTestBase  {
             "(instance ?DECISION LegalDecision) " +
             "(agent ?DECISION ?JURY))) ?JURY))";
 
-
+    /** ***************************************************************
+     */
     @Test
-    public void testGatherPredVarsStmt1()     {
+    public void testGatherPredVarsStmt1() {
+
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt1);
 
@@ -40,8 +43,11 @@ public class PredVarInstTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
-    public void testGatherPredVarsStmt2()     {
+    public void testGatherPredVarsStmt2() {
+
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
         Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
@@ -50,20 +56,11 @@ public class PredVarInstTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
-    public void testFindPredVarTypesStmt1()     {
-        Formula f = new Formula();
-        f.read(PredVarInstTest.stmt1);
+    public void testInstantiatePredStmt2() {
 
-        Map<String, HashSet<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
-
-        Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?REL", Sets.newHashSet("Entity"));
-        assertEquals(expected, actual);
-    }
-
-    @Test
-    public void testInstantiatePredStmt2()     {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
 
@@ -72,4 +69,5 @@ public class PredVarInstTest extends UnitTestBase  {
         Set<Formula> expected = Sets.newHashSet();
         assertEquals(expected, actual);
     }
+
 }

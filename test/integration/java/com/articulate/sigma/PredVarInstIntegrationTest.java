@@ -1,16 +1,23 @@
 package com.articulate.sigma;
 
+import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import org.junit.Ignore;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
 public class PredVarInstIntegrationTest extends IntegrationTestBase {
 
+    /** ***************************************************************
+     */
     @Ignore
     public void testInstantiatePredVars1() {
+
         String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
                 "(forall (?INST1 ?INST2 ?INST3) " +
                 "(=> (and (?REL ?INST1 ?INST2) " +
@@ -1401,6 +1408,22 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
                 "      (identicalListItems ?INST1 ?INST3))))";
         expected.add(new Formula(formulaStr));
 
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testFindPredVarTypesStmt3() {
+
+        String stmt3 = "(=> (playsRoleInEvent ?OBJ ?ROLE ?EVENT) (?ROLE ?EVENT ?OBJ))";
+        Formula f = new Formula();
+        f.read(stmt3);
+
+        Map<String, HashSet<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
+        System.out.println("testFindPredVarTypesStmt3(): actual: " + actual);
+        Map<String, HashSet<String>> expected = Maps.newHashMap();
+        expected.put("?ROLE", Sets.newHashSet("CaseRole"));
         assertEquals(expected, actual);
     }
 }
