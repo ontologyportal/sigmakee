@@ -1130,6 +1130,13 @@ public class StringUtil {
         }
         catch (NumberFormatException e) {
             // s is not numeric
+        }
+        try {
+            Double.parseDouble(input);
+            return true;
+        }
+        catch (NumberFormatException e) {
+            // s is not numeric
             return false;
         }
     }
