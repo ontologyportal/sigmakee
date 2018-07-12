@@ -242,8 +242,11 @@ public class EProver {
         }
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
+        //ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+        //        executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+        //        eproverPath));
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
