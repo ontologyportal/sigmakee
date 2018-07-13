@@ -35,7 +35,7 @@ public class FormulaPreprocessor {
      */
     private static final int AXIOM_EXPANSION_LIMIT = 2000;
 
-    private static boolean debug = false;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * A + is appended to the type if the parameter must be a class
@@ -47,6 +47,23 @@ public class FormulaPreprocessor {
     private ArrayList<String> getTypeList(String pred, KB kb) {
 
         return kb.kbCache.signatures.get(pred);
+    }
+
+    /** ***************************************************************
+     */
+    private boolean hasFormulaType(Formula form,
+                                   HashMap<String,HashSet<String>> varmap) {
+
+        if (debug) System.out.println("hasFormulaType(): form: " + form);
+        if (debug) System.out.println("hasFormulaType(): varmap: " + varmap);
+        for (HashSet<String> hs : varmap.values()) {
+            for (String t : hs)
+                if (t.equals("Formula")) {
+                    if (debug) System.out.println("hasFormulaType(): has a Formula argument: " + form);
+                    return true;
+                }
+        }
+        return false;
     }
 
     /** ***************************************************************
@@ -141,9 +158,10 @@ public class FormulaPreprocessor {
         if (debug) System.out.println("addTypeRestrictions: form " + form);
         // get variable types from domain definitions
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
+        if (debug) System.out.println("addTypeRestrictions: varDomainTypes " + varDomainTypes);
         // get variable types which are explicitly defined in formula
         HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(kb,form);
-
+        if (debug) System.out.println("addTypeRestrictions: varExplicitTypes " + varExplicitTypes);
         // only keep variables which are not explicitly defined in formula
         HashMap<String,HashSet<String>> varmap = new HashMap<String, HashSet<String>>();
         for (String var : varDomainTypes.keySet()) {
@@ -170,6 +188,8 @@ public class FormulaPreprocessor {
         ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables =
                 form.collectQuantifiedUnquantifiedVariables();
         ArrayList<String> unquantifiedVariables = quantifiedUnquantifiedVariables.get(1);
+        if (hasFormulaType(form,varmap))
+            form.higherOrder = true;
         // add sortals for unquantifiedVariables
         StringBuffer sb = new StringBuffer();
         boolean begin = true;
@@ -194,9 +214,9 @@ public class FormulaPreprocessor {
             sb.append(")\n");
         if (debug) System.out.println("addTypeRestrictions: sb: " + sb);
         // recursively add sortals for existentially quantified variables
-        if ((form.theFormula.indexOf(Formula.EQUANT) > -1) ||
-                (form.theFormula.indexOf(Formula.UQUANT) > -1))
-            addTypeRestrictionsRecurse(kb, form, sb);
+       // if ((form.theFormula.indexOf(Formula.EQUANT) > -1) ||
+       //         (form.theFormula.indexOf(Formula.UQUANT) > -1))
+        addTypeRestrictionsRecurse(kb, form, sb);
 
         if (!begin)
             sb.append(")\n");
@@ -290,7 +310,7 @@ public class FormulaPreprocessor {
                 if (debug)
                     for (int i = 1; i < f.listLength(); i++) {
                         Formula newF = new Formula(f.getArgument(i));
-                        System.out.println(f.getArgument(i) + " : " + newF + " : " + newF.theFormula);
+                        System.out.println("addTypeRestrictionsRecurse: " + f.getArgument(i) + " : " + newF + " : " + newF.theFormula);
                     }
                 // recurse from the first argument if the formula is not in (exists ...) / (forall ...) scope
                 for (int i = 1; i < f.listLength(); i++)
@@ -548,14 +568,15 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      * utility method to merge two HashMaps of String keys and a values
-     * of an HashSet of Strings
+     * of an HashSet of Strings.  Note that parent classes in the set of
+     * classes will be removed
      */
     static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
                                                        HashMap<String, HashSet<String>> map2, KB kb) {
 
         HashMap<String, HashSet<String>> result = new HashMap<String,HashSet<String>>(map1);
 
-        for(String key : map2.keySet()) {
+        for (String key : map2.keySet()) {
             Set<String> value = new HashSet<String>();
             if (result.containsKey(key)) {
                 value = result.get(key);
@@ -989,7 +1010,9 @@ public class FormulaPreprocessor {
             while (it.hasNext()) {
                 Formula f = it.next();
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                f.read(fp.addTypeRestrictions(f,kb).theFormula);
+                Formula fnew = fp.addTypeRestrictions(f,kb);
+                f.read(fnew.theFormula);
+                f.higherOrder = fnew.higherOrder;
             }
         }
 
@@ -1110,7 +1133,6 @@ public class FormulaPreprocessor {
         System.out.println();
         System.out.println();
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        FormulaPreprocessor.debug = true;
         String strf = "(=>\n" +
                 "    (equal\n" +
                 "        (GreatestCommonDivisorFn @ROW) ?NUMBER)\n" +
@@ -1137,7 +1159,6 @@ public class FormulaPreprocessor {
         System.out.println();
         System.out.println();
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        FormulaPreprocessor.debug = true;
         String strf = "(equal (AbsoluteValueFn ?NUMBER1) 2)";
         Formula f = new Formula();
         f.read(strf);
@@ -1155,7 +1176,6 @@ public class FormulaPreprocessor {
         System.out.println();
         System.out.println();
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        FormulaPreprocessor.debug = true;
         String strf = "\n" +
                 "(<=>\n" +
                 "    (and\n" +
@@ -1187,7 +1207,6 @@ public class FormulaPreprocessor {
         System.out.println();
         System.out.println();
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        FormulaPreprocessor.debug = true;
         String strf = "(forall (?NUMBER ?ELEMENT ?CLASS)\n" +
                 "        (=>\n" +
                 "          (equal ?ELEMENT\n" +
@@ -1208,8 +1227,9 @@ public class FormulaPreprocessor {
      */
     public static void main(String[] args) {
 
-        //testOne();
-        //testTwo();
+        testOne();
+        testTwo();
+        testThree();
         testFour();
 
         //testFindTypes();
