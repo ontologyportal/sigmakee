@@ -13,11 +13,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class FormulaPreprocessorTest extends UnitTestBase  {
 
+    /** ***************************************************************
+     */
     // TODO: Technically, this should to in the FormulaTest class, but the gatherRelationsWithArgTypes( ) method requires a KB
     // and none of the other tests in that class do. Maybe move the method to FormulaPreprocessor--it's the only Formula method
     // requiring a KB.
     @Test
     public void testGatherRelationships()   {
+
         String stmt = "(agent Leaving Human)";
         Formula f = new Formula();
         f.read(stmt);
@@ -31,10 +34,13 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertEquals(expectedMap, actualMap);
     }
 
+    /** ***************************************************************
+     */
     // FIXME: test is waiting completion of Formula.logicallyEquals()
     @Ignore
     @Test
     public void testAddTypes1() {
+
         String stmt = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
         Formula f = new Formula();
@@ -49,13 +55,16 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
         Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
         assertEquals(expected, actual);
-//        assertTrue(expected.logicallyEquals(actual));
+        assertTrue(expected.logicallyEquals(actual));
     }
 
+    /** ***************************************************************
+     */
     // FIXME: test is waiting completion of Formula.logicallyEquals()
     @Ignore
     @Test
     public void testAddTypes2() {
+
         String stmt = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
                 " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
         Formula f = new Formula();
@@ -72,8 +81,11 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertTrue(expected.logicallyEquals(actual));
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testMergeToMap1()   {
+
 //        Set<String> objectSet1 = Sets.newHashSet("Object", "CorpuscularObject");
 //        Set<String> humanSet1 = Sets.newHashSet("Man", "Woman");
         HashMap<String, HashSet<String>> map1 = Maps.newHashMap();
@@ -97,4 +109,57 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertEquals(expectedMap, actualMap);
     }
 
+    /** ***************************************************************
+     */
+    @Test
+    public void test4() {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(forall (?NUMBER ?ELEMENT ?CLASS)\n" +
+                "        (=>\n" +
+                "          (equal ?ELEMENT\n" +
+                "            (ListOrderFn\n" +
+                "              (ListFn_1 ?FOO) ?NUMBER))\n" +
+                "          (instance ?ELEMENT ?CLASS)))";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        String actual = fp.addTypeRestrictions(f, kb).toString();
+        String expected = "(forall (?NUMBER ?ELEMENT ?CLASS)\n" +
+                "  (=>\n" +
+                "    (and\n" +
+                "      (instance ?NUMBER PositiveInteger)\n" +
+                "      (instance ?CLASS SetOrClass) )\n" +
+                "    (=>\n" +
+                "      (equal ?ELEMENT\n" +
+                "        (ListOrderFn\n" +
+                "          (ListFn_1 ?FOO) ?NUMBER) )\n" +
+                "      (instance ?ELEMENT ?CLASS) )))";
+        assertEquals(expected,actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void test5() {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(<=>\n" +
+                "   (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER)\n" +
+                "   (equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        FormulaPreprocessor.debug = true;
+        String actual = fp.addTypeRestrictions(f, kb).toString();
+        String expected = "(=>\n" +
+                "    (and\n" +
+                "      (instance ?NUMBER1 Quantity)\n" +
+                "      (instance ?NUMBER2 Quantity)\n" +
+                "      (instance ?NUMBER Quantity) )\n" +
+                "    (<=>\n" +
+                "   (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER)\n" +
+                "   (equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1)) )";
+        assertEquals(expected,actual);
+    }
 }
