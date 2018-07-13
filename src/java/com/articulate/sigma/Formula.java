@@ -129,6 +129,8 @@ public class Formula implements Comparable, Serializable {
     public static final String termSymbolPrefix   = "s__";
     public static final String termVariablePrefix = "V__";
 
+    public boolean higherOrder = false;
+
     public String getSourceFile() {
         return this.sourceFile;
     }
@@ -1905,6 +1907,8 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean isHigherOrder() {
 
+        if (higherOrder)
+            return true;
         if (this.listP()) {
             String pred = this.car();
             boolean logop = isLogicalOperator(pred);
@@ -1915,11 +1919,15 @@ public class Formula implements Comparable, Serializable {
                 f.read(arg);
                 if (!atom(arg) && !f.isFunctionalTerm()) {
                     if (logop) {
-                        if (f.isHigherOrder())
+                        if (f.isHigherOrder()) {
+                            higherOrder = true;
                             return true;
+                        }
                     }
-                    else
+                    else {
+                        higherOrder = true;
                         return true;
+                    }
                 }
             }
         }
