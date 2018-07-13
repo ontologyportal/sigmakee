@@ -153,6 +153,7 @@ public class SUMOKBtoTPTPKB {
     public String writeTPTPFile(String fileName,
                                 boolean onlyPlainFOL) {
 
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(1): onlyPlainFOL: " +onlyPlainFOL);
         final String reasoner = "EProver";
         return writeTPTPFile(fileName,onlyPlainFOL,
                 reasoner);
@@ -165,6 +166,7 @@ public class SUMOKBtoTPTPKB {
                                 boolean onlyPlainFOL,
                                 String reasoner) {
 
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(2): onlyPlainFOL: " +onlyPlainFOL);
         final Formula conjecture = null;
         return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
                 reasoner);
@@ -178,6 +180,7 @@ public class SUMOKBtoTPTPKB {
                                 boolean onlyPlainFOL,
                                 String reasoner) {
 
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(3): onlyPlainFOL: " +onlyPlainFOL);
         final boolean isQuestion = false;
         return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
                 reasoner,isQuestion);
@@ -192,6 +195,7 @@ public class SUMOKBtoTPTPKB {
                                 String reasoner,
                                 boolean isQuestion) {
 
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(4): onlyPlainFOL: " +onlyPlainFOL);
         final PrintWriter pw = null;
         return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
                 reasoner,isQuestion,pw);
@@ -225,7 +229,7 @@ public class SUMOKBtoTPTPKB {
     public String writeTPTPFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
                                 String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile()");
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(5): onlyPlainFOL: " + onlyPlainFOL);
 
         ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
         HashSet<String> excludedPredicates = buildExcludedPredicates();
@@ -272,6 +276,7 @@ public class SUMOKBtoTPTPKB {
             int counter = 0;
             while (ite.hasNext()) {
                 Formula f = ite.next();
+                pr.println("% from file " + f.sourceFile + " at line " + f.startLine);
                 counter++;
                 if (counter == 100) {
                     System.out.print(".");
