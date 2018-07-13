@@ -105,7 +105,7 @@ public class EProver {
         } 
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error in EProver.addBatchFile()");
+            System.out.println("Error in EProver.addBatchConfig()");
             System.out.println(e.getMessage());
         }
 
@@ -129,7 +129,7 @@ public class EProver {
         } 
         catch (FileNotFoundException e) {
             e.printStackTrace();
-            System.out.println("Error in EProver.writeBatchFile()");
+            System.out.println("Error in EProver.addBatchConfig()");
             System.out.println(e.getMessage());
         }
     }
@@ -220,7 +220,6 @@ public class EProver {
     
     
     /** *************************************************************
-     * @author Infosys LTD.
      * Create a running instance of EProver based on existing batch
      * specification file.
      *
@@ -230,6 +229,7 @@ public class EProver {
      * @throws IOException
      */
     public EProver (String executable,int maxAnswers) throws IOException {
+
         if (this._eprover != null)
             this.terminate();
         __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
@@ -256,8 +256,7 @@ public class EProver {
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
-    
-    
+
     /** *************************************************************
      * Add an assertion for inference.
      *
