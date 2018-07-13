@@ -456,7 +456,7 @@ public class SUMOformulaToTPTPformula {
                 Iterator<Formula> g = processed.iterator();
                 while (g.hasNext()) {
                     Formula f = (Formula) g.next();
-                    if (!f.theFormula.contains("@")) {
+                    if (!f.theFormula.contains("@") && !f.higherOrder) {
                         String tptpStr = tptpParseSUOKIFString(f.theFormula,query);
                         if (StringUtil.isNonEmptyString(tptpStr)) 
                             _f.getTheTptpFormulas().add(tptpStr);                        
