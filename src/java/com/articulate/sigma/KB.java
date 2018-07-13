@@ -354,8 +354,7 @@ public class KB implements Serializable {
     }
 
     /**************************************************************
-     * Sets the
-     * synchronized SortedSet of all the terms in the KB to be kbTerms.
+     * Sets the synchronized SortedSet of all the terms in the KB to be kbTerms.
      */
     public void setTerms(SortedSet<String> newTerms) {
 
@@ -367,8 +366,7 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Get an
-     * ArrayList of Strings containing the language identifiers of available
+     * Get an ArrayList of Strings containing the language identifiers of available
      * natural language formatting templates.
      *
      * @return an ArrayList of Strings containing the language identifiers
@@ -393,11 +391,7 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Remove from
-     * the given set any item which is a superclass of another item in the set.
-     *
-     * @param set
-     * @return
+     * Remove from the given set any item which is a superclass of another item in the set.
      */
     public Set<String> removeSuperClasses(Set<String> set) {
 
@@ -407,19 +401,17 @@ public class KB implements Serializable {
         // Compare every element to every other.
         for (String first : returnSet) {
             for (String second : returnSet) {
-                if (isSubclass(first, second)) {
+                if (isSubclass(first, second) && !first.equals(second)) {
                     removeSet.add(second);
                 }
             }
         }
-
         returnSet.removeAll(removeSet);
         return returnSet;
     }
 
     /***************************************************************
-     * Arity
-     * errors should already have been trapped in addConstituent() unless a
+     * Arity errors should already have been trapped in addConstituent() unless a
      * relation is used before it is defined. This routine is a comprehensive
      * re-check.
      */
@@ -663,7 +655,8 @@ public class KB implements Serializable {
     /***************************************************************
      * Returns
      * true if the subclass cache supports the conclusion that c1 is a subclass
-     * of c2, else returns false.
+     * of c2, else returns false.  Note that classes are also subclasses of
+     * themselves
      *
      * @param c1 A String, the name of a SetOrClass.
      * @param parent A String, the name of a SetOrClass.
@@ -3170,6 +3163,7 @@ public class KB implements Serializable {
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+                System.out.println("INFO in KB.loadEProver(): generating TPTP file");
                 skb.writeTPTPFile(tptpFilename, true);
                 if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
                     eprover = new EProver(mgr.getPref("inferenceEngine"), tptpFilename);
@@ -3327,7 +3321,7 @@ public class KB implements Serializable {
      */
     public static void main(String[] args) throws IOException {
 
-        System.out.println("INFO in Interpreter.main()");
+        System.out.println("INFO in KB.main()");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB("SUMO");
         if (args != null && args.length > 2 && args[0].equals("-c")) {
