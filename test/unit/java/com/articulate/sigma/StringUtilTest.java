@@ -39,4 +39,22 @@ public class StringUtilTest {
         assertFalse(StringUtil.isNumeric("Hello!"));
         assertTrue(StringUtil.isNumeric("0.000001"));
     }
+
+    /** *****************************************************************
+     */
+    @Test
+    public void testRemoveEscapes() {
+
+        assertEquals("  ",StringUtil.removeEscapes("\u0641\u0646\u062F\u0642 \u0648\u064A\u0633\u062A\u064A\u0646 "));
+
+    }
+
+    /** *****************************************************************
+     */
+    @Test
+    public void testCamelCase() {
+
+        assertEquals("HowToMarketToPeopleNotLikeYou",StringUtil.toCamelCase("\\n          \\n          How to Market to People Not Like You: \\"));
+
+    }
 }
