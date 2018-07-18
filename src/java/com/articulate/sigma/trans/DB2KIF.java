@@ -175,6 +175,7 @@ public class DB2KIF {
      */
     public String clean(ArrayList<ArrayList<String>> cells) {
 
+        System.out.println("DB2KIF.clean()");
         StringBuffer sb = new StringBuffer();
         for (int r = 2; r < cells.size(); r++) {
             ArrayList<String> row = cells.get(r);
