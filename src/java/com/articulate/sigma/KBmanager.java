@@ -650,8 +650,8 @@ public class KBmanager implements Serializable {
                     NLGUtils.init(configFileDir);
                     OMWordnet.readOMWfiles();
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
-                    for (KB aKB : manager.kbs.values())
-                        aKB.loadEProver();
+                    //for (KB aKB : manager.kbs.values())
+                    //    aKB.loadEProver();
                     initializing = false;
                     initialized = true;
                 }
