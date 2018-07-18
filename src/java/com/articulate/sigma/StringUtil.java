@@ -345,11 +345,15 @@ public class StringUtil {
      */
     public static String toCamelCase(String input) {
 
+        //System.out.println("toCamelCase(): " + input.toCharArray());
         StringBuffer sb = new StringBuffer();
         char lastChar = ' ';
         for (char c : input.toCharArray()) {
-            if (lastChar == '\\')
+            //System.out.println(sb.toString());
+            if (lastChar == '\\') {
+                lastChar = c;
                 continue;
+            }
             if (Character.isAlphabetic(c) && !Character.isAlphabetic(lastChar))
                 sb.append(Character.toUpperCase(c));
             else {
@@ -358,6 +362,7 @@ public class StringUtil {
             }
             lastChar = c;
         }
+        //System.out.println("\ntoCamelCase(): returning: " + sb.toString());
         return sb.toString();
     }
 
@@ -712,7 +717,7 @@ public class StringUtil {
      */
     public static String removeEscapes(String str) {
 
-        String ans = str.replaceAll("\\u[0-9A-F]{4}"," ");
+        String ans = str.replaceAll("\\\\u[0-9A-F]{4}"," ");
         if (isNonEmptyString(str)) {
             StringBuilder sb = new StringBuilder();
             char prevCh = 'x';
@@ -1623,20 +1628,13 @@ public class StringUtil {
     }
 
     /** *****************************************************************
-     */
-    public static void main(String args[]) {
-
-        System.out.println(StringUtil.fillString("111",'0',8,true));
-
-    }
-
-    /** *****************************************************************
      * Fetch the entire contents of a text file, and return it in a String.
      * This style of implementation does not throw Exceptions to the caller.
      *
      * @param aFile is a file which already exists and can be read.
      */
      public static String getContents(File aFile) {
+
         //...checks on aFile are elided
         StringBuilder contents = new StringBuilder();
 
@@ -1674,6 +1672,7 @@ public class StringUtil {
      * @return
      */
     public static String filterHtml(String input)  {
+
         // Note use of non-greedy matching.
         String out = input.replaceAll("<.*?>", "");
 
@@ -1685,4 +1684,11 @@ public class StringUtil {
         return out;
     }
 
-} // StringUtil
+    /** *****************************************************************
+     */
+    public static void main(String args[]) {
+
+        System.out.println(StringUtil.fillString("111",'0',8,true));
+
+    }
+}
