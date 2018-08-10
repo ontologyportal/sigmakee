@@ -123,7 +123,10 @@ public class Formula implements Comparable, Serializable {
 
     /** The formula in textual forms. */
     public String theFormula;
-	
+
+    /** The formula in textual forms. */
+    public String tffFormula;
+
     public static final String termMentionSuffix  = "__m";
     public static final String classSymbolSuffix  = "__t";  // for the case when a class is used as an instance
     public static final String termSymbolPrefix   = "s__";
@@ -147,32 +150,7 @@ public class Formula implements Comparable, Serializable {
      * predicate variable instantiation and row variable expansion
      * might cause theFormula to expand to several TPTP formulas.
      */
-    public ArrayList<String> theTptpFormulas = null;
-
-    /** ***************************************************************
-     * Returns an ArrayList of the TPTP formulas (Strings) that
-     * together constitute the TPTP translation of theFormula.
-     *
-     * @return An ArrayList of Strings, or an empty ArrayList if no
-     * translations have been created or entered.
-     */
-    public ArrayList<String> getTheTptpFormulas() {
-
-        if (theTptpFormulas == null)
-            theTptpFormulas = new ArrayList<String>();
-        return theTptpFormulas;
-    }
-
-    /** ***************************************************************
-     * Clears theTptpFormulas if the ArrayList exists, else does
-     * nothing.
-     */
-    public void clearTheTptpFormulas() {
-
-        if (theTptpFormulas != null)
-            theTptpFormulas.clear();
-        return;
-    }
+    public ArrayList<String> theTptpFormulas = new ArrayList<>();
 
     /** *****************************************************************
      * A list of clausal (resolution) forms generated from this
