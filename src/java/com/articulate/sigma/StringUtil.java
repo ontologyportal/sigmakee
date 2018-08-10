@@ -343,6 +343,17 @@ public class StringUtil {
      * Remove characters other than JavaIdentifiers and capitalize
      * any character following a non-alpha character
      */
+    public static String initialLowerCase(String input) {
+
+        if (input == null || input.length() < 1)
+            return input;
+        return Character.toLowerCase(input.charAt(0)) + input.substring(1);
+    }
+
+    /****************************************************************
+     * Remove characters other than JavaIdentifiers and capitalize
+     * any character following a non-alpha character
+     */
     public static String toCamelCase(String input) {
 
         //System.out.println("toCamelCase(): " + input.toCharArray());
