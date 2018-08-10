@@ -503,7 +503,7 @@ public class InterfaceTPTP {
 		SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
     	stptp._f = conjectureFormula;
     	stptp.tptpParse(conjectureFormula,true, kb);
-		Iterator<String> it = conjectureFormula.getTheTptpFormulas().iterator();
+		Iterator<String> it = conjectureFormula.theTptpFormulas.iterator();
 		String theTPTPFormula = (String) it.next();
 		String originalConjecture = theTPTPFormula;
 		if (isQuestion) 
@@ -512,7 +512,7 @@ public class InterfaceTPTP {
 			conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";		
 		SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
     	stptpkb.kb = kb;
-		originalKBFileName = stptpkb.writeTPTPFile(null,null,true,systemChosen,isQuestion);
+		originalKBFileName = stptpkb.writeFile(null,null,true,systemChosen,isQuestion);
 		ArrayList<Binding> lastAnswer = null;
 		ArrayList<Binding> originalAnswer = null;
 		int numAnswers = 0;
