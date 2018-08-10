@@ -27,11 +27,11 @@ public class SUMOformulaToTPTPformula {
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
-    private static String translateWord(StreamTokenizer_s st, boolean hasArguments) {
+    public static String translateWord(String st, int type, boolean hasArguments) {
 
         String result = null;
         try {
-            result = translateWord_1(st, hasArguments);
+            result = translateWord_1(st,type,hasArguments);
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): " + result);
             if (result.equals("$true__m") || result.equals("$false__m")) 
                 result = "'" + result + "'";
@@ -56,7 +56,7 @@ public class SUMOformulaToTPTPformula {
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
      */
-    private static String translateWord_1(StreamTokenizer_s st, boolean hasArguments) {      
+    private static String translateWord_1(String st, int type, boolean hasArguments) {
 
         //System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): st: " + st.sval);
         int translateIndex;
@@ -77,7 +77,7 @@ public class SUMOformulaToTPTPformula {
 
         List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN, 
                 Formula.PLUSFN, Formula.MINUSFN);
-        List<String> tptpFunctions = Arrays.asList("times","divide","plus","minus");
+        List<String> tptpFunctions = Arrays.asList("product","quotient","sum","difference");
 
         List<String> kifRelations = new ArrayList<String>();
         kifRelations.addAll(kifPredicates);
@@ -93,48 +93,48 @@ public class SUMOformulaToTPTPformula {
         String mentionSuffix = Formula.termMentionSuffix;
         mgr = KBmanager.getMgr();
         holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
-        if (holdsPrefixInUse && !kifRelations.contains(st.sval))
+        if (holdsPrefixInUse && !kifRelations.contains(st))
             mentionSuffix = "";
 
         //----Places single quotes around strings, and replace \n by space
-        if (st.ttype == 34)
-            return("'" + st.sval.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+        if (type == 34)
+            return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
         //----Fix variables to have leading V_
-        char ch0 = ((st.sval.length() > 0)
-                    ? st.sval.charAt(0)
+        char ch0 = ((st.length() > 0)
+                    ? st.charAt(0)
                     : 'x');
-        char ch1 = ((st.sval.length() > 1)
-                    ? st.sval.charAt(1)
+        char ch1 = ((st.length() > 1)
+                    ? st.charAt(1)
                     : 'x');
         if (ch0 == '?' || ch0 == '@')
-            return(Formula.termVariablePrefix + st.sval.substring(1).replace('-','_'));
+            return(Formula.termVariablePrefix + st.substring(1).replace('-','_'));
         //----Translate special predicates
         translateIndex = 0;
-        while (translateIndex < kifPredicates.size() && !st.sval.equals(kifPredicates.get(translateIndex)))
+        while (translateIndex < kifPredicates.size() && !st.equals(kifPredicates.get(translateIndex)))
             translateIndex++;
         if (translateIndex < kifPredicates.size())
             // return((hasArguments ? "$" : "") + tptpPredicates[translateIndex]);
             return(tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         //----Translate special functions
         translateIndex = 0;
-        while (translateIndex < kifFunctions.size() && !st.sval.equals(kifFunctions.get(translateIndex)))
+        while (translateIndex < kifFunctions.size() && !st.equals(kifFunctions.get(translateIndex)))
             translateIndex++;
         if (translateIndex < kifFunctions.size())
             // return((hasArguments ? "$" : "") + tptpFunctions[translateIndex]);
             return(tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         //----Translate operators
         translateIndex = 0;
-        while (translateIndex < kifOps.size() && !st.sval.equals(kifOps.get(translateIndex)))
+        while (translateIndex < kifOps.size() && !st.equals(kifOps.get(translateIndex)))
             translateIndex++;
         if (translateIndex < kifOps.size())
             return(tptpOps.get(translateIndex));
         //----Do nothing to numbers
-        if (st.ttype == StreamTokenizer.TT_NUMBER ||
-            (st.sval != null && (Character.isDigit(ch0) ||
+        if (type == StreamTokenizer.TT_NUMBER ||
+            (st != null && (Character.isDigit(ch0) ||
                                  (ch0 == '-' && Character.isDigit(ch1))))) {
-            return(st.sval);
+            return(st);
         }
-        String term = st.sval;
+        String term = st;
 
         if (!hasArguments) {
             if (
@@ -195,7 +195,7 @@ public class SUMOformulaToTPTPformula {
     private static void addVariable(StreamTokenizer_s st,Vector<String> variables) {
 
         if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
-            String tptpVariable = translateWord(st,false);
+            String tptpVariable = translateWord(st.sval,st.ttype,false);
             if (variables.indexOf(tptpVariable) == -1) 
                 variables.add(tptpVariable);            
         }
@@ -281,7 +281,7 @@ public class SUMOformulaToTPTPformula {
                         tptpFormula.append("'");
                     tptpFormula.append("(");          //----()s around all operator expressions
                     if (arity == 1) {                 //----Output unary as prefix
-                        tptpFormula.append(translateWord(st,false));                        
+                        tptpFormula.append(translateWord(st.sval,st.ttype,false));
                         countStack.push(Integer.valueOf(0));   //----Note the new operator (dummy) with 0 operands so far
                         operatorStack.push(",");
                         //----Check if the next thing will be the quantified variables
@@ -291,7 +291,7 @@ public class SUMOformulaToTPTPformula {
                     else if (arity == 2) {    //----Binary operator
                         //----Note the new operator with 0 operands so far
                         countStack.push(Integer.valueOf(0));
-                        operatorStack.push(translateWord(st,false));
+                        operatorStack.push(translateWord(st.sval,st.ttype,false));
                     }
                     lastWasOpen = false;                    
                 } 
@@ -308,7 +308,7 @@ public class SUMOformulaToTPTPformula {
                     if (lastWasOpen) {          //----Start of a predicate or variable list
                         if (inQuantifierVars) { //----Variable list
                             tptpFormula.append("[");
-                            tptpFormula.append(translateWord(st,false));
+                            tptpFormula.append(translateWord(st.sval,st.ttype,false));
                             incrementTOS(countStack);
                         } 
                         else {                //----Predicate
@@ -319,7 +319,7 @@ public class SUMOformulaToTPTPformula {
                             //----If this is the start of a hol__ situation, quote it all
                             if (inHOL && inHOLCount == 1)
                                 tptpFormula.append("'");                            
-                            tptpFormula.append(translateWord(st,true));   //----Predicate or function and (
+                            tptpFormula.append(translateWord(st.sval,st.ttype,true));   //----Predicate or function and (
                             tptpFormula.append("(");                            
                             countStack.push(Integer.valueOf(0));              //----Note the , for between arguments with 0 arguments so far
                             operatorStack.push(",");
@@ -332,7 +332,7 @@ public class SUMOformulaToTPTPformula {
                         if ((Integer)(countStack.peek()) > 0)
                             tptpFormula.append((String)operatorStack.peek());
                         // TODO: may have to trap strings - AP
-                        tptpFormula.append(translateWord(st,false));      //----Output the word               
+                        tptpFormula.append(translateWord(st.sval,st.ttype,false));      //----Output the word
                         incrementTOS(countStack);                         //----Increment counter for this level
                     }
                     //----Collect variables that are used and quantified
@@ -451,7 +451,7 @@ public class SUMOformulaToTPTPformula {
             if (debug)
                 System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
             if (processed != null) {
-                _f.clearTheTptpFormulas();
+                _f.theTptpFormulas = new ArrayList<String>();
                 //----Performs function on each current processed axiom
                 Iterator<Formula> g = processed.iterator();
                 while (g.hasNext()) {
@@ -459,7 +459,7 @@ public class SUMOformulaToTPTPformula {
                     if (!f.theFormula.contains("@") && !f.higherOrder) {
                         String tptpStr = tptpParseSUOKIFString(f.theFormula,query);
                         if (StringUtil.isNonEmptyString(tptpStr)) 
-                            _f.getTheTptpFormulas().add(tptpStr);                        
+                            _f.theTptpFormulas.add(tptpStr);
                     }
                 }
             }

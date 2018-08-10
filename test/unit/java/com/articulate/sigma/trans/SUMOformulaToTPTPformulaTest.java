@@ -1,4 +1,4 @@
-package com.articulate.sigma;
+package com.articulate.sigma.trans;
 
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import org.junit.Test;

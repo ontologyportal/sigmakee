@@ -12,48 +12,44 @@ public class SUMOKBtoTPTPKB {
 
     public KB kb;
 
-    private static boolean debug = false;
+    public static boolean debug = false;
+
+    public static String lang = "tff";
+
+    public static HashSet<String> excludedPredicates = new HashSet<>();
+
+    public ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
 
     /** *************************************************************
-     * This method translates the entire KB to TPTP format, storing
-     * the translation for each Formula in the List identified by the
-     * private member Formula.theTptpFormulas.  Use
-     * Formula.getTheTptpFormulas() to accesss the TPTP sentences
-     * (Strings) that constitute the translation for a single SUO-KIF
-     * Formula.
-     *
-     * @return An int indicating the number of Formulas that were
-     * successfully translated.
      */
-    public int tptpParse() {
+    public SUMOKBtoTPTPKB() {
 
-        int goodCount = 0;
-        try {
-            ArrayList<Formula> badList = new ArrayList<Formula>();
-            Iterator<Formula> it = kb.formulaMap.values().iterator();
-            while (it.hasNext()) {
-                Formula f = it.next();
-                SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                stptp._f = f;
-                stptp.tptpParse(f,false, kb);
-                if (f.getTheTptpFormulas().isEmpty()) {
-                    if (badList.size() < 11)
-                        badList.add(f);
-                }
-                else
-                    goodCount++;
-            }
-        }
-        catch (Exception ex) {
-            System.out.println("Error in SUMOKBtoTPTPKB.tptpParse(): " + ex.getMessage());
-            ex.printStackTrace();
-        }
-        return goodCount;
+        buildExcludedPredicates();
+    }
+
+    /** *************************************************************
+     * define a set of predicates which will not be used for inference
+     */
+    public static HashSet<String> buildExcludedPredicates() {
+
+        excludedPredicates.add("documentation");
+        excludedPredicates.add("domain");
+        excludedPredicates.add("format");
+        excludedPredicates.add("termFormat");
+        excludedPredicates.add("externalImage");
+        excludedPredicates.add("relatedExternalConcept");
+        excludedPredicates.add("relatedInternalConcept");
+        excludedPredicates.add("formerName");
+        excludedPredicates.add("abbreviation");
+        excludedPredicates.add("conventionalShortName");
+        excludedPredicates.add("conventionalLongName");
+
+        return excludedPredicates;
     }
 
     /** *************************************************************
      */
-    public String copyFile (String fileName) {
+    public String copyFile(String fileName) {
 
         String outputPath = "";
         FileReader in = null;
@@ -135,7 +131,7 @@ public class SUMOKBtoTPTPKB {
                     Formula f = result.get(i);
                     String s = f.theFormula.replace(value,key);
                     if (!onlyPlainFOL) {
-                        pr.println("fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                        pr.println(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++ +
                                 ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
                     }
                     else {
@@ -150,54 +146,54 @@ public class SUMOKBtoTPTPKB {
     /** *************************************************************
      *  Sets reasoner and calls writeTPTPFile() below
      */
-    public String writeTPTPFile(String fileName,
+    public String writeFile(String fileName,
                                 boolean onlyPlainFOL) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(1): onlyPlainFOL: " +onlyPlainFOL);
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(1): onlyPlainFOL: " + onlyPlainFOL);
         final String reasoner = "EProver";
-        return writeTPTPFile(fileName,onlyPlainFOL,
+        return writeFile(fileName,onlyPlainFOL,
                 reasoner);
     }
 
     /** *************************************************************
      *  Sets conjecture and calls writeTPTPFile() below
      */
-    public String writeTPTPFile(String fileName,
+    public String writeFile(String fileName,
                                 boolean onlyPlainFOL,
                                 String reasoner) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(2): onlyPlainFOL: " +onlyPlainFOL);
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(2): onlyPlainFOL: " + onlyPlainFOL);
         final Formula conjecture = null;
-        return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
+        return writeFile(fileName,conjecture,onlyPlainFOL,
                 reasoner);
     }
 
     /** *************************************************************
      *  Sets isQuestion and calls writeTPTPFile() below
      */
-    public String writeTPTPFile(String fileName,
+    public String writeFile(String fileName,
                                 Formula conjecture,
                                 boolean onlyPlainFOL,
                                 String reasoner) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(3): onlyPlainFOL: " +onlyPlainFOL);
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(3): onlyPlainFOL: " + onlyPlainFOL);
         final boolean isQuestion = false;
-        return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
+        return writeFile(fileName,conjecture,onlyPlainFOL,
                 reasoner,isQuestion);
     }
 
     /** *************************************************************
      *  Sets pw and calls writeTPTPFile() below
      */
-    public String writeTPTPFile(String fileName,
+    public String writeFile(String fileName,
                                 Formula conjecture,
                                 boolean onlyPlainFOL,
                                 String reasoner,
                                 boolean isQuestion) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(4): onlyPlainFOL: " +onlyPlainFOL);
+        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(4): onlyPlainFOL: " + onlyPlainFOL);
         final PrintWriter pw = null;
-        return writeTPTPFile(fileName,conjecture,onlyPlainFOL,
+        return writeFile(fileName,conjecture,onlyPlainFOL,
                 reasoner,isQuestion,pw);
     }
 
@@ -222,17 +218,27 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     */
+    public void writeHeader(PrintWriter pw, String sanitizedKBName) {
+
+        if (pw == null) {
+            pw.println("% Articulate Software");
+            pw.println("% www.ontologyportal.org www.articulatesoftware.com");
+            pw.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
+            pw.println("% This is a translation to TPTP of KB " + sanitizedKBName);
+            pw.println("");
+        }
+    }
+
+    /** *************************************************************
      *  Write all axioms in the KB to TPTP format.
      *
      * @param fileName - the full pathname of the file to write
      */
-    public String writeTPTPFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
-                                String reasoner, boolean isQuestion, PrintWriter pw) {
+    public String writeFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
+                            String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(5): onlyPlainFOL: " + onlyPlainFOL);
-
-        ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
-        HashSet<String> excludedPredicates = buildExcludedPredicates();
+        //if (debug && pw != null) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(5): onlyPlainFOL: " + onlyPlainFOL);
         String result = null;
         PrintWriter pr = null;
         try {
@@ -253,104 +259,59 @@ public class SUMOKBtoTPTPKB {
                 pr = pw;
             else
                 pr = new PrintWriter(new FileWriter(outputFile));
-            // If a PrintWriter object is passed in, we suppress this
-            // copyright notice and assume that such a notice will be
-            // provided somewhere is the wider calling context.
-            if (pw == null) {
-                pr.println("% Articulate Software");
-                pr.println("% www.ontologyportal.org www.articulatesoftware.com");
-                pr.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
-                pr.println("% This is a translation to TPTP of KB " + sanitizedKBName);
-                pr.println("");
-            }
+            writeHeader(pr,sanitizedKBName);
 
             OrderedFormulae orderedFormulae = new OrderedFormulae();
             orderedFormulae.addAll(kb.formulaMap.values());
-            if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
+            //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
             List<String> tptpFormulas = null;
-            String oldSourceFile = "";
-            String sourceFile = "";
             File sf = null;
-            Iterator<Formula> ite = orderedFormulae.iterator();
-            String theTPTPFormula = null;
             int counter = 0;
-            while (ite.hasNext()) {
-                Formula f = ite.next();
+            for (Formula f : orderedFormulae) {
+                pr.println("% f: " + f.format("",""," "));
                 pr.println("% from file " + f.sourceFile + " at line " + f.startLine);
                 counter++;
-                if (counter == 100) {
-                    System.out.print(".");
-                    counter = 0;
-                }
-                sf = new File(f.sourceFile);
-                sourceFile = sf.getName();
-                sourceFile = sourceFile.substring(0, sourceFile.lastIndexOf("."));
-                //if (!sourceFile.equals(oldSourceFile))
-                //    kb.warnings.add("Source file has changed to " + sourceFile);
-                oldSourceFile = sourceFile;
-                tptpFormulas = f.getTheTptpFormulas();
-
-                Formula tmpF = new Formula();
-                tmpF.read(f.theFormula);
+                if (counter == 100) { System.out.print("."); counter = 0; }
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                List<Formula> processed = fp.preProcess(tmpF,false, kb);
+                fp.debug = true;
+                List<Formula> processed = fp.preProcess(f,false,kb);
+                //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): processed formulas: " + processed);
                 if (!processed.isEmpty()) {
                     ArrayList<Formula> withRelnRenames = new ArrayList<Formula>();
-                    Iterator<Formula> procit = processed.iterator();
-                    while (procit.hasNext()) {
-                        Formula f2 = procit.next();
+                    for (Formula f2 : processed)
                         withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
+                    for (Formula f3 : withRelnRenames) {
+                        if (lang.equals("tptp")) {
+                            SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                            stptp._f = f3;
+                            stptp.tptpParse(f3, false, kb, withRelnRenames);
+                        }
+                        else if (lang.equals("tff")) {
+                            SUMOtoTFAform stptp = new SUMOtoTFAform();
+                            f3.theTptpFormulas = new ArrayList<>();
+                            if (withRelnRenames != null) {
+                                String tfaForm = stptp.process(f3.theFormula);
+                                if (tfaForm != null)
+                                    f3.theTptpFormulas.add(tfaForm);
+                            }
+                        }
+                        if (f != null && f3 != null)
+                            f.theTptpFormulas.addAll(f3.theTptpFormulas);
+                        else
+                            System.out.println("Error in writeFile(): f or f3 is null");
                     }
-                    SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                    stptp._f = tmpF;
-                    stptp.tptpParse(tmpF,false, kb, withRelnRenames);
-                    tptpFormulas = tmpF.getTheTptpFormulas();
-                    f.theTptpFormulas.addAll(tptpFormulas);
                 }
-                if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): formula: " + f);
-                if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
+                //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): formula: " + f.format("","",""));
+                //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
 
-                Iterator<String> tptpIt = tptpFormulas.iterator();
-                while (tptpIt.hasNext()) {
-                    theTPTPFormula = tptpIt.next();
-                    if (onlyPlainFOL) {   //----Remove interpretations of arithmetic
-                        theTPTPFormula = theTPTPFormula
-                                .replaceAll("[$]less","dollar_less")
-                                .replaceAll("[$]greater","dollar_greater")
-                                .replaceAll("[$]time","dollar_times")
-                                .replaceAll("[$]divide","dollar_divide")
-                                .replaceAll("[$]plus","dollar_plus")
-                                .replaceAll("[$]minus","dollar_minus");
-                        //----Don't output ""ed ''ed and numbers
-                        if (theTPTPFormula.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") ||
-                                theTPTPFormula.indexOf("'") > -1
-                                || theTPTPFormula.indexOf('"') >= 0)
-                            //pr.print("%FOL ");
-                            continue;
-                        if (reasoner.matches(".*(?i)Equinox.*")
-                                && f.theFormula.indexOf("equal") > 2) {
-                            Formula f2 = new Formula();
-                            f2.read(f.cdr());
-                            f2.read(f.car());
-                            if (f2.theFormula.equals("equal"))
-                                //pr.print("%FOL ");
-                                continue;
-                        }
-                    }
-
-                    if (filterExcludePredicates(excludedPredicates, f) == false) {
-                        if (!alreadyWrittenTPTPs.contains(theTPTPFormula)) {
-                            pr.print("fof(kb_" + sanitizedKBName + "_" + axiomIndex++);
-                            pr.println(",axiom,(" + theTPTPFormula + ")).");
-                            alreadyWrittenTPTPs.add(theTPTPFormula);
-                        }
+                for (String theTPTPFormula : f.theTptpFormulas) {
+                    if (!filterAxiom(f,theTPTPFormula)) {
+                        pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                        pr.println(",axiom,(" + theTPTPFormula + ")).");
+                        alreadyWrittenTPTPs.add(theTPTPFormula);
                     }
                 }
                 pr.flush();
-                if (f.getTheTptpFormulas().isEmpty()) {
-                    String addErrStr = "No TPTP formula for:" + f.theFormula;
-                    kb.warnings.add(addErrStr);
-                }
             }
             System.out.println();
             printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex,onlyPlainFOL);
@@ -360,11 +321,8 @@ public class SUMOKBtoTPTPKB {
                 // below is probably unnecessary
                 String type = "conjecture";
                 if (isQuestion) type = "question";
-                Iterator<String> tptpIt = conjecture.getTheTptpFormulas().iterator();
-                while (tptpIt.hasNext()) {
-                    theTPTPFormula = (String) tptpIt.next();
-                    pr.println("fof(prove_from_" + sanitizedKBName + "," + type + ",(" + theTPTPFormula + ")).");
-                }
+                for (String theTPTPFormula : conjecture.theTptpFormulas)
+                    pr.println(lang + "(prove_from_" + sanitizedKBName + "," + type + ",(" + theTPTPFormula + ")).");
             }
             result = canonicalPath;
         }
@@ -385,37 +343,41 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * define a set of predicates which will not be used for inference
-     */
-    public static HashSet<String> buildExcludedPredicates() {
-
-        HashSet<String> excludedPredicates = new HashSet<>();
-        excludedPredicates.add("documentation");
-        excludedPredicates.add("domain");
-        excludedPredicates.add("format");
-        excludedPredicates.add("termFormat");
-        excludedPredicates.add("externalImage");
-        excludedPredicates.add("relatedExternalConcept");
-        excludedPredicates.add("relatedInternalConcept");
-        excludedPredicates.add("formerName");
-        excludedPredicates.add("abbreviation");
-        excludedPredicates.add("conventionalShortName");
-        excludedPredicates.add("conventionalLongName");
-
-        return excludedPredicates;
-    }
-
-    /** *************************************************************
      * @return true if the given formula is simple clause,
      *   and contains one of the excluded predicates;
      * otherwise return false;
      */
-    public boolean filterExcludePredicates(HashSet<String> excludedPredicates, Formula formula) {
+    public boolean filterExcludePredicates(Formula formula) {
 
         boolean pass = false;
         if (formula.isSimpleClause(kb))
             pass = excludedPredicates.contains(formula.getArgument(0));
         return pass;
+    }
+
+    /** *************************************************************
+     */
+    public boolean filterAxiom(Formula form, String tptp) {
+
+        //----Don't output ""ed ''ed and numbers
+        if (tptp.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") ||
+                tptp.indexOf("'") > -1
+                || tptp.indexOf('"') >= 0) {
+            //pr.print("%FOL ");
+            System.out.println("% quoted thing or number");
+            return true;
+        }
+
+        if (filterExcludePredicates(form) == false) {
+            if (!alreadyWrittenTPTPs.contains(form)) {
+                return false;
+            }
+        }
+        else {
+            System.out.println("% filtered predicate");
+            return true;
+        }
+        return false;
     }
 
     /** *************************************************************
