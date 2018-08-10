@@ -331,7 +331,7 @@ public class EProver {
                     }
                     // 3. Write to new tptp file
                     if (eprover != null) {
-                        List<String> tptpFormulas = parsedF.getTheTptpFormulas();
+                        List<String> tptpFormulas = parsedF.theTptpFormulas;
                         Iterator<String> tptpIt = tptpFormulas.iterator();
                         while (tptpIt.hasNext()) {
                             String theTPTPFormula = tptpIt.next();
