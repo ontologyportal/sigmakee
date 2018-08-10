@@ -176,7 +176,7 @@ public class InferenceTestSuite {
     	stptp.tptpParse(conjectureFormula,true,kb);
     	SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
     	stptpkb.kb = kb;
-        String kbFileName = stptpkb.writeTPTPFile(null,conjectureFormula,true,
+        String kbFileName = stptpkb.writeFile(null,conjectureFormula,true,
                                              systemChosen,false);
         InterfaceTPTP.init();
         String res = InterfaceTPTP.callTPTP(TPTPlocation, systemChosen, kbFileName,
