@@ -37,6 +37,8 @@ public class FormulaPreprocessor {
 
     public static boolean debug = false;
 
+    public static boolean addTypes = true;
+
     /** ***************************************************************
      * A + is appended to the type if the parameter must be a class
      *
@@ -136,32 +138,14 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Add clauses for every variable in the antecedent to restrict its
-     * type to the type restrictions defined on every relation in which
-     * it appears.  For example
-     * (=>
-     *   (foo ?A B)
-     *   (bar B ?A))
-     *
-     * (domain foo 1 Z)
-     *
-     * would result in
-     *
-     * (=>
-     *   (instance ?A Z)
-     *   (=>
-     *     (foo ?A B)
-     *     (bar B ?A)))
      */
-    public Formula addTypeRestrictions(Formula form, KB kb) {
+    public HashMap<String,HashSet<String>> findTypeRestrictions(Formula form, KB kb) {
 
-        if (debug) System.out.println("addTypeRestrictions: form " + form);
-        // get variable types from domain definitions
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
-        if (debug) System.out.println("addTypeRestrictions: varDomainTypes " + varDomainTypes);
+        if (debug) System.out.println("findTypeRestrictions: varDomainTypes " + varDomainTypes);
         // get variable types which are explicitly defined in formula
         HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(kb,form);
-        if (debug) System.out.println("addTypeRestrictions: varExplicitTypes " + varExplicitTypes);
+        if (debug) System.out.println("findTypeRestrictions: varExplicitTypes " + varExplicitTypes);
         // only keep variables which are not explicitly defined in formula
         HashMap<String,HashSet<String>> varmap = new HashMap<String, HashSet<String>>();
         for (String var : varDomainTypes.keySet()) {
@@ -183,6 +167,32 @@ public class FormulaPreprocessor {
                 varmap.put(var, types);
             }
         }
+        return varmap;
+    }
+
+    /** ***************************************************************
+     * Add clauses for every variable in the antecedent to restrict its
+     * type to the type restrictions defined on every relation in which
+     * it appears.  For example
+     * (=>
+     *   (foo ?A B)
+     *   (bar B ?A))
+     *
+     * (domain foo 1 Z)
+     *
+     * would result in
+     *
+     * (=>
+     *   (instance ?A Z)
+     *   (=>
+     *     (foo ?A B)
+     *     (bar B ?A)))
+     */
+    public Formula addTypeRestrictions(Formula form, KB kb) {
+
+        if (debug) System.out.println("addTypeRestrictions: form " + form);
+        // get variable types from domain definitions
+        HashMap<String,HashSet<String>> varmap = findTypeRestrictions(form,kb);
 
         // compute quantifiedVariables and unquantifiedVariables
         ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables =
@@ -795,6 +805,7 @@ public class FormulaPreprocessor {
                 while (it.hasNext()) {
                     f = (Formula) it.next();
                     Set<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
+                    if (debug) System.out.println("preProcess(): pred vars repl: " + f + "\n" + instantiations);
                     form.errors.addAll(f.getErrors());
 
                     // If the accumulator is null -- the formula can't be instantiated at all and has been marked "reject",
@@ -1010,7 +1021,9 @@ public class FormulaPreprocessor {
             while (it.hasNext()) {
                 Formula f = it.next();
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                Formula fnew = fp.addTypeRestrictions(f,kb);
+                Formula fnew = f;
+                if (addTypes)
+                    fp.addTypeRestrictions(f,kb);
                 f.read(fnew.theFormula);
                 f.higherOrder = fnew.higherOrder;
             }
@@ -1024,6 +1037,7 @@ public class FormulaPreprocessor {
      */
     public static void testFindTypes() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
@@ -1071,6 +1085,7 @@ public class FormulaPreprocessor {
      */
     public static void testFindExplicit() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String formStr = "(<=> (instance ?REL TransitiveRelation) " +
@@ -1093,6 +1108,7 @@ public class FormulaPreprocessor {
      */
     public static void testAddTypes() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
@@ -1127,6 +1143,7 @@ public class FormulaPreprocessor {
      */
     public static void testOne() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
@@ -1153,6 +1170,7 @@ public class FormulaPreprocessor {
      */
     public static void testTwo() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
@@ -1170,6 +1188,7 @@ public class FormulaPreprocessor {
      */
     public static void testThree() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
@@ -1201,6 +1220,7 @@ public class FormulaPreprocessor {
      */
     public static void testFour() {
 
+        System.out.println("------------------------------------");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
