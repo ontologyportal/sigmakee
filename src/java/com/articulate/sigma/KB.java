@@ -2025,6 +2025,20 @@ public class KB implements Serializable {
     }
 
     /*****************************************************************
+     * Find the most specific term in a collection using compareTermDepth()
+     */
+    public String mostSpecificTerm(Collection<String> terms) {
+
+        if (terms == null || terms.size() < 1)
+            return null;
+        String result = "";
+        for (String t : terms)
+            if (result == "" || compareTermDepth(t,result) > 1)
+                result = t;
+        return result;
+    }
+
+    /*****************************************************************
      * Takes a term and returns true if the term occurs in the KB.
      *
      * @param term A String.
@@ -3164,7 +3178,7 @@ public class KB implements Serializable {
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                skb.writeTPTPFile(tptpFilename, true);
+                skb.writeFile(tptpFilename, true);
                 if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
                     eprover = new EProver(mgr.getPref("inferenceEngine"), tptpFilename);
             }
