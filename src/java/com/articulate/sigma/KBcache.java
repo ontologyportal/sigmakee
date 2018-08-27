@@ -259,6 +259,10 @@ public class KBcache implements Serializable {
 
         if (instanceOf.containsKey(i)) {
             HashSet<String> hashSet = instanceOf.get(i);
+            if (hashSet == null) {
+                System.out.println("Error in KBcache.isInstanceOf(): null result for " + i);
+                return false;
+            }
             if (hashSet.contains(c))
                 return true;
             else
@@ -326,6 +330,15 @@ public class KBcache implements Serializable {
             instances.put(parent, is);
         }
         is.add(child);
+    }
+
+    /** ***************************************************************
+     * Add a new instance from an existing one plus a suffix, updating the caches
+     */
+    public void extendInstance(String child, String suffix) {
+
+        HashSet<String> iset = instanceOf.get(child);
+        instanceOf.put(child+suffix,iset);
     }
 
     /** ***************************************************************
@@ -648,23 +661,6 @@ public class KBcache implements Serializable {
      *
      * For example, given the class "Nation", getInstancesForType(Nation)
      * returns all instances, like "America", "Austria", "Albania", etc.
-
-    public HashSet<String> getInstancesForType(String cl) {
-
-        HashSet<String> instancesForType = new HashSet<>();
-        for (String inst : instanceOf.keySet()) {
-            HashSet<String> parents = instanceOf.get(inst);
-            if (parents.contains(cl))
-                instancesForType.add(inst);
-        }
-        return instancesForType;
-    } */
-
-    /** ***************************************************************
-     * Get all instances for the given input class
-     *
-     * For example, given the class "Nation", getInstancesForType(Nation)
-     * returns all instances, like "America", "Austria", "Albania", etc.
      *
      * Follow instances through transitive relations if applicable from
      * the set of [subAttribute, subrelation].
@@ -697,6 +693,25 @@ public class KBcache implements Serializable {
                 instancesForType2.addAll(temp);
         }
         return instancesForType2;
+    }
+
+    /** ***************************************************************
+     */
+    public ArrayList<String> getSignature(String rel) {
+
+        return signatures.get(rel);
+    }
+
+    /** ***************************************************************
+     */
+    public String getRange(String f) {
+
+        if (!kb.isFunction(f))
+            return null;
+        ArrayList<String> sig = getSignature(f);
+        if (sig == null || sig.size() == 0)
+            return null;
+        return sig.get(0);
     }
 
     /** ***************************************************************
