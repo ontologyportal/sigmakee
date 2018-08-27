@@ -536,7 +536,8 @@ public class FormulaPreprocessor {
                     if (varExplicitTypes.containsKey(var))
                         hs = varExplicitTypes.get(var);
                 }
-                varExplicitTypes.put(var, hs);
+                if (hs != null && hs.size() != 0)
+                    varExplicitTypes.put(var, hs);
             }
 
             p = Pattern.compile("\\(subclass (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-]+)");
@@ -554,7 +555,8 @@ public class FormulaPreprocessor {
                     if (varExplicitClasses.containsKey(var))
                         hs = varExplicitClasses.get(var);
                 }
-                varExplicitClasses.put(var, hs);
+                if (hs != null && hs.size() != 0)
+                    varExplicitClasses.put(var, hs);
             }
         }
         else {
@@ -643,27 +645,45 @@ public class FormulaPreprocessor {
             String pred = carstr;
             if (f.theFormula.indexOf("?") > -1 && !Formula.isVariable(pred)) {
                 Formula newf = f.cdrAsFormula();
+                if (pred.equals(Formula.EQUAL)) {
+                    ArrayList<String> args = f.complexArgumentsToArrayList(1);
+                    if (Formula.isVariable(args.get(0)) && Formula.isFunctionalTerm(args.get(1))) {
+                        Formula func = new Formula(args.get(1));
+                        String fstr = func.car();
+                        String type = kb.kbCache.getRange(fstr);
+                        addToMap(result,args.get(0),type);
+                    }
+                    if (Formula.isVariable(args.get(1)) && Formula.isFunctionalTerm(args.get(0))) {
+                        Formula func = new Formula(args.get(0));
+                        String fstr = func.car();
+                        String type = kb.kbCache.getRange(fstr);
+                        addToMap(result,args.get(1),type);
+                    }
+                }
+
                 int argnum = 1;
                 while (!newf.empty()) {
                     String arg = newf.car();
                     if (Formula.isVariable(arg)) {
-                        String cl = findType(argnum,pred,kb);
-                        if (debug) System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
+                        String cl = findType(argnum, pred, kb);
+                        if (debug)
+                            System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
                         if (StringUtil.emptyString(cl)) {
-                            if (kb.kbCache == null || !kb.kbCache.transInstOf(pred,"VariableArityRelation"))
+                            if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation"))
                                 System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                         "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                         }
                         else
-                            addToMap(result,arg,cl);
+                            addToMap(result, arg, cl);
                     }
                     // If formula is function then recurse.
-                    else if (Formula.isFunctionalTerm(arg))  {
+                    else if (Formula.isFunctionalTerm(arg)) {
                         result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     newf = newf.cdrAsFormula();
                     argnum++;  // note that this will try an argument that doesn't exist, and terminate when it does
                 }
+
             }
         }
         else {
@@ -1245,13 +1265,32 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      */
+    public static void testFive() {
+
+        System.out.println("------------------------------------");
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+        System.out.println();
+        System.out.println();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(equal (AdditionFn 1 2) ?X)";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        System.out.println("testFive(): equality: " + fp.preProcess(f,false,kb));
+    }
+
+    /** ***************************************************************
+     */
     public static void main(String[] args) {
 
-        testOne();
-        testTwo();
-        testThree();
-        testFour();
+        //testOne();
+        //testTwo();
+        //testThree();
+        //testFour();
 
+        testFive();
         //testFindTypes();
         //testAddTypes();
         //testFindExplicit();
