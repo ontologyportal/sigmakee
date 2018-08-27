@@ -47,6 +47,9 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * Set the cached information of automatically generated functions
+     * and relations needed to cover the polymorphic type signatures
+     * of build-in TFF terms
      */
     public static void setNumericFunctionInfo() {
 
