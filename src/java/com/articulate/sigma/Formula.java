@@ -81,14 +81,14 @@ public class Formula implements Comparable, Serializable {
                                                                         IFF);
 
     /** SUO-KIF mathematical comparison predicates. */
-    private static final List<String> COMPARISON_OPERATORS = Arrays.asList(EQUAL,
+    public static final List<String> COMPARISON_OPERATORS = Arrays.asList(EQUAL,
                                                                            GT,
                                                                            GTET,
                                                                            LT,
                                                                            LTET);
 
     /** The SUO-KIF mathematical functions are implemented in Vampire, but not yet EProver. */
-    private static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN,
+    public static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN,
                                                                      MINUSFN,
                                                                      TIMESFN,
                                                                      DIVIDEFN);
@@ -1859,8 +1859,10 @@ public class Formula implements Comparable, Serializable {
      * Test whether a Formula is a functional term.  Note this assumes
      * the textual convention of all functions ending with "Fn".
      */
+    @Deprecated
     public boolean isFunctionalTerm() {
 
+        System.out.println("Error in Formula.isFunctionalTerm(): must use KB.isFunction() instead");
         boolean ans = false;
         if (this.listP()) {
             String pred = this.car();
@@ -2215,6 +2217,7 @@ public class Formula implements Comparable, Serializable {
      *
      * @param term A String.
      */
+    @Deprecated
     public static boolean isFunction(String term) {
 
         System.out.println("Error in Formula.isFuction(): must use KB.isFunction() instead");
