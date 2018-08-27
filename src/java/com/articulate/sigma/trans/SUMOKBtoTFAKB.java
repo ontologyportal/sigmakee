@@ -64,8 +64,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             Thread.dumpStack();
         }
         StringBuffer sigBuf = new StringBuffer();
-        if (kb.isFunction(t))
-            sigBuf.append(" " + translateSort(sig.get(0)) + " *");
+        //if (kb.isFunction(t))
+        //    sigBuf.append(" " + translateSort(sig.get(0)) + " *");
         for (String s : sig.subList(1,sig.size()))
             sigBuf.append(" " + translateSort(s) + " *");
         if (sigBuf.length() == 0) {
