@@ -17,7 +17,7 @@ public class SUMOformulaToTPTPformula {
 
     public Formula _f = null;
     public static boolean debug = false;
-    public static boolean hideNumbers = true;
+    public static boolean hideNumbers = false;
 
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
@@ -67,11 +67,11 @@ public class SUMOformulaToTPTPformula {
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
 
         List<String> kifPredicates =
-            Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE,
+            Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE, "Integer", "RealNumber",
                           "<=","<",">",">=",
                           "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
 
-        List<String> tptpPredicates = Arrays.asList("$true","$false",
+        List<String> tptpPredicates = Arrays.asList("$true","$false","$int", "$real",
                                                     "lesseq","less","greater","greatereq",
                                                     "lesseq","less","greater","greatereq");
 
