@@ -5,8 +5,7 @@ import com.articulate.sigma.wordNet.WordNet;
 import com.google.common.collect.Lists;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class SigmaTestBase {
 
@@ -52,13 +51,27 @@ public class SigmaTestBase {
         if (WordNet.wn.synsetsToWords.isEmpty()) {
             problemList.add("WordNet mappings are empty.");
         }
-
+        List kbnames = Arrays.asList("english_format.kif","domainEnglishFormat.kif", 
+            "Merge.kif", "Mid-level-ontology.kif", "ArabicCulture.kif", "Cars.kif",
+            "Catalog.kif", "Communications.kif", "CountriesAndRegions.kif", "Dining.kif",
+            "Economy.kif", "engineering.kif", "FinancialOntology.kif", "Food.kif",
+            "Geography.kif", "Government.kif", "Hotel.kif", "Justice.kif", "Languages.kif",
+            "Media.kif", "MilitaryDevices.kif", "Military.kif", "MilitaryPersons.kif",
+            "MilitaryProcesses.kif", "Music.kif", "naics.kif", "People.kif",
+            "QoSontology.kif", "Sports.kif", "TransnationalIssues.kif", "Transportation.kif",
+            "TransportDetail.kif","VirusProteinAndCellPart.kif","WMD.kif");
+                
+        if (KBmanager.getMgr().getKBnames().containsAll(kbnames)) {
+            problemList.add("KB missing one or more files. Expected: " + kbnames + 
+                    " actual:" + KBmanager.getMgr().getKBnames());
+        }
         if (! problemList.isEmpty()) {
             StringBuilder sBuild = new StringBuilder();
             for (String problem : problemList) {
                 final String NEWLINE_AND_SPACES = "\n   ";
                 sBuild.append(NEWLINE_AND_SPACES).append(problem);
             }
+            System.out.println("Configuration failed. Problems:" + sBuild.toString());
             throw new IllegalStateException("Configuration failed. Problems:" + sBuild.toString());
         }
     }
