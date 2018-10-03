@@ -26,6 +26,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static String translateSort(String s) {
 
         //System.out.println("translateSort(): s: '" + s + "'");
+        if (StringUtil.emptyString(s))
+            return "$i";
         if (s.equals("$i") || s.equals("$tType"))
             return s;
         if (s.equals("Integer"))
@@ -72,7 +74,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             pw.println("% Error in writeSorts(): " + t);
             pw.println("% Error in writeSorts(): signature: " + sig);
             pw.flush();
-            Thread.dumpStack();
+            return;
+            //Thread.dumpStack();
         }
         String sigStr = sigBuf.toString().substring(0,sigBuf.length()-1);
         String relname = translateName(t);
@@ -154,6 +157,5 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         catch (Exception e) {
             e.printStackTrace();
         }
-
     }
 }
