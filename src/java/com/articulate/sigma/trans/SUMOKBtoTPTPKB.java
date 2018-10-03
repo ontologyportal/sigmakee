@@ -270,6 +270,10 @@ public class SUMOKBtoTPTPKB {
             for (Formula f : orderedFormulae) {
                 pr.println("% f: " + f.format("",""," "));
                 pr.println("% from file " + f.sourceFile + " at line " + f.startLine);
+                if (f.isHigherOrder()) {
+                    pr.println("% is higher order");
+                    continue;
+                }
                 counter++;
                 if (counter == 100) { System.out.print("."); counter = 0; }
                 FormulaPreprocessor fp = new FormulaPreprocessor();
