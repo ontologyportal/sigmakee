@@ -1935,7 +1935,7 @@ public class Formula implements Comparable, Serializable {
      * Test whether the Formula is automatically created by caching
      */
     public boolean isCached() {
-        return sourceFile.contains(KB._cacheFileSuffix);
+        return sourceFile != null && sourceFile.contains(KB._cacheFileSuffix);
     }
 
     /** ***************************************************************
@@ -2793,6 +2793,16 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      */
+    public static void testHOL() {
+
+        Formula f = new Formula("(<=> (holdsDuring ?TIME (instance ?AGENT LegalAgent)) " +
+                "(holdsDuring ?TIME (or (capability LegalAction agent ?AGENT) " +
+                "(capability LegalAction patient ?AGENT))))");
+        System.out.println("testHOL(): " + f.isHigherOrder());
+    }
+
+    /** ***************************************************************
+     */
     public Formula negate() {
 
         return new Formula("(not " + theFormula + ")");
@@ -2806,7 +2816,7 @@ public class Formula implements Comparable, Serializable {
         // testIsSimpleClause();
         //testReplaceVar();
         //testBigArgs();
-        testArg2ArrayList();
+        testHOL();
     }
 }
 
