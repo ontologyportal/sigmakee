@@ -171,9 +171,10 @@ public class KBcache implements Serializable {
                 HashMap<String, HashSet<String>> oldInnerMap = outerEntry.getValue();
                 for (Map.Entry<String, HashSet<String>> innerEntry : oldInnerMap.entrySet()) {
                     String innerKey = innerEntry.getKey();
-
-                    HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
-                    newInnerMap.put(innerKey, newInnerSet);
+                    if (innerEntry != null && innerEntry.getValue() != null) {
+                        HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
+                        newInnerMap.put(innerKey, newInnerSet);
+                    }
                 }
                 this.children.put(outerKey, newInnerMap);
             }
@@ -380,9 +381,8 @@ public class KBcache implements Serializable {
 
             if (arguments != null && !arguments.isEmpty()) {
                 int i = 2;
-                if (f.getArgument(0).equals("disjoint")) {
+                if (f.getArgument(0).equals("disjoint"))
                     i = 1;
-                }
                 for ( ; i < arguments.size(); i++) {
                     String key = arguments.get(i);
                     int j = 2;
@@ -881,42 +881,47 @@ public class KBcache implements Serializable {
     
     /** ***************************************************************
      * Build "children" relations based on breadth first search algorithm.
+     * Note that this routine expects to build "up" from the leaves.
      */
-    private void breadthFirstBuildChildren(String root, String rel) {
+    private void breadthFirstBuildChildren(String leaf, String rel) {
         
         HashMap<String,HashSet<String>> relChildren = children.get(rel);
         if (relChildren == null) {
             System.out.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
             return;
         }
-        if (debug) System.out.println("INFO in KBcache.breadthFirst(): trying relation " + rel);
+        //if (debug) System.out.println("INFO in KBcache.breadthFirstBuildChildren(): trying relation " + rel);
         ArrayDeque<String> Q = new ArrayDeque<String>();
         HashSet<String> V = new HashSet<String>();
-        Q.add(root);
-        V.add(root);
+        Q.add(leaf);
+        V.add(leaf);
         while (!Q.isEmpty()) {
-            String t = Q.remove();
-            if (debug) System.out.println("visiting " + t);
-            ArrayList<Formula> forms = kb.askWithRestriction(0,rel,1,t);
+            String child = Q.remove();
+            //if (debug) System.out.println("visiting " + child);
+            ArrayList<Formula> forms = kb.askWithRestriction(0,rel,1,child);
+            if (debug) System.out.println("forms " + forms);
             if (forms != null) {
-                HashSet<String> relSubs = collectArgFromFormulas(2,forms);
-                if (debug) System.out.println("visiting subs of t: " + relSubs);
-                Iterator<String> it = relSubs.iterator();
-                while (it.hasNext()) {
-                    String newTerm = it.next();
+                HashSet<String> relParents = collectArgFromFormulas(2,forms);
+                //if (debug) System.out.println("visiting direct parents of " + child +  ": " + relParents);
+                for (String newTerm : relParents) {
+                    //if (debug && newTerm.indexOf("RealNumber") > -1)
+                    //    System.out.println("visiting parent  " + newTerm);
                     HashSet<String> newChildren = new HashSet<String>();
-                    HashSet<String> oldChildren = relChildren.get(t);
+                    HashSet<String> oldChildren = relChildren.get(child);
+                    //if (debug) System.out.println("existing children of " + child +  ": " + oldChildren);
                     if (oldChildren == null) {
                         oldChildren = new HashSet<String>();
-                        relChildren.put(t, oldChildren);        
+                        relChildren.put(child, oldChildren);
                     }
                     newChildren.addAll(oldChildren);
-                    newChildren.add(t);
+                    newChildren.add(child);
                     HashSet<String> newTermChildren = relChildren.get(newTerm);
                     if (newTermChildren != null)
                         newChildren.addAll(newTermChildren);
                     relChildren.put(newTerm, newChildren);
-                    if (!V.contains(newTerm)) {
+                    //if (debug && newTerm.indexOf("RealNumber") > -1)
+                    //    System.out.println("new children of  " + newTerm +  ": " + newChildren);
+                    if (!V.contains(newTerm)) { // this is a DAG, not a tree, so we may have to visit nodes more than once
                         V.add(newTerm);
                         Q.addFirst(newTerm);
                     }
@@ -925,7 +930,47 @@ public class KBcache implements Serializable {
         }
         insts.addAll(relChildren.keySet());
     }
-    
+
+    /** ***************************************************************
+     */
+    private HashSet<String> visited = new HashSet<>();
+
+    /** ***************************************************************
+     * Build "children" relations recursively from the root
+     */
+    private HashSet<String> buildChildrenNew(String term, String rel) {
+
+        //if (debug) System.out.println("buildChildrenNew(): looking at  " + term + " with relation " + rel);
+        if (children.get(rel) == null)
+            children.put(rel,new HashMap<>());
+        HashMap<String,HashSet<String>> allChildren = children.get(rel);
+        if (visited.contains(term))
+            return allChildren.get(term);
+        visited.add(term);
+        ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,term); // argument 2 is the "parent" in any binary relation
+        //if (debug) System.out.println("buildChildrenNew(): forms  " + forms);
+        if (forms == null || forms.size() == 0) {
+            return new HashSet<>();
+        }
+        HashSet<String> collectedChildren = new HashSet<>();
+        for (Formula f : forms) {
+            if (f.isCached() || StringUtil.emptyString(f.sourceFile))
+                continue;
+            //System.out.println(f.sourceFile);
+            String newTerm = f.getArgument(1);// argument 1 is the "child" in any binary relation
+            HashSet<String> children = buildChildrenNew(newTerm, rel);
+            if (allChildren.containsKey(newTerm) && allChildren.get(newTerm) != null)
+                children.addAll(allChildren.get(newTerm));
+            allChildren.put(newTerm, children);
+            if (children != null)
+                collectedChildren.addAll(children);
+            collectedChildren.add(newTerm);
+        }
+        //collectedChildren.add(term);
+        //if (debug) System.out.println("buildChildrenNew(): return  " + term + " with " + collectedChildren);
+        return collectedChildren;
+    }
+
     /** ***************************************************************
      * For each transitive relation, find its transitive closure.  If
      * rel is transitive, and (rel A B) and (rel B C) then the entry for
@@ -950,24 +995,47 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * For each transitive relation, find its transitive closure.  If
      * rel is transitive, and (rel A B) and (rel B C) then the entry for
-     * rel is a HashMap where the key A has value ArrayList of {B,C}.
+     * rel is a HashMap where the key A has value ArrayList of {B,C}. Note
+     * that this routine builds "up" from the leaves
      */
-    public void buildChildren() {
-    
-        Iterator<String> it = transRels.iterator();
-        while (it.hasNext()) {
-            String rel = it.next();
+    public void buildChildrenOld() {
+
+        if (debug) System.out.println("INFO in KBcache.buildChildren()");
+        for (String rel : transRels) {
+            if (debug) System.out.println("INFO in KBcache.buildChildren(): rel: " + rel);
             HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
             HashSet<String> leaves = findLeaves(rel);
+            if (debug) System.out.println("INFO in KBcache.buildChildren(): leaves: " + leaves);
             children.put(rel, value);
-            Iterator<String> it1 = leaves.iterator();
-            while (it1.hasNext()) {
-                String root = it1.next();
-                breadthFirstBuildChildren(root, rel);
+            for (String leaf : leaves)
+                breadthFirstBuildChildren(leaf, rel);
+        }
+    }
+
+    /** ***************************************************************
+     * For each transitive relation, find its transitive closure.  If
+     * rel is transitive, and (rel A B) and (rel B C) then the entry for
+     * rel is a HashMap where the key A has value ArrayList of {B,C}. Note
+     * that this routine builds "up" from the leaves
+     */
+    public void buildChildren() {
+
+        if (debug) System.out.println("INFO in KBcache.buildChildren()");
+        for (String rel : transRels) {
+            if (debug) System.out.println("INFO in KBcache.buildChildren(): rel: " + rel);
+            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
+            HashSet<String> roots = findRoots(rel);
+            if (debug) System.out.println("INFO in KBcache.buildChildren(): roots: " + roots);
+            children.put(rel, value);
+            for (String root : roots) {
+                HashSet<String> c = buildChildrenNew(root, rel);
+                if (c != null)
+                    value.put(root,c);
+                insts.add(root);// TODO: shouldn't need this
             }
         }
     }
-    
+
     /** ***************************************************************
      * Fill an array of String with the specified String up to but
      * not including the index, starting from the 1st argument and
@@ -1239,7 +1307,8 @@ public class KBcache implements Serializable {
      * Main entry point for the class.  
      */
     public void buildCaches() {
-        
+
+        if (debug) System.out.println("INFO in KBcache.buildCaches()");
         buildRelationsSet();
         buildTransitiveRelationsSet();
         buildParents();
@@ -1264,7 +1333,7 @@ public class KBcache implements Serializable {
             instanceOf.put(pred, instanceOf.get(oldPred));
         valences.put(pred,arity);
     }
-        ;
+
     /** *************************************************************
      */
     public void showState() {
@@ -1345,12 +1414,53 @@ public class KBcache implements Serializable {
 
     /** *************************************************************
      */
+    public static void showAll(KBcache nkbc) {
+
+        System.out.println("KBcache.main(): transRels: " + nkbc.transRels);
+        System.out.println("KBcache.main(): instTransRels: " + nkbc.instTransRels);
+        System.out.println("KBcache.main(): subclass signature: " + nkbc.signatures.get("subclass"));
+        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.instanceOf.get("PrimaryColor"));
+        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.instanceOf.get("ColorAttribute"));
+        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.getInstancesForType("PrimaryColor"));
+        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.getInstancesForType("ColorAttribute"));
+        System.out.println("KBcache.main(): FormOfGovernment: " + nkbc.getInstancesForType("FormOfGovernment"));
+    }
+
+    /** *************************************************************
+     */
     public static void main(String[] args) {
 
+        debug = true;
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("**** Finished loading KB ***");
         KBcache nkbc = kb.kbCache;
+        String term = "Integer";
+        HashSet<String> classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        nkbc.children = new HashMap<>();
+        nkbc.buildChildrenNew("Entity","subclass");
+        term = "Integer";
+        classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        term = "PositiveInteger";
+        classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        term = "PositiveRealNumber";
+        classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        term = "NonnegativeRealNumber";
+        classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        term = "Number";
+        classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
         /*
         String term = "Object";
         HashSet<String> classes = nkbc.getChildClasses(term);
@@ -1373,15 +1483,8 @@ public class KBcache implements Serializable {
 
         System.out.println("KBcache.main(): " + nkbc.getCommonParent("Kicking","Pushing"));
 */
+        //showAll(nkbc);
 
-        System.out.println("KBcache.main(): transRels: " + nkbc.transRels);
-        System.out.println("KBcache.main(): instTransRels: " + nkbc.instTransRels);
-        System.out.println("KBcache.main(): subclass signature: " + nkbc.signatures.get("subclass"));
-        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.instanceOf.get("PrimaryColor"));
-        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.instanceOf.get("ColorAttribute"));
-        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.getInstancesForType("PrimaryColor"));
-        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.getInstancesForType("ColorAttribute"));
-        System.out.println("KBcache.main(): FormOfGovernment: " + nkbc.getInstancesForType("FormOfGovernment"));
         /* List<Formula> forms = kb.ask("arg",0,"subrelation");
         for (Formula f : forms) {
             String rel = f.getArgument(1);
