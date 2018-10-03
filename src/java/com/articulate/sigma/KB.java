@@ -172,6 +172,8 @@ public class KB implements Serializable {
         }
     }
 
+    /***************************************************************
+     */
     public KB(String n, String dir, boolean visibility) {
 
         this(n, dir);
@@ -261,7 +263,8 @@ public class KB implements Serializable {
                 if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
                     celt = new CELT();
             }
-        } catch (IOException ioe) {
+        }
+        catch (IOException ioe) {
             System.out.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
