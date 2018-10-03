@@ -79,8 +79,10 @@ public class FormulaPreprocessor {
     public static String findType(int numarg, String pred, KB kb) {
 
         ArrayList<String> sig = null;
-        if (kb.kbCache == null)
+        if (kb == null || kb.kbCache == null) {
             System.out.println("Error in FormulaPreprocessor.findType(): null cache");
+            return null;
+        }
         else if (kb.kbCache.signatures == null)
             System.out.println("Error in FormulaPreprocessor.findType(): null cache signatures");
         if (kb.kbCache != null && kb.kbCache.signatures != null)
