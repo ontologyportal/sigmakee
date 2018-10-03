@@ -11,6 +11,26 @@ import java.util.function.BiPredicate;
 public class FormulaUtil {
 
     /** ***************************************************************
+     * Get the antecedent of an implication.  If not a rule, return null
+     */
+    public static String antecedent (Formula f) {
+
+        if (f == null || !f.isRule())
+            return null;
+        return f.getArgument(1);
+    }
+
+    /** ***************************************************************
+     * Get the consequent of an implication.  If not a rule, return null
+     */
+    public static String consequent (Formula f) {
+
+        if (f == null || !f.isRule())
+            return null;
+        return f.getArgument(2);
+    }
+
+    /** ***************************************************************
      * Must check that this is a simple clause before calling!
      */
     public static String toProlog(Formula f) {
