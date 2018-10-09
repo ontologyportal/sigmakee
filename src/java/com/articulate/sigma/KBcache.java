@@ -703,6 +703,8 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     * Get the range (return type) of a Function.
+     * @return null if argument is not a function
      */
     public String getRange(String f) {
 
