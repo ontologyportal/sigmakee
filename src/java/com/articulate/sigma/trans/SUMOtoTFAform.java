@@ -20,6 +20,10 @@ public class SUMOtoTFAform {
 
     private static HashMap<String,HashSet<String>> varmap = null;
 
+    // a map of relation signatures (where function returns are index 0)
+    // modified from the original by the constraints of the axiom
+    private static HashMap<String,ArrayList<String>> signatures = null;
+
     public static boolean initialized = false;
 
     public static FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -121,7 +125,7 @@ public class SUMOtoTFAform {
      */
     public static Formula convertNumericFunctions(Formula f) {
 
-        System.out.println("convertNumericFunctions(): " + f);
+        //System.out.println("convertNumericFunctions(): " + f);
         if (f == null)
             return f;
         if (f.atom()) {
@@ -144,6 +148,11 @@ public class SUMOtoTFAform {
                     isReal = true;
                 if (!isInt && !isReal) {
                     Formula sf = new Formula(s);
+                    String type = kb.kbCache.getRange(sf.car());
+                    if (type != null && (type.equals("Integer") || kb.isSubclass(type,"Integer")))
+                        isInt = true;
+                    if (type != null && (type.equals("RealNumber") || kb.isSubclass(type,"RealNumber")))
+                        isReal = true;
                     argsStr.append(convertNumericFunctions(sf) + " ");
                 }
                 else
@@ -181,9 +190,169 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      */
+    private static String processQuant(Formula f, Formula car, String op,
+                                       ArrayList<String> args) {
+
+        if (debug) System.out.println("processRecurse(): quantifier");
+        if (args.size() < 2) {
+            System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
+            return "";
+        }
+        else {
+            if (debug) System.out.println("processRecurse(): correct # of args");
+            if (args.get(0) != null) {
+                if (debug) System.out.println("processRecurse(): valid varlist: " + args.get(0));
+                Formula varlist = new Formula(args.get(0));
+                ArrayList<String> vars = varlist.argumentsToArrayList(0);
+                if (debug) System.out.println("processRecurse(): valid vars: " + vars);
+                StringBuffer varStr = new StringBuffer();
+                for (String v : vars) {
+                    String oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
+                    if (varmap.keySet().contains(v) && !StringUtil.emptyString(varmap.get(v))) {
+                        String type = kb.mostSpecificTerm(varmap.get(v));
+                        oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(type);
+                    }
+                    varStr.append(oneVar + ", ");
+                }
+                if (debug) System.out.println("processRecurse(): valid vars: " + varStr);
+                String opStr = " ! ";
+                if (op.equals("exists"))
+                    opStr = " ? ";
+                if (debug) System.out.println("processRecurse(): quantified formula: " + args.get(1));
+                return opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
+                        processRecurse(new Formula(args.get(1))) + ")";
+            }
+            else {
+                System.out.println("Error in processRecurse(): null arguments to " + op + " in " + f);
+                return "";
+            }
+        }
+    }
+
+    /** *************************************************************
+     */
+    private static String processLogOp(Formula f, Formula car,
+                                        ArrayList<String> args) {
+        String op = car.theFormula;
+        //System.out.println("processRecurse(): op: " + op);
+        //System.out.println("processRecurse(): args: " + args);
+        if (op.equals("and")) {
+            if (args.size() < 2) {
+                System.out.println("Error in processLogOp(): wrong number of arguments to " + op + " in " + f);
+                return "";
+            }
+            else
+                return processRecurse(new Formula(args.get(0))) + " & " +
+                        processRecurse(new Formula(args.get(1)));
+        }
+        if (op.equals("=>")) {
+            if (args.size() < 2) {
+                System.out.println("Error in processLogOp(): wrong number of arguments to " + op + " in " + f);
+                return "";
+            }
+            else
+                return processRecurse(new Formula(args.get(0))) + " => " +
+                        processRecurse(new Formula(args.get(1)));
+        }
+        if (op.equals("<=>")) {
+            if (args.size() < 2) {
+                System.out.println("Error in processLogOp(): wrong number of arguments to " + op + " in " + f);
+                return "";
+            }
+            else
+                return "(" + processRecurse(new Formula(args.get(0))) + " => " +
+                        processRecurse(new Formula(args.get(1))) + ") & (" +
+                        processRecurse(new Formula(args.get(1))) + " => " +
+                        processRecurse(new Formula(args.get(0))) + ")";
+        }
+        if (op.equals("or")) {
+            if (args.size() < 2) {
+                System.out.println("Error in processLogOp(): wrong number of arguments to " + op + " in " + f);
+                return "";
+            }
+            else
+                return processRecurse(new Formula(args.get(0))) + " | " +
+                        processRecurse(new Formula(args.get(1)));
+        }
+        if (op.equals("not")) {
+            if (args.size() != 1) {
+                System.out.println("Error in processLogOp(): wrong number of arguments to " + op + " in " + f);
+                return "";
+            }
+            else
+                return "~" + processRecurse(new Formula(args.get(0)));
+        }
+        if (op.equals("forall") || op.equals("exists"))
+            return processQuant(f,car,op,args);
+        System.out.println("Error in processLogOp(): bad logical operator " + op + " in " + f);
+        return "";
+    }
+
+    /** *************************************************************
+     */
+    private static String processCompOp(Formula f, Formula car,
+                                       ArrayList<String> args) {
+
+        String op = car.theFormula;
+        if (args.size() != 2) {
+            System.out.println("Error in processCompOp(): wrong number of arguments to " + op + " in " + f);
+            return "";
+        }
+        if (debug) System.out.println("processCompOp(): op: " + op);
+        if (debug) System.out.println("processCompOp(): args: " + args);
+        if (op.equals("equal")) {
+            return processRecurse(new Formula(args.get(0))) + " = " +
+                    processRecurse(new Formula(args.get(1)));
+        }
+        if (op.equals("greaterThan"))
+            return "$greater(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        if (op.equals("greaterThanOrEqualTo"))
+            return "$greatereq(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        if (op.equals("lessThan"))
+            return "$less(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        if (op.equals("lessThanOrEqualTo"))
+            return "$lesseq(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        System.out.println("Error in processCompOp(): bad comparison operator " + op + " in " + f);
+        return "";
+    }
+
+    /** *************************************************************
+     */
+    private static String processMathOp(Formula f, Formula car,
+                                        ArrayList<String> args) {
+
+        String op = car.theFormula;
+        if (args.size() != 2) {
+            System.out.println("Error in processMathOp(): wrong number of arguments to " + op + " in " + f);
+            return "";
+        }
+        if (debug) System.out.println("processMathOp(): op: " + op);
+        if (debug) System.out.println("processMathOp(): args: " + args);
+        if (op.startsWith("AdditionFn"))
+            return "$sum(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        if (op.startsWith("SubtractionFn"))
+            return "$difference(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        if (op.startsWith("MultiplicationFn"))
+            return "$product(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        if (op.startsWith("DivisionFn"))
+            return "$quotient_e(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+        System.out.println("Error in processMathOp(): bad math operator " + op + " in " + f);
+        return "";
+    }
+
+    /** *************************************************************
+     */
     public static String processRecurse(Formula f) {
 
-        System.out.println("processRecurse(): " + f);
+        if (debug) System.out.println("processRecurse(): " + f);
         if (f == null)
             return "";
         if (f.atom()) {
@@ -193,159 +362,35 @@ public class SUMOtoTFAform {
             return SUMOformulaToTPTPformula.translateWord(f.theFormula,ttype,false);
         }
         Formula car = f.carAsFormula();
-        System.out.println("processRecurse(): car: " + car);
-        System.out.println("processRecurse(): car: " + car.theFormula);
+        //System.out.println("processRecurse(): car: " + car);
+        //System.out.println("processRecurse(): car: " + car.theFormula);
         ArrayList<String> args = f.complexArgumentsToArrayList(1);
         if (car.listP()) {
             System.out.println("Error in processRecurse(): formula " + f);
             return "";
         }
-        if (Formula.isLogicalOperator(car.theFormula)) {
-            String op = car.theFormula;
-            System.out.println("processRecurse(): op: " + op);
-            System.out.println("processRecurse(): args: " + args);
-
-            if (op.equals("and")) {
-                if (args.size() < 2) {
-                    System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                    return "";
-                }
-                else
-                    return processRecurse(new Formula(args.get(0))) + " & " +
-                            processRecurse(new Formula(args.get(1)));
-            }
-            if (op.equals("=>")) {
-                if (args.size() < 2) {
-                    System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                    return "";
-                }
-                else
-                    return processRecurse(new Formula(args.get(0))) + " => " +
-                            processRecurse(new Formula(args.get(1)));
-            }
-            if (op.equals("<=>")) {
-                if (args.size() < 2) {
-                    System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                    return "";
-                }
-                else
-                    return "(" + processRecurse(new Formula(args.get(0))) + " => " +
-                            processRecurse(new Formula(args.get(1))) + ") & (" +
-                            processRecurse(new Formula(args.get(1))) + " => " +
-                        processRecurse(new Formula(args.get(0))) + ")";
-            }
-            if (op.equals("or")) {
-                if (args.size() < 2) {
-                    System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                    return "";
-                }
-                else
-                    return processRecurse(new Formula(args.get(0))) + " | " +
-                            processRecurse(new Formula(args.get(1)));
-            }
-            if (op.equals("not")) {
-                if (args.size() != 1) {
-                    System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                    return "";
-                }
-                else
-                    return "~" + processRecurse(new Formula(args.get(0)));
-            }
-            if (op.equals("forall") || op.equals("exists")) {
-                System.out.println("processRecurse(): quantifier");
-                if (args.size() < 2) {
-                    System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                    return "";
-                }
-                else {
-                    System.out.println("processRecurse(): correct # of args");
-                    if (args.get(0) != null) {
-                        System.out.println("processRecurse(): valid varlist: " + args.get(0));
-                        Formula varlist = new Formula(args.get(0));
-                        ArrayList<String> vars = varlist.argumentsToArrayList(0);
-                        System.out.println("processRecurse(): valid vars: " + vars);
-                        StringBuffer varStr = new StringBuffer();
-                        for (String v : vars) {
-                            String oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
-                            if (varmap.keySet().contains(v) && !StringUtil.emptyString(varmap.get(v))) {
-                                String type = kb.mostSpecificTerm(varmap.get(v));
-                                oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(type);
-                            }
-                            varStr.append(oneVar + ", ");
-                        }
-                        System.out.println("processRecurse(): valid vars: " + varStr);
-                        String opStr = " ! ";
-                        if (op.equals("exists"))
-                            opStr = " ? ";
-                        System.out.println("processRecurse(): quantified formula: " + args.get(1));
-                        return opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
-                                processRecurse(new Formula(args.get(1))) + ")";
-                    }
-                }
-            }
-        }
-        else if (isComparisonOperator(car.theFormula)) {
-            String op = car.theFormula;
-            if (args.size() != 2) {
-                System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                return "";
-            }
-            System.out.println("processRecurse(): op: " + op);
-            System.out.println("processRecurse(): args: " + args);
-            if (op.equals("equal")) {
-                    return processRecurse(new Formula(args.get(0))) + " = " +
-                            processRecurse(new Formula(args.get(1)));
-            }
-            if (op.equals("greaterThan"))
-                return "$greater(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-            if (op.equals("greaterThanOrEqualTo"))
-                return "$greatereq(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-            if (op.equals("lessThan"))
-                return "$less(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-            if (op.equals("lessThanOrEqualTo"))
-                return "$lesseq(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-        }
-        else if (isMathFunction(car.theFormula)) {
-            String op = car.theFormula;
-            if (args.size() != 2) {
-                System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
-                return "";
-            }
-            System.out.println("processRecurse(): op: " + op);
-            System.out.println("processRecurse(): args: " + args);
-            if (op.startsWith("AdditionFn"))
-                return "$sum(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-            if (op.startsWith("SubtractionFn"))
-                return "$difference(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-            if (op.startsWith("MultiplicationFn"))
-                return "$product(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-            if (op.startsWith("DivisionFn"))
-                return "$quotient_e(" + processRecurse(new Formula(args.get(0))) + " ," +
-                        processRecurse(new Formula(args.get(1))) + ")";
-        }
+        if (Formula.isLogicalOperator(car.theFormula))
+            return processLogOp(f,car,args);
+        else if (isComparisonOperator(car.theFormula))
+            return processCompOp(f,car,args);
+        else if (isMathFunction(car.theFormula))
+            return processMathOp(f,car,args);
         else {
-            System.out.println("processRecurse(): not math or comparison op: " + car);
+            if (debug) System.out.println("processRecurse(): not math or comparison op: " + car);
             StringBuffer argStr = new StringBuffer();
             for (String s : args)
                 argStr.append(processRecurse(new Formula(s)) + ", ");
             String result = "s__" + car.theFormula + "(" + argStr.substring(0,argStr.length()-2) + ")";
-            System.out.println("processRecurse(): result: " + result);
+            if (debug) System.out.println("processRecurse(): result: " + result);
             return result;
         }
-        return "";
     }
 
     /** *************************************************************
      */
     public static String process(Formula f) {
 
+        f.theFormula = modifyPostcond(f);
         f.theFormula = convertNumericFunctions(f).theFormula;
         HashMap<String,HashSet<String>> varDomainTypes = fp.computeVariableTypes(f, kb);
         if (debug) System.out.println("process: varDomainTypes " + varDomainTypes);
@@ -353,15 +398,15 @@ public class SUMOtoTFAform {
         HashMap<String,HashSet<String>> varExplicitTypes = fp.findExplicitTypesClassesInAntecedent(kb,f);
         if (debug) System.out.println("process: varExplicitTypes " + varExplicitTypes);
         varmap = fp.findTypeRestrictions(f, kb);
-        System.out.println("process(): varmap: " + varmap);
+        if (debug) System.out.println("process(): varmap: " + varmap);
         if (f != null && f.listP()) {
             ArrayList<String> UqVars = f.collectUnquantifiedVariables();
-            System.out.println("process(): unquant: " + UqVars);
+            if (debug) System.out.println("process(): unquant: " + UqVars);
             String result = processRecurse(f);
-            System.out.println("process(): result 1: " + result);
+            if (debug) System.out.println("process(): result 1: " + result);
             StringBuffer qlist = new StringBuffer();
             for (String s : UqVars) {
-                System.out.println("process(): s: " + s);
+                if (debug) System.out.println("process(): s: " + s);
                 String t = "";
                 String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
                 if (varmap.keySet().contains(s) && !StringUtil.emptyString(varmap.get(s))) {
@@ -374,7 +419,7 @@ public class SUMOtoTFAform {
                 qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
                 result = "! [" + qlist + "] : (" + result + ")";
             }
-            System.out.println("process(): result 2: " + result);
+            if (debug) System.out.println("process(): result 2: " + result);
             return result;
         }
         return ("");
@@ -402,22 +447,88 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      * if the precondition of a rule is of the form (instance ?X term)
+     * @return the name of the variable in the instance statement
+     * (without the leading question mark)
      */
     private static String matchingPrecond(Formula f, String term) {
 
         String ant = FormulaUtil.antecedent(f);
-        System.out.println("matchingPrecond(): term: " + term);
-        System.out.println("matchingPrecond(): ant: " + ant);
+        //System.out.println("matchingPrecond(): term: " + term);
+        //System.out.println("matchingPrecond(): ant: " + ant);
         if (ant == null)
             return null;
         Pattern p = Pattern.compile("\\(instance \\?(\\w+) " + term + "\\)");
         Matcher m = p.matcher(ant);
         if (m.find()) {
-            System.out.println("matchingPrecond(): matches! ");
+            //System.out.println("matchingPrecond(): matches! ");
             String var = m.group(1);
             return var;
         }
         return null;
+    }
+
+    /** *************************************************************
+     * if all or part of a consequent of a rule is of the form (instance ?X term)
+     * @return the name of the type in the instance statement
+     */
+    private static String matchingPostcondTerm(Formula f) {
+
+        String cons = FormulaUtil.consequent(f);
+        //System.out.println("matchingPostcondTerm(): const: " + cons);
+        if (cons == null)
+            return null;
+        Pattern p = Pattern.compile("\\(instance \\?\\w+ (\\w+)\\)");
+        Matcher m = p.matcher(cons);
+        if (m.find()) {
+            //System.out.println("matchingPostcondTerm(): matches! ");
+            String type = m.group(1);
+            return type;
+        }
+        return null;
+    }
+
+    /** *************************************************************
+     * if all or part of a consequent of a rule is of the form (instance ?X term)
+     * @return the name of the type in the instance statement
+     */
+    private static String matchingPostcond(Formula f) {
+
+        HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
+        //System.out.println("buildNumericConstraints(): int: " + intChildren);
+        HashSet<String> realChildren = kb.kbCache.getChildClasses("RealNumber");
+        if (realChildren.contains("Integer"))
+            realChildren.remove("Integer");
+        //System.out.println("buildNumericConstraints(): real: " + realChildren);
+        String type = matchingPostcondTerm(f);
+        if (intChildren.contains(type))
+            return type;
+        else if (realChildren.contains(type))
+            return type;
+        else return null;
+    }
+
+    /** *************************************************************
+     * if all or part of a consequent of a rule is of the form (instance ?X term)
+     * @return the name of the type in the instance statement
+     */
+    private static String modifyPostcond(Formula f) {
+
+        String type = matchingPostcond(f);
+        if (type == null)
+            return f.theFormula;
+        Pattern p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
+        Matcher m = p.matcher(f.theFormula);
+        if (m.find()) {
+            if (debug) System.out.println("matchingPostcondTerm(): matches! ");
+            String var = m.group(1);
+            String toReplace = "(instance ?" + var + " " + type + ")";
+            String cons = numericConstraints.get(type);
+            String origVar = numericVars.get(type);
+            String newCons = cons.replace("?" + origVar,"?" + var);
+            return f.theFormula.replace(toReplace,newCons);
+        }
+        else
+            return f.theFormula;
     }
 
     /** *************************************************************
@@ -515,14 +626,35 @@ public class SUMOtoTFAform {
     public static void test4() {
 
         Formula f = new Formula("(<=> (greaterThanOrEqualTo ?NUMBER1 ?NUMBER2) (or (equal ?NUMBER1 ?NUMBER2) (greaterThan ?NUMBER1 ?NUMBER2)))");
-        System.out.println("SUMOtoTFAform.test3(): " + process(f));
+        System.out.println("SUMOtoTFAform.test4(): " + process(f));
+    }
+
+    /** *************************************************************
+     */
+    public static void test5() {
+
+        Formula f = new Formula("(=>\n" +
+                "(measure ?QUAKE\n" +
+                "(MeasureFn ?VALUE RichterMagnitude))\n" +
+                "(instance ?VALUE PositiveRealNumber))");
+        System.out.println("SUMOtoTFAform.test5(): " + modifyPostcond(f));
+    }
+
+    /** *************************************************************
+     */
+    public static void test6() {
+
+        Formula f = new Formula("(<=> " +
+                "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
+                "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
+        System.out.println("SUMOtoTFAform.test6(): " + process(f));
     }
 
     /** *************************************************************
      */
     public static void main(String[] args) {
 
-        //debug = true;
+        debug = true;
         initOnce();
         System.out.println(numericConstraints);
         System.out.println(numericVars);
@@ -536,6 +668,6 @@ public class SUMOtoTFAform {
         realChildren = kb.kbCache.getChildClasses("NonnegativeRealNumber");
         System.out.println("main(): children of NonnegativeRealNumber: " + realChildren);
         */
-        test4();
+        test6();
     }
 }
