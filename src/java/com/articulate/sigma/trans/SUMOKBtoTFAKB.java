@@ -141,7 +141,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
-        debug = true;
+        debug = false;
         initOnce();
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
