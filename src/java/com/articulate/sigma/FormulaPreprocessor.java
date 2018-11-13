@@ -173,6 +173,30 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
+     */
+    public HashMap<String,HashSet<String>> findAllTypeRestrictions(Formula form, KB kb) {
+
+        HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
+        if (debug) System.out.println("findTypeRestrictions: varDomainTypes " + varDomainTypes);
+        // get variable types which are explicitly defined in formula
+        HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(kb,form);
+        if (debug) System.out.println("findTypeRestrictions: varExplicitTypes " + varExplicitTypes);
+        // only keep variables which are not explicitly defined in formula
+        HashMap<String,HashSet<String>> varmap = new HashMap<String, HashSet<String>>();
+        for (String var : varDomainTypes.keySet()) {
+            HashSet<String> types = new HashSet();
+            HashSet<String> domainTypes = varDomainTypes.get(var);
+            HashSet<String> explicitTypes = varExplicitTypes.get(var);
+            if (domainTypes != null)
+                types.addAll(domainTypes);
+            if (explicitTypes != null)
+                types.addAll(explicitTypes);
+            varmap.put(var, types);
+        }
+        return varmap;
+    }
+
+    /** ***************************************************************
      * Add clauses for every variable in the antecedent to restrict its
      * type to the type restrictions defined on every relation in which
      * it appears.  For example
@@ -649,13 +673,13 @@ public class FormulaPreprocessor {
                 Formula newf = f.cdrAsFormula();
                 if (pred.equals(Formula.EQUAL)) {
                     ArrayList<String> args = f.complexArgumentsToArrayList(1);
-                    if (Formula.isVariable(args.get(0)) && Formula.isFunctionalTerm(args.get(1))) {
+                    if (Formula.isVariable(args.get(0)) && kb.isFunction(args.get(1))) {
                         Formula func = new Formula(args.get(1));
                         String fstr = func.car();
                         String type = kb.kbCache.getRange(fstr);
                         addToMap(result,args.get(0),type);
                     }
-                    if (Formula.isVariable(args.get(1)) && Formula.isFunctionalTerm(args.get(0))) {
+                    if (Formula.isVariable(args.get(1)) && kb.isFunction(args.get(0))) {
                         Formula func = new Formula(args.get(0));
                         String fstr = func.car();
                         String type = kb.kbCache.getRange(fstr);
@@ -679,7 +703,7 @@ public class FormulaPreprocessor {
                             addToMap(result, arg, cl);
                     }
                     // If formula is function then recurse.
-                    else if (Formula.isFunctionalTerm(arg)) {
+                    else if (kb.isFunction(arg)) {
                         result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     newf = newf.cdrAsFormula();
@@ -751,7 +775,7 @@ public class FormulaPreprocessor {
                         if (!Formula.isLogicalOperator(pred) &&
                                 !Formula.isComparisonOperator(pred) &&
                                 !Formula.isMathFunction(pred) &&
-                                !argF.isFunctionalTerm()) {
+                                !kb.isFunction(argF.theFormula)) {
                             result.append("`");
                         }
                         result.append(res);
@@ -765,7 +789,7 @@ public class FormulaPreprocessor {
                 if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
                     if (!Formula.isLogicalOperator(pred) && !Formula.isQuantifierList(pred,previousPred))
                         prefix = "holds_";
-                    if (f.isFunctionalTerm())
+                    if (kb.isFunction(f.theFormula))
                         prefix = "apply_";
                     if (pred.equals("holds")) {
                         pred = "";
