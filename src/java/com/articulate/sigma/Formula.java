@@ -1863,6 +1863,7 @@ public class Formula implements Comparable, Serializable {
     public boolean isFunctionalTerm() {
 
         System.out.println("Error in Formula.isFunctionalTerm(): must use KB.isFunction() instead");
+        Thread.dumpStack();
         boolean ans = false;
         if (this.listP()) {
             String pred = this.car();
@@ -1885,6 +1886,7 @@ public class Formula implements Comparable, Serializable {
      * Test whether a Formula contains a Formula as an argument to
      * other than a logical operator.
      */
+    @Deprecated
     public boolean isHigherOrder() {
 
         if (higherOrder)
@@ -1900,6 +1902,39 @@ public class Formula implements Comparable, Serializable {
                 if (!atom(arg) && !f.isFunctionalTerm()) {
                     if (logop) {
                         if (f.isHigherOrder()) {
+                            higherOrder = true;
+                            return true;
+                        }
+                    }
+                    else {
+                        higherOrder = true;
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     * Test whether a Formula contains a Formula as an argument to
+     * other than a logical operator.
+     */
+    public boolean isHigherOrder(KB kb) {
+
+        if (higherOrder)
+            return true;
+        if (this.listP()) {
+            String pred = this.car();
+            boolean logop = isLogicalOperator(pred);
+            ArrayList<String> al = literalToArrayList();
+            for (int i = 1; i < al.size(); i++) {
+                String arg = al.get(i);
+                Formula f = new Formula();
+                f.read(arg);
+                if (!atom(arg) && !kb.isFunction(f.theFormula)) {
+                    if (logop) {
+                        if (f.isHigherOrder(kb)) {
                             higherOrder = true;
                             return true;
                         }
