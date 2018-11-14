@@ -336,10 +336,55 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * Add a new instance from an existing one plus a suffix, updating the caches
      */
-    public void extendInstance(String child, String suffix) {
+    public void extendInstance(String term, String suffix) {
 
-        HashSet<String> iset = instanceOf.get(child);
-        instanceOf.put(child+suffix,iset);
+        String newTerm = term + "__" + suffix;
+        kb.terms.add(newTerm);
+        HashSet<String> iset = instanceOf.get(term);
+        instanceOf.put(newTerm,iset);
+        //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
+        relations.add(newTerm);
+
+        // math and logic ops are not transitive
+        //transRels = new HashSet<String>();
+        // all the transitive relations between instances in the kb
+        //instTransRels = new HashSet<String>();
+
+        /** All the cached "parent" relations of all transitive relations
+         * meaning the relations between all first arguments and the
+         * transitive closure of second arguments.  The external HashMap
+         * pairs relation name String keys to values that are the parent
+         * relationships.  The interior HashMap is the set of terms and
+         * their transitive closure of parents.
+         */
+        //parents = new HashMap<String, HashMap<String, HashSet<String>>>();
+
+        // all the instances of a class key, including through subrelation
+        // and subAttribute
+        //instances = new HashMap<>();
+
+        // logic, math op are not transitive so no need to update "children"
+
+        /** Relation name keys and argument types with 0th arg always ""
+         * except in the case of Functions where the 0th arg will be the
+         * function range.
+         * Note that types can be functions, rather than just terms. Note that
+         * types (when there's a domainSubclass etc) are designated by a
+         * '+' appended to the class name.
+         **/
+        ArrayList<String> sig = signatures.get(term);
+        String suf = suffix;
+        if (suffix.endsWith("Real") || suffix.endsWith("RealFn"))
+            suf = "RealNumber";
+        if (suffix.endsWith("IntegerFn"))
+            suf = "Integer";
+        ArrayList<String> newsig = new ArrayList<>();
+        for (int i = 0; i < sig.size(); i++)
+            newsig.add(suf);
+        signatures.put(newTerm,newsig);
+
+        // The number of arguments to each relation.  Variable arity is -1
+        valences.put(newTerm,valences.get(term));
     }
 
     /** ***************************************************************
