@@ -41,7 +41,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static String translateName(String s) {
 
-        System.out.println("% translateName(): " + s);
+        //System.out.println("% translateName(): " + s);
         int ttype = s.charAt(0);
         if (Character.isDigit(ttype))
             ttype = StreamTokenizer_s.TT_NUMBER;
