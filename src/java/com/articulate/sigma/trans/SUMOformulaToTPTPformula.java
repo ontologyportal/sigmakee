@@ -65,7 +65,7 @@ public class SUMOformulaToTPTPformula {
                 Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF, 
                 Formula.EQUAL);
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
-
+/*
         List<String> kifPredicates =
             Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE, "Integer", "RealNumber",
                           "<=","<",">",">=",
@@ -74,6 +74,15 @@ public class SUMOformulaToTPTPformula {
         List<String> tptpPredicates = Arrays.asList("$true","$false","$int", "$real",
                                                     "lesseq","less","greater","greatereq",
                                                     "lesseq","less","greater","greatereq");
+*/
+        List<String> kifPredicates =
+                Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE,
+                        "<=","<",">",">=",
+                        "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
+
+        List<String> tptpPredicates = Arrays.asList("$true","$false",
+                "lesseq","less","greater","greatereq",
+                "lesseq","less","greater","greatereq");
 
         List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN, 
                 Formula.PLUSFN, Formula.MINUSFN);
@@ -382,7 +391,7 @@ public class SUMOformulaToTPTPformula {
                             for (index = 0; index < allVariables.size(); index++) {
                                 if (index > 0)
                                     quantification += ",";
-                                quantification += (String)allVariables.elementAt(index);
+                                quantification += (String) allVariables.elementAt(index);
                             }
                             quantification += "] : ";
                             tptpFormula.insert(0,"( " + quantification);
