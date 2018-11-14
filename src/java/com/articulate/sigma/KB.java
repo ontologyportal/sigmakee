@@ -2035,9 +2035,18 @@ public class KB implements Serializable {
         if (terms == null || terms.size() < 1)
             return null;
         String result = "";
-        for (String t : terms)
-            if (result == "" || compareTermDepth(t,result) > 1)
+        for (String t : terms) {
+            if (debug) System.out.println("mostSpecificTerm(): t: " + t);
+            if (debug) System.out.println("mostSpecificTerm(): depth: " + termDepth(t));
+            if (debug) System.out.println("mostSpecificTerm(): result: " + result);
+            if (debug) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
+            if (debug) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
+            if (!containsTerm(t)) {
+                System.out.println("Error in mostSpecificTerm(): no such term: " + t);
+            }
+            if (result == "" || compareTermDepth(t,result) > 0)
                 result = t;
+        }
         return result;
     }
 
