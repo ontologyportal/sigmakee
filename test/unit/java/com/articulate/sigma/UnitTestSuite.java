@@ -1,6 +1,7 @@
 package com.articulate.sigma;
 
 import com.google.common.collect.Sets;
+import com.articulate.sigma.trans.SUMOformulaToTPTPformulaTest;
 import org.junit.Test;
 import com.articulate.sigma.nlg.UnitNLGTestSuite;
 import com.articulate.sigma.wordNet.MultiWordsTest;
