@@ -41,7 +41,7 @@ public class SUMOtoTFAform {
         int under = s.lastIndexOf("__");
         if (under == -1)
             return Formula.isComparisonOperator(s);
-        if (Formula.isComparisonOperator(s.substring(0,under-1)))
+        if (Formula.isComparisonOperator(s.substring(0,under)))
             return true;
         return false;
     }
@@ -65,55 +65,16 @@ public class SUMOtoTFAform {
      */
     public static void setNumericFunctionInfo() {
 
+        //System.out.println("setNumericFunctionInfo()");
         if (kb.containsTerm("AdditionFn_IntegerFn")) // this routine has already been run or cached via serialization
             return;
         for (String s : Formula.COMPARISON_OPERATORS) {
-            String relI = s + "__Integer";
-            String relR = s + "__Real";
-            if (!s.equals(Formula.EQUAL)) {
-                kb.kbCache.extendInstance(s,"__Integer");
-                kb.kbCache.relations.add(relI);
-                kb.kbCache.valences.put(relI,2);
-                kb.terms.add(relI);
-                kb.kbCache.extendInstance(s,"__Real");
-                kb.kbCache.relations.add(relR);
-                kb.kbCache.valences.put(relR,2);
-                kb.terms.add(relR);
-                HashSet<String> p = kb.immediateParents(s);
-                ArrayList<String> domainsI = new ArrayList<String>();
-                domainsI.add("");
-                domainsI.add("Integer");
-                domainsI.add("Integer");
-                kb.kbCache.signatures.put(relI,domainsI);
-                ArrayList<String> domainsR = new ArrayList<String>();
-                domainsR.add("");
-                domainsR.add("RealNumber");
-                domainsR.add("RealNumber");
-                kb.kbCache.signatures.put(relR,domainsR);
-            }
+            kb.kbCache.extendInstance(s,"Integer");
+            kb.kbCache.extendInstance(s,"Real");
         }
         for (String s : Formula.MATH_FUNCTIONS) {
-            HashSet<String> p = kb.immediateParents(s);
-            kb.kbCache.extendInstance(s,"__IntegerFn");
-            kb.kbCache.extendInstance(s,"__RealFn");
-            String relI = s + "__IntegerFn";
-            kb.kbCache.relations.add(relI);
-            kb.kbCache.valences.put(relI,2);
-            kb.terms.add(relI);
-            String relR = s + "__RealFn";
-            kb.kbCache.relations.add(relR);
-            kb.kbCache.valences.put(relR,2);
-            kb.terms.add(relR);
-            ArrayList<String> domainsI = new ArrayList<String>();
-            domainsI.add("Integer");
-            domainsI.add("Integer");
-            domainsI.add("Integer");
-            kb.kbCache.signatures.put(relI,domainsI);
-            ArrayList<String> domainsR = new ArrayList<String>();
-            domainsR.add("RealNumber");
-            domainsR.add("RealNumber");
-            domainsR.add("RealNumber");
-            kb.kbCache.signatures.put(relR,domainsR);
+            kb.kbCache.extendInstance(s,"IntegerFn");
+            kb.kbCache.extendInstance(s,"RealFn");
         }
     }
 
@@ -143,7 +104,7 @@ public class SUMOtoTFAform {
             boolean isReal = false;
             for (String s : args) {
                 if (StringUtil.isInteger(s))
-                    isInt = true;
+                    isReal = true; // isInt = true; it could be a real that just doesn't have a decimal
                 if (!isInt && StringUtil.isNumeric(s))
                     isReal = true;
                 if (!isInt && !isReal) {
@@ -193,18 +154,18 @@ public class SUMOtoTFAform {
     private static String processQuant(Formula f, Formula car, String op,
                                        ArrayList<String> args) {
 
-        if (debug) System.out.println("processRecurse(): quantifier");
+        //if (debug) System.out.println("processQuant(): quantifier");
         if (args.size() < 2) {
-            System.out.println("Error in processRecurse(): wrong number of arguments to " + op + " in " + f);
+            System.out.println("Error in processQuant(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         else {
-            if (debug) System.out.println("processRecurse(): correct # of args");
+            //if (debug) System.out.println("processQuant(): correct # of args");
             if (args.get(0) != null) {
-                if (debug) System.out.println("processRecurse(): valid varlist: " + args.get(0));
+                //if (debug) System.out.println("processQuant(): valid varlist: " + args.get(0));
                 Formula varlist = new Formula(args.get(0));
                 ArrayList<String> vars = varlist.argumentsToArrayList(0);
-                if (debug) System.out.println("processRecurse(): valid vars: " + vars);
+                //if (debug) System.out.println("processRecurse(): valid vars: " + vars);
                 StringBuffer varStr = new StringBuffer();
                 for (String v : vars) {
                     String oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
@@ -214,16 +175,16 @@ public class SUMOtoTFAform {
                     }
                     varStr.append(oneVar + ", ");
                 }
-                if (debug) System.out.println("processRecurse(): valid vars: " + varStr);
+                //if (debug) System.out.println("processQuant(): valid vars: " + varStr);
                 String opStr = " ! ";
                 if (op.equals("exists"))
                     opStr = " ? ";
-                if (debug) System.out.println("processRecurse(): quantified formula: " + args.get(1));
+                //if (debug) System.out.println("processQuant(): quantified formula: " + args.get(1));
                 return opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
                         processRecurse(new Formula(args.get(1))) + ")";
             }
             else {
-                System.out.println("Error in processRecurse(): null arguments to " + op + " in " + f);
+                System.out.println("Error in processQuant(): null arguments to " + op + " in " + f);
                 return "";
             }
         }
@@ -300,22 +261,23 @@ public class SUMOtoTFAform {
         }
         if (debug) System.out.println("processCompOp(): op: " + op);
         if (debug) System.out.println("processCompOp(): args: " + args);
-        if (op.equals("equal")) {
+        if (op.startsWith("equal")) {
             return processRecurse(new Formula(args.get(0))) + " = " +
                     processRecurse(new Formula(args.get(1)));
         }
-        if (op.equals("greaterThan"))
-            return "$greater(" + processRecurse(new Formula(args.get(0))) + " ," +
-                    processRecurse(new Formula(args.get(1))) + ")";
-        if (op.equals("greaterThanOrEqualTo"))
+        if (op.startsWith("greaterThanOrEqualTo"))
             return "$greatereq(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
-        if (op.equals("lessThan"))
-            return "$less(" + processRecurse(new Formula(args.get(0))) + " ," +
+        if (op.startsWith("greaterThan"))
+            return "$greater(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
-        if (op.equals("lessThanOrEqualTo"))
+        if (op.startsWith("lessThanOrEqualTo"))
             return "$lesseq(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
+        if (op.startsWith("lessThan"))
+            return "$less(" + processRecurse(new Formula(args.get(0))) + " ," +
+                    processRecurse(new Formula(args.get(1))) + ")";
+
         System.out.println("Error in processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
     }
@@ -330,8 +292,8 @@ public class SUMOtoTFAform {
             System.out.println("Error in processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
-        if (debug) System.out.println("processMathOp(): op: " + op);
-        if (debug) System.out.println("processMathOp(): args: " + args);
+        //if (debug) System.out.println("processMathOp(): op: " + op);
+        //if (debug) System.out.println("processMathOp(): args: " + args);
         if (op.startsWith("AdditionFn"))
             return "$sum(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
@@ -353,6 +315,7 @@ public class SUMOtoTFAform {
     public static String processRecurse(Formula f) {
 
         if (debug) System.out.println("processRecurse(): " + f);
+        if (debug) System.out.println("processRecurse(): varmap: " + varmap);
         if (f == null)
             return "";
         if (f.atom()) {
@@ -376,14 +339,169 @@ public class SUMOtoTFAform {
         else if (isMathFunction(car.theFormula))
             return processMathOp(f,car,args);
         else {
-            if (debug) System.out.println("processRecurse(): not math or comparison op: " + car);
+            //if (debug) System.out.println("processRecurse(): not math or comparison op: " + car);
             StringBuffer argStr = new StringBuffer();
             for (String s : args)
                 argStr.append(processRecurse(new Formula(s)) + ", ");
             String result = "s__" + car.theFormula + "(" + argStr.substring(0,argStr.length()-2) + ")";
-            if (debug) System.out.println("processRecurse(): result: " + result);
+            //if (debug) System.out.println("processRecurse(): result: " + result);
             return result;
         }
+    }
+
+    /** *************************************************************
+     * result is a side effect on varmap
+     */
+    private static HashMap<String,HashSet<String>> cloneVarmap() {
+
+        HashMap<String,HashSet<String>> newVarmap = new HashMap<>();
+        for (String s : varmap.keySet()) {
+            HashSet<String> newSet = new HashSet<>();
+            newSet.addAll(varmap.get(s));
+            newVarmap.put(s,newSet);
+        }
+        return newVarmap;
+    }
+
+    /** *************************************************************
+     */
+    private static String numberSuffix(String op, String t, String sigType) {
+
+        String suffix = "";
+        if (kb.isSubclass(t, sigType) && kb.isSubclass(t, "Number")) {
+            if (kb.isSubclass(t, "RealNumber") || t.equals("RealNumber"))
+                if (Formula.isMathFunction(op))
+                    suffix = "__RealFn";
+                else
+                    suffix = "__Real";
+            if (kb.isSubclass(t, "Integer") || t.equals("Integer"))
+                if (Formula.isMathFunction(op))
+                    suffix = "__IntegerFn";
+                else
+                    suffix = "__Integer";
+        }
+        return suffix;
+    }
+
+    /** *************************************************************
+     * @param args is a list of arguments, starting with an empty first argument
+     *             for the relation
+     */
+    private static String constrainOp(Formula f, String op, ArrayList<String> args) {
+
+        if (debug) System.out.println("constrainOp(): op: " + op);
+        if (debug) System.out.println("constrainOp(): f: " + f);
+        if (debug) System.out.println("constrainOp(): args: " + args);
+        String suffix = "";
+        ArrayList<String> sig = kb.kbCache.getSignature(op);
+        for (int i = 1; i < args.size(); i++) {
+            String arg = args.get(i);
+            String type = sig.get(i);
+            if (Formula.listP(arg)) {
+                String justArg = (new Formula(arg)).car();
+                if (kb.isFunction(justArg) ||
+                        (justArg.indexOf('_') != -1 && kb.isFunction(justArg.substring(0,justArg.indexOf('_'))))) {
+                    String t = kb.kbCache.getRange(justArg);
+                    suffix = numberSuffix(op,t,type);
+                }
+                if (Formula.isVariable(justArg)) {
+                    String t = kb.mostSpecificTerm(varmap.get(justArg));
+                    suffix = numberSuffix(op,t,type);
+                }
+                args.set(i,constrainFunctVarsRecurse(new Formula(arg)));
+            }
+        }
+        if (op.indexOf("_") != -1)
+            suffix = "";
+        ArrayList<String> newargs = new ArrayList<>();
+        newargs.addAll(args);
+        newargs.remove(0);
+        String result = "(" + op + suffix + " " + StringUtil.arrayListToSpacedString(newargs) + ")";
+        //System.out.println("constrainOp(): result: " + result);
+        return result;
+    }
+
+    /** *************************************************************
+     */
+    private static String constrainFunctVarsRecurse(Formula f) {
+
+        if (debug) System.out.println("constrainFunctVarsRecurse(): " + f);
+        if (f == null) return "";
+        if (f.atom()) return f.theFormula;
+        Formula car = f.carAsFormula();
+        //System.out.println("processRecurse(): car: " + car);
+        //System.out.println("processRecurse(): car: " + car.theFormula);
+        ArrayList<String> args = f.complexArgumentsToArrayList(0);
+        if (car.listP()) {
+            System.out.println("Error in processRecurse(): formula " + f);
+            return "";
+        }
+        String op = car.theFormula;
+        ArrayList<String> sig = kb.kbCache.getSignature(op);
+        if ((car.theFormula.equals(Formula.EQUAL)) || isComparisonOperator(car.theFormula) ||
+                isMathFunction(car.theFormula))
+            return constrainOp(f,op,args);
+        else {
+            StringBuffer resultString = new StringBuffer();
+            resultString.append("(" + op);
+            if (debug) System.out.println("processRecurse(): not math or comparison op: " + car);
+            ArrayList<String> newargs = new ArrayList<>();
+            newargs.addAll(args);
+            newargs.remove(0);
+            for (String s : newargs)
+                resultString.append(" " + constrainFunctVarsRecurse(new Formula(s)));
+            resultString.append(")");
+            return resultString.toString();
+        }
+    }
+
+    /** *************************************************************
+     * Only constrain the element of the varmap if the new type is more specific
+     * @result is the new varmap
+     */
+    private static void constrainTypeRestriction(HashMap<String,HashSet<String>> newvarmap) {
+
+        for (String k : newvarmap.keySet()) {
+            HashSet<String> newvartypes = newvarmap.get(k);
+            String newt = kb.mostSpecificTerm(newvartypes);
+            HashSet<String> oldvartypes = varmap.get(k);
+            String oldt = kb.mostSpecificTerm(oldvartypes);
+            if (StringUtil.emptyString(newt) && StringUtil.emptyString(oldt)) {
+                System.out.println("Error in constrainTypeRestriction(): empty variables: " +
+                        newt + " " + oldt);
+                System.out.println("Error in constrainTypeRestriction(): newvarmap: " +
+                        newvarmap);
+                Thread.dumpStack();
+                return;
+            }
+            if (StringUtil.emptyString(newt))
+                varmap.put(k,oldvartypes);
+            else if (StringUtil.emptyString(oldt))
+                varmap.put(k,newvartypes);
+            else if (kb.isSubclass(newt,oldt))
+                varmap.put(k,newvartypes);
+            else
+                varmap.put(k,oldvartypes);
+        }
+    }
+
+    /** *************************************************************
+     * result is a side effect on varmap
+     */
+    private static void constrainFunctVars(Formula f) {
+
+        if (debug) System.out.println("constrainFunctVars(): formula: " + f);
+        HashMap<String,HashSet<String>> oldVarmap = null;
+        do {
+            oldVarmap = cloneVarmap();
+            String newf = constrainFunctVarsRecurse(f);
+            f.theFormula = newf;
+            HashMap<String,HashSet<String>> types = fp.findAllTypeRestrictions(f, kb);
+            if (debug) System.out.println("constrainFunctVars(): found types: " + types);
+            constrainTypeRestriction(types);
+            //System.out.println("constrainFunctVars(): new varmap: " + varmap);
+            //System.out.println("constrainFunctVars(): old varmap: " + oldVarmap);
+        } while (!varmap.equals(oldVarmap));
     }
 
     /** *************************************************************
@@ -399,6 +517,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("process: varExplicitTypes " + varExplicitTypes);
         varmap = fp.findTypeRestrictions(f, kb);
         if (debug) System.out.println("process(): varmap: " + varmap);
+        constrainFunctVars(f);
         if (f != null && f.listP()) {
             ArrayList<String> UqVars = f.collectUnquantifiedVariables();
             if (debug) System.out.println("process(): unquant: " + UqVars);
@@ -411,6 +530,8 @@ public class SUMOtoTFAform {
                 String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
                 if (varmap.keySet().contains(s) && !StringUtil.emptyString(varmap.get(s))) {
                     t = kb.mostSpecificTerm(varmap.get(s));
+                    if (debug) System.out.println("process(): varmap.get(s): " + varmap.get(s));
+                    if (debug) System.out.println("process(): t: " + t);
                     if (t != null)
                         qlist.append(oneVar + " : " + SUMOKBtoTFAKB.translateSort(t) + ",");
                 }
@@ -508,10 +629,39 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * remove statements of the form (instance ?X term) if 'term' is
+     * Integer or RealNumber and ?X is already of that type in the
+     * quantifier list for the formula
+     * @return the modified formula
+     * TODO: remove the statements but also remove enclosing conjunctions
+     * and disjunctions if removal results in a single enclosed literal
+     */
+    protected static String modifyPrecond(Formula f) {
+
+        if (f == null)
+            return f.theFormula;
+        String type = "Integer";
+        Pattern p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
+        Matcher m = p.matcher(f.theFormula);
+        if (m.find()) {
+            String var = m.group(1);
+        }
+
+        type = "RealNumber";
+        p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
+        m = p.matcher(f.theFormula);
+        if (m.find()) {
+            String var = m.group(1);
+        }
+
+        return f.theFormula; // do nothing until this is fully implemented
+    }
+
+    /** *************************************************************
      * if all or part of a consequent of a rule is of the form (instance ?X term)
      * @return the name of the type in the instance statement
      */
-    private static String modifyPostcond(Formula f) {
+    protected static String modifyPostcond(Formula f) {
 
         String type = matchingPostcond(f);
         if (type == null)
@@ -519,7 +669,7 @@ public class SUMOtoTFAform {
         Pattern p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
         Matcher m = p.matcher(f.theFormula);
         if (m.find()) {
-            if (debug) System.out.println("matchingPostcondTerm(): matches! ");
+            //if (debug) System.out.println("matchingPostcondTerm(): matches! ");
             String var = m.group(1);
             String toReplace = "(instance ?" + var + " " + type + ")";
             String cons = numericConstraints.get(type);
@@ -542,14 +692,14 @@ public class SUMOtoTFAform {
     private static void buildNumericConstraints() {
 
         HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
-        System.out.println("buildNumericConstraints(): int: " + intChildren);
+        //System.out.println("buildNumericConstraints(): int: " + intChildren);
         HashSet<String> realChildren = kb.kbCache.getChildClasses("RealNumber");
         if (realChildren.contains("Integer"))
             realChildren.remove("Integer");
-        System.out.println("buildNumericConstraints(): real: " + realChildren);
+        //System.out.println("buildNumericConstraints(): real: " + realChildren);
         //HashSet<Formula> intForms = new HashSet<>();
         for (String t : intChildren) {
-            System.out.println("buildNumericConstraints(): t: " + t);
+            //System.out.println("buildNumericConstraints(): t: " + t);
             ArrayList<Formula> intFormsTemp = kb.ask("ant",0,t);
             if (intFormsTemp != null) {
                 for (Formula f : intFormsTemp) {
@@ -563,7 +713,7 @@ public class SUMOtoTFAform {
         }
         //HashSet<Formula> realForms = new HashSet<>();
         for (String t : realChildren) {
-            System.out.println("buildNumericConstraints(): t: " + t);
+            //System.out.println("buildNumericConstraints(): t: " + t);
             ArrayList<Formula> realFormsTemp = kb.ask("ant", 0, t);
             if (realFormsTemp != null) {
                 for (Formula f : realFormsTemp) {
@@ -648,14 +798,40 @@ public class SUMOtoTFAform {
                 "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
                 "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
         System.out.println("SUMOtoTFAform.test6(): " + process(f));
+        System.out.println("expect: ");
+        System.out.println("tff(kb_SUMO_73,axiom,(! [V__NUMBER1 : $int,V__NUMBER2 : $int,V__NUMBER : $int] : " +
+                "((s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER " +
+                "=> $sum($product(s__FloorFn($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = " +
+                "V__NUMBER1) & " +
+                "($sum($product(s__FloorFn($quotient_e(V__NUMBER1 ,V__NUMBER2)) ,V__NUMBER2) ,V__NUMBER) = " +
+                "V__NUMBER1 => s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER)))).");
+    }
+
+    /** *************************************************************
+     */
+    public static void test7() {
+
+        Formula f = new Formula("(<=> (and (equal (AbsoluteValueFn ?NUMBER1) ?NUMBER2) " +
+                "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
+                "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
+                "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
+        System.out.println("SUMOtoTFAform.test7(): " + process(f));
+        System.out.println("test7() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $int,V__NUMBER2 : $int] : " +
+                "((s__AbsoluteValueFn__Integer(V__NUMBER1) = V__NUMBER2 => s__SignumFn__Integer(V__NUMBER1) = 1 " +
+                "| s__SignumFn__Integer(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | $less(V__NUMBER1, 0) " +
+                "& V__NUMBER2 = $difference(0 ,V__NUMBER1)) & (s__SignumFn__Integer(V__NUMBER1) = 1 | " +
+                "s__SignumFn__Integer(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | $greater(V__NUMBER1, 0) & " +
+                "V__NUMBER2 = $difference(0 ,V__NUMBER1) => s__AbsoluteValueFn__Integer(V__NUMBER1) = " +
+                "V__NUMBER2 & $greater(V__NUMBER1, 0))))).");
     }
 
     /** *************************************************************
      */
     public static void main(String[] args) {
 
-        debug = true;
+        //debug = true;
         initOnce();
+        setNumericFunctionInfo();
         System.out.println(numericConstraints);
         System.out.println(numericVars);
         /*
@@ -668,6 +844,6 @@ public class SUMOtoTFAform {
         realChildren = kb.kbCache.getChildClasses("NonnegativeRealNumber");
         System.out.println("main(): children of NonnegativeRealNumber: " + realChildren);
         */
-        test6();
+        test7();
     }
 }
