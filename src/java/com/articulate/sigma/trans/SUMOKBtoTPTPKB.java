@@ -270,14 +270,14 @@ public class SUMOKBtoTPTPKB {
             for (Formula f : orderedFormulae) {
                 pr.println("% f: " + f.format("",""," "));
                 pr.println("% from file " + f.sourceFile + " at line " + f.startLine);
-                if (f.isHigherOrder()) {
+                if (f.isHigherOrder(kb)) {
                     pr.println("% is higher order");
                     continue;
                 }
                 counter++;
                 if (counter == 100) { System.out.print("."); counter = 0; }
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                fp.debug = true;
+                //fp.debug = true;
                 List<Formula> processed = fp.preProcess(f,false,kb);
                 //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): processed formulas: " + processed);
                 if (!processed.isEmpty()) {
@@ -309,7 +309,7 @@ public class SUMOKBtoTPTPKB {
                 //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
 
                 for (String theTPTPFormula : f.theTptpFormulas) {
-                    if (!filterAxiom(f,theTPTPFormula)) {
+                    if (!filterAxiom(f,theTPTPFormula,pr)) {
                         pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
                         pr.println(",axiom,(" + theTPTPFormula + ")).");
                         alreadyWrittenTPTPs.add(theTPTPFormula);
@@ -331,7 +331,7 @@ public class SUMOKBtoTPTPKB {
             result = canonicalPath;
         }
         catch (Exception ex) {
-            System.out.println("Error in SUMOKBtoTPTPKB.writeTPTPfile(): " + ex.getMessage());
+            System.out.println("Error in SUMOKBtoTPTPKB.writeFile(): " + ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -361,14 +361,16 @@ public class SUMOKBtoTPTPKB {
 
     /** *************************************************************
      */
-    public boolean filterAxiom(Formula form, String tptp) {
+    public boolean filterAxiom(Formula form, String tptp, PrintWriter pw) {
 
         //----Don't output ""ed ''ed and numbers
-        if (tptp.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") ||
-                tptp.indexOf("'") > -1
-                || tptp.indexOf('"') >= 0) {
-            //pr.print("%FOL ");
-            System.out.println("% quoted thing or number");
+        if (tptp.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") &&
+                this.getClass().equals(SUMOKBtoTPTPKB.class)) { // only filter numbers in TPTP, not TFF
+            pw.println("% number");
+            return true;
+        }
+        if (tptp.indexOf("'") > -1 || tptp.indexOf('"') >= 0) {
+            pw.println("% quoted thing");
             return true;
         }
 
@@ -378,7 +380,7 @@ public class SUMOKBtoTPTPKB {
             }
         }
         else {
-            System.out.println("% filtered predicate");
+            pw.println("% filtered predicate");
             return true;
         }
         return false;
