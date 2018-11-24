@@ -20,7 +20,9 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.LineNumberReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -37,6 +39,8 @@ import java.util.regex.Pattern;
  */
 public class SInE extends InferenceEngine {
 
+    static boolean kifFormat = true;
+
     /** *************************************************************
      */
     public static SInE getNewInstance(String kbFileName) {
@@ -44,7 +48,8 @@ public class SInE extends InferenceEngine {
         SInE res = null;
         try {
             res = new SInE(kbFileName);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
@@ -115,7 +120,7 @@ public class SInE extends InferenceEngine {
         requirements = new Hashtable<String, List<String>>();
     
         String error = null;
-        System.out.println("INFO in SInE(): initializing"); 
+        //System.out.println("INFO in SInE(): initializing");
         File kbFile = null;
         if (error == null) {
             kbFile = new File(kbFileName);
@@ -128,12 +133,22 @@ public class SInE extends InferenceEngine {
         }
         
         if (error == null) {
-            KIF kif = new KIF();
-            kif.setParseMode(KIF.RELAXED_PARSE_MODE);
-            kif.readFile( kbFile.getCanonicalPath());
-            if (!kif.formulaMap.keySet().isEmpty()) {
-                formulas.ensureCapacity(kif.formulaMap.keySet().size());
-                loadFormulas(kif.formulaMap.keySet());
+            if (!kifFormat) {
+                //System.out.println("INFO in SInE(): non KIF");
+                ArrayList<String> forms = loadNonKif(kbFile);
+                if (!forms.isEmpty()) {
+                    formulas.ensureCapacity(forms.size());
+                    loadFormulas(forms);
+                }
+            }
+            else {
+                KIF kif = new KIF();
+                kif.setParseMode(KIF.RELAXED_PARSE_MODE);
+                kif.readFile(kbFile.getCanonicalPath());
+                if (!kif.formulaMap.keySet().isEmpty()) {
+                    formulas.ensureCapacity(kif.formulaMap.keySet().size());
+                    loadFormulas(kif.formulaMap.keySet());
+                }
             }
         }
     }
@@ -157,7 +172,35 @@ public class SInE extends InferenceEngine {
     
         loadFormulas(formulaSource);
     }
-    
+
+    /** *************************************************************
+     * Loads formulas from given source.
+     */
+    public ArrayList<String> loadNonKif(File kbFile) {
+
+        ArrayList<String> result = new ArrayList<>();
+        LineNumberReader lr = null;
+        String line = null;
+        try {
+            FileReader fr = new FileReader(kbFile);
+            lr = new LineNumberReader(fr);
+            while ((line = lr.readLine()) != null) {
+                if (!StringUtil.emptyString(line) && !line.startsWith("%")) {
+                    result.add(line);
+                    //System.out.println(line);
+                }
+            }
+        }
+        catch (Exception ex1) {
+            System.out.println("ERROR in ENTER SInE.loadNonKif(" + kbFile + ")");
+            System.out.println("  approx. line # == " + lr.getLineNumber());
+            System.out.println("  line == " + line);
+            ex1.printStackTrace();
+        }
+        System.out.println("SInE.loadNonKif(): loaded " + result.size() + " formulas ");
+        return result;
+    }
+
     /** *************************************************************
      * Loads formulas from given source.
      * 
@@ -167,8 +210,7 @@ public class SInE extends InferenceEngine {
 
         Iterator it = formulaSource.iterator();
     
-        //First we go through all formulas, 
-        //and compute degree of each symbol.
+        // First we go through all formulas, and compute degree of each symbol.
         while (it.hasNext()) {
             String f = (String) it.next();            
             formulas.add(f);            
@@ -180,8 +222,9 @@ public class SInE extends InferenceEngine {
                     degrees.put(sym, 1);                
             }
         }
+        //System.out.println("SInE.loadFormulas(): stored " + formulas.size() + " formulas ");
         
-        //Now we associate each formula with its lowest-degree symbols.
+        // Now we associate each formula with its lowest-degree symbols.
         for (String form : formulas) {
             Set<String> symbols = getSymbols(form);
             if (symbols.size() == 0) {
@@ -189,7 +232,7 @@ public class SInE extends InferenceEngine {
                 continue;
             }
                         
-            int minDeg=5000000;
+            int minDeg = 5000000;
             ArrayList<String> minDegSyms = new ArrayList<String>();
             for (String sym : symbols) {
                 int deg = degrees.get(sym);
@@ -197,21 +240,25 @@ public class SInE extends InferenceEngine {
                     minDeg = deg;
                     minDegSyms.clear();
                     minDegSyms.add(sym);
-                } else if (deg == minDeg) {
+                }
+                else if (deg == minDeg) {
                     minDegSyms.add(sym);
                 }
             }
+            //System.out.println("SInE.loadFormulas(): minDegSyms: " + minDegSyms);
             for (String sym : minDegSyms) {
                 List<String> reqForms = requirements.get(sym);
                 if (reqForms == null) {
                     reqForms = new ArrayList<String>();
                     reqForms.add(form);
                     requirements.put(sym, reqForms);
-                } else {
+                }
+                else {
                     reqForms.add(form);
                 }
             }
         }
+        //System.out.println("SInE.loadFormulas(): computed " + requirements.size() + " formulas ");
     }
       
     /** *************************************************************
@@ -222,6 +269,9 @@ public class SInE extends InferenceEngine {
      */
     public Set<String> getSymbols(String form) {
 
+        if (form.startsWith("tff") || form.startsWith("tptp") || form.startsWith("thf") || form.startsWith("fof"))
+            form = form.substring(form.indexOf('(',5),form.length());
+        //System.out.println("SInE.getSymbols(): form: " + form);
         Set<String> res = formSymbols.get(form);
         if (res == null) {
             res = new HashSet<String>();            
@@ -232,6 +282,7 @@ public class SInE extends InferenceEngine {
             res.removeAll(nonSymbols);            
             formSymbols.put(form, res);
         }
+        //System.out.println("SInE.getSymbols(): symbols: " + res);
         return res;
     }
 
@@ -239,9 +290,11 @@ public class SInE extends InferenceEngine {
      */
     public Set<String> getSymbols(Collection<String> forms) {
 
+        //System.out.println("SInE.getSymbols(): forms " + forms.size());
         Set<String> syms = new HashSet<String>();
         for (String form : forms) 
-            syms.addAll(getSymbols(form));        
+            syms.addAll(getSymbols(form));
+        //System.out.println("SInE.getSymbols(): symbols " + syms.size());
         return syms; 
     }
     
@@ -254,6 +307,7 @@ public class SInE extends InferenceEngine {
      */
     public Set<String> get1RequiredFormulas(Collection<String> symbols) {
 
+        //System.out.println("SInE.get1RequiredFormulas(): symbols: " + symbols);
         Set<String> reqForms = new HashSet<String>();
         for (String sym : symbols) {
             List<String> symReqForms = requirements.get(sym);
@@ -275,13 +329,13 @@ public class SInE extends InferenceEngine {
     public Set<String> getRequiredSymbols(Collection<String> symbols) {
 
         Set<String> reqSyms = new HashSet<String>(symbols);            
-        int prevSize;
+        int prevSize = 0;
         do {
             prevSize = reqSyms.size();                    
             Set<String> reqForms = get1RequiredFormulas(reqSyms);                    
             reqSyms.addAll(getSymbols(reqForms));
         } while (reqSyms.size() > prevSize);
-        
+        System.out.println("SInE.getRequiredSymbols(): " + reqSyms.size());
         return reqSyms;
     }
     
@@ -307,6 +361,8 @@ public class SInE extends InferenceEngine {
     public Set<String> performSelection(String form) {
 
         Set<String> symbols = getSymbols(form);
+        //System.out.println("performSelection(): form: " + form);
+        //System.out.println("performSelection(): symbols: " + symbols);
         symbols.addAll(getSymbols(mandatoryFormulas));            
         Set<String> res = getRequiredFormulas(symbols);            
         res.addAll(mandatoryFormulas);
@@ -355,7 +411,33 @@ public class SInE extends InferenceEngine {
         
         return null;
     }
-    
+
+    /** *************************************************************
+     *  A simple test to load a KB file and pose a query, which are
+     *  the first and second item, respectively, given on the
+     *  command line.
+     */
+    public static void test(String[] args) {
+
+        String kbFileName = args[0];
+        if (!kbFileName.endsWith(".kif"))
+            kifFormat = false;
+        String query = args[1];
+        System.out.println("% Selecting from " + kbFileName);
+
+        SInE sine = SInE.getNewInstance(kbFileName);
+        System.out.println("test(): object degrees: " + sine.degrees.get("s__Object"));
+        System.out.println("test(): subclass degrees: " + sine.degrees.get("s__subclass"));
+        System.out.println("test(): object requirements: " + sine.requirements.get("s__Object"));
+        System.out.println("test(): subclass requirements: " + sine.requirements.get("s__subclass"));
+        System.out.println("test(): symbols: " + sine.getSymbols(query));
+        Set<String> selectedFormulas = sine.performSelection(query);
+        System.out.println("test(): "  + selectedFormulas.size() + " formulas");
+        for (String form : selectedFormulas)
+            System.out.println(form);
+       // sine.terminate();
+    }
+
     /** *************************************************************
      *  A simple test to load a KB file and pose a query, which are
      *  the first and second item, respectively, given on the
@@ -363,19 +445,6 @@ public class SInE extends InferenceEngine {
      */
     public static void main (String[] args) throws Exception {
 
-        String kbFileName = args[0];
-        String query = args[1];
-        System.out.println("% Selecting from " + kbFileName);
-
-        SInE sine = SInE.getNewInstance(kbFileName);
-        System.out.println("symbols: " + sine.getSymbols(query));
-        /*Set<String> selectedFormulas = sine.performSelection(query);
-        
-        for (String form : selectedFormulas) 
-            System.out.println(form); 
-       
-        sine.terminate();
-        */
-        
+        test(args);
     }
 }
