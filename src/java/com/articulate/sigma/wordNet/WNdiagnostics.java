@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.AVPair;
 
 /** *****************************************************************
  * A class that finds problems in WordNet to KB mappings.  It is not meant
