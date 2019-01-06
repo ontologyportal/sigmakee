@@ -146,7 +146,7 @@
  * @version 2.3.7
  */
 
-package com.articulate.sigma;
+package com.articulate.sigma.utils;
 
 public class Base64
 {

@@ -11,7 +11,9 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-package com.articulate.sigma;
+package com.articulate.sigma.utils;
+
+import com.articulate.sigma.StringUtil;
 
 import java.util.Collection;
 import java.util.HashSet;
