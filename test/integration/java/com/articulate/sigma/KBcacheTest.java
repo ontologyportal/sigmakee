@@ -190,6 +190,15 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    public void testIsChildOf5() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        assertTrue(SigmaTestBase.kb.isChildOf("Integer", "RealNumber"));
+    }
+
+    /** *************************************************************
+     */
+    @Test
     public void testTransitiveRelations() {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
