@@ -269,7 +269,8 @@ public class SUMOKBtoTPTPKB {
             int counter = 0;
             for (Formula f : orderedFormulae) {
                 pr.println("% f: " + f.format("",""," "));
-                pr.println("% from file " + f.sourceFile + " at line " + f.startLine);
+                pr.println("% " + counter + " of " + orderedFormulae.size() +
+                        " from file " + f.sourceFile + " at line " + f.startLine);
                 if (f.isHigherOrder(kb)) {
                     pr.println("% is higher order");
                     continue;
