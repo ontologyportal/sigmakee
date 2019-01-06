@@ -193,6 +193,16 @@ public class FormulaPreprocessor {
                 types.addAll(explicitTypes);
             varmap.put(var, types);
         }
+        for (String var : varExplicitTypes.keySet()) {
+            HashSet<String> types = new HashSet();
+            HashSet<String> domainTypes = varDomainTypes.get(var);
+            HashSet<String> explicitTypes = varExplicitTypes.get(var);
+            if (domainTypes != null)
+                types.addAll(domainTypes);
+            if (explicitTypes != null)
+                types.addAll(explicitTypes);
+            varmap.put(var, types);
+        }
         return varmap;
     }
 
@@ -595,7 +605,7 @@ public class FormulaPreprocessor {
      * utility method to add a String element to a HashMap of String
      * keys and a value of an HashSet of Strings
      */
-    private static void addToMap(HashMap<String,HashSet<String>> map, String key, String element) {
+    public static void addToMap(HashMap<String,HashSet<String>> map, String key, String element) {
 
         HashSet<String> al = map.get(key);
         if (al == null)
@@ -673,13 +683,15 @@ public class FormulaPreprocessor {
                 Formula newf = f.cdrAsFormula();
                 if (pred.equals(Formula.EQUAL)) {
                     ArrayList<String> args = f.complexArgumentsToArrayList(1);
-                    if (Formula.isVariable(args.get(0)) && kb.isFunction(args.get(1))) {
+                    if (Formula.isVariable(args.get(0)) && Formula.listP(args.get(1)) &&
+                            kb.isFunctional(args.get(1))) {
                         Formula func = new Formula(args.get(1));
                         String fstr = func.car();
                         String type = kb.kbCache.getRange(fstr);
                         addToMap(result,args.get(0),type);
                     }
-                    if (Formula.isVariable(args.get(1)) && kb.isFunction(args.get(0))) {
+                    if (Formula.isVariable(args.get(1)) && Formula.listP(args.get(0)) &&
+                            kb.isFunctional(args.get(0))) {
                         Formula func = new Formula(args.get(0));
                         String fstr = func.car();
                         String type = kb.kbCache.getRange(fstr);
@@ -690,10 +702,16 @@ public class FormulaPreprocessor {
                 int argnum = 1;
                 while (!newf.empty()) {
                     String arg = newf.car();
+                    if (debug)
+                        System.out.println("arg,pred,argnum: " + arg + ", " + pred + ", " + argnum);
+                    if (debug)
+                        System.out.println("newf: " + newf);
+                    if (debug)
+                        System.out.println("is function?: " + kb.isFunctional(arg));
                     if (Formula.isVariable(arg)) {
                         String cl = findType(argnum, pred, kb);
                         if (debug)
-                            System.out.println("arg,pred,argnum,type: " + arg + ", " + pred + ", " + argnum + ", " + cl);
+                            System.out.println("cl: " + cl);
                         if (StringUtil.emptyString(cl)) {
                             if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation"))
                                 System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
@@ -703,7 +721,9 @@ public class FormulaPreprocessor {
                             addToMap(result, arg, cl);
                     }
                     // If formula is function then recurse.
-                    else if (kb.isFunction(arg)) {
+                    else if (Formula.listP(arg) && kb.isFunctional(arg)) {
+                        if (debug)
+                            System.out.println("arg is a function: " + arg);
                         result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     newf = newf.cdrAsFormula();
@@ -772,12 +792,12 @@ public class FormulaPreprocessor {
                     if (argF.listP()) {
                         String res = preProcessRecurse(argF,pred,ignoreStrings,translateIneq,translateMath,kb);
                         result.append(" ");
-                        if (!Formula.isLogicalOperator(pred) &&
+                        /* if (!Formula.isLogicalOperator(pred) &&
                                 !Formula.isComparisonOperator(pred) &&
                                 !Formula.isMathFunction(pred) &&
-                                !kb.isFunction(argF.theFormula)) {
+                                !kb.isFunctional(argF.theFormula)) {
                             result.append("`");
-                        }
+                        } */
                         result.append(res);
                     }
                     else
@@ -789,7 +809,7 @@ public class FormulaPreprocessor {
                 if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
                     if (!Formula.isLogicalOperator(pred) && !Formula.isQuantifierList(pred,previousPred))
                         prefix = "holds_";
-                    if (kb.isFunction(f.theFormula))
+                    if (kb.isFunctional(f.theFormula))
                         prefix = "apply_";
                     if (pred.equals("holds")) {
                         pred = "";
