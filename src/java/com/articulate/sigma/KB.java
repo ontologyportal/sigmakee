@@ -60,6 +60,8 @@ Infosys LTD.
 */
 
 import com.articulate.sigma.trans.*;
+import com.articulate.sigma.utils.Pair;
+import com.articulate.sigma.utils.SetUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -569,11 +571,13 @@ public class KB implements Serializable {
      * true if i is an instance of Function in any loaded KB, else returns
      * false.
      *
-     * @param i A String denoting an instance.
+     * @param i A String denoting a constant.
      * @return true or false.
      */
     public boolean isFunction(String i) {
 
+        if (Formula.listP(i))
+            System.out.println("Warning in KB.isFunction(): not a constant: " + i);
         if (kbCache != null && !StringUtil.emptyString(i)) {
             if (isInstanceOf(i, "Function")) {
                 if (!i.endsWith(Formula.FN_SUFF) && !i.matches("\\w+Fn_\\d+")) {
@@ -590,6 +594,36 @@ public class KB implements Serializable {
             }
         }
         return false;
+    }
+
+    /***************************************************************
+     * Returns
+     * true if i is functional expression, else returns
+     * false.
+     *
+     * @param i A String denoting a possibly functional literal.
+     * @return true or false.
+     */
+    public boolean isFunctional(String s) {
+
+        if (StringUtil.emptyString(s)) {
+            System.out.println("Warning - KB.isFunctional(): empty: " + s);
+            return false;
+        }
+        if (!Formula.listP(s)) {
+            System.out.println("Warning - KB.isFunctional(): not a list: " + s);
+            Thread.dumpStack();
+            return false;
+        }
+        Formula form = new Formula(s);
+        if (form.empty()) {
+            System.out.println("Warning - KB.isFunctional(): empty list: " + s);
+            return false;
+        }
+        String pred = form.car();
+        if (!isFunction(pred))
+            return false;
+        return true;
     }
 
     /***************************************************************
@@ -669,12 +703,12 @@ public class KB implements Serializable {
 
         if (StringUtil.emptyString(c1)) {
             System.out.println("Error in KB.isSubclass(): empty c1");
-            Thread.dumpStack();
+            //Thread.dumpStack();
             return false;
         }
         if (StringUtil.emptyString(parent)) {
             System.out.println("Error in KB.isSubclass(): empty parent");
-            Thread.dumpStack();
+            //Thread.dumpStack();
             return false;
         }
         if (c1.equals(parent))
@@ -1951,13 +1985,24 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * Count the number of "levels" deep the term is in taxonomic
-     * relations from Entity
+     * relations from Entity.  Remove trailing '+' signs.  Also handle
+     * a composite term like (UnionFn A B) with a warning
      */
     public int termDepth(String term) {
 
         //System.out.println("KB.termDepth(): " + term);
+        if (term.endsWith("+"))
+            term = term.substring(0,term.length()-1);
+        if (term.startsWith("(UnionFn")) {
+            System.out.println("KB.termDepth(): warning - composite term: " + term);
+            Formula f = new Formula(term);
+            String arg1 = f.getArgument(1);
+            String arg2 = f.getArgument(2);
+            return Integer.max(termDepth(arg1), termDepth(arg2));
+        }
         if (!terms.contains(term)) {
             System.out.println("KB.termDepth(): no such term " + term);
+            //Thread.dumpStack();
             return 0;
         }
         if (term.equals("Entity") || StringUtil.isNumeric(term))
@@ -2041,8 +2086,9 @@ public class KB implements Serializable {
             if (debug) System.out.println("mostSpecificTerm(): result: " + result);
             if (debug) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
             if (debug) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
-            if (!containsTerm(t)) {
-                System.out.println("Error in mostSpecificTerm(): no such term: " + t);
+            if (StringUtil.emptyString(t) || !containsTerm(t)) {
+                System.out.println("Error in KB.mostSpecificTerm(): no such term: " + t);
+                continue;
             }
             if (result == "" || compareTermDepth(t,result) > 0)
                 result = t;
