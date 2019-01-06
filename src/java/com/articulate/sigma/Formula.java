@@ -1932,7 +1932,7 @@ public class Formula implements Comparable, Serializable {
                 String arg = al.get(i);
                 Formula f = new Formula();
                 f.read(arg);
-                if (!atom(arg) && !kb.isFunction(f.theFormula)) {
+                if (!atom(arg) && !kb.isFunctional(f.theFormula)) {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
