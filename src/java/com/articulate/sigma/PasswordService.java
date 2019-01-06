@@ -33,7 +33,7 @@ public final class PasswordService {
 
     // open the password DB as a server so both Sigma and SigmaNLP can access at once
     //public static final String JDBCString = "jdbc:h2:tcp://localhost/~/var/passwd";
-    public static final String JDBCString = "jdbc:h2:~/var/passwd";
+    public static final String JDBCString = "jdbc:h2:tcp://localhost/home/apease/var/passwd;AUTO_SERVER=TRUE";
     public static String UserName = "sumo";
     public Connection conn = null;
     //public static Server server = null;
