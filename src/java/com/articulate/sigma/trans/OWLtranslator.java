@@ -15,6 +15,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.wordNet.WordNet;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 /** This code is copyright Articulate Software (c) 2010.
