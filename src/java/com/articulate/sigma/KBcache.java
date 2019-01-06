@@ -28,6 +28,7 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.AVPair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -339,6 +340,8 @@ public class KBcache implements Serializable {
     public void extendInstance(String term, String suffix) {
 
         String newTerm = term + "__" + suffix;
+        if (kb.terms.contains(newTerm))
+            System.out.println("Error in KBcache.extendInstance(): term already exists: " + newTerm);
         kb.terms.add(newTerm);
         HashSet<String> iset = instanceOf.get(term);
         instanceOf.put(newTerm,iset);
@@ -374,13 +377,18 @@ public class KBcache implements Serializable {
          **/
         ArrayList<String> sig = signatures.get(term);
         String suf = suffix;
-        if (suffix.endsWith("Real") || suffix.endsWith("RealFn"))
+        if (suffix.endsWith("RealNumberFn"))
             suf = "RealNumber";
         if (suffix.endsWith("IntegerFn"))
             suf = "Integer";
+        if (suffix.endsWith("RationalNumberFn"))
+            suf = "RationalNumber";
         ArrayList<String> newsig = new ArrayList<>();
-        for (int i = 0; i < sig.size(); i++)
-            newsig.add(suf);
+        for (int i = 1; i < sig.size(); i++) {
+            String orig = sig.get(i);
+            if (kb.isSubclass(suf,orig))
+                newsig.add(suf);
+        }
         signatures.put(newTerm,newsig);
 
         // The number of arguments to each relation.  Variable arity is -1
@@ -1370,12 +1378,19 @@ public class KBcache implements Serializable {
 
     /** ***************************************************************
      * Copy all relevant information from a VariableArityRelation to a new
-     * predicate that is a particular fixed arity.
+     * predicate that is a particular fixed arity. Fill the signature from
+     * final argument type in the predicate
      */
     public void copyNewPredFromVariableArity(String pred, String oldPred, int arity) {
 
+        ArrayList<String> oldSig = signatures.get(oldPred);
+        ArrayList<String> newSig = new ArrayList(oldSig);
         if (signatures.keySet().contains(oldPred))
-            signatures.put(pred,signatures.get(oldPred));
+            signatures.put(pred,newSig);
+        String lastType = oldSig.get(oldSig.size()-1);
+        for (int i = oldSig.size(); i <= arity; i++) {
+            newSig.add(lastType);
+        }
         if (instanceOf.keySet().contains(oldPred))
             instanceOf.put(pred, instanceOf.get(oldPred));
         valences.put(pred,arity);
@@ -1486,8 +1501,8 @@ public class KBcache implements Serializable {
         HashSet<String> classes = nkbc.getChildClasses(term);
         System.out.println("KBcache.main(): children of " + term + ": " +
                 classes);
-        nkbc.children = new HashMap<>();
-        nkbc.buildChildrenNew("Entity","subclass");
+        //nkbc.children = new HashMap<>();
+        //nkbc.buildChildrenNew("Entity","subclass");
         term = "Integer";
         classes = nkbc.getChildClasses(term);
         System.out.println("KBcache.main(): children of " + term + ": " +
@@ -1505,6 +1520,10 @@ public class KBcache implements Serializable {
         System.out.println("KBcache.main(): children of " + term + ": " +
                 classes);
         term = "Number";
+        classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.main(): children of " + term + ": " +
+                classes);
+        term = "RealNumber";
         classes = nkbc.getChildClasses(term);
         System.out.println("KBcache.main(): children of " + term + ": " +
                 classes);
