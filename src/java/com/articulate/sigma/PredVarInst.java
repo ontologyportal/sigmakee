@@ -126,7 +126,8 @@ public class PredVarInst {
      
     /** ***************************************************************
      */
-    private static String hasCorrectArityRecurse(Formula f, KB kb) throws IllegalArgumentException, TypeNotPresentException {
+    private static String hasCorrectArityRecurse(Formula f, KB kb)
+            throws IllegalArgumentException, TypeNotPresentException {
 
         if (f == null || StringUtil.emptyString(f.theFormula) || f.empty() ||
                 Formula.atom(f.theFormula) || f.isVariable())
@@ -168,9 +169,10 @@ public class PredVarInst {
                 }
             }
             if (f.isSimpleClause(kb)) {
-                //check if the clasue has function clause and check arity of function clause
+                //check if the clause has function clause and check arity of function clause
                 for (String arg : l) {
-                    if (kb.isFunction(arg)) {
+                    if ((Formula.atom(arg) && kb.isFunction(arg)) ||
+                            (Formula.listP(arg) && kb.isFunctional(arg)))   {
                         String result = hasCorrectArityRecurse(new Formula(arg), kb);
                         if (!StringUtil.emptyString(result))
                             return result;
@@ -178,7 +180,7 @@ public class PredVarInst {
                 }
             }
             else {
-                //if quantifiered, just check the third arguemnt
+                //if quantified, just check the third argument
                 if (Formula.isQuantifier(f.car()))
                     return hasCorrectArityRecurse(f.cddrAsFormula(), kb);
             }
@@ -202,9 +204,10 @@ public class PredVarInst {
      * that has its arity violated in the given formula.
      */
     public static String hasCorrectArity(Formula f, KB kb) {
-        String res=null;
-        try{
-            res=hasCorrectArityRecurse(f,kb);
+
+        String res = null;
+        try {
+            res = hasCorrectArityRecurse(f,kb);
         }
         catch(IllegalArgumentException e){
             System.out.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
