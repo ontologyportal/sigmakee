@@ -24,6 +24,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.AVPair;
 import com.google.common.collect.*;
 
 import static com.articulate.sigma.wordNet.WSD.readFileIntoArray;
@@ -2406,15 +2407,6 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
-     *  A method used only for testing.  It should not be called
-     *  during normal operation.
-     */
-    public static void testIsValidKey() {
-
-        System.out.println("INFO in WordNetUtilities.testIsValidKey(): " + isValidKey("morale_NN_1"));
-    }
-
-    /** ***************************************************************
      * test if a word is sensory or mental and return true if so
      */
     public static boolean sensoryOrMentalWord(String word) {
@@ -2461,6 +2453,43 @@ public class WordNetUtilities {
         return false;
     }
 
+    /** ***************************************************************
+     */
+    private static HashSet<String> readDomain(String domain) {
+
+        HashSet<String> result = new HashSet<>();
+        String filename = System.getenv("CORPORA") + File.separator +
+                "WordNet-3.0" + File.separator + "wn-domains-3.0.txt";
+        ArrayList<ArrayList<String>> lines = DB.readSpreadsheet(filename, null, false, ' ');
+        for (ArrayList<String> line : lines) {
+            if (line == null && line.size() < 3)
+                continue;
+            if (line.contains(domain))
+                result.add(line.get(0));
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * print out legal synsets and SUMO mappings
+     */
+    private static void lawDomainInfo() {
+
+        HashSet<String> synsets = readDomain("law");
+        for (String synset : synsets) {
+            String id = synset.substring(0,8);
+            char pos = synset.charAt(synset.length()-1);
+            char posnum = posLetterToNumber(pos);
+            String synset9 = posnum + id;
+            Collection<String> words = WordNet.wn.getWordsFromSynset(synset9);
+            String doc = WordNet.wn.getDocumentation(synset9);
+            String sumo = WordNet.wn.getSUMOMapping(synset9);
+            System.out.println(synset9 + "\n" + words + "\n" + doc  + "\n" + sumo + "\n\n");
+        }
+    }
+
+    /** ***************************************************************
+     */
     private static boolean testWordDebug = false;
 
     /** ***************************************************************
@@ -2494,12 +2523,22 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     *  A method used only for testing.  It should not be called
+     *  during normal operation.
+     */
+    public static void testIsValidKey() {
+
+        System.out.println("INFO in WordNetUtilities.testIsValidKey(): " + isValidKey("morale_NN_1"));
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
-        testGetPOS();
+        KBmanager.getMgr().initializeOnce();
+        lawDomainInfo();
 
         /*
         withThoughtEmotion = false;
