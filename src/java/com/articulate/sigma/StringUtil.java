@@ -20,6 +20,8 @@ Infosys LTD.
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.Base64;
+
 import java.io.*;
 import java.net.URL;
 import java.net.URLDecoder;
