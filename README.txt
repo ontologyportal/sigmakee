@@ -383,6 +383,12 @@ have access to all Sigma functions.  Currently, this control is hard coded into 
 that will check for user roles.  At some point in the future this may be changed to a more flexible
 scheme of access rights driven from a file or database mapping roles to allowed functions.
 
+You'll need to start the database server with
+
+ java -jar h2-1.4.197.jar -webAllowOthers -tcpAllowOthers
+
+and you'll need to change JDBCstring in PasswordService.java to your path instead of /home/apease
+and recompile
 
 Old Installation Notes
 ======================
