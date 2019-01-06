@@ -21,6 +21,7 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.wordNet.WordNet;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;

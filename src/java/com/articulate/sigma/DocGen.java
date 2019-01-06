@@ -38,6 +38,8 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.SetUtil;
 
 /** A class to generate simplified HTML-based documentation for SUO-KIF terms. */
 public class DocGen {
