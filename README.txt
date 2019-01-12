@@ -171,7 +171,7 @@ Linux Installation
 mkdir workspace
 mkdir Programs
 cd Programs
-wget 'http://ftp.wayne.edu/apache/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
+wget 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
 wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
@@ -249,7 +249,7 @@ install Homebrew from http://brew.sh
 mkdir workspace
 mkdir Programs
 cd Programs
-curl -O 'http://www-us.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
+curl -O 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
 curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
