@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-
 /**
  * Created by qingqingcai on 1/14/15.
  */
@@ -94,6 +93,24 @@ public class SUMOformulaToTPTPformulaTest {
                 "        (lessThan ?NUMBER 0.001)\n" +    // nonsense just to test number hiding
                 "        (instance ?NUMBER RealNumber)))";
         expectedRes = "( ( ! [V__NUMBER] : (s__instance(V__NUMBER,s__NegativeRealNumber) <=> (less(V__NUMBER,n__0_001) & s__instance(V__NUMBER,s__RealNumber))) ) )";
+        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
+        System.out.println(actualRes);
+        assertEquals(expectedRes, actualRes);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void sumo2TPTPhigherOrder() {
+
+        String kifstring, expectedRes, actualRes;
+
+        kifstring = "(=> (and (instance ?GUN Gun) (effectiveRange ?GUN ?LM) " +
+                "(distance ?GUN ?O ?LM1) (instance ?O Organism) (not (exists (?O2) " +
+                "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
+                "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
+                "(patient ?KILLING ?O))) instrument ?GUN))";
+        expectedRes = "";
         actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
         System.out.println(actualRes);
         assertEquals(expectedRes, actualRes);
