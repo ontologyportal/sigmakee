@@ -16,10 +16,7 @@ import TPTPWorld.InterfaceTPTP;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.*;
 
 public class CCheck implements Runnable {
     private KB kb;
@@ -342,7 +339,7 @@ public class CCheck implements Runnable {
                 Formula query = (Formula) it.next();
                 System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                ArrayList<Formula> processedQueries = fp.preProcess(query,false, kb);
+                Set<Formula> processedQueries = fp.preProcess(query,false, kb);
                 
                 String processedQuery = null;
                 String sourceFile = null;
