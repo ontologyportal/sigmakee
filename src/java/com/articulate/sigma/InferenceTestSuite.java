@@ -11,10 +11,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.StringTokenizer;
+import java.util.*;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -306,7 +303,7 @@ public class InferenceTestSuite {
                     System.out.println("INFO in InferenceTestSuite.test(): Query: " + query);
 
                     Formula theQuery = new Formula();
-                    ArrayList theQueries = null;
+                    Set<Formula> theQueries = null;
                     theQuery.theFormula = query;
 
                     FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -452,7 +449,7 @@ public class InferenceTestSuite {
         }
         int maxAnswers = expectedAnswers.size();
         Formula theQuery = new Formula();
-        ArrayList theQueries = null;
+        Set<Formula> theQueries = null;
         theQuery.theFormula = query;
         FormulaPreprocessor fp = new FormulaPreprocessor();
         theQueries = fp.preProcess(theQuery,true,kb);
