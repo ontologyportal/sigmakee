@@ -45,4 +45,19 @@ public class KbIntegrationTest extends IntegrationTestBase {
         assertTrue(SigmaTestBase.kb.isSubclass("Boy", "Entity"));
     }
 
+    /** ***************************************************************
+     */
+    @Test
+    public void testIsHigherOrder() {
+
+        String stmt;
+
+        stmt = "(=> (and (instance ?GUN Gun) (effectiveRange ?GUN ?LM) " +
+                "(distance ?GUN ?O ?LM1) (instance ?O Organism) (not (exists (?O2) " +
+                "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
+                "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
+                "(patient ?KILLING ?O))) instrument ?GUN))";
+        Formula f = new Formula(stmt);
+        assertTrue(f.isHigherOrder(SigmaTestBase.kb));
+    }
 }
