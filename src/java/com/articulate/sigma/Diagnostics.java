@@ -781,7 +781,7 @@ public class Diagnostics {
             while (it.hasNext()) {
                 Formula query = (Formula) it.next();
                 FormulaPreprocessor fp = new FormulaPreprocessor();
-                ArrayList processedQueries = fp.preProcess(query,false,kb); // may be multiple because of row vars.
+                Set<Formula> processedQueries = fp.preProcess(query,false,kb); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
 
