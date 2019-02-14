@@ -28,6 +28,7 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -339,7 +340,10 @@ public class KBcache implements Serializable {
      */
     public void extendInstance(String term, String suffix) {
 
-        String newTerm = term + "__" + suffix;
+        String sep = "__";
+        if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
+            sep = "_";
+        String newTerm = term + sep + suffix;
         if (kb.terms.contains(newTerm))
             System.out.println("Error in KBcache.extendInstance(): term already exists: " + newTerm);
         kb.terms.add(newTerm);
@@ -376,18 +380,12 @@ public class KBcache implements Serializable {
          * '+' appended to the class name.
          **/
         ArrayList<String> sig = signatures.get(term);
-        String suf = suffix;
-        if (suffix.endsWith("RealNumberFn"))
-            suf = "RealNumber";
-        if (suffix.endsWith("IntegerFn"))
-            suf = "Integer";
-        if (suffix.endsWith("RationalNumberFn"))
-            suf = "RationalNumber";
-        ArrayList<String> newsig = new ArrayList<>();
-        for (int i = 1; i < sig.size(); i++) {
+
+        ArrayList<String> newsig = SUMOtoTFAform.relationExtractSig(newTerm);
+        for (int i = 0; i < sig.size(); i++) {
             String orig = sig.get(i);
-            if (kb.isSubclass(suf,orig))
-                newsig.add(suf);
+            if (i > newsig.size()-1 || kb.isSubclass(orig,newsig.get(i)))
+                SUMOtoTFAform.safeSet(newsig,i,orig);
         }
         signatures.put(newTerm,newsig);
 
@@ -414,6 +412,18 @@ public class KBcache implements Serializable {
             if (superclasses != null && superclasses.get(parent) != null)
                 iset.addAll(superclasses.get(parent));
         	instanceOf.put(child, iset);
+        }
+    }
+
+    /** ***************************************************************
+     * Add transitive relationships to instances in the "instances" map
+     */
+    public void addTransitiveInstances() {
+
+        for (String s : instances.keySet()) {
+            HashSet<String> allInst = instances.get(s);
+            allInst.addAll(getInstancesForType(s));
+            instances.put(s,allInst);
         }
     }
 
@@ -723,17 +733,21 @@ public class KBcache implements Serializable {
      */
     public HashSet<String> getInstancesForType(String cl) {
 
+        if (debug) System.out.println("getInstancesForType(): " + cl);
         HashSet<String> instancesForType = new HashSet<>();
         HashMap<String,HashSet<String>> ps = children.get("subclass");
         HashSet<String> classes = ps.get(cl);
+        if (debug) System.out.println("getInstancesForType(): subclasses of " + cl + " : " + classes);
         if (classes == null)
             classes = new HashSet<>();
         classes.add(cl);
         for (String c : classes) {
             HashSet<String> is = instances.get(c);
+            if (debug) System.out.println("getInstancesForType(): instances of " + c + " : " + is);
             if (is != null)
                 instancesForType.addAll(is);
         }
+        if (debug) System.out.println("getInstancesForType(): " + instancesForType);
         HashSet<String> instancesForType2 = new HashSet<>();
         HashMap<String,HashSet<String>> attr = children.get("subAttribute");
         HashMap<String,HashSet<String>> arel = children.get("subrelation");
@@ -745,6 +759,8 @@ public class KBcache implements Serializable {
             if (temp != null)
                 instancesForType2.addAll(temp);
         }
+        instancesForType2.addAll(instancesForType);
+        if (debug) System.out.println("getInstancesForType(): 2: " + instancesForType2);
         return instancesForType2;
     }
 
@@ -995,7 +1011,7 @@ public class KBcache implements Serializable {
      */
     private HashSet<String> buildChildrenNew(String term, String rel) {
 
-        //if (debug) System.out.println("buildChildrenNew(): looking at  " + term + " with relation " + rel);
+        if (debug) System.out.println("buildChildrenNew(): looking at  " + term + " with relation " + rel);
         if (children.get(rel) == null)
             children.put(rel,new HashMap<>());
         HashMap<String,HashSet<String>> allChildren = children.get(rel);
@@ -1003,7 +1019,7 @@ public class KBcache implements Serializable {
             return allChildren.get(term);
         visited.add(term);
         ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,term); // argument 2 is the "parent" in any binary relation
-        //if (debug) System.out.println("buildChildrenNew(): forms  " + forms);
+        if (debug) System.out.println("buildChildrenNew(): forms  " + forms);
         if (forms == null || forms.size() == 0) {
             return new HashSet<>();
         }
@@ -1013,7 +1029,9 @@ public class KBcache implements Serializable {
                 continue;
             //System.out.println(f.sourceFile);
             String newTerm = f.getArgument(1);// argument 1 is the "child" in any binary relation
+            if (debug) System.out.println("buildChildrenNew(): new term " + newTerm);
             HashSet<String> children = buildChildrenNew(newTerm, rel);
+            if (debug) System.out.println("buildChildrenNew(): children of " + newTerm + " are " + children);
             if (allChildren.containsKey(newTerm) && allChildren.get(newTerm) != null)
                 children.addAll(allChildren.get(newTerm));
             allChildren.put(newTerm, children);
@@ -1022,7 +1040,8 @@ public class KBcache implements Serializable {
             collectedChildren.add(newTerm);
         }
         //collectedChildren.add(term);
-        //if (debug) System.out.println("buildChildrenNew(): return  " + term + " with " + collectedChildren);
+        if (debug) System.out.println("buildChildrenNew(): return  " + term + " with " + collectedChildren);
+        if (debug) System.out.println();
         return collectedChildren;
     }
 
@@ -1371,6 +1390,7 @@ public class KBcache implements Serializable {
         collectDomains();  // note that buildInstTransRels() depends on this
         buildInstTransRels();
         buildDirectInstances();
+        addTransitiveInstances();
         buildDisjointRelationsMap(); // find relations under partition definition
         writeCacheFile();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
@@ -1394,6 +1414,17 @@ public class KBcache implements Serializable {
         if (instanceOf.keySet().contains(oldPred))
             instanceOf.put(pred, instanceOf.get(oldPred));
         valences.put(pred,arity);
+    }
+
+    /** ***************************************************************
+     * @return the type of the last argument to the given relation,
+     * which will be the type of all the expanded row variables
+     */
+    public String variableArityType(String r) {
+
+        ArrayList sig = getSignature(r);
+        sig.get(sig.size() - 1);
+        return "";
     }
 
     /** *************************************************************
@@ -1466,11 +1497,19 @@ public class KBcache implements Serializable {
         }
         System.out.println();
         System.out.println();
-        System.out.println("-------------- instances ----------------");
+        System.out.println("-------------- instancesOf ----------------");
         Iterator<String> it6 = this.instanceOf.keySet().iterator();
         while (it6.hasNext()) {
             String inst = it6.next();
             System.out.println(inst + ": " + this.instanceOf.get(inst));
+        }
+        System.out.println();
+        System.out.println();
+        System.out.println("-------------- instances ----------------");
+        Iterator<String> it7 = this.instances.keySet().iterator();
+        while (it7.hasNext()) {
+            String inst = it7.next();
+            System.out.println(inst + ": " + this.instances.get(inst));
         }
     }
 
