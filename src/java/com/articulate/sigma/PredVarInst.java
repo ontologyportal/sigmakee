@@ -10,6 +10,9 @@ package com.articulate.sigma;
  Pease, A., (2003). The Sigma Ontology Development Environment,
  in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
+
+ Note that relations that are automatically created by SUMOKBtoTFAKB are excluded
+ and this depends on double underscore in the names of those predicates
  */
 
 import java.util.*;
@@ -56,7 +59,16 @@ public class PredVarInst {
         }
         return result;
     }
-    
+
+    /** ***************************************************************
+     */
+    private static boolean isTypeExpansion(String rel) {
+
+        if (rel.indexOf("__") == -1)
+            return false;
+        return true;
+    }
+
     /** ***************************************************************
      * @param input formula
      * @param kb knowledge base
@@ -88,6 +100,10 @@ public class PredVarInst {
             String var = it.next();
             // 3.1 check: predVarArity should match arity of substituted relation
             for (String rel : kb.kbCache.relations) {
+                if (isTypeExpansion(rel)) {
+                    if (debug) System.out.println("instantiatePredVars(): type expansion of relation so exclude: " + rel);
+                    continue;
+                }
                 if (kb.kbCache.valences.get(rel).equals(predVarArity.get(var))) {
                     boolean ok = true;
                     if (debug) System.out.println("instantiatePredVars(): types for var: " + varTypes.get(var));
