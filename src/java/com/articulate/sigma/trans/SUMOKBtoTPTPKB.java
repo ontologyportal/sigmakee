@@ -14,7 +14,7 @@ public class SUMOKBtoTPTPKB {
 
     public static boolean debug = false;
 
-    public static String lang = "tff";
+    public static String lang = "fof"; // or thf
 
     public static HashSet<String> excludedPredicates = new HashSet<>();
 
@@ -267,33 +267,35 @@ public class SUMOKBtoTPTPKB {
             List<String> tptpFormulas = null;
             File sf = null;
             int counter = 0;
+            int formCount = 0;
             for (Formula f : orderedFormulae) {
                 pr.println("% f: " + f.format("",""," "));
-                pr.println("% " + counter + " of " + orderedFormulae.size() +
+                pr.println("% " + formCount++ + " of " + orderedFormulae.size() +
                         " from file " + f.sourceFile + " at line " + f.startLine);
                 if (f.isHigherOrder(kb)) {
                     pr.println("% is higher order");
                     continue;
                 }
+                pr.println("% not higher order");
                 counter++;
                 if (counter == 100) { System.out.print("."); counter = 0; }
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //fp.debug = true;
-                List<Formula> processed = fp.preProcess(f,false,kb);
+                Set<Formula> processed = fp.preProcess(f,false,kb);
                 //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): processed formulas: " + processed);
                 if (!processed.isEmpty()) {
-                    ArrayList<Formula> withRelnRenames = new ArrayList<Formula>();
+                    HashSet<Formula> withRelnRenames = new HashSet<Formula>();
                     for (Formula f2 : processed)
                         withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
                     for (Formula f3 : withRelnRenames) {
-                        if (lang.equals("tptp")) {
+                        if (lang.equals("fof")) {
                             SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
                             stptp._f = f3;
                             stptp.tptpParse(f3, false, kb, withRelnRenames);
                         }
                         else if (lang.equals("tff")) {
                             SUMOtoTFAform stptp = new SUMOtoTFAform();
-                            f3.theTptpFormulas = new ArrayList<>();
+                            f3.theTptpFormulas = new HashSet<>();
                             if (withRelnRenames != null) {
                                 String tfaForm = stptp.process(f3.theFormula);
                                 if (tfaForm != null)
@@ -375,6 +377,8 @@ public class SUMOKBtoTPTPKB {
             return true;
         }
 
+        if (form.isHigherOrder(kb))
+            return true;
         if (filterExcludePredicates(form) == false) {
             if (!alreadyWrittenTPTPs.contains(form)) {
                 return false;
@@ -393,17 +397,15 @@ public class SUMOKBtoTPTPKB {
 
         //debug = true;
         KBmanager.getMgr().initializeOnce();
-                /* not needed since initialization will create the tptp file
+
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
 
         skbtptpkb.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
-        String fileWritten = skbtptpkb.writeTPTPFile(filename, null, true, "none");
+        String fileWritten = skbtptpkb.writeFile(filename, null, true, "none");
         if (StringUtil.isNonEmptyString(fileWritten))
             System.out.println("File written: " + fileWritten);
         else
             System.out.println("Could not write " + filename);
-        return;
-        */
     }
 }
