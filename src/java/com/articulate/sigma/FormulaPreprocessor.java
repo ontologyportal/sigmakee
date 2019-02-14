@@ -736,6 +736,8 @@ public class FormulaPreprocessor {
             result = mergeToMap(input,computeVariableTypesRecurse(kb,f.carAsFormula(),input), kb);
             result = mergeToMap(result,computeVariableTypesRecurse(kb,f.cdrAsFormula(),input), kb);
         }
+        if (debug)System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): exiting from\n" + f);
+        if (debug)System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): with result:" + result);
         return result;
     }
 
@@ -1031,12 +1033,13 @@ public class FormulaPreprocessor {
      *
      * @param kb The KB to be used for processing this Formula
      *
-     * @return an ArrayList of Formula(s), which could be empty.
+     * @return an Set of Formula(s), which could be empty.
      *
      */
-    public ArrayList<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
+    public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
-        ArrayList<Formula> results = new ArrayList<Formula>();
+        if (debug) System.out.println("preProcess(): starting on: " + form);
+        HashSet<Formula> results = new HashSet<Formula>();
         if (!StringUtil.emptyString(form.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
             if (!form.isBalancedList()) {
