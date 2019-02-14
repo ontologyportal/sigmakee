@@ -146,11 +146,11 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      * A list of TPTP formulas (Strings) that together constitute the
-     * translation of theFormula.  This member is a List, because
+     * translation of theFormula.  This member is a Set, because
      * predicate variable instantiation and row variable expansion
      * might cause theFormula to expand to several TPTP formulas.
      */
-    public ArrayList<String> theTptpFormulas = new ArrayList<>();
+    public HashSet<String> theTptpFormulas = new HashSet<>();
 
     /** *****************************************************************
      * A list of clausal (resolution) forms generated from this
@@ -1886,50 +1886,19 @@ public class Formula implements Comparable, Serializable {
      * Test whether a Formula contains a Formula as an argument to
      * other than a logical operator.
      */
-    @Deprecated
-    public boolean isHigherOrder() {
-
-        if (higherOrder)
-            return true;
-        if (this.listP()) {
-            String pred = this.car();
-            boolean logop = isLogicalOperator(pred);
-            ArrayList<String> al = literalToArrayList();
-            for (int i = 1; i < al.size(); i++) {
-                String arg = al.get(i);
-                Formula f = new Formula();
-                f.read(arg);
-                if (!atom(arg) && !f.isFunctionalTerm()) {
-                    if (logop) {
-                        if (f.isHigherOrder()) {
-                            higherOrder = true;
-                            return true;
-                        }
-                    }
-                    else {
-                        higherOrder = true;
-                        return true;
-                    }
-                }
-            }
-        }
-        return false;
-    }
-
-    /** ***************************************************************
-     * Test whether a Formula contains a Formula as an argument to
-     * other than a logical operator.
-     */
     public boolean isHigherOrder(KB kb) {
 
+        System.out.println("Formula.isHigherOrder(): " + this);
         if (higherOrder)
             return true;
         if (this.listP()) {
             String pred = this.car();
+            ArrayList sig = kb.kbCache.getSignature(pred);
+            if (sig != null && sig.contains("Formula"))
+                return true;
             boolean logop = isLogicalOperator(pred);
             ArrayList<String> al = literalToArrayList();
-            for (int i = 1; i < al.size(); i++) {
-                String arg = al.get(i);
+            for (String arg : al) {
                 Formula f = new Formula();
                 f.read(arg);
                 if (!atom(arg) && !kb.isFunctional(f.theFormula)) {
@@ -1944,8 +1913,14 @@ public class Formula implements Comparable, Serializable {
                         return true;
                     }
                 }
+                else
+                    if (f.isHigherOrder(kb)) {
+                        higherOrder = true;
+                        return true;
+                    }
             }
         }
+        System.out.println("Formula.isHigherOrder(): not HOL: " + this);
         return false;
     }
 
@@ -2009,7 +1984,7 @@ public class Formula implements Comparable, Serializable {
             System.out.println("Error in Formula.isHorn(): Formula is not a rule: " + this);
             return false;
         }
-        if (isHigherOrder()) 
+        if (isHigherOrder(kb))
             return false;
         if (theFormula.contains("exists") || theFormula.contains("forall")) 
             return false;        
@@ -2828,16 +2803,6 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      */
-    public static void testHOL() {
-
-        Formula f = new Formula("(<=> (holdsDuring ?TIME (instance ?AGENT LegalAgent)) " +
-                "(holdsDuring ?TIME (or (capability LegalAction agent ?AGENT) " +
-                "(capability LegalAction patient ?AGENT))))");
-        System.out.println("testHOL(): " + f.isHigherOrder());
-    }
-
-    /** ***************************************************************
-     */
     public Formula negate() {
 
         return new Formula("(not " + theFormula + ")");
@@ -2851,7 +2816,6 @@ public class Formula implements Comparable, Serializable {
         // testIsSimpleClause();
         //testReplaceVar();
         //testBigArgs();
-        testHOL();
     }
 }
 
