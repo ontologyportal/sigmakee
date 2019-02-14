@@ -31,28 +31,6 @@ import java.util.*;
  */
 public class KBmanager implements Serializable {
 
-    /** A numeric (bitwise) constant used to signal whether type
-     * prefixes (sortals) should be added during formula
-     * preprocessing.
-     */
-    public static final int USE_TYPE_PREFIX  = 1;
-
-    /** A numeric (bitwise) constant used to signal whether holds
-     * prefixes should be added during formula preprocessing.
-     */
-    public static final int USE_HOLDS_PREFIX = 2;
-
-    /** A numeric (bitwise) constant used to signal whether the closure
-     * of instance and subclass relastions should be "cached out" for
-     * use by the inference engine.
-     */
-    public static final int USE_CACHE        = 4;
-
-    /*** A numeric (bitwise) constant used to signal whether formulas
-     * should be translated to TPTP format during the processing of KB
-     * constituent files.
-     */
-    public static final int USE_TPTP         = 8;
     private static CCheckManager ccheckManager = new CCheckManager();
 
     private static KBmanager manager = new KBmanager();
@@ -63,7 +41,6 @@ public class KBmanager implements Serializable {
     public static boolean initialized = false;
     public static boolean initializing = false;
     public static boolean debug = false;
-    private int oldInferenceBitValue = -1;
     private String error = "";
 
     public static final List<String> configKeys =
