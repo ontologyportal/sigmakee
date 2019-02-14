@@ -14,7 +14,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean initialized = false;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public static HashSet<String> qChildren = null;
     public static HashSet<String> iChildren = null;
@@ -54,6 +54,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Test whether the given relation has an argument that is a subclass
+     * of Quantity
      */
     public boolean hasNumericArg(String t) {
 
@@ -67,7 +69,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * Test whether the terms is a subclass of Quantity but not a
+     * Test whether the term is a subclass of Quantity but not a
      * subclass of one of the three TFF built-in types of $int, $rat
      * and $real
      */
@@ -84,7 +86,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * Test whether the terms is a subclass of Quantity but not a
+     * Test whether the term is a subclass of Quantity but not a
      * one of the three TFF built-in types of $int, $rat
      * and $real or subclass
      */
@@ -246,11 +248,15 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         for (int i = 0; i < sig.size(); i++) {
             String s = sig.get(i);
             String strnum = Integer.toString(i);
-            if (quantButNotBuiltInType("Integer",s))
+            if (debug) System.out.println("processRelationSort(): s,i: " + s + ", " + i);
+            if ((kb.isSubclass("Integer",s) && kb.isSubclass(s,"Quantity")) ||
+                    s.equals("Integer") || kb.isSubclass(s,"Integer"))
                 FormulaPreprocessor.addToMap(modsig,strnum,strnum + INT_SUFFIX);
-            if (quantButNotBuiltInType("RationalNumber",s))
+            if ((kb.isSubclass("RationalNumber",s) && kb.isSubclass(s,"Quantity")) ||
+                    s.equals("RationalNumber") || kb.isSubclass(s,"RationalNumber"))
                 FormulaPreprocessor.addToMap(modsig,strnum,strnum + RAT_SUFFIX);
-            if (quantButNotBuiltInType("RealNumber",s))
+            if ((kb.isSubclass("RealNumber",s) && kb.isSubclass(s,"Quantity")) ||
+                    s.equals("RealNumber") || kb.isSubclass(s,"RealNumber"))
                 FormulaPreprocessor.addToMap(modsig,strnum,strnum + REAL_SUFFIX);
         }
         if (debug) System.out.println("processRelationSort(): modsig: " + modsig);
@@ -269,6 +275,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         allsig.remove("");
         if (debug) System.out.println("processRelationSort(): adding " + t + " : " + allsig);
+        if (toExtend.containsKey(t)) {
+            allsig.addAll(toExtend.get(t));
+        }
         toExtend.put(t,allsig);
     }
 
@@ -293,7 +302,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         String newRel = t + "__" + e + suffix;
         System.out.println("extendRelationSig(): newrel: " + newRel);
-        ArrayList<String> extsig = SUMOtoTFAform.relationExtractSig(newRel);
+        ArrayList<String> extsig = SUMOtoTFAform.relationExtractUpdateSig(newRel);
         ArrayList<String> combinedSig = new ArrayList<>();
         for (int i = 0; i < sig.size(); i++) {
             if (extsig != null && i < extsig.size() && !StringUtil.emptyString(extsig.get(i)))
@@ -307,6 +316,68 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Create polymorphic comparison and math relations.
+     * The result is a side effect on toExtend
+     */
+    private void handleMathAndComp(HashMap<String,HashSet<String>> toExtend) {
+
+        for (String t : Formula.COMPARISON_OPERATORS) {
+            FormulaPreprocessor.addToMap(toExtend, t, "1Re2Re");
+            FormulaPreprocessor.addToMap(toExtend, t, "1Ra2Ra");
+            FormulaPreprocessor.addToMap(toExtend, t, "1In2In");
+        }
+        for (String t : Formula.MATH_FUNCTIONS) {
+            FormulaPreprocessor.addToMap(toExtend, t, "0Re1Re2Re");
+            FormulaPreprocessor.addToMap(toExtend, t, "0Ra1Ra2Ra");
+            FormulaPreprocessor.addToMap(toExtend, t, "0In1In2In");
+        }
+    }
+
+    /** *************************************************************
+     * VariableArityRelations are special cases since the different
+     * versions only get expanded when axioms are processed but
+     * we need to create the different sorts up front.  The current
+     * set in SUMO as of 1/2019 are AssignmentFn, GreatestCommonDivisorFn,
+     * LatitudeFn, LeastCommonMultipleFn, ListFn, LongitudeFn, contraryAttribute,
+     * disjointDecomposition, exhaustiveAttribute, exhaustiveDecomposition,
+     * partition and processList.  ListFn is a special special case
+     */
+    private void handleVariableArity(HashMap<String,HashSet<String>> toExtend) {
+
+        if (debug) System.out.println("handleVariableArity():");
+        HashSet<String> rels = kb.kbCache.getInstancesForType("VariableArityRelation");
+
+        for (String r : rels) {
+            StringBuffer inStr = new StringBuffer();
+            StringBuffer reStr = new StringBuffer();
+            StringBuffer raStr = new StringBuffer();
+            if (debug) System.out.println("handleVariableArity(): r: " + r);
+            if (hasNumericArg(r) || r.equals("ListFn")) {
+                if (debug) System.out.println("handleVariableArity(): numeric or list r: " + r);
+                for (int i = 1; i < 7; i++) {
+                    inStr.append(Integer.toString(i) + "In");
+                    reStr.append(Integer.toString(i) + "Re");
+                    raStr.append(Integer.toString(i) + "Ra");
+                    String newInStr = Integer.toString(i) + "__" + inStr.toString();
+                    String newReStr = Integer.toString(i) + "__" + reStr.toString();
+                    String newRaStr = Integer.toString(i) + "__" + raStr.toString();
+                    if (debug) System.out.println("handleVariableArity(): adding term: " + newInStr);
+                    FormulaPreprocessor.addToMap(toExtend, r, newInStr);
+                    FormulaPreprocessor.addToMap(toExtend, r, newReStr);
+                    FormulaPreprocessor.addToMap(toExtend, r, newRaStr);
+                }
+            }
+            else {
+                if (debug) System.out.println("handleVariableArity(): non numeric and non-list r: " + r);
+                for (int i = 1; i < 7; i++) {
+                    FormulaPreprocessor.addToMap(toExtend, r, Integer.toString(i));
+                }
+            }
+        }
+        if (debug) System.out.println("handleVariableArity(): toExtend: " + toExtend);
+    }
+
+    /** *************************************************************
      * Check if the relation has a numeric argument that isn't completely
      * specific, so that it needs special treatment to create versions
      * for integers, reals and rationals
@@ -315,6 +386,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         SUMOtoTFAform.setNumericFunctionInfo();
         HashMap<String,HashSet<String>> toExtend = new HashMap<>();
+        handleMathAndComp(toExtend);
+        handleVariableArity(toExtend); // special case
         for (String t : kb.getTerms()) {
             pw.println("% writeSorts(): " + t);
             if (debug) System.out.println("writeSorts(): t: " + t);
@@ -323,47 +396,29 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 fnSuffix = "Fn";
             if (Formula.isLogicalOperator(t) || t.equals("equal"))
                 continue;
-            if (kb.isRelation(t) && !alreadyExtended(t)) {
-                if (Formula.isComparisonOperator(t) || Formula.isMathFunction(t)) {
-                    ArrayList<String> sig = kb.kbCache.signatures.get(t);
-                    if (debug) System.out.println("writeSorts(): sig: " + sig);
-                    for (String s : sig) {
-                        if (quantButNotBuiltInSubtype("Integer",s) && !alreadyExtended(t)) {
-                            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): extending "
-                                    + t + " with Integer");
-                            FormulaPreprocessor.addToMap(toExtend, t, "Integer" + fnSuffix);
-                        }
-                        if (quantButNotBuiltInSubtype("RationalNumber",s) && !alreadyExtended(t)) {
-                            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): extending " +
-                                    t + " with RationalNumber ");
-                            FormulaPreprocessor.addToMap(toExtend, t, "RationalNumber" + fnSuffix);
-                        }
-                        if (quantButNotBuiltInSubtype("RealNumber",s) && !alreadyExtended(t)) {
-                            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): extending " +
-                                    t + " with RealNumber ");
-                            FormulaPreprocessor.addToMap(toExtend, t, "RealNumber" + fnSuffix);
-                        }
-                    }
-                    writeRelationSort(t, pw, sanitizedKBName);
+            if (kb.isRelation(t) && !alreadyExtended(t) &&
+                !(Formula.isComparisonOperator(t) || Formula.isMathFunction(t))) {
+                if (hasNumericArg(t)) {
+                    writeRelationSort(t,pw,sanitizedKBName);
+                    processRelationSort(toExtend, t);
                 }
-                else {
-                    if (hasNumericArg(t)) {
-                        writeRelationSort(t,pw,sanitizedKBName);
-                        processRelationSort(toExtend, t);
-                    }
-                    else
-                        writeRelationSort(t,pw,sanitizedKBName);
-                }
+                else
+                    writeRelationSort(t,pw,sanitizedKBName);
             }
         }
         for (String k : toExtend.keySet()) {
+            if (debug) System.out.println("writeSorts(): k: " + k);
             HashSet<String> vals = toExtend.get(k);
             String fnSuffix = "";
             if (kb.isFunction(k))
                 fnSuffix = "Fn";
             for (String e : vals) {
                 kb.kbCache.extendInstance(k, e + fnSuffix);
-                String newTerm = k + "__" + e + fnSuffix;
+                String sep = "__";
+                if (e.matches("\\d__.*"))  // variable arity has appended single underscore before arity
+                    sep = "_";
+                String newTerm = k + sep + e + fnSuffix;
+                if (debug) System.out.println("writeSorts(): newTerm: " + newTerm);
                 if (!StringUtil.emptyString(e)) {
                     extendRelationSig(k,e);
                     writeRelationSort(newTerm, pw, sanitizedKBName);
@@ -376,7 +431,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
-        debug = false;
+        debug = true;
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tff";
