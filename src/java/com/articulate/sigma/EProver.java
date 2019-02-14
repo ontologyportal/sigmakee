@@ -314,7 +314,7 @@ public class EProver {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
-            ArrayList<Formula> processedFormulas = new ArrayList<Formula>();
+            HashSet<Formula> processedFormulas = new HashSet<Formula>();
             Iterator<Formula> it2 = parsedFormulas.iterator();
             while (it2.hasNext()) {
                 processedFormulas.clear();
@@ -331,7 +331,7 @@ public class EProver {
                     }
                     // 3. Write to new tptp file
                     if (eprover != null) {
-                        List<String> tptpFormulas = parsedF.theTptpFormulas;
+                        Set<String> tptpFormulas = parsedF.theTptpFormulas;
                         Iterator<String> tptpIt = tptpFormulas.iterator();
                         while (tptpIt.hasNext()) {
                             String theTPTPFormula = tptpIt.next();
