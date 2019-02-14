@@ -612,7 +612,7 @@ public class KB implements Serializable {
         }
         if (!Formula.listP(s)) {
             System.out.println("Warning - KB.isFunctional(): not a list: " + s);
-            Thread.dumpStack();
+            //Thread.dumpStack();
             return false;
         }
         Formula form = new Formula(s);
@@ -1681,7 +1681,7 @@ public class KB implements Serializable {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            ArrayList<Formula> processedStmts = fp.preProcess(query, true, this);
+            Set<Formula> processedStmts = fp.preProcess(query, true, this);
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
                 // set timeout in EBatchConfig file and reload eprover
@@ -1692,7 +1692,7 @@ public class KB implements Serializable {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedStmts.get(0).theFormula;
+                String strQuery = processedStmts.iterator().next().theFormula;
                 result = this.eprover.submitQuery(strQuery, this);
                 if (result == null || result.isEmpty())
                     System.out.println("KB.ask: No response from EProver!");
@@ -1731,9 +1731,9 @@ public class KB implements Serializable {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            ArrayList<Formula> processedStmts = fp.preProcess(query, true, this);
+            Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                String strQuery = processedStmts.get(0).theFormula;
+                String strQuery = processedStmts.iterator().next().theFormula;
                 result = this.eprover.submitQuery(strQuery, this);
             }
 
@@ -1746,7 +1746,7 @@ public class KB implements Serializable {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedStmts.get(0).theFormula;
+                String strQuery = processedStmts.iterator().next().theFormula;
                 result = this.eprover.submitQuery(strQuery, this);
             }
         }
@@ -1769,7 +1769,7 @@ public class KB implements Serializable {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            ArrayList<Formula> processedStmts = fp.preProcess(query, true, this);
+            Set<Formula> processedStmts = fp.preProcess(query, true, this);
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
                 // set timeout in EBatchConfig file and reload eprover
@@ -1780,7 +1780,7 @@ public class KB implements Serializable {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedStmts.get(0).theFormula;
+                String strQuery = processedStmts.iterator().next().theFormula;
                 String EResult = this.eprover.submitQuery(strQuery, this);
                 if (EResult == null || EResult.isEmpty())
                     System.out.println("No response from EProver!");
@@ -1819,10 +1819,10 @@ public class KB implements Serializable {
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            ArrayList<Formula> processedStmts = fp.preProcess(query, true, this);
+            Set<Formula> processedStmts = fp.preProcess(query, true, this);
             try {
                 if (!processedStmts.isEmpty()) {
-                    String strQuery = processedStmts.get(0).theFormula;
+                    String strQuery = processedStmts.iterator().next().theFormula;
                     result = engine.submitQuery(strQuery, timeout, maxAnswers);
                 }
             }
@@ -2106,7 +2106,7 @@ public class KB implements Serializable {
 
         if (getTerms().contains(term.intern()))
             return true;
-        else if (getREMatch(term.intern()).size() == 1)
+        else if (getREMatch(term.intern()).size() >= 1)
             return true;
         return false;
     }
@@ -3282,7 +3282,7 @@ public class KB implements Serializable {
             // System.out.println("INFO in KB.preProcess(): form : " + form);
             // System.out.println("INFO in KB.preProcess(): f : " + f);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            ArrayList<Formula> processed = fp.preProcess(f, false, this); // not
+            Set<Formula> processed = fp.preProcess(f, false, this); // not
                                                                             // queries
             if (tptpParseP) {
                 try {
