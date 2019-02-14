@@ -64,12 +64,6 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
         else if (saveAs.equalsIgnoreCase("TPTP") || saveAs.equalsIgnoreCase("tptpFOL")) {
             // Force translation of the KB to TPTP, even if the user has not
             // requested this on the Preferences page.
-            if (!KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) {
-                System.out.println( "INFO in Manifest.jsp: generating TPTP for all formulas");
-                com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
-                skbtptpkb.kb = kb;
-                skbtptpkb.tptpParse();
-            }
             boolean onlyPlainFOL = saveAs.equalsIgnoreCase("tptpFOL");
             File tptpf = new File(kbDirFile, (saveFile + ".tptp"));
             String tptpfcp = null;
@@ -78,7 +72,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
                 tptpfcp = tptpf.getCanonicalPath();
                 com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
         		skbtptpkb.kb = kb;
-                tptpFile = skbtptpkb.writeTPTPFile(tptpfcp, null, onlyPlainFOL, "");
+                tptpFile = skbtptpkb.writeFile(tptpfcp, null, onlyPlainFOL, "");
             }
             catch (Exception tptpfe) {
                 tptpfe.printStackTrace();
