@@ -6,12 +6,7 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Stack;
-import java.util.Vector;
+import java.util.*;
 
 public class SUMOformulaToTPTPformula {
 
@@ -435,7 +430,7 @@ public class SUMOformulaToTPTPformula {
      * Parse formulae into TPTP format
      * Result is returned in _f.theTptpFormulas
      */
-    public void tptpParse(Formula input, boolean query, KB kb, List<Formula> preProcessedForms)
+    public void tptpParse(Formula input, boolean query, KB kb, Set<Formula> preProcessedForms)
         throws ParseException, IOException {
 
         if (debug)
@@ -452,7 +447,7 @@ public class SUMOformulaToTPTPformula {
                 _f.errors.add(errStr);
                 return;
             }
-            List<Formula> processed = preProcessedForms;
+            Set<Formula> processed = preProcessedForms;
             if (processed == null) {
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 processed = fp.preProcess(_f,query, kb);
@@ -460,7 +455,7 @@ public class SUMOformulaToTPTPformula {
             if (debug)
                 System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
             if (processed != null) {
-                _f.theTptpFormulas = new ArrayList<String>();
+                _f.theTptpFormulas = new HashSet<String>();
                 //----Performs function on each current processed axiom
                 Iterator<Formula> g = processed.iterator();
                 while (g.hasNext()) {
@@ -488,7 +483,7 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * Parse formulae into TPTP format
      */
-    public ArrayList<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
+    public Set<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
 
         tptpParse(input,query, kb, null);
         return _f.theTptpFormulas;
