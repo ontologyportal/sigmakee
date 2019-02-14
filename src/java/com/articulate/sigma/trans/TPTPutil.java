@@ -17,6 +17,7 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.StringUtil;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class TPTPutil {
 
@@ -71,8 +72,7 @@ public class TPTPutil {
         if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1) 
             return "No TPTP formula.  May not be expressible in strict first order.";        
         StringBuffer result = new StringBuffer();
-        for (int j = 0; j < f.theTptpFormulas.size(); j++) {   
-            String formString = f.theTptpFormulas.get(j);
+        for (String formString : f.theTptpFormulas) {
             if (!StringUtil.emptyString(formString)) {
                 //System.out.println("INFO in Formula.htmlTPTPFormat(): TPTP formula: " + formString);
                 formString = formString.trim();
@@ -191,7 +191,7 @@ public class TPTPutil {
      */
 	public static void main(String[] args) {
         Formula f = new Formula();
-        f.theTptpFormulas = new ArrayList();
+        f.theTptpFormulas = new HashSet();
         //f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
         f.theTptpFormulas.add("(! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => " +
         		"s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");
