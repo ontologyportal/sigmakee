@@ -1044,6 +1044,7 @@ public class FormulaPreprocessor {
             KBmanager mgr = KBmanager.getMgr();
             if (!form.isBalancedList()) {
                 String errStr = "Unbalanced parentheses or quotes in: " + form.theFormula;
+                System.out.println("Error in preProcess(): " + errStr);
                 form.errors.add(errStr);
                 return results;
             }
@@ -1092,7 +1093,9 @@ public class FormulaPreprocessor {
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 Formula fnew = f;
                 if (addTypes)
-                    fp.addTypeRestrictions(f,kb);
+                    fnew.theFormula = fp.addTypeRestrictions(f,kb).theFormula;
+                else
+                    System.out.println("preProcess(): not adding types");
                 f.read(fnew.theFormula);
                 f.higherOrder = fnew.higherOrder;
             }
