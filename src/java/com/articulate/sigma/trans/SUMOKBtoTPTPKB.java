@@ -238,7 +238,7 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
                             String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        //if (debug && pw != null) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(5): onlyPlainFOL: " + onlyPlainFOL);
+        //if (debug && pw != null) pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(5): onlyPlainFOL: " + onlyPlainFOL);
         String result = null;
         PrintWriter pr = null;
         try {
@@ -263,7 +263,7 @@ public class SUMOKBtoTPTPKB {
 
             OrderedFormulae orderedFormulae = new OrderedFormulae();
             orderedFormulae.addAll(kb.formulaMap.values());
-            //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
+            //if (debug) pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
             List<String> tptpFormulas = null;
             File sf = null;
             int counter = 0;
@@ -282,37 +282,35 @@ public class SUMOKBtoTPTPKB {
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //fp.debug = true;
                 Set<Formula> processed = fp.preProcess(f,false,kb);
-                //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): processed formulas: " + processed);
                 if (!processed.isEmpty()) {
                     HashSet<Formula> withRelnRenames = new HashSet<Formula>();
                     for (Formula f2 : processed)
                         withRelnRenames.add(f2.renameVariableArityRelations(kb,relationMap));
                     for (Formula f3 : withRelnRenames) {
                         if (lang.equals("fof")) {
-                            SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                            stptp._f = f3;
-                            stptp.tptpParse(f3, false, kb, withRelnRenames);
+                            SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula(lang);
+                            result = stptp.tptpParseSUOKIFString(f3.theFormula, false);
+                            //pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): result: " + result);
+                            if (result != null)
+                                f3.theTptpFormulas.add(result);
                         }
                         else if (lang.equals("tff")) {
-                            SUMOtoTFAform stptp = new SUMOtoTFAform();
+                            SUMOtoTFAform stfa = new SUMOtoTFAform();
                             f3.theTptpFormulas = new HashSet<>();
                             if (withRelnRenames != null) {
-                                String tfaForm = stptp.process(f3.theFormula);
+                                String tfaForm = stfa.process(f3.theFormula);
                                 if (tfaForm != null)
                                     f3.theTptpFormulas.add(tfaForm);
                             }
                         }
-                        if (f != null && f3 != null)
-                            f.theTptpFormulas.addAll(f3.theTptpFormulas);
-                        else
-                            System.out.println("Error in writeFile(): f or f3 is null");
+                        f.theTptpFormulas = f3.theTptpFormulas;
                     }
                 }
-                //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): formula: " + f.format("","",""));
-                //if (debug) pw.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
+                //if (f != null && f.theTptpFormulas != null)
+                //    pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
 
                 for (String theTPTPFormula : f.theTptpFormulas) {
-                    if (!filterAxiom(f,theTPTPFormula,pr)) {
+                    if (!filterAxiom(f,theTPTPFormula,pr) && !alreadyWrittenTPTPs.contains(theTPTPFormula)) {
                         pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
                         pr.println(",axiom,(" + theTPTPFormula + ")).");
                         alreadyWrittenTPTPs.add(theTPTPFormula);
