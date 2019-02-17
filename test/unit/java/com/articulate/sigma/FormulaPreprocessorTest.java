@@ -54,6 +54,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        System.out.println("testAddTypes1(): actual: " + actual);
+        System.out.println("testAddTypes1(): expected: " + expected);
         assertEquals(expected, actual);
         assertTrue(expected.logicallyEquals(actual));
     }
@@ -77,6 +79,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        System.out.println("testAddTypes2(): actual: " + actual);
+        System.out.println("testAddTypes2(): expected: " + expected);
         //assertEquals(expected, actual);
         assertTrue(expected.logicallyEquals(actual));
     }
@@ -135,6 +139,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "        (ListOrderFn\n" +
                 "          (ListFn_1 ?FOO) ?NUMBER) )\n" +
                 "      (instance ?ELEMENT ?CLASS) )))";
+        System.out.println("test4(): actual: " + actual);
+        System.out.println("test4(): expected: " + expected);
         assertEquals(expected,actual);
     }
 
@@ -154,12 +160,75 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         String actual = fp.addTypeRestrictions(f, kb).toString();
         String expected = "(=>\n" +
                 "    (and\n" +
-                "      (instance ?NUMBER1 Quantity)\n" +
-                "      (instance ?NUMBER2 Quantity)\n" +
-                "      (instance ?NUMBER Quantity) )\n" +
+                "      (instance ?NUMBER1 Integer)\n" +
+                "      (instance ?NUMBER2 Integer)\n" +
+                "      (instance ?NUMBER Integer) )\n" +
                 "    (<=>\n" +
-                "   (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER)\n" +
-                "   (equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1)) )";
+                "   (equal " +
+                "     (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER)\n" +
+                "   (equal \n" +
+                "     (AdditionFn \n" +
+                "       (MultiplicationFn \n" +
+                "         (FloorFn \n" +
+                "           (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1)) )";
+        System.out.println("test5(): actual: " + actual);
+        System.out.println("test5(): expected: " + expected);
         assertEquals(expected,actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void test6() {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(<=>\n" +
+                "  (temporalPart ?POS\n" +
+                "    (WhenFn ?THING))\n" +
+                "  (time ?THING ?POS))";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        FormulaPreprocessor.debug = true;
+        String actual = fp.addTypeRestrictions(f, kb).toString();
+        String expected = "(=>\n" +
+                "  (and\n" +
+                "    (instance ?POS TimePosition)\n" +
+                "    (instance ?THING Physical) )\n" +
+                "  (<=>\n" +
+                "    (temporalPart ?POS\n" +
+                "      (WhenFn ?THING))\n" +
+                "    (time ?THING ?POS) ))";
+        System.out.println("test6(): actual: " + actual);
+        System.out.println("test6(): expected: " + expected);
+        assertEquals(expected,actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void test7() {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(<=>\n" +
+                "  (temporalPart ?POS\n" +
+                "    (WhenFn ?THING))\n" +
+                "  (time ?THING ?POS))";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        FormulaPreprocessor.debug = true;
+        Set<Formula> actual = fp.preProcess(f, false, kb);
+        String expected = "(=>\n" +
+                "  (and\n" +
+                "    (instance ?POS TimePosition)\n" +
+                "    (instance ?THING Physical) )\n" +
+                "  (<=>\n" +
+                "    (temporalPart ?POS\n" +
+                "      (WhenFn ?THING))\n" +
+                "    (time ?THING ?POS) ))";
+        System.out.println("test7(): actual: " + actual);
+        System.out.println("test7(): expected: " + expected);
+        assertEquals(expected,actual.iterator().next().toString());
     }
 }
