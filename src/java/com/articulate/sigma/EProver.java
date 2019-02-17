@@ -324,14 +324,14 @@ public class EProver {
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP.
+                    Set<String> tptpFormulas = new HashSet<>();
                     if (tptp) {
                         SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                        stptp._f = parsedF;
-                        stptp.tptpParse(parsedF,false, kb, processedFormulas);
+                        for (Formula p : processedFormulas)
+                            tptpFormulas.add(stptp.tptpParseSUOKIFString(p.theFormula,false));
                     }
                     // 3. Write to new tptp file
                     if (eprover != null) {
-                        Set<String> tptpFormulas = parsedF.theTptpFormulas;
                         Iterator<String> tptpIt = tptpFormulas.iterator();
                         while (tptpIt.hasNext()) {
                             String theTPTPFormula = tptpIt.next();
@@ -344,10 +344,7 @@ public class EProver {
                     }
                 }
             }
-        } 
-        catch (ParseException e) {
-            e.printStackTrace();
-        } 
+        }
         catch (IOException e) {
             e.printStackTrace();
         } 
