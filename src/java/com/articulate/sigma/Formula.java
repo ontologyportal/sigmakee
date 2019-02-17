@@ -1888,7 +1888,7 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean isHigherOrder(KB kb) {
 
-        System.out.println("Formula.isHigherOrder(): " + this);
+        //System.out.println("Formula.isHigherOrder(): " + this);
         if (higherOrder)
             return true;
         if (this.listP()) {
@@ -1920,7 +1920,7 @@ public class Formula implements Comparable, Serializable {
                     }
             }
         }
-        System.out.println("Formula.isHigherOrder(): not HOL: " + this);
+        //System.out.println("Formula.isHigherOrder(): not HOL: " + this);
         return false;
     }
 
