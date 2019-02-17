@@ -13,6 +13,21 @@ public class SUMOformulaToTPTPformula {
     public Formula _f = null;
     public static boolean debug = false;
     public static boolean hideNumbers = false;
+    public static String lang = "fof"; // or "tff"
+
+    /** ***************************************************************
+     */
+    public SUMOformulaToTPTPformula () {
+
+        lang = "fof";
+    }
+
+    /** ***************************************************************
+     */
+    public SUMOformulaToTPTPformula (String l) {
+
+        lang = l;
+    }
 
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
@@ -60,24 +75,16 @@ public class SUMOformulaToTPTPformula {
                 Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF, 
                 Formula.EQUAL);
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
-/*
-        List<String> kifPredicates =
-            Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE, "Integer", "RealNumber",
-                          "<=","<",">",">=",
-                          "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
 
-        List<String> tptpPredicates = Arrays.asList("$true","$false","$int", "$real",
-                                                    "lesseq","less","greater","greatereq",
-                                                    "lesseq","less","greater","greatereq");
-*/
         List<String> kifPredicates =
-                Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE,
-                        "<=","<",">",">=",
+                Arrays.asList("<=","<",">",">=",
                         "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
-
-        List<String> tptpPredicates = Arrays.asList("$true","$false",
-                "lesseq","less","greater","greatereq",
+        List<String> tptpPredicates = Arrays.asList("lesseq","less","greater","greatereq",
                 "lesseq","less","greater","greatereq");
+
+        List<String> kifConstants =
+                Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE);
+        List<String> tptpConstants = Arrays.asList("$true","$false");
 
         List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN, 
                 Formula.PLUSFN, Formula.MINUSFN);
@@ -112,26 +119,31 @@ public class SUMOformulaToTPTPformula {
                     : 'x');
         if (ch0 == '?' || ch0 == '@')
             return(Formula.termVariablePrefix + st.substring(1).replace('-','_'));
+
         //----Translate special predicates
-        translateIndex = 0;
-        while (translateIndex < kifPredicates.size() && !st.equals(kifPredicates.get(translateIndex)))
-            translateIndex++;
-        if (translateIndex < kifPredicates.size())
-            // return((hasArguments ? "$" : "") + tptpPredicates[translateIndex]);
-            return(tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
+        if (lang.equals("tff")) {
+            translateIndex = kifPredicates.indexOf(st);
+            if (translateIndex != -1)
+                return (tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
+        }
+
+        //----Translate special constants
+        translateIndex = kifConstants.indexOf(st);
+        if (translateIndex != -1)
+            return(tptpConstants.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
+
         //----Translate special functions
-        translateIndex = 0;
-        while (translateIndex < kifFunctions.size() && !st.equals(kifFunctions.get(translateIndex)))
-            translateIndex++;
-        if (translateIndex < kifFunctions.size())
-            // return((hasArguments ? "$" : "") + tptpFunctions[translateIndex]);
-            return(tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
+        if (lang.equals("tff")) {
+            translateIndex = kifFunctions.indexOf(st);
+            if (translateIndex != -1)
+                return (tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
+        }
+
         //----Translate operators
-        translateIndex = 0;
-        while (translateIndex < kifOps.size() && !st.equals(kifOps.get(translateIndex)))
-            translateIndex++;
-        if (translateIndex < kifOps.size())
+        translateIndex = kifOps.indexOf(st);
+        if (translateIndex != -1)
             return(tptpOps.get(translateIndex));
+
         //----Do nothing to numbers
         if (type == StreamTokenizer.TT_NUMBER ||
             (st != null && (Character.isDigit(ch0) ||
@@ -430,6 +442,7 @@ public class SUMOformulaToTPTPformula {
      * Parse formulae into TPTP format
      * Result is returned in _f.theTptpFormulas
      */
+    @Deprecated  // call tptpParseSUOKIFString() directly
     public void tptpParse(Formula input, boolean query, KB kb, Set<Formula> preProcessedForms)
         throws ParseException, IOException {
 
@@ -483,6 +496,7 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * Parse formulae into TPTP format
      */
+    @Deprecated
     public Set<String> tptpParse(Formula input, boolean query, KB kb) throws ParseException, IOException {
 
         tptpParse(input,query, kb, null);
