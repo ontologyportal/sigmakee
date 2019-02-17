@@ -17,7 +17,6 @@ public class SUMOformulaToTPTPformulaTest {
 
         String kifstring, expectedRes, actualRes;
 
-        // test1: passed
         kifstring = "(=> " +
                 "(instance ?X P)" +
                 "(instance ?X Q))";
@@ -33,7 +32,6 @@ public class SUMOformulaToTPTPformulaTest {
     public void TesttptpParseSUOKIFString2() {
 
         String kifstring, expectedRes, actualRes;
-        // test2: passed
         kifstring = "(=> " +
                 "(or" +
                 "(instance ?X Q)" +
@@ -51,7 +49,6 @@ public class SUMOformulaToTPTPformulaTest {
     public void TesttptpParseSUOKIFString3() {
 
         String kifstring, expectedRes, actualRes;
-        // test3: passed
         kifstring = "(or " +
                 "(not " +
                 "(instance ?X Q))" +
@@ -68,7 +65,6 @@ public class SUMOformulaToTPTPformulaTest {
     public void TesttptpParseSUOKIFString4() {
 
         String kifstring, expectedRes, actualRes;
-        // test3: passed
         kifstring = "(<=>\n" +
                 "    (instance ?NUMBER NegativeRealNumber)\n" +
                 "    (and\n" +
@@ -86,13 +82,25 @@ public class SUMOformulaToTPTPformulaTest {
     public void TesttptpParseSUOKIFString5() {
 
         String kifstring, expectedRes, actualRes;
-        // test3: passed
         kifstring = "(<=>\n" +
                 "    (instance ?NUMBER NegativeRealNumber)\n" +
                 "    (and\n" +
                 "        (lessThan ?NUMBER 0.001)\n" +    // nonsense just to test number hiding
                 "        (instance ?NUMBER RealNumber)))";
         expectedRes = "( ( ! [V__NUMBER] : (s__instance(V__NUMBER,s__NegativeRealNumber) <=> (less(V__NUMBER,n__0_001) & s__instance(V__NUMBER,s__RealNumber))) ) )";
+        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
+        System.out.println(actualRes);
+        assertEquals(expectedRes, actualRes);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void TesttptpParseSUOKIFString6() {
+
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(<=> (temporalPart ?POS (WhenFn ?THING)) (time ?THING ?POS))";
+        expectedRes = "";
         actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
         System.out.println(actualRes);
         assertEquals(expectedRes, actualRes);
