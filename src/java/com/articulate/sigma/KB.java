@@ -3282,33 +3282,20 @@ public class KB implements Serializable {
             // System.out.println("INFO in KB.preProcess(): form : " + form);
             // System.out.println("INFO in KB.preProcess(): f : " + f);
             FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processed = fp.preProcess(f, false, this); // not
-                                                                            // queries
+            Set<Formula> processed = fp.preProcess(f, false, this); // not queries
+            Set<String> tptp = new HashSet<>();
             if (tptpParseP) {
-                try {
-                    SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                    stptp._f = f;
-                    stptp.tptpParse(f, false, this, processed); // not a query
-                }
-                catch (ParseException pe) {
-                    String err = ("Error in KB.preProcess() " + pe.getMessage() + " at line " + f.startLine
-                            + " in file " + f.sourceFile);
-                    errors.add(err);
-                }
-                catch (IOException ioe) {
-                    String err = "Error in KB.preProcess(): " + ioe.getMessage();
-                    System.out.println(err);
-                    errors.add(err);
+                SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                for (Formula pform : processed) {
+                    tptp.add(stptp.tptpParseSUOKIFString(pform.theFormula, false)); // not a query
+                    errors.addAll(pform.getErrors());
                 }
             }
-            errors.addAll(f.getErrors());
-            Formula p = null;
-            Iterator<Formula> itp = processed.iterator();
-            while (itp.hasNext()) {
-                p = itp.next();
-                if (StringUtil.isNonEmptyString(p.theFormula)) {
-                    newTreeSet.add(p.theFormula);
-                    errors.addAll(p.getErrors());
+
+            Iterator<String> itp = tptp.iterator();
+            for (String p : tptp) {
+                if (StringUtil.isNonEmptyString(p)) {
+                    newTreeSet.add(p);
                 }
                 else {
                     String warn = "Warning in KB.preProcess(): empty formula: " + p;
