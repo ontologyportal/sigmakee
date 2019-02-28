@@ -238,7 +238,7 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
                             String reasoner, boolean isQuestion, PrintWriter pw) {
 
-        //if (debug && pw != null) pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(5): onlyPlainFOL: " + onlyPlainFOL);
+        //if (debug && pw != null) pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(5): onlyPlainFOL: " + onlyPlainFOL);
         String result = null;
         PrintWriter pr = null;
         try {
@@ -263,7 +263,7 @@ public class SUMOKBtoTPTPKB {
 
             OrderedFormulae orderedFormulae = new OrderedFormulae();
             orderedFormulae.addAll(kb.formulaMap.values());
-            //if (debug) pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): added formulas: " + orderedFormulae.size());
+            //if (debug) pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): added formulas: " + orderedFormulae.size());
             List<String> tptpFormulas = null;
             File sf = null;
             int counter = 0;
@@ -290,7 +290,7 @@ public class SUMOKBtoTPTPKB {
                         if (lang.equals("fof")) {
                             SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula(lang);
                             result = stptp.tptpParseSUOKIFString(f3.theFormula, false);
-                            //pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): result: " + result);
+                            //pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null)
                                 f3.theTptpFormulas.add(result);
                         }
@@ -307,10 +307,12 @@ public class SUMOKBtoTPTPKB {
                     }
                 }
                 //if (f != null && f.theTptpFormulas != null)
-                //    pr.println("% INFO in SUMOKBtoTPTPKB.writeTPTPFile(): tptp formulas: " + f.theTptpFormulas);
+                //    pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): tptp formulas: " + f.theTptpFormulas);
 
                 for (String theTPTPFormula : f.theTptpFormulas) {
-                    if (!filterAxiom(f,theTPTPFormula,pr) && !alreadyWrittenTPTPs.contains(theTPTPFormula)) {
+                    if (!StringUtil.emptyString(theTPTPFormula) &&
+                            !filterAxiom(f,theTPTPFormula,pr) &&
+                            !alreadyWrittenTPTPs.contains(theTPTPFormula)) {
                         pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
                         pr.println(",axiom,(" + theTPTPFormula + ")).");
                         alreadyWrittenTPTPs.add(theTPTPFormula);
