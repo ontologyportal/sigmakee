@@ -169,7 +169,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__graphPart(V__ARC2, V__PATH) & s__arcWeight(V__ARC1, V__NUMBER1) & s__arcWeight(V__ARC2, V__NUMBER2) &  " +
                 "! [V__ARC3:$i] : (s__graphPart(V__ARC3, V__PATH) => " +
                 "equal(V__ARC3 ,V__ARC1) | equal(V__ARC3 ,V__ARC2)) => " +
-                "equal(s__PathWeightFn(V__PATH) ,AdditionFn(V__NUMBER1 ,V__NUMBER2)))";
+                "equal(s__PathWeightFn(V__PATH) ,s__AdditionFn(V__NUMBER1 ,V__NUMBER2)))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:" + actualRes);
         System.out.println("expected:" + expectedRes);
@@ -230,6 +230,300 @@ public class SUMOtoTFATest extends UnitTestBase {
         expectedRes = "! [V__NUMBER1 : $i] : ( ? [V__ARC1:$i, V__ARC2:$i, V__PATH:$i] : " +
                 "(s__graphPart(V__ARC1, V__PATH) & s__graphPart(V__ARC2, V__PATH) & s__arcWeight(V__ARC1, V__NUMBER1)))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void test9() {
+
+        System.out.println("\n========= test 9 ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (and (instance ?INT1 Integer) (instance ?INT2 Integer)) (not (and (lessThan ?INT1 ?INT2) (lessThan ?INT2 (SuccessorFn ?INT1)))))\n";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        if (forms == null || forms.size() == 0)
+            return;
+        expectedRes = "! [V__INT2 : $int,V__INT1 : $int] : (~$less(V__INT1 ,V__INT2) & $less(V__INT2 ,s__SuccessorFn__0In1InFn(V__INT1)))";
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testElimLogops() {
+
+        System.out.println("\n========= test 9 ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=>\n" +
+                "  (not\n" +
+                "    (and\n" +
+                "      (lessThan ?INT1 ?INT2)\n" +
+                "      (lessThan ?INT2\n" +
+                "        (SuccessorFn ?INT1)))))\n";
+        actualRes = SUMOtoTFAform.elimUnitaryLogops(new Formula(kifstring));
+
+        expectedRes = "(not\n" +
+                "    (and\n" +
+                "      (lessThan ?INT1 ?INT2)\n" +
+                "      (lessThan ?INT2\n" +
+                "        (SuccessorFn ?INT1))))";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTemporalComp() {
+
+        System.out.println("\n========= test testTemporalComp ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (and (instance ?MONTH Month) (duration ?MONTH (MeasureFn ?NUMBER DayDuration))) " +
+                "(equal (CardinalityFn (TemporalCompositionFn ?MONTH Day)) ?NUMBER))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__MONTH : $i,V__NUMBER : $real] : (s__instance(V__MONTH, s__Month) & " +
+                "s__duration(V__MONTH, s__MeasureFn__1ReFn(V__NUMBER, s__DayDuration)) => " +
+                "s__CardinalityFn(s__TemporalCompositionFn(V__MONTH, s__Day)) = V__NUMBER))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testBigNumber() {
+
+        System.out.println("\n========= test testBigNumber ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (and (instance ?UNIT UnitOfMeasure) (equal ?TERAUNIT (TeraFn ?UNIT))) " +
+                "(equal (MeasureFn 1 ?TERAUNIT) (MeasureFn 1000000000 (KiloFn ?UNIT))))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__TERAUNIT : $i,V__UNIT : $i] : (s__instance(V__UNIT, s__UnitOfMeasure) & " +
+                "equal(V__TERAUNIT ,s__TeraFn(V__UNIT)) => " +
+                "equal(s__MeasureFn(1.0, V__TERAUNIT) ,s__MeasureFn(1000000000.0, (s__KiloFn(V__UNIT)))))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testNumber() {
+
+        System.out.println("\n========= test testNumber ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (diameter ?CIRCLE ?LENGTH) (exists (?HALF) " +
+                "(and (radius ?CIRCLE ?HALF) (equal (MultiplicationFn ?HALF 2) ?LENGTH))))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__CIRCLE : $i,V__LENGTH : $real] : (s__diameter(V__CIRCLE, V__LENGTH) =>  " +
+                "? [V__HALF:$real] : (s__radius(V__CIRCLE, V__HALF) & " +
+                "equal(s__MultiplicationFn__2ReFn(V__HALF ,2.0) ,V__LENGTH))))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testMostSpecific() {
+
+        System.out.println("\n========= test testMostSpecific ==========\n");
+        assertEquals("RealNumber",SUMOtoTFAform.mostSpecificTerm(Arrays.asList("RealNumber", "LengthMeasure")));
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTemporalComp2() {
+
+        System.out.println("\n========= test testTemporalComp2 ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (and (instance ?MONTH Month) (duration ?MONTH (MeasureFn ?NUMBER DayDuration))) " +
+                "(equal (CardinalityFn (TemporalCompositionFn ?MONTH Day)) ?NUMBER))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__MONTH : $i,V__NUMBER : $real] : (s__instance(V__MONTH, s__Month) & " +
+                "s__duration(V__MONTH, s__MeasureFn__1ReFn(V__NUMBER, s__DayDuration)) => " +
+                "s__CardinalityFn(s__TemporalCompositionFn(V__MONTH, s__Day)) = V__NUMBER))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testCeiling() {
+
+        System.out.println("\n========= test testTemporalComp ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (equal (CeilingFn ?NUMBER) ?INT) (not (exists (?OTHERINT) " +
+                "(and (instance ?OTHERINT Integer) " +
+                "(greaterThanOrEqualTo ?OTHERINT ?NUMBER) (lessThan ?OTHERINT ?INT)))))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__NUMBER : $int,V__INT : $int] : " +
+                "(s__CeilingFn__0In1ReFn(V__NUMBER) = V__INT => " +
+                "~ ? [V__OTHERINT:$int] : ($greatereq(V__OTHERINT ,V__NUMBER) & " +
+                "$less(V__OTHERINT ,V__INT))))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testInList() {
+
+        System.out.println("\n========= test testInList ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (equal (GreatestCommonDivisorFn @ROW) ?NUMBER) " +
+                "(forall (?ELEMENT) (=> (inList ?ELEMENT (ListFn @ROW)) " +
+                "(equal (RemainderFn ?ELEMENT ?NUMBER) 0))))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__ROW1 : $int,V__NUMBER : $int] : " +
+                "(s__GreatestCommonDivisorFn_1__0In1InFn(V__ROW1) = V__NUMBER =>  " +
+                "! [V__ELEMENT:$int] : (s__inList__1In(V__ELEMENT, s__ListFn_1__1InFn(V__ROW1)) => " +
+                "s__RemainderFn__0In1In2InFn(V__ELEMENT, V__NUMBER) = 0)))";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testLeastCommon() {
+
+        System.out.println("\n========= test testLeastCommon ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (equal (LeastCommonMultipleFn @ROW) ?NUMBER) " +
+                "(=> (inList ?ELEMENT (ListFn @ROW)) (instance ?ELEMENT Number)))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__ELEMENT : $i,V__ROW1 : $i,V__NUMBER : $int] : " +
+                "(s__LeastCommonMultipleFn_1(V__ROW1) = V__NUMBER => " +
+                "s__inList(V__ELEMENT, s__ListFn_1(V__ROW1)) => s__instance(V__ELEMENT, s__Number)))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testMult() {
+
+        System.out.println("\n========= test testMult ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (equal (SquareRootFn ?NUMBER1) ?NUMBER2) (equal (MultiplicationFn ?NUMBER2 ?NUMBER2) ?NUMBER1))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
+                "(equal(s__SquareRootFn__1ReFn(V__NUMBER1) ,V__NUMBER2) => " +
+                "$product(V__NUMBER2 ,V__NUMBER2) = V__NUMBER1)))";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testDay() {
+
+        System.out.println("\n========= test testDay ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (instance ?DAY (DayFn ?NUMBER ?MONTH)) (lessThanOrEqualTo ?NUMBER 31))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__DAY : $i,V__MONTH : $i,V__NUMBER : $int] : " +
+                "(s__instance(V__DAY, s__DayFn__1InFn(V__NUMBER, V__MONTH)) => $lesseq(V__NUMBER ,31)))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testExponent() {
+
+        System.out.println("\n========= test testExponent ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (instance ?NUMBER Quantity) " +
+                "(equal (ReciprocalFn ?NUMBER) (ExponentiationFn ?NUMBER -1)))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__NUMBER : $i] : (s__instance(V__NUMBER, s__Quantity) => " +
+                "equal(s__ReciprocalFn(V__NUMBER) ,s__ExponentiationFn__2InFn(V__NUMBER, -1))))).";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testInstance() {
+
+        System.out.println("\n========= test testInstance ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (instance ?SET FiniteSet) " +
+                "(exists (?NUMBER) (and (instance ?NUMBER NonnegativeInteger) " +
+                "(equal ?NUMBER (CardinalityFn ?SET)))))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "! [V__SET : $i] : (s__instance(V__SET, s__FiniteSet) =>  " +
+                "? [V__NUMBER:$int] : ($greater(V__NUMBER ,-1) & V__NUMBER = s__CardinalityFn(V__SET)))";
+        System.out.println("actual:" + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testRadian() {
+
+        System.out.println("\n========= test testRadian ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(equal (MeasureFn ?NUMBER AngularDegree) " +
+                "(MeasureFn (MultiplicationFn ?NUMBER (DivisionFn Pi 180)) Radian))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "(! [V__NUMBER : $real] : " +
+                "(equal(s__MeasureFn__1ReFn(V__NUMBER, s__AngularDegree) ," +
+                "s__MeasureFn__1ReFn($product(V__NUMBER ,$quotient_e(3.141592653589793 ,180.0)), s__Radian))))";
         System.out.println("actual:" + actualRes);
         System.out.println("expected:" + expectedRes);
         assertEquals(expectedRes, actualRes.trim());
