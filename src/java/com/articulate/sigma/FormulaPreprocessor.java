@@ -1095,7 +1095,7 @@ public class FormulaPreprocessor {
                 if (addTypes)
                     fnew.theFormula = fp.addTypeRestrictions(f,kb).theFormula;
                 else
-                    System.out.println("preProcess(): not adding types");
+                    if (debug) System.out.println("preProcess(): not adding types");
                 f.read(fnew.theFormula);
                 f.higherOrder = fnew.higherOrder;
             }
