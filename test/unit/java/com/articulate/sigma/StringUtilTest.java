@@ -38,6 +38,7 @@ public class StringUtilTest {
         assertTrue(StringUtil.isNumeric("53.0"));
         assertFalse(StringUtil.isNumeric("Hello!"));
         assertTrue(StringUtil.isNumeric("0.000001"));
+        assertTrue(StringUtil.isNumeric("1000000000"));
     }
 
     /** *****************************************************************
@@ -46,7 +47,6 @@ public class StringUtilTest {
     public void testRemoveEscapes() {
 
         assertEquals("  ",StringUtil.removeEscapes("\u0641\u0646\u062F\u0642 \u0648\u064A\u0633\u062A\u064A\u0646 "));
-
     }
 
     /** *****************************************************************
