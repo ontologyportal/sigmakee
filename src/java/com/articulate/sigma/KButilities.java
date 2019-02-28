@@ -468,6 +468,23 @@ public class KButilities {
         }
         System.out.println(total);
     }
+    
+    
+    /** *************************************************************
+     *  Find all formulas in which the SUMO term is involved.  
+     */
+    public static Set<Formula> getAllFormulasOfTerm(KB kb, String term) {
+		HashSet<Formula> result = new HashSet<>();
+		Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");		
+		for (String f : kb.formulaMap.keySet()){
+			Matcher matcher = pattern.matcher(f);
+			if (matcher.find()) {
+				result.add(kb.formulaMap.get(f));
+			}
+		}
+		return result;
+	}
+
 
     /** *************************************************************
      */
