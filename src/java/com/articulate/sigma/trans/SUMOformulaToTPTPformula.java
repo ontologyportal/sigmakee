@@ -19,7 +19,6 @@ public class SUMOformulaToTPTPformula {
      */
     public SUMOformulaToTPTPformula () {
 
-        lang = "fof";
     }
 
     /** ***************************************************************
