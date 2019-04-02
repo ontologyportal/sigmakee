@@ -52,7 +52,7 @@ public class WordNet implements Serializable {
 
     /** This array contains all of the compiled Pattern objects that
      * will be used by methods in this file. */
-    private static Pattern[] regexPatterns = null;
+    public static Pattern[] regexPatterns = null;
 
     public HashMap<String,HashSet<String>> nounSynsetHash = new HashMap<>();   // Words in root form are String keys,
     public HashMap<String,HashSet<String>> verbSynsetHash = new HashMap<>();   // String values are 8-digit synset lists.
@@ -131,6 +131,11 @@ public class WordNet implements Serializable {
      * from index.sense, which reduces all words to lower case */
     public HashMap<String,String> senseIndex = new HashMap<String,String>();
 
+    /** A HashMap where the keys are of the form word%POS:lex_filenum:lex_id (numeric POS)
+     * and values are 8 digit WordNet synset byte offsets. Note that all words are
+     * from index.sense, which reduces all words to lower case */
+    public HashMap<String,String> senseKeys = new HashMap<String,String>();
+
     /** A HashMap where the keys are 9 digit POS prefixed WordNet synset byte offsets, 
      * and the values are of the form word_POS_sensenum (alpha POS like "VB"). Note
      * that all words are from index.sense, which reduces
@@ -169,7 +174,7 @@ public class WordNet implements Serializable {
     /**  This array contains all of the regular expression strings that
      * will be compiled to Pattern objects for use in the methods in
      * this file. */
-    private static final String[] regexPatternStrings =
+    public static final String[] regexPatternStrings =
     {
         // 0: WordNet.processPointers()
         "^\\s*\\d\\d\\s\\S\\s\\d\\S\\s",
@@ -226,7 +231,7 @@ public class WordNet implements Serializable {
         "^Word: ([^ ]+) Values: (.*)",
 
         // 18: WordNet.readSenseIndex()
-        "([^%]+)%([^:]*):[^:]*:[^:]*:[^:]*:[^ ]* ([^ ]+) ([^ ]+) .*",
+        "([^%]+)%([^:]*):([^:]*):([^:]*)?:([^:]*)?:([^ ]*)? ([^ ]+)? ([^ ]+).*",
 
         // 19: WordNet.removePunctuation()
         "(\\w)\\'re",
@@ -1181,15 +1186,22 @@ public class WordNet implements Serializable {
             Matcher m = null;
             String line;
             while ((line = lr.readLine()) != null) {
-                // 18: Pattern p = Pattern.compile("([^%]+)%([^:]*):[^:]*:[^:]*:[^:]*:[^ ]* ([^ ]+) ([^ ]+) .*");
+                // 18: Pattern p = Pattern.compile("([^%]+)%([^:]*):([^:]*):([^:]*):([^:]*):([^ ]*) ([^ ]+) ([^ ]+) .*");
                 m = regexPatterns[18].matcher(line);
                 if (m.matches()) {
                     String word = m.group(1);
-                    String pos = m.group(2);  
-                    String synset = m.group(3);
-                    String sensenum = m.group(4);
+                    String pos = m.group(2);  // WN's ss_type
+                    String lexFilenum = m.group(3);
+                    String lexID = m.group(4);
+                    String headword = m.group(5);
+                    String headID = m.group(6);
+                    String synset = m.group(7);
+                    String sensenum = m.group(8);
                     String posString = WordNetUtilities.posNumberToLetters(pos); // alpha POS - NN,VB etc
                     String key = word + "_" + posString + "_" + sensenum;
+                    String sensekey = word + "%" + pos + ":" + lexFilenum + ":" + lexID;
+                    senseKeys.put(sensekey,synset);
+                    //System.out.println("WordNet.readSenseIndex(): " + sensekey + " " + synset);
                     ArrayList<String> al = wordsToSenseKeys.get(word);
                     if (al == null) {
                         al = new ArrayList<String>();
