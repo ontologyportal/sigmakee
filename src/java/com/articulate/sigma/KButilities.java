@@ -28,6 +28,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.articulate.sigma.KB;
+import com.articulate.sigma.wordNet.WordNet;
 
 /** *****************************************************************
  *  Contains utility methods for KBs
@@ -139,6 +140,25 @@ public class KButilities {
                 System.out.println(term + " " + al.size());
             }
         }
+    }
+
+    /** *************************************************************
+     */
+    public static void countProcesses(KB kb) {
+
+        int count = 0;
+        int wncount = 0;
+        Iterator it = kb.terms.iterator();
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            if (kb.isSubclass(term,"Process")) {
+                count++;
+                if (WordNet.wn.SUMOHash.containsKey(term))
+                    wncount += WordNet.wn.SUMOHash.get(term).size();
+            }
+        }
+        System.out.println("SUMO Process subclass count: " + count);
+        System.out.println("SUMO Process synsets: " + wncount);
     }
 
     /** *************************************************************
@@ -437,7 +457,8 @@ public class KButilities {
                 if (Character.isLowerCase(term.charAt(0)))
                     System.out.println(term);
             }
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
@@ -468,8 +489,7 @@ public class KButilities {
         }
         System.out.println(total);
     }
-    
-    
+
     /** *************************************************************
      *  Find all formulas in which the SUMO term is involved.  
      */
@@ -484,7 +504,6 @@ public class KButilities {
 		}
 		return result;
 	}
-
 
     /** *************************************************************
      */
@@ -503,6 +522,7 @@ public class KButilities {
         //for (String s : generateSemanticNetwork(kb))
         //    System.out.println(s);
         countStringWords(kb);
+        countProcesses(kb);
     }
 }
 
