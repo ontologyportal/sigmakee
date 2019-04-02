@@ -630,6 +630,36 @@ public class WSD {
     }
 
     /** ***************************************************************
+     *  @return each line of a file into an array of String.
+     */
+    public static ArrayList<String> readFile(String filename) {
+
+        System.out.println("In WSD.readFile(): Reading file " + filename);
+        ArrayList<String> result = new ArrayList<String>();
+        LineNumberReader lr = null;
+        try {
+            String line;
+            File file = new File(filename);
+            if (file == null) {
+                System.out.println("Error in WSD.readFile(): The file does not exist in " + filename);
+                return null;
+            }
+            long t1 = System.currentTimeMillis();
+            FileReader r = new FileReader(file);
+            lr = new LineNumberReader(r);
+            while ((line = lr.readLine()) != null) {
+                result.add(line);
+            }
+        }
+        catch (IOException ex) {
+            System.out.println("Error in WSD.readSick()");
+            System.out.println(ex.getMessage());
+            ex.printStackTrace();
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      *  Extract SUMO terms from a file assuming one sentence per line
      *  @return a Map of SUMO term keys and integer counts of their
      *  appearance
@@ -668,6 +698,21 @@ public class WSD {
             System.out.println(key + "\t" + result.get(key) + "\t" + SUMO + "\t" + wordstr);
         }
         return result;
+    }
+
+    /** ***************************************************************
+     *  Extract SUMO terms from a file assuming one sentence per line
+     *  print SUMO term keys and integer counts of their
+     *  appearance
+     */
+    public static void printSUMOFromFileByLine(String filename) {
+
+        HashMap<String,Integer> result = new HashMap<>();
+        ArrayList<String> far = readFile(filename);
+        for (String line : far) {
+            System.out.println("\n" + line);
+            collectSUMOFromString(line);
+        }
     }
 
     /** ***************************************************************
@@ -818,6 +863,10 @@ public class WSD {
             KBmanager.getMgr().initializeOnce();
             collectSUMOFromFile(args[1]);
         }
+        else if (args != null && args.length > 0 && (args[0].equals("-fp"))) {
+            KBmanager.getMgr().initializeOnce();
+            printSUMOFromFileByLine(args[1]);
+        }
         else if (args != null && args.length > 0 && (args[0].equals("-p"))) {
             KBmanager.getMgr().initializeOnce();
             collectSUMOFromString(StringUtil.removeEnclosingQuotes(args[1]));
@@ -831,6 +880,7 @@ public class WSD {
             System.out.println("  options:");
             System.out.println("  -h - show this help screen");
             System.out.println("  -f <file> - find all SUMO terms in a file");
+            System.out.println("  -fp <file> - find all SUMO terms in a file by line");
             System.out.println("  -p one quoted sentence with space delimited tokens into SUMO ");
             System.out.println("  -i interactive mode ");
         }
