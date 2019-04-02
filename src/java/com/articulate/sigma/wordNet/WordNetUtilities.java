@@ -40,6 +40,7 @@ public class WordNetUtilities {
     public static HashMap<String,String> mappings = new HashMap<String,String>();
     public static int TPTPidCounter = 1;
     public static int errorCount = 0;
+    public static int patternNum = 18; // sense key patten
 
     /** ***************************************************************
      *  Get a SUMO term minus its &% prefix and one character mapping
@@ -91,7 +92,7 @@ public class WordNetUtilities {
      */
     public static boolean isValidKey(String senseKey) {
 
-        String m = "[^_]+_(NN|VB|JJ|RB|AS)_[\\d]+";
+        String m = ".*_(NN|VB|JJ|RB|AS)_[\\d]+";
         return senseKey.matches(m);
     }
 
@@ -139,7 +140,7 @@ public class WordNetUtilities {
 
         int lastUS = senseKey.lastIndexOf("_");
         if (lastUS < 0) {
-            System.out.println("Info in WordNetUtilities.getPOSfromKey(): missing word: " + senseKey);
+            System.out.println("Info in WordNetUtilities.getWordFromKey(): missing word: " + senseKey);
             new Exception().printStackTrace();
             return "";
         }
@@ -167,6 +168,73 @@ public class WordNetUtilities {
 
         String POS = getPOSfromKey(senseKey);
         String POSnum = posLettersToNumber(POS);
+        return POSnum + WordNet.wn.senseIndex.get(senseKey);
+    }
+
+    /** ***************************************************************
+     * Extract the info in a word%num:num:num sense key.
+     *     colonp = Pattern.compile("([^%]+)%([^:]*):([^:]*):([^:]*):([^:]*)");
+     */
+    public static ArrayList<String> parseColonKey (String colonKey) {
+
+        ArrayList<String> result = new ArrayList<>();
+        Pattern p = Pattern.compile("([^%]+)%([^:]*):([^:]*):([^:]*)");
+        Matcher m = p.matcher(colonKey);
+        if (m.matches()) {
+            String word = m.group(1);
+            String pos = m.group(2);
+            String sensenum = m.group(3);
+            result.add(word);
+            result.add(pos);
+            result.add(sensenum);
+        }
+        else
+            System.out.println("Error in WordNetUtilities.parseColonKey(): improper key: " + colonKey);
+        return result;
+    }
+
+    /** ***************************************************************
+     * Extract the word from a word%num:num:num sense key.
+     */
+    public static String getWordFromColonKey (String key) {
+
+        ArrayList<String> result = parseColonKey(key);
+        if (result.size() < 3) {
+            System.out.println("Info in WordNetUtilities.getWordFromColonKey(): missing word: " + key);
+            new Exception().printStackTrace();
+            return "";
+        }
+        return result.get(0);
+    }
+
+    /** ***************************************************************
+     * Extract the sense number from a word%num:num:num sense key.
+     */
+    public static String getPOSNumFromColonKey (String key) {
+
+        ArrayList<String> result = parseColonKey(key);
+        if (result.size() < 3) {
+            System.out.println("Info in WordNetUtilities.getPOSNumFromColonKey(): missing num: " + key);
+            new Exception().printStackTrace();
+            return "";
+        }
+        return result.get(1);
+    }
+
+    /** ***************************************************************
+     * Extract the synset corresponding to a word%num:num:num sense key.
+     */
+    public static String getSenseFromColonKey (String key) {
+
+        ArrayList<String> result = parseColonKey(key);
+        if (result.size() < 3) {
+            System.out.println("Info in WordNetUtilities.getSenseFromColonKey(): missing or bad key: " + key);
+            new Exception().printStackTrace();
+            return "";
+        }
+        String POSnum = result.get(1);
+        String POSlet = posLettersToNumber(POSnum);
+        String senseKey = result.get(0) + "_" + POSlet + "_" + result.get(2);
         return POSnum + WordNet.wn.senseIndex.get(senseKey);
     }
 
@@ -2537,9 +2605,10 @@ public class WordNetUtilities {
      */
     public static void main (String[] args) {
 
-        KBmanager.getMgr().initializeOnce();
-        lawDomainInfo();
-
+        //KBmanager.getMgr().initializeOnce();
+        //lawDomainInfo();
+        WordNet.initOnce();
+        System.out.println(parseColonKey("worm%2:38:00"));
         /*
         withThoughtEmotion = false;
         KBmanager.getMgr().initializeOnce();
