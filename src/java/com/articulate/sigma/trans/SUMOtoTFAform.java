@@ -450,6 +450,22 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     */
+    private static boolean allOfType(ArrayList<String> args, String type) {
+
+        ArrayList<String> argtypes = collectArgTypes(args);
+        if (debug) System.out.println("SUMOtoTFAform.allOfType(): arg types: " + argtypes);
+        for (String arg : argtypes) {
+            if (!StringUtil.emptyString(arg) && !arg.equals(type)) {
+                if (debug) System.out.println("SUMOtoTFAform.allOfType(): returning false ");
+                return false;
+            }
+        }
+        if (debug) System.out.println("SUMOtoTFAform.allOfType(): returning true ");
+        return true;
+    }
+
+    /** *************************************************************
      * equal is a special case since it needs translation to '='
      * regardless of argument types since it's polymorphic on $i also.
      */
@@ -471,8 +487,8 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): op: " + op);
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
         if (op.startsWith("equal")) {
-            return "(" + processRecurse(new Formula(args.get(0))) + " = " +
-                    processRecurse(new Formula(args.get(1))) + ")";
+            return processRecurse(new Formula(args.get(0))) + " = " +
+                    processRecurse(new Formula(args.get(1)));
         }
         if (op.startsWith("greaterThanOrEqualTo"))
             return "$greatereq(" + processRecurse(new Formula(args.get(0))) + " ," +
@@ -519,9 +535,14 @@ public class SUMOtoTFAform {
         if (op.startsWith("MultiplicationFn"))
             return "$product(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
-        if (op.startsWith("DivisionFn"))
-            return "$quotient_e(" + processRecurse(new Formula(args.get(0))) + " ," +
+        if (op.startsWith("DivisionFn")) {
+            if (allOfType(args,"Integer"))
+                return "$quotient_e(" + processRecurse(new Formula(args.get(0))) + " ," +
+                        processRecurse(new Formula(args.get(1))) + ")";
+            else
+                return "$quotient(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
+        }
         System.out.println("Error in SUMOtoTFAform.processMathOp(): bad math operator " + op + " in " + f);
         return "";
     }
