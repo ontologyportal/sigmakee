@@ -31,8 +31,8 @@ When running the container, the necessary folders and ``config.xml`` file should
 be mounted in the correct paths. This can be done with the ``--mount`` option of
 ``docker run``, i.e.:
 
-``docker run -d --rm -p 8080:8080 --m --mount type=bind,src=`pwd`/SUMO,dst=$KBDIR \
---mount type=bind,src=`pwd`/config.xml,dst=$KBDIR/config.xml \
+``docker run -d --rm -p 8080:8080 --m --mount type=bind,src=`pwd`/SUMO,dst=$KBDIR
+--mount type=bind,src=`pwd`/config.xml,dst=$KBDIR/config.xml
 --mount type=bind,src=`pwd`/WordNetMappings,dst=$KBDIR/WordNetMappings sigma:kee``
 
 Running for the first time
