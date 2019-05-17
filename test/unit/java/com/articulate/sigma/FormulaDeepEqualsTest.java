@@ -10,8 +10,11 @@ import static org.junit.Assert.assertTrue;
  */
 public class FormulaDeepEqualsTest extends UnitTestBase{
 
+    /***************************************************************
+     */
     @Test
     public void testDeepEquals() {
+
         Formula f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
@@ -81,9 +84,50 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
     }
 
+    /***************************************************************
+     */
+    @Test
+    public void testDeepEquals2() {
 
+        Formula f1 = new Formula();
+        f1.read("(exists (?Leigh-1 ?baby-4 ?blankets-6 ?swaddled-2)\n" +
+                "  (and\n" +
+                "    (orientation ?swaddled-2 ?blankets-6 Inside)\n" +
+                "    (destination ?swaddled-2 ?blankets-6)\n" +
+                "    (names ?Leigh-1 \"Leigh\")\n" +
+                "    (instance ?baby-4 HumanBaby)\n" +
+                "    (agent ?swaddled-2 ?Leigh-1)\n" +
+                "    (patient ?swaddled-2 ?baby-4)\n" +
+                "    (earlier\n" +
+                "      (WhenFn ?swaddled-2) Now)\n" +
+                "    (instance ?blankets-6 Blanket)\n" +
+                "    (instance ?Leigh-1 Human)\n" +
+                "    (instance ?swaddled-2 Covering)))");
+
+        Formula f2 = new Formula();
+        f2.read("(exists (?Leigh-1 ?baby-4 ?blankets-6 ?swaddled-2)\n" +
+                "  (and\n" +
+                "    (orientation ?swaddled-2 ?blankets-6 Inside)\n" +
+                "    (destination ?swaddled-2 ?blankets-6)\n" +
+                "    (names ?Leigh-1 \"Leigh\")\n" +
+                "    (instance ?swaddled-2 Covering)\n" +
+                "    (agent ?swaddled-2 ?Leigh-1)\n" +
+                "    (patient ?swaddled-2 ?baby-4)\n" +
+                "    (earlier\n" +
+                "      (WhenFn ?swaddled-2) Now)\n" +
+                "    (instance ?blankets-6 Blanket)\n" +
+                "    (instance ?Leigh-1 Human)\n" +
+                "    (instance ?baby-4 HumanBaby)) )");
+
+        //testing equal formulas
+        assertTrue(f1.deepEquals(f2));
+    }
+
+    /***************************************************************
+     */
     @Test
     public void testDeepEqualsErrorCases(){
+
         Formula f = new Formula();
         f.read("(<=> (instance ?REL SymmetricRelation) (forall (?INST1 ?INST2) (=> (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1)))))");
 
@@ -101,8 +145,11 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertTrue(f.deepEquals(f));
     }
 
+    /***************************************************************
+     */
     @Test
-    public void testLogicallyEqualsErrorCases(){
+    public void testLogicallyEqualsErrorCases() {
+
         Formula f = new Formula();
         f.read("(<=> (instance ?REL SymmetricRelation) (forall (?INST1 ?INST2) (=> (?REL ?INST1 ?INST2) (?REL ?INST2 ?INST1)))))");
 
@@ -120,8 +167,11 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertTrue(f.logicallyEquals(f));
     }
 
+    /***************************************************************
+     */
     @Test
     public void testUnifyWith() {
+
         Formula f1 = new Formula();
         f1.read("(=>" +
                 "    (instance ?C WalkingCane)" +
@@ -191,6 +241,8 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
 
     }
 
+    /***************************************************************
+     */
     @Test
     public void testUnifyWithMiscPredicates() {
 
@@ -208,6 +260,8 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         System.out.println("Execution time (in microseconds): " + ((stop - start) / 1000));
    }
 
+    /***************************************************************
+     */
     @Test
     public void testLogicallyEqualsPerformance() {
 
@@ -230,6 +284,5 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         assertTrue(expected.unifyWith(actual));
         long stop = System.nanoTime();
         System.out.println("Execution time (in microseconds): " + ((stop - start)/1000));
-
     }
 }
