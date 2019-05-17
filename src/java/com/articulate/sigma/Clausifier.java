@@ -46,12 +46,18 @@ public class Clausifier  {
      // generate unique Skolem terms.
     private static int SKOLEM_INDEX = 0;
 
+    public static boolean resetSkolem = false;
+
     /** ***************************************************************
      */
     public Clausifier(String s) {
 
         thisFormula = new Formula();
         thisFormula.read(s);
+        if (resetSkolem) {
+            System.out.println("Clausifer(): resetting skolem index");
+            SKOLEM_INDEX = 0;
+        }
     }
 
     /** ***************************************************************
@@ -85,7 +91,8 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    public static ArrayList<Formula> separateConjunctions(Formula f) {  
+    public static ArrayList<Formula> separateConjunctions(Formula f) {
+
         Clausifier temp = new Clausifier(f.theFormula);
         return temp.separateConjunctions();
     }
@@ -93,7 +100,8 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    public static Formula clausify(Formula f) {  
+    public static Formula clausify(Formula f) {
+
         Clausifier temp = new Clausifier(f.theFormula);
         return temp.clausify();
     }
@@ -258,7 +266,8 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    public static ArrayList toNegAndPosLitsWithRenameInfo(Formula f) {  
+    public static ArrayList toNegAndPosLitsWithRenameInfo(Formula f) {
+
         Clausifier temp = new Clausifier(f.theFormula);
         return temp.toNegAndPosLitsWithRenameInfo();
     }
@@ -345,7 +354,8 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    public static Formula toCanonicalClausalForm(Formula f) {  
+    public static Formula toCanonicalClausalForm(Formula f) {
+
         Clausifier temp = new Clausifier(f.theFormula);
         return temp.toCanonicalClausalForm();
     }
