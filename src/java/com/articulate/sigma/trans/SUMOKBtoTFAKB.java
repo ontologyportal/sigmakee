@@ -176,7 +176,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeRelationSort(String t, PrintWriter pw, String sanitizedKBName) {
 
-        System.out.println("writeRelationSort(): t: " + t);
+        //System.out.println("writeRelationSort(): t: " + t);
         if (Formula.isLogicalOperator(t))
             return;
         if (Formula.isMathFunction(t))
@@ -340,7 +340,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return;
         }
         String newRel = t + "__" + e + suffix;
-        System.out.println("extendRelationSig(): newrel: " + newRel);
+        //System.out.println("extendRelationSig(): newrel: " + newRel);
         ArrayList<String> extsig = SUMOtoTFAform.relationExtractUpdateSig(newRel);
         ArrayList<String> combinedSig = new ArrayList<>();
         for (int i = 0; i < sig.size(); i++) {
@@ -366,9 +366,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             FormulaPreprocessor.addToMap(toExtend, t, "1In2In");
         }
         for (String t : Formula.MATH_FUNCTIONS) {
-            FormulaPreprocessor.addToMap(toExtend, t, "0Re1Re2Re");
-            FormulaPreprocessor.addToMap(toExtend, t, "0Ra1Ra2Ra");
-            FormulaPreprocessor.addToMap(toExtend, t, "0In1In2In");
+            if (t.equals(Formula.FLOORFN))
+                FormulaPreprocessor.addToMap(toExtend, t, "0In1Re");
+            else {
+                FormulaPreprocessor.addToMap(toExtend, t, "0Re1Re2Re");
+                FormulaPreprocessor.addToMap(toExtend, t, "0Ra1Ra2Ra");
+                FormulaPreprocessor.addToMap(toExtend, t, "0In1In2In");
+            }
         }
     }
 
