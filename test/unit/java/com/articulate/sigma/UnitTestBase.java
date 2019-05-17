@@ -11,7 +11,7 @@ import static org.junit.Assert.fail;
  * Base class for fast-running true unit tests.
  */
 
-public class UnitTestBase  extends SigmaTestBase {
+public class UnitTestBase extends SigmaTestBase {
 
     private static final String SIGMA_SRC = System.getenv("SIGMA_SRC");
     public static final String CONFIG_FILE_DIR = SIGMA_SRC + File.separator +
