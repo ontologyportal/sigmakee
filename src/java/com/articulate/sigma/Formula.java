@@ -55,6 +55,7 @@ public class Formula implements Comparable, Serializable {
     public static final String MINUSFN  = "SubtractionFn";
     public static final String TIMESFN  = "MultiplicationFn";
     public static final String DIVIDEFN = "DivisionFn";
+    public static final String FLOORFN = "FloorFn";
     public static final String SKFN     = "SkFn";
     public static final String SK_PREF = "Sk";
     public static final String FN_SUFF = "Fn";
@@ -91,7 +92,8 @@ public class Formula implements Comparable, Serializable {
     public static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN,
                                                                      MINUSFN,
                                                                      TIMESFN,
-                                                                     DIVIDEFN);
+                                                                     DIVIDEFN,
+                                                                     FLOORFN);
 
     public static final List<String> DOC_PREDICATES = Arrays.asList("documentation",
                                                                     "comment",
@@ -143,6 +145,8 @@ public class Formula implements Comparable, Serializable {
 	public TreeSet<String> getErrors() {
 		return this.errors;
 	}
+
+	public static boolean debug = false;
 
     /** ***************************************************************
      * A list of TPTP formulas (Strings) that together constitute the
@@ -1222,6 +1226,8 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean deepEquals(Formula f) {
 
+        if (debug)
+            System.out.println("deepEquals(): this: " + this + " arg: " + f);
         //null and simple string equality tests
         if (f == null) {
             return false;
@@ -1235,11 +1241,17 @@ public class Formula implements Comparable, Serializable {
         Formula f1 = Clausifier.clausify(this);
         Formula f2 = Clausifier.clausify(f);
 
+        if (debug)
+            System.out.println("deepEquals(): clausified this: " + f1 + " arg: " + f2);
+
         //the normalizeParameterOrder method should be moved to Clausifier
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         String normalized1 = Formula.normalizeParameterOrder(f1.theFormula, kb, true);
         String normalized2 = Formula.normalizeParameterOrder(f2.theFormula, kb, true);
+
+        if (debug)
+            System.out.println("deepEquals(): normalized this: " + normalized1 + " arg: " + normalized2);
 
         return normalized1.equals(normalized2);
     }
