@@ -16,7 +16,7 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    private static boolean debug = false;
+    public static boolean debug = false;
 
     private static HashMap<String,HashSet<String>> varmap = null;
 
@@ -515,17 +515,24 @@ public class SUMOtoTFAform {
         String op = car.theFormula;
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): op: " + op);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): args: " + args);
-        if (args.size() != 2) {
+        if (!op.startsWith("FloorFn") && args.size() != 2) {
+            System.out.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
+            return "";
+        }
+        if (op.startsWith("FloorFn") && args.size() != 1) {
             System.out.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         if (!allBuiltInNumericTypes(args)) {
+            if (debug) System.out.println("SUMOtoTFAform.processMathOp(): not all builtin types");
             int ttype = f.theFormula.charAt(0);
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             return "s__" + op + "(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
         }
+        if (op.startsWith("FloorFn"))
+            return "$to_int(" + processRecurse(new Formula(args.get(0))) + ")";
         if (op.startsWith("AdditionFn"))
             return "$sum(" + processRecurse(new Formula(args.get(0))) + " ," +
                     processRecurse(new Formula(args.get(1))) + ")";
@@ -738,6 +745,27 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * Constrain a list of arguments to be the most specific type
+     */
+    private static ArrayList<String> constrainArgs(String type, ArrayList<String> argTypes) {
+
+        ArrayList<String> result = new ArrayList<>();
+        if (StringUtil.emptyString(type) || !kb.isSubclass(type,"Quantity"))
+            return argTypes;
+        if (debug) System.out.println("SUMOtoTFAform.constrainArgs(): " + type);
+        for (String t : argTypes) {
+            if (kb.termDepth(type) > kb.termDepth(t)) {  // classes lower in hierarchy have a large number (of levels)
+                result.add(type);
+                if (debug) System.out.println("SUMOtoTFAform.constrainArgs(): constraining " + t + " to " + type);
+            }
+            else {
+                result.add(t);
+            }
+        }
+        return result;
+    }
+
+    /** *************************************************************
      * for numerical and comparison operators, ensure their arguments
      * are all the same type and that it's the most specific type.  If
      * no types are found in the suffix, return the empty string.
@@ -820,26 +848,82 @@ public class SUMOtoTFAform {
             return null;
         String result = "";
         for (String t : args) {
-            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): t: " + t);
-            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): builtInNumericType(t): " + builtInNumericType(t));
-            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): builtInNumericType(result): " + builtInNumericType(result));
-            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): depth(t): " + kb.termDepth(t));
-            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): depth(result): " + kb.termDepth(result));
-            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): compareTermDepth(t,result): " + kb.compareTermDepth(t,result));
-            if (StringUtil.emptyString(t) || !kb.containsTerm(t)) {
-                if (!StringUtil.emptyString(t))
-                    System.out.println("Error in SUMOtoTFAform.mostSpecificTerm(): no such term: " + t);
+            String term = t;
+            if (t.endsWith("+"))
+                term = t.substring(0,t.length()-1);
+            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): t: " +
+                    term);
+            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): builtInNumericType(t): " +
+                    builtInNumericType(term));
+            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): builtInNumericType(result): " +
+                    builtInNumericType(result));
+            if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): depth(t): " +
+                    kb.termDepth(term));
+            if (!StringUtil.emptyString(result)) {
+                if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): depth(result): " +
+                        kb.termDepth(result));
+                if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): compareTermDepth(t,result): " +
+                        kb.compareTermDepth(term, result));
+            }
+            if (StringUtil.emptyString(term) || !kb.containsTerm(term)) {
+                if (!StringUtil.emptyString(term))
+                    System.out.println("Error in SUMOtoTFAform.mostSpecificTerm(): no such term: " + term);
                 continue;
             }
             if (result == "")
-                result = t;
-            else if (kb.compareTermDepth(t,result) > 0) {
-                if (builtInNumericType(result) && !builtInNumericType(t))
+                result = term;
+            else if (kb.compareTermDepth(term,result) > 0) {
+                if (builtInNumericType(result) && !builtInNumericType(term))
                     continue;
-                result = t;
+                result = term;
             }
         }
         if (debug) System.out.println("SUMOtoTFAform.mostSpecificTerm(): result: " + result);
+        return result;
+    }
+
+    /** *************************************************************
+     */
+    private static String getOpReturnType(String arg) {
+
+        if (StringUtil.emptyString(arg) || !Formula.listP(arg))
+            return "Entity";
+        Formula f = new Formula(arg);
+        String op = f.car();
+        if (!kb.containsTerm(op))
+            System.out.println("Error in SUMOtoTFAform.getOpReturnType(): no term: " + op);
+        if (kb.isFunctional(arg)) {
+            String range = kb.kbCache.getRange(op);
+            if (range != null)
+                return range;
+        }
+        return "Entity";
+    }
+
+    /** *************************************************************
+     */
+    private static ArrayList<String> mostSpecificArgType(ArrayList<String> args1, ArrayList<String> args2) {
+
+        if (args1 == null || args1.size() < 1)
+            return args2;
+        if (args2 == null || args2.size() < 1)
+            return args1;
+        ArrayList<String> result = new ArrayList<String>();
+        int size = args1.size();
+        if (args2.size() > size)
+            size = args2.size();
+        for (int i = 0; i < size; i++) {
+            String type1 = "";
+            if (args1.size() > i)
+                type1 = args1.get(i);
+            String type2 = "";
+            if (args2.size() > i)
+                type2 = args2.get(i);
+            if (kb.termDepth(type1) > kb.termDepth(type2))
+                result.add(type1);
+            else
+                result.add(type2);
+        }
         return result;
     }
 
@@ -857,8 +941,14 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): args: " + args);
         String suffix = "";
         ArrayList<String> sig = kb.kbCache.getSignature(op);
-
         ArrayList<String> typeFromName = relationExtractSig(op);
+        sig = mostSpecificArgType(sig,typeFromName);
+        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): cache contains op: " + kb.kbCache.signatures.containsKey(op));
+        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): sig: " + sig);
+        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): typeFromName: " + typeFromName);
+        if (!kb.kbCache.signatures.containsKey(op))
+            if (typeFromName != null)
+                sig = typeFromName;
         String opType = mostSpecificTerm(typeFromName);
         ArrayList<String> argtypes = collectArgTypes(args);
 
@@ -886,6 +976,13 @@ public class SUMOtoTFAform {
                 if (Formula.listP(arg)) {
                     args.set(i, constrainFunctVarsRecurse(new Formula(arg)));
                     arg = args.get(i);
+                    String argType = getOpReturnType(arg);
+                    if (debug) System.out.println("SUMOtoTFAform.constrainOp(): old sig: " + sig);
+                    if (debug) System.out.println("SUMOtoTFAform.constrainOp(): new op type: " + argType);
+                    if ((StringUtil.emptyString(argType) || kb.isSubclass(argType,lowest))  &&
+                            (isComparisonOperator(op) || isMathFunction(op)) || op.equals("equal)"))
+                        sig = constrainArgs(argType,sig);
+                    if (debug) System.out.println("SUMOtoTFAform.constrainOp(): new sig: " + sig);
                     String justArg = (new Formula(arg)).car();
                     if (kb.isFunction(justArg)) { // ||
                             // (justArg.indexOf('_') != -1 && kb.isFunction(justArg.substring(0, justArg.indexOf('_'))))) {
@@ -913,18 +1010,19 @@ public class SUMOtoTFAform {
                     if (StringUtil.isNumeric(arg)) { // even without a decimal, we can't be sure it's Integer
                         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): numeric argument: " + arg);
                         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): isInteger(): " + StringUtil.isInteger(arg));
+                        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): type: " + type);
                         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): type.equals(\"RealNumber\"): " + type.equals("RealNumber"));
                         String t = "RealNumber";
                         if (StringUtil.isInteger(arg)) {
-                            if (type.equals("RealNumber")) {
+                            if (kb.isSubclass(type, "Integer") || type.equals("Integer"))
+                                t = "Integer";
+                            else {
                                 if (debug)
                                     System.out.println("SUMOtoTFAform.constrainOp(): converting number to real " + arg);
                                 arg = arg + ".0";
                                 args.set(i, arg);
                                 t = "RealNumber";
                             }
-                            else
-                                t = "Integer";
                         }
                         suffix = numberSuffix(suffix, i,op, t, type);
                     }
