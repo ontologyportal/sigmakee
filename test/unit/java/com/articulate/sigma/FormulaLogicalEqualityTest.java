@@ -70,7 +70,11 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
      */
     @After
     public void performanceReport() {
-       System.out.println("\nFormulaLogicalEqualityTest: \nA total of " + testCount + " tests ran with an average of " + ((totalExecutionTime/testCount) / 1000000) + " milisecond execution time per test.\n");
+
+       System.out.println("\nFormulaLogicalEqualityTest: \nA total of " +
+               testCount + " tests ran with an average of " +
+               ((totalExecutionTime/testCount) / 1000000) +
+               " milisecond execution time per test.\n");
     }
 
     /***************************************************************
@@ -90,10 +94,12 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
         totalExecutionTime += (stop - start);
         testCount++;
         if (areEqual) {
-            assertTrue("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
+            assertTrue("The following should be equal: \n" +
+                    f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
         }
         else {
-            assertFalse("The following should be equal: \n" + f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
+            assertFalse("The following should be equal: \n" +
+                    f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
         }
     }
 }
