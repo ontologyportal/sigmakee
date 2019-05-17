@@ -52,6 +52,10 @@ public class KBcacheUnitTest {
         kif.parseStatement("(domain rel 1 Object)");
         kif.parseStatement("(domain rel 2 Object)");
         kif.parseStatement("(subclass Object Entity)");
+        kif.parseStatement("(subclass Furniture Object)");
+        kif.parseStatement("(subclass Table Furniture)");
+        kif.parseStatement("(subclass Chair Furniture)");
+        kif.parseStatement("(subclass LadderBackChair Chair)");
         kif.parseStatement("(subrelation relsub rel)");
         kif.parseStatement("(subclass TransitiveRelation Relation)");
         kif.parseStatement("(instance relsub TransitiveRelation)");
@@ -176,6 +180,18 @@ public class KBcacheUnitTest {
     /** ***************************************************************
      */
     @Test
+    public void testCommonParent() {
+
+        System.out.println("Test testCommonParent");
+        String actual = kb.kbCache.getCommonParent("LadderBackChair", "Table");
+        String expected = "Furniture";
+        System.out.println("Test testCommonParent(): result: " + actual);
+        assertEquals(expected,actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
     public void testInstancesForType() {
 
         System.out.println("Test testInstancesForType");
@@ -184,5 +200,4 @@ public class KBcacheUnitTest {
         HashSet<String> actual = kb.kbCache.getInstancesForType("Relation");
         assertEquals(expected,actual);
     }
-
 }
