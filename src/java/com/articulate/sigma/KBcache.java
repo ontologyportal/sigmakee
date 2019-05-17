@@ -349,6 +349,8 @@ public class KBcache implements Serializable {
         kb.terms.add(newTerm);
         HashSet<String> iset = instanceOf.get(term);
         instanceOf.put(newTerm,iset);
+        //if (newTerm.endsWith("Fn"))
+        //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
         //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
         relations.add(newTerm);
 
@@ -601,11 +603,15 @@ public class KBcache implements Serializable {
         while (it.hasNext()) {
             String cl = it.next();
             HashSet<String> classes = subclasses.get(cl);
-            int count = classes.size();
-            String countString = Integer.toString(count);
-            countString = StringUtil.fillString(countString,'0',10,true);
-            AVPair avp = new AVPair(countString,cl);
-            countIndex.add(avp);
+            if (classes == null)
+                System.out.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
+            else {
+                int count = classes.size();
+                String countString = Integer.toString(count);
+                countString = StringUtil.fillString(countString, '0', 10, true);
+                AVPair avp = new AVPair(countString, cl);
+                countIndex.add(avp);
+            }
         }
         return countIndex.first().value;
     }
