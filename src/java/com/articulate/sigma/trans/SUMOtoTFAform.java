@@ -1,5 +1,10 @@
 package com.articulate.sigma.trans;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 import com.articulate.sigma.*;
 
 import java.io.File;
