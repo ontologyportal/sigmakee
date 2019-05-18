@@ -926,6 +926,7 @@ public class Formula implements Comparable, Serializable {
      * to (and B A C).  Note that this is a fairly time-consuming operation
      * and should not generally be used for comparing large sets of formulas.
      */
+    @Deprecated
     public boolean logicallyEquals(String s) {
 
         if (this.equals(s))
@@ -1028,8 +1029,8 @@ public class Formula implements Comparable, Serializable {
      *     (and (instance ?A Human) (instance ?A Mushroom)) according
      *     to deepEquals(...) would be equal to
      *     (and (instance ?A Human) (instance ?B Mushroom)) even though
-     *     the first formula refers only one variable
-     *  but the second one refers two, and as such they are not logically
+     *     the first formula uses only one variable
+     *  but the second one uses two, and as such they are not logically
      *  equal. This method generates false positives, but
      *  only true negatives. If the result of the comparison is false,
      *  we return false, otherwise keep trying.
@@ -1250,8 +1251,17 @@ public class Formula implements Comparable, Serializable {
         String normalized1 = Formula.normalizeParameterOrder(f1.theFormula, kb, true);
         String normalized2 = Formula.normalizeParameterOrder(f2.theFormula, kb, true);
 
+        f1 = new Formula(normalized1);
+        f2 = new Formula(normalized2);
+
         if (debug)
-            System.out.println("deepEquals(): normalized this: " + normalized1 + " arg: " + normalized2);
+            System.out.println("deepEquals(): normalized this: \n" + f1.theFormula + "\n arg: \n" + f2.theFormula);
+
+        normalized1 = Clausifier.normalizeVariables(f1.theFormula,true); // renumber skolems too
+        normalized2 = Clausifier.normalizeVariables(f2.theFormula,true);
+
+        if (debug)
+            System.out.println("deepEquals(): normalized this: \n" + normalized1 + "\n arg: \n" + normalized2);
 
         return normalized1.equals(normalized2);
     }
@@ -1530,11 +1540,53 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Collects all variables in this Formula.  Returns an Set
-     * of String variable names (with initial '?').  Note that 
-     * duplicates are not removed.
+     * Collects all String terms from one Collection and adds them
+     * to another, without duplication
+     *
+     * @return An Collection of Strings with no duplicates
+     */
+    public void addAllNoDup (Collection<String> thisCol, Collection<String> arg) {
+
+        for (String s : arg)
+            if (!thisCol.contains(s))
+                thisCol.add(s);
+    }
+
+    /** ***************************************************************
+     * Collects all variables in this Formula.  Returns an ArrayList
+     * of String variable names (with initial '?').
      *
      * @return An ArrayList of String variable names
+     */
+    public ArrayList<String> collectOrderedVariables() {
+
+        ArrayList<String> result = new ArrayList<String>();
+        if (listLength() < 1)
+            return result;
+        Formula fcar = new Formula();
+        fcar.read(this.car());
+        if (fcar.isVariable() && !result.contains(fcar.theFormula))
+            result.add(fcar.theFormula);
+        else {
+            if (fcar.listP())
+                addAllNoDup(result,fcar.collectAllVariables());
+        }
+        Formula fcdr = new Formula();
+        fcdr.read(this.cdr());
+        if (fcdr.isVariable() && !result.contains(fcar.theFormula))
+            result.add(fcdr.theFormula);
+        else {
+            if (fcdr.listP())
+                addAllNoDup(result,fcdr.collectAllVariables());
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * Collects all variables in this Formula.  Returns an Set
+     * of String variable names (with initial '?').
+     *
+     * @return A Set of String variable names
      */
     public Set<String> collectAllVariables() {
     	    
