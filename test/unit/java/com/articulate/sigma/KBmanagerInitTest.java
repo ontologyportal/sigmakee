@@ -26,7 +26,7 @@ public class KBmanagerInitTest extends UnitTestBase {
      */
     @Test
     public void testInitializationTime()   {
-        assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime < 200000);
+        assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime < 250000);
         // Just in case something whacky is going on, make sure it's greater than some minimum, too.
         assertTrue("Actual time = " + UnitTestBase.totalKbMgrInitTime, UnitTestBase.totalKbMgrInitTime > 10000);
     }
