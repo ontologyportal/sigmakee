@@ -89,6 +89,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     @Test
     public void testDeepEquals2() {
 
+        System.out.println("============= FormulaDeepEqualsTest.testDeepEquals2 ==================");
         Formula f1 = new Formula();
         f1.read("(exists (?Leigh-1 ?baby-4 ?blankets-6 ?swaddled-2)\n" +
                 "  (and\n" +
@@ -118,9 +119,10 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
                 "    (instance ?blankets-6 Blanket)\n" +
                 "    (instance ?Leigh-1 Human)\n" +
                 "    (instance ?baby-4 HumanBaby)) )");
-
+        Formula.debug = true;
         //testing equal formulas
         assertTrue(f1.deepEquals(f2));
+        Formula.debug = false;
     }
 
     /***************************************************************
