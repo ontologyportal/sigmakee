@@ -1,5 +1,10 @@
 package com.articulate.sigma;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 import com.google.common.collect.*;
 import org.junit.*;
 
@@ -118,6 +123,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
     @Test
     public void test4() {
 
+        System.out.println("============= test4 ==================");
         FormulaPreprocessor fp = new FormulaPreprocessor();
         String strf = "(forall (?NUMBER ?ELEMENT ?CLASS)\n" +
                 "        (=>\n" +
@@ -129,19 +135,25 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(strf);
         fp = new FormulaPreprocessor();
         String actual = fp.addTypeRestrictions(f, kb).toString();
-        String expected = "(forall (?NUMBER ?ELEMENT ?CLASS)\n" +
-                "  (=>\n" +
-                "    (and\n" +
-                "      (instance ?NUMBER PositiveInteger)\n" +
-                "      (instance ?CLASS SetOrClass) )\n" +
+        String expected = "(=>\n" +
+                "  (and\n" +
+                "    (instance ?FOO Entity) )\n" +
+                "  (forall (?NUMBER ?ELEMENT ?CLASS)\n" +
                 "    (=>\n" +
-                "      (equal ?ELEMENT\n" +
-                "        (ListOrderFn\n" +
-                "          (ListFn_1 ?FOO) ?NUMBER) )\n" +
-                "      (instance ?ELEMENT ?CLASS) )))";
+                "      (and\n" +
+                "        (instance ?NUMBER PositiveInteger)\n" +
+                "        (instance ?ELEMENT Entity)\n" +
+                "        (instance ?CLASS SetOrClass) )\n" +
+                "      (=>\n" +
+                "        (equal ?ELEMENT\n" +
+                "          (ListOrderFn\n" +
+                "            (ListFn_1 ?FOO) ?NUMBER) )\n" +
+                "        (instance ?ELEMENT ?CLASS) ))))";
         System.out.println("test4(): actual: " + actual);
         System.out.println("test4(): expected: " + expected);
-        assertEquals(expected,actual);
+        Formula fActual = new Formula(actual);
+        Formula fExpected = new Formula(expected);
+        assertTrue(fExpected.deepEquals(fActual));
     }
 
     /** ***************************************************************
@@ -173,7 +185,9 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "           (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1)) )";
         System.out.println("test5(): actual: " + actual);
         System.out.println("test5(): expected: " + expected);
-        assertEquals(expected,actual);
+        Formula fActual = new Formula(actual);
+        Formula fExpected = new Formula(expected);
+        assertTrue(fExpected.deepEquals(fActual));
     }
 
     /** ***************************************************************
