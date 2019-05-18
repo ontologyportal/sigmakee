@@ -67,6 +67,7 @@ public class FormulaTest {
     @Test
     public void testRecursiveCdrComplex() {
 
+        System.out.println("============= testRecursiveCdrComplex ==================");
         String stmt = "(time JohnsBirth (MonthFn ?M (YearFn 2000)))";
         Formula f = new Formula(stmt);
 
@@ -85,6 +86,7 @@ public class FormulaTest {
         cdrF = cdrF.cdrAsFormula();
         assertEquals("()", cdrF.theFormula);
 
+        System.out.println("testRecursiveCdrComplex(): functionStr: " + functionStr);
         assertTrue(Formula.isFunctionalTerm(functionStr));
 
         f = new Formula();
