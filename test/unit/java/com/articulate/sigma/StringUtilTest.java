@@ -1,10 +1,16 @@
 package com.articulate.sigma;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import org.junit.Ignore;
 
 public class StringUtilTest {
 
@@ -43,6 +49,7 @@ public class StringUtilTest {
 
     /** *****************************************************************
      */
+    @Ignore
     @Test
     public void testRemoveEscapes() {
 
