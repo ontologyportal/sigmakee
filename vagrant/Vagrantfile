@@ -1,0 +1,23 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/contrib-stretch64"
+  config.vm.define "sigma"
+  config.vm.hostname = "sigma"
+  
+  ENV['LC_ALL']="en_US.UTF-8"
+
+  config.vm.network "forwarded_port", guest: 8080, host: 8080
+
+  config.vm.synced_folder "./KBs", "/sigma/sigmakee/KBs", create: true
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.name = "sigma"
+    vb.memory = "4096"
+    vb.cpus = "2"
+  end
+
+  config.vm.provision "shell", path: "bootstrap.sh"
+
+end
