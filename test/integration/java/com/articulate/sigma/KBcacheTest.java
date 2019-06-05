@@ -69,12 +69,12 @@ public class KBcacheTest extends IntegrationTestBase {
                 "PhysicalDisability", "ViralDisease", "VisualAcuityAttribute", "NonspecificDisease", "SexAttribute",
                 "BacterialDisease", "Disability", "Neurosis", "Psychosis", "LiteracyAttribute",
                 "ConsciousnessAttribute", "StateOfMind", "TraitAttribute", "AnimacyAttribute", "EmotionalState",
-                "DevelopmentalAttribute"));
+                "DevelopmentalAttribute", "BiologicalAttribute"));
 
         HashSet<String> actual = cache.getChildClasses(parent);
         assertEquals(expected, actual);
         parent = "AsymmetricRelation";
-        expected = new HashSet<>(Arrays.asList("PropositionalAttitude", "CaseRole"));
+        expected = new HashSet<>(Arrays.asList("AsymmetricRelation", "PropositionalAttitude", "CaseRole"));
         actual = cache.getChildClasses(parent);
         assertEquals(expected, actual);
     }
@@ -195,6 +195,16 @@ public class KBcacheTest extends IntegrationTestBase {
         KBcache cache = SigmaTestBase.kb.kbCache;
         assertTrue(SigmaTestBase.kb.isChildOf("Integer", "RealNumber"));
     }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testIsChildOf6() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        assertTrue(SigmaTestBase.kb.isChildOf("Writing", "ContentDevelopment"));
+    }
+
 
     /** *************************************************************
      */
