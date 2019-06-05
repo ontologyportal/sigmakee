@@ -1078,26 +1078,6 @@ public class KBcache implements Serializable {
      * rel is a HashMap where the key A has value ArrayList of {B,C}. Note
      * that this routine builds "up" from the leaves
      */
-    public void buildChildrenOld() {
-
-        if (debug) System.out.println("INFO in KBcache.buildChildren()");
-        for (String rel : transRels) {
-            if (debug) System.out.println("INFO in KBcache.buildChildren(): rel: " + rel);
-            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
-            HashSet<String> leaves = findLeaves(rel);
-            if (debug) System.out.println("INFO in KBcache.buildChildren(): leaves: " + leaves);
-            children.put(rel, value);
-            for (String leaf : leaves)
-                breadthFirstBuildChildren(leaf, rel);
-        }
-    }
-
-    /** ***************************************************************
-     * For each transitive relation, find its transitive closure.  If
-     * rel is transitive, and (rel A B) and (rel B C) then the entry for
-     * rel is a HashMap where the key A has value ArrayList of {B,C}. Note
-     * that this routine builds "up" from the leaves
-     */
     public void buildChildren() {
 
         if (debug) System.out.println("INFO in KBcache.buildChildren()");
@@ -1108,6 +1088,7 @@ public class KBcache implements Serializable {
             if (debug) System.out.println("INFO in KBcache.buildChildren(): roots: " + roots);
             children.put(rel, value);
             for (String root : roots) {
+                visited = new HashSet<>(); // reset the visited list for each new root and relation
                 HashSet<String> c = buildChildrenNew(root, rel);
                 if (c != null)
                     value.put(root,c);
