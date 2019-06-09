@@ -6596,7 +6596,8 @@ public class DocGen {
         String ans = docString;
         try {
             if (StringUtil.isNonEmptyString(docString)) {
-                String nsTerm = toKifNamespace(kb, namespace);
+                //String nsTerm = toKifNamespace(kb, namespace);
+                String nsTerm = namespace;
                 String tmpstr = StringUtil.normalizeSpaceChars(docString);
                 Map srmap = getStringReplacementMap();
                 if (isXmlDoc) {
