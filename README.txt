@@ -29,6 +29,7 @@ in their URL that will change every time. Change "theuser" below to your user na
 If your installation isn't working and you're getting funny "null"s in your paths
 try opening permissions on your $SIGMA_HOME, $CATALINA_HOME and $SIGMA_SRC directories.
 
+
 Container-Based installation
 ==========================
 
@@ -52,6 +53,10 @@ Run with
 sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee2018:latest "./sigmastart.sh"
 
 Access from a browser with http://localhost:8080/sigma/login.html . Use admin for username and admin for password
+
+
+Vagrant Virtual Machine installation
+==========================
 
 If you want an additional level of system independence and security, you can also
 run the docker image in a virtual machine.  For Vagrant you would do the following -
@@ -80,6 +85,10 @@ vagrant ssh
 then
 
 Access from a browser with http://localhost:8888/sigma/login.html . Use admin for username and admin for password
+
+
+Build a New Docker Image
+=========================
 
 To build a new docker container follow these steps where $SIGMA_SRC is your sigmakee git repo path.
 First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
@@ -326,6 +335,7 @@ java -Xmx4g -classpath /home/apease/workspace/sigmakee/build/classes:
   /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 
+
 RESTful Interface
 ================
 
@@ -390,6 +400,7 @@ You'll need to start the database server with
 
 and you'll need to change JDBCstring in PasswordService.java to your path instead of /home/apease
 and recompile
+
 
 Old Installation Notes
 ======================
