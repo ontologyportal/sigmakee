@@ -436,6 +436,7 @@ public class WordNetUtilities {
         else if (penn.equals("WP$")) return '0';	// 35.	WP$	Possessive wh-pronoun
         else if (penn.equals("WRB")) return '0';	// 36.	WRB	Wh-adverb
         else if (penn.equals("``")) return '0';
+        else if (penn.equals("''")) return '0';
         else { System.out.println("Error in WordNetUtilities.posPennToNumber(): bad tag: " + penn); new Throwable().printStackTrace(System.out); }
         return '0';
     }
