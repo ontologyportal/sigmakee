@@ -12,6 +12,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import static org.junit.Assert.*;
+import org.junit.Ignore;
 import org.junit.BeforeClass;
 
 /**
@@ -570,6 +571,59 @@ public class SUMOtoTFATest extends UnitTestBase {
         expectedRes = "! [V__X : $real] : " +
                 "(equal(s__MillionYearsAgoFn(V__X) ," +
                 "s__BeginFn(s__YearFn($to_int($sum(1950.0 ,$product(V__X ,-1000000.0)))))))";
+        System.out.println("actual:  " + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testPrime() {
+
+        //SUMOtoTFAform.debug = true;
+        System.out.println("\n========= test testPrime ==========\n");
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=> (instance ?PRIME PrimeNumber) (forall (?NUMBER) (=> " +
+                "(equal (RemainderFn ?PRIME ?NUMBER) 0) (or (equal ?NUMBER 1) (equal ?NUMBER ?PRIME)))))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "! [V__PRIME : $int] : (( ! [V__NUMBER:$int] : (s__RemainderFn__0In1In2InFn(V__PRIME, V__NUMBER) = 0 => " +
+                "(V__NUMBER = 1 | V__NUMBER = V__PRIME))) => " +
+                "( ! [V__NUMBER:$int] : (s__RemainderFn__0In1In2InFn(V__PRIME, V__NUMBER) = 0 => " +
+                "(V__NUMBER = 1 | V__NUMBER = V__PRIME))))";
+        System.out.println("actual:  " + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Ignore // requires loading a new kif file
+    @Test
+    public void testAvgWork() {
+
+        System.out.println("\n========= test testAvgWork ==========\n");
+
+        kb.addConstituent(KBmanager.getMgr().getPref("kbDir") + "/Demographics.kif");
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        if (!kb.terms.contains("avgWorkHours")) {
+            System.out.println("test6AvgWork(): Demographics.kif not loaded");
+            return;
+        }
+        kb.kbCache.buildCaches();
+        System.out.println("testAvgWork(): domain statements: " + kb.ask("arg",1,"avgWorkHours"));
+        System.out.println("testAvgWork(): domain statements: " +  kb.kbCache.signatures.get("avgWorkHours"));
+        //FormulaPreprocessor.debug = true;
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(=>\n" +
+                "  (avgWorkHours ?H ?N)\n" +
+                "  (lessThan ?N 70.0))";
+        Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
+        actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
+        expectedRes = "! [X448 : $i, X130 : $real] : (s__instance(X448,s__Human) => " +
+                "(s__avgWorkHours__2Re(X448,X130) => $less(X130,70.0))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
         assertEquals(expectedRes, actualRes.trim());
