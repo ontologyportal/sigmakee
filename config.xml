@@ -1,4 +1,4 @@
-<configuration >
+<configuration>
   <preference name="nlpTools" value="yes" />
   <preference name="sumokbname" value="SUMO" />
   <preference name="testOutputDir" value="~/.sigmakee/KBs/tests" />
