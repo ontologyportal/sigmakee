@@ -118,7 +118,7 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      *  Check whether sources are newer than serialized version.
-     */
+
     public static boolean serializedOld() {
 
         System.out.println("KBmanager.serializedOld(): ");
@@ -142,7 +142,7 @@ public class KBmanager implements Serializable {
         System.out.println("KBmanager.serializedOld(): returning false");
         return false;
     }
-
+*/
     /** ***************************************************************
      *  Load the most recently save serialized version.
      */
