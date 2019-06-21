@@ -107,7 +107,8 @@ public class CELTTestSuite {
                     Formula f = new Formula();
                     f.read(expectedAnswer);
                     boolean correct = false;
-                    if (f.logicallyEquals(celtResult))
+                    Formula celtResultF = new Formula(celtResult);
+                    if (f.logicallyEquals(celtResultF))
                         correct = true;
                     else
                         correct = false;
