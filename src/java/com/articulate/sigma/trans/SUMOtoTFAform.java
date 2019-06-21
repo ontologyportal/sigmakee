@@ -1019,7 +1019,8 @@ public class SUMOtoTFAform {
                         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): type.equals(\"RealNumber\"): " + type.equals("RealNumber"));
                         String t = "RealNumber";
                         if (StringUtil.isInteger(arg)) {
-                            if (kb.isSubclass(type, "Integer") || type.equals("Integer"))
+                            if (kb.isSubclass(type, "Integer") || type.equals("Integer") ||
+                                    (isComparisonOperator(op) && lowest.equals("Integer")))
                                 t = "Integer";
                             else {
                                 if (debug)
