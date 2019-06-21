@@ -689,7 +689,7 @@ public class FormulaTest {
         List<String> vars = new ArrayList<>();
         vars.add("Drosophila");
         Formula actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
-        assertTrue(actual.logicallyEquals(expected));
+        assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?JOHN ?KICKS ?CART)\n" +
                 "  (and\n" +
@@ -714,7 +714,7 @@ public class FormulaTest {
         vars.add("Kick_2");
         vars.add("Cart_1");
         actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
-        assertTrue(actual.logicallyEquals(expected));
+        assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?ENTITY)\n" +
                 "         (and \n" +
@@ -733,7 +733,7 @@ public class FormulaTest {
         vars = new ArrayList<>();
         vars.add("Ent_1");
         actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
-        assertTrue(actual.logicallyEquals(expected));
+        assertTrue(actual.logicallyEquals(exp));
 
         stmt = "(exists (?ENTITY)\n" +
                 "         (and \n" +
@@ -752,6 +752,6 @@ public class FormulaTest {
         vars = new ArrayList<>();
         vars.add("Ent_1");
         actual = f.replaceQuantifierVars(Formula.EQUANT, vars);
-        assertFalse(actual.toString() + "\n should not be logically equal to \n" + expected, actual.logicallyEquals(expected));
+        assertFalse(actual.toString() + "\n should not be logically equal to \n" + expected, actual.logicallyEquals(exp));
     }
 }
