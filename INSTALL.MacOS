@@ -29,7 +29,7 @@ git clone https://github.com/ontologyportal/sigmakee
 git clone https://github.com/ontologyportal/sumo
 
 curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-tar xvfz WordNet-3.0.tar
+tar xvfz WordNet-3.0.tar.gz
 cp -iav WordNet-3.0/dict/* ~/workspace/sumo/WordNetMappings/
 rm WordNet-3.0.tar.gz
 
@@ -52,6 +52,7 @@ these variables created before the next step:
 
   ## SUMO/SIGMAKEE
   export SIGMA_HOME=~/workspace 
+  export SIGMA_SRC=~/workspace/sigmakee
   export ONTOLOGYPORTAL_GIT=~/workspace
   export CATALINA_OPTS="-Xms500M -Xmx2500M" 
   export CATALINA_HOME=~/workspace/apache-tomcat-8.5.23
