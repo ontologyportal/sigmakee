@@ -13,7 +13,6 @@ import java.util.*;
 public class NLGUtils implements Serializable {
 
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
-    //private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath() + File.separator + "WordNetMappings";
     private static final String PHRASES_FILENAME = "Translations/language.txt";
     private static NLGUtils nlg = null;
     private HashMap<String,HashMap<String,String>> keywordMap;
@@ -34,7 +33,7 @@ public class NLGUtils implements Serializable {
      */
     public static boolean serializedExists() {
 
-        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
         File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
         System.out.println("NLGUtils.serializedExists(): " + serfile.exists());
         return serfile.exists();
@@ -45,7 +44,7 @@ public class NLGUtils implements Serializable {
      */
     public static boolean serializedOld() {
 
-        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
         String phrasesFilename = kbDir + File.separator + PHRASES_FILENAME;
         File phrasesFile = new File(phrasesFilename);
         if (!phrasesFile.exists()) {
@@ -68,7 +67,7 @@ public class NLGUtils implements Serializable {
         nlg = null;
         try {
             // Reading the object from a file
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
             FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
             ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
@@ -98,7 +97,7 @@ public class NLGUtils implements Serializable {
 
         try {
             // Reading the object from a file
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            String kbDir = KBmanager.getMgr().getPref("kbDir");
             FileOutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
             ObjectOutputStream out = new ObjectOutputStream(file);
             System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
