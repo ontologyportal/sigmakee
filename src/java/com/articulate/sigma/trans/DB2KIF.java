@@ -40,25 +40,31 @@ public class DB2KIF {
     // columns
     public static HashMap<String,String> symbol2Term = new HashMap<>();
 
+    // map from column name key to symbol name key to SUMO term
+    public static HashMap<String,HashMap<String,String>> symbolMatches = new HashMap<>();
+
+    // String header name key, String UnitOfMeasure or function on the unit if value ends with "Fn"
+    public static HashMap<String,String> units = new HashMap<>();
+
     // relation keys and key value pairs of first argument and a set of prohibited second arguments
     // When the first argument doesn't matter, include a value for that argument of "*"
-    HashMap<String,HashMap<String,HashSet<String>>> badValues = new HashMap<>();
+    public HashMap<String,HashMap<String,HashSet<String>>> badValues = new HashMap<>();
 
     // relation keys and key value pairs of first argument and a set of possible allowed second arguments
     // When the first argument doesn't matter, include a value for that argument of "*"
-    HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
+    public HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
 
     // relation keys and key value pairs of argument number and maximum value
-    HashMap<String,HashMap<Integer,Double>> maxValue = new HashMap<>();
+    public HashMap<String,HashMap<Integer,Double>> maxValue = new HashMap<>();
 
     // relation keys and key value pairs of argument number and minimum value
-    HashMap<String,HashMap<Integer,Double>> minValue = new HashMap<>();
+    public HashMap<String,HashMap<Integer,Double>> minValue = new HashMap<>();
 
     // whether to correct a value to an allowed value, ignore bad values, or delete the entire row
     enum Action {Correct,Ignore,Delete};
-    Action action = Action.Ignore;
+    public Action action = Action.Ignore;
 
-    String defaultRowType = "Human";
+    public String defaultRowType = "Human";
 
     public static KB kb = null;
 
@@ -314,6 +320,46 @@ public class DB2KIF {
             // HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
             System.out.println("DB2KIF.initValues(): for " + r + " : " + insts);
             dbkif.addValuesForAny(r,insts,dbkif.goodValues);
+        }
+    }
+
+    /** *****************************************************************
+     */
+    public void toKIF(ArrayList<ArrayList<String>> cells) {
+
+        int id = 0;
+        for (ArrayList<String> row : cells.subList(2,cells.size())) { // skip header and def'n rows
+            for (int i = 0; i < row.size(); i++) {
+                String cell = row.get(i);
+                if (StringUtil.emptyString(cell))
+                    continue;
+                String header = cells.get(0).get(i);
+                String rel = column2Rel.get(header);
+                //System.out.println("toKIF(): header,cell,rel: " + header + ", " + cell + ", " + rel);
+                if (StringUtil.emptyString(rel))
+                    continue;
+                if (rel.indexOf(" : ") != -1)
+                    rel = rel.substring(0,rel.indexOf(" : "));
+                if (units.containsKey(header)) {
+                    String unit = units.get(header);
+                    //System.out.println("toKIF(): unit: " + unit);
+                    if (unit.endsWith("Fn")) {
+                        cell = "(" + unit + " " + cell + ")";
+                    }
+                    else {
+                        cell = "(MeasureFn " + cell  + " " + unit + ")";
+                    }
+                }
+                else {
+                    if (symbolMatches.containsKey(header)) {
+                        HashMap<String,String> map = symbolMatches.get(header);
+                        if (map.containsKey(cell))
+                            cell = map.get(cell);
+                    }
+                }
+                System.out.println("(" + rel + " " + defaultRowType + id + " " + cell + ")");
+            }
+            id++;
         }
     }
 
