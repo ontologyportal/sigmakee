@@ -246,79 +246,10 @@ again.
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
 
-Apple install notes
+MacOS install notes
 ===================
 
-use "curl -o filename URL" if you don't have wget installed
-java will be installed in /usr/libexec/java_home
-get git from the xcode tools - "xcode-select --install"
-instead of .bashrc edit .bash_profile
-
-install Homebrew from http://brew.sh
-
-mkdir workspace
-mkdir Programs
-cd Programs
-curl -O 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
-curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
-tar -xvzf E.tgz
-unzip apache-tomcat-8.5.23.zip
-rm apache-tomcat-8.5.23.zip
-cd ~/Programs/apache-tomcat-8.5.23/bin
-chmod 777 *
-cd ~/workspace/
-sudo apt-get install git
-git clone https://github.com/ontologyportal/sigmakee
-git clone https://github.com/ontologyportal/sumo
-cd ~
-mkdir .sigmakee
-cd .sigmakee
-mkdir KBs
-cp -R ~/workspace/sumo/* KBs
-me="$(whoami)"
-cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
-sed -i "s/theuser/$me/g" config.xml
-cd ~/Programs
-gunzip WordNet-3.0.tar.gz
-tar -xvf WordNet-3.0.tar
-cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
-cd ~/Programs/E
-brew install make
-brew install gcc
-./configure
-make
-make install
-cd ~
-brew install graphviz
-echo "export SIGMA_HOME=~/.sigmakee" >> .bash_profile
-echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bash_profile
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bash_profile
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bash_profile
-source .bash_profile
-cd ~/workspace/sigmakee
-brew install ant
-ant
-
-Follow the steps in section "Account Management" below to set up accounts
-
-To test run
-
-  java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
-    com.articulate.sigma.KB
-
-
-Start Tomcat with
-  $CATALINA_HOME/bin/startup.sh
-
-Point your browser at http://localhost:8080/sigma/login.html
-
-
-Debugging
-- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
-again.
-- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
-from ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+See INSTALL.MacOS
 
 
 jUnit testing on the command line
