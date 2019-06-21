@@ -57,8 +57,10 @@ these variables created before the next step:
   export CATALINA_HOME=~/workspace/apache-tomcat-8.5.23
   export SIGMA_CP=$SIGMA_HOME/sigmakee/build/classes:$SIGMA_HOME/sigmakee/build/lib/*:$SIGMA_HOME/sigmakee/lib/*
 
-cd ~/workspace/sigmakee
+pushd ~/workspace/sigmakee
 ant
+popd
+popd
 
 Follow the steps in section "Account Management" from the README.txt below to set up accounts
 
