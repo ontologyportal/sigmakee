@@ -37,7 +37,7 @@ public class FormulaPreprocessor {
 
     public static boolean debug = false;
 
-    public static boolean addTypes = true;
+    public static boolean addOnlyNonNumericTypes = false;
 
     /** ***************************************************************
      * A + is appended to the type if the parameter must be a class
@@ -248,8 +248,10 @@ public class FormulaPreprocessor {
                         sb.append("(=> \n  (and \n");  // TODO: need test for singular list
                         begin = false;
                     }
-                    if (!t.endsWith("+"))
-                        sb.append(" (instance " + unquantifiedV + " " + t + ") ");
+                    if (!t.endsWith("+")) {
+                        if (!addOnlyNonNumericTypes || !kb.isSubclass(t,"Quantity"))
+                            sb.append(" (instance " + unquantifiedV + " " + t + ") ");
+                    }
                     else
                         sb.append(" (subclass " + unquantifiedV + " " + t.substring(0,t.length()-1) + ") ");
                 }
@@ -1039,6 +1041,8 @@ public class FormulaPreprocessor {
     public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
         if (debug) System.out.println("preProcess(): starting on: " + form);
+        if (form.theFormula.contains("avgWorkHours"))
+            debug = true;
         HashSet<Formula> results = new HashSet<Formula>();
         if (!StringUtil.emptyString(form.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
@@ -1086,22 +1090,26 @@ public class FormulaPreprocessor {
         // If typePrefix==yes and isQuery==false, add a "sortal" antecedent to every axiom
         KBmanager mgr = KBmanager.getMgr();
         boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
+        if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): type prefix: " + typePrefix);
         if (typePrefix && !isQuery) {
             Iterator<Formula> it = results.iterator();
             while (it.hasNext()) {
                 Formula f = it.next();
+                if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + f);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 Formula fnew = f;
-                if (addTypes)
+                //if (addTypes)
                     fnew.theFormula = fp.addTypeRestrictions(f,kb).theFormula;
-                else
-                    if (debug) System.out.println("preProcess(): not adding types");
+                //else
+                //    if (debug) System.out.println("preProcess(): not adding types");
                 f.read(fnew.theFormula);
                 f.higherOrder = fnew.higherOrder;
             }
         }
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): 2 result: " + results);
+        if (form.theFormula.contains("avgWorkHours"))
+            debug = false;
         return results;
     }
 
@@ -1335,6 +1343,31 @@ public class FormulaPreprocessor {
 
     /** ***************************************************************
      */
+    public static void test6() {
+
+        System.out.println("------------------------------------");
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+        if (!kb.terms.contains("avgWorkHours")) {
+            System.out.println("FormulaPreprocessor.test6(): Demographics.kif not loaded");
+            return;
+        }
+        System.out.println();
+        System.out.println();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(=>\n" +
+                "  (avgWorkHours ?H ?N)\n" +
+                "  (lessThan ?N 70.0))";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        debug = true;
+        System.out.println("test6(): " + fp.preProcess(f,false,kb));
+    }
+
+    /** ***************************************************************
+     */
     public static void main(String[] args) {
 
         //testOne();
@@ -1342,7 +1375,7 @@ public class FormulaPreprocessor {
         //testThree();
         //testFour();
 
-        testFive();
+        test6();
         //testFindTypes();
         //testAddTypes();
         //testFindExplicit();
