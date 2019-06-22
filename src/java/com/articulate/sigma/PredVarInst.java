@@ -100,6 +100,8 @@ public class PredVarInst {
             String var = it.next();
             // 3.1 check: predVarArity should match arity of substituted relation
             for (String rel : kb.kbCache.relations) {
+                if (rel.equals("equal"))
+                    continue;
                 if (isTypeExpansion(rel)) {
                     if (debug) System.out.println("instantiatePredVars(): type expansion of relation so exclude: " + rel);
                     continue;
