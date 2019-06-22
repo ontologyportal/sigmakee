@@ -1,0 +1,86 @@
+MacOS install notes
+===================
+
+- you need curl or wget to download files, you can install both with
+  Homebrew.
+- java will be installed in /usr/libexec/java_home
+- get git from the xcode tools with "xcode-select --install”
+- instead of .bashrc edit .bash_profile
+- install Homebrew from http://brew.sh and the packages:
+
+brew install make
+brew install gcc
+brew install git
+brew install graphviz
+brew install ant
+
+Next, execute step-by-step the commands below (tested on MacOS 10.14.5):
+
+cd 
+mkdir workspace
+pushd workspace
+
+curl -O 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
+unzip apache-tomcat-8.5.23.zip
+rm apache-tomcat-8.5.23.zip
+chmod 777 apache-tomcat-8.5.23/bin/*
+
+git clone https://github.com/ontologyportal/sigmakee
+git clone https://github.com/ontologyportal/sumo
+
+curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+tar xvfz WordNet-3.0.tar.gz
+cp -iav WordNet-3.0/dict/* ~/workspace/sumo/WordNetMappings/
+rm WordNet-3.0.tar.gz
+
+curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
+tar xvzf E.tgz
+pushd E
+./configure
+make
+make install (this step is optional, it will copy E files to /usr/local making it available for the whole system)
+popd
+
+cp sigmakee/config.xml sumo/
+(edit the config.xml changing all `~` to the value of `$HOME` and adapting all variables)
+
+ln -s sumo KBs
+(because there are many places in the java code that reference the "KBs" string)
+
+Add the following lines in your .profile and make sure to have all
+these variables created before the next step:
+
+  ## SUMO/SIGMAKEE
+  export SIGMA_HOME=~/workspace 
+  export SIGMA_SRC=~/workspace/sigmakee
+  export ONTOLOGYPORTAL_GIT=~/workspace
+  export CATALINA_OPTS="-Xms500M -Xmx2500M" 
+  export CATALINA_HOME=~/workspace/apache-tomcat-8.5.23
+  export SIGMA_CP=$SIGMA_HOME/sigmakee/build/classes:$SIGMA_HOME/sigmakee/build/lib/*:$SIGMA_HOME/sigmakee/lib/*
+
+pushd ~/workspace/sigmakee
+ant
+popd
+popd
+
+Follow the steps in section "Account Management" from the README.txt below to set up accounts
+
+To test run
+
+java  -Xmx2500m -classpath $SIGMA_CP com.articulate.sigma.KB
+
+To start Tomcat execute
+
+$CATALINA_HOME/bin/startup.sh
+
+Point your browser at http://localhost:8080/sigma/login.html
+
+
+Debugging
+
+- If login.html redirects you to init.jsp that means the system is
+  still initializing. Wait a minute or two and try again.
+
+- If you are on mac and getting errors related to not finding jars
+  when running com.articulate.sigma.KB, copy all jars from
+  ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
