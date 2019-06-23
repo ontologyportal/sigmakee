@@ -1486,7 +1486,7 @@ public class SUMOtoTFAform {
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB("SUMO");
         fp = new FormulaPreprocessor();
-        fp.addTypes = false;
+        fp.addOnlyNonNumericTypes = true;
         buildNumericConstraints();
         initialized = true;
     }
