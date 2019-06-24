@@ -1,4 +1,4 @@
-package com.articulate.sigma;
+package com.articulate.sigma.tp;
 /** This code is copyright Articulate Software (c) 2014.  
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
@@ -15,6 +15,7 @@ Adam Pease
 Infosys LTD.
 */
 
+import com.articulate.sigma.*;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 
 import java.io.*;
@@ -162,7 +163,7 @@ public class EProver {
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
-        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
         	eproverPath=KBmanager.getMgr().getPref("eproverPath");
         }
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
