@@ -1341,8 +1341,15 @@ public class SUMOtoTFAform {
      */
     private static String matchingInstance(Formula f) {
 
-        if (f.theFormula == null)
+        if (f.theFormula == null) {
+            System.out.println("Error in SUMOtoTFAform.matchingInstance(): null formula");
             return null;
+        }
+        if (kb == null || kb.kbCache == null) {
+            System.out.println("Error in SUMOtoTFAform.matchingInstance(): null KB cache");
+            System.out.println("formula: " + f);
+            return null;
+        }
         HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
         if (debug) System.out.println("SUMOtoTFAform.matchingInstance(): int: " + intChildren);
         HashSet<String> realChildren = new HashSet<String>();
