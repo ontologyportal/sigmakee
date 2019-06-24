@@ -4,6 +4,7 @@ import com.articulate.sigma.DB;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.tp.Vampire;
 
 import java.io.File;
 import java.util.*;
@@ -67,6 +68,8 @@ public class DB2KIF {
     public String defaultRowType = "Human";
 
     public static KB kb = null;
+
+    public static HashSet<String> KIF = new HashSet<>();
 
     /** *****************************************************************
      * A convenience method that gets the minimum expected value for
@@ -325,7 +328,22 @@ public class DB2KIF {
 
     /** *****************************************************************
      */
-    public void toKIF(ArrayList<ArrayList<String>> cells) {
+    public void provingClean() {
+
+        for (String s : KIF) {
+            //Vampire.addTemp(s);
+            String result = "";
+            // Vampire.askNoConj();
+            if (!result.contains("GaveUp") && !result.contains("Timeout"))
+                System.out.print("Conflict with: " + s);
+            else
+                System.out.print("Ok: " + s);
+        }
+    }
+
+    /** *****************************************************************
+     */
+    public void toKIF(ArrayList<ArrayList<String>> cells, boolean print) {
 
         int id = 0;
         for (ArrayList<String> row : cells.subList(2,cells.size())) { // skip header and def'n rows
@@ -357,7 +375,11 @@ public class DB2KIF {
                             cell = map.get(cell);
                     }
                 }
-                System.out.println("(" + rel + " " + defaultRowType + id + " " + cell + ")");
+                String kifstring = "(" + rel + " " + defaultRowType + id + " " + cell + ")";
+                if (print)
+                    System.out.println(kifstring);
+                else
+                    KIF.add(kifstring);
             }
             id++;
         }
