@@ -11,7 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.StringTokenizer;
 
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.Vampire;
+import com.articulate.sigma.tp.Vampire;
 
 import edu.dlsu.SUMOs.obj.Input;
 import edu.dlsu.SUMOs.obj.Instance;
