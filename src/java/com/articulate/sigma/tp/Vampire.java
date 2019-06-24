@@ -11,7 +11,12 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
 
-package com.articulate.sigma;
+package com.articulate.sigma.tp;
+
+import com.articulate.sigma.InferenceEngine;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.KIF;
+import com.articulate.sigma.StringUtil;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
