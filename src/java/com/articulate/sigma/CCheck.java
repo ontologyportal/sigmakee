@@ -13,6 +13,7 @@ package com.articulate.sigma;
  */
 
 import TPTPWorld.InterfaceTPTP;
+import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.*;
