@@ -504,7 +504,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
-        debug = true;
+        //debug = true;
         SUMOformulaToTPTPformula.lang = "tff";
         SUMOKBtoTPTPKB.lang = "tff";
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
