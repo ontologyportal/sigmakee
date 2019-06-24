@@ -19,6 +19,8 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.Vampire;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -156,7 +158,7 @@ public class SInE extends InferenceEngine {
     /** *************************************************************
      */
     private SInE(String kbFileName) throws Exception {
-         this(kbFileName,Vampire.getFactory());
+         this(kbFileName, Vampire.getFactory());
     }
 
     /** *************************************************************
