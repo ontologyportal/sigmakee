@@ -59,6 +59,7 @@ Adam Pease
 Infosys LTD.
 */
 
+import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.Pair;
 import com.articulate.sigma.utils.SetUtil;
