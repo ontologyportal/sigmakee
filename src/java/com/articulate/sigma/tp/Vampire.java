@@ -18,14 +18,9 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KIF;
 import com.articulate.sigma.StringUtil;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -269,7 +264,54 @@ public class Vampire extends InferenceEngine {
         }
         _writer = new BufferedWriter(new OutputStreamWriter(_vampire.getOutputStream()));                    
     }
-    
+
+    /** *************************************************************
+     * Creates a running instance of Vampire.  To obtain a new
+     * instance of Vampire, use the static factory method
+     * Vampire.getNewInstance().
+     *
+     * @param executable A File object denoting the platform-specific
+     * Vampire executable.
+     *
+     * @param kbFile A File object denoting the initial knowledge base
+     * to be loaded by the Vampire executable.
+     *
+     * @throws IOException should not normally be thrown unless either
+     *         Vampire executable or database file name are incorrect
+     */
+    private Vampire (File executable, String opts, File kbFile) throws Exception {
+
+        BufferedReader _reader;
+        BufferedWriter _writer;
+
+        String[] cmds = new String[] {executable.toString(), "--mode","casc", "-t","300", kbFile.toString()};
+        ArrayList<String> commands = new ArrayList<String>(Arrays.asList(cmds));
+
+        Runtime rt = Runtime.getRuntime();
+        Process proc = rt.exec(cmds);
+
+        System.out.println("Vampire(): command: " + commands);
+
+        _reader = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+        _writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
+        _error = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
+
+        String line = null;
+        while ((line = _reader.readLine()) != null)
+        {
+            System.out.println(line);
+        }
+        while ((line = _error.readLine()) != null)
+        {
+            System.out.println(line);
+        }
+        int exitValue = proc.waitFor();
+        if (exitValue != 0) {
+            System.out.println("Abnormal process termination");
+        }
+        System.out.println("Vampire() done executing");
+    }
+
     /** *************************************************************
      * Add an assertion.
      *
@@ -383,6 +425,7 @@ public class Vampire extends InferenceEngine {
      */
     public static void main (String[] args) throws Exception {
 
+        /*
         String initialDatabase = "SUMO-v.kif";
         Vampire vampire = Vampire.getNewInstance(initialDatabase);
         System.out.print(vampire.submitQuery("(holds instance ?X Relation)",5,2));
@@ -392,6 +435,11 @@ public class Vampire extends InferenceEngine {
         // System.out.print(vampire.submitQuery("(human ?X)", 1, 2));
         // System.out.print(vampire.submitQuery("(holds instance ?X Human)", 5, 2));
         vampire.terminate();
+        */
+        File v = new File("/home/apease/workspace/vampire/vampire");
+        File s = new File("/home/apease/.sigmakee/KBs/SUMO.tff");
+        Vampire vampire = new Vampire(v,"--mode casc -t 300",s);
+        //vampire.terminate();
     }
     
 }
