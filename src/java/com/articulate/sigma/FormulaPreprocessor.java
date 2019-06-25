@@ -249,8 +249,10 @@ public class FormulaPreprocessor {
                         begin = false;
                     }
                     if (!t.endsWith("+")) {
-                        if (!addOnlyNonNumericTypes || !kb.isSubclass(t,"Quantity"))
-                            sb.append(" (instance " + unquantifiedV + " " + t + ") ");
+                        if (!addOnlyNonNumericTypes || !kb.isSubclass(t,"Quantity")) {
+                            if (!t.equals("Entity"))
+                                sb.append(" (instance " + unquantifiedV + " " + t + ") ");
+                        }
                     }
                     else
                         sb.append(" (subclass " + unquantifiedV + " " + t.substring(0,t.length()-1) + ") ");
@@ -336,8 +338,10 @@ public class FormulaPreprocessor {
                     HashSet<String> types = varmap.get(existentiallyQV);
                     if (types != null && !types.isEmpty()) {
                         for (String t : types) {
-                            if (!t.endsWith("+"))
-                                sb.append(" (instance " + existentiallyQV + " " + t + ") ");
+                            if (!t.endsWith("+")) {
+                                if (!t.equals("Entity"))
+                                    sb.append(" (instance " + existentiallyQV + " " + t + ") ");
+                            }
                             else
                                 sb.append(" (subclass " + existentiallyQV + " " + t.substring(0,t.length()-1) + ") ");
                         }
