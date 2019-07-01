@@ -1215,6 +1215,10 @@ public class SUMOtoTFAform {
      */
     public static String process(Formula f) {
 
+        if (kb == null) {
+            System.out.println("Error in SUMOtoTFAform.process(): null kb");
+            return "";
+        }
         if (f.theFormula.startsWith("(instance equal"))
             return "";
         if (debug) System.out.println("\nSUMOtoTFAform.process(): =======================");
@@ -1423,13 +1427,18 @@ public class SUMOtoTFAform {
                 String var = m.group(1);
                 String toReplace = "(instance ?" + var + " " + type + ")";
                 String cons = numericConstraints.get(type);
-                if (StringUtil.emptyString(cons))
-                    System.out.println("Error in SUMOtoTFAform.modifyTypesToConstraints(): no constraint for " + type);
-                String origVar = numericVars.get(type);
-                String newCons = cons.replace("?" + origVar, "?" + var);
-                if (debug) System.out.println("SUMOtoTFAform.modifyTypesToConstraints(): replacing " +
-                    toReplace + " with " + newCons);
-                f.theFormula = f.theFormula.replace(toReplace, newCons);
+                if (StringUtil.emptyString(cons)) {
+                    System.out.println("Error in SUMOtoTFAform.modifyTypesToConstraints(): no constraint for " +
+                            type + " in formula:\n" + f);
+                    found = false;
+                }
+                else {
+                    String origVar = numericVars.get(type);
+                    String newCons = cons.replace("?" + origVar, "?" + var);
+                    if (debug) System.out.println("SUMOtoTFAform.modifyTypesToConstraints(): replacing " +
+                            toReplace + " with " + newCons);
+                    f.theFormula = f.theFormula.replace(toReplace, newCons);
+                }
             }
             else
                 found = false;
