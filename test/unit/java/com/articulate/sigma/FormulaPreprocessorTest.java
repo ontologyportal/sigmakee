@@ -245,4 +245,23 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         System.out.println("test7(): expected: " + expected);
         assertEquals(expected,actual.iterator().next().toString());
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testAbsolute() {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        String strf = "(equal\n" +
+                "  (AbsoluteValueFn ?NUMBER1) ?NUMBER2)";
+        Formula f = new Formula();
+        f.read(strf);
+        fp = new FormulaPreprocessor();
+        FormulaPreprocessor.debug = true;
+        HashMap<String,HashSet<String>> actual = fp.findAllTypeRestrictions(f, kb);
+        String expected = "{?NUMBER1=[RealNumber], ?NUMBER2=[Entity, NonnegativeRealNumber]}";
+        System.out.println("testAbsolute(): actual: " + actual);
+        System.out.println("testAbsolute(): expected: " + expected);
+        assertEquals(expected,actual.toString());
+    }
 }
