@@ -2582,13 +2582,6 @@ public class KB implements Serializable {
         this.getTerms().addAll(file.terms);
         if (!constituents.contains(canonicalPath))
             constituents.add(canonicalPath);
-        // clearFormatMaps(); // Clear formatMap and termFormatMap for this KB.
-        // if (buildCachesP && !canonicalPath.endsWith(_cacheFileSuffix)) {
-        // kbCache = new KBcache(this);
-        // kbCache.buildCaches();
-        // }
-        // if (loadEProverP)
-        // loadEProver();
     }
 
     /*****************************************************************
@@ -3224,6 +3217,10 @@ public class KB implements Serializable {
 
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
+        if (!mgr.initialized) {
+            System.out.println("INFO in KB.loadEProver(): KBmanager not initialized, exiting");
+            return;
+        }
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
