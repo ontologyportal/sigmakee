@@ -51,7 +51,7 @@ public class KBmanager implements Serializable {
                     "graphDir", "nlpTools","TPTP","cache","editorCommand","graphVizDir",
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
-                    "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir");
+                    "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
@@ -116,33 +116,6 @@ public class KBmanager implements Serializable {
         return false;
     }
 
-    /** ***************************************************************
-     *  Check whether sources are newer than serialized version.
-
-    public static boolean serializedOld() {
-
-        System.out.println("KBmanager.serializedOld(): ");
-        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-        File configFile = new File(kbDir + File.separator + "config.xml");
-        Date configDate = new Date(configFile.lastModified());
-        File serfile = new File(kbDir + File.separator + "kbmanager.ser");
-        Date saveDate = new Date(serfile.lastModified());
-        System.out.println("KBmanager.serializedOld(): save date: " + saveDate.toString());
-        if (saveDate.compareTo(configDate) < 0)
-            return true;
-        for (KB thekb : manager.kbs.values()) {
-            for (String f : thekb.constituents) {
-                File file = new File(f);
-                Date fileDate = new Date(file.lastModified());
-                if (saveDate.compareTo(fileDate) < 0) {
-                    return true;
-                }
-            }
-        }
-        System.out.println("KBmanager.serializedOld(): returning false");
-        return false;
-    }
-*/
     /** ***************************************************************
      *  Load the most recently save serialized version.
      */
@@ -319,8 +292,11 @@ public class KBmanager implements Serializable {
                 if (element.getTagName().equals("preference")) {
                     String name = (String) element.getAttribute("name");
                     String value = (String) element.getAttribute("value");
+                    System.out.println("Error in KBmanager.preferencesFromXML(): Adding: " + name + " " + value);
                     preferences.put(name,value);
                 }
+                else
+                    System.out.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + element.getTagName());
             }
         }
         if (debug) System.out.println("KBmanager.preferencesFromXML(): number of preferences: " +
