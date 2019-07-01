@@ -296,6 +296,7 @@ public class SUMOKBtoTPTPKB {
                         }
                         else if (lang.equals("tff")) {
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
+                            SUMOtoTFAform.kb = kb;
                             f3.theTptpFormulas = new HashSet<>();
                             if (withRelnRenames != null) {
                                 String tfaForm = stfa.process(f3.theFormula);
