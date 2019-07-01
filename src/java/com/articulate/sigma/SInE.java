@@ -158,7 +158,7 @@ public class SInE extends InferenceEngine {
     /** *************************************************************
      */
     private SInE(String kbFileName) throws Exception {
-         this(kbFileName, Vampire.getFactory());
+         //this(kbFileName, Vampire.getFactory());
     }
 
     /** *************************************************************
