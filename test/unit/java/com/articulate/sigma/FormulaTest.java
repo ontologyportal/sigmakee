@@ -672,6 +672,21 @@ public class FormulaTest {
     /** ***************************************************************
      */
     @Test
+    public void testComplexArgumentsToArrayListAbsolute() {
+
+        String stmt = "(equal\n" +
+                "  (AbsoluteValueFn ?NUMBER1) ?NUMBER2)";
+        Formula f = new Formula(stmt);
+        String expected = "[(AbsoluteValueFn ?NUMBER1),?NUMBER2]";
+        ArrayList<String> actual = f.complexArgumentsToArrayList(1);
+        System.out.println("testComplexArgumentsToArrayListAbsolute(): actual: " + actual);
+        System.out.println("testComplexArgumentsToArrayListAbsolute(): expected: " + expected);
+        assertEquals(expected, actual.toString());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
     public void testReplaceQuantifierVars() throws Exception {
 
         String stmt = "(exists (?X)\n" +
