@@ -696,6 +696,10 @@ public class FormulaPreprocessor {
                         String type = kb.kbCache.getRange(fstr);
                         addToMap(result,args.get(0),type);
                     }
+                    if (args == null)
+                        System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() args = null found while processing: \n" + f);
+                    if (kb == null)
+                        System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() kb = null found while processing: \n" + f);
                     if (Formula.isVariable(args.get(1)) && Formula.listP(args.get(0)) &&
                             kb.isFunctional(args.get(0))) {
                         Formula func = new Formula(args.get(0));
