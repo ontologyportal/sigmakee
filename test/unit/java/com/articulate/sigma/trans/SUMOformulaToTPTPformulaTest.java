@@ -135,4 +135,20 @@ public class SUMOformulaToTPTPformulaTest {
         System.out.println(actualRes);
         assertEquals(expectedRes, actualRes);
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void TesttptpParseSUOKIFString7() {
+
+        String kifstring, expectedRes, actualRes;
+        kifstring = "(<=> (exists (?BUILD) (and (instance ?BUILD Constructing) " +
+                "(result ?BUILD ?ARTIFACT))) (instance ?ARTIFACT StationaryArtifact))";
+        expectedRes = "( ( ! [V__ARTIFACT] : ((? [V__BUILD] : " +
+                "(s__instance(V__BUILD,s__Constructing) & s__result(V__BUILD,V__ARTIFACT))) <=> " +
+                "s__instance(V__ARTIFACT,s__StationaryArtifact)) ) )";
+        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
+        System.out.println(actualRes);
+        assertEquals(expectedRes, actualRes);
+    }
 }
