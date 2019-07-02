@@ -1154,36 +1154,38 @@ public class SUMOtoTFAform {
      */
     public static String elimUnitaryLogops(Formula f) {
 
-        //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): f: " + f);
+        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): f: " + f);
         if (f.empty() || f.atom()) {
-            //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): atomic result: " + f.theFormula);
+            if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): atomic result: " + f.theFormula);
             return f.theFormula;
         }
         ArrayList<String> args = f.complexArgumentsToArrayList(0);
-        //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): args: " + args);
-        //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): size: " + args.size());
-        //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): car: " + f.car());
+        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): args: " + args);
+        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): size: " + args.size());
+        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): car: " + f.car());
         if (f.car().equals("and") || f.car().equals("or") || f.car().equals("=>")) {
             if (args.size() == 1) {  // meaning that the one "argument" is the predicate
-                //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): empty result: ");
+                if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): empty result: ");
                 return "";
             }
             if (args.size() == 2) {
-                //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): elimination: " + args.get(1));
+                if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): elimination: " + args.get(1));
                 String result = elimUnitaryLogops(new Formula(args.get(1)));
-                //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): result: " + result);
+                if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): result: " + result);
                 return result;
             }
         }
-        //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): not an elimination ");
+        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): not an elimination ");
         StringBuffer result = new StringBuffer();
         result = result.append("(" + args.get(0));
         for (int i = 1; i < args.size(); i++) {
             result.append(" " + elimUnitaryLogops(new Formula(args.get(i))));
-            //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): appending: " + result);
+            if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): appending: " + result);
         }
         result.append(")");
-        //System.out.println("SUMOtoTFAform.elimUnitaryLogops(): result: " + result);
+        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): result: " + result);
+        if (!result.toString().equals(f.theFormula))
+            return elimUnitaryLogops(new Formula(result.toString())); // loop again if it's changed
         return result.toString();
     }
 
