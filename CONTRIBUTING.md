@@ -28,7 +28,9 @@ Some things that will increase the chance that your pull request is accepted:
 * Make small incremental changes.
 * Avoid the use of automatic tools or formatters to keep commits small and trackable.
 * Write a [good commit message][commit].
-* explain (ideally with an automated proof) what your addition attempts to accomplish
+* explain what your addition attempts to accomplish
+* provide the transcript showing that you've run all the existing jUnit tests for Sigma (as specified
+in the README https://github.com/ontologyportal/sigmakee/blob/master/README.txt) and that they pass
 
 [commit]: http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html
 
