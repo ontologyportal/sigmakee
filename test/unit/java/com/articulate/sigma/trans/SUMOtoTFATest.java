@@ -1,7 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.FormulaPreprocessor;
-import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.trans.*;
 import com.articulate.sigma.*;
 import org.junit.Test;
 import org.junit.Before;
@@ -40,6 +40,21 @@ public class SUMOtoTFATest extends UnitTestBase {
             e.printStackTrace();
         }
         SUMOtoTFAform.setNumericFunctionInfo();
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testBuildConstraints() {
+
+        System.out.println("\n========= testBuildConstraints ==========\n");
+        String kifstring, expectedRes, actualRes;
+        expectedRes = "(or (equal (SignumFn ?NUMBER) 1) (equal (SignumFn ?NUMBER) 0))";
+        SUMOtoTFAform.initOnce();
+        actualRes = SUMOtoTFAform.numericConstraints.get("NonnegativeRealNumber");
+        System.out.println("actual:  " + actualRes);
+        System.out.println("expected:" + expectedRes);
+        assertEquals(expectedRes, actualRes.trim());
     }
 
     /** ***************************************************************
