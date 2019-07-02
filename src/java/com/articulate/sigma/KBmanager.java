@@ -123,17 +123,11 @@ public class KBmanager implements Serializable {
 
         manager = null;
         try {
-            // Reading the object from a file
             String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
             FileInputStream file = new FileInputStream(kbDir + File.separator + "kbmanager.ser");
             ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
             KBmanager temp = (KBmanager) in.readObject();
-            //if (serializedOld()) {
-            //    System.out.println("KBmanager.loadSerialized(): serialized file is older than sources, " +
-            //            "reloading from sources.");
-            //    return false;
-            //}
             manager = temp;
             in.close();
             file.close();
@@ -383,10 +377,6 @@ public class KBmanager implements Serializable {
                                 kb.add(filename);
                         }
                     }
-                }
-                else {
-                    System.out.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: " + element.getTagName());
-                    System.out.println("Error in KBmanager.kbsFilenamesFromXML(): expected <kb>");
                 }
             }
         }
