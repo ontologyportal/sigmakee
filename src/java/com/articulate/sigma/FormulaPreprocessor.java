@@ -20,6 +20,7 @@
  */
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.google.common.collect.Sets;
 
 import java.util.*;
@@ -273,9 +274,9 @@ public class FormulaPreprocessor {
 
         Formula f = new Formula();
         f.read(sb.toString());
-
         if (StringUtil.emptyString(f.theFormula) || f.empty())
             f.read(form.theFormula);
+        f.theFormula = SUMOtoTFAform.elimUnitaryLogops(f);
         if (debug) System.out.println("addTypeRestrictions: result: " + f);
         if (debug) System.out.println("addTypeRestrictions: form at end: " + form);
         if (debug) System.out.println("addTypeRestrictions: sb at end: '" + sb + "'");
@@ -1049,8 +1050,6 @@ public class FormulaPreprocessor {
     public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
         if (debug) System.out.println("preProcess(): starting on: " + form);
-        if (form.theFormula.contains("avgWorkHours"))
-            debug = true;
         HashSet<Formula> results = new HashSet<Formula>();
         if (!StringUtil.emptyString(form.theFormula)) {
             KBmanager mgr = KBmanager.getMgr();
@@ -1116,8 +1115,6 @@ public class FormulaPreprocessor {
         }
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): 2 result: " + results);
-        if (form.theFormula.contains("avgWorkHours"))
-            debug = false;
         return results;
     }
 
