@@ -54,6 +54,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.numericConstraints.get("NonnegativeRealNumber");
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testBuildConstraints(): Success!");
+        else
+            System.out.println("testBuildConstraints(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -69,6 +73,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(kifstring);
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test1(): Success!");
+        else
+            System.out.println("test1(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -84,6 +92,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(kifstring);
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test2(): Success!");
+        else
+            System.out.println("test2(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -102,12 +114,16 @@ public class SUMOtoTFATest extends UnitTestBase {
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
         if (forms == null || forms.size() == 0)
             return;
-        expectedRes = "! [V__P : $i,V__S1 : $i,V__S2 : $i] : " +
-                "((s__subProcess(V__S1, V__P) & s__subProcess(V__S2, V__P)) => " +
-                "s__relatedEvent(V__S1, V__S2))";
+        expectedRes = "! [V__P : $i,V__S1 : $i,V__S2 : $i] : ((s__instance(V__P, s__Process) & " +
+                "s__instance(V__S1, s__Process) & s__instance(V__S2, s__Process)) => " +
+                "(s__subProcess(V__S1, V__P) & s__subProcess(V__S2, V__P)) => s__relatedEvent(V__S1, V__S2))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test3(): Success!");
+        else
+            System.out.println("test3(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -137,6 +153,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test4(): Success!");
+        else
+            System.out.println("test4(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -157,13 +177,18 @@ public class SUMOtoTFATest extends UnitTestBase {
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
         if (forms == null || forms.size() == 0)
             return;
-        expectedRes = "! [V__PROC : $i,V__LOC : $i,V__SUB : $i] : " +
-                "((s__instance(V__PROC, s__Process) & s__eventLocated(V__PROC, V__LOC) & " +
+        expectedRes = "! [V__PROC : $i,V__SUB : $i,V__LOC : $i] : " +
+                "(s__instance(V__SUB, s__Process) => (s__instance(V__PROC, s__Process) & " +
+                "s__eventLocated(V__PROC, V__LOC) & " +
                 "s__subProcess(V__SUB, V__PROC)) => " +
                 "s__eventLocated(V__SUB, V__LOC))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test5(): Success!");
+        else
+            System.out.println("test5(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -183,14 +208,20 @@ public class SUMOtoTFATest extends UnitTestBase {
         if (forms == null || forms.size() == 0)
             return;
         expectedRes = "! [V__SUM : $i,V__NUMBER1 : $i,V__NUMBER2 : $i,V__ARC1 : $i,V__PATH : $i,V__ARC2 : $i] : " +
-                "((equal(s__PathWeightFn(V__PATH) ,V__SUM) & s__graphPart(V__ARC1, V__PATH) & " +
-                "s__graphPart(V__ARC2, V__PATH) & s__arcWeight(V__ARC1, V__NUMBER1) & s__arcWeight(V__ARC2, V__NUMBER2) & " +
-                "( ! [V__ARC3:$i] : (s__graphPart(V__ARC3, V__PATH) => " +
-                "(equal(V__ARC3 ,V__ARC1) | equal(V__ARC3 ,V__ARC2))))) => " +
+                "((s__instance(V__ARC1, s__GraphArc) & s__instance(V__PATH, s__GraphPath) & " +
+                "s__instance(V__ARC2, s__GraphArc)) => (equal(s__PathWeightFn(V__PATH) ,V__SUM) & " +
+                "s__graphPart(V__ARC1, V__PATH) & s__graphPart(V__ARC2, V__PATH) & " +
+                "s__arcWeight(V__ARC1, V__NUMBER1) & s__arcWeight(V__ARC2, V__NUMBER2) & " +
+                "( ! [V__ARC3:$i] : (s__instance(V__ARC3, s__GraphElement) => " +
+                "s__graphPart(V__ARC3, V__PATH) => (equal(V__ARC3 ,V__ARC1) | equal(V__ARC3 ,V__ARC2))))) => " +
                 "equal(s__PathWeightFn(V__PATH) ,s__AdditionFn(V__NUMBER1 ,V__NUMBER2)))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test6(): Success!");
+        else
+            System.out.println("test6(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -208,11 +239,16 @@ public class SUMOtoTFATest extends UnitTestBase {
         if (forms == null || forms.size() == 0)
             return;
         expectedRes = "! [V__NUMBER1 : $i] : (( ? [V__ARC1:$i, V__ARC2:$i, V__PATH:$i] : " +
-                "((s__graphPart(V__ARC1, V__PATH) & s__graphPart(V__ARC2, V__PATH) & " +
-                "s__arcWeight(V__ARC1, V__NUMBER1)))))";
+                "((s__instance(V__ARC1, s__GraphArc) & s__instance(V__ARC2, s__GraphElement) & " +
+                "s__instance(V__PATH, s__Graph) & (s__graphPart(V__ARC1, V__PATH) & " +
+                "s__graphPart(V__ARC2, V__PATH) & s__arcWeight(V__ARC1, V__NUMBER1))))))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test7(): Success!");
+        else
+            System.out.println("test7(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -248,23 +284,32 @@ public class SUMOtoTFATest extends UnitTestBase {
             return;
         expectedRes = "! [V__ROW1 : $i] : (((s__instance(s__greaterThan__m, s__TotalValuedRelation) & " +
                 "s__instance(s__greaterThan__m, s__Predicate)) => ( ? [V__VALENCE:$int] : " +
-                "((s__instance(s__greaterThan__m, s__Relation) & " +
+                "(($greater(V__VALENCE ,0) & (s__instance(s__greaterThan__m, s__Relation) & " +
                 "s__valence__2In(s__greaterThan__m, V__VALENCE) & " +
-                "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : " +
-                "(($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__greaterThan__m, V__NUMBER, V__CLASS) & " +
-                "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
-                "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$i] : " +
-                "(greaterThan(V__ROW1 ,V__ITEM))))))) & (( ? [V__VALENCE:$int] : " +
-                "((s__instance(s__greaterThan__m, s__Relation) & s__valence__2In(s__greaterThan__m, V__VALENCE) & " +
-                "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($less(V__NUMBER ,V__VALENCE) & " +
+                "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($greater(V__NUMBER ,0) & " +
+                "s__instance(V__CLASS, s__SetOrClass)) => ($less(V__NUMBER ,V__VALENCE) & " +
                 "s__domain__2In(s__greaterThan__m, V__NUMBER, V__CLASS) & " +
                 "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
                 "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$i] : " +
-                "(greaterThan(V__ROW1 ,V__ITEM)))))) => (s__instance(s__greaterThan__m, s__TotalValuedRelation) & " +
+                "((s__instance(V__ITEM, s__Quantity) & greaterThan(V__ROW1 ,V__ITEM))))))))) & " +
+                "(( ? [V__VALENCE:$int] : (($greater(V__VALENCE ,0) & " +
+                "(s__instance(s__greaterThan__m, s__Relation) & " +
+                "s__valence__2In(s__greaterThan__m, V__VALENCE) & " +
+                "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($greater(V__NUMBER ,0) & " +
+                "s__instance(V__CLASS, s__SetOrClass)) => ($less(V__NUMBER ,V__VALENCE) & " +
+                "s__domain__2In(s__greaterThan__m, V__NUMBER, V__CLASS) & " +
+                "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
+                "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$i] : " +
+                "((s__instance(V__ITEM, s__Quantity) & greaterThan(V__ROW1 ,V__ITEM)))))))) => " +
+                "(s__instance(s__greaterThan__m, s__TotalValuedRelation) & " +
                 "s__instance(s__greaterThan__m, s__Predicate))))";
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test8(): Success!");
+        else
+            System.out.println("test8(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -286,6 +331,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("test9(): Success!");
+        else
+            System.out.println("test9(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -338,6 +387,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__CardinalityFn(s__TemporalCompositionFn(V__MONTH, s__Day)) = V__NUMBER)";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testTemporalComp(): Success!");
+        else
+            System.out.println("testTemporalComp(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -358,6 +411,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "equal(s__MeasureFn__1ReFn(1.0, V__TERAUNIT) ,s__MeasureFn__1ReFn(1000000000.0, s__KiloFn(V__UNIT))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testBigNumber(): Success!");
+        else
+            System.out.println("testBigNumber(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -373,11 +430,16 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(and (radius ?CIRCLE ?HALF) (equal (MultiplicationFn ?HALF 2) ?LENGTH))))";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
-        expectedRes = "! [V__CIRCLE : $i,V__LENGTH : $real] : (s__diameter(V__CIRCLE, V__LENGTH) => " +
-                "( ? [V__HALF:$real] : ((s__radius(V__CIRCLE, V__HALF) & " +
-                "s__MultiplicationFn__0Re1Re2ReFn(V__HALF ,2.0) = V__LENGTH))))";
+        expectedRes = "! [V__CIRCLE : $i,V__LENGTH : $real] : (s__instance(V__CIRCLE, s__Circle) => " +
+                "s__diameter(V__CIRCLE, V__LENGTH) => ( ? [V__HALF:$real] : " +
+                "((s__instance(V__HALF, s__LengthMeasure) & (s__radius(V__CIRCLE, V__HALF) & " +
+                "s__MultiplicationFn__0Re1Re2ReFn(V__HALF ,2.0) = V__LENGTH)))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testNumber(): Success!");
+        else
+            System.out.println("testNumber(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -407,6 +469,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__CardinalityFn(s__TemporalCompositionFn(V__MONTH, s__Day)) = V__NUMBER)";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testTemporalComp2(): Success!");
+        else
+            System.out.println("testTemporalComp2(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -429,6 +495,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "$less(V__OTHERINT ,V__INT))))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testCeiling(): Success!");
+        else
+            System.out.println("testCeiling(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -451,6 +521,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__RemainderFn__0In1In2InFn(V__ELEMENT, V__NUMBER) = 0)))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testInList(): Success!");
+        else
+            System.out.println("testInList(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -471,6 +545,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__inList(V__ELEMENT, s__ListFn_1__1InFn(V__ROW1)) => s__instance(V__ELEMENT, s__Number))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testLeastCommon(): Success!");
+        else
+            System.out.println("testLeastCommon(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -490,6 +568,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "$product(V__NUMBER2 ,V__NUMBER2) = V__NUMBER1)";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testMult(): Success!");
+        else
+            System.out.println("testMult(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -505,9 +587,14 @@ public class SUMOtoTFATest extends UnitTestBase {
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         expectedRes = "! [V__DAY : $i,V__MONTH : $i,V__NUMBER : $int] : " +
-                "(s__instance(V__DAY, s__DayFn__1InFn(V__NUMBER, V__MONTH)) => $lesseq(V__NUMBER ,31))";
+                "(s__subclass(V__MONTH, s__Month) => " +
+                "s__instance(V__DAY, s__DayFn__1InFn(V__NUMBER, V__MONTH)) => $lesseq(V__NUMBER ,31))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testDay(): Success!");
+        else
+            System.out.println("testDay(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -527,6 +614,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__ReciprocalFn__0Re1ReFn(V__NUMBER) = s__ExponentiationFn__0Re1Re2InFn(V__NUMBER, -1))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testExponent(): Success!");
+        else
+            System.out.println("testExponent(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -547,6 +638,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "( ? [V__NUMBER:$int] : (($greater(V__NUMBER ,-1) & V__NUMBER = s__CardinalityFn(V__SET)))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testInstance(): Success!");
+        else
+            System.out.println("testInstance(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -567,6 +662,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__MeasureFn__1ReFn($product(V__NUMBER ,$quotient_e(3.141592653589793 ,180.0)), s__Radian)))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testRadian(): Success!");
+        else
+            System.out.println("testRadian(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -588,6 +687,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "s__BeginFn(s__YearFn($to_int($sum(1950.0 ,$product(V__X ,-1000000.0)))))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testFloor(): Success!");
+        else
+            System.out.println("testFloor(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -610,6 +713,10 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(V__NUMBER = 1 | V__NUMBER = V__PRIME))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testPrime(): Success!");
+        else
+            System.out.println("testPrime(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -641,6 +748,30 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(s__avgWorkHours__2Re(X448,X130) => $less(X130,70.0))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testAvgWork(): Success!");
+        else
+            System.out.println("testAvgWork(): fail");
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testComposeSuffix() {
+
+        //SUMOtoTFAform.debug = true;
+        System.out.println("\n========= testComposeSuffix ==========\n");
+        String rel = "multiplicativeFactor__1Re";
+        String suffix = "__1In2In";
+        String actualRes = SUMOtoTFAform.composeSuffix(rel,suffix);
+        String expectedRes = "multiplicativeFactor__1In2In";
+        System.out.println("actual:  " + actualRes);
+        System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testComposeSuffix(): Success!");
+        else
+            System.out.println("testComposeSuffix(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
