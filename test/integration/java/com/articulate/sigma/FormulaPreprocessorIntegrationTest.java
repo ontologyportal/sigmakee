@@ -20,7 +20,8 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
      *    <constituent filename=".../Mid-level-ontology.kif" />
      */
     @Test
-    public void testComputeVariableTypesTypicalPart()     {
+    public void testComputeVariableTypesTypicalPart() {
+
         String stmt =   "(=> " +
                             "(typicalPart ?X ?Y) " +
                             "(subclass ?Y Object))";
@@ -39,8 +40,11 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testFindTypes2() {
+
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?NOTPARTPROB", Sets.newHashSet("Quantity"));
         expected.put("?PART", Sets.newHashSet("SetOrClass", "Object+"));
@@ -64,9 +68,12 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         assertEquals(expected, actualMap);
     }
 
+    /** ***************************************************************
+     */
     @Ignore
     @Test
     public void testAddTypes3() {
+
         String strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
                 "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +
                 "(instance ?Y ?WHOLE) (part ?X ?Y))))) (equal (?NOTPARTPROB " +
@@ -88,8 +95,11 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
-    public void testComputeVariableTypesPlaintiff()     {
+    public void testComputeVariableTypesPlaintiff() {
+
         String stmt =   "(exists (?P ?H)\n" +
                 "           (and\n" +
                 "               (instance ?P LegalAction)\n" +
