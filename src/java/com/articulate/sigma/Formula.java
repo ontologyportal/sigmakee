@@ -148,6 +148,18 @@ public class Formula implements Comparable, Serializable {
 
 	public static boolean debug = false;
 
+    // caches of frequently computed sets of variables in the formula
+    public HashSet<String> allVarsCache = new HashSet<>();
+    public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<HashSet<String>>();
+    public HashSet<String> quantVarsCache = new HashSet<>();
+    public HashSet<String> unquantVarsCache = new HashSet<>();
+    public HashSet<String> existVarsCache = new HashSet<>();
+    public HashSet<String> univVarsCache = new HashSet<>();
+    public HashSet<String> termCache = new HashSet<>();
+
+    // includes the leading '?'.  Does not include row variables
+    public HashMap<String,HashSet<String>> varTypeCache = new HashMap<>();
+
     /** ***************************************************************
      * A list of TPTP formulas (Strings) that together constitute the
      * translation of theFormula.  This member is a Set, because
@@ -1441,11 +1453,15 @@ public class Formula implements Comparable, Serializable {
      * @return An ArrayList containing two ArrayLists, each of which
      * could be empty
      */
-    public ArrayList<ArrayList<String>> collectVariables() {
+    public ArrayList<HashSet<String>> collectVariables() {
 
-        ArrayList<ArrayList<String>> ans = new ArrayList<ArrayList<String>>();
-        ans.add(new ArrayList());
-        ans.add(new ArrayList());
+        if (allVarsPairCache.size() > 0 && KBmanager.initialized)
+            return allVarsPairCache;
+        ArrayList<HashSet<String>> ans = new ArrayList<HashSet<String>>();
+        ans.add(new HashSet());
+        ans.add(new HashSet());
+        allVarsPairCache.add(new HashSet());
+        allVarsPairCache.add(new HashSet());
     	HashSet<String> quantified = new HashSet<String>();
     	HashSet<String> unquantified = new HashSet<String>();
         unquantified.addAll(collectAllVariables());
@@ -1453,6 +1469,8 @@ public class Formula implements Comparable, Serializable {
         unquantified.removeAll(quantified);
         ans.get(0).addAll(quantified);
         ans.get(1).addAll(unquantified);
+        allVarsPairCache.get(0).addAll(quantified);
+        allVarsPairCache.get(1).addAll(unquantified);
         return ans;
     }
 
@@ -1468,7 +1486,7 @@ public class Formula implements Comparable, Serializable {
      * in quantified list and unquantified list;
      *
      * @return An ArrayList containing two ArrayLists, each of which could be empty.
-     */
+
     public ArrayList<ArrayList<String>> collectQuantifiedUnquantifiedVariables() {
 
         ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables = new ArrayList<ArrayList<String>>();
@@ -1490,7 +1508,7 @@ public class Formula implements Comparable, Serializable {
 
         return quantifiedUnquantifiedVariables;
     }
-
+*/
     /** ***************************************************************
      * Collect quantified and unquantified variables recursively
      */
@@ -1557,7 +1575,7 @@ public class Formula implements Comparable, Serializable {
      * of String variable names (with initial '?').
      *
      * @return An ArrayList of String variable names
-     */
+
     public ArrayList<String> collectOrderedVariables() {
 
         ArrayList<String> result = new ArrayList<String>();
@@ -1581,7 +1599,7 @@ public class Formula implements Comparable, Serializable {
         }
         return result;
     }
-
+*/
     /** ***************************************************************
      * Collects all variables in this Formula.  Returns an Set
      * of String variable names (with initial '?').
@@ -1589,7 +1607,9 @@ public class Formula implements Comparable, Serializable {
      * @return A Set of String variable names
      */
     public Set<String> collectAllVariables() {
-    	    
+
+        if (allVarsCache.size() > 0)
+            return allVarsCache;
     	//ArrayList<String> result = new ArrayList<String>();
     	HashSet<String> resultSet = new HashSet<String>();
     	if (listLength() < 1)
@@ -1611,6 +1631,7 @@ public class Formula implements Comparable, Serializable {
     			resultSet.addAll(fcdr.collectAllVariables());
     	}
     	//result.addAll(resultSet);
+        allVarsCache.addAll(resultSet);
     	return resultSet;
     }
    
@@ -1620,7 +1641,7 @@ public class Formula implements Comparable, Serializable {
      * duplicates are not removed.
      *
      * @return An ArrayList of String variable names
-     */
+
     public ArrayList<String> collectExistentiallyQuantifiedVariables() {
     	    
     	ArrayList<String> result = new ArrayList<String>();
@@ -1649,7 +1670,7 @@ public class Formula implements Comparable, Serializable {
     	result.addAll(resultSet);
     	return result;
     }
-
+*/
     /** ***************************************************************
      * Collects all quantified variables in this Formula.  Returns an ArrayList
      * of String variable names (with initial '?').  Note that 
@@ -1657,12 +1678,13 @@ public class Formula implements Comparable, Serializable {
      *
      * @return An ArrayList of String variable names
      */
-    public ArrayList<String> collectQuantifiedVariables() {
-    	    
-    	ArrayList<String> result = new ArrayList<String>();
+    public Set<String> collectQuantifiedVariables() {
+
+        if (quantVarsCache.size() > 0)
+            return quantVarsCache;
     	HashSet<String> resultSet = new HashSet<String>();
     	if (listLength() < 1)
-    		return result;
+    		return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
     	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) { 
@@ -1670,7 +1692,7 @@ public class Formula implements Comparable, Serializable {
         	remainder.read(this.cdr());
         	if (!remainder.listP()) {
         		System.out.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
-        		return result;
+        		return resultSet;
         	}
         	Formula varlist = new Formula();
         	varlist.read(remainder.car());
@@ -1682,14 +1704,14 @@ public class Formula implements Comparable, Serializable {
     			resultSet.addAll(fcar.collectQuantifiedVariables());
     		resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
     	}
-    	result.addAll(resultSet);
-    	return result;
+        quantVarsCache.addAll(resultSet);
+    	return resultSet;
     }
 
     /** ***************************************************************
      * Collect all the unquantified variables in a formula
      */
-    public ArrayList<String> collectUnquantifiedVariables() {
+    public HashSet<String> collectUnquantifiedVariables() {
         return collectVariables().get(1);
     }
 
@@ -1705,13 +1727,15 @@ public class Formula implements Comparable, Serializable {
 					"No formula to collect terms from: " + this);
             return null;
         }
-
         if (this.empty())
             return resultSet;
-
-        if (this.atom())
+        if (this.atom()) {
+            termCache.add(theFormula);
             resultSet.add(theFormula);
+        }
         else {
+            if (termCache.size() > 0)
+            return termCache;
             Formula f = new Formula();
             f.read(theFormula);
             while (!f.empty() && f.theFormula != null && f.theFormula != "") {
@@ -1722,6 +1746,7 @@ public class Formula implements Comparable, Serializable {
             }
         }
         //ArrayList<String> result = new ArrayList(resultSet);
+        termCache.addAll(resultSet);
         return resultSet;
     }
 
@@ -1766,9 +1791,9 @@ public class Formula implements Comparable, Serializable {
     	
         String result = this.theFormula;
         String arg0 = this.car();
-        ArrayList<ArrayList<String>> vpair = collectVariables();
-        ArrayList<String> quantVariables = vpair.get(0);
-        ArrayList<String> unquantVariables = vpair.get(1);
+        ArrayList<HashSet<String>> vpair = collectVariables();
+        HashSet<String> quantVariables = vpair.get(0);
+        HashSet<String> unquantVariables = vpair.get(1);
 
         if (!unquantVariables.isEmpty()) {   // Quantify all the unquantified variables
             StringBuilder sb = new StringBuilder();
@@ -1807,16 +1832,19 @@ public class Formula implements Comparable, Serializable {
             Formula f = new Formula();
             f.read(this.theFormula);
             int flen = f.listLength();
-            String suffix = ("_" + (flen - 1));
+            String suffix = ("__" + (flen - 1));
             String arg = null;
             sb.append("(");
             for (int i = 0 ; i < flen ; i++) {
                 arg = f.getArgument(i);
                 if (i > 0)
                     sb.append(" ");
-                if ((i == 0) && kb.kbCache.transInstOf(arg,"VariableArityRelation") && !arg.endsWith(suffix)) {
-                    relationMap.put(arg + suffix, arg);
-                    arg += suffix;
+                String func = "";
+                if (kb.kbCache.isInstanceOf(arg,"Function"))
+                    func = "Fn";
+                if ((i == 0) && kb.kbCache.transInstOf(arg,"VariableArityRelation") && !arg.endsWith(suffix + func)) {
+                    relationMap.put(arg + suffix + func, arg);
+                    arg += suffix + func;
                 }
                 else if (listP(arg)) {
                     Formula argF = new Formula();
