@@ -8,6 +8,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static String lang = "tff";
@@ -16,10 +21,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean debug = false;
 
-    public static HashSet<String> qChildren = null;
-    public static HashSet<String> iChildren = null;
-    public static HashSet<String> rChildren = null;
-    public static HashSet<String> lChildren = null;
+    public static HashSet<String> qChildren = new HashSet<String>();
+    public static HashSet<String> iChildren = new HashSet<String>();
+    public static HashSet<String> rChildren = new HashSet<String>();
+    public static HashSet<String> lChildren = new HashSet<String>();
     public static HashSet<String> qNotR = new HashSet<String>();
     public static HashSet<String> qNotI = new HashSet<String>();
     public static HashSet<String> qNotL = new HashSet<String>();
@@ -39,15 +44,28 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             iChildren = kb.kbCache.getChildClasses("Integer");
             rChildren = kb.kbCache.getChildClasses("RationalNumber");
             lChildren = kb.kbCache.getChildClasses("RealNumber");
-            qNotR.addAll(qChildren);
-            qNotR.removeAll(rChildren);
+            if (qChildren != null)
+                qNotR.addAll(qChildren);
+            else
+                qChildren = new HashSet<String>();
+            if (rChildren != null)
+                qNotR.removeAll(rChildren);
+            else
+                rChildren = new HashSet<String>();
             qNotR.add("RationalNumber");
-            qNotI.addAll(qChildren);
-            qNotI.removeAll(iChildren);
+            if (qChildren != null) qNotI.addAll(qChildren);
+            if (iChildren != null)
+                qNotI.removeAll(iChildren);
+            else
+                iChildren = new HashSet<String>();
             qNotI.add("Integer");
-            qNotL.addAll(qChildren);
-            qNotL.removeAll(lChildren);
+            if (qChildren != null) qNotL.addAll(qChildren);
+            if (lChildren != null)
+                qNotL.removeAll(lChildren);
+            else
+                lChildren = new HashSet<String>();
             qNotL.add("RealNumber");
+
             SUMOtoTFAform.initOnce();
         }
         initialized = true;
@@ -176,7 +194,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeRelationSort(String t, PrintWriter pw, String sanitizedKBName) {
 
-        //System.out.println("writeRelationSort(): t: " + t);
+        if (debug) System.out.println("writeRelationSort(): t: " + t);
         if (Formula.isLogicalOperator(t))
             return;
         if (Formula.isMathFunction(t))
@@ -343,7 +361,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         //System.out.println("extendRelationSig(): newrel: " + newRel);
         ArrayList<String> extsig = SUMOtoTFAform.relationExtractUpdateSig(newRel);
         ArrayList<String> combinedSig = new ArrayList<>();
-        for (int i = 0; i < sig.size(); i++) {
+        int sigmax = sig.size();
+        if (extsig.size() > sigmax)
+            sigmax = extsig.size();
+        for (int i = 0; i < sigmax; i++) {
             if (extsig != null && i < extsig.size() && !StringUtil.emptyString(extsig.get(i)))
                 SUMOtoTFAform.safeSet(combinedSig,i,extsig.get(i));
             else
@@ -385,9 +406,11 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             type = sig.get(argnum);
         else
             type = kb.kbCache.variableArityType(rel);
+        if (rel.equals("ListFn"))
+            return true;
         if (rel.equals("AssignmentFn") && argnum == 0)
             return false;
-        if (!rel.equals("ListFn") && argnum == 0)
+        if (argnum == 0)
             return true;
         if (listOperator(rel) && type.equals("Entity"))
             return true;
@@ -416,12 +439,14 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             StringBuffer inStr = new StringBuffer();
             StringBuffer reStr = new StringBuffer();
             StringBuffer raStr = new StringBuffer();
-            StringBuffer noStr = new StringBuffer();
             if (expandableArg(r,0,sig)) {
                 inStr.append("0In");
                 reStr.append("0Re");
                 raStr.append("0Ra");
             }
+            String fnSuffix = "";
+            if (kb.isFunction(r))
+                fnSuffix = "Fn";
             if (debug) System.out.println("handleVariableArity(): r: " + r);
             if (hasNumericArg(r) || listOperator(r)) {
                 if (debug) System.out.println("handleVariableArity(): numeric or list r: " + r);
@@ -431,13 +456,15 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                         reStr.append(Integer.toString(i) + "Re");
                         raStr.append(Integer.toString(i) + "Ra");
                     }
-                    String newInStr = Integer.toString(i) + "__" + inStr.toString();
-                    String newReStr = Integer.toString(i) + "__" + reStr.toString();
-                    String newRaStr = Integer.toString(i) + "__" + raStr.toString();
+                    String newInStr = Integer.toString(i) + fnSuffix + "__" + inStr.toString();
+                    String newReStr = Integer.toString(i) + fnSuffix + "__" + reStr.toString();
+                    String newRaStr = Integer.toString(i) + fnSuffix + "__" + raStr.toString();
+                    String newNoStr = Integer.toString(i);
                     if (debug) System.out.println("handleVariableArity(): adding term: " + newInStr);
                     FormulaPreprocessor.addToMap(toExtend, r, newInStr);
                     FormulaPreprocessor.addToMap(toExtend, r, newReStr);
                     FormulaPreprocessor.addToMap(toExtend, r, newRaStr);
+                    FormulaPreprocessor.addToMap(toExtend, r, newNoStr);
                 }
             }
             else {
@@ -483,13 +510,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (debug) System.out.println("writeSorts(): k: " + k);
             HashSet<String> vals = toExtend.get(k);
             String fnSuffix = "";
-            if (kb.isFunction(k))
+            if (kb.isFunction(k) || k.endsWith("Fn"))  // variable arity relations with numerical suffixes not in kb yet
                 fnSuffix = "Fn";
             for (String e : vals) {
                 kb.kbCache.extendInstance(k, e + fnSuffix);
                 String sep = "__";
-                if (e.matches("\\d__.*"))  // variable arity has appended single underscore before arity
-                    sep = "_";
+                //if (e.matches("\\d__.*"))  // variable arity has appended single underscore before arity
+                //    sep = "_";
                 String newTerm = k + sep + e + fnSuffix;
                 if (debug) System.out.println("writeSorts(): newTerm: " + newTerm);
                 if (!StringUtil.emptyString(e)) {
