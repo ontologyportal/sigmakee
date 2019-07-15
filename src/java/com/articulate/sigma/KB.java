@@ -37,7 +37,7 @@ package com.articulate.sigma;
 /*
 Author: Adam Pease apease@articulatesoftware.com
 
-some portions copyright Teknowledge, IPsoft
+some portions copyright Infosys, Teknowledge, IPsoft
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -103,6 +103,9 @@ public class KB implements Serializable {
 
     /** The instance of the CELT process. */
     public transient CELT celt = null;
+
+    /** a cache built through lazy evaluation of the taxonomic depth of each term */
+    public HashMap<String,Integer> termDepthCache = new HashMap<>();
 
     /* A synchronized SortedSet of Strings, which are all the terms in the KB.     */
     public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
@@ -703,12 +706,12 @@ public class KB implements Serializable {
     public boolean isSubclass(String c1, String parent) {
 
         if (StringUtil.emptyString(c1)) {
-            System.out.println("Error in KB.isSubclass(): empty c1");
+            //System.out.println("Error in KB.isSubclass(): empty c1");
             //Thread.dumpStack();
             return false;
         }
         if (StringUtil.emptyString(parent)) {
-            System.out.println("Error in KB.isSubclass(): empty parent");
+            //System.out.println("Error in KB.isSubclass(): empty parent");
             //Thread.dumpStack();
             return false;
         }
@@ -2002,7 +2005,8 @@ public class KB implements Serializable {
             return Integer.max(termDepth(arg1), termDepth(arg2));
         }
         if (!terms.contains(term)) {
-            System.out.println("KB.termDepth(): no such term " + term);
+            if (!StringUtil.emptyString(term))
+                System.out.println("KB.termDepth(): no such term " + term);
             //Thread.dumpStack();
             return 0;
         }
@@ -2010,9 +2014,14 @@ public class KB implements Serializable {
             return 0;
         if (!kbCache.subclassOf(term,"Entity") && !kbCache.transInstOf(term,"Entity"))
             return 0;
+        if (termDepthCache.containsKey(term))
+            return termDepthCache.get(term);
         Set<String> rents = immediateParents(term);
-        for (String s : rents)
-            return 1 + termDepth(s);
+        for (String s : rents) {
+            int depth = 1 + termDepth(s);
+            termDepthCache.put(term,depth);
+            return depth;
+        }
         return 0;
     }
 
@@ -2087,7 +2096,9 @@ public class KB implements Serializable {
             if (debug) System.out.println("mostSpecificTerm(): result: " + result);
             if (debug) System.out.println("mostSpecificTerm(): result depth: " + termDepth(result));
             if (debug) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
-            if (StringUtil.emptyString(t) || !containsTerm(t)) {
+            if (StringUtil.emptyString(t))
+                continue;
+            if (!containsTerm(t)) {
                 System.out.println("Error in KB.mostSpecificTerm(): no such term: " + t);
                 continue;
             }
