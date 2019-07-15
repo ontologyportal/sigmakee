@@ -1007,15 +1007,15 @@ public class Clausifier  {
      *  Counter for instantiateVariables() to make sure generated
      *  symbols are unique.
      */
-    private static int _GENSYM_COUNTER = 0;
+    private static int GENSYM_COUNTER = 0;
 
     /** **************************************************************
      *  Create constants to fill variables.
-     */
+
     public Formula instantiateVariables() {
 
         Formula f = renameVariables();
-        ArrayList<ArrayList<String>> varList = f.collectVariables();
+        ArrayList<HashSet<String>> varList = f.collectVariables();
         TreeMap<String,String> vars = new TreeMap<String,String>();
         ArrayList<String> al = (ArrayList<String>) varList.get(0);
         al.addAll((ArrayList<String>) varList.get(1));
@@ -1027,7 +1027,7 @@ public class Clausifier  {
         }
         return f.substituteVariables(vars);
     }
-
+*/
     /** ***************************************************************
      * This method returns a new Formula in which all variables have
      * been renamed to ensure uniqueness.
