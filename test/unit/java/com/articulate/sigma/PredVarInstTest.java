@@ -1,12 +1,17 @@
 package com.articulate.sigma;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.util.*;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  * These tests follow PredVarInst.test( ), with the exception of that method's call to FormulaPreprocessor.
@@ -70,4 +75,194 @@ public class PredVarInstTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
+    @Test
+    public void testInstantiatePredStmt3() {
+
+        String stmt = "(=> " +
+                "(and " +
+                  "(minValue ?R ?ARG ?N) " +
+                  "(?R @ARGS) " +
+                  "(equal ?VAL (ListOrderFn (ListFn @ARGS) ?ARG))) " +
+                "(greaterThan ?VAL ?N))";
+        Formula f = new Formula();
+        f.read(stmt);
+
+        System.out.println("\n--------------------");
+        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        System.out.println("PredVarInstTest.testInstantiatePredStmt3(): actual: " + actual);
+        Set<Formula> expected = Sets.newHashSet();
+        assertTrue(actual.size() > 100);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testPredVarArity() {
+
+        String stmt = "(=> (and (instance ?REL CaseRole) (instance ?OBJ Object) " +
+                "(?REL ?PROCESS ?OBJ)) (exists (?TIME) (overlapsSpatially (WhereFn ?PROCESS ?TIME) ?OBJ)))";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        HashSet<String>  actual = PredVarInst.gatherPredVarRecurse(SigmaTestBase.kb,f);
+        System.out.println("PredVarInstTest.testPredVarArity(): actual: " + actual);
+        System.out.println("PredVarInstTest.testPredVarArity(): arity: " + PredVarInst.predVarArity.get("?REL").intValue());
+        HashSet<String> expected = new HashSet<>();
+        expected.add("?REL");
+        assertEquals(expected, actual);
+        assertEquals(2,PredVarInst.predVarArity.get("?REL").intValue());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testPredVarArity2() {
+
+        String stmt = "(=>\n" +
+                "  (and\n" +
+                "    (instance ?REL CaseRole)\n" +
+                "    (instance ?OBJ Object)\n" +
+                "    (?REL ?PROCESS ?OBJ))\n" +
+                "  (exists (?TIME)\n" +
+                "    (overlapsSpatially\n" +
+                "      (WhereFn ?PROCESS ?TIME) ?OBJ)))";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        String var = "?REL";
+        System.out.println("PredVarInstTest.testPredVarArity2(): formula: " + f);
+        HashSet<String> actual = PredVarInst.gatherPredVarRecurse(SigmaTestBase.kb,f);
+        System.out.println("PredVarInstTest.testPredVarArity2(): actual pred vars: " + actual);
+        int arity = PredVarInst.predVarArity.get(var).intValue();
+        int expectedArity = 2;
+        System.out.println("PredVarInstTest.testPredVarArity2(): actual arity: " + arity);
+        System.out.println("PredVarInstTest.testPredVarArity2(): expectedArity: " + expectedArity);
+        HashSet<String> expected = new HashSet<>();
+        expected.add(var);
+        System.out.println("PredVarInstTest.testPredVarArity2(): expected pred vars: " + expected);
+        assertEquals(expected, actual);
+        assertEquals(expectedArity,arity);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTVRPredVars() {
+
+        String stmt = "(<=>\n" +
+                "    (and\n" +
+                "        (instance ?REL TotalValuedRelation)\n" +
+                "        (instance ?REL Predicate))\n" +
+                "    (exists (?VALENCE)\n" +
+                "        (and\n" +
+                "            (instance ?REL Relation)\n" +
+                "            (valence ?REL ?VALENCE)\n" +
+                "            (=>\n" +
+                "                (forall (?NUMBER ?ELEMENT ?CLASS)\n" +
+                "                    (=>\n" +
+                "                        (and\n" +
+                "                            (lessThan ?NUMBER ?VALENCE)\n" +
+                "                            (domain ?REL ?NUMBER ?CLASS)\n" +
+                "                            (equal ?ELEMENT\n" +
+                "                                (ListOrderFn\n" +
+                "                                    (ListFn @ROW) ?NUMBER)))\n" +
+                "                        (instance ?ELEMENT ?CLASS)))\n" +
+                "                (exists (?ITEM)\n" +
+                "                    (?REL @ROW ?ITEM))))))";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        System.out.println("PredVarInstTest.testTVRPredVars(): formula: " + f);
+        HashSet<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb, f);
+        System.out.println("PredVarInstTest.testTVRPredVars(): actual: " + actual);
+        HashSet<String> expected = new HashSet<>();
+        expected.add("?REL");
+        System.out.println("PredVarInstTest.testTVRPredVars(): expected: " + expected);
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTVRArity() {
+
+        String stmt = "(<=>\n" +
+                "    (and\n" +
+                "        (instance ?REL TotalValuedRelation)\n" +
+                "        (instance ?REL Predicate))\n" +
+                "    (exists (?VALENCE)\n" +
+                "        (and\n" +
+                "            (instance ?REL Relation)\n" +
+                "            (valence ?REL ?VALENCE)\n" +
+                "            (=>\n" +
+                "                (forall (?NUMBER ?ELEMENT ?CLASS)\n" +
+                "                    (=>\n" +
+                "                        (and\n" +
+                "                            (lessThan ?NUMBER ?VALENCE)\n" +
+                "                            (domain ?REL ?NUMBER ?CLASS)\n" +
+                "                            (equal ?ELEMENT\n" +
+                "                                (ListOrderFn\n" +
+                "                                    (ListFn @ROW) ?NUMBER)))\n" +
+                "                        (instance ?ELEMENT ?CLASS)))\n" +
+                "                (exists (?ITEM)\n" +
+                "                    (?REL @ROW ?ITEM))))))";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        String var = "?REL";
+        System.out.println("PredVarInstTest.testTVRArity(): formula: " + f);
+        System.out.println("PredVarInstTest.testTVRArity(): variable: " + var);
+        HashSet<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb, f);
+        int arity = PredVarInst.predVarArity.get(var).intValue();
+        int expected = 0; // variable arity is given as "0"
+        System.out.println("PredVarInstTest.testTVRArity(): actual arity: " + arity);
+        System.out.println("PredVarInstTest.testTVRArity(): expected arity: " + expected);
+        assertEquals(expected, arity);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTVRTypes() {
+
+        String stmt = "(<=>\n" +
+                "    (and\n" +
+                "        (instance ?REL TotalValuedRelation)\n" +
+                "        (instance ?REL Predicate))\n" +
+                "    (exists (?VALENCE)\n" +
+                "        (and\n" +
+                "            (instance ?REL Relation)\n" +
+                "            (valence ?REL ?VALENCE)\n" +
+                "            (=>\n" +
+                "                (forall (?NUMBER ?ELEMENT ?CLASS)\n" +
+                "                    (=>\n" +
+                "                        (and\n" +
+                "                            (lessThan ?NUMBER ?VALENCE)\n" +
+                "                            (domain ?REL ?NUMBER ?CLASS)\n" +
+                "                            (equal ?ELEMENT\n" +
+                "                                (ListOrderFn\n" +
+                "                                    (ListFn @ROW) ?NUMBER)))\n" +
+                "                        (instance ?ELEMENT ?CLASS)))\n" +
+                "                (exists (?ITEM)\n" +
+                "                    (?REL @ROW ?ITEM))))))";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        System.out.println("PredVarInstTest.testTVRTypes(): formula: " + f);
+        HashMap<String,HashSet<String>> varTypes = PredVarInst.findPredVarTypes(f,kb);
+        System.out.println("PredVarInstTest.testTVRTypes(): types from domains: " + varTypes);
+        varTypes = PredVarInst.addExplicitTypes(kb,f,varTypes);
+        System.out.println("PredVarInstTest.testTVRTypes(): with explicit types: " + varTypes);
+        HashSet<String> types = varTypes.get("?REL");
+        System.out.println("PredVarInstTest.testTVRTypes(): types: " + types);
+        System.out.println("PredVarInstTest.testTVRTypes(): expected: TotalValuedRelation and Predicate");
+        if (types.contains("TotalValuedRelation") && types.contains("Predicate"))
+            System.out.println("PredVarInstTest.testTVRTypes(): pass");
+        else
+            System.out.println("PredVarInstTest.testTVRTypes(): fail");
+        assertTrue(types.contains("TotalValuedRelation"));
+        assertTrue(types.contains("Predicate"));
+    }
 }
