@@ -13,6 +13,11 @@ import com.articulate.sigma.wordNet.*;
 
 import static org.junit.Assert.*;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
         FormulaArityCheckTest.class,
@@ -25,13 +30,14 @@ import static org.junit.Assert.*;
         FormulaUnificationTest.class,
         KBcacheUnitTest.class,
         KBmanagerInitTest.class,
+        KBTest.class,
+        MultiWordsTest.class,
         PredVarInstTest.class,
+        RowVarTest.class,
         StringUtilTest.class,
         SUMOformulaToTPTPformulaTest.class,
-        MultiWordsTest.class,
-        WordNetTest.class,
-        KBTest.class,
         UnitNLGTestSuite.class,
+        WordNetTest.class,
 })
 public class UnitTestSuite extends UnitTestBase {
 
