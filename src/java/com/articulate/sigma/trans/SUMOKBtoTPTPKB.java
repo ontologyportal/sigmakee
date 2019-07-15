@@ -292,24 +292,17 @@ public class SUMOKBtoTPTPKB {
                             result = stptp.tptpParseSUOKIFString(f3.theFormula, false);
                             //pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null)
-                                f3.theTptpFormulas.add(result);
+                                f.theTptpFormulas.add(result);
                         }
                         else if (lang.equals("tff")) {
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
-                            f3.theTptpFormulas = new HashSet<>();
-                            if (withRelnRenames != null) {
-                                String tfaForm = stfa.process(f3.theFormula);
-                                if (tfaForm != null)
-                                    f3.theTptpFormulas.add(tfaForm);
-                            }
+                            result = stfa.process(f3.theFormula);
+                            if (result != null)
+                                f.theTptpFormulas.add(result);
                         }
-                        f.theTptpFormulas = f3.theTptpFormulas;
                     }
                 }
-                //if (f != null && f.theTptpFormulas != null)
-                //    pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): tptp formulas: " + f.theTptpFormulas);
-
                 for (String theTPTPFormula : f.theTptpFormulas) {
                     if (!StringUtil.emptyString(theTPTPFormula) &&
                             !filterAxiom(f,theTPTPFormula,pr) &&
@@ -347,6 +340,7 @@ public class SUMOKBtoTPTPKB {
                 ioe.printStackTrace();
             }
         }
+
         return result;
     }
 
