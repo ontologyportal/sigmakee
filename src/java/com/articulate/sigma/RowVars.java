@@ -2,10 +2,15 @@ package com.articulate.sigma;
 
 import java.util.*;
 
+//This software is released under the GNU Public License
+//<http://www.gnu.org/copyleft/gpl.html>.
+// Copyright 2019 Infosys
+// adam.pease@infosys.com
+
 public class RowVars {
 
     public static boolean DEBUG = false;
-    
+
     /** ***************************************************************
      * @return a HashSet, possibly empty, containing row variable
      * names, each of which will start with the row variable
@@ -42,7 +47,7 @@ public class RowVars {
      * @seeAlso kb.kbCache.valences
      */
     private static HashMap<String,Integer> getRowVarMaxArities(HashMap<String,HashSet<String>> ar, KB kb) {
-        
+
         HashMap<String,Integer> arities = new HashMap<String,Integer>();
         Iterator<String> it = ar.keySet().iterator();
         while (it.hasNext()) {
@@ -51,6 +56,8 @@ public class RowVars {
             Iterator<String> it2 = preds.iterator();
             while (it2.hasNext()) {
                 String pred = it2.next();
+                if (kb.kbCache.isInstanceOf(pred,"VariableArityRelation"))
+                    System.out.println("Error in RowVars.getRowVarMaxArities(): contains variable arity relation: " + pred);
                 //System.out.println("INFO in RowVars.getRowVarMaxArities(): " + kb.kbCache.valences);
                 //System.out.println("INFO in RowVars.getRowVarMaxArities(): pred: " + pred);
                 if (kb.kbCache.valences.get(pred) != null) {
@@ -62,15 +69,17 @@ public class RowVars {
                     else
                         arities.put(rowvar, Integer.valueOf(arity));
                 }
+                else
+                    System.out.println("Error in RowVars.getRowVarMaxArities(): no arity for " + pred);
             }
         }
         return arities;
     }
 
     /** ***************************************************************
-     * given in @param ar which is a list for each variable of all the
-     * predicates in which it appears as an argument, find the maximum
-     * arity allowed by predicate arities, as given by
+     * @param ar a list for each variable of all the predicates in
+     *           which it appears as an argument
+     * @result the maximum arity allowed by predicate arities, as given by
      * @seeAlso kb.kbCache.valences
      *
      * TODO: currently we only find the maximum arity allowed by predicate arities;
@@ -90,25 +99,36 @@ public class RowVars {
                 // If row variables in an argument list with other arguments,
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int nonRowVar = 0;
-                int start = f.theFormula.indexOf("("+pred);
+                int start = f.theFormula.indexOf("(" + pred);
                 int end = f.theFormula.indexOf(")", start);
                 String simpleFS = f.theFormula.substring(start, end+1);
+                if (DEBUG)
+                    System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
                 Formula simpleF = new Formula();
                 simpleF.read(simpleFS);
                 for (int i = 0; i < simpleF.listLength(); i++) {
-                    if(simpleF.getArgument(i).startsWith(Formula.V_PREF))
+                    if (simpleF.getArgument(i).startsWith(Formula.V_PREF)) // a '?'
                         nonRowVar++;
                 }
 
+                if (DEBUG)
+                    System.out.println("getRowVarMaxAritiesWithOtherArgs() non row var count " + nonRowVar);
                 if (kb.kbCache!= null && kb.kbCache.valences != null &&
                         kb.kbCache.valences.get(pred) != null) {
                     int arity = kb.kbCache.valences.get(pred).intValue();
-                    if (arities.containsKey(pred)) {
-                        if (arity < arities.get(rowvar).intValue())
-                            arities.put(rowvar, Integer.valueOf(arity)-nonRowVar);
+                    if (kb.isInstanceOf(pred,"VariableArityRelation"))
+                        arity = Formula.MAX_PREDICATE_ARITY;
+                    arity = arity - nonRowVar;
+                    if (DEBUG)
+                        System.out.println("getRowVarMaxAritiesWithOtherArgs() pred,arity " + pred + ", " + arity);
+                    if (arities.containsKey(rowvar) && DEBUG)
+                        System.out.println("getRowVarMaxAritiesWithOtherArgs() previous arity " + arities.get(rowvar));
+                    if (arities.containsKey(rowvar)) {
+                        if (arity < arities.get(rowvar))
+                            arities.put(rowvar, arity);
                     }
                     else if (arity > 0)
-                        arities.put(rowvar, Integer.valueOf(arity)-nonRowVar);
+                        arities.put(rowvar, arity);
                 }
             }
         }
@@ -193,7 +213,7 @@ public class RowVars {
      * add it to a map that has row variables as keys and a set of 
      * predicate names as values. 
      */
-    private static HashMap<String,HashSet<String>> getRowVarRelations(Formula f) {
+    protected static HashMap<String,HashSet<String>> getRowVarRelations(Formula f) {
         
         //System.out.println("Info in RowVars.getRowVarRelations(): f: " + f);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
@@ -290,18 +310,24 @@ public class RowVars {
             int maxArity = 7;  
             if (rowVarMaxArities.containsKey(var) && maxArity > rowVarMaxArities.get(var).intValue())
                 maxArity = rowVarMaxArities.get(var).intValue();
+            if (DEBUG)
+                System.out.println("Info in RowVars.expandRowVars(): maxArity: " + maxArity);
             for (int j = 0; j < maxArity; j++) {
                 if (j > 0)
                     replaceString.append(" ");
                 replaceString.append(replaceVar + Integer.toString(j+1));
-                if (DEBUG)
-                    System.out.println("Info in RowVars.expandRowVars(): replace: " + replaceString);
+                //if (DEBUG)
+                //    System.out.println("Info in RowVars.expandRowVars(): replace: " + replaceString);
                 for (int i = 0; i < result.size(); i++) {
                     String form = result.get(i);
                     form = form.replaceAll("\\"+var, replaceString.toString());
                     if (DEBUG)
                         System.out.println("Info in RowVars.expandRowVars(): form: " + form);
-                    newresult.add(form);
+                    if (j == maxArity - 1) {
+                        newresult.add(form);
+                        if (DEBUG)
+                            System.out.println("Info in RowVars.expandRowVars(): form: " + form);
+                    }
                 }
             }
             result = newresult;
