@@ -1,5 +1,5 @@
-/** This code is copyright Articulate Software (c) 2003.  Some
-portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
+/** This code is copyright Infosys 2017-, Articulate Software  2003-2017.  Some
+portions copyright Teknowledge (c) 2003 and reused under the terms of the GNU
 license.  This software is released under the GNU Public License
 <http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
 by use of this code, to credit Articulate Software and Teknowledge in any
@@ -10,7 +10,7 @@ cite the following article in any publication with references:
 Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico. see also
-http://sigmakee.sourceforge.net
+https://github.com/ontologyportal
 
 Note that this class, and therefore, Sigma, depends upon several terms
 being present in the ontology in order to function as intended.  They are:
@@ -341,11 +341,11 @@ public class KBcache implements Serializable {
     public void extendInstance(String term, String suffix) {
 
         String sep = "__";
-        if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
-            sep = "_";
+        //if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
+        //    sep = "_";
         String newTerm = term + sep + suffix;
         if (kb.terms.contains(newTerm))
-            System.out.println("Error in KBcache.extendInstance(): term already exists: " + newTerm);
+            System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
         kb.terms.add(newTerm);
         HashSet<String> iset = instanceOf.get(term);
         instanceOf.put(newTerm,iset);
@@ -383,11 +383,15 @@ public class KBcache implements Serializable {
          **/
         ArrayList<String> sig = signatures.get(term);
 
+        if (sig == null)
+            System.out.println("Error in KBcache.extendInstance(): no sig for term " + term);
         ArrayList<String> newsig = SUMOtoTFAform.relationExtractSig(newTerm);
-        for (int i = 0; i < sig.size(); i++) {
-            String orig = sig.get(i);
-            if (i > newsig.size()-1 || kb.isSubclass(orig,newsig.get(i)))
-                SUMOtoTFAform.safeSet(newsig,i,orig);
+        if (sig != null) {
+            for (int i = 0; i < sig.size(); i++) {
+                String orig = sig.get(i);
+                if (i > newsig.size() - 1 || kb.isSubclass(orig, newsig.get(i)))
+                    SUMOtoTFAform.safeSet(newsig, i, orig);
+            }
         }
         signatures.put(newTerm,newsig);
 
@@ -758,12 +762,17 @@ public class KBcache implements Serializable {
         HashMap<String,HashSet<String>> attr = children.get("subAttribute");
         HashMap<String,HashSet<String>> arel = children.get("subrelation");
         for (String i : instancesForType) {
-            HashSet<String> temp = attr.get(i);
-            if (temp != null)
-                instancesForType2.addAll(temp);
-            temp = arel.get(i);
-            if (temp != null)
-                instancesForType2.addAll(temp);
+            HashSet<String> temp = null;
+            if (attr != null) {
+                temp = attr.get(i);
+                if (temp != null)
+                    instancesForType2.addAll(temp);
+            }
+            if (arel != null) {
+                temp = arel.get(i);
+                if (temp != null)
+                    instancesForType2.addAll(temp);
+            }
         }
         instancesForType2.addAll(instancesForType);
         if (debug) System.out.println("getInstancesForType(): 2: " + instancesForType2);
