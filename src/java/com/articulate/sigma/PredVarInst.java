@@ -114,7 +114,7 @@ public class PredVarInst {
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
-                if (rel.equals("equal"))
+                if (rel.equals("equal") || rel.contains("__"))  // no rels created by SUMOKBtoTFAKB.writeSorts()
                     continue;
                 if (isTypeExpansion(rel)) {
                     if (debug) System.out.println("instantiatePredVars(): type expansion of relation: " + rel);
