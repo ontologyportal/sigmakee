@@ -297,6 +297,7 @@ public class SUMOKBtoTPTPKB {
                         else if (lang.equals("tff")) {
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
+                            //pr.println("% tff input: " + f3.format("",""," "));
                             result = stfa.process(f3.theFormula);
                             if (result != null)
                                 f.theTptpFormulas.add(result);
