@@ -514,4 +514,37 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
             System.out.println("testRemoveNumInst(): fail");
         assertEquals(expected,result);
     }
+
+
+    /****************************************************************
+     */
+    @Test
+    public void testInstNum() {
+
+        SUMOtoTFAform.debug = true;
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testInstNum(): ");
+        String sf = "(=> " +
+                "(and " +
+                "  (instance equal RelationExtendedToQuantities) " +
+                "  (equal ?Q1 (MeasureFn ?I1 ?U)) " +
+                "  (equal ?Q2 (MeasureFn ?I2 ?U)) " +
+                "  (equal ?I1 ?I2)) " +
+                "(equal ?Q1 ?Q2))";
+        Formula f = new Formula(sf);
+        System.out.println("formula: " + f);
+        String result = SUMOtoTFAform.process(f);
+        System.out.println("SUMOtoTFAformTest.testInstNum(): actual: " + result);
+        String expected = "! [V__Q2 : $i,V__U : $i,V__I1 : $real,V__I2 : $real,V__Q1 : $i] : " +
+                "((s__instance(s__equal__1Re2Re__m, s__RelationExtendedToQuantities) & V__Q1 = " +
+                "s__MeasureFn__1ReFn(V__I1, V__U) & V__Q2 = s__MeasureFn__1ReFn(V__I2, V__U) & " +
+                "V__I1 = V__I2) => V__Q1 = V__Q2)";
+        System.out.println("expect: " + expected);
+        System.out.println("equal: " + expected.equals(result));
+        if (expected.equals(result))
+            System.out.println("testInstNum(): Success!");
+        else
+            System.out.println("testInstNum(): fail");
+        assertEquals(expected,result);
+    }
 }
