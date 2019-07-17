@@ -808,7 +808,7 @@ public class FormulaPreprocessor {
                     if (pred.endsWith("Fn"))
                         func = "Fn";
                     if (!pred.endsWith("__" + arity + func)) {
-                        System.out.println("preProcessRecurse(): adding " + "__" + arity + func + " to " + pred);
+                        //System.out.println("preProcessRecurse(): adding " + "__" + arity + func + " to " + pred);
                         pred = pred + "__" + arity + func;
                     }
                     kb.kbCache.copyNewPredFromVariableArity(pred,oldPred,arity);
