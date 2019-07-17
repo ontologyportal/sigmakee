@@ -1468,6 +1468,9 @@ public class KBcache implements Serializable {
             System.out.println();
         }
         System.out.println();
+        System.out.println("-------------- disjoint ----------------");
+        System.out.println(kb.kbCache.explicitDisjointRelations);
+        System.out.println();
         System.out.println("-------------- domains ----------------");
         //nkbc.collectDomains();
         Iterator<String> it3 = this.relations.iterator();
