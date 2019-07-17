@@ -64,6 +64,9 @@ public class KBcacheUnitTest {
         kif.parseStatement("(instance CitizenryFn Function)");
         kif.parseStatement("(instance ResidentFn Function)");
         kif.parseStatement("(subclass Function Relation)");
+        kif.parseStatement("(partition Animal Vertebrate Invertebrate)");
+        kif.parseStatement("(subclass Dog Vertebrate)");
+        kif.parseStatement("(subclass Jellyfish Invertebrate)");
         kb.merge(kif,"");
         for (Formula f : kb.formulaMap.values())
             f.sourceFile = "test"; // without a source file kbCache assumes it's a cached formula and ignores it
@@ -199,5 +202,38 @@ public class KBcacheUnitTest {
                 "subrelation", "CitizenryFn", "ResidentFn"));
         HashSet<String> actual = kb.kbCache.getInstancesForType("Relation");
         assertEquals(expected,actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testDisjoint() {
+
+        System.out.println("Test testDisjoint");
+        HashSet<String> classes = new HashSet<>(Arrays.asList("Dog", "Jellyfish"));
+        System.out.println("KBcacheUnitTest.testDisjoint(): Dog&Jellyfish");
+        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,"Dog", "Jellyfish"));
+        if (kb.kbCache.checkDisjoint(kb,"Dog","Jellyfish"))
+            System.out.println("KBcacheUnitTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheUnitTest.testDisjoint(): fail");
+        assertTrue(kb.kbCache.checkDisjoint(kb,"Dog","Jellyfish"));
+
+        System.out.println("KBcacheUnitTest.testDisjoint(): classes: " + classes);
+        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
+        if (kb.kbCache.checkDisjoint(kb,classes))
+            System.out.println("KBcacheUnitTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheUnitTest.testDisjoint(): fail");
+        assertTrue(kb.kbCache.checkDisjoint(kb,classes));
+
+        classes = new HashSet<>(Arrays.asList("Table", "Chair"));
+        System.out.println("KBcacheUnitTest.testDisjoint(): classes: " + classes);
+        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
+        if (!kb.kbCache.checkDisjoint(kb,classes))
+            System.out.println("KBcacheUnitTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheUnitTest.testDisjoint(): fail");
+        assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
     }
 }
