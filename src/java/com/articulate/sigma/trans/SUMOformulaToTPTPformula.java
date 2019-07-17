@@ -40,6 +40,9 @@ public class SUMOformulaToTPTPformula {
 
         String result = null;
         try {
+            if (lang.equals("tff"))
+                if (SUMOtoTFAform.numericConstantValues.keySet().contains(st))
+                    return (SUMOtoTFAform.numericConstantValues.get(st));
             result = translateWord_1(st,type,hasArguments);
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): " + result);
             if (result.equals("$true__m") || result.equals("$false__m")) 
