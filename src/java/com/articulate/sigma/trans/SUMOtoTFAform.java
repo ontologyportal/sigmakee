@@ -21,9 +21,10 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
-    private static HashMap<String,HashSet<String>> varmap = null;
+    // a Set of types for each variable key
+    protected static HashMap<String,HashSet<String>> varmap = null;
 
     // a map of relation signatures (where function returns are index 0)
     // modified from the original by the constraints of the axiom
@@ -34,10 +35,18 @@ public class SUMOtoTFAform {
     public static FormulaPreprocessor fp = new FormulaPreprocessor();
 
     // constraints on numeric types
-    public static HashMap<String,String> numericConstraints = new HashMap();
+    public static HashMap<String,String> numericConstraints = new HashMap<>();
 
     // variable names of constraints on numeric types
-    public static HashMap<String,String> numericVars = new HashMap();
+    public static HashMap<String,String> numericVars = new HashMap<>();
+
+    // numeric constraint axioms that need not be processed since
+    // their constraints will be substituted into axioms directly
+    public static HashSet<String> numConstAxioms = new HashSet<>();
+
+    // types like E and Pi
+    public static HashMap<String,String> numericConstantTypes = new HashMap<>();
+    public static HashMap<String,String> numericConstantValues = new HashMap<>();
 
     /** *************************************************************
      */
@@ -1192,8 +1201,9 @@ public class SUMOtoTFAform {
             return f.theFormula;
         }
         ArrayList<String> args = f.complexArgumentsToArrayList(0);
+        if (args == null) return "";
         if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): args: " + args);
-        if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): size: " + args.size());
+        if (debug && args != null) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): size: " + args.size());
         if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): car: " + f.car());
         if (f.car().equals("and") || f.car().equals("or") || f.car().equals("=>")) {
             if (args.size() == 1) {  // meaning that the one "argument" is the predicate
@@ -1271,8 +1281,15 @@ public class SUMOtoTFAform {
                     }
                     String arg = al.get(2);
                     String var = al.get(1);
+                    if (var.equals("NumberE") || var.equals("Pi"))
+                        return "";
+                    if (debug) System.out.println("SUMOtoTFAform.removeNumericInstance(): s,var,vartype" +
+                            s + ", " + var + ", " + varmap.get(var));
                     if (arg.equals("RealNumber") || arg.equals("RationalNumber") || arg.equals("Integer"))
                         return "";
+                    if (varmap.get(var) != null)
+                        if (varmap.get(var).contains("RealNumber") || varmap.get(var).contains("RationalNumber") || varmap.get(var).contains("Integer"))
+                            return "";
                     if (builtInNumericType(arg)) { // meaning a subtype actually
                         String cons = numericConstraints.get(arg);
                         if (StringUtil.emptyString(cons))
@@ -1297,6 +1314,24 @@ public class SUMOtoTFAform {
             }
         }
         return s;
+    }
+
+    /** *************************************************************
+     * Check whether variables have multiple mutually exclusive types
+     */
+    public static boolean inconsistentVarTypes() {
+
+        for (String s : varmap.keySet()) {
+            HashSet<String> types = varmap.get(s);
+            for (String c1 : types) {
+                for (String c2 : types) {
+                    if (!c1.equals(c2))
+                        if (kb.kbCache.checkDisjoint(kb,c1,c2))
+                            return true;
+                }
+            }
+        }
+        return false;
     }
 
     /** *************************************************************
@@ -1330,6 +1365,8 @@ public class SUMOtoTFAform {
         varmap = fp.findAllTypeRestrictions(f, kb);
         f.theFormula = convertNumericFunctions(f,"").theFormula;
         varmap = fp.findAllTypeRestrictions(f, kb);
+        if (inconsistentVarTypes())
+            return "";
         if (debug) System.out.println("SUMOtoTFAform.process(): formula: " + f);
         if (debug) System.out.println("SUMOtoTFAform.process(): varmap: " + varmap);
         oldf = f.theFormula;
@@ -1341,6 +1378,8 @@ public class SUMOtoTFAform {
             constrainFunctVars(f);
         } while (!f.theFormula.equals(oldf) && counter < 5);
         f.theFormula = removeNumericInstance(f.theFormula);
+        if (f.theFormula == "")
+            return "";
         f.theFormula = elimUnitaryLogops(f); // remove empty (and... and (or... and =>...
         if (f != null && f.listP()) {
             HashSet<String> UqVars = f.collectUnquantifiedVariables();
@@ -1374,7 +1413,7 @@ public class SUMOtoTFAform {
      */
     public static String process(String s) {
 
-        if (StringUtil.emptyString(s) || s.contains("ListFn"))
+        if (StringUtil.emptyString(s) || s.contains("ListFn") || numConstAxioms.contains(s))
             return "";
         Formula f = new Formula(s);
         return process(f);
@@ -1570,6 +1609,7 @@ public class SUMOtoTFAform {
                     if (var != null) {
                         numericConstraints.put(t, FormulaUtil.consequent(f));
                         numericVars.put(t,var);
+                        numConstAxioms.add(f.theFormula);
                     }
                 }
             }
@@ -1584,6 +1624,7 @@ public class SUMOtoTFAform {
                     if (var != null) {
                         numericConstraints.put(t, FormulaUtil.consequent(f));
                         numericVars.put(t,var);
+                        numConstAxioms.add(f.theFormula);
                     }
                 }
             }
@@ -1601,6 +1642,10 @@ public class SUMOtoTFAform {
         fp = new FormulaPreprocessor();
         fp.addOnlyNonNumericTypes = true;
         buildNumericConstraints();
+        numericConstantTypes.put("NumberE","RealNumber");
+        numericConstantValues.put("NumberE","2.718282");
+        numericConstantTypes.put("Pi","RealNumber");
+        numericConstantValues.put("Pi","3.141592653589793");
         initialized = true;
     }
 
