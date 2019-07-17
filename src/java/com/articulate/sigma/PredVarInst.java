@@ -31,7 +31,7 @@ public class PredVarInst {
     public static boolean debug = false;
 
     // a debugging option to reject formulas with more than one predicate variable, to save time
-    public static boolean rejectDoubles = false;
+    public static boolean rejectDoubles = true;
 
     /** ***************************************************************
      * There are two type conditions:
@@ -92,7 +92,7 @@ public class PredVarInst {
         Set<Formula> result = new HashSet<Formula>();
         HashSet<String> predVars = gatherPredVars(kb,input);
         if (predVars.size() > 1 && rejectDoubles)
-            return result;
+            return null;
         if (debug) System.out.println("instantiatePredVars(): predVars: " + predVars);
         if (predVars == null )
             return null;
@@ -114,11 +114,11 @@ public class PredVarInst {
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
-                if (rel.equals("equal") || rel.contains("__"))  // no rels created by SUMOKBtoTFAKB.writeSorts()
+                if (rel.equals("equal"))
                     continue;
                 if (isTypeExpansion(rel)) {
                     if (debug) System.out.println("instantiatePredVars(): type expansion of relation: " + rel);
-                //    continue;
+                    continue;
                 }
                 if (predVarArity == null || var == null) System.out.println("instantiatePredVars(): pred var arity null for: " + var);
                 Integer arityInteger = predVarArity.get(var);
