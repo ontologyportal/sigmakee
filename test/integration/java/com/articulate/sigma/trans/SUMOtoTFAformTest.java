@@ -1,8 +1,6 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.IntegrationTestBase;
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.*;
 import org.junit.Test;
 
 import java.io.File;
@@ -546,5 +544,69 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         else
             System.out.println("testInstNum(): fail");
         assertEquals(expected,result);
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testTypeConflict() {
+
+        SUMOtoTFAform.debug = true;
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict(): ");
+        String sf = "(=> (and (irreflexiveOn pathLength ?CLASS) (instance pathLength Predicate)) " +
+                "(forall (?INST) (=> (instance ?INST ?CLASS) (not (pathLength ?INST ?INST)))))";
+        Formula f = new Formula(sf);
+        System.out.println("formula: " + f);
+        String s = SUMOtoTFAform.process(f);
+        KBcache.debug = true;
+        boolean inc = SUMOtoTFAform.inconsistentVarTypes();
+        System.out.println("SUMOtoTFAformTest.testTypeConflict(): varmap: " + SUMOtoTFAform.varmap);
+        if (inc)
+            System.out.println("testTypeConflict(): Success!");
+        else
+            System.out.println("testTypeConflict(): fail");
+        assertTrue(inc);
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testTypeConflict2() {
+
+        SUMOtoTFAform.debug = true;
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict2(): ");
+        String sf = "(=> (and (irreflexiveOn multiplicativeFactor ?CLASS) (instance multiplicativeFactor Predicate)) " +
+                "(forall (?INST) (=> (instance ?INST ?CLASS) (not (multiplicativeFactor ?INST ?INST)))))";
+        Formula f = new Formula(sf);
+        System.out.println("formula: " + f);
+        String result = SUMOtoTFAform.process(f);
+        System.out.println("SUMOtoTFAformTest.testTypeConflict2(): result: " + result);
+        if (StringUtil.emptyString(result))
+            System.out.println("testTypeConflict2(): Success!");
+        else
+            System.out.println("testTypeConflict2(): fail");
+        assertTrue(StringUtil.emptyString(result));
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testTransNum() {
+
+        SUMOtoTFAform.debug = true;
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict2(): ");
+        String sf = "(=> (instance ?X NegativeInteger) (greaterThan 0 ?X))";
+        Formula f = new Formula(sf);
+        System.out.println("formula: " + f);
+        String result = SUMOtoTFAform.process(f);
+        System.out.println("SUMOtoTFAformTest.testTypeConflict2(): result: " + result);
+        if (StringUtil.emptyString(result))
+            System.out.println("testTypeConflict2(): Success!");
+        else
+            System.out.println("testTypeConflict2(): fail");
+        assertTrue(StringUtil.emptyString(result));
     }
 }
