@@ -216,4 +216,37 @@ public class KBcacheTest extends IntegrationTestBase {
         assertTrue(cache.transRels.contains("subAttribute"));
         assertTrue(cache.transRels.contains("subrelation"));
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testDisjoint() {
+
+        System.out.println("Test testDisjoint");
+        HashSet<String> classes = new HashSet<>(Arrays.asList("Arthropod", "Bird"));
+        System.out.println("KBcacheTest.testDisjoint(): Arthropod&Bird");
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird"));
+        if (kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird"))
+            System.out.println("KBcacheTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird"));
+
+        System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
+        if (kb.kbCache.checkDisjoint(kb,classes))
+            System.out.println("KBcacheTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(kb.kbCache.checkDisjoint(kb,classes));
+
+        classes = new HashSet<>(Arrays.asList("Table", "Chair"));
+        System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
+        if (!kb.kbCache.checkDisjoint(kb,classes))
+            System.out.println("KBcacheTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
+    }
 }
