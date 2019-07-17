@@ -265,4 +265,26 @@ public class PredVarInstTest extends UnitTestBase  {
         assertTrue(types.contains("TotalValuedRelation"));
         assertTrue(types.contains("Predicate"));
     }
+
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testPredVarCount() {
+
+        String stmt = "(=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate) " +
+                "(disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (?REL1 @ROW2)) (not (?REL2 @ROW2)))";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        System.out.println("PredVarInstTest.testPredVarCount(): formula: " + f);
+        HashSet<String> predVars = PredVarInst.gatherPredVars(kb,f);
+        System.out.println("PredVarInstTest.testPredVarCount(): predVars: " + predVars);
+        System.out.println("PredVarInstTest.testPredVarCount(): expected: ?REL1 ?REL2");
+        if (predVars.contains("?REL1") && predVars.contains("?REL2") && predVars.size() == 2)
+            System.out.println("PredVarInstTest.testPredVarCount(): pass");
+        else
+            System.out.println("PredVarInstTest.testPredVarCount(): fail");
+        assertTrue(predVars.contains("?REL1") && predVars.contains("?REL2") && predVars.size() == 2);
+    }
 }
