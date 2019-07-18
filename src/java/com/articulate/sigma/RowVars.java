@@ -275,13 +275,6 @@ public class RowVars {
      *    (?REL2 ?ARG1 ?ARG2))
      * etc.
      *
-     * TODO: Note that this method does not handle the case of row 
-     * variables in an argument list with other arguments.  It will
-     * just blindly generate all 7 variable expansions even if this
-     * means that a predicate will wind up with more than 7 arguments
-     * due to the existence of a non-row-variable in the argument
-     * list.
-     * 
      * @return an ArrayList of Formulas, or an empty ArrayList.
      */
     public static ArrayList<Formula> expandRowVars(KB kb, Formula f) {
@@ -322,12 +315,12 @@ public class RowVars {
                     String form = result.get(i);
                     form = form.replaceAll("\\"+var, replaceString.toString());
                     if (DEBUG)
-                        System.out.println("Info in RowVars.expandRowVars(): form: " + form);
-                    if (j == maxArity - 1) {
+                        System.out.println("Info in RowVars.expandRowVars(1): form: " + form);
+                    //if (j == maxArity - 1) {
                         newresult.add(form);
                         if (DEBUG)
-                            System.out.println("Info in RowVars.expandRowVars(): form: " + form);
-                    }
+                            System.out.println("Info in RowVars.expandRowVars(2): form: " + form);
+                    //}
                 }
             }
             result = newresult;
