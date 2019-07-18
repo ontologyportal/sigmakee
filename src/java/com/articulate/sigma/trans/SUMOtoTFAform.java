@@ -1325,9 +1325,13 @@ public class SUMOtoTFAform {
             HashSet<String> types = varmap.get(s);
             for (String c1 : types) {
                 for (String c2 : types) {
-                    if (!c1.equals(c2))
-                        if (kb.kbCache.checkDisjoint(kb,c1,c2))
+                    if (!c1.equals(c2)) {
+                        if (kb.kbCache.checkDisjoint(kb, c1, c2)) {
+                            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variables types: " +
+                                    c1 + ", " + c2 + " for var " + s);
                             return true;
+                        }
+                    }
                 }
             }
         }
@@ -1346,8 +1350,10 @@ public class SUMOtoTFAform {
             System.out.println("Error in SUMOtoTFAform.process(): null kb");
             return "";
         }
-        if (f.theFormula.startsWith("(instance equal") || f.theFormula.contains("ListFn"))
+        if (f.theFormula.startsWith("(instance equal")) { // || f.theFormula.contains("ListFn"))
+            System.out.println("SUMOtoTFAform.process(): rejected (instance equal: " + f);
             return "";
+        }
         if (debug) System.out.println("\nSUMOtoTFAform.process(): =======================");
         instantiateNumericConstants(f);
         f.theFormula = modifyPrecond(f);
@@ -1365,8 +1371,10 @@ public class SUMOtoTFAform {
         varmap = fp.findAllTypeRestrictions(f, kb);
         f.theFormula = convertNumericFunctions(f,"").theFormula;
         varmap = fp.findAllTypeRestrictions(f, kb);
-        if (inconsistentVarTypes())
+        if (inconsistentVarTypes()) {
+            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variables types: " + varmap + " in : " + f);
             return "";
+        }
         if (debug) System.out.println("SUMOtoTFAform.process(): formula: " + f);
         if (debug) System.out.println("SUMOtoTFAform.process(): varmap: " + varmap);
         oldf = f.theFormula;
