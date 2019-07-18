@@ -91,8 +91,10 @@ public class PredVarInst {
         if (debug) System.out.println("instantiatePredVars(): input: " + input);
         Set<Formula> result = new HashSet<Formula>();
         HashSet<String> predVars = gatherPredVars(kb,input);
-        if (predVars.size() > 1 && rejectDoubles)
+        if (predVars.size() > 1 && rejectDoubles) {
+            System.out.println("instantiatePredVars(): reject axioms with more than one predicate variable: \n" + input);
             return null;
+        }
         if (debug) System.out.println("instantiatePredVars(): predVars: " + predVars);
         if (predVars == null )
             return null;
