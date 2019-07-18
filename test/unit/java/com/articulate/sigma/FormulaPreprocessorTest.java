@@ -346,7 +346,6 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         assertTrue(actual.size() > expectedSize);
     }
 
-
     /** ***************************************************************
      */
     @Test
@@ -379,7 +378,6 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
             System.out.println("testMinValuePreprocess(): fail");
         assertTrue(actual.size() > expectedSize);
     }
-
 
     /** ***************************************************************
      */
