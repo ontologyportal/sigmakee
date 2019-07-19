@@ -16,22 +16,22 @@ import static org.junit.Assert.*;
  */
 public class RowVarTest extends UnitTestBase  {
 
-    private static final String stmt1 = "(=>\n" +
-            "  (and\n" +
-            "    (minValue links ?ARG ?N)\n" +
-            "    (links @ARGS)\n" +
-            "    (equal ?VAL\n" +
-            "      (ListOrderFn\n" +
-            "        (ListFn @ARGS) ?ARG)))\n" +
-            "  (greaterThan ?VAL ?N))";
-
     /** ***************************************************************
      */
     @Test
     public void testLinks() {
 
+        String stmt1 = "(=>\n" +
+                "  (and\n" +
+                "    (minValue links ?ARG ?N)\n" +
+                "    (links @ARGS)\n" +
+                "    (equal ?VAL\n" +
+                "      (ListOrderFn\n" +
+                "        (ListFn @ARGS) ?ARG)))\n" +
+                "  (greaterThan ?VAL ?N))";
+
         Formula f = new Formula();
-        f.read(RowVarTest.stmt1);
+        f.read(stmt1);
 
         RowVars.DEBUG = true;
         HashMap<String,HashSet<String>> rels = RowVars.getRowVarRelations(f);
@@ -41,5 +41,21 @@ public class RowVarTest extends UnitTestBase  {
         System.out.println("testLinks(): rels: " + rels);
         System.out.println("testLinks(): rowVarMaxArities: " + rowVarMaxArities);
         assertEquals(3, rowVarMaxArities.get("@ARGS").intValue());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testRowVarExp() {
+
+        String stmt = "(<=> (partition @ROW) (and (exhaustiveDecomposition @ROW) (disjointDecomposition @ROW)))";
+        Formula f = new Formula();
+        f.read(stmt);
+
+        RowVars.DEBUG = true;
+        ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
+        System.out.println("testRowVarExp(: input: " + stmt);
+        System.out.println("testRowVarExp(): results: " + results);
+        assertTrue(results.size() == 7);
     }
 }
