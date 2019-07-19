@@ -107,17 +107,26 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
-     * Fill the indicated elements with the empty string, starting at start and ending
+     * Fill the indicated elements with "Entity", starting at start and ending
      * at end-1
      */
     public static void fill (ArrayList<String> ar, int start, int end) {
 
+        fill(ar,start,end,"Entity");
+    }
+
+    /** *************************************************************
+     * Fill the indicated elements with the given string, starting at start and ending
+     * at end-1
+     */
+    public static void fill (ArrayList<String> ar, int start, int end, String fillStr) {
+
         if (ar.size() <= end)
             for (int i = start; i < end; i++)
-                ar.add("Entity");
+                ar.add(fillStr);
         else
             for (int i = start; i < end; i++)
-                ar.set(i,"Entity");
+                ar.set(i,fillStr);
     }
 
     /** *************************************************************
@@ -129,6 +138,24 @@ public class SUMOtoTFAform {
         if (index > ar.size()-1)
             fill(ar,ar.size(),index+1);
         ar.set(index,val);
+    }
+
+    /** *************************************************************
+     * Return the full signature
+     */
+    protected static ArrayList<String> relationExtractNonNumericSig(String rel) {
+
+        String bareRel = rel.substring(0,rel.length() - 3);
+        System.out.println("SUMOtoTFAform.relationExtractNonNumericSig(): bareRel: " + bareRel);
+        ArrayList<String> sig = new ArrayList();
+        int size = Integer.parseInt(rel.substring(rel.length()-1,rel.length()));
+        System.out.println("SUMOtoTFAform.relationExtractNonNumericSig(): size: " + size);
+        sig = kb.kbCache.signatures.get(bareRel);
+        System.out.println("SUMOtoTFAform.relationExtractNonNumericSig(): sig: " + sig);
+        String type = kb.kbCache.variableArityType(bareRel);
+        System.out.println("SUMOtoTFAform.relationExtractNonNumericSig(): type: " + type);
+        fill(sig,sig.size(),size,type);
+        return sig;
     }
 
     /** *************************************************************
@@ -148,6 +175,8 @@ public class SUMOtoTFAform {
         int under = rel.indexOf("__");
         if (under == -1)
             return sig;
+        if (rel.endsWith("__\\d"))
+            return relationExtractNonNumericSig(rel);
         String text = rel.substring(under + 2, rel.length());
         Pattern pattern = Pattern.compile(patternString);
         Matcher matcher = pattern.matcher(text);
@@ -1421,7 +1450,7 @@ public class SUMOtoTFAform {
      */
     public static String process(String s) {
 
-        if (StringUtil.emptyString(s) || s.contains("ListFn") || numConstAxioms.contains(s))
+        if (StringUtil.emptyString(s) || numConstAxioms.contains(s) || s.contains("ListFn"))
             return "";
         Formula f = new Formula(s);
         return process(f);
