@@ -39,10 +39,10 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
     public void testPartition() {
 
         System.out.println();
-        System.out.println("\n======================== SUMOtoTFAformTest.testPartition(): ");
+        System.out.println("\n======================== SUMOtoTFAKBTest.testPartition(): ");
         ArrayList<String> sig = SUMOtoTFAform.relationExtractNonNumericSig("partition__5");
         System.out.println(sig);
-        String expectedRes = "[\"\",Class, Class, Class, Class, Class, Class]";
+        String expectedRes = "[\"\",Class, Class, Class, Class, Class]";
         String result = sig.toString();
         if (expectedRes.equals(result))
             System.out.println("testPartition(): Success!");
