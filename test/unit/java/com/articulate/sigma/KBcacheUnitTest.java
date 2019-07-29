@@ -49,6 +49,9 @@ public class KBcacheUnitTest {
         kif.parseStatement("(instance subclass TransitiveRelation)");
         kif.parseStatement("(instance subAttribute TransitiveRelation)");
         kif.parseStatement("(instance subrelation TransitiveRelation)");
+        kif.parseStatement("(instance var VariableArityRelation)");
+        kif.parseStatement("(domain var 1 Object)");
+        kif.parseStatement("(domain var 2 Object)");
         kif.parseStatement("(domain rel 1 Object)");
         kif.parseStatement("(domain rel 2 Object)");
         kif.parseStatement("(subclass Object Entity)");
@@ -58,6 +61,7 @@ public class KBcacheUnitTest {
         kif.parseStatement("(subclass LadderBackChair Chair)");
         kif.parseStatement("(subrelation relsub rel)");
         kif.parseStatement("(subclass TransitiveRelation Relation)");
+        kif.parseStatement("(subclass VariableArityRelation Relation)");
         kif.parseStatement("(instance relsub TransitiveRelation)");
         kif.parseStatement("(subclass Relation Entity)");
         kif.parseStatement("(subrelation CitizenryFn ResidentFn)");
@@ -128,6 +132,19 @@ public class KBcacheUnitTest {
         ArrayList<String> expected = new ArrayList<>(Arrays.asList("", "Object", "Oject"));
         ArrayList<String> actual = kb.kbCache.signatures.get("rel");
         assertEquals(expected.subList(1,2), actual.subList(1,2));
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testVarSignatures() {
+
+        System.out.println("Test var signatures");
+        String expected = "Object";
+        System.out.println("testVarSignatures() expected: " + expected);
+        String actual = kb.kbCache.variableArityType("var");
+        System.out.println("testVarSignatures() actual: " + actual);
+        assertEquals(expected, actual);
     }
 
     /** ***************************************************************
