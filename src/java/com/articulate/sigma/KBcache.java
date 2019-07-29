@@ -1152,7 +1152,7 @@ public class KBcache implements Serializable {
             if (forms != null) {
                 for (int i = 0; i < forms.size(); i++) {
                     Formula form = forms.get(i);
-                    //System.out.println("INFO in KBcache.collectDomains(): form " + form);
+                    System.out.println("INFO in KBcache.collectDomains(): form " + form);
                     int arg = Integer.valueOf(form.getArgument(2));
                     String type = form.getArgument(3); 
                     domainArray[arg] = type; 
@@ -1199,6 +1199,8 @@ public class KBcache implements Serializable {
             ArrayList<String> domains = new ArrayList<String>();
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
+            System.out.println("INFO in KBcache.collectDomains(): rel " + rel);
+            System.out.println("INFO in KBcache.collectDomains(): domains " + domains);
             signatures.put(rel,domains);
             valences.put(rel, Integer.valueOf(maxIndex));
         }
@@ -1418,9 +1420,11 @@ public class KBcache implements Serializable {
      */
     public String variableArityType(String r) {
 
-        ArrayList sig = getSignature(r);
-        sig.get(sig.size() - 1);
-        return "";
+        ArrayList<String> sig = getSignature(r);
+        if (sig == null)
+            System.out.println("Error in variableArityType() null signature for " + r);
+        String type = sig.get(sig.size() - 1);
+        return type;
     }
 
     /** *************************************************************
@@ -1486,6 +1490,14 @@ public class KBcache implements Serializable {
             String rel = it4.next();
             Integer arity = this.valences.get(rel);
             System.out.println(rel + ": " + arity);
+        }
+        System.out.println();
+        System.out.println("-------------- signatures ----------------");
+        Iterator<String> it45 = this.signatures.keySet().iterator();
+        while (it45.hasNext()) {
+            String rel = it45.next();
+            ArrayList<String> sig = this.signatures.get(rel);
+            System.out.println(rel + ": " + sig);
         }
         System.out.println();
         System.out.println("-------------- insts ----------------");
