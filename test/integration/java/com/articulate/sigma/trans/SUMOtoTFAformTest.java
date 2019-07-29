@@ -50,11 +50,13 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     public void testExtractSig() {
 
         System.out.println();
-        System.out.println("\n======================== SUMOtoTFAformTest.testSorts(): ");
+        System.out.println("\n======================== SUMOtoTFAformTest.testExtractSig(): ");
         ArrayList<String> sorts = SUMOtoTFAform.relationExtractSig("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
         System.out.println(sorts);
         String expectedRes = "[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]";
         String result = sorts.toString();
+        System.out.println("testExtractSig(): expected: " + expectedRes);
+        System.out.println("testExtractSig(): actual:    " + sorts);
         if (expectedRes.equals(result))
             System.out.println("testExtractSig(): Success!");
         else
@@ -73,6 +75,8 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println(sorts);
         String expectedRes = "[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]";
         String result = sorts.toString();
+        System.out.println("testExtractUpdateSig(): expected: " + expectedRes);
+        System.out.println("testExtractUpdateSig(): actual:    " + sorts);
         if (expectedRes.equals(result))
             System.out.println("testExtractUpdateSig(): Success!");
         else
@@ -83,11 +87,40 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    public void testExtractUpdateSig2() {
+
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testExtractUpdateSig2(): ");
+        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSig("partition__5");
+        System.out.println(sorts);
+        String expectedRes = "[, Class, Class, Class, Class, Class]";
+        System.out.println("testExtractUpdateSig2(): expected: " + expectedRes);
+        System.out.println("testExtractUpdateSig2(): actual:    " + sorts);
+        String result = sorts.toString();
+        if (expectedRes.equals(result))
+            System.out.println("testExtractUpdateSig2(): Success!");
+        else
+            System.out.println("testExtractUpdateSig2(): fail");
+        assertTrue(expectedRes.equals(result));
+    }
+
+    /** *************************************************************
+     */
+    @Test
     public void testSorts() {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testSorts(): ");
-        System.out.println(skbtfakb.kb.kbCache.getSignature("AbsoluteValueFn__Integer"));
+        ArrayList<String> actual = skbtfakb.kb.kbCache.getSignature("AbsoluteValueFn__0Re1ReFn");
+        String expectedRes = "[RealNumber, RealNumber]";
+        System.out.println("testSorts(): expected: " + expectedRes);
+        System.out.println("testSorts(): actual:    " + actual);
+        String result = actual.toString();
+        if (expectedRes.equals(result))
+            System.out.println("testSorts(): Success!");
+        else
+            System.out.println("testSorts(): fail");
+        assertTrue(expectedRes.equals(result));
     }
 
     /** *************************************************************
@@ -342,7 +375,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     @Test
     public void testVariableArity() {
 
-        SUMOtoTFAform.debug = true;
+        //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testVariableArity(): ");
         Formula f = new Formula("(<=> (and (instance ?REL TotalValuedRelation) " +
@@ -458,7 +491,24 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f);
         System.out.println("SUMOtoTFAformTest.testPredVarArity(): actual: " + result);
-        String expected = "";
+        String expected = "! [V__ROW1 : $rat] : (((s__instance(s__greaterThan__1Ra2Ra__m, s__TotalValuedRelation) & " +
+                "s__instance(s__greaterThan__1Ra2Ra__m, s__Predicate)) => ( ? [V__VALENCE:$int] : " +
+                "(($greater(V__VALENCE ,0) & (s__instance(s__greaterThan__1Ra2Ra__m, s__Relation) & " +
+                "s__valence__2In(s__greaterThan__1Ra2Ra__m, V__VALENCE) & " +
+                "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : " +
+                "(($greater(V__NUMBER ,0) & s__instance(V__CLASS, s__SetOrClass)) => " +
+                "($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__greaterThan__1Ra2Ra__m, V__NUMBER, V__CLASS) & " +
+                "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
+                "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$rat] : ($greater(V__ROW1 ,V__ITEM)))))))) & " +
+                "(( ? [V__VALENCE:$int] : (($greater(V__VALENCE ,0) & " +
+                "(s__instance(s__greaterThan__1Ra2Ra__m, s__Relation) & " +
+                "s__valence__2In(s__greaterThan__1Ra2Ra__m, V__VALENCE) & " +
+                "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : " +
+                "(($greater(V__NUMBER ,0) & s__instance(V__CLASS, s__SetOrClass)) => " +
+                "($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__greaterThan__1Ra2Ra__m, V__NUMBER, V__CLASS) & " +
+                "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
+                "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$rat] : ($greater(V__ROW1 ,V__ITEM))))))) => " +
+                "(s__instance(s__greaterThan__1Ra2Ra__m, s__TotalValuedRelation) & s__instance(s__greaterThan__1Ra2Ra__m, s__Predicate))))";
         System.out.println("expect: " + expected);
         System.out.println("equal: " + expected.equals(result));
         if (expected.equals(result))
@@ -533,10 +583,14 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f);
         System.out.println("SUMOtoTFAformTest.testInstNum(): actual: " + result);
+        //String expected = "! [V__Q2 : $i,V__U : $i,V__I1 : $real,V__I2 : $real,V__Q1 : $i] : " +
+        //        "((s__instance(s__equal__1Re2Re__m, s__RelationExtendedToQuantities) & V__Q1 = " +
+        //        "s__MeasureFn__1ReFn(V__I1, V__U) & V__Q2 = s__MeasureFn__1ReFn(V__I2, V__U) & " +
+        //        "V__I1 = V__I2) => V__Q1 = V__Q2)";
         String expected = "! [V__Q2 : $i,V__U : $i,V__I1 : $real,V__I2 : $real,V__Q1 : $i] : " +
-                "((s__instance(s__equal__1Re2Re__m, s__RelationExtendedToQuantities) & V__Q1 = " +
-                "s__MeasureFn__1ReFn(V__I1, V__U) & V__Q2 = s__MeasureFn__1ReFn(V__I2, V__U) & " +
-                "V__I1 = V__I2) => V__Q1 = V__Q2)";
+                "((s__instance(s__equal__m, s__RelationExtendedToQuantities) & " +
+                "equal(V__Q1 ,s__MeasureFn__1ReFn(V__I1, V__U)) & " +
+                "equal(V__Q2 ,s__MeasureFn__1ReFn(V__I2, V__U)) & V__I1 = V__I2) => equal(V__Q1 ,V__Q2))";
         System.out.println("expect: " + expected);
         System.out.println("equal: " + expected.equals(result));
         if (expected.equals(result))
@@ -551,7 +605,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     @Test
     public void testTypeConflict() {
 
-        SUMOtoTFAform.debug = true;
+        //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict(): ");
         String sf = "(=> (and (irreflexiveOn pathLength ?CLASS) (instance pathLength Predicate)) " +
@@ -559,7 +613,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String s = SUMOtoTFAform.process(f);
-        KBcache.debug = true;
+        //KBcache.debug = true;
         boolean inc = SUMOtoTFAform.inconsistentVarTypes();
         System.out.println("SUMOtoTFAformTest.testTypeConflict(): varmap: " + SUMOtoTFAform.varmap);
         if (inc)
@@ -574,7 +628,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     @Test
     public void testTypeConflict2() {
 
-        SUMOtoTFAform.debug = true;
+        //SUMOtoTFAform.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict2(): ");
         String sf = "(=> (and (irreflexiveOn multiplicativeFactor ?CLASS) (instance multiplicativeFactor Predicate)) " +
@@ -582,31 +636,62 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f);
-        System.out.println("SUMOtoTFAformTest.testTypeConflict2(): result: " + result);
-        if (StringUtil.emptyString(result))
+        String expected = "! [V__CLASS : $i] : ((s__irreflexiveOn(s__multiplicativeFactor__m, V__CLASS) & " +
+                "s__instance(s__multiplicativeFactor__m, s__Predicate)) => ( ! [V__INST:$int] : " +
+                "(~(s__multiplicativeFactor__1In2In(V__INST, V__INST)))))";
+        System.out.println("SUMOtoTFAformTest.testTypeConflict2(): result:   " + result);
+        System.out.println("SUMOtoTFAformTest.testTypeConflict2(): expected: " + expected);
+        if (result.equals(expected))
             System.out.println("testTypeConflict2(): Success!");
         else
             System.out.println("testTypeConflict2(): fail");
+        assertEquals(expected,result);
+    }
+
+    /****************************************************************
+     */
+    @Ignore
+    @Test
+    public void testTransNum() {
+
+        SUMOtoTFAform.debug = true;
+        FormulaPreprocessor.debug = true;
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testTransNum(): ");
+        String sf = "(=> (instance ?X NegativeInteger) (greaterThan 0 ?X))";
+        Formula f = new Formula(sf);
+        System.out.println("formula: " + f);
+        String result = SUMOtoTFAform.process(f);
+        System.out.println("SUMOtoTFAformTest.testTransNum(): result: " + result);
+        if (StringUtil.emptyString(result))
+            System.out.println("testTransNum(): Success!");
+        else
+            System.out.println("testTransNum(): fail");
         assertTrue(StringUtil.emptyString(result));
     }
 
     /****************************************************************
      */
     @Test
-    public void testTransNum() {
+    public void testPropertyFn() {
 
         SUMOtoTFAform.debug = true;
+        SUMOformulaToTPTPformula.debug = true;
+        FormulaPreprocessor.debug = true;
         System.out.println();
-        System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict2(): ");
-        String sf = "(=> (instance ?X NegativeInteger) (greaterThan 0 ?X))";
+        System.out.println("\n======================== SUMOtoTFAformTest.testPropertyFn(): ");
+        String sf = "(<=> (instance ?OBJ (PropertyFn ?PERSON)) (possesses ?PERSON ?OBJ))";
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f);
-        System.out.println("SUMOtoTFAformTest.testTypeConflict2(): result: " + result);
-        if (StringUtil.emptyString(result))
-            System.out.println("testTypeConflict2(): Success!");
+        String expected = "! [V__OBJ : $i,V__PERSON : $i] : ((s__instance(V__OBJ, s__PropertyFn(V__PERSON)) => " +
+                "s__possesses(V__PERSON, V__OBJ)) & (s__possesses(V__PERSON, V__OBJ) => s__instance(V__OBJ, s__PropertyFn(V__PERSON))))";
+        System.out.println("SUMOtoTFAformTest.testPropertyFn(): result:   " + result);
+        System.out.println("SUMOtoTFAformTest.testPropertyFn(): expected: " + expected);
+        if (expected.equals(result))
+            System.out.println("testPropertyFn(): Success!");
         else
-            System.out.println("testTypeConflict2(): fail");
-        assertTrue(StringUtil.emptyString(result));
+            System.out.println("testPropertyFn(): fail");
+        assertTrue(expected.equals(result));
     }
 }
