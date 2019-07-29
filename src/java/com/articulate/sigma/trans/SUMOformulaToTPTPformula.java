@@ -66,11 +66,16 @@ public class SUMOformulaToTPTPformula {
      * Convert the logical operators and inequalities in SUO-KIF to
      * their TPTP equivalents
      * @param st is the StreamTokenizer_s that contains the current token
+     * @param hasArguments is whether the given word, st, has arguments or
+     *                     is itself and argument.  If it's a term that is
+     *                     an argument, and it's a relation, it will get a suffix
+     *                     "__m"
      * @return the String that is the translated token
      */
     private static String translateWord_1(String st, int type, boolean hasArguments) {
 
-        //System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): st: " + st.sval);
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): st: " + st);
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): hasArguments: " + hasArguments);
         int translateIndex;
 
         List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT, 
@@ -143,8 +148,9 @@ public class SUMOformulaToTPTPformula {
 
         //----Translate operators
         translateIndex = kifOps.indexOf(st);
-        if (translateIndex != -1)
-            return(tptpOps.get(translateIndex));
+        if (translateIndex != -1 && hasArguments) {
+            return (tptpOps.get(translateIndex));
+        }
 
         //----Do nothing to numbers
         if (type == StreamTokenizer.TT_NUMBER ||
