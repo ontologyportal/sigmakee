@@ -144,6 +144,7 @@ public class FormulaPreprocessor {
      */
     public HashMap<String,HashSet<String>> findTypeRestrictions(Formula form, KB kb) {
 
+        if (debug) System.out.println("findTypeRestrictions: form \n" + form);
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
         if (debug) System.out.println("findTypeRestrictions: varDomainTypes " + varDomainTypes);
         // get variable types which are explicitly defined in formula
@@ -177,11 +178,12 @@ public class FormulaPreprocessor {
      */
     public HashMap<String,HashSet<String>> findAllTypeRestrictions(Formula form, KB kb) {
 
+        if (debug) System.out.println("findAllTypeRestrictions: form \n" + form);
         HashMap<String,HashSet<String>> varDomainTypes = computeVariableTypes(form, kb);
-        if (debug) System.out.println("findTypeRestrictions: varDomainTypes " + varDomainTypes);
+        if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions: varDomainTypes " + varDomainTypes);
         // get variable types which are explicitly defined in formula
         HashMap<String,HashSet<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(kb,form);
-        if (debug) System.out.println("findTypeRestrictions: varExplicitTypes " + varExplicitTypes);
+        if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions: varExplicitTypes " + varExplicitTypes);
         // only keep variables which are not explicitly defined in formula
         HashMap<String,HashSet<String>> varmap = new HashMap<String, HashSet<String>>();
         for (String var : varDomainTypes.keySet()) {
@@ -664,8 +666,10 @@ public class FormulaPreprocessor {
      */
     public HashMap<String,HashSet<String>> computeVariableTypes(Formula form, KB kb) {
 
-        if (form.varTypeCache.keySet().size() > 0 && KBmanager.initialized) // type lists can change as KBs are read
+        if (form.varTypeCache.keySet().size() > 0 && KBmanager.initialized) { // type lists can change as KBs are read
+            if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): returning cached types for \n" + form);
             return form.varTypeCache;
+        }
         if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
         Formula f = new Formula();
         f.read(form.theFormula);
