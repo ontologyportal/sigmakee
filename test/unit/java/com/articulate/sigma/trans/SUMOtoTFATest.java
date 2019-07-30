@@ -26,8 +26,10 @@ public class SUMOtoTFATest extends UnitTestBase {
 
         System.out.println("============ SUMOtoTFATest.init()");
         SUMOtoTFAform.initOnce();
+        System.out.println("SUMOtoTFATest.init(): " + SUMOtoTFAform.numericConstantValues);
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
+        SUMOformulaToTPTPformula.lang = "tff";
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tff";
         PrintWriter pw = null;
         try {
@@ -254,6 +256,7 @@ public class SUMOtoTFATest extends UnitTestBase {
 
     /** ***************************************************************
      */
+    @Ignore // includes ListFn
     @Test
     public void test8() {
 
@@ -432,8 +435,8 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         expectedRes = "! [V__CIRCLE : $i,V__LENGTH : $real] : (s__instance(V__CIRCLE, s__Circle) => " +
                 "s__diameter(V__CIRCLE, V__LENGTH) => ( ? [V__HALF:$real] : " +
-                "((s__instance(V__HALF, s__LengthMeasure) & (s__radius(V__CIRCLE, V__HALF) & " +
-                "s__MultiplicationFn__0Re1Re2ReFn(V__HALF ,2.0) = V__LENGTH)))))";
+                "((s__radius(V__CIRCLE, V__HALF) & " +
+                "s__MultiplicationFn__0Re1Re2ReFn(V__HALF ,2.0) = V__LENGTH))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
         if (expectedRes.equals(actualRes.trim()))
@@ -504,6 +507,7 @@ public class SUMOtoTFATest extends UnitTestBase {
 
     /** ***************************************************************
      */
+    @Ignore // contains ListFn
     @Test
     public void testInList() {
 
@@ -530,6 +534,7 @@ public class SUMOtoTFATest extends UnitTestBase {
 
     /** ***************************************************************
      */
+    @Ignore // contains ListFn
     @Test
     public void testLeastCommon() {
 
@@ -610,8 +615,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(equal (ReciprocalFn ?NUMBER) (ExponentiationFn ?NUMBER -1)))";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
-        expectedRes = "! [V__NUMBER : $real] : (s__instance(V__NUMBER, s__Quantity) => " +
-                "s__ReciprocalFn__0Re1ReFn(V__NUMBER) = s__ExponentiationFn__0Re1Re2InFn(V__NUMBER, -1))";
+        expectedRes = "! [V__NUMBER : $real] : (s__ReciprocalFn__0Re1ReFn(V__NUMBER) = s__ExponentiationFn__0Re1Re2InFn(V__NUMBER, -1))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
         if (expectedRes.equals(actualRes.trim()))
@@ -650,7 +654,9 @@ public class SUMOtoTFATest extends UnitTestBase {
     @Test
     public void testRadian() {
 
+        //SUMOformulaToTPTPformula.debug = true;
         System.out.println("\n========= test testRadian ==========\n");
+        System.out.println("testRadian(): " + SUMOtoTFAform.numericConstantValues);
         //FormulaPreprocessor.debug = true;
         String kifstring, expectedRes, actualRes;
         kifstring = "(equal (MeasureFn ?NUMBER AngularDegree) " +
@@ -659,7 +665,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         expectedRes = "! [V__NUMBER : $real] : " +
                 "(equal(s__MeasureFn__1ReFn(V__NUMBER, s__AngularDegree) ," +
-                "s__MeasureFn__1ReFn($product(V__NUMBER ,$quotient_e(3.141592653589793 ,180.0)), s__Radian)))";
+                "s__MeasureFn__1ReFn($product(V__NUMBER ,$quotient(3.141592653589793 ,180.0)), s__Radian)))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
         if (expectedRes.equals(actualRes.trim()))
@@ -684,7 +690,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         actualRes = SUMOtoTFAform.process(forms.iterator().next().toString());
         expectedRes = "! [V__X : $real] : " +
                 "(equal(s__MillionYearsAgoFn(V__X) ," +
-                "s__BeginFn(s__YearFn($to_int($sum(1950.0 ,$product(V__X ,-1000000.0)))))))";
+                "s__BeginFn(s__YearFn__1InFn($to_int($sum(1950.0 ,$product(V__X ,-1000000.0)))))))";
         System.out.println("actual:  " + actualRes);
         System.out.println("expected:" + expectedRes);
         if (expectedRes.equals(actualRes.trim()))
