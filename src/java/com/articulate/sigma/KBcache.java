@@ -1152,7 +1152,7 @@ public class KBcache implements Serializable {
             if (forms != null) {
                 for (int i = 0; i < forms.size(); i++) {
                     Formula form = forms.get(i);
-                    System.out.println("INFO in KBcache.collectDomains(): form " + form);
+                    if (debug) System.out.println("INFO in KBcache.collectDomains(): form " + form);
                     int arg = Integer.valueOf(form.getArgument(2));
                     String type = form.getArgument(3); 
                     domainArray[arg] = type; 
@@ -1199,8 +1199,8 @@ public class KBcache implements Serializable {
             ArrayList<String> domains = new ArrayList<String>();
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
-            System.out.println("INFO in KBcache.collectDomains(): rel " + rel);
-            System.out.println("INFO in KBcache.collectDomains(): domains " + domains);
+            if (debug) System.out.println("INFO in KBcache.collectDomains(): rel " + rel);
+            if (debug) System.out.println("INFO in KBcache.collectDomains(): domains " + domains);
             signatures.put(rel,domains);
             valences.put(rel, Integer.valueOf(maxIndex));
         }
