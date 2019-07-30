@@ -15,6 +15,8 @@ package com.articulate.sigma;
  and this depends on double underscore in the names of those predicates
  */
 
+import com.articulate.sigma.trans.SUMOtoTFAform;
+
 import java.util.*;
 
 public class PredVarInst {
@@ -92,6 +94,7 @@ public class PredVarInst {
         Set<Formula> result = new HashSet<Formula>();
         HashSet<String> predVars = gatherPredVars(kb,input);
         if (predVars.size() > 1 && rejectDoubles) {
+            SUMOtoTFAform.filterMessage = "reject axioms with more than one predicate variable";
             System.out.println("instantiatePredVars(): reject axioms with more than one predicate variable: \n" + input);
             return null;
         }
