@@ -31,6 +31,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         SUMOtoTFAform.setNumericFunctionInfo();
         skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
+        SUMOformulaToTPTPformula.lang = "tff";
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tff";
         PrintWriter pw = null;
         try {
