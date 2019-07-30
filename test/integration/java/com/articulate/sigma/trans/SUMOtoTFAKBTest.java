@@ -30,6 +30,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         SUMOtoTFAform.initOnce();
         SUMOtoTFAform.setNumericFunctionInfo();
         skbtfakb = new SUMOKBtoTFAKB();
+        SUMOformulaToTPTPformula.lang = "tff";
         skbtfakb.initOnce();
     }
 
