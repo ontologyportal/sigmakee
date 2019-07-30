@@ -269,9 +269,11 @@ public class SUMOKBtoTPTPKB {
             int counter = 0;
             int formCount = 0;
             for (Formula f : orderedFormulae) {
-                pr.println("% f: " + f.format("",""," "));
-                pr.println("% " + formCount++ + " of " + orderedFormulae.size() +
-                        " from file " + f.sourceFile + " at line " + f.startLine);
+                if (!f.theFormula.startsWith("(documentation")) {
+                    pr.println("% f: " + f.format("", "", " "));
+                    pr.println("% " + formCount++ + " of " + orderedFormulae.size() +
+                            " from file " + f.sourceFile + " at line " + f.startLine);
+                }
                 if (f.isHigherOrder(kb)) {
                     pr.println("% is higher order");
                     continue;
@@ -299,8 +301,11 @@ public class SUMOKBtoTPTPKB {
                             SUMOtoTFAform.kb = kb;
                             //pr.println("% tff input: " + f3.format("",""," "));
                             result = stfa.process(f3.theFormula);
-                            if (result != null)
+                            if (!StringUtil.emptyString(result))
                                 f.theTptpFormulas.add(result);
+                            else
+                                if (!StringUtil.emptyString(SUMOtoTFAform.filterMessage))
+                                    pr.println("% " + SUMOtoTFAform.filterMessage);
                         }
                     }
                 }
@@ -369,6 +374,7 @@ public class SUMOKBtoTPTPKB {
             return true;
         }
         if (tptp.indexOf("'") > -1 || tptp.indexOf('"') >= 0) {
+            pw.println("% f: " + form.format("", "", " "));
             pw.println("% quoted thing");
             return true;
         }
