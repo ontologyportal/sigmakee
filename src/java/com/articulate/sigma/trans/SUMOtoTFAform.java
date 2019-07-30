@@ -48,6 +48,9 @@ public class SUMOtoTFAform {
     public static HashMap<String,String> numericConstantTypes = new HashMap<>();
     public static HashMap<String,String> numericConstantValues = new HashMap<>();
 
+    // storage for a message why the formula wasn't translated
+    public static String filterMessage = "";
+
     /** *************************************************************
      */
     public static boolean isComparisonOperator(String s) {
@@ -349,14 +352,15 @@ public class SUMOtoTFAform {
                     isReal = true;
                 if (!isInt && !isReal) {
                     Formula sf = new Formula(s);
-                    String type = kb.kbCache.getRange(sf.car());
+                    Formula argResult = convertNumericFunctions(sf,"");
+                    String type = kb.kbCache.getRange(argResult.car());
                     if (type != null && (type.equals("Integer") || kb.isSubclass(type,"Integer")))
                         isInt = true;
                     if (type != null && (type.equals("RationalNumber") || kb.isSubclass(type,"RationalNumber")))
                         isRat = true;
                     if (type != null && (type.equals("RealNumber") || kb.isSubclass(type,"RealNumber")))
                         isReal = true;
-                    argsStr.append(convertNumericFunctions(sf,"") + " ");
+                    argsStr.append(argResult + " ");
                 }
                 else
                     argsStr.append(s + " ");
@@ -1252,7 +1256,7 @@ public class SUMOtoTFAform {
     /** *************************************************************
      * result is a side effect on varmap and the formula
      */
-    private static void constrainFunctVars(Formula f) {
+    private static Formula constrainFunctVars(Formula f) {
 
         int counter = 0;
         if (debug) System.out.println();
@@ -1262,13 +1266,14 @@ public class SUMOtoTFAform {
             counter++;
             oldVarmap = cloneVarmap();
             String newf = constrainFunctVarsRecurse(f);
-            f.theFormula = newf;
+            f = new Formula(newf);
             HashMap<String,HashSet<String>> types = fp.findAllTypeRestrictions(f, kb);
             if (debug) System.out.println("SUMOtoTFAform.constrainFunctVars(): found types: " + types);
             constrainTypeRestriction(types);
             //System.out.println("SUMOtoTFAform.constrainFunctVars(): new varmap: " + varmap);
             //System.out.println("SUMOtoTFAform.constrainFunctVars(): old varmap: " + oldVarmap);
         } while (!varmap.equals(oldVarmap) && counter < 5);
+        return f;
     }
 
     /** *************************************************************
@@ -1331,7 +1336,7 @@ public class SUMOtoTFAform {
             String s = constants.get(i);
             String val = values.get(i);
             if (f.theFormula.indexOf(s) != -1) {
-                f.theFormula = f.rename(s,val).theFormula;
+                f = new Formula(f.rename(s,val).theFormula);
             }
         }
     }
@@ -1448,7 +1453,7 @@ public class SUMOtoTFAform {
             counter++;
             //System.out.println("SUMOtoTFAform.process(): counter: " + counter);
             oldf = f.theFormula;
-            f.theFormula = elimUnitaryLogops(f); // remove empty (and... and (or... and =>...
+            f = new Formula(elimUnitaryLogops(f)); // remove empty (and... and (or... and =>...
         } while (!f.theFormula.equals(oldf) && counter < 5);
         if (debug) System.out.println("SUMOtoTFAform.process(): formula after elimUnitaryLogops: " + f);
         varmap = fp.findAllTypeRestrictions(f, kb);
@@ -1464,11 +1469,14 @@ public class SUMOtoTFAform {
         counter = 0;
         do {
             counter++;
-            //System.out.println("SUMOtoTFAform.process(): counter: " + counter);
+            if (debug) System.out.println("SUMOtoTFAform.process(): counter: " + counter);
+            if (debug) System.out.println("SUMOtoTFAform.process(1): formula: " + f);
             oldf = f.theFormula;
-            constrainFunctVars(f);
+            f = constrainFunctVars(f);
         } while (!f.theFormula.equals(oldf) && counter < 5);
+        if (debug) System.out.println("SUMOtoTFAform.process(2): formula: " + f);
         f = new Formula(removeNumericInstance(f.theFormula));
+        if (debug) System.out.println("SUMOtoTFAform.process(3): formula: " + f);
         if (f.theFormula == "")
             return "";
         f = new Formula(elimUnitaryLogops(f)); // remove empty (and... and (or... and =>...
@@ -1504,6 +1512,9 @@ public class SUMOtoTFAform {
      */
     public static String process(String s) {
 
+        filterMessage = "";
+        if (s.contains("ListFn"))
+            filterMessage = "Formula contains a list operator";
         if (StringUtil.emptyString(s) || numConstAxioms.contains(s) || s.contains("ListFn"))
             return "";
         Formula f = new Formula(s);
@@ -1615,7 +1626,7 @@ public class SUMOtoTFAform {
         Matcher m = p.matcher(f.theFormula);
         if (m.find()) {
             String var = m.group(1);
-            f.theFormula = m.replaceAll("");
+            f = new Formula(m.replaceAll(""));
         }
 
         type = "RealNumber";
@@ -1623,7 +1634,7 @@ public class SUMOtoTFAform {
         m = p.matcher(f.theFormula);
         if (m.find()) {
             String var = m.group(1);
-            f.theFormula = m.replaceAll("");
+            f = new Formula(m.replaceAll(""));
         }
 
         return f.theFormula;
@@ -1665,7 +1676,7 @@ public class SUMOtoTFAform {
                     String newCons = cons.replace("?" + origVar, "?" + var);
                     if (debug) System.out.println("SUMOtoTFAform.modifyTypesToConstraints(): replacing " +
                             toReplace + " with " + newCons);
-                    f.theFormula = f.theFormula.replace(toReplace, newCons);
+                    f = new Formula(f.theFormula.replace(toReplace, newCons));
                 }
             }
             else
