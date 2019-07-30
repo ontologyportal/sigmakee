@@ -38,13 +38,19 @@ public class SUMOformulaToTPTPformula {
      */
     public static String translateWord(String st, int type, boolean hasArguments) {
 
+        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): input: '" + st + "'");
+        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): containsKey: " + SUMOtoTFAform.numericConstantValues.containsKey(st));
+        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): lang: " + lang);
+        if (debug) System.out.println("translateWord(): " + SUMOtoTFAform.numericConstantValues);
         String result = null;
         try {
             if (lang.equals("tff"))
-                if (SUMOtoTFAform.numericConstantValues.keySet().contains(st))
+                if (SUMOtoTFAform.numericConstantValues.containsKey(st)) {
+                    if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): constant " + SUMOtoTFAform.numericConstantValues.get(st));
                     return (SUMOtoTFAform.numericConstantValues.get(st));
+                }
             result = translateWord_1(st,type,hasArguments);
-            if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): " + result);
+            if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
             if (result.equals("$true__m") || result.equals("$false__m")) 
                 result = "'" + result + "'";
             if (StringUtil.isNumeric(result) && hideNumbers) {
