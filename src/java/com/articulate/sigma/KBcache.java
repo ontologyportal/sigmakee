@@ -49,6 +49,9 @@ public class KBcache implements Serializable {
     // all the relations in the kb
     public HashSet<String> relations = new HashSet<String>();
 
+    // all the functions in the kb
+    public HashSet<String> functions = new HashSet<String>();
+
     // all the transitive relations in the kb
     public HashSet<String> transRels = new HashSet<String>();
 
@@ -107,10 +110,17 @@ public class KBcache implements Serializable {
     // The number of arguments to each relation.  Variable arity is -1
     public HashMap<String, Integer> valences = new HashMap<String, Integer>();
 
-    /** Disjoint relations which were explicitly defined in "partition", "disjoint",
-     * "disjointDecomposition" and "exhaustiveDecomposition" expressions
+    /** Disjoint relationships which were explicitly defined in "partition", "disjoint",
+     * and "disjointDecomposition" expressions
      **/
-    public HashMap<String, HashSet<String>> explicitDisjointRelations = new HashMap<>();
+    public HashMap<String, HashSet<String>> explicitDisjoint = new HashMap<>();
+
+    // each pair of classes as class1\tclass2
+    // transitive closure of classes based on explicitDisjoint
+    public HashSet<String> disjoint = new HashSet<>();
+
+    // each pair of relations as rel1\trel2
+    public HashSet<String> disjointRelations = new HashSet<>();
 
     /****************************************************************
      * empty constructor for testing only
@@ -192,11 +202,11 @@ public class KBcache implements Serializable {
         if (kbCacheIn.valences != null) {
             this.valences = Maps.newHashMap(kbCacheIn.valences);
         }
-        if (kbCacheIn.explicitDisjointRelations != null) {
-            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.explicitDisjointRelations.entrySet()) {
+        if (kbCacheIn.explicitDisjoint != null) {
+            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.explicitDisjoint.entrySet()) {
                 String key = entry.getKey();
                 HashSet<String> newSet = Sets.newHashSet(entry.getValue());
-                this.explicitDisjointRelations.put(key, newSet);
+                this.explicitDisjoint.put(key, newSet);
             }
         }
     }
@@ -434,20 +444,46 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     */
+    public void buildDisjointRelationsMap() {
+
+        HashSet<String> pairs = new HashSet<>();
+        ArrayList<Formula> explicitDisjointFormulae = new ArrayList<Formula>();
+        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjointRelation"));
+        for (Formula f : explicitDisjointFormulae) {
+            String arg1 = f.getArgument(1);
+            String arg2 = f.getArgument(2);
+            pairs.add(arg1 + "\t" + arg2);
+            HashSet<String> children1 = getChildRelations(arg1);
+            if (children1 == null)
+                children1 = new HashSet<>();
+            children1.add(arg1);
+            HashSet<String> children2 = getChildRelations(arg2);
+            if (children2 == null)
+                children2 = new HashSet<>();
+            children2.add(arg2);
+            for (String c1 : children1) {
+                for (String c2 : children2) {
+                    if (!c1.equals(c2))
+                        disjointRelations.add(c1 + "\t" + c2);
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
      * build a disjoint-relations-map which were explicitly defined in
      * "partition", "exhaustiveDecomposition", "disjointDecomposition"
      * and "disjoint" expressions;
      */
-    public void buildDisjointRelationsMap() {
+    public void buildExplicitDisjointMap() {
 
-        ArrayList<Formula> explicitDisjontFormulae = new ArrayList<Formula>();
-        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "partition"));
-        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjoint"));
-        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "disjointDecomposition"));
-        explicitDisjontFormulae.addAll(kb.ask("arg", 0, "exhaustiveDecomposition"));
-        for (Formula f : explicitDisjontFormulae) {
+        ArrayList<Formula> explicitDisjointFormulae = new ArrayList<Formula>();
+        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "partition"));
+        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjoint"));
+        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjointDecomposition"));
+        for (Formula f : explicitDisjointFormulae) {
             ArrayList<String> arguments = f.argumentsToArrayList(0);
-
             if (arguments != null && !arguments.isEmpty()) {
                 int i = 2;
                 if (f.getArgument(0).equals("disjoint"))
@@ -460,15 +496,15 @@ public class KBcache implements Serializable {
                     for ( ; j < arguments.size(); j++) {
                         if (j != i) {
                             String val = arguments.get(j);
-                            if (!explicitDisjointRelations.containsKey(key)) {
+                            if (!explicitDisjoint.containsKey(key)) {
                                 HashSet<String> vals = new HashSet<String>();
                                 vals.add(val);
-                                explicitDisjointRelations.put(key, vals);
+                                explicitDisjoint.put(key, vals);
                             }
                             else {
-                                HashSet<String> vals = explicitDisjointRelations.get(key);
+                                HashSet<String> vals = explicitDisjoint.get(key);
                                 vals.add(val);
-                                explicitDisjointRelations.put(key, vals);
+                                explicitDisjoint.put(key, vals);
                             }
                         }
                     }
@@ -478,17 +514,46 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     * cache the transitive closure of disjoint relations
+     */
+    public void buildDisjointMap() {
+
+        long t1 = System.currentTimeMillis();
+        for (String p1 : explicitDisjoint.keySet()) {
+            HashSet<String> vals = explicitDisjoint.get(p1);
+            HashSet<String> children1 = getChildClasses(p1);
+            if (children1 == null)
+                children1 = new HashSet<>();
+            children1.add(p1);
+            for (String p2 : vals) {
+                HashSet<String> children2 = getChildClasses(p2);
+                if (children2 == null)
+                    children2 = new HashSet<>();
+                children2.add(p2);
+                for (String c1 : children1) {
+                    for (String c2 : children2) {
+                        if (!c1.equals(c2))
+                            disjoint.add(c1 + "\t" + c2);
+                    }
+                }
+            }
+        }
+        System.out.println("buildDisjointMap():  " + ((System.currentTimeMillis() - t1) / 1000.0)
+                + " seconds to process " + disjoint.size() + " entries");
+    }
+
+    /** ***************************************************************
      * check if there are any two types in typeSet are disjoint or not;
      */
-    public static boolean checkDisjoint(KB kb, HashSet<String> typeSet) {
+    public boolean checkDisjoint(KB kb, HashSet<String> typeSet) {
 
         ArrayList<String> typeList = new ArrayList<>(typeSet);
         int size = typeList.size();
         for (int i = 0; i < size; i++) {
-            String rel1 = typeList.get(i);
+            String c1 = typeList.get(i);
             for (int j = i+1; j < size; j++) {
-                String rel2 = typeList.get(j);
-                if (checkDisjoint(kb, rel1, rel2) == true)
+                String c2 = typeList.get(j);
+                if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1))
                     return true;
             }
         }
@@ -499,26 +564,32 @@ public class KBcache implements Serializable {
      * check if rel1 and rel2 are disjoint
      * return true if rel1 and rel2 are disjoint; otherwise return false.
      */
-    public static boolean checkDisjoint(KB kb, String rel1, String rel2) {
+    public boolean checkDisjoint(KB kb, String c1, String c2) {
 
-        HashSet<String> ancestors_rel1 = kb.kbCache.getParentClasses(rel1);
-        HashSet<String> ancestors_rel2 = kb.kbCache.getParentClasses(rel2);
+        if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1))
+            return true;
+        else
+            return false;
+        /**
+        HashSet<String> ancestors_rel1 = kb.kbCache.getParentClasses(c1);
+        HashSet<String> ancestors_rel2 = kb.kbCache.getParentClasses(c2);
         if (ancestors_rel1 == null || ancestors_rel2 == null)
             return false;
 
-        ancestors_rel1.add(rel1);
-        ancestors_rel2.add(rel2);
+        ancestors_rel1.add(c1);
+        ancestors_rel2.add(c2);
         for (String s1 : ancestors_rel1) {
             for (String s2 : ancestors_rel2) {
-                if (kb.kbCache.isExplicitDisjoint(kb.kbCache.explicitDisjointRelations, s1, s2)) {
+                if (kb.kbCache.isExplicitDisjoint(kb.kbCache.explicitDisjoint, s1, s2)) {
                     if (debug)
-                        System.out.println(rel1 + " and " + rel2 +
+                        System.out.println(c1 + " and " + c2 +
                                 " are disjoint relations, because of " + s1 + " and " + s2);
                     return true;
                 }
             }
         }
         return false;
+         **/
     }
 
     /** ***************************************************************
@@ -526,13 +597,13 @@ public class KBcache implements Serializable {
      * relations; otherwise return false.
      */
     public boolean isExplicitDisjoint(HashMap<String, HashSet<String>> explicitDisjointRelations,
-                                      String rel1, String rel2) {
+                                      String c1, String c2) {
 
-        if (explicitDisjointRelations.containsKey(rel1)) {
-            return explicitDisjointRelations.get(rel1).contains(rel2);
+        if (explicitDisjointRelations.containsKey(c1)) {
+            return explicitDisjointRelations.get(c1).contains(c2);
         }
-        else if (explicitDisjointRelations.containsKey(rel2)) {
-            return explicitDisjointRelations.get(rel2).contains(rel1);
+        else if (explicitDisjointRelations.containsKey(c2)) {
+            return explicitDisjointRelations.get(c2).contains(c1);
         }
         else
             return false;
@@ -669,7 +740,19 @@ public class KBcache implements Serializable {
         else
             return null;
     }
-    
+
+    /** ***************************************************************
+     * return child relations for the given rel from subrelation expressions.
+     */
+    public HashSet<String> getChildRelations(String rel) {
+
+        HashMap<String,HashSet<String>> ps = children.get("subrelation");
+        if (ps != null)
+            return ps.get(rel);
+        else
+            return null;
+    }
+
     /** ***************************************************************
      * return child classes for the given cl from subclass expressions.
      */
@@ -883,6 +966,15 @@ public class KBcache implements Serializable {
             rels = new HashSet<String>();
             rels.addAll(relSubs);
         }
+    }
+
+    /** ***************************************************************
+     */
+    public void buildFunctionsSet() {
+
+        for (String s : relations)
+            if (kb.isFunction(s))
+                functions.add(s);
     }
 
     /** ***************************************************************
@@ -1389,7 +1481,9 @@ public class KBcache implements Serializable {
         buildInstTransRels();
         buildDirectInstances();
         addTransitiveInstances();
-        buildDisjointRelationsMap(); // find relations under partition definition
+        buildExplicitDisjointMap(); // find relations under partition definition
+        buildDisjointMap();
+        buildFunctionsSet();
         writeCacheFile();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
     }
@@ -1473,7 +1567,7 @@ public class KBcache implements Serializable {
         }
         System.out.println();
         System.out.println("-------------- disjoint ----------------");
-        System.out.println(kb.kbCache.explicitDisjointRelations);
+        System.out.println(kb.kbCache.explicitDisjoint);
         System.out.println();
         System.out.println("-------------- domains ----------------");
         //nkbc.collectDomains();
