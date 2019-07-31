@@ -780,5 +780,4 @@ public class SUMOtoTFATest extends UnitTestBase {
             System.out.println("testComposeSuffix(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
-
 }
