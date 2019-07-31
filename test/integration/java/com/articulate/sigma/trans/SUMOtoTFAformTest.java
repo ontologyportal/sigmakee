@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.File;
@@ -694,5 +695,30 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         else
             System.out.println("testPropertyFn(): fail");
         assertTrue(expected.equals(result));
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testMemberTypeCount() {
+
+        SUMOtoTFAform.debug = true;
+        SUMOKBtoTFAKB.debug = true;
+        System.out.println("\n========= testMemberTypeCount ==========\n");
+        System.out.println("testMemberTypeCount(): memberTypeCount exists: " + kb.terms.contains("memberTypeCount"));
+        System.out.println("testMemberTypeCount(): memberTypeCount signature: " + kb.kbCache.getSignature("memberTypeCount"));
+        String input = "(=> (and (memberTypeCount ?GROUP ?TYPE ?NUMBER) (equal ?NUMBER 0)) " +
+                "(not (exists (?ITEM) (and (instance ?ITEM ?TYPE) (member ?ITEM ?GROUP)))))";
+        String actualRes = SUMOtoTFAform.process(input);
+        String expectedRes = "! [V__GROUP : $i,V__TYPE : $i,V__NUMBER : $int] : " +
+                "((s__memberTypeCount__3In(V__GROUP, V__TYPE, V__NUMBER) & V__NUMBER = 0) => " +
+                "~(( ? [V__ITEM:$i] : ((s__instance(V__ITEM, V__TYPE) & s__member(V__ITEM, V__GROUP))))))";
+        System.out.println("actual:  " + actualRes);
+        System.out.println("expected:" + expectedRes);
+        if (expectedRes.equals(actualRes.trim()))
+            System.out.println("testMemberTypeCount(): Success!");
+        else
+            System.out.println("testMemberTypeCount(): fail");
+        Assert.assertEquals(expectedRes, actualRes.trim());
     }
 }
