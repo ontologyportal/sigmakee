@@ -33,7 +33,8 @@ public class PredVarInst {
     public static boolean debug = false;
 
     // a debugging option to reject formulas with more than one predicate variable, to save time
-    public static boolean rejectDoubles = true;
+    public static boolean rejectDoubles = false;
+    public static boolean doublesHandled = false;
 
     /** ***************************************************************
      * There are two type conditions:
@@ -80,6 +81,90 @@ public class PredVarInst {
     }
 
     /** ***************************************************************
+     * (=>
+     *   (and
+     *     (instance ?REL1 Predicate)
+     *     (instance ?REL2 Predicate)
+     *     (disjointRelation ?REL1 ?REL2)
+     *     (not
+     *       (equal ?REL1 ?REL2))
+     *     (?REL1 @ROW2))
+     *   (not
+     *     (?REL2 @ROW2)))
+     *
+
+     */
+    private static Set<Formula> handleDouble1(KB kb) {
+
+        Set<Formula> result = new HashSet<Formula>();
+        for (String s : kb.kbCache.disjointRelations) {
+            String arg1 = s.substring(0,s.indexOf("\t"));
+            String arg2 = s.substring(s.indexOf("\t")+1,s.length());
+            int arity1 = kb.kbCache.getArity(arg1);
+            int arity2 = kb.kbCache.getArity(arg2);
+            if (arity1 != arity2)
+                continue;
+            StringBuffer vars = new StringBuffer();
+            for (int i = 1; i <= arity1; i++)
+                vars.append(" ?ROW" + i);
+            result.add(new Formula("(=> (" + arg1 + vars + ") (not (" + arg2 + vars + ")))"));
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * (=>
+     *   (and
+     *     (subrelation ?REL1 ?REL2)
+     *     (instance ?REL1 Predicate)
+     *     (instance ?REL2 Predicate)
+     *     (?REL1 @ROW))
+     *   (?REL2 @ROW))
+     */
+    private static Set<Formula> handleDouble2(KB kb) {
+
+        Set<Formula> result = new HashSet<Formula>();
+        for (String r1 : kb.kbCache.relations) {
+            //System.out.println("handleDouble2(): relation: " + r1);
+            //System.out.println("handleDouble2(): in function set " + kb.kbCache.functions.contains(r1));
+            //System.out.println("handleDouble2(): is function " + kb.isFunction(r1));
+            if (kb.kbCache.functions.contains(r1)) // || kb.isFunction(r1))
+                continue;
+            HashSet<String> children = kb.kbCache.children.get("subrelation").get(r1);
+            if (children != null) {
+                for (String r2 : children) {
+                    int arity1 = kb.kbCache.getArity(r1);
+                    int arity2 = kb.kbCache.getArity(r2);
+                    if (arity1 != arity2)
+                        continue;
+                    StringBuffer vars = new StringBuffer();
+                    for (int i = 1; i <= arity1; i++)
+                        vars.append(" ?ROW" + i);
+                    result.add(new Formula("(=> (" + r1 + vars + ") (" + r2 + vars + "))"));
+                }
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * A bit of a hack to produce the statements that would result from
+     * the only two axioms in SUMO with two predicate variables
+     */
+    protected static Set<Formula> handleDoubles(KB kb) {
+
+        Set<Formula> result = new HashSet<Formula>();
+        Set<Formula> result1 = handleDouble1(kb);
+        if (result1 != null)
+            result.addAll(result1);
+        Set<Formula> result2 = handleDouble2(kb);
+        if (result2 != null)
+            result.addAll(result2);
+        doublesHandled = true;
+        return result;
+    }
+
+    /** ***************************************************************
      * @param input formula
      * @param kb knowledge base
      * @return A list of formulas where predicate variables are instantiated;
@@ -93,11 +178,26 @@ public class PredVarInst {
         if (debug) System.out.println("instantiatePredVars(): input: " + input);
         Set<Formula> result = new HashSet<Formula>();
         HashSet<String> predVars = gatherPredVars(kb,input);
-        if (predVars.size() > 1 && rejectDoubles) {
-            SUMOtoTFAform.filterMessage = "reject axioms with more than one predicate variable";
-            System.out.println("instantiatePredVars(): reject axioms with more than one predicate variable: \n" + input);
-            return null;
+        if (predVars.size() > 1) {
+            if (rejectDoubles) {
+                SUMOtoTFAform.filterMessage = "reject axioms with more than one predicate variable";
+                System.out.println("instantiatePredVars(): reject axioms with more than one predicate variable: \n" + input);
+                return null;
+            }
+            else {
+                if (!doublesHandled) {
+                    SUMOtoTFAform.filterMessage = "axiom with more than one predicate variable";
+                    System.out.println("instantiatePredVars(): should handle: \n" + input);
+                    return handleDoubles(kb);
+                }
+                else {
+                    SUMOtoTFAform.filterMessage = "axiom with more than one predicate variable";
+                    System.out.println("instantiatePredVars(): should have already handled: \n" + input);
+                    return null;
+                }
+            }
         }
+
         if (debug) System.out.println("instantiatePredVars(): predVars: " + predVars);
         if (predVars == null )
             return null;
