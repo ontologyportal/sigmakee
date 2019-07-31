@@ -1148,7 +1148,7 @@ public class SUMOtoTFAform {
                         String t = "RealNumber";
                         if (StringUtil.isInteger(arg)) {
                             if (kb.isSubclass(type, "Integer") || type.equals("Integer") ||
-                                    (isComparisonOperator(op) && lowest.equals("Integer")))
+                                    (isComparisonOperator(op) && (lowest.equals("Integer") || kb.isSubclass(lowest, "Integer"))))
                                 t = "Integer";
                             else {
                                 if (debug)
