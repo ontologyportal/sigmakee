@@ -3,8 +3,7 @@ package com.articulate.sigma;
 import org.junit.Test;
 import org.junit.Ignore;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -99,7 +98,7 @@ public class KBcacheTest extends IntegrationTestBase {
         HashSet<String> expected = new HashSet<>(Arrays.asList("RationalNumber","Integer","EvenInteger",
                 "OddInteger","PrimeNumber","NonnegativeInteger","PositiveInteger","NegativeInteger",
                 "IrrationalNumber","NonnegativeRealNumber","PositiveRealNumber","PositiveInteger",
-                "NegativeRealNumber","NegativeInteger","BinaryNumber"));
+                "NegativeRealNumber","NegativeInteger","BinaryNumber","RealNumber"));
 
         HashSet<String> actual = cache.getChildClasses(parent);
         assertEquals(expected, actual);
@@ -248,5 +247,19 @@ public class KBcacheTest extends IntegrationTestBase {
         else
             System.out.println("KBcacheTest.testDisjoint(): fail");
         assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testSignature() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        //System.out.println("parents of Shirt (as instance): " + cache.getParentClassesOfInstance("Shirt"));
+        //System.out.println("parents of Shirt: " + cache.parents.get("subclass").get("Shirt"));
+        //System.out.println("childOfP(\"Shirt\", \"WearableItem\"): " + cache.childOfP("subclass", "WearableItem","Shirt"));
+        //System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"WearableItem\"): " + SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
+        System.out.println("testSignature(): cache.getSignature(memberTypeCount): " + cache.getSignature("memberTypeCount"));
+        assertTrue(cache.getSignature("memberTypeCount").equals(new ArrayList(Arrays.asList("", "Collection", "SetOrClass", "NonnegativeInteger"))));
     }
 }
