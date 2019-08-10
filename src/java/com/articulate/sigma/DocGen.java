@@ -463,9 +463,11 @@ public class DocGen {
                 // Ontology, using predicate subsumption to take
                 // advantage of any predicates that have been
                 // liked with SUMO's predicates.
-                for (it = kb.kbCache.instanceOf.get("Ontology")
-                        .iterator(); it.hasNext();) {
-                    candidates.add((String) it.next());
+                if (kb.kbCache.instanceOf.get("Ontology") != null) {
+                    for (it = kb.kbCache.instanceOf.get("Ontology")
+                            .iterator(); it.hasNext(); ) {
+                        candidates.add((String) it.next());
+                    }
                 }
                 if (candidates.isEmpty()) {
                     // Next, we check for explicit
