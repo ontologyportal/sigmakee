@@ -2505,6 +2505,7 @@ public class DocGen {
     protected String toKifNamespace(KB kb, String term) {
 
         String ans = term;
+        /*
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 String kifTerm = StringUtil.w3cToKif(term);
@@ -2528,7 +2529,7 @@ public class DocGen {
         }
         catch (Exception ex) {
             ex.printStackTrace();
-        }
+        } */
         return ans;
     }
 
