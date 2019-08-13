@@ -719,6 +719,29 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
             System.out.println("testMemberTypeCount(): Success!");
         else
             System.out.println("testMemberTypeCount(): fail");
-        Assert.assertEquals(expectedRes, actualRes.trim());
+        assertEquals(expectedRes, actualRes.trim());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTypeConflict3() {
+
+        // tff(kb_SUMO_283,axiom,(! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : ((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__SetOrClass)) => (s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & s__instance(s__intelligenceQuotient__m, s__Predicate) & s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS)))).
+
+        SUMOtoTFAform.debug = true;
+        SUMOKBtoTFAKB.debug = true;
+        System.out.println("\n========= testTypeConflict3 ==========\n");
+        String input = "(=> (and (domain intelligenceQuotient ?NUMBER ?CLASS) " +
+                "(instance intelligenceQuotient Predicate) (intelligenceQuotient__2Re ?ROW1 ?ROW2)) " +
+                "(instance (ListOrderFn__2InFn (ListFn__2Fn__2ReFn ?ROW1 ?ROW2) ?NUMBER) ?CLASS))";
+        Formula f = new Formula(input);
+        SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        boolean actual = SUMOtoTFAform.typeConflict(f);
+        if (actual)
+            System.out.println("testTypeConflict3(): Success!");
+        else
+            System.out.println("testTypeConflict3(): fail");
+        assertTrue(actual);
     }
 }
