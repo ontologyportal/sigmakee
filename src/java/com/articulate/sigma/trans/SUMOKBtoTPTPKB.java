@@ -301,12 +301,23 @@ public class SUMOKBtoTPTPKB {
                             SUMOtoTFAform.kb = kb;
                             //pr.println("% tff input: " + f3.format("",""," "));
                             result = stfa.process(f3.theFormula);
+                            stfa.sorts = stfa.missingSorts(f3);
+                            if (stfa.sorts != null && stfa.sorts.size() > 0)
+                                f.tffSorts.addAll(stfa.sorts);
                             if (!StringUtil.emptyString(result))
                                 f.theTptpFormulas.add(result);
                             else
                                 if (!StringUtil.emptyString(SUMOtoTFAform.filterMessage))
                                     pr.println("% " + SUMOtoTFAform.filterMessage);
                         }
+                    }
+                }
+                for (String sort : f.tffSorts) {
+                    if (!StringUtil.emptyString(sort) &&
+                            !alreadyWrittenTPTPs.contains(sort)) {
+                        pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                        pr.println(",axiom,(" + sort + ")).");
+                        alreadyWrittenTPTPs.add(sort);
                     }
                 }
                 for (String theTPTPFormula : f.theTptpFormulas) {
