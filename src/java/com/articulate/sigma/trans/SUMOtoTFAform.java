@@ -51,6 +51,9 @@ public class SUMOtoTFAform {
     // storage for a message why the formula wasn't translated
     public static String filterMessage = "";
 
+    // extra sorts determined just for this formula
+    public HashSet<String> sorts = new HashSet<>();
+
     /** *************************************************************
      */
     public static boolean isComparisonOperator(String s) {
@@ -1427,10 +1430,151 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     */
+    private static boolean typeConflict(Formula f, String type) {
+
+        if (f == null)
+            return false;
+        if (f.atom())
+            return false;
+        if (!kb.isFunctional(f.theFormula))
+            return false;
+        ArrayList<String> sig = kb.kbCache.getSignature(f.car());
+        String rangeType = sig.get(0);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): formula: " + f);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): sig: " + sig);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): rangeType: " + rangeType);
+        if (kb.kbCache.checkDisjoint(kb,type,rangeType))
+            return true;
+        return false;
+    }
+
+    /** *************************************************************
+     */
+    private static boolean typeConflict(HashSet<String> types, String type) {
+
+        if (types == null) {
+            System.out.println("Error in SUMOtoTFAform.typeConflict(types,type): null types");
+            return false;
+        }
+        for (String s : types)
+            if (kb.kbCache.checkDisjoint(kb,s,type))
+                return true;
+        return false;
+    }
+
+    /** *************************************************************
+     * Reject formulas that wind up with type conflicts despite all
+     * attempts to resolve them
+     */
+    public static boolean typeConflict(Formula f) {
+
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): formula: " + f);
+        if (f == null)
+            return false;
+        if (f.atom())
+            return false;
+        String op = f.car();
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): op: " + op);
+        if (Formula.isQuantifier(op)) {
+            ArrayList<String> args = f.complexArgumentsToArrayList(1);
+            for (String s : args) {
+                Formula farg = new Formula(s);
+                if (farg.listP() && typeConflict(farg))
+                    return true;
+            }
+        }
+        else {
+            ArrayList<String> sig = kb.kbCache.getSignature(op);
+            ArrayList<String> args = f.complexArgumentsToArrayList(0);
+            if (debug) System.out.println("SUMOtoTFAform.typeConflict(): args: " + args);
+            if (debug) System.out.println("SUMOtoTFAform.typeConflict(): sig: " + sig);
+            for (int i = 1; i < args.size(); i++) {
+                String s = args.get(i);
+                String sigType = "";
+                if (sig != null && i < sig.size())
+                    sigType = sig.get(i);
+                if (debug) System.out.println("SUMOtoTFAform.typeConflict(): check arg: " + s + " with type: " + sigType);
+                Formula farg = new Formula(s);
+                if (farg.listP() && kb.isFunctional(farg.theFormula)) {
+                    if (typeConflict(farg, sigType))
+                        return true;
+                    if (typeConflict(farg))
+                        return true;
+                }
+                else if (farg.listP() && typeConflict(farg))
+                    return true;
+                else if (farg.isVariable()) {
+                    if (debug) System.out.println("SUMOtoTFAform.typeConflict(): check types of: " + farg);
+                    HashSet<String> vars = varmap.get(farg.theFormula);
+                    if (typeConflict(vars, sigType))
+                        return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** *************************************************************
+     * Create a sort spec from the relation name with embedded types
+     */
+    public static String sortFromRelation(String rel) {
+
+        if (debug) System.out.println("SUMOtoTFAform.sortFromRelation(): rel: " + rel);
+        ArrayList<String> sig = SUMOtoTFAform.relationExtractSig(rel);
+        if (debug) System.out.println("SUMOtoTFAform.sortFromRelation(): sig: " + sig);
+        if (sig == null || sig.size() < 1)
+            return "";
+        StringBuffer sigBuf = new StringBuffer();
+        for (String s : sig.subList(1,sig.size())) {
+            if (StringUtil.emptyString((s)))
+                sigBuf.append(" " + "$i" + " *");
+            else
+                sigBuf.append(" " + SUMOKBtoTFAKB.translateSort(kb, s) + " *");
+        }
+        String sigStr = sigBuf.toString().substring(0,sigBuf.length()-1);
+        String relname = SUMOKBtoTFAKB.translateName(rel);
+        if (relname.endsWith("__m"))
+            relname = relname.substring(0,relname.length()-3);
+        if (debug) System.out.println("SUMOtoTFAform.sortFromRelation(): sigStr: " + sigStr);
+        String axname = rel;
+        if (axname.startsWith("s__"))
+            axname = axname.substring(3,axname.length());
+        if (kb.isFunction(rel) || rel.endsWith("Fn")) {
+            String range = sig.get(0);
+            if (StringUtil.emptyString(range))
+                range = "Entity";
+            //return("tff(" + StringUtil.initialLowerCase(axname) + "_sig,type," + rel + " : ( " + sigStr + " ) > " + SUMOKBtoTFAKB.translateSort(kb,range) + " ).");
+            return(rel + " : ( " + sigStr + " ) > " + SUMOKBtoTFAKB.translateSort(kb,range));
+        }
+        else
+            return(rel + " : ( " + sigStr + " ) > $o ");
+    }
+
+    /** *************************************************************
+     * @return a list of TFF relation sort definitions to cover
+     * ListFn statements that have diverse sorts
+     */
+    public HashSet<String> missingSorts(Formula f) {
+
+        if (debug) System.out.println("SUMOtoTFAform.missingSorts(): formula: " + f);
+        HashSet<String> result = new HashSet<String>();
+        Pattern p = Pattern.compile("(ListFn[^ ]+)");
+        Matcher m = p.matcher(f.theFormula);
+        while (m.find()) {
+            String rel = m.group(1);
+            String sort = sortFromRelation(rel);
+            if (debug)
+                System.out.println("SUMOtoTFAform.missingSorts(): match rel,sort: " + rel + ", " + sort);
+            if (!StringUtil.emptyString(sort))
+                result.add(sort);
+        }
+        return result;
+    }
+
+    /** *************************************************************
      * This is the primary method of the class.  It takes a SUO-KIF
-     * formula and returns a TFF formula.  Reject axioms with ListFn
-     * since a list can have different types of arguments, which
-     * then violates TFF's restrictions
+     * formula and returns a TFF formula.
      */
     public static String process(Formula f) {
 
@@ -1515,7 +1659,7 @@ public class SUMOtoTFAform {
         filterMessage = "";
         if (s.contains("ListFn"))
             filterMessage = "Formula contains a list operator";
-        if (StringUtil.emptyString(s) || numConstAxioms.contains(s) || s.contains("ListFn"))
+        if (StringUtil.emptyString(s) || numConstAxioms.contains(s)) // || s.contains("ListFn"))
             return "";
         Formula f = new Formula(s);
         return process(f);
