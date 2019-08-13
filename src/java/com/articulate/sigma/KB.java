@@ -3272,9 +3272,11 @@ public class KB implements Serializable {
         System.out.println("INFO in KB.preProcess(): ");
         TreeSet<String> newTreeSet = new TreeSet<String>();
         KBmanager mgr = KBmanager.getMgr();
+        boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         kbCache.kb = this;
         kbCache.buildCaches();
-        boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
+        if (!tptpParseP)
+            return newTreeSet;
         Iterator<String> it = forms.iterator();
         int counter = 0;
         while (it.hasNext()) {
