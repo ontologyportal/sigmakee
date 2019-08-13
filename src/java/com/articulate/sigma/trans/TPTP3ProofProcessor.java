@@ -16,6 +16,7 @@ package com.articulate.sigma.trans;
 import TPTPWorld.TPTPFormula;
 import TPTPWorld.TPTPParser;
 import com.articulate.sigma.*;
+import com.articulate.sigma.tp.EProver;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
