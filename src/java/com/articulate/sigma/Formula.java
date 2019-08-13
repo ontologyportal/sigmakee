@@ -126,9 +126,6 @@ public class Formula implements Comparable, Serializable {
     /** The formula in textual forms. */
     public String theFormula;
 
-    /** The formula in textual forms. */
-    public String tffFormula;
-
     public static final String termMentionSuffix  = "__m";
     public static final String classSymbolSuffix  = "__t";  // for the case when a class is used as an instance
     public static final String termSymbolPrefix   = "s__";
@@ -167,6 +164,9 @@ public class Formula implements Comparable, Serializable {
      * might cause theFormula to expand to several TPTP formulas.
      */
     public HashSet<String> theTptpFormulas = new HashSet<>();
+
+    //any extra sort signatures not computed in advance
+    public HashSet<String> tffSorts = new HashSet<>();
 
     /** *****************************************************************
      * A list of clausal (resolution) forms generated from this
