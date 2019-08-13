@@ -136,6 +136,63 @@ public class RowVars {
     }
 
     /** ***************************************************************
+     * @param ar a list for each variable of all the predicates in
+     *           which it appears as an argument
+     * @result the minimum arity allowed by predicate arities, as given by
+     * @seeAlso kb.kbCache.valences
+     *
+     */
+    public static HashMap<String,Integer> getRowVarMinAritiesWithOtherArgs(HashMap<String,HashSet<String>> ar, KB kb, Formula f) {
+
+        HashMap<String,Integer> arities = new HashMap<String,Integer>();
+        Iterator<String> it = ar.keySet().iterator();
+        while (it.hasNext()) {
+            String rowvar = it.next();
+            HashSet<String> preds = ar.get(rowvar);
+            Iterator<String> it2 = preds.iterator();
+            while (it2.hasNext()) {
+                String pred = it2.next();
+
+                // If row variables in an argument list with other arguments,
+                // then #arguments which can be expanded = #arguments in pred - nonRowVar
+                int nonRowVar = 0;
+                int start = f.theFormula.indexOf("(" + pred);
+                int end = f.theFormula.indexOf(")", start);
+                String simpleFS = f.theFormula.substring(start, end+1);
+                if (DEBUG)
+                    System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
+                Formula simpleF = new Formula();
+                simpleF.read(simpleFS);
+                for (int i = 0; i < simpleF.listLength(); i++) {
+                    if (simpleF.getArgument(i).startsWith(Formula.V_PREF)) // a '?'
+                        nonRowVar++;
+                }
+
+                if (DEBUG)
+                    System.out.println("getRowVarMaxAritiesWithOtherArgs() non row var count " + nonRowVar);
+                if (kb.kbCache!= null && kb.kbCache.valences != null &&
+                        kb.kbCache.valences.get(pred) != null) {
+                    int arity = kb.kbCache.valences.get(pred).intValue();
+                    if (kb.isInstanceOf(pred,"VariableArityRelation"))
+                        arity = 1;
+                    arity = arity - nonRowVar;
+                    if (DEBUG)
+                        System.out.println("getRowVarMaxAritiesWithOtherArgs() pred,arity " + pred + ", " + arity);
+                    if (arities.containsKey(rowvar) && DEBUG)
+                        System.out.println("getRowVarMaxAritiesWithOtherArgs() previous arity " + arities.get(rowvar));
+                    if (arities.containsKey(rowvar)) {
+                        if (arity > arities.get(rowvar))
+                            arities.put(rowvar, arity);
+                    }
+                    else if (arity > 0)
+                        arities.put(rowvar, arity);
+                }
+            }
+        }
+        return arities;
+    }
+
+    /** ***************************************************************
      * Merge the key,value pairs for a multiple value ArrayList
      */
     private static HashMap<String,HashSet<String>> 
@@ -290,6 +347,7 @@ public class RowVars {
             System.out.println("Info in RowVars.expandRowVars(): f: " +f);
         HashMap<String,HashSet<String>> rels = getRowVarRelations(f);   
         HashMap<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
+        HashMap<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, f);
         result.add(f.theFormula);
         HashSet<String> rowvars = findRowVars(f);
         Iterator<String> it = rowvars.iterator();
@@ -300,12 +358,22 @@ public class RowVars {
             String replaceVar = var.replace('@', '?');
             ArrayList<String> newresult = new ArrayList<String>();
             StringBuffer replaceString = new StringBuffer();
-            int maxArity = 7;  
+            int maxArity = 7;
+            int minArity = 1;
             if (rowVarMaxArities.containsKey(var) && maxArity > rowVarMaxArities.get(var).intValue())
                 maxArity = rowVarMaxArities.get(var).intValue();
+            if (rowVarMinArities.containsKey(var) && minArity < rowVarMinArities.get(var).intValue())
+                minArity = rowVarMinArities.get(var).intValue();
             if (DEBUG)
                 System.out.println("Info in RowVars.expandRowVars(): maxArity: " + maxArity);
-            for (int j = 0; j < maxArity; j++) {
+            if (DEBUG)
+                System.out.println("Info in RowVars.expandRowVars(): minArity: " + minArity);
+            for (int j = 1; j < minArity; j++) {
+                if (j > 1)
+                    replaceString.append(" ");
+                replaceString.append(replaceVar + Integer.toString(j+1));
+            }
+            for (int j = minArity; j <= maxArity; j++) {
                 if (j > 0)
                     replaceString.append(" ");
                 replaceString.append(replaceVar + Integer.toString(j+1));
