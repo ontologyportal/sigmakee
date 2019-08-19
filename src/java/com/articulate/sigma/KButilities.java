@@ -82,6 +82,31 @@ public class KButilities {
     }
 
     /** *************************************************************
+     * Get count of all the termFormat strings for the given language
+     */
+    public static int getCountTermFormats(KB kb, String lang) {
+
+        ArrayList<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
+        return forms.size();
+    }
+
+    /** *************************************************************
+     * Get count of all the termFormat strings for unique SUMO terms
+     * for the given language.  So if a term has more than one
+     * termFormat, only count one
+     */
+    public static int getCountUniqueTermFormats(KB kb, String lang) {
+
+        ArrayList<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
+        HashSet<String> terms = new HashSet<>();
+        for (Formula f : forms) {
+            String s = f.getArgument(2);
+            terms.add(s);
+        }
+        return terms.size();
+    }
+
+    /** *************************************************************
      * convert the numerical result of compare() to text
      */
     public static String eqNum2Text(int val) {
