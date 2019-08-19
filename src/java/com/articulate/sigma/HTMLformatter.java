@@ -241,6 +241,17 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
+     *  Show knowledge base statistics
+     */
+    public static String showLanguageStats(KB kb, String lang) {
+
+        StringBuilder show = new StringBuilder();
+        show.append("termFormats: " + KButilities.getCountTermFormats(kb,lang) + "<p>\n");
+        show.append("unique terms: " + KButilities.getCountUniqueTermFormats(kb,lang) + "<p>\n");
+        return show.toString();
+    }
+
+    /** *************************************************************
      *  Show a map if coordinates are given in the kb
      */
     public static String showMap(KB kb, String term) {
