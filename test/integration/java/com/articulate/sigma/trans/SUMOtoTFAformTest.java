@@ -29,6 +29,8 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     public static void init() {
 
         SUMOtoTFAform.initOnce();
+        if (!kb.containsFile("Merge.kif") || !kb.containsFile("Mid-level-ontology.kif"))
+            System.out.println("!!!!!!!! error in init(): missing KB files !!!!!!!!!!!!");
         SUMOtoTFAform.setNumericFunctionInfo();
         skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
