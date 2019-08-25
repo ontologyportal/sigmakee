@@ -21,6 +21,7 @@ public class RowVarTest extends UnitTestBase  {
     @Test
     public void testLinks() {
 
+        System.out.println("\n=========== testLinks =================");
         String stmt1 = "(=>\n" +
                 "  (and\n" +
                 "    (minValue links ?ARG ?N)\n" +
@@ -40,7 +41,51 @@ public class RowVarTest extends UnitTestBase  {
         System.out.println("testLinks(): arity of 'links': " + arity);
         System.out.println("testLinks(): rels: " + rels);
         System.out.println("testLinks(): rowVarMaxArities: " + rowVarMaxArities);
+        System.out.println("testLinks(): result: " + rowVarMaxArities.get("@ARGS").intValue());
+        System.out.println("testLinks(): expected: " + 3);
+        if (3 == rowVarMaxArities.get("@ARGS").intValue())
+            System.out.println("testLinks(): success!");
+        else
+            System.out.println("testLinks(): failure");
         assertEquals(3, rowVarMaxArities.get("@ARGS").intValue());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testLinks2() {
+
+        System.out.println("\n=========== testLinks2 =================");
+        String stmt1 = "(=>\n" +
+                "  (and\n" +
+                "    (minValue links ?ARG ?N)\n" +
+                "    (links @ARGS)\n" +
+                "    (equal ?VAL\n" +
+                "      (ListOrderFn\n" +
+                "        (ListFn @ARGS) ?ARG)))\n" +
+                "  (greaterThan ?VAL ?N))";
+
+        Formula f = new Formula();
+        f.read(stmt1);
+
+        RowVars.DEBUG = true;
+        ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
+        String result = results.get(0).theFormula;
+        String expected = "(=>\n" +
+                "  (and\n" +
+                "    (minValue links ?ARG ?N)\n" +
+                "    (links ?ARGS2 ?ARGS3 ?ARGS4)\n" +
+                "    (equal ?VAL\n" +
+                "      (ListOrderFn\n" +
+                "        (ListFn ?ARGS2 ?ARGS3 ?ARGS4) ?ARG)))\n" +
+                "  (greaterThan ?VAL ?N))";
+        System.out.println("testLinks2(): result: " + result);
+        System.out.println("testLinks2(): expected: " + expected);
+        if (expected.equals(result))
+            System.out.println("testLinks2(): success!");
+        else
+            System.out.println("testLinks2(): failure");
+        assertEquals(expected,result);
     }
 
     /** ***************************************************************
@@ -48,6 +93,7 @@ public class RowVarTest extends UnitTestBase  {
     @Test
     public void testRowVarExp() {
 
+        System.out.println("\n=========== testRowVarExp =================");
         String stmt = "(<=> (partition @ROW) (and (exhaustiveDecomposition @ROW) (disjointDecomposition @ROW)))";
         Formula f = new Formula();
         f.read(stmt);
@@ -56,6 +102,12 @@ public class RowVarTest extends UnitTestBase  {
         ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
         System.out.println("testRowVarExp(: input: " + stmt);
         System.out.println("testRowVarExp(): results: " + results);
+        System.out.println("testRowVarExp(): results size: " + results.size());
+        System.out.println("testRowVarExp(): expected: " + 7);
+        if (results.size() == 7)
+            System.out.println("testLinks(): success!");
+        else
+            System.out.println("testLinks(): failure");
         assertTrue(results.size() == 7);
     }
 }
