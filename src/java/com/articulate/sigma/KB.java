@@ -2124,6 +2124,24 @@ public class KB implements Serializable {
     }
 
     /*****************************************************************
+     * Takes a filename without path and returns true if it occurs in the KB.
+     *
+     * @param term A String.
+     * @return true or false.
+     */
+    public boolean containsFile(String fname) {
+
+        for (String path : constituents) {
+            if (path.contains("/")) {
+                path = path.substring(path.lastIndexOf('/')+1,path.length());
+            }
+            if (path.equals(fname))
+                return true;
+        }
+        return false;
+    }
+
+    /*****************************************************************
      * Takes a formula string and returns true if the corresponding Formula occurs in
      * the KB.
      *
@@ -2135,9 +2153,9 @@ public class KB implements Serializable {
         return formulaMap.containsKey(formula.intern());
     }
 
-    /***************************************************************** Count the
-     * number of terms in the knowledge base in order to present statistics to
-     * the user.
+    /*****************************************************************
+     * Count the number of terms in the knowledge base in order to
+     * present statistics to the user.
      *
      * @return The int(eger) number of terms in the knowledge base.
      */

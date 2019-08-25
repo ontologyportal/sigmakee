@@ -122,6 +122,8 @@ public class KBcache implements Serializable {
     // each pair of relations as rel1\trel2
     public HashSet<String> disjointRelations = new HashSet<>();
 
+    public boolean initialized = false;
+
     /****************************************************************
      * empty constructor for testing only
      */
@@ -1486,6 +1488,7 @@ public class KBcache implements Serializable {
         buildFunctionsSet();
         writeCacheFile();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
+        initialized = true;
     }
 
     /** ***************************************************************
