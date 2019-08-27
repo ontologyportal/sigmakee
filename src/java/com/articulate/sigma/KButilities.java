@@ -107,6 +107,22 @@ public class KButilities {
     }
 
     /** *************************************************************
+     * Generate default synonymousExternalConcept statements for a .tsv
+     */
+    public static void genSynLinks(String fname) {
+
+        int termcol = 0;
+        ArrayList<ArrayList<String>> spread = new ArrayList<>();
+        spread = DB.readSpreadsheet(fname,null,false,'\t');
+        for (ArrayList<String> row : spread) {
+            if (row != null && row.size() > 1) {
+                String label = row.get(termcol);
+                System.out.println("(synonymousExternalConcept \"" + label + "\" Entity Taxonomy)");
+            }
+        }
+    }
+
+    /** *************************************************************
      * convert the numerical result of compare() to text
      */
     public static String eqNum2Text(int val) {
