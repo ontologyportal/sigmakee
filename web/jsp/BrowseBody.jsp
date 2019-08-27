@@ -31,7 +31,7 @@
 
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm) && StringUtil.emptyString(relREmatch)) {       // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
-        show.append(HTMLformatter.showLanguageStats(kb,language));
+    show.append(HTMLformatter.showLanguageStats(kb,language));
  }
  else if (kb != null && term != null && !kb.containsTerm(term) && KBPOS.equals("1")) {           // Show the alphabetic neighbors of a term
     show.append(HTMLformatter.showNeighborTerms(kb,term));
