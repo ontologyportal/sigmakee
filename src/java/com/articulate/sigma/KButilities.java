@@ -546,6 +546,18 @@ public class KButilities {
 		return result;
 	}
 
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("KButilities class");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -c <fname> - generate external links from file fname");
+        System.out.println("  -s - count strings and processes");
+    }
+
     /** *************************************************************
      */
     public static void main(String[] args) {
@@ -562,8 +574,18 @@ public class KButilities {
         //validatePictureList();
         //for (String s : generateSemanticNetwork(kb))
         //    System.out.println(s);
-        countStringWords(kb);
-        countProcesses(kb);
+        if (args != null && args.length > 1 && args[0].equals("-c")) {
+            genSynLinks(args[1]);
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            showHelp();
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-s")) {
+            countStringWords(kb);
+            countProcesses(kb);
+        }
+        else
+            showHelp();
     }
 }
 
