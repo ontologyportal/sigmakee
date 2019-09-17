@@ -24,7 +24,7 @@ public class SUMOtoTFAform {
     public static boolean debug = false;
 
     // a Set of types for each variable key
-    protected static HashMap<String,HashSet<String>> varmap = null;
+    public static HashMap<String,HashSet<String>> varmap = null;
 
     // a map of relation signatures (where function returns are index 0)
     // modified from the original by the constraints of the axiom
@@ -1422,6 +1422,8 @@ public class SUMOtoTFAform {
                                     c1 + ", " + c2 + " for var " + s);
                             return true;
                         }
+                        //System.out.println("SUMOtoTFAform.process(): " +
+                        //        c1 + ", " + c2 + " ok for var " + s);
                     }
                 }
             }
