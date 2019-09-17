@@ -310,6 +310,28 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Term does not appear in any implication (rule).
+     */
+    public static boolean termWithoutRules(KB kb, String term) {
+
+        boolean isNaN = true;
+        try {
+            double dval = Double.parseDouble(term);
+            isNaN = Double.isNaN(dval);
+        }
+        catch (Exception nex) {
+        }
+        if (isNaN) {
+            ArrayList<Formula> forms = kb.ask("ant",0,term);
+            ArrayList<Formula> forms2 = kb.ask("cons",0,term);
+            if (((forms == null) || forms.isEmpty())
+                    && ((forms2 == null) || forms2.isEmpty()))
+                return true;
+        }
+        return false;
+    }
+
+    /** *****************************************************************
      * Find all terms which do not appear in any implication (rule).
      */
     public static ArrayList<String> termsWithoutRules(KB kb) {
@@ -317,27 +339,14 @@ public class Diagnostics {
         boolean isNaN = true;
         ArrayList<String> result = new ArrayList<String>();
         Iterator<String> it = kb.getTerms().iterator();
-        synchronized (kb.getTerms()) {
-            while (it.hasNext()) {
-                String term = (String) it.next();
-                isNaN = true;
-                try {
-                    double dval = Double.parseDouble(term);
-                    isNaN = Double.isNaN(dval);
-                }
-                catch (Exception nex) {
-                }
-                if (isNaN) {
-                    ArrayList<Formula> forms = kb.ask("ant",0,term);
-                    ArrayList<Formula> forms2 = kb.ask("cons",0,term);
-                    if (((forms == null) || forms.isEmpty()) 
-                        && ((forms2 == null) || forms2.isEmpty()))
-                        result.add(term);
-                }
-                if (result.size() > 99) {
-                    result.add("limited to 100 results");
-                    break;
-                }
+        while (it.hasNext()) {
+            String term = (String) it.next();
+            isNaN = true;
+            if (termWithoutRules(kb,term))
+                result.add(term);
+            if (result.size() > 99) {
+                result.add("limited to 100 results");
+                break;
             }
         }
         return result;
@@ -347,7 +356,7 @@ public class Diagnostics {
      * @return true if a quantifiers in a quantifier list is not found
      * in the body of the statement.
      */
-    private static boolean quantifierNotInStatement(Formula f) {
+    public static boolean quantifierNotInStatement(Formula f) {
 
         if (f.theFormula == null || f.theFormula.length() < 1 ||
             !f.listP() || f.empty())
@@ -385,6 +394,31 @@ public class Diagnostics {
             }
         }
         return false;
+    }
+
+    /** *****************************************************************
+     * Find cases where a variable appears in a quantifier list, but not
+     * in the body of the quantified expression.  For example
+     * (exists (?FOO) (bar ?FLOO Shmoo))
+     * @return an ArrayList of Formula(s).
+     */
+    public static ArrayList<Formula> quantifierNotInBody(KB kb, String fname) {
+
+        ArrayList<Formula> result = new ArrayList<Formula>();
+        Iterator<Formula> it = kb.formulaMap.values().iterator();
+        while (it.hasNext()) {
+            Formula form = (Formula) it.next();
+            if (!StringUtil.noPath(form.sourceFile).equals(fname))
+                continue;
+            if ((form.theFormula.indexOf("forall") != -1)
+                    || (form.theFormula.indexOf("exists") != -1)) {
+                if (quantifierNotInStatement(form))
+                    result.add(form);
+            }
+            if (result.size() > 19)
+                return result;
+        }
+        return result;
     }
 
     /** *****************************************************************
