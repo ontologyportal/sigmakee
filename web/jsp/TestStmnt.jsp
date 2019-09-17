@@ -57,7 +57,6 @@ if (!role.equalsIgnoreCase("admin")) {
             }
             SUMOtoTFAform.initOnce();
             SUMOtoTFAform.varmap = fp.findAllTypeRestrictions(f, kb);
-            status.append(SUMOtoTFAform.varmap);
             if (SUMOtoTFAform.inconsistentVarTypes()) {
                 status.append("Inconsistent variable types: " + SUMOtoTFAform.varmap + "<P>\n");
                 error = true;
@@ -75,6 +74,15 @@ if (!role.equalsIgnoreCase("admin")) {
             if (pred != null) {
                 status.append("Incorrect arity for predicate: " + pred + "<P>\n");
                 error = true;
+            }
+            Set<String> terms = f.collectTerms();
+            if (terms != null) {
+                for (String s : terms) {
+                    if (!kb.terms.contains(s) && !Formula.isVariable(s)) {
+                        status.append("Unknown term: " + s + "<P>\n");
+                        error = true;
+                    }
+                }
             }
         }
     }
