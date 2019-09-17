@@ -29,53 +29,52 @@ if (!role.equalsIgnoreCase("admin")) {
     ArrayList processedStmts = null;
     String stmt = request.getParameter("stmt");
     String req = request.getParameter("request");
-    boolean syntaxError = false;
+    boolean error = false;
 
     if ((kbName == null) || kbName.equals("")) {
         System.out.println("Error: No knowledge base specified");
-        return;
+        kbName = "SUMO";
     }
     
     if (stmt != null)
-        System.out.println("  text box input: " + stmt.trim());
+        System.out.println("text box input: " + stmt.trim());
 
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
         stmt = "(instance ?X Relation)";    
     else {
         String msg = (new KIF()).parseStatement(stmt);
         if (msg != null) {
-            status.append("<font color='red'>Syntax Error in statement: " + stmt);
-            status.append("Message: " + msg + "</font><br>\n");
-            syntaxError = true;
+            status.append("Syntax Error: " + msg + "<P>\n");
+            error = true;
         }
         else {
             Formula f = new Formula(stmt);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> res = fp.preProcess(f,false,kb);
             if (f.errors != null && f.errors.size() > 0) {
-                status.append("<font color='red'>Error in statement: " + stmt);
-                status.append("Message: " + f.errors.toString() + "</font><br>\n");
-                syntaxError = true;
+                status.append("Error:  " + f.errors.toString() + "<P>\n");
+                error = true;
             }
             SUMOtoTFAform.initOnce();
             SUMOtoTFAform.varmap = fp.findAllTypeRestrictions(f, kb);
             status.append(SUMOtoTFAform.varmap);
             if (SUMOtoTFAform.inconsistentVarTypes()) {
-                status.append("SUMOtoTFAform.process(): rejected inconsistent variables types: " + SUMOtoTFAform.varmap + " in : " + f);
-                syntaxError = true;
+                status.append("SUMOtoTFAform.process(): rejected inconsistent variables types: " + SUMOtoTFAform.varmap + " in : " + f + "<P>\n");
+                error = true;
             }
             if (Diagnostics.quantifierNotInStatement(f)) {
-                status.append("<font color='red'>Quantifier not in body</font><br>\n");
+                status.append("Quantifier not in body<P>\n");
+                error = true;
+            }
+            HashSet<String> svars = Diagnostics.singleUseVariables(f);
+            if (svars != null && svars.size() > 0) {
+                status.append("Single use variables: " + svars + "<P>\n");
             }
         }
     }
 
-    if (stmt == null || stmt.length() < 2 || stmt.trim().charAt(0) != '(') {
-        syntaxError = true;
-        status.append("<font color='red'>Error: Syntax Error or parsing failure in statement: " + stmt + "</font><br>\n");
-    }
-    else
-        status.append("statement ok");
+    if (!error)
+        status.append("Statement ok<P>");
 
     String lineHtml =
       "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
