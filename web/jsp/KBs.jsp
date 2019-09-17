@@ -85,6 +85,7 @@
           out.println("</TD>");          
           out.println("<TD><A href=\"Browse.jsp?kb=" + kbName2 + "&lang=" + language + "\">Browse</A></TD>");                                                      
           out.println("<TD><A href=\"Graph.jsp?kb=" + kbName2 + "&lang=" + language + "\">Graph</A></TD>");  
+          out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbName2 + "&lang=" + language + "\">Test Stmt</A></TD>");
 
           if (isAdministrator) {
               out.println("<TD><A href=\"Diag.jsp?kb=" + kbName2 + "&lang=" + language + "\">Diagnostics</A></TD>");                                                 
