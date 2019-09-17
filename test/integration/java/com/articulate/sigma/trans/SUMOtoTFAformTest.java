@@ -653,6 +653,28 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     }
 
     /****************************************************************
+     * nonsense axiom just to check types
+     */
+    @Test
+    public void testTypeConflict3() {
+
+        //SUMOtoTFAform.debug = true;
+        System.out.println();
+        System.out.println("\n======================== SUMOtoTFAformTest.testTypeConflict3(): ");
+        String sf = "(forall (?X) (=> (instance ?X Table) (agent ?Y ?X)))";
+        Formula f = new Formula(sf);
+        System.out.println("formula: " + f);
+        String result = SUMOtoTFAform.process(f);
+        boolean inc = SUMOtoTFAform.inconsistentVarTypes();
+        System.out.println("SUMOtoTFAformTest.testTypeConflict3(): varmap: " + SUMOtoTFAform.varmap);
+        if (inc)
+            System.out.println("testTypeConflict3(): Success!");
+        else
+            System.out.println("testTypeConflict3(): fail");
+        assertTrue(inc);
+    }
+
+    /****************************************************************
      */
     @Ignore
     @Test
@@ -727,23 +749,30 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    public void testTypeConflict3() {
+    public void testTypeConflict4() {
 
         // tff(kb_SUMO_283,axiom,(! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : ((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__SetOrClass)) => (s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & s__instance(s__intelligenceQuotient__m, s__Predicate) & s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS)))).
 
         SUMOtoTFAform.debug = true;
+        SUMOtoTFAform stfa = new SUMOtoTFAform();
+        stfa.initOnce();
         SUMOKBtoTFAKB.debug = true;
-        System.out.println("\n========= testTypeConflict3 ==========\n");
+        System.out.println("\n========= testTypeConflict4 ==========\n");
         String input = "(=> (and (domain intelligenceQuotient ?NUMBER ?CLASS) " +
                 "(instance intelligenceQuotient Predicate) (intelligenceQuotient__2Re ?ROW1 ?ROW2)) " +
                 "(instance (ListOrderFn__2InFn (ListFn__2Fn__2ReFn ?ROW1 ?ROW2) ?NUMBER) ?CLASS))";
         Formula f = new Formula(input);
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        System.out.println("testTypeConflict4(): testing missing sorts");
+        stfa.sorts = stfa.missingSorts(f);
+        System.out.println("testTypeConflict4(): sorts: " + stfa.sorts);
+        if (stfa.sorts != null && stfa.sorts.size() > 0)
+            f.tffSorts.addAll(stfa.sorts);
         boolean actual = SUMOtoTFAform.typeConflict(f);
         if (actual)
-            System.out.println("testTypeConflict3(): Success!");
+            System.out.println("testTypeConflict4(): Success!");
         else
-            System.out.println("testTypeConflict3(): fail");
+            System.out.println("testTypeConflict4(): fail");
         assertTrue(actual);
     }
 }
