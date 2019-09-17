@@ -380,6 +380,17 @@ public class StringUtil {
     }
 
     /****************************************************************
+     * Removes the path from a file specifier and returns just the
+     * file name
+     */
+    public static String noPath(String s) {
+
+        if (!s.contains(File.separator) || s.indexOf(File.separator) == s.length()-1)
+            return s;
+        return s.substring(s.lastIndexOf(File.separator)+1);
+    }
+
+    /****************************************************************
      * Removes all balanced ASCII double-quote characters from each
      * end of the String s, if any are present.
      */
