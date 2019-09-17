@@ -831,7 +831,9 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("getInstancesForType(): " + cl);
         HashSet<String> instancesForType = new HashSet<>();
         HashMap<String,HashSet<String>> ps = children.get("subclass");
-        HashSet<String> classes = ps.get(cl);
+        HashSet<String> classes = new HashSet<>();
+        if (ps != null)
+            classes = ps.get(cl);
         if (debug) System.out.println("getInstancesForType(): subclasses of " + cl + " : " + classes);
         if (classes == null)
             classes = new HashSet<>();
