@@ -247,6 +247,15 @@ public class KBcacheTest extends IntegrationTestBase {
         else
             System.out.println("KBcacheTest.testDisjoint(): fail");
         assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
+
+        classes = new HashSet<>(Arrays.asList("Table", "Agent"));
+        System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
+        if (kb.kbCache.checkDisjoint(kb,classes))
+            System.out.println("KBcacheTest.testDisjoint(): pass");
+        else
+            System.out.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(kb.kbCache.checkDisjoint(kb,classes));
     }
 
     /** *************************************************************
