@@ -59,7 +59,7 @@ if (!role.equalsIgnoreCase("admin")) {
             SUMOtoTFAform.varmap = fp.findAllTypeRestrictions(f, kb);
             status.append(SUMOtoTFAform.varmap);
             if (SUMOtoTFAform.inconsistentVarTypes()) {
-                status.append("SUMOtoTFAform.process(): rejected inconsistent variables types: " + SUMOtoTFAform.varmap + " in : " + f + "<P>\n");
+                status.append("Inconsistent variable types: " + SUMOtoTFAform.varmap + "<P>\n");
                 error = true;
             }
             if (Diagnostics.quantifierNotInStatement(f)) {
@@ -69,6 +69,12 @@ if (!role.equalsIgnoreCase("admin")) {
             HashSet<String> svars = Diagnostics.singleUseVariables(f);
             if (svars != null && svars.size() > 0) {
                 status.append("Single use variables: " + svars + "<P>\n");
+                error = true;
+            }
+            String pred = PredVarInst.hasCorrectArity(f,kb);
+            if (pred != null) {
+                status.append("Incorrect arity for predicate: " + pred + "<P>\n");
+                error = true;
             }
         }
     }
@@ -100,7 +106,6 @@ if (!role.equalsIgnoreCase("admin")) {
 
 <%
     if (status != null && status.toString().length() > 0) {
-        out.println("Status: ");
         out.println(status.toString());
     }
 %>
