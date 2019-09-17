@@ -353,6 +353,22 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * @return a list of variables used only once.
+     */
+    public static HashSet<String> singleUseVariables(Formula f) {
+
+        HashSet<String> result = new HashSet<String>();
+        Set<String> vars = f.collectAllVariables();
+        for (String v : vars) {
+            int index = f.theFormula.indexOf(v);
+            int index2 = f.theFormula.indexOf(v,index+v.length());
+            if (index2 == -1)
+                result.add(v);
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * @return true if a quantifiers in a quantifier list is not found
      * in the body of the statement.
      */
