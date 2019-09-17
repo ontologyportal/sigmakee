@@ -300,10 +300,10 @@ public class SUMOKBtoTPTPKB {
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
                             //pr.println("% tff input: " + f3.format("",""," "));
-                            result = stfa.process(f3.theFormula);
                             stfa.sorts = stfa.missingSorts(f3);
                             if (stfa.sorts != null && stfa.sorts.size() > 0)
-                                f.tffSorts.addAll(stfa.sorts);
+                                f3.tffSorts.addAll(stfa.sorts);
+                            result = stfa.process(f3.theFormula);
                             if (!StringUtil.emptyString(result))
                                 f.theTptpFormulas.add(result);
                             else
