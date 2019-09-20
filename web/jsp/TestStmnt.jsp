@@ -80,7 +80,7 @@ if (!role.equalsIgnoreCase("admin")) {
                 for (String s : terms) {
                     if (!kb.terms.contains(s) && !Formula.isVariable(s)) {
                         status.append("Unknown term: " + s + "<P>\n");
-                        error = true;
+                      error = true;
                     }
                 }
             }
