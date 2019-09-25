@@ -3373,6 +3373,8 @@ public class WordNet implements Serializable {
         if (!StringUtil.emptyString(maxVerbSynsetID))
             origMaxVerbSynsetID = maxVerbSynsetID;
 
+        int counter = 0;
+        int totalcount = 0;
         //System.out.println("INFO in WordNet.termFormatsToSynsets()");
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
         for (int i = 0; i < forms.size(); i++) {
@@ -3380,6 +3382,12 @@ public class WordNet implements Serializable {
             ArrayList<String> args = form.argumentsToArrayList(1);
             if (args == null || args.size() < 2)
                 continue;
+            counter++;
+            if (counter == 1000) {
+                System.out.print('.');
+                totalcount = totalcount + counter;
+                counter = 0;
+            }
             if (args.size() != 3) {
                 String errStr = "Error in WordNet.termFormatsToSynsets(): wrong number of arguments: " +
                     form.toString();
@@ -3398,7 +3406,7 @@ public class WordNet implements Serializable {
             }
             synsetFromTermFormat(form,tf,SUMOterm,kb);
         }
-        System.out.println("INFO in WordNet.termFormatsToSynsets(): result (orig,max): " +
+        System.out.println("\nINFO in WordNet.termFormatsToSynsets(): result (orig,max): " +
                 origMaxNounSynsetID + " and: " + maxNounSynsetID);
     }
     
