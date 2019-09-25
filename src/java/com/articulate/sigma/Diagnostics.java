@@ -12,9 +12,11 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
+
+import java.io.*;
+import java.net.URL;
 import java.util.*;
 
 /** *****************************************************************
@@ -896,6 +898,67 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Make a table of terms and the files in which they are defined
+     */
+    public static void termDefsByGivenFile(KB kb, HashSet<String> files) {
+
+        HashSet<String> alreadyCounted = new HashSet<>();
+        TreeMap<String,ArrayList<String>> termsUsed = new TreeMap<>();
+        TreeMap<String,ArrayList<String>> termsDefined = new TreeMap<>();
+        termLinks(kb, termsUsed, termsDefined);
+        for (String t : termsDefined.keySet()) {
+            for (String fname : termsDefined.get(t)) {
+                String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
+                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t) || !files.contains(simpleName))
+                    continue;
+                alreadyCounted.add(t);
+                ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
+                HashSet<String> tformstrs = new HashSet<>();
+                for (Formula f : tforms) {
+                    String str = f.getArgument(3);
+                    tformstrs.add(str);
+                }
+                System.out.print(t + "\t" + simpleName + "\t");
+                int i = 0;
+                for (String str : tformstrs) {
+                    if (i < 3)
+                        System.out.print(str + "\t");
+                    i++;
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    /****************************************************************
+     * This method reads in a text file, breaking it into single line documents
+     * Currently, sentences are not separated if they occur on the same line.
+     *
+     * @param filename          file to be read
+     * @param separateSentences should sentences be separated if they occur on one line
+     * @return list of strings from each line of the document
+     */
+    public static List<String> readLines(String filename, boolean separateSentences) {
+
+        List<String> documents = Lists.newArrayList();
+        File f = new File(filename);
+        String line = null;
+        try {
+            BufferedReader bf = new BufferedReader(new FileReader(f));
+            while ((line = bf.readLine()) != null) {
+                if (line == null || line.equals(""))
+                    continue;
+                documents.add(line);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Unable to read line in file. Last line successfully read was: " + line);
+        }
+        return documents;
+    }
+
+    /** ***************************************************************
      */
     public static void showHelp() {
 
@@ -903,6 +966,7 @@ public class Diagnostics {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - print term def by file");
+        System.out.println("  -f <fname> - print term def by file");
         System.out.println("  -o - terms not below Entity (Orphans)");
     }
 
@@ -915,6 +979,12 @@ public class Diagnostics {
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (args != null && args.length > 0 && args[0].equals("-t")) {
             termDefsByFile(kb);
+        }
+        if (args != null && args.length > 1 && args[0].equals("-f")) {
+            HashSet<String> files = new HashSet<>();
+            List<String> lines = readLines(args[1],false);
+            files.addAll(lines);
+            termDefsByGivenFile(kb,files);
         }
         else if (args != null && args.length > 0 && args[0].equals("-o")) {
             System.out.println(termsNotBelowEntity(kb));
