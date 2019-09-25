@@ -109,7 +109,7 @@ public class SimpleDOMParser {
                 if (!tagName.equals(currentElement.getTagName()))               // close tag does not match with open tag
                     throw new IOException("Expected close tag for '" +
                                     currentElement.getTagName() + "' but got '" +
-                                    tagName + "'.");
+                                    tagName + "' while parsing '" + currentTag + "'.");
                 if (elements.empty()) 
                     return currentElement;                                      // document processing is over
                 else                                                            // pop up the previous open tag
