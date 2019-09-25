@@ -498,46 +498,42 @@ public class Diagnostics {
                                                    "domain",
                                                    "documentation",
                                                    "subrelation");
-        synchronized (kb.getTerms()) {
-            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) { 
-                // Check every term in the KB
-                String term = (String) it.next();
-                ArrayList forms = kb.ask("arg",1,term);     
-                // Get every formula with the term as arg 1
-                // Only definitional uses are in the arg 1 position
-                if (forms != null && forms.size() > 0) {
-                    for (int i = 0; i < forms.size(); i++) {
-                        Formula formula = (Formula) forms.get(i);
-                        String relation = formula.getArgument(0);
-                        String filename = formula.sourceFile;
-                        if (definitionalRelations.contains(relation)) 
-                            addToMapList(termsDefined,term,filename);
-                        else
-                            addToMapList(termsUsed,term,filename);
-                    }
-                }
-                forms = kb.ask("arg",2,term);   
-                ArrayList newform;
-                for (int i = 3; i < 7; i++) {
-                    newform = kb.ask("arg",i,term);
-                    if (newform != null) 
-                        forms.addAll(newform);                
-                }
-                newform = kb.ask("ant",-1,term);
-                if (newform != null) 
-                    forms.addAll(newform);                
-                newform = kb.ask("cons",-1,term);
-                if (newform != null) 
-                    forms.addAll(newform);                
-                newform = kb.ask("stmt",-1,term);
-                if (newform != null) 
-                    forms.addAll(newform);                
-                if (forms != null && forms.size() > 0) {
-                    for (int i = 0; i < forms.size(); i++) {
-                        Formula formula = (Formula) forms.get(i);
-                        String filename = formula.sourceFile;
+
+        for (String term : kb.getTerms()) {
+            ArrayList<Formula> forms = kb.ask("arg",1,term);
+            // Get every formula with the term as arg 1
+            // Only definitional uses are in the arg 1 position
+            if (forms != null && forms.size() > 0) {
+                for (Formula formula : forms) {
+                    String relation = formula.getArgument(0);
+                    String filename = formula.sourceFile;
+                    if (definitionalRelations.contains(relation))
+                        addToMapList(termsDefined,term,filename);
+                    else
                         addToMapList(termsUsed,term,filename);
-                    }
+                }
+            }
+            forms = kb.ask("arg",2,term);
+            ArrayList<Formula> newform;
+            for (int i = 3; i < 7; i++) {
+                newform = kb.ask("arg",i,term);
+                if (newform != null)
+                    forms.addAll(newform);
+            }
+            newform = kb.ask("ant",-1,term);
+            if (newform != null)
+                forms.addAll(newform);
+            newform = kb.ask("cons",-1,term);
+            if (newform != null)
+                forms.addAll(newform);
+            newform = kb.ask("stmt",-1,term);
+            if (newform != null)
+                forms.addAll(newform);
+            if (forms != null && forms.size() > 0) {
+                for (int i = 0; i < forms.size(); i++) {
+                    Formula formula = (Formula) forms.get(i);
+                    String filename = formula.sourceFile;
+                    addToMapList(termsUsed,term,filename);
                 }
             }
         }
@@ -586,37 +582,35 @@ public class Diagnostics {
 
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is used.
-        TreeMap termsUsed = new TreeMap();
+        TreeMap<String,ArrayList<String>> termsUsed = new TreeMap();
 
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is defined (meaning appearance in an
         // instance, subclass, domain, subrelation, or documentation statement).
         // 
-        TreeMap termsDefined = new TreeMap();
+        TreeMap<String,ArrayList<String>> termsDefined = new TreeMap();
 
         // A map of file names and ArrayList values listing term names defined
         // in the file;
-        TreeMap fileDefines = new TreeMap();
+        TreeMap<String,ArrayList<String>> fileDefines = new TreeMap();
 
         // A map of file names and ArrayList values listing term names used but not defined
         // in the file;
-        TreeMap fileUses = new TreeMap();
+        TreeMap<String,ArrayList<String>> fileUses = new TreeMap();
 
         // A map of file name keys and TreeMap values listing file names
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
-        TreeMap fileDepends = new TreeMap();
+        TreeMap<String,TreeMap<String,ArrayList<String>>> fileDepends = new TreeMap();
 
         termLinks(kb,termsUsed,termsDefined);
         fileLinks(kb,fileDefines,fileUses,termsUsed,termsDefined);
 
-        Iterator it = fileUses.keySet().iterator();
-        while (it.hasNext()) {
-            String fileUsesName = (String) it.next();
-            ArrayList termUsedNames = (ArrayList) fileUses.get(fileUsesName);
+        for (String fileUsesName : fileUses.keySet()) {
+            ArrayList termUsedNames = fileUses.get(fileUsesName);
             for (int i = 0; i < termUsedNames.size(); i++) {
                 String term = (String) termUsedNames.get(i);
-                ArrayList fileDependencies = (ArrayList) termsDefined.get(term);
+                ArrayList fileDependencies = termsDefined.get(term);
                 if (fileDependencies != null) {
                     String fileDepend = null;
                     for (int j = 0; j < fileDependencies.size(); j++) {
@@ -869,21 +863,66 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Make a table of terms and the files in which they are defined
+     */
+    public static void termDefsByFile(KB kb) {
+
+        HashSet<String> alreadyCounted = new HashSet<>();
+        TreeMap<String,ArrayList<String>> termsUsed = new TreeMap<>();
+        TreeMap<String,ArrayList<String>> termsDefined = new TreeMap<>();
+        termLinks(kb, termsUsed, termsDefined);
+        for (String t : termsDefined.keySet()) {
+            for (String fname : termsDefined.get(t)) {
+                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t))
+                    continue;
+                alreadyCounted.add(t);
+                ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
+                HashSet<String> tformstrs = new HashSet<>();
+                for (Formula f : tforms) {
+                    String str = f.getArgument(3);
+                    tformstrs.add(str);
+                }
+                String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
+                System.out.print(t + "\t" + simpleName + "\t");
+                int i = 0;
+                for (String str : tformstrs) {
+                    if (i < 3)
+                        System.out.print(str + "\t");
+                    i++;
+                }
+                System.out.println();
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("Diagnostics");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t - print term def by file");
+        System.out.println("  -o - terms not below Entity (Orphans)");
+    }
+
+    /** ***************************************************************
      * Test method for this class.
      */
     public static void main(String args[]) {
 
-        //try {
-            KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        if (args != null && args.length > 0 && args[0].equals("-t")) {
+            termDefsByFile(kb);
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-o")) {
             System.out.println(termsNotBelowEntity(kb));
-
-        //}
-        //catch (IOException ioe) {
-        //    System.out.println("Error in Diagnostics.main(): " + ioe.getMessage());
-        //    ioe.printStackTrace();
-        //}      
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            showHelp();
+        }
+        else
+            showHelp();
     }
-
-
 }
