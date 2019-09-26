@@ -12,6 +12,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.utils.FileUtil;
 import com.google.common.collect.Lists;
 import com.google.common.io.Resources;
 
@@ -25,7 +26,6 @@ import java.util.*;
  */
 public class Diagnostics {
 
-	
     private static List LOG_OPS = Arrays.asList("and","or","not","exists",
                                                 "forall","=>","<=>","holds");
 
@@ -492,14 +492,14 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * Find all the terms used and defined in a KB.  Terms are defined by
+     * their appearance in definitionalRelations
      */
     private static void termLinks(KB kb, TreeMap termsUsed, TreeMap termsDefined) {
         
-        List definitionalRelations = Arrays.asList("instance",
-                                                   "subclass",
-                                                   "domain",
-                                                   "documentation",
-                                                   "subrelation");
+        List definitionalRelations = Arrays.asList("instance", "subclass",
+                "subAttribute", "domain", "domainSubclass", "range",
+                "rangeSubclass", "documentation", "subrelation");
 
         for (String term : kb.getTerms()) {
             ArrayList<Formula> forms = kb.ask("arg",1,term);
@@ -903,15 +903,22 @@ public class Diagnostics {
     public static void termDefsByGivenFile(KB kb, HashSet<String> files) {
 
         HashSet<String> alreadyCounted = new HashSet<>();
+        HashSet<String> excluded = new HashSet<>();
         TreeMap<String,ArrayList<String>> termsUsed = new TreeMap<>();
         TreeMap<String,ArrayList<String>> termsDefined = new TreeMap<>();
         termLinks(kb, termsUsed, termsDefined);
         for (String t : termsDefined.keySet()) {
             for (String fname : termsDefined.get(t)) {
                 String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
-                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t) || !files.contains(simpleName))
+                if (!files.contains(simpleName)) {
+                    excluded.add(t);
+                    continue;
+                }
+                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t))
                     continue;
                 alreadyCounted.add(t);
+                if (excluded.contains(t))
+                    excluded.remove(t);
                 ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
                 HashSet<String> tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
@@ -928,34 +935,16 @@ public class Diagnostics {
                 System.out.println();
             }
         }
-    }
 
-    /****************************************************************
-     * This method reads in a text file, breaking it into single line documents
-     * Currently, sentences are not separated if they occur on the same line.
-     *
-     * @param filename          file to be read
-     * @param separateSentences should sentences be separated if they occur on one line
-     * @return list of strings from each line of the document
-     */
-    public static List<String> readLines(String filename, boolean separateSentences) {
-
-        List<String> documents = Lists.newArrayList();
-        File f = new File(filename);
-        String line = null;
-        try {
-            BufferedReader bf = new BufferedReader(new FileReader(f));
-            while ((line = bf.readLine()) != null) {
-                if (line == null || line.equals(""))
-                    continue;
-                documents.add(line);
+        System.out.println("termDefsByGivenFile(): terms used but not defined in file set: \n");
+        for (String t : termsUsed.keySet()) {
+            if (alreadyCounted.contains(t))
+                continue;
+            for (String fname : termsUsed.get(t)) {
+                String simpleName = fname.substring(fname.lastIndexOf('/') + 1, fname.length());
+                System.out.println(t + "\t" + simpleName);
             }
         }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.out.println("Unable to read line in file. Last line successfully read was: " + line);
-        }
-        return documents;
     }
 
     /** ***************************************************************
@@ -982,7 +971,7 @@ public class Diagnostics {
         }
         if (args != null && args.length > 1 && args[0].equals("-f")) {
             HashSet<String> files = new HashSet<>();
-            List<String> lines = readLines(args[1],false);
+            List<String> lines = FileUtil.readLines(args[1],false);
             files.addAll(lines);
             termDefsByGivenFile(kb,files);
         }
