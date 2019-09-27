@@ -908,14 +908,20 @@ public class Diagnostics {
         TreeMap<String,ArrayList<String>> termsDefined = new TreeMap<>();
         termLinks(kb, termsUsed, termsDefined);
         for (String t : termsDefined.keySet()) {
+            if (t.equals("BPM"))
+                System.out.println("termDefsByGivenFile(): found BPM: " + t);
             for (String fname : termsDefined.get(t)) {
                 String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
                 if (!files.contains(simpleName)) {
+                    System.out.println("termDefsByGivenFile(): excluding file: " + simpleName);
                     excluded.add(t);
                     continue;
                 }
-                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t))
+                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t)) {
+                    if (alreadyCounted.contains(t))
+                        System.out.println("termDefsByGivenFile(): already counted: " + t);
                     continue;
+                }
                 alreadyCounted.add(t);
                 if (excluded.contains(t))
                     excluded.remove(t);
