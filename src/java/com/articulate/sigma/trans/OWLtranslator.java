@@ -463,10 +463,10 @@ public class OWLtranslator {
         _debugLevelCounter = 0;
         try {
             SimpleElement se = SimpleDOMParser.readFile(filename);
-            System.out.println("INFO in WLtranslator.read(): input filename: " + filename);
+            System.out.println("INFO in OWLtranslator.read(): input filename: " + filename);
             fw = new FileWriter(filename + ".kif");
             pw = new PrintWriter(fw);
-            System.out.println("INFO in WLtranslator.read(): output filename: " + filename + ".kif");
+            System.out.println("INFO in OWLtranslator.read(): output filename: " + filename + ".kif");
             decode(pw,se,"","","");
         }
         catch (java.io.IOException e) {
@@ -987,16 +987,14 @@ public class OWLtranslator {
      public void writeKB(String path) throws IOException {
 
          System.out.println("INFO in OWLtranslator.write(): writing " + path);
-         readYAGOSUMOMappings();
+         //readYAGOSUMOMappings();
          FileWriter fw = new FileWriter(path);
          PrintWriter pw = new PrintWriter(fw);
          writeKBHeader(pw);
          Set<String> kbterms = kb.getTerms();
-         synchronized (kbterms) {
-             for (String term : kbterms) { 
-                 writeSUMOTerm(pw,term);
-             	 pw.flush();
-             }
+         for (String term : kbterms) {
+             writeSUMOTerm(pw,term);
+             pw.flush();
          }
          defineFunctionalTerms(pw);
          writeAxioms(pw);
@@ -1495,38 +1493,72 @@ public class OWLtranslator {
         }
     }
 
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("OWL translator class");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t <fname> - read OWL file and write translation to fname.kif");
+        System.out.println("  -s - translate and write OWL version of kb to stdout");
+        System.out.println("  -y - translate and write OWL version of kb including YAGO mappings to stdout");
+    }
+
     /** *************************************************************
      * A test method.
      */
     public static void main(String args[]) {
 
-    	/*
-        OWLtranslator ot = new OWLtranslator();
-        try {
-            KBmanager.getMgr().initializeOnce();
-            ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            ot.createAxiomMap();
-            ot.writeDefsAsFiles();
-            ot.readYAGOSUMOMappings();
-            PrintWriter pw = new PrintWriter(System.out);
-            pw.flush();
-            ot.writeTerm(pw,"WN30-100019613");
-            pw.flush();
-            ot.writeTerm(pw,"Object");
-            pw.flush();
-            ot.writeTerm(pw,"axiom-N226655687Merge.kif");
-            pw.flush();
-        } catch (Exception e ) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+        System.out.println("INFO in OWL.main()");
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB("SUMO");
+        if (args != null && args.length > 1 && args[0].equals("-t")) {
+            try {
+                OWLtranslator.read(args[1]);
+            }
+            catch (Exception e ) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
         }
-        */
-        try {
-        	OWLtranslator.read(args[0]);
+        else if (args != null && args.length > 0 && args[0].equals("-s")) {
+            OWLtranslator ot = new OWLtranslator();
+            try {
+                KBmanager.getMgr().initializeOnce();
+                ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                ot.createAxiomMap();
+                ot.writeDefsAsFiles();
+                //ot.readYAGOSUMOMappings();
+                PrintWriter pw = new PrintWriter(System.out);
+                pw.flush();
+            }
+            catch (Exception e ) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
         }
-        catch (Exception e ) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }    	
+        else if (args != null && args.length > 0 && args[0].equals("-y")) {
+            OWLtranslator ot = new OWLtranslator();
+            try {
+                KBmanager.getMgr().initializeOnce();
+                ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                ot.createAxiomMap();
+                ot.writeDefsAsFiles();
+                ot.readYAGOSUMOMappings();
+                PrintWriter pw = new PrintWriter(System.out);
+                ot.writeKB();
+                pw.flush();
+            }
+            catch (Exception e ) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            showHelp();
+        }
+        else
+            showHelp();
     }
 }
