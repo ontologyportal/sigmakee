@@ -26,6 +26,8 @@ import java.util.*;
  */
 public class Diagnostics {
 
+    public static boolean debug = false;
+
     private static List LOG_OPS = Arrays.asList("and","or","not","exists",
                                                 "forall","=>","<=>","holds");
 
@@ -909,17 +911,17 @@ public class Diagnostics {
         termLinks(kb, termsUsed, termsDefined);
         for (String t : termsDefined.keySet()) {
             if (t.equals("BPM"))
-                System.out.println("termDefsByGivenFile(): found BPM: " + t);
+                if (debug) System.out.println("termDefsByGivenFile(): found BPM: " + t);
             for (String fname : termsDefined.get(t)) {
                 String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
                 if (!files.contains(simpleName)) {
-                    System.out.println("termDefsByGivenFile(): excluding file: " + simpleName);
+                    if (debug) System.out.println("termDefsByGivenFile(): excluding file: " + simpleName);
                     excluded.add(t);
                     continue;
                 }
                 if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t)) {
                     if (alreadyCounted.contains(t))
-                        System.out.println("termDefsByGivenFile(): already counted: " + t);
+                        if (debug) System.out.println("termDefsByGivenFile(): already counted: " + t);
                     continue;
                 }
                 alreadyCounted.add(t);
@@ -942,13 +944,13 @@ public class Diagnostics {
             }
         }
 
-        System.out.println("termDefsByGivenFile(): terms used but not defined in file set: \n");
+        if (debug) System.out.println("termDefsByGivenFile(): terms used but not defined in file set: \n");
         for (String t : termsUsed.keySet()) {
             if (alreadyCounted.contains(t))
                 continue;
             for (String fname : termsUsed.get(t)) {
                 String simpleName = fname.substring(fname.lastIndexOf('/') + 1, fname.length());
-                System.out.println(t + "\t" + simpleName);
+                if (debug) System.out.println(t + "\t" + simpleName);
             }
         }
     }
