@@ -904,36 +904,60 @@ public class Diagnostics {
      */
     public static void termDefsByGivenFile(KB kb, HashSet<String> files) {
 
+        if (debug)
+            System.out.println("termDefsByGivenFile(): files: " + files);
         HashSet<String> alreadyCounted = new HashSet<>();
-        HashSet<String> excluded = new HashSet<>();
-        TreeMap<String,ArrayList<String>> termsUsed = new TreeMap<>();
-        TreeMap<String,ArrayList<String>> termsDefined = new TreeMap<>();
-        termLinks(kb, termsUsed, termsDefined);
-        for (String t : termsDefined.keySet()) {
-            if (t.equals("BPM"))
-                if (debug) System.out.println("termDefsByGivenFile(): found BPM: " + t);
-            for (String fname : termsDefined.get(t)) {
-                String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
-                if (!files.contains(simpleName)) {
-                    if (debug) System.out.println("termDefsByGivenFile(): excluding file: " + simpleName);
-                    excluded.add(t);
+        HashMap<String,HashSet<String>> termsByFile = new HashMap<>();
+        for (Formula f : kb.formulaMap.values()) {
+            if (debug) if (f.theFormula.contains("AppleComputerCorporation"))
+                System.out.println("termDefsByGivenFile(): " + f);
+            String fname = f.sourceFile;
+            String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
+            if (debug) if (f.theFormula.contains("AppleComputerCorporation"))
+                System.out.println("termDefsByGivenFile(): simple name: " + simpleName);
+            HashSet<String> terms = (HashSet) f.collectTerms();
+            HashSet<String> goodTerms = new HashSet<>();
+            if (debug) if (f.theFormula.contains("AppleComputerCorporation"))
+                System.out.println("termDefsByGivenFile(): terms: " + terms);
+            for (String t : terms) {
+                if (!Formula.isVariable(t) && t.charAt(0) != '"' && !StringUtil.isNumeric(t))
+                    goodTerms.add(t);
+            }
+            if (termsByFile.keySet() != null && termsByFile.keySet().contains(simpleName)) {
+                HashSet<String> ts = termsByFile.get(simpleName);
+                ts.addAll(goodTerms);
+            }
+            else {
+                if (debug) System.out.println("termDefsByGivenFile(): new file: " + simpleName);
+                termsByFile.put(simpleName, goodTerms);
+            }
+        }
+        for (String fname : termsByFile.keySet()) {  // make all terms not in file set already counted
+            if (files.contains(fname) || fname.equals("domainEnglishFormat.kif") &&
+                    fname.equals("english_format.kif") || fname.equals("SUMO_Cache.kif"))
+                continue;
+            for (String term : termsByFile.get(fname)) {
+                if (debug) if (term.equals("AppleComputerCorporation"))
+                    System.out.println("termDefsByGivenFile(): adding to already counted: " + term + " from file: " + fname);
+                alreadyCounted.add(term);
+            }
+        }
+        for (String fname : termsByFile.keySet()) {
+            for (String term : termsByFile.get(fname)) {
+                if (debug) if (term.equals("AppleComputerCorporation"))
+                    System.out.println("termDefsByGivenFile(): found term: " + term);
+                if (alreadyCounted.contains(term))
                     continue;
-                }
-                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t)) {
-                    if (alreadyCounted.contains(t))
-                        if (debug) System.out.println("termDefsByGivenFile(): already counted: " + t);
-                    continue;
-                }
-                alreadyCounted.add(t);
-                if (excluded.contains(t))
-                    excluded.remove(t);
-                ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
+                alreadyCounted.add(term);
+                if (debug) if (term.equals("AppleComputerCorporation"))
+                    System.out.println("termDefsByGivenFile(): added to already counted (2): " + term);
+                ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
                 HashSet<String> tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
                     String str = f.getArgument(3);
                     tformstrs.add(str);
                 }
-                System.out.print(t + "\t" + simpleName + "\t");
+                System.out.print(term + "\t" + fname + "\t");
                 int i = 0;
                 for (String str : tformstrs) {
                     if (i < 3)
@@ -941,16 +965,6 @@ public class Diagnostics {
                     i++;
                 }
                 System.out.println();
-            }
-        }
-
-        if (debug) System.out.println("termDefsByGivenFile(): terms used but not defined in file set: \n");
-        for (String t : termsUsed.keySet()) {
-            if (alreadyCounted.contains(t))
-                continue;
-            for (String fname : termsUsed.get(t)) {
-                String simpleName = fname.substring(fname.lastIndexOf('/') + 1, fname.length());
-                if (debug) System.out.println(t + "\t" + simpleName);
             }
         }
     }
