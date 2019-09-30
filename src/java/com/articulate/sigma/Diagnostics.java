@@ -904,8 +904,9 @@ public class Diagnostics {
      */
     public static void termDefsByGivenFile(KB kb, HashSet<String> files) {
 
-        if (debug)
-            System.out.println("termDefsByGivenFile(): files: " + files);
+        HashSet<String> ignore = new HashSet<>();
+        ignore.add("SUMO_Cache.kif");
+        System.out.println("termDefsByGivenFile(): files: " + files);
         HashSet<String> alreadyCounted = new HashSet<>();
         HashMap<String,HashSet<String>> termsByFile = new HashMap<>();
         for (Formula f : kb.formulaMap.values()) {
@@ -971,6 +972,43 @@ public class Diagnostics {
 
     /** ***************************************************************
      */
+    public static void printAllTerms(KB kb) {
+
+        for (String t : kb.terms)
+            System.out.println(t);
+    }
+
+    /** ***************************************************************
+     * diff the terms in two KBs (big first, then small) and print
+     * all the remainder with their filename and termFormats
+     */
+    public static void diffTerms(KB kb, String f1, String f2) {
+
+        HashSet<String> small = new HashSet<>();
+        small.addAll(FileUtil.readLines(f1,false));
+        HashSet<String> big = new HashSet<>();
+        big.addAll(FileUtil.readLines(f2,false));
+        big.removeAll(small);
+        for (String term : big) {
+            ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+            HashSet<String> tformstrs = new HashSet<>();
+            for (Formula f : tforms) {
+                String str = f.getArgument(3);
+                tformstrs.add(str);
+            }
+            System.out.print(term + "\t"); //  + fname + "\t");
+            int i = 0;
+            for (String str : tformstrs) {
+                if (i < 3)
+                    System.out.print(str + "\t");
+                i++;
+            }
+            System.out.println();
+        }
+    }
+
+    /** ***************************************************************
+     */
     public static void showHelp() {
 
         System.out.println("Diagnostics");
@@ -978,6 +1016,8 @@ public class Diagnostics {
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - print term def by file");
         System.out.println("  -f <fname> - print term def by file");
+        System.out.println("  -p - print all terms in KB");
+        System.out.println("  -d <f1> <f2> - print all terms in f2 not in f1");
         System.out.println("  -o - terms not below Entity (Orphans)");
     }
 
@@ -999,6 +1039,12 @@ public class Diagnostics {
         }
         else if (args != null && args.length > 0 && args[0].equals("-o")) {
             System.out.println(termsNotBelowEntity(kb));
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-p")) {
+            printAllTerms(kb);
+        }
+        else if (args != null && args.length > 2 && args[0].equals("-d")) {
+            diffTerms(kb,args[1],args[2]);
         }
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
