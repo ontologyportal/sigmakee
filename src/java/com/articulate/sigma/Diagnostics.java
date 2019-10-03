@@ -979,7 +979,7 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
-     * diff the terms in two KBs (big first, then small) and print
+     * diff the terms in two KBs (small first, then big) and print
      * all the remainder with their filename and termFormats
      */
     public static void diffTerms(KB kb, String f1, String f2) {
