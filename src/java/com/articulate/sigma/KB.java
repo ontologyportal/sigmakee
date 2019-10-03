@@ -584,14 +584,16 @@ public class KB implements Serializable {
             System.out.println("Warning in KB.isFunction(): not a constant: " + i);
         if (kbCache != null && !StringUtil.emptyString(i)) {
             if (isInstanceOf(i, "Function")) {
-                if (!i.endsWith(Formula.FN_SUFF) && !i.matches("\\w+Fn_\\d+")) {
+                if (!i.endsWith(Formula.FN_SUFF) && !i.matches("\\w+Fn_\\d+") &&
+                        !KBmanager.getMgr().getPref("reportFnError").equals("no")) {
                     String warn = "Warnings in KB.isFunction(): functional relation type without 'Fn' suffix: " + i;
                     System.out.println(warn);
                     warnings.add(warn);
                 }
                 return true;
             }
-            else if (i.endsWith(Formula.FN_SUFF) || i.matches("\\w+Fn_\\d+")) {
+            else if (i.endsWith(Formula.FN_SUFF) || i.matches("\\w+Fn_\\d+") &&
+                    !KBmanager.getMgr().getPref("reportFnError").equals("no")) {
                 String warn = "Warnings in KB.isFunction(): 'Fn' suffix without functional relation type : " + i;
                 System.out.println(warn);
                 warnings.add(warn);
