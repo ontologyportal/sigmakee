@@ -243,7 +243,7 @@ public class KIF {
                     if (parenLevel == 0) { // The end of the statement...
                         String fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.theFormula = fstr.intern();
-                        if (formulaMap.keySet().contains(f.theFormula)) {
+                        if (formulaMap.keySet().contains(f.theFormula) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
                             String warning = ("Duplicate axiom at line " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
