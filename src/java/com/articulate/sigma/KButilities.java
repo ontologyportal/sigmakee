@@ -505,6 +505,24 @@ public class KButilities {
     }
 
     /** *************************************************************
+     */
+    public static int getCountNonLinguisticAxioms(KB kb) {
+
+        HashSet<String> rels = new HashSet<>();
+        rels.add("documentation");
+        rels.add("termFormat");
+        rels.add("format");
+        int counter = 0;
+        HashSet<Formula> forms = new HashSet<>();
+        forms.addAll(kb.formulaMap.values());
+        for (Formula f : forms) {
+            if (!rels.contains(f.getArgument(0)))
+                counter++;
+        }
+        return counter;
+    }
+
+    /** *************************************************************
      * Count the number of words in all the strings in a knowledge base
      */
     public static void countStringWords(KB kb) {
