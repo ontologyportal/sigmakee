@@ -237,6 +237,7 @@ public class HTMLformatter {
         show.append("</td><tr> </table><p>\n");
         show.append("Relations: " + kb.getCountRelations());
         show.append("<p>\n");
+        show.append("non-linguistic axioms: " + KButilities.getCountNonLinguisticAxioms(kb) + "<p>\n");
         return show.toString();
     }
 
