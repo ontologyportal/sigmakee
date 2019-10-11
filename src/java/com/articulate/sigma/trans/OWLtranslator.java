@@ -988,6 +988,8 @@ public class OWLtranslator {
 
          System.out.println("INFO in OWLtranslator.write(): writing " + path);
          //readYAGOSUMOMappings();
+         if (StringUtil.emptyString(path))
+             path = "SUMO.owl";
          FileWriter fw = new FileWriter(path);
          PrintWriter pw = new PrintWriter(fw);
          writeKBHeader(pw);
@@ -1501,7 +1503,7 @@ public class OWLtranslator {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t <fname> - read OWL file and write translation to fname.kif");
-        System.out.println("  -s - translate and write OWL version of kb to stdout");
+        System.out.println("  -s - translate and write OWL version of kb to SUMO.owl");
         System.out.println("  -y - translate and write OWL version of kb including YAGO mappings to stdout");
     }
 
@@ -1513,6 +1515,7 @@ public class OWLtranslator {
         System.out.println("INFO in OWL.main()");
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB("SUMO");
+        System.out.println("OWL.main(): completed initialization");
         if (args != null && args.length > 1 && args[0].equals("-t")) {
             try {
                 OWLtranslator.read(args[1]);
@@ -1525,13 +1528,12 @@ public class OWLtranslator {
         else if (args != null && args.length > 0 && args[0].equals("-s")) {
             OWLtranslator ot = new OWLtranslator();
             try {
-                KBmanager.getMgr().initializeOnce();
+                System.out.println("OWL.main(): starting translation");
                 ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                 ot.createAxiomMap();
                 ot.writeDefsAsFiles();
+                ot.writeKB();
                 //ot.readYAGOSUMOMappings();
-                PrintWriter pw = new PrintWriter(System.out);
-                pw.flush();
             }
             catch (Exception e ) {
                 System.out.println(e.getMessage());
@@ -1541,14 +1543,11 @@ public class OWLtranslator {
         else if (args != null && args.length > 0 && args[0].equals("-y")) {
             OWLtranslator ot = new OWLtranslator();
             try {
-                KBmanager.getMgr().initializeOnce();
                 ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                 ot.createAxiomMap();
                 ot.writeDefsAsFiles();
                 ot.readYAGOSUMOMappings();
-                PrintWriter pw = new PrintWriter(System.out);
                 ot.writeKB();
-                pw.flush();
             }
             catch (Exception e ) {
                 System.out.println(e.getMessage());
@@ -1560,5 +1559,6 @@ public class OWLtranslator {
         }
         else
             showHelp();
+        System.out.println("OWL.main(): finished");
     }
 }
