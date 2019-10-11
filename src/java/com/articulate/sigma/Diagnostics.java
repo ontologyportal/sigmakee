@@ -31,17 +31,18 @@ public class Diagnostics {
     private static List LOG_OPS = Arrays.asList("and","or","not","exists",
                                                 "forall","=>","<=>","holds");
 
+    private static int resultLimit = 100;
+
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not 
      * have a specified relation.
      * @param kb the knowledge base
      * @param rel the relation name
      * @param argnum the argument position of the term
-     * @param limit the maximum number of results to return, or -1 if all
      * @param letter the first letter of the term name
      */
     public static ArrayList<String> termsWithoutRelation(KB kb, String rel, int argnum, 
-                                                 int limit, char letter) {
+                                                         char letter) {
 
         ArrayList<String> result = new ArrayList<String>();
         Iterator<String> it = kb.getTerms().iterator();
@@ -74,8 +75,8 @@ public class Diagnostics {
                         result.add(term);                    
                 }
             }
-            if (limit > 0 && result.size() > limit) {
-                result.add("limited to " + limit + " results");
+            if (resultLimit > 0 && result.size() > resultLimit) {
+                result.add("limited to " + resultLimit + " results");
                 break;
             }
         }
@@ -88,7 +89,7 @@ public class Diagnostics {
     public static ArrayList termsWithoutDoc(KB kb) {
 
         System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
-        return termsWithoutRelation(kb,"documentation",1,100,' ');                                              
+        return termsWithoutRelation(kb,"documentation",1,' ');
     }
 
     /** *****************************************************************
@@ -118,8 +119,8 @@ public class Diagnostics {
                         result.add(term);                
                     else 
                         withDoc.add(key);
-                }               
-                if (result.size() > 99) {
+                }
+                if (resultLimit > 0 && result.size() > resultLimit) {
                     result.add("limited to 100 results");
                     break;
                 }
@@ -157,17 +158,17 @@ public class Diagnostics {
         ArrayList<String> result = new ArrayList<String>();
         int count = 0;
         Iterator<String> it = kb.getTerms().iterator();
-        while (it.hasNext() && (count < 100)) {
+        while (it.hasNext() && (resultLimit < 1 || count < resultLimit)) {
             String term = it.next();
             if (LOG_OPS.contains(term) || term.equals("Entity") || StringUtil.isNumeric(term)) 
                 continue;
             else {
-                if (kb.kbCache.subclassOf(term,"Entity") || kb.kbCache.transInstOf(term,"Entity")) {
+                if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity")) {
                     result.add(term); 
                     count++;
                 }
             }
-            if (count > 99) 
+            if (resultLimit > 0 && count > resultLimit)
                 result.add("limited to 100 results");            
         }        
         return result;
@@ -183,44 +184,42 @@ public class Diagnostics {
         /*
         int count = 0;
         Iterator<String> it = kb.getTerms().iterator();
-        synchronized (kb.getTerms()) {
-            while (it.hasNext()) {
-                boolean contradiction = false;
-                String term = it.next();
-                boolean isNaN = true;
-                try {
-                    double dval = Double.parseDouble(term);
-                    isNaN = Double.isNaN(dval);
-                }
-                catch (Exception nex) {
-                }
-                if (isNaN) {
-                	HashSet<String> parentSet = kb.kbCache.getParentClasses(term);
-                	Object[] parents = null;
-                    if ((parentSet != null) && !parentSet.isEmpty())
-                        parents = parentSet.toArray();            
-                    if (parents != null) {
-                        for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
-                        	String termX = (String) parents[i];
-                        	Set<String> disjoints = kb.kbCache.getCachedRelationValues("disjoint", termX, 1, 2);
-                            if ((disjoints != null) && !disjoints.isEmpty()) {
-                                for (int j = (i + 1) ; j < parents.length ; j++) {
-                                	String termY = (String) parents[j];
-                                    if (disjoints.contains(termY)) {
-                                        result.add(term);
-                                        contradiction = true;
-                                        count++;
-                                        break;
-                                    }
+        while (it.hasNext()) {
+            boolean contradiction = false;
+            String term = it.next();
+            boolean isNaN = true;
+            try {
+                double dval = Double.parseDouble(term);
+                isNaN = Double.isNaN(dval);
+            }
+            catch (Exception nex) {
+            }
+            if (isNaN) {
+                HashSet<String> parentSet = kb.kbCache.getParentClasses(term);
+                Object[] parents = null;
+                if ((parentSet != null) && !parentSet.isEmpty())
+                    parents = parentSet.toArray();
+                if (parents != null) {
+                    for (int i = 0 ; (i < parents.length) && !contradiction ; i++) {
+                        String termX = (String) parents[i];
+                        Set<String> disjoints = kb.kbCache.getCachedRelationValues("disjoint", termX, 1, 2);
+                        if ((disjoints != null) && !disjoints.isEmpty()) {
+                            for (int j = (i + 1) ; j < parents.length ; j++) {
+                                String termY = (String) parents[j];
+                                if (disjoints.contains(termY)) {
+                                    result.add(term);
+                                    contradiction = true;
+                                    count++;
+                                    break;
                                 }
                             }
                         }
                     }
                 }
-                if (count > 99) {
-                    result.add("limited to 100 results");
-                    break;
-                }
+            }
+            if (resultLimit > 0 && count > resultLimit) {
+                result.add("limited to 100 results");
+                break;
             }
         }
         */
@@ -284,13 +283,13 @@ public class Diagnostics {
                             else 
                                 reduce.add(inst);                            
                         }
-                        if (reduce.size() > 99) 
+                        if (resultLimit < 1 || reduce.size() > resultLimit)
                             go = false;                        
                     }
                 }
             }
             result.addAll(reduce);
-            if (result.size() > 99) 
+            if (resultLimit > 0 && result.size() > resultLimit)
                 result.add("limited to 100 results");            
         }
         catch (Exception ex) {
@@ -348,7 +347,7 @@ public class Diagnostics {
             isNaN = true;
             if (termWithoutRules(kb,term))
                 result.add(term);
-            if (result.size() > 99) {
+            if (resultLimit > 0 && result.size() > resultLimit) {
                 result.add("limited to 100 results");
                 break;
             }
@@ -435,7 +434,7 @@ public class Diagnostics {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
-            if (result.size() > 19)
+            if (resultLimit > 0 && result.size() > resultLimit)
                 return result;
         }
         return result;
@@ -458,7 +457,7 @@ public class Diagnostics {
 				if (quantifierNotInStatement(form)) 
 					result.add(form);					
 			}
-			if (result.size() > 19) 
+            if (resultLimit > 0 && result.size() > resultLimit)
 				return result;				
 		}
         return result;
@@ -971,6 +970,29 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Make a table of terms and the files in which they are defined
+     */
+    public static void addLabels(KB kb, HashSet<String> file) {
+
+        for (String term : file) {
+            ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+            HashSet<String> tformstrs = new HashSet<>();
+            for (Formula f : tforms) {
+                String str = f.getArgument(3);
+                tformstrs.add(str);
+            }
+            System.out.print(term + "\t");
+            int i = 0;
+            for (String str : tformstrs) {
+                if (i < 3)
+                    System.out.print(str + "\t");
+                i++;
+            }
+            System.out.println();
+        }
+    }
+
+    /** ***************************************************************
      */
     public static void printAllTerms(KB kb) {
 
@@ -1015,10 +1037,13 @@ public class Diagnostics {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - print term def by file");
+        System.out.println("  -l <fname> - add labels for a file of terms");
         System.out.println("  -f <fname> - print term def by file");
         System.out.println("  -p - print all terms in KB");
         System.out.println("  -d <f1> <f2> - print all terms in f2 not in f1");
         System.out.println("  -o - terms not below Entity (Orphans)");
+        System.out.println("  -d - terms without documentation");
+        System.out.println("  -q - quantifier not in body");
     }
 
     /** ***************************************************************
@@ -1027,6 +1052,7 @@ public class Diagnostics {
     public static void main(String args[]) {
 
         KBmanager.getMgr().initializeOnce();
+        //resultLimit = 0; // don't limit number of results on command line
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (args != null && args.length > 0 && args[0].equals("-t")) {
             termDefsByFile(kb);
@@ -1037,8 +1063,20 @@ public class Diagnostics {
             files.addAll(lines);
             termDefsByGivenFile(kb,files);
         }
+        if (args != null && args.length > 1 && args[0].equals("-l")) {
+            HashSet<String> files = new HashSet<>();
+            List<String> lines = FileUtil.readLines(args[1],false);
+            files.addAll(lines);
+            addLabels(kb,files);
+        }
         else if (args != null && args.length > 0 && args[0].equals("-o")) {
             System.out.println(termsNotBelowEntity(kb));
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-d")) {
+            System.out.println(termsWithoutDoc(kb));
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-q")) {
+            System.out.println(quantifierNotInBody(kb));
         }
         else if (args != null && args.length > 0 && args[0].equals("-p")) {
             printAllTerms(kb);
