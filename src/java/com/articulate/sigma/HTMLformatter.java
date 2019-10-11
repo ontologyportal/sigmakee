@@ -236,8 +236,8 @@ public class HTMLformatter {
         show.append("</td><td> " + kb.getCountRules());
         show.append("</td></tr> </table><p>\n");
 
-        show.append("<table><tr><td>Relations: </td><td>" + kb.getCountRelations() + "</td></tr>\n");
-        show.append("<tr><td>non-linguistic axioms: </td><td>" + KButilities.getCountNonLinguisticAxioms(kb) + "</td></tr>\n");
+        show.append("<table><tr><td>Relations: </td><td align=right>" + kb.getCountRelations() + "</td></tr>\n");
+        show.append("<tr><td>non-linguistic axioms: </td><td align=right>" + KButilities.getCountNonLinguisticAxioms(kb) + "</td></tr>\n");
         return show.toString();
     }
 
@@ -247,8 +247,8 @@ public class HTMLformatter {
     public static String showLanguageStats(KB kb, String lang) {
 
         StringBuilder show = new StringBuilder();
-        show.append("<tr><td>termFormats: </td><td>" + KButilities.getCountTermFormats(kb,lang) + "</td></tr>\n");
-        show.append("<tr><td>unique terms in termFormats: </td><td> " + KButilities.getCountUniqueTermFormats(kb,lang) + "</td></tr>\n");
+        show.append("<tr><td>termFormats: </td><td align=right>" + KButilities.getCountTermFormats(kb,lang) + "</td></tr>\n");
+        show.append("<tr><td>unique terms in termFormats: </td><td align=right> " + KButilities.getCountUniqueTermFormats(kb,lang) + "</td></tr>\n");
         show.append("</table><p>\n");
         return show.toString();
     }
