@@ -659,7 +659,9 @@ public class KBcache implements Serializable {
                     if (instanceOf.get(child) != null)
                         iset = instanceOf.get(child);
                     iset.add(cl);
-                    iset.addAll(superclasses.get(cl));
+                    HashSet<String> supers = superclasses.get(cl);
+                    if (supers != null && supers.size() > 0)
+                        iset.addAll(supers);
                 	instanceOf.put(child, iset);
                 }
             }            
