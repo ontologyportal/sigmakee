@@ -26,7 +26,7 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
-    public void testbuildParents() {
+    public void testBuildParents() {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
 
@@ -49,7 +49,7 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
-    public void testbuildChildren() {
+    public void testBuildChildren() {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
 
@@ -107,7 +107,7 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
-    public void testbuildTransInstOf() {
+    public void testBuildTransInstOf() {
 
         KBcache cache = SigmaTestBase.kb.kbCache;
 
@@ -270,5 +270,17 @@ public class KBcacheTest extends IntegrationTestBase {
         //System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"WearableItem\"): " + SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
         System.out.println("testSignature(): cache.getSignature(memberTypeCount): " + cache.getSignature("memberTypeCount"));
         assertTrue(cache.getSignature("memberTypeCount").equals(new ArrayList(Arrays.asList("", "Collection", "SetOrClass", "NonnegativeInteger"))));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testTransInst() {
+
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("testTransInst(): cache.transInstOf(Anger,Entity): " + cache.transInstOf("Anger","Entity"));
+        System.out.println("testTransInst(): insts.contains(Anger): " + cache.insts.contains("Anger"));
+        System.out.println("testTransInst(): instancesOf.get(Anger): " + cache.instanceOf.get("Anger"));
+        assertTrue(cache.transInstOf("Anger","Entity"));
     }
 }
