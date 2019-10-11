@@ -1042,7 +1042,7 @@ public class Diagnostics {
         System.out.println("  -p - print all terms in KB");
         System.out.println("  -d <f1> <f2> - print all terms in f2 not in f1");
         System.out.println("  -o - terms not below Entity (Orphans)");
-        System.out.println("  -d - terms without documentation");
+        System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
     }
 
@@ -1072,7 +1072,7 @@ public class Diagnostics {
         else if (args != null && args.length > 0 && args[0].equals("-o")) {
             System.out.println(termsNotBelowEntity(kb));
         }
-        else if (args != null && args.length > 0 && args[0].equals("-d")) {
+        else if (args != null && args.length > 0 && args[0].equals("-c")) {
             System.out.println(termsWithoutDoc(kb));
         }
         else if (args != null && args.length > 0 && args[0].equals("-q")) {
