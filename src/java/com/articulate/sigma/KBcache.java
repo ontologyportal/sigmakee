@@ -55,6 +55,9 @@ public class KBcache implements Serializable {
     // all the transitive relations in the kb
     public HashSet<String> transRels = new HashSet<String>();
 
+    // all the transitive relations between instances in the kb that must have the same type
+    public HashSet<String> instRels = new HashSet<String>();
+
     // all the transitive relations between instances in the kb
     public HashSet<String> instTransRels = new HashSet<String>();
 
@@ -619,26 +622,21 @@ public class KBcache implements Serializable {
      * TODO: make sure that direct instances are recorded too
      */
     public void buildTransInstOf() {
-    
-        Iterator<String> titer = insts.iterator();     // Iterate through the temporary list of instances built 
-                                                       // during creation of the @see children map
-        while (titer.hasNext()) {
-            String child = titer.next();
+
+        //System.out.println("buildTransInstOf(): insts: " + insts);
+    // Iterate through the temporary list of instances built during creation of the @see children map
+        for (String child : insts) {
             ArrayList<Formula> forms = kb.ask("arg",1,child);
-            for (int i = 0; i < forms.size(); i++) {
-                Formula f = forms.get(i);
+            for (Formula f : forms) {
                 String rel = f.getArgument(0);
                 if (instTransRels.contains(rel) && !rel.equals("subclass")) {
                     HashMap<String,HashSet<String>> prentList = parents.get(rel);
                     if (prentList != null) {
-                        HashSet<String> prents = prentList.get(f.getArgument(1));  // include all parents of the child 
+                        HashSet<String> prents = prentList.get(f.getArgument(1));  // include all parents of the child
                         if (prents != null) {
-                            Iterator<String> it = prents.iterator();
-                            while (it.hasNext()) {
-                                String p = it.next();
+                            for (String p : prents) {
                                 ArrayList<Formula> forms2 = kb.askWithRestriction(0,"instance",1,p);
-                                for (int j = 0; j < forms2.size(); j++) {
-                                    Formula f2 = forms2.get(j);
+                                for (Formula f2 : forms2) {
                                     String cl = f2.getArgument(2);
                                     HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                                     HashSet<String> pset = new HashSet<String>();
@@ -993,6 +991,7 @@ public class KBcache implements Serializable {
         HashSet<String> arg2s = collectArgFromFormulas(2,forms);
         arg2s.removeAll(arg1s);
         result.addAll(arg2s);
+        //System.out.println("findRoots(): rel, roots: " + rel + ":" + result);
         return result;
     }
     
@@ -1154,6 +1153,24 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("buildChildrenNew(): return  " + term + " with " + collectedChildren);
         if (debug) System.out.println();
         return collectedChildren;
+    }
+
+    /** ***************************************************************
+     * Find all instances
+     */
+    public void buildInsts() {
+
+        HashSet<String> rels = new HashSet<>();
+        rels.add("instance");
+        rels.add("subAttribute");
+        rels.add("subrelation");
+        for (String r : rels) {
+            ArrayList<Formula> forms = kb.ask("arg",0,r);
+            for (Formula f : forms) {
+                String arg = f.getArgument(1);
+                insts.add(arg);
+            }
+        }
     }
 
     /** ***************************************************************
@@ -1477,6 +1494,7 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         if (debug) System.out.println("INFO in KBcache.buildCaches()");
+        buildInsts();
         buildRelationsSet();
         buildTransitiveRelationsSet();
         buildParents();
@@ -1485,6 +1503,7 @@ public class KBcache implements Serializable {
         buildInstTransRels();
         buildDirectInstances();
         addTransitiveInstances();
+        buildTransInstOf();
         buildExplicitDisjointMap(); // find relations under partition definition
         buildDisjointMap();
         buildFunctionsSet();
@@ -1584,43 +1603,30 @@ public class KBcache implements Serializable {
         }
         System.out.println();
         System.out.println("-------------- valences ----------------");
-        Iterator<String> it4 = this.valences.keySet().iterator();
-        while (it4.hasNext()) {
-            String rel = it4.next();
+        for (String rel : this.valences.keySet()) {
             Integer arity = this.valences.get(rel);
             System.out.println(rel + ": " + arity);
         }
         System.out.println();
         System.out.println("-------------- signatures ----------------");
-        Iterator<String> it45 = this.signatures.keySet().iterator();
-        while (it45.hasNext()) {
-            String rel = it45.next();
+        for (String rel : this.signatures.keySet()) {
             ArrayList<String> sig = this.signatures.get(rel);
             System.out.println(rel + ": " + sig);
         }
         System.out.println();
         System.out.println("-------------- insts ----------------");
-        Iterator<String> it5 = this.insts.iterator();
-        while (it5.hasNext()) {
-            String inst = it5.next();
+        for (String inst : this.insts)
             System.out.print(inst + ", ");
-        }
         System.out.println();
         System.out.println();
         System.out.println("-------------- instancesOf ----------------");
-        Iterator<String> it6 = this.instanceOf.keySet().iterator();
-        while (it6.hasNext()) {
-            String inst = it6.next();
+        for (String inst : this.instanceOf.keySet())
             System.out.println(inst + ": " + this.instanceOf.get(inst));
-        }
         System.out.println();
         System.out.println();
         System.out.println("-------------- instances ----------------");
-        Iterator<String> it7 = this.instances.keySet().iterator();
-        while (it7.hasNext()) {
-            String inst = it7.next();
+        for (String inst : this.instances.keySet())
             System.out.println(inst + ": " + this.instances.get(inst));
-        }
     }
 
     /** *************************************************************
@@ -1629,6 +1635,7 @@ public class KBcache implements Serializable {
 
         System.out.println("KBcache.main(): transRels: " + nkbc.transRels);
         System.out.println("KBcache.main(): instTransRels: " + nkbc.instTransRels);
+        System.out.println("KBcache.main(): instTransRels: " + nkbc.instanceOf);
         System.out.println("KBcache.main(): subclass signature: " + nkbc.signatures.get("subclass"));
         System.out.println("KBcache.main(): PrimaryColor: " + nkbc.instanceOf.get("PrimaryColor"));
         System.out.println("KBcache.main(): ColorAttribute: " + nkbc.instanceOf.get("ColorAttribute"));
@@ -1641,11 +1648,12 @@ public class KBcache implements Serializable {
      */
     public static void main(String[] args) {
 
-        debug = true;
+        //debug = true;
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("**** Finished loading KB ***");
         KBcache nkbc = kb.kbCache;
+        showAll(nkbc);
         String term = "Integer";
         HashSet<String> classes = nkbc.getChildClasses(term);
         System.out.println("KBcache.main(): children of " + term + ": " +
@@ -1676,6 +1684,7 @@ public class KBcache implements Serializable {
         classes = nkbc.getChildClasses(term);
         System.out.println("KBcache.main(): children of " + term + ": " +
                 classes);
+        nkbc.showState();
         /*
         String term = "Object";
         HashSet<String> classes = nkbc.getChildClasses(term);
