@@ -35,11 +35,14 @@
  }
  else if (kb != null && term != null && !kb.containsTerm(term) && KBPOS.equals("1")) {           // Show the alphabetic neighbors of a term
     show.append(HTMLformatter.showNeighborTerms(kb,term));
-    TreeMap tm = WordNet.wn.getSenseKeysFromWord(term);
+    TreeMap<String,ArrayList<String>> tm = WordNet.wn.getSenseKeysFromWord(term);
     if (tm != null) {
         show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
         show.append("<td width=\"40%\" valign=\"top\"><small>");
         show.append(WordNetUtilities.formatWordsList(tm,kbName));
+        String verbs = VerbNet.formatVerbsList(tm);
+        if (!StringUtil.emptyString(verbs))
+            show.append("<P>" + verbs);
         show.append("</small></td>");
     }
     show.append("</td></table>");
@@ -90,7 +93,7 @@
          show.append(HTMLformatter.showMap(kb,term));
          show.append(HTMLformatter.showPictures(kb,term));
          show.append("</td>");
-         TreeMap tm = WordNet.wn.getWordsFromTerm(term);
+         TreeMap<String,String> tm = WordNet.wn.getWordsFromTerm(term);
          if (tm != null) {
              show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
              show.append("<td width=\"40%\"><small>");
@@ -98,6 +101,9 @@
                  show.append(WordNetUtilities.formatWords(tm,kbName));
              else 
                  show.append(OMWordnet.formatWords(term,kbName,language,HTMLformatter.createHrefStart() + "/sigma/"));
+             String verbs = VerbNet.formatVerbs(tm);
+             if (!StringUtil.emptyString(verbs))
+                show.append("<P>" + verbs);
              show.append("</small></td>");
          }
          else
