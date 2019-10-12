@@ -12,13 +12,7 @@
     http://github.com/ontologyportal
 */
 
- KBPOS = request.getParameter("KBPOS");
  term = request.getParameter("term");
- 
- if (KBPOS == null && term == null)
-    KBPOS = "1";
- else if (KBPOS == null && term != null)
- 	KBPOS = kb.REswitch(term);
 
   String POS = request.getParameter("POS");
   if (POS == null)
