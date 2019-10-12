@@ -18,6 +18,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 package com.articulate.sigma;
 
 import com.articulate.sigma.CCheckManager.CCheckStatus;
+import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
@@ -593,6 +594,8 @@ public class KBmanager implements Serializable {
                     WordNet.initOnce();
                     NLGUtils.init(configFileDir);
                     OMWordnet.readOMWfiles();
+                    VerbNet.initOnce();
+                    VerbNet.processVerbs();
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     //for (KB aKB : manager.kbs.values())
                     //    aKB.loadEProver();
@@ -642,6 +645,8 @@ public class KBmanager implements Serializable {
         System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
         NLGUtils.init(kbDir);
         WordNet.wn.initOnce();
+        VerbNet.initOnce();
+        VerbNet.processVerbs();
         OMWordnet.readOMWfiles();
         if (kbs != null && kbs.size() > 0) {
             for (String kbName : kbs.keySet()) {
