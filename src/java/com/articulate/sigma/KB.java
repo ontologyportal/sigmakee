@@ -285,21 +285,18 @@ public class KB implements Serializable {
     }
 
     /****************************************************
-     * REswitch determines if
-     * a String is a RegEx or not based on its use of RE metacharacters.
-     * "1"=nonRE, "2"=RE
-     *
-     * @param term
-     *            A String
-     * @return "1" or "2"
+     * REswitch determines if a String is a RegEx or not
+     * based on its use of RE metacharacters.
      */
-    public String REswitch(String term) {
+    public boolean hasREchars(String term) {
 
+        if (StringUtil.emptyString(term))
+            return false;
         if (term.contains("(") || term.contains("[") || term.contains("{") || term.contains("\\") || term.contains("^")
                 || term.contains("$") || term.contains("|") || term.contains("}") || term.contains("]")
                 || term.contains(")") || term.contains("?") || term.contains("*") || term.contains("+"))
-            return "2";
-        return "1";
+            return true;
+        return false;
     }
 
     /***************************************************
@@ -346,9 +343,7 @@ public class KB implements Serializable {
         try {
             Pattern p = Pattern.compile(term);
             ArrayList<String> matchesList = new ArrayList<String>();
-            Iterator<String> itr = getTerms().iterator();
-            while (itr.hasNext()) {
-                String t = itr.next();
+            for (String t : getTerms()) {
                 Matcher m = p.matcher(t);
                 if (m.matches())
                     matchesList.add(t);
@@ -2118,10 +2113,12 @@ public class KB implements Serializable {
      */
     public boolean containsTerm(String term) {
 
+        if (StringUtil.emptyString(term))
+            return false;
         if (getTerms().contains(term.intern()))
             return true;
-        else if (getREMatch(term.intern()).size() >= 1)
-            return true;
+        //else if (getREMatch(term.intern()).size() >= 1)
+        //    return true;
         return false;
     }
 
