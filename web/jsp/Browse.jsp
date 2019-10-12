@@ -21,14 +21,7 @@
  * */
  String nonRelTerm = request.getParameter("nonrelation");
  String relTerm = request.getParameter("relation");
- String relREmatch = request.getParameter("relREmatch");
- String nonRelREmatch = request.getParameter("nonRelREmatch");
- String KBPOS = request.getParameter("KBPOS");
 
- if (StringUtil.emptyString(relREmatch))
-  	relREmatch = "";
- if (StringUtil.emptyString(nonRelREmatch))
- 	nonRelREmatch = "";
  if (StringUtil.emptyString(term))
     term = "";
  if (StringUtil.emptyString(nonRelTerm))
@@ -40,10 +33,6 @@
                  "kb=" + kbName + "&term=" + term);
     return;
  }
- if (KBPOS == null && term == null)
-    KBPOS = "1";
- else if (KBPOS == null && term != null)
- 	KBPOS = kb.REswitch(term);
 %>
 <html>
 <head><title><%=term%> - Sigma Knowledge base Browser</title></head>
