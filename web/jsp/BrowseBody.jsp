@@ -18,22 +18,21 @@
  nonRelTerm = request.getParameter("nonrelation");
  relTerm = request.getParameter("relation");
  Map theMap = null;     // Map of natural language format strings.
- KBPOS = request.getParameter("KBPOS");
- relREmatch = request.getParameter("relREmatch");
- nonRelREmatch = request.getParameter("nonRelREmatch");
-
- if (KBPOS == null && term == null)
-    KBPOS = "1";
- else if (KBPOS == null && term != null)
- 	KBPOS = kb.REswitch(term);
  
  HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
-
- if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) && StringUtil.emptyString(nonRelTerm) && StringUtil.emptyString(relREmatch)) {       // Show statistics only when no term is specified.
+ if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) &&
+    StringUtil.emptyString(nonRelTerm)) {       // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
     show.append(HTMLformatter.showLanguageStats(kb,language));
  }
- else if (kb != null && term != null && !kb.containsTerm(term) && KBPOS.equals("1")) {           // Show the alphabetic neighbors of a term
+ else if (kb != null && term != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors and RE matches of a term
+    if (kb.hasREchars(term) && StringUtil.isValidRegex(term)) {
+       show.append(HTMLformatter.termList(kb.getREMatch(term),HTMLformatter.kbHref));
+    }
+    else {
+        if (StringUtil.isValidRegex(".*" + term + ".*"))
+            show.append(HTMLformatter.termList(kb.getREMatch(".*" + term + ".*"),HTMLformatter.kbHref));
+    }
     show.append(HTMLformatter.showNeighborTerms(kb,term));
     TreeMap<String,ArrayList<String>> tm = WordNet.wn.getSenseKeysFromWord(term);
     if (tm != null) {
@@ -47,7 +46,7 @@
     }
     show.append("</td></table>");
  }
- else if ((kb != null) && (term == null) && (nonRelTerm != null) && (relTerm != null) && KBPOS.equals("1")) {
+ else if ((kb != null) && (term == null) && (nonRelTerm != null) && (relTerm != null)) {
     show.append(HTMLformatter.showNeighborTerms(kb,nonRelTerm, relTerm));
     show.append("</td></table>");
  }
@@ -142,19 +141,4 @@
                  "?lang=" + language + "&flang=" + flang + "&kb=" + kbName + "&simple=yes" +
                  "&term=" + term + "\">Show simplified definition (with tree view)</a></small><p>\n");
  }
- else if (kb != null && term != null && kb.containsRE(term) && 
-         KBPOS.equals("2") && relREmatch == null) {
- 	ArrayList<String> matches = kb.getREMatch(term);
- 	ArrayList<String> relMatches = HTMLformatter.getAllRelTerms(kb,matches);
- 	ArrayList<String> nonRelMatches = HTMLformatter.getAllNonRelTerms(kb,matches);
- 	relREmatch = relMatches.size()>0?relMatches.get(0):"";
- 	nonRelREmatch = nonRelMatches.size()>0?nonRelMatches.get(0):"";
- 	show.append(HTMLformatter.showREMatches(kb, relREmatch, nonRelREmatch, term));
- }
- else if (kb != null && term != null && kb.containsRE(term) && KBPOS.equals("2") && relREmatch != null) 
- 	show.append(HTMLformatter.showREMatches(kb, relREmatch, nonRelREmatch, term));
- 
- else if (kb != null && term != null && !kb.containsRE(term) && KBPOS.equals("2") && relREmatch == null) 
-  	show.append("<b>No Matches Could Be Found </b>");
-
 %>
