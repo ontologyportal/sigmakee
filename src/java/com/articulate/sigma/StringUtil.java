@@ -1151,6 +1151,23 @@ public class StringUtil {
 
     /****************************************************************
      */
+    public static boolean isValidRegex(String s) {
+
+        PatternSyntaxException exc = null;
+        try {
+            Pattern.compile(s);
+        }
+        catch (PatternSyntaxException e) {
+            exc = e;
+        }
+        if (exc != null)
+            return false;
+        else
+            return true;
+    }
+
+    /****************************************************************
+     */
     public static boolean isNumeric(String input) {
 
         try {
