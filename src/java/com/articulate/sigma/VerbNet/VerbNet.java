@@ -62,7 +62,7 @@ public class VerbNet {
 
         SimpleElement configuration = null;
         try {
-            String dirStr = "/home/apease/ontology/VerbNet3-2";
+            String dirStr = KBmanager.getMgr().getPref("verbnet");
             File dir = new File(dirStr);
             if (!dir.exists()) {
                 return;
@@ -116,7 +116,9 @@ public class VerbNet {
         if (StringUtil.emptyString(verb) || !verb.contains("|"))
             return "";
         String ID = verb.substring(0,verb.indexOf("|"));
-        result.append("<a href=\"http://verbs.colorado.edu/verb-index/vn/" + ID + ".php\">" + verb + "</a>, ");
+        String link = "<a href=\"http://verbs.colorado.edu/verb-index/vn/" + ID + ".php\">" + verb + "</a>, ";
+        if (!result.toString().contains(verb))
+            result.append(link);
         return result.toString();
     }
 
@@ -136,6 +138,8 @@ public class VerbNet {
                 String res = formatForSynset(synset);
                 if (StringUtil.emptyString(res))
                     continue;
+                if (StringUtil.emptyString(result.toString()))
+                    result.append("VerbNet: ");
                 result.append(res);
                 count++;
             }
@@ -159,6 +163,8 @@ public class VerbNet {
             String res = formatForSynset(synset);
             if (StringUtil.emptyString(res))
                 continue;
+            if (StringUtil.emptyString(result.toString()))
+                result.append("VerbNet: ");
             result.append(res);
             count++;
         }
