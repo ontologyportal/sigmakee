@@ -252,6 +252,25 @@ MacOS install notes
 See INSTALL.MacOS
 
 
+jEdit Integration (optional)
+============================
+
+If you install jEdit (see http://jedit.org) and configure Sigma properly, you can click on a source
+file and line number for a statement in the Sigma Browse page and be taken to
+the editor, open on that line.  By default, the edit feature will make use of your $ONTOLOGYPORTAL_GIT
+environment variable, and try to open the file in that location in the "sumo" module. Recommended practice
+is to edit .kif files in your local Git repository and then copy them to the .sigmakee/KBs directory. If
+you wish to edit in a different location, either a different repository or a different directory altogether,
+the you can set the editDir configuration variable in your config.xml file, for example
+
+  <preference name="editDir" value="/home/user/workspace/myproject" />
+
+If you wish to install jEdit so that there's no path to it, for example on a shared machine as a user-specific
+program, you'll need to set a path in config.xml, for example
+
+  <preference name="jedit" value="/home/user/jedit/jedit" />
+
+
 jUnit testing on the command line
 =================================
 
