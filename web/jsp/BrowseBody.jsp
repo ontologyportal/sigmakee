@@ -17,8 +17,20 @@
  term = request.getParameter("term");
  nonRelTerm = request.getParameter("nonrelation");
  relTerm = request.getParameter("relation");
+ filename = request.getParameter("file");
+ line = request.getParameter("line");
  Map theMap = null;     // Map of natural language format strings.
- 
+
+ if (!StringUtil.emptyString(filename)) {
+    int l = 0;
+    if (!StringUtil.emptyString(line)) {
+        try {
+            l = Integer.parseInt(line);
+        }
+        catch (NumberFormatException nfe) {}
+    }
+    HTMLformatter.launchEditor(filename,l);
+ }
  HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) &&
     StringUtil.emptyString(nonRelTerm)) {       // Show statistics only when no term is specified.
