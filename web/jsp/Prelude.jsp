@@ -86,6 +86,8 @@ kb = KBmanager.getMgr().getKB(kbName);
 if (kb != null)
     TaxoModel.kbName = kbName;
 
+String filename = ""; // an ontology file to edit
+String line = ""; // the line of the ontology to place a cursor
 String language = ""; // natural language for NL generation
 String flang = request.getParameter("flang");    // formal language
 flang = HTMLformatter.processFormalLanguage(flang);
