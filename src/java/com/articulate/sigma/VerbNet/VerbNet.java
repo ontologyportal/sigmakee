@@ -13,7 +13,7 @@ public class VerbNet {
 
     public static KB kb;
 
-    private static boolean debug = true;
+    private static boolean debug = false;
     private static boolean echo = false;
     private static HashMap<String,SimpleElement> verbFiles = new HashMap<>();
     private static HashMap<String,String> roles = new HashMap<>(); // VN to SUMO role mappings
@@ -63,8 +63,10 @@ public class VerbNet {
         SimpleElement configuration = null;
         try {
             String dirStr = KBmanager.getMgr().getPref("verbnet");
+            System.out.println("VerbNet.readVerbFiles(): loading files from: " + dirStr);
             File dir = new File(dirStr);
             if (!dir.exists()) {
+                System.out.println("VerbNet.readVerbFiles(): no such dir: " + dirStr);
                 return;
             }
             try {
