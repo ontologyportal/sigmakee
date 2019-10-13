@@ -53,7 +53,7 @@ public class KBmanager implements Serializable {
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
                     "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire",
-                    "reportDup", "reportFnError", "verbnet");
+                    "reportDup", "reportFnError", "verbnet", "jedit", "editdir");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
