@@ -20,6 +20,7 @@ import com.articulate.sigma.trans.TPTPutil;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -559,8 +560,15 @@ public class HTMLformatter {
                 File srcfile = new File(f.sourceFile);
                 String sourceFilename = srcfile.getName();
                 if (StringUtil.isNonEmptyString(sourceFilename)) {
+                    String jeditcmd = KBmanager.getMgr().getPref("jedit");
+                    if (!StringUtil.emptyString(jeditcmd)) {
+                        show.append("<a href=\"" + kbHref +
+                                "&file=" + sourceFilename + "&line=" + f.startLine + "\">");
+                    }
                     show.append(sourceFilename);
                     show.append(" " + f.startLine + "-" + f.endLine);
+                    if (!StringUtil.emptyString(jeditcmd))
+                        show.append("</a>");
                 }
                 show.append("</a>");
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
@@ -582,7 +590,44 @@ public class HTMLformatter {
         show.append(limitString);
         return show.toString();
     }
-    
+
+    /** *************************************************************
+     * Launch the jEdit editor with the cursor at the specified line
+     * number.  Edit the file in the specified editDir, which should
+     * be different from Sigma's KBs directory.  Recommended practice
+     * is to edit .kif files in your local Git repository and then
+     * copy them to the .sigmakee/KBs directory
+     */
+    public static void launchEditor(String file, int line) {
+
+        String editDir = KBmanager.getMgr().getPref("editDir");
+        if (StringUtil.emptyString(editDir)) {
+            String git = System.getenv("ONTOLOGYPORTAL_GIT");
+            if (!StringUtil.emptyString(git))
+                editDir = git + File.separator + "sumo";
+        }
+        String jeditcmd = "jedit";
+        if (StringUtil.emptyString(jeditcmd)) {
+            String jeditconfig = KBmanager.getMgr().getPref("jedit");
+            if (!StringUtil.emptyString(jeditconfig))
+                jeditcmd = jeditconfig;
+        }
+        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+                jeditcmd, editDir + File.separator + file ," +line:" + line,
+                "-norestore", "-reuseview" ));
+        System.out.println("EProver(): command: " + commands);
+        try {
+            System.out.println("launchEditor(): commands: " + commands);
+            ProcessBuilder _builder = new ProcessBuilder(commands);
+            _builder.redirectErrorStream(false);
+            Process _jedit = _builder.start();
+        }
+        catch (IOException ioe) {
+            System.out.println("launchEditor(): " + ioe.getMessage());
+            ioe.printStackTrace();
+        }
+    }
+
     /** *************************************************************
      *  Create the HTML for a section of the Sigma term browser page.
      */
