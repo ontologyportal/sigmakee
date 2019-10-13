@@ -10,8 +10,16 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
-/**
- * Created by apease on 3/9/19.
+/** This code is copyright Infosys 2019.
+ This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+
+ Pease, A., (2003). The Sigma Ontology Development Environment,
+ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
+
+ Authors:
+ Adam Pease
+ Infosys LTD.
  */
 public class Verb {
 
