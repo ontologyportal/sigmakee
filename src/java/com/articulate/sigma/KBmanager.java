@@ -904,7 +904,6 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * A test method.
      */
     public static void printHelp() {
 
@@ -916,7 +915,6 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * A test method.
      */
     public static void main(String[] args) {
 
