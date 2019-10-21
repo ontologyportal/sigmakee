@@ -71,7 +71,7 @@ public class KIF {
      */
     public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();
 
-    private String filename;
+    public String filename;
     private File file;
     private int totalLinesForComments = 0;
 
@@ -162,7 +162,7 @@ public class KIF {
      * @return a Set of warnings that may indicate syntax errors, but not fatal
      *         parse errors.
      */
-    protected TreeSet<String> parse(Reader r) {
+    public TreeSet<String> parse(Reader r) {
 
         int mode = this.getParseMode();
         StringBuilder expression = new StringBuilder();
@@ -201,7 +201,7 @@ public class KIF {
                         // statement is to start. Check if a new statement
                         // has already been generated, otherwise report error
                         if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
-                            errStr = (errStart + " possible missed closing parenthesis near start line " + f.startLine
+                            errStr = (errStart + " possible missed closing parenthesis near start line: " + f.startLine
                                     + " end line " + f.endLine + " for formula " + expression.toString() + "\n and key "
                                     + keySet.toString() + " keyset size " + keySet.size() + " exp length "
                                     + expression.length() + " comment lines " + totalLinesForComments);
@@ -244,7 +244,7 @@ public class KIF {
                         String fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.theFormula = fstr.intern();
                         if (formulaMap.keySet().contains(f.theFormula) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
-                            String warning = ("Duplicate axiom at line " + f.startLine + " of " + f.sourceFile + ": "
+                            String warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
                             System.out.println(warning);
@@ -256,7 +256,7 @@ public class KIF {
                             if (StringUtil.emptyString(validArgs))
                                 validArgs = f.badQuantification();
                             if (StringUtil.isNonEmptyString(validArgs)) {
-                                errStr = (errStart + ": Invalid number of arguments near line " + f.startLine + " : "
+                                errStr = (errStart + ": Invalid number of arguments near line: " + f.startLine + " : "
                                         + validArgs);
                                 errorSet.add(errStr);
                                 throw new ParseException(errStr, f.startLine);
@@ -300,7 +300,7 @@ public class KIF {
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
-                        errStr = (errStart + ": Extra closing parenthesis found near line " + f.startLine);
+                        errStr = (errStart + ": Extra closing parenthesis found near line: " + f.startLine);
                         errorSet.add(errStr);
                         throw new ParseException(errStr, f.startLine);
                     }
@@ -337,7 +337,7 @@ public class KIF {
                         expression.append(" ");
                     expression.append(String.valueOf(st.sval));
                     if (expression.length() > 64000) {
-                        errStr = (errStart + ": Sentence over 64000 characters new line " + f.startLine);
+                        errStr = (errStart + ": Sentence over 64000 characters new line: " + f.startLine);
                         errorSet.add(errStr);
                         throw new ParseException(errStr, f.startLine);
                     }
@@ -357,14 +357,14 @@ public class KIF {
                 else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow '`' in relaxed parse mode
                     expression.append(" `");
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    errStr = (errStart + ": Illegal character near line " + f.startLine);
+                    errStr = (errStart + ": Illegal character near line: " + f.startLine);
                     errorSet.add(errStr);
                     throw new ParseException(errStr, f.startLine);
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
 
             if (!keySet.isEmpty() || expression.length() > 0) {
-                errStr = (errStart + ": Missed closing parenthesis near line " + f.startLine);
+                errStr = (errStart + ": Missed closing parenthesis near line: " + f.startLine);
                 errorSet.add(errStr);
                 throw new ParseException(errStr, f.startLine);
             }
