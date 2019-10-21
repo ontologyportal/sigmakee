@@ -28,7 +28,7 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    private static List LOG_OPS = Arrays.asList("and","or","not","exists",
+    public static List LOG_OPS = Arrays.asList("and","or","not","exists",
                                                 "forall","=>","<=>","holds");
 
     private static int resultLimit = 100;
@@ -804,7 +804,6 @@ public class Diagnostics {
         }
         return "";
     }
-
 
     /** *****************************************************************
      * Iterating through all formulas, return a proof of an inconsistent 
