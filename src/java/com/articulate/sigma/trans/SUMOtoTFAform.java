@@ -54,6 +54,8 @@ public class SUMOtoTFAform {
     // extra sorts determined just for this formula
     public HashSet<String> sorts = new HashSet<>();
 
+    public static HashSet<String> errors = new HashSet<>();
+
     /** *************************************************************
      */
     public static boolean isComparisonOperator(String s) {
@@ -1418,8 +1420,10 @@ public class SUMOtoTFAform {
                 for (String c2 : types) {
                     if (!c1.equals(c2)) {
                         if (kb.kbCache.checkDisjoint(kb, c1, c2)) {
-                            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variables types: " +
-                                    c1 + ", " + c2 + " for var " + s);
+                            String msg = "SUMOtoTFAform.process(): rejected inconsistent variables types: " +
+                                    c1 + ", " + c2 + " for var " + s;
+                            System.out.println(msg);
+                            errors.add(msg);
                             return true;
                         }
                         //System.out.println("SUMOtoTFAform.process(): " +
