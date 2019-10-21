@@ -344,7 +344,8 @@ public class KIF {
                     // Build the terms list and special keys ONLY if in NORMAL_PARSE_MODE
                     if ((mode == NORMAL_PARSE_MODE) && (st.sval.charAt(0) != '?') && (st.sval.charAt(0) != '@')) { // Variables are not terms
                         terms.add(st.sval); // collect all terms
-                        
+                        f.termCache.add(st.sval);
+
                         if (!termFrequency.containsKey(st.sval)) {
                             termFrequency.put(st.sval, 0);
                         }
