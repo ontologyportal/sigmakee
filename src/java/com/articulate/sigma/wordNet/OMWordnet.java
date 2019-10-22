@@ -38,6 +38,8 @@ August 9, Acapulco, Mexico.
 
     public static OMWordnet omw = new OMWordnet();
 
+    public static boolean disable = false; // disable for debugging
+
     /** *************************************************************
      */
     private static char getOMWMappingSuffix(String SUMOmapping) {
@@ -320,6 +322,8 @@ August 9, Acapulco, Mexico.
      */
     public static void readOMWfiles() {
 
+        if (disable)
+            return;
         loadSerialized();
         if (omw != null)
             return;
