@@ -39,6 +39,7 @@ import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
  */
 public class WordNet implements Serializable {
 
+    public static boolean disable = false;
     public static boolean debug = false;
     public static WordNet wn  = new WordNet();
 
@@ -1795,6 +1796,7 @@ public class WordNet implements Serializable {
      */
     private static void loadFresh() {
 
+        if (disable) return;
         System.out.println("WordNet.loadFresh(): ");
         try {
             wn = new WordNet();
@@ -1825,11 +1827,14 @@ public class WordNet implements Serializable {
      */
     public static void initOnce() {
 
+        System.out.println("WordNet.initOnce(): disable: " + disable);
+        if (disable) return;
         try {
             if (initNeeded == true) {
                 if ((WordNet.baseDir == "") || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
+                System.out.println("WordNet.initOnce(): disable: " + disable);
                 baseDirFile = new File(WordNet.baseDir);
                 if (KBmanager.getMgr().getPref("loadFresh").equals("false")) {
                     loadSerialized();

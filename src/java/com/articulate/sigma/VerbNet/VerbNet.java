@@ -39,10 +39,13 @@ public class VerbNet {
     // verb ID keys and Verb values
     public static HashMap<String,Verb> verbs = new HashMap<>();
 
+    public static boolean disable = false;
+
     /** *************************************************************
      */
     public static void initOnce() {
 
+        if (disable) return;
         ArrayList<String> keys = new ArrayList<String>(Arrays.asList("Actor","involvedInEvent",
             "Agent","agent", "Asset","objectTransferred", "Attribute","attribute",
             "Beneficiary","beneficiary", "Cause","involvedInEvent",
