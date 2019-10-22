@@ -594,8 +594,10 @@ public class KBmanager implements Serializable {
                     WordNet.initOnce();
                     NLGUtils.init(configFileDir);
                     OMWordnet.readOMWfiles();
-                    VerbNet.initOnce();
-                    VerbNet.processVerbs();
+                    if (!VerbNet.disable) {
+                        VerbNet.initOnce();
+                        VerbNet.processVerbs();
+                    }
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     //for (KB aKB : manager.kbs.values())
                     //    aKB.loadEProver();
@@ -648,7 +650,7 @@ public class KBmanager implements Serializable {
         VerbNet.initOnce();
         VerbNet.processVerbs();
         OMWordnet.readOMWfiles();
-        if (kbs != null && kbs.size() > 0) {
+        if (kbs != null && kbs.size() > 0 && !WordNet.initNeeded) {
             for (String kbName : kbs.keySet()) {
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
                 WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
