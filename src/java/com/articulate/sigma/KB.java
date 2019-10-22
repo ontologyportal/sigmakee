@@ -390,7 +390,7 @@ public class KB implements Serializable {
                     al.add(lang.intern());
             }
         }
-        al.addAll(OMWordnet.lnames);
+        //al.addAll(OMWordnet.lnames);
         return al;
     }
 
