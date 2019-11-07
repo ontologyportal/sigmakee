@@ -55,7 +55,7 @@ public class TaxoModel {
             //	System.out.println(f.sourceFile);
             //	System.out.println(KB._cacheFileSuffix);
             //}
-            if (f == null || f.sourceFile == null || !f.sourceFile.endsWith(KB._cacheFileSuffix)) 
+            if (f == null || f.sourceFile == null || !KButilities.isCacheFile(f.sourceFile))
                 result.add(f);
         }
         return result;
