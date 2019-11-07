@@ -38,12 +38,12 @@
     show.append(HTMLformatter.showLanguageStats(kb,language));
  }
  else if (kb != null && term != null && !kb.containsTerm(term)) {           // Show the alphabetic neighbors and RE matches of a term
-    if (kb.hasREchars(term) && StringUtil.isValidRegex(term)) {
-       show.append(HTMLformatter.termList(kb.getREMatch(term),HTMLformatter.kbHref));
+    if (StringUtil.hasREchars(term) && StringUtil.isValidRegex(term)) {
+       show.append(HTMLformatter.termList(kb.getREMatch(term,true),HTMLformatter.kbHref));
     }
     else {
         if (StringUtil.isValidRegex(".*" + term + ".*"))
-            show.append(HTMLformatter.termList(kb.getREMatch(".*" + term + ".*"),HTMLformatter.kbHref));
+            show.append(HTMLformatter.termList(kb.getREMatch(".*" + term + ".*",true),HTMLformatter.kbHref));
     }
     show.append(HTMLformatter.showNeighborTerms(kb,term));
     TreeMap<String,ArrayList<String>> tm = WordNet.wn.getSenseKeysFromWord(term);
