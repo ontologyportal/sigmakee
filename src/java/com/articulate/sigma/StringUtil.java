@@ -1166,6 +1166,19 @@ public class StringUtil {
             return true;
     }
 
+    /****************************************************
+     */
+    public static boolean hasREchars(String term) {
+
+        if (StringUtil.emptyString(term))
+            return false;
+        if (term.contains("(") || term.contains("[") || term.contains("{") || term.contains("\\") || term.contains("^")
+                || term.contains("$") || term.contains("|") || term.contains("}") || term.contains("]")
+                || term.contains(")") || term.contains("?") || term.contains("*") || term.contains("+"))
+            return true;
+        return false;
+    }
+
     /****************************************************************
      */
     public static boolean isNumeric(String input) {
