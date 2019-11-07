@@ -11,7 +11,7 @@ import java.util.*;
 public class SUMOformulaToTPTPformula {
 
     public Formula _f = null;
-    public static boolean debug = false;
+    public static boolean debug = true;
     public static boolean hideNumbers = false;
     public static String lang = "fof"; // or "tff"
 
@@ -139,25 +139,21 @@ public class SUMOformulaToTPTPformula {
             if (translateIndex != -1)
                 return (tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         }
-
         //----Translate special constants
         translateIndex = kifConstants.indexOf(st);
         if (translateIndex != -1)
             return(tptpConstants.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
-
         //----Translate special functions
         if (lang.equals("tff")) {
             translateIndex = kifFunctions.indexOf(st);
             if (translateIndex != -1)
                 return (tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         }
-
         //----Translate operators
         translateIndex = kifOps.indexOf(st);
         if (translateIndex != -1 && hasArguments) {
             return (tptpOps.get(translateIndex));
         }
-
         //----Do nothing to numbers
         if (type == StreamTokenizer.TT_NUMBER ||
             (st != null && (Character.isDigit(ch0) ||
@@ -167,22 +163,16 @@ public class SUMOformulaToTPTPformula {
         String term = st;
 
         if (!hasArguments) {
-            if (
-                // The purely syntactic criteria for testing if a term
-                // denotes a Relation are reliable only for "pure"
-                // SUO-KIF.  They break down if the terms to be
-                // translated contain namespace prefixes and other
-                // non-SUO-KIF lexical conventions.
-                (!term.endsWith(mentionSuffix)
-                 && ((!term.contains(StringUtil.getKifNamespaceDelimiter())
-                      && Character.isLowerCase(ch0))
+            if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
                      || term.endsWith("Fn")
-                     // The semantic test below works only if a KB is loaded.
-                     || KB.isRelationInAnyKB(term)))) {
+                     || KB.isRelationInAnyKB(term)) {
                 term += mentionSuffix;
             }
         }
-        return(Formula.termSymbolPrefix + term.replace('-','_'));
+        if (kifOps.contains(term))
+            return(term.replace('-','_'));
+        else
+            return(Formula.termSymbolPrefix + term.replace('-','_'));
     }
 
     /** ***************************************************************
@@ -279,39 +269,42 @@ public class SUMOformulaToTPTPformula {
 
             st = new StreamTokenizer_s(new StringReader(suoString));
             KIF.setupStreamTokenizer(st);
-
             do {
                 if (query || debug)
                     System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): looping: " +
                             st);
-
+                if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 1: " + lastWasOpen);
                 st.nextToken();
                 if (st.ttype==40) {         //----Open bracket
+                    if (debug) System.out.println("tptpParseSUOKIFString(): open bracket: " + st);
                     if (lastWasOpen)      //----Should not have ((in KIF
                         throw new ParseException("Parsing error in " + suoString + ". Doubled open parentheses.",0);                                       
                     if (inHOL)              //----Track nesting of ()s for hol__, so I know when to close the '
                         inHOLCount++;
                     lastWasOpen = true;
-                    parenLevel++;                    
+                    parenLevel++;
+                    if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 2: " + lastWasOpen);
                 } 
                 else if (st.ttype == StreamTokenizer.TT_WORD &&  //----Operators
-                           (((arity = operatorArity(st)) > 0) || st.sval.equals(Formula.EQUAL))) {                    
+                           (((arity = operatorArity(st)) > 0) || st.sval.equals(Formula.EQUAL))) {
+                    if (debug) System.out.println("tptpParseSUOKIFString(): operator: " + st);
                     if (st.sval.equals(Formula.EQUAL))
                         arity = 2;
+                    if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 3: " + lastWasOpen);
                     if (!lastWasOpen)              //----Operators must be preceded by a (
                         return(null);                    
                     //----This is the start of a new term - put in the infix operator if not the
                     //----first term for this operator
-                    if ((Integer)(countStack.peek()) > 0) {
+                    if (countStack.peek() > 0) {
                         // System.out.println("  1 : countStack == " + countStack);
                         // System.out.println("  1 : operatorStack == " + operatorStack);
-                        tptpFormula.append((String)operatorStack.peek());
+                        tptpFormula.append(operatorStack.peek());
                     }                    
                     if (inHOL && inHOLCount == 1)     //----If this is the start of a hol__ situation, quote it all
                         tptpFormula.append("'");
                     tptpFormula.append("(");          //----()s around all operator expressions
                     if (arity == 1) {                 //----Output unary as prefix
-                        tptpFormula.append(translateWord(st.sval,st.ttype,false));
+                        tptpFormula.append(translateWord(st.sval,st.ttype,true));
                         countStack.push(Integer.valueOf(0));   //----Note the new operator (dummy) with 0 operands so far
                         operatorStack.push(",");
                         //----Check if the next thing will be the quantified variables
@@ -321,7 +314,7 @@ public class SUMOformulaToTPTPformula {
                     else if (arity == 2) {    //----Binary operator
                         //----Note the new operator with 0 operands so far
                         countStack.push(Integer.valueOf(0));
-                        operatorStack.push(translateWord(st.sval,st.ttype,false));
+                        operatorStack.push(translateWord(st.sval,st.ttype,true));
                     }
                     lastWasOpen = false;                    
                 } 
@@ -335,6 +328,7 @@ public class SUMOformulaToTPTPformula {
                            st.ttype == StreamTokenizer.TT_NUMBER ||
                            (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
                            st.ttype == StreamTokenizer.TT_WORD) {
+                    if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 4: " + lastWasOpen);
                     if (lastWasOpen) {          //----Start of a predicate or variable list
                         if (inQuantifierVars) { //----Variable list
                             tptpFormula.append("[");
@@ -344,8 +338,11 @@ public class SUMOformulaToTPTPformula {
                         else {                //----Predicate
                             //----This is the start of a new term - put in the infix operator if not the
                             //----first term for this operator
-                            if ((Integer)(countStack.peek()) > 0)
-                                tptpFormula.append((String)operatorStack.peek());
+                            if (countStack.peek() > 0) {
+                                if (operatorStack.peek() != ",") tptpFormula.append(" ");
+                                tptpFormula.append(operatorStack.peek());
+                                if (operatorStack.peek() != ",") tptpFormula.append(" ");
+                            }
                             //----If this is the start of a hol__ situation, quote it all
                             if (inHOL && inHOLCount == 1)
                                 tptpFormula.append("'");                            
@@ -357,10 +354,14 @@ public class SUMOformulaToTPTPformula {
                         //----Argument or quantified variable
                     } 
                     else {
+                        if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 5: " + lastWasOpen);
                         //----This is the start of a new term - put in the infix operator if not the
                         //----first term for this operator
-                        if ((Integer)(countStack.peek()) > 0)
-                            tptpFormula.append((String)operatorStack.peek());
+                        if (countStack.peek() > 0) {
+                            if (operatorStack.peek() != ",") tptpFormula.append(" ");
+                            tptpFormula.append(operatorStack.peek());
+                            if (operatorStack.peek() != ",") tptpFormula.append(" ");
+                        }
                         // TODO: may have to trap strings - AP
                         tptpFormula.append(translateWord(st.sval,st.ttype,false));      //----Output the word
                         incrementTOS(countStack);                         //----Increment counter for this level
@@ -375,7 +376,8 @@ public class SUMOformulaToTPTPformula {
                     }
                     lastWasOpen = false;
                 } 
-                else if (st.ttype==41) {      //----Close bracket                    
+                else if (st.ttype==41) {      //----Close bracket
+                    if (debug) System.out.println("tptpParseSUOKIFString(): close bracket: " + st);
                     if (inHOL)                  //----Track nesting of ()s for hol__, so I know when to close the '
                         inHOLCount--;
                     //----End of quantified variable list
@@ -429,6 +431,7 @@ public class SUMOformulaToTPTPformula {
                     }
                 } 
                 else if (st.ttype != StreamTokenizer.TT_EOF && st.ttype != StreamTokenizer.TT_EOL) {
+                    if (debug) System.out.println("tptpParseSUOKIFString(): eol: " + st);
                 	String error = null;
                 	switch (st.ttype) {
                 	case StreamTokenizer.TT_EOL : error = "End of line (which should not be an error)"; break;
@@ -446,9 +449,12 @@ public class SUMOformulaToTPTPformula {
                 translatedFormula = tptpFormula.toString();
         }
         catch (Exception ex2) {
-            System.out.println("Error in SUMOformulaToTPTPformula: " + ex2.getMessage());
+            System.out.println("Error in SUMOformulaToTPTPformula: ");
+            System.out.println(ex2.getMessage());
             ex2.printStackTrace();
         }
+        if (translatedFormula != null)
+            translatedFormula = translatedFormula.replaceAll("  "," ");
         return translatedFormula;
     }
 
@@ -593,7 +599,19 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * A test method.
      */
+    public static void testTptpParse3() {
+
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+        String teststr = "(instance equal BinaryPredicate)";
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr, false));
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
     public static void main(String[] args) {
-        testTptpParse2();
+        testTptpParse3();
     }
 }
