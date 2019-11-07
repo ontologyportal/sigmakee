@@ -414,11 +414,11 @@ public class HTMLformatter {
         String markup = "";
         try {	
         	StringBuilder show = new StringBuilder();
-        	ArrayList<String> matchesList = kb.getREMatch(term);
+        	ArrayList<String> matchesList = kb.getREMatch(term,true);
         	ArrayList<String> relTermsList = getAllRelTerms(kb,matchesList);
         	ArrayList<String> nonRelTermsList = getAllNonRelTerms(kb,matchesList);
-        	ArrayList<String> largerList = (relTermsList.size()>nonRelTermsList.size())?relTermsList:nonRelTermsList;
-        	ArrayList<String> smallerList = (relTermsList.size()>nonRelTermsList.size())?nonRelTermsList:relTermsList;
+        	ArrayList<String> largerList = (relTermsList.size() > nonRelTermsList.size()) ? relTermsList : nonRelTermsList;
+        	ArrayList<String> smallerList = (relTermsList.size() > nonRelTermsList.size()) ? nonRelTermsList : relTermsList;
         	int sizeDiff = largerList.size() - smallerList.size();
         	for (int i = 0; i < sizeDiff; i++) {				//buffer smaller list
         		smallerList.add("");
@@ -428,13 +428,13 @@ public class HTMLformatter {
         	show.append("<tr><td><FONT face='Arial,helvetica' size=+3> <b> " + term + "</b></FONT></td>");
         	show.append("</tr>\n<br><br>");
         	for (String t : largerList) {
-        		if (t.equals((largerList==relTermsList?relREmatch:nonRelREmatch))) {		//keeps track of which term is at the top
+        		if (t.equals((largerList == relTermsList ? relREmatch : nonRelREmatch))) {		//keeps track of which term is at the top
         			int matchIndex = largerList.indexOf(t);      //matchIndex is the index of an REmatch in the larger list
         			int listLength = largerList.size();          //listLength is the the larger count of either relMatches or nonRelMatches
-        			int finalIndex = (listLength>(matchIndex + 29) ? (matchIndex + 30) : listLength);    //finalIndex is 1 + the index of the final match that will be displayed
+        			int finalIndex = (listLength > (matchIndex + 29) ? (matchIndex + 30) : listLength);    //finalIndex is 1 + the index of the final match that will be displayed
         			//If there are at least 30 more matches after REmatch, then finalIndex=matchIndex+30, otherwise finalIndex = listLength
-        			for (int i=matchIndex;i<finalIndex;i++) {
-        				if (i==matchIndex && i!=0)     //if there are other matches before REmatch, previous 30 should be linked at the top of the page
+        			for (int i = matchIndex; i < finalIndex; i++) {
+        				if (i == matchIndex && i != 0)     //if there are other matches before REmatch, previous 30 should be linked at the top of the page
         					show.append("<tr><td><i><a href=\"" + kbHref + "&relREmatch=" + relTermsList.get(matchIndex-29) + "&nonRelREmatch=" + nonRelTermsList.get(matchIndex-29) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">previous " + 30 + "</a>" + "</i></td></tr>\n");
         				show.append("<tr>\n");
         				if (nonRelTermsList.get(i) == "") 
@@ -450,8 +450,8 @@ public class HTMLformatter {
         					show.append(   relTermsList.get(i) + "\">" + relTermsList.get(i) + "</a>" + "</td>");
         				}
         				show.append("</tr>\n");
-        				if (i==(finalIndex - 1) && listLength>(matchIndex + 30)) {
-        					int nextCount = (listLength>finalIndex+29)?30:(listLength-finalIndex+1);
+        				if (i == (finalIndex - 1) && listLength > (matchIndex + 30)) {
+        					int nextCount = (listLength > finalIndex + 29) ? 30 : (listLength - finalIndex + 1);
         					show.append("<tr><td><i><a href=\"" + kbHref +"&relREmatch=" + relTermsList.get(i) + "&nonRelREmatch=" + nonRelTermsList.get(i) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">next " + nextCount + "</a>" + "</i></td></tr>\n");
         				}
         			}
@@ -545,7 +545,7 @@ public class HTMLformatter {
             }
             //System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
             if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
-                    !f.sourceFile.endsWith(KB._cacheFileSuffix) ) {
+                    !KButilities.isCacheFile(f.sourceFile)) {
                 String arg0 = f.getArgument(0);
                 show.append("<tr><td width=\"50%\" valign=\"top\">");
                 String formattedFormula = null;
