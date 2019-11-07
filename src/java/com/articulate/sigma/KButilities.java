@@ -185,6 +185,18 @@ public class KButilities {
 
     /** *************************************************************
      */
+    public static boolean isCacheFile(String filename) {
+
+        if (StringUtil.emptyString(filename))
+            return false;
+        if (filename.endsWith("_Cache.kif"))
+            return true;
+        else
+            return false;
+    }
+
+    /** *************************************************************
+     */
     public static void countProcesses(KB kb) {
 
         int count = 0;
@@ -293,23 +305,22 @@ public class KButilities {
      *  use the subclass hierarchy to relate all parents of terms in
      *  domain statements, through the relation itself but with a
      *  suffix designating it as a separate relation. Convert SUMO
-     *  terms to WordNet synsets.
+     *  terms to WordNet synsets. Don't show cached statements or
+     *  relations with String arguments.
      */
     private static Set<String> generateSemanticNetwork(KB kb) {
 
         TreeSet<String> resultSet = new TreeSet<String>();
-        Iterator<String> it = kb.formulaMap.keySet().iterator();
-        while (it.hasNext()) {          // look at all formulas in the KB
-            String formula = it.next();
-            Formula f = new Formula();
-            f.read(formula);
+        for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
+            if (isCacheFile(f.sourceFile))
+                continue;
             if (!f.isSimpleClause(kb) || !f.isGround()) {
                 Set<String> terms = f.collectTerms();
                 for (String term1 : terms) {
-                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1))
+                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || StringUtil.isQuotedString(term1))
                         continue;                
                     for (String term2 : terms) {
-                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2))
+                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || StringUtil.isQuotedString(term2))
                             continue;  
                         //resultSet.add("(link " + term1 + " " + term2 + ")");
                         if (!term1.equals(term2))
@@ -323,12 +334,27 @@ public class KButilities {
                 if (args != null && args.size() == 2) { // could have a function which would return null
                     String arg1 = f.getArgument(1);
                     String arg2 = f.getArgument(2);  
-                    if (!Formula.isVariable(arg1) && !Formula.isVariable(arg1))
+                    if (!Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
+                            !StringUtil.isQuotedString(arg1) && !StringUtil.isQuotedString(arg2))
                         resultSet.add(arg1 + " " + predicate + " " +  arg2);
                 }
             }
         }
         return resultSet;
+    }
+
+    /** *************************************************************
+     */
+    private static String semnetAsDot(Set<String> triples) {
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("graph G {");
+        for (String s : triples) {
+            String[] tuple = s.split(" ");
+            sb.append("  \"" + tuple[0] + "\" -- \"" + tuple[2] + "\" [ label=\"" + tuple[1] + "\" ];\n");
+        }
+        sb.append("}");
+        return sb.toString();
     }
 
     /** *************************************************************
@@ -574,6 +600,7 @@ public class KButilities {
         System.out.println("  -h - show this help screen");
         System.out.println("  -c <fname> - generate external links from file fname");
         System.out.println("  -s - count strings and processes");
+        System.out.println("  -n - generate semantic network");
     }
 
     /** *************************************************************
@@ -601,6 +628,10 @@ public class KButilities {
         else if (args != null && args.length > 0 && args[0].equals("-s")) {
             countStringWords(kb);
             countProcesses(kb);
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-n")) {
+            Set<String> tuples = generateSemanticNetwork(kb);
+            System.out.println(semnetAsDot(tuples));
         }
         else
             showHelp();
