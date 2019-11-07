@@ -284,20 +284,6 @@ public class KB implements Serializable {
         return this.terms;
     }
 
-    /****************************************************
-     * REswitch determines if a String is a RegEx or not
-     * based on its use of RE metacharacters.
-     */
-    public boolean hasREchars(String term) {
-
-        if (StringUtil.emptyString(term))
-            return false;
-        if (term.contains("(") || term.contains("[") || term.contains("{") || term.contains("\\") || term.contains("^")
-                || term.contains("$") || term.contains("|") || term.contains("}") || term.contains("]")
-                || term.contains(")") || term.contains("?") || term.contains("*") || term.contains("+"))
-            return true;
-        return false;
-    }
 
     /***************************************************
      * Only called in
@@ -308,10 +294,10 @@ public class KB implements Serializable {
      *            a String
      * @return modified term a String
      */
-    public String simplifyTerm(String term) {
+    public String simplifyTerm(String term, boolean ignoreCaps) {
 
-        if (getREMatch(term.intern()).size() == 1)
-            return getREMatch(term.intern()).get(0);
+        if (getREMatch(term.intern(),ignoreCaps).size() == 1)
+            return getREMatch(term.intern(),ignoreCaps).get(0);
         return term;
     }
 
@@ -324,9 +310,9 @@ public class KB implements Serializable {
      *            A String
      * @return true or false.
      */
-    public boolean containsRE(String term) {
+    public boolean containsRE(String term, boolean ignoreCaps) {
 
-        return (getREMatch(term).size() > 0 ? true : false);
+        return (getREMatch(term,ignoreCaps).size() > 0 ? true : false);
     }
 
     /****************************************************
@@ -338,10 +324,14 @@ public class KB implements Serializable {
      *            A String
      * @return An ArrayList of terms that have a match to term
      */
-    public ArrayList<String> getREMatch(String term) {
+    public ArrayList<String> getREMatch(String term, boolean ignoreCaps) {
 
         try {
-            Pattern p = Pattern.compile(term);
+            Pattern p;
+            if (ignoreCaps)
+                p = Pattern.compile(term, Pattern.CASE_INSENSITIVE);
+            else
+                p = Pattern.compile(term);
             ArrayList<String> matchesList = new ArrayList<String>();
             for (String t : getTerms()) {
                 Matcher m = p.matcher(t);
@@ -362,10 +352,8 @@ public class KB implements Serializable {
      */
     public void setTerms(SortedSet<String> newTerms) {
 
-        synchronized (getTerms()) {
-            getTerms().clear();
-            this.terms = Collections.synchronizedSortedSet(newTerms);
-        }
+        getTerms().clear();
+        this.terms = Collections.synchronizedSortedSet(newTerms);
         return;
     }
 
@@ -602,7 +590,7 @@ public class KB implements Serializable {
      * true if i is functional expression, else returns
      * false.
      *
-     * @param i A String denoting a possibly functional literal.
+     * @param s A String denoting a possibly functional literal.
      * @return true or false.
      */
     public boolean isFunctional(String s) {
@@ -2622,7 +2610,7 @@ public class KB implements Serializable {
             Iterator<String> ci = constituents.iterator();
             while (ci.hasNext()) {
                 String cName = ci.next();
-                if (!cName.endsWith(_cacheFileSuffix)) // Recompute cached data
+                if (!KButilities.isCacheFile(cName)) // Recompute cached data
                     newConstituents.add(cName);
             }
             constituents.clear();
