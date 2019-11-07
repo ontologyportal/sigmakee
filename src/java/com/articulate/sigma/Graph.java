@@ -253,7 +253,7 @@ public class Graph {
                 for (int i = 0; i < stmtAbove.size(); i++) {
                     Formula f = stmtAbove.get(i);
                     String newTerm = f.getArgument(2);
-                    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+                    if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
                         result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language));
                     check.add(term);
                 }
@@ -286,7 +286,7 @@ public class Graph {
                 for (int i = 0; i < stmtBelow.size(); i++) {
                     Formula f = stmtBelow.get(i);
                     String newTerm = f.getArgument(1);
-                    if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+                    if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
                         result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
                     check.add(term);
                 }
@@ -295,7 +295,7 @@ public class Graph {
                     for (int i = 0; i < stmtBelow.size(); i++) {
                         Formula f = stmtBelow.get(i);
                         String newTerm = f.getArgument(1);
-                        if (!newTerm.equals(term) && !f.sourceFile.endsWith("_Cache.kif"))
+                        if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
                             result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
                         check.add(term);
                     }

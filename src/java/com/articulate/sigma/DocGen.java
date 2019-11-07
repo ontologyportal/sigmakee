@@ -3781,7 +3781,7 @@ public class DocGen {
                 Formula f = null;
                 for (Iterator it = forms.iterator(); it.hasNext();) {
                     f = (Formula) it.next();
-                    if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                    if (!KButilities.isCacheFile(f.sourceFile)) {
                         s = f.getArgument(2);
                         if (isLegalForDisplay(s)) {
                             parents.add(s);
@@ -3888,7 +3888,7 @@ public class DocGen {
             String s = null;
             for (Iterator it = forms.iterator(); it.hasNext();) {
                 f = (Formula) it.next();
-                if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                if (!KButilities.isCacheFile(f.sourceFile)) {
                     s = f.getArgument(1);
                     if (isLegalForDisplay(s) && !kids.contains(s)) {
                         kids.add(s);
@@ -3986,7 +3986,7 @@ public class DocGen {
                     forms = kb.askWithPredicateSubsumption("instance", 2, subent);
                     for (Iterator itf = forms.iterator(); itf.hasNext();) {
                         f = (Formula) itf.next();
-                        if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                        if (!KButilities.isCacheFile(f.sourceFile)) {
                             inst = f.getArgument(1); 
                             if (!excluded.contains(inst) && isLegalForDisplay(inst)) {
                                 instances.add(inst);
@@ -4235,7 +4235,7 @@ public class DocGen {
                                 ArrayList vals = new ArrayList();
                                 for (Iterator its = statements.iterator(); its.hasNext();) {
                                     Formula f = (Formula) its.next();
-                                    if (!f.sourceFile.endsWith(KB._cacheFileSuffix)) {
+                                    if (!KButilities.isCacheFile(f.sourceFile)) {
                                         vals.add(f.getArgument(2));
                                     }
                                 }

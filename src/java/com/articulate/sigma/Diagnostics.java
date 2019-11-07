@@ -875,7 +875,7 @@ public class Diagnostics {
         termLinks(kb, termsUsed, termsDefined);
         for (String t : termsDefined.keySet()) {
             for (String fname : termsDefined.get(t)) {
-                if (fname.endsWith("_Cache.kif") || alreadyCounted.contains(t))
+                if (KButilities.isCacheFile(fname) || alreadyCounted.contains(t))
                     continue;
                 alreadyCounted.add(t);
                 ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
@@ -902,8 +902,6 @@ public class Diagnostics {
      */
     public static void termDefsByGivenFile(KB kb, HashSet<String> files) {
 
-        HashSet<String> ignore = new HashSet<>();
-        ignore.add("SUMO_Cache.kif");
         System.out.println("termDefsByGivenFile(): files: " + files);
         HashSet<String> alreadyCounted = new HashSet<>();
         HashMap<String,HashSet<String>> termsByFile = new HashMap<>();
@@ -933,7 +931,7 @@ public class Diagnostics {
         }
         for (String fname : termsByFile.keySet()) {  // make all terms not in file set already counted
             if (files.contains(fname) || fname.equals("domainEnglishFormat.kif") &&
-                    fname.equals("english_format.kif") || fname.equals("SUMO_Cache.kif"))
+                    fname.equals("english_format.kif") || KButilities.isCacheFile(fname))
                 continue;
             for (String term : termsByFile.get(fname)) {
                 if (debug) if (term.equals("AppleComputerCorporation"))

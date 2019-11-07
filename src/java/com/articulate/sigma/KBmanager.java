@@ -326,7 +326,7 @@ public class KBmanager implements Serializable {
                         if (!filename.startsWith((File.separator)))
                             filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
-                            if (filename.endsWith(KB._cacheFileSuffix)) {
+                            if (KButilities.isCacheFile(filename)) {
                                 if (useCacheFile)
                                     constituentsToAdd.add(filename);
                             }
@@ -371,7 +371,7 @@ public class KBmanager implements Serializable {
                         if (!filename.startsWith((File.separator)))
                             filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
-                            if (filename.endsWith(KB._cacheFileSuffix)) {
+                            if (KButilities.isCacheFile(filename)) {
                                 if (useCacheFile)
                                     kb.add(filename);
                             }
@@ -458,7 +458,7 @@ public class KBmanager implements Serializable {
                             	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                             String filename = (String) kbConst.getAttribute("filename");
                             if (!StringUtil.emptyString(filename)) {
-                                if (filename.endsWith(KB._cacheFileSuffix)) {
+                                if (KButilities.isCacheFile(filename)) {
                                     if (useCacheFile)
                                         constituentsToAdd.add(filename);
                                 }

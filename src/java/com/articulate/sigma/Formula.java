@@ -2037,7 +2037,7 @@ public class Formula implements Comparable, Serializable {
      * Test whether the Formula is automatically created by caching
      */
     public boolean isCached() {
-        return sourceFile != null && sourceFile.contains(KB._cacheFileSuffix);
+        return sourceFile != null && KButilities.isCacheFile(sourceFile);
     }
 
     /** ***************************************************************
