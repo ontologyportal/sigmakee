@@ -63,7 +63,7 @@
     show.append("</td></table>");
  }
  else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build the HTML format for all the formulas in
-     term = kb.simplifyTerm(term);
+     term = kb.simplifyTerm(term, true);
      
      show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
      show.append("<table width=\"95%\"><tr><td width=\"50%\"><font face=\"Arial,helvetica\" size=\"+3\"><b>");
