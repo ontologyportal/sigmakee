@@ -318,27 +318,34 @@ public class Graph {
      *                 in the graph.
      */
     public boolean createDotGraph(KB kb, String term, String relation, int above, int below,
-                                  String fname) throws IOException {
+                                  int limitInt, String fname, String fileRestrict) throws IOException {
 
         FileWriter fw = null;
         PrintWriter pw = null;
-        String dir = KBmanager.getMgr().getPref("graphDir");
-        String filename = System.getenv("CATALINA_HOME") + File.separator + "webapps" +
-                File.separator + "sigma" + File.separator + "graph" + File.separator + fname;
+        String sep = File.separator;
+        String dir = System.getenv("CATALINA_HOME") + sep + "webapps" +
+                sep + "sigma" + sep + "graph";
+        String filename = System.getenv("CATALINA_HOME") + sep + "webapps" +
+                sep + "sigma" + sep + "graph" + sep + fname;
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         try {
             File dirfile = new File(dir);
             if (!dirfile.exists())
                 dirfile.mkdir();
             fw = new FileWriter(filename + ".dot");
+            System.out.println("Graph.createGraphBody(): creating file at " + filename);
             pw = new PrintWriter(fw);
             HashSet<String> result = new HashSet<String>();
             HashSet<String> start = new HashSet<String>();
             HashSet<String> checked = new HashSet<String>();
             start.add(term);
-            result = createDotGraphBody(kb,start,checked,relation,above,below,true);
-            start.add(term);
-            result.addAll(createDotGraphBody(kb,start,checked,relation,above,below,false));
+            if (relation.equals("all"))
+                result = createDotGraphNetBody(kb, start, checked, limitInt, fileRestrict);
+            else {
+                result = createDotGraphBody(kb, start, checked, relation, above, below, true);
+                start.add(term);
+                result.addAll(createDotGraphBody(kb, start, checked, relation, above, below, false));
+            }
             pw.println("digraph G {");
             pw.println("  rankdir=LR");
             Iterator<String> it = result.iterator();
@@ -374,9 +381,146 @@ public class Graph {
     /** *************************************************************
      * The main body for createDotGraph().
      */
+    private boolean rejectedTerm(String s) {
+
+        if (StringUtil.emptyString(s))
+            return true;
+        if (Formula.isLogicalOperator(s) || Formula.isMathFunction(s) ||
+                Formula.isComparisonOperator(s) || Formula.DOC_PREDICATES.contains(s) ||
+                StringUtil.isNumeric(s) || Formula.DEFN_PREDICATES.contains(s) ||
+                StringUtil.isQuotedString(s))
+            return true;
+        return false;
+    }
+
+    /** *************************************************************
+     * The main body for createDotGraph() when no relation is specified.
+     * Don't graph math, logical operators or documentation relations
+     */
+    private HashSet<String> createDotGraphNetBody(KB kb, HashSet<String> startSet, HashSet<String> checkedSet,
+                                               int size, String fileRestrict) {
+
+        if (!StringUtil.emptyString(fileRestrict) && !kb.containsFile(fileRestrict)) {
+            System.out.println("Error in createDotGraphNetBody(): no such file: " + fileRestrict);
+            return null;
+        }
+        System.out.println("createDotGraphNetBody(): start set: " + startSet);
+        HashSet<String> result = new HashSet<String>();
+        HashSet<String> newStartSet = new HashSet<String>();
+        while (startSet.size() > 0) {
+            Iterator<String> it = startSet.iterator();
+            String term = it.next();
+            System.out.println("createDotGraphNetBody(): checking term: " + term);
+            boolean removed = startSet.remove(term);
+            if (!removed) {
+                String err = "Error in Graph.createDotGraphNetBody(): " + term + " not removed";
+                errors.add(err);
+                System.out.println(err);
+            }
+            if (StringUtil.isQuotedString(term) || Formula.isLogicalOperator(term))
+                continue;
+            ArrayList<Formula> stmts;
+
+            stmts = kb.ask("arg",1, term);
+            for (int i = 0; i < stmts.size(); i++) {
+                Formula f = stmts.get(i);
+                if (f.isCached())
+                    continue;
+                else {
+                    String parent = f.getArgument(2);
+                    if (rejectedTerm(parent))
+                        continue;
+                    if (!StringUtil.emptyString(fileRestrict) && !StringUtil.noPath(f.getSourceFile()).equals(fileRestrict))
+                        continue;
+                    String rel = f.getArgument(0);
+                    if (Formula.DOC_PREDICATES.contains(rel))
+                        continue;
+                    String link = "[ label = \"" + rel + "\" ]";
+                    String arrow = " -> ";
+                    String s = "  \"" + parent + "\"" + arrow + "\"" + term + "\" " + link + ";";
+                    System.out.println("createDotGraphNetBody(): result in adding parents: " + s);
+                    graphsize++;
+                    if (graphsize < size)
+                        result.add(s);
+                    else
+                        return result;
+                    checkedSet.add(term);
+                    if (!checkedSet.contains(parent))
+                        newStartSet.add(parent);
+                }
+            }
+
+            stmts = kb.ask("arg",2, term);
+            for (int i = 0; i < stmts.size(); i++) {
+                Formula f = stmts.get(i);
+                if (f.isCached())
+                    continue;
+                else {
+                    String parent = f.getArgument(1);
+                    if (rejectedTerm(parent))
+                        continue;
+                    if (!StringUtil.emptyString(fileRestrict) && !StringUtil.noPath(f.getSourceFile()).equals(fileRestrict))
+                        continue;
+                    String rel = f.getArgument(0);
+                    if (Formula.DOC_PREDICATES.contains(rel))
+                        continue;
+                    String link = "[ label = \"" + rel + "\" ]";
+                    String arrow = " -> ";
+                    String s = "  \"" + term + "\"" + arrow + "\"" + parent + "\" " + link + ";";
+                    System.out.println("createDotGraphNetBody(): result in adding children: " + s);
+                    graphsize++;
+                    if (graphsize < size)
+                        result.add(s);
+                    else
+                        return result;
+                    checkedSet.add(term);
+                    if (!checkedSet.contains(parent))
+                        newStartSet.add(parent);
+                }
+            }
+
+            stmts = kb.ask("ant",0,term);
+            ArrayList<Formula> cons = kb.ask("ant",0,term);
+            if (cons != null)
+                stmts.addAll(cons);
+            for (int i = 0; i < stmts.size(); i++) {
+                Formula f = stmts.get(i);
+                if (f.isCached())
+                    continue;
+                else {
+                    Set<String> terms = f.collectTerms();
+                    for (String s : terms) {
+                        if (rejectedTerm(s) || term.equals(s))
+                            continue;
+                        if (!StringUtil.emptyString(fileRestrict) && !StringUtil.noPath(f.getSourceFile()).equals(fileRestrict))
+                            continue;
+                        String rel = "link";
+                        String link = "[ dir=none, label = \"" + rel + "\" ]";
+                        String arrow = " -> ";
+                        String str = "  \"" + term + "\"" + arrow + "\"" + s + "\" " + link + ";";
+                        graphsize++;
+                        if (graphsize < size)
+                            result.add(str);
+                        else
+                            return result;
+                        checkedSet.add(term);
+                        if (!checkedSet.contains(s))
+                            newStartSet.add(s);
+                    }
+                }
+            }
+            result.addAll(createDotGraphNetBody(kb,newStartSet,checkedSet,size,fileRestrict));
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * The main body for createDotGraph().
+     */
     private HashSet<String> createDotGraphBody(KB kb, HashSet<String> startSet, HashSet<String> checkedSet, 
                                    String relation, int above, int below, boolean upSearch) {
 
+        System.out.println("createDotGraph(): start set: " + startSet);
         HashSet<String> result = new HashSet<String>();
         HashSet<String> newStartSet = new HashSet<String>();
         newStartSet.addAll(startSet);
@@ -392,38 +536,51 @@ public class Graph {
         while (startSet.size() > 0) {
             Iterator<String> it = startSet.iterator();
             String term = (String) it.next();
-                        
+            System.out.println("createDotGraph(): checking term: " + term);
             boolean removed = startSet.remove(term);
             if (!removed) {
                 String err = "Error in Graph.createDotGraphBody(): " + term + " not removed";
                 errors.add(err);
                 System.out.println(err);
             }
+            if (StringUtil.isQuotedString(term))
+                continue;
             ArrayList<Formula> stmts;
-            if (upSearch) 
-                stmts = kb.askWithRestriction(0,relation,1,term);
-            else 
-                stmts = kb.askWithRestriction(0,relation,2,term);
-            
+            if (upSearch) {
+                stmts = kb.askWithRestriction(0, relation, 1, term);
+            }
+            else {
+                stmts = kb.askWithRestriction(0, relation, 2, term);
+            }
+
             for (int i = 0; i < stmts.size(); i++) {
                 Formula f = stmts.get(i);
                 if (f.isCached())
                     continue;
-                String parent = f.getArgument(2); 
-                String child = f.getArgument(1);                      
-                String s = "  \"" + parent + "\" -> \"" + child + "\";";
-                graphsize++;
-                if (graphsize < 100) 
-                    result.add(s);
-                else
-                    return result;
-                checkedSet.add(term);
-                if (upSearch) {
-                    newStartSet.add(parent);
-                }
                 else {
-                    newStartSet.add(child);
-                }                
+                    String child = f.getArgument(1);
+                    String parent = f.getArgument(2);
+                    String link = "";
+                    String arrow = "->";
+                    String rel = f.getArgument(0);
+                    if (relation.equals("all")) {
+                        link = "[ label = \"" + rel + "\" ]";
+                        arrow = "--";
+                    }
+                    String s = "  \"" + parent + "\"" + arrow + "\"" + child + "\" " + link + ";";
+                    graphsize++;
+                    if (graphsize < 100)
+                        result.add(s);
+                    else
+                        return result;
+                    checkedSet.add(term);
+                    if (upSearch) {
+                        newStartSet.add(parent);
+                    }
+                    else {
+                        newStartSet.add(child);
+                    }
+                }
                 result.addAll(createDotGraphBody(kb,newStartSet,checkedSet,relation,above,below,upSearch));
             } 
         }
@@ -431,39 +588,43 @@ public class Graph {
     }
 
     /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("Graphing");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -g <term> <rel> - create a dot graph file with a term and relation");
+    }
+
+    /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
 
-        try {
-            KBmanager.getMgr().initializeOnce();
+        System.out.println("INFO in Graph.main()");
+        if (args != null && args.length > 1 && args[0].equals("-h")) {
+            showHelp();
+        }
+        KBmanager.getMgr().initializeOnce();
+        if (args != null && args.length > 2 && args[0].equals("-g")) {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Graph g = new Graph();
-            String start = "Process";
-            String relation = "subclass";
-            HashSet<String> result = new HashSet<String>();
+            String start = args[1];
+            String relation = args[2];
             HashSet<String> checked = new HashSet<String>();
             HashSet<String> startSet = new HashSet<String>();
+            String fileRestrict = "";
             startSet.add(start);
-            result = g.createDotGraphBody(kb,startSet,checked,relation,0,2,false);
-            System.out.println(result);
-            //g.createDotGraph(kb, "Process", "subclass", 2,2, "graph.txt");
-        } 
-        catch (Exception ex ) {
-            System.out.println(ex.getMessage());
+            try {
+                    g.createDotGraph(kb, start, relation, 2, 2, 100, "graph.txt", fileRestrict);
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.getStackTrace();
+            }
         }
-
-        /*
-        Graph g = new Graph();
-        HashSet result = g.createDotGraph(kb,"Entity","subclass");
-        System.out.println("digraph G {");
-        System.out.println("  rankdir=LR");
-        Iterator it = result.iterator();
-        while (it.hasNext()) {
-            String s = (String) it.next();
-            System.out.println(s);
-        }
-        System.out.println("}");
-        */
+        else
+            showHelp();
     }
 }

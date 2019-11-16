@@ -50,7 +50,11 @@ function setWidth(id) {
   Graph g = new Graph();
   String view = request.getParameter("view");
   String inst = request.getParameter("inst");
-  int limitInt = 100;
+  String all = request.getParameter("all");
+  String fileRestrict = request.getParameter("fileRestrict");
+  if (fileRestrict == null || fileRestrict.equals("null"))
+      fileRestrict = "";
+
   if (view == null)
   	view = "text";
   if (term == null || term.equals("null")) term = "Process";
@@ -73,6 +77,7 @@ function setWidth(id) {
   int downint = Integer.parseInt(down);
   if (downint > 10) 
       downint = 1;
+  int limitInt = 100;
   String limit = request.getParameter("limit");
   try {
       limitInt = Integer.parseInt(limit);
@@ -140,8 +145,12 @@ function setWidth(id) {
    			  if (term != null && relation != null && kb != null && role.equalsIgnoreCase("admin")) {
    			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
    			      try {
+   			          if (!StringUtil.emptyString(all))
+   			              relation = "all";
+   			          System.out.println("Graph.jsp: creating graph with limitInt=" + limitInt +
+   			              " and fileRestrict=" + fileRestrict);
    			          graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
-   			                                            Integer.parseInt(down),fname);
+   			                                            Integer.parseInt(down),limitInt,fname,fileRestrict);
    			      }
    			      catch (Exception ex) {
    			          graphAvailable = false;
@@ -163,6 +172,8 @@ function setWidth(id) {
   Levels &quot;below&quot;:<input type="text" size="2" name="down" value="<%=down %>">
   Total term limit:<input type="text" size="2" name="limit" value="<%=limit %>">
   Show instances: <input type="checkbox" name="inst" value="inst" <%= (inst != null && inst.equals("inst")) ? "checked" : "" %>><br>
+  All relations: <input type="checkbox" name="all" value="all" <%= (all != null && all.equals("all")) ? "checked" : "" %>>
+  Restrict to file:<input type="text" size="30" name="fileRestrict" value="<%=fileRestrict %>"> <br>
   Columns to display:<%=HTMLformatter.createMultiMenu("columns",g.columnList) %>
   <input type="hidden" value="" onLoad="setWidth(this)" name="scrWidth" id="scrWidth"/>
       <script type="text/javascript">setWidth('scrWidth');</script>
