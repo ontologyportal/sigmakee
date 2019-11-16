@@ -97,9 +97,23 @@ public class Formula implements Comparable, Serializable {
 
     public static final List<String> DOC_PREDICATES = Arrays.asList("documentation",
                                                                     "comment",
-                                                                    "format" //,
-                                                                    // "termFormat"
+                                                                    "format",
+                                                                    "termFormat",
+                                                                    "lexicon",
+                                                                    "externalImage",
+                                                                    "synonymousExternalConcept"
                                                                     );
+
+    public static final List<String> DEFN_PREDICATES = Arrays.asList("instance",
+            "subclass",
+            "domain",
+            "domainSubclass",
+            "range",
+            "rangeSubclass",
+            "subAttribute",
+            "subrelation"
+    );
+
     /** The source file in which the formula appears. */
     public String sourceFile;
 
