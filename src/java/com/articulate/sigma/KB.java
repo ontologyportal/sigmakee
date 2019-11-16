@@ -2113,14 +2113,14 @@ public class KB implements Serializable {
     /*****************************************************************
      * Takes a filename without path and returns true if it occurs in the KB.
      *
-     * @param term A String.
+     * @param fname A String.
      * @return true or false.
      */
     public boolean containsFile(String fname) {
 
         for (String path : constituents) {
             if (path.contains("/")) {
-                path = path.substring(path.lastIndexOf('/')+1,path.length());
+                path = StringUtil.noPath(path);
             }
             if (path.equals(fname))
                 return true;
