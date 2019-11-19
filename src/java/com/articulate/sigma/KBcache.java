@@ -643,7 +643,8 @@ public class KBcache implements Serializable {
                                     if (instanceOf.get(child) != null)
                                         pset = instanceOf.get(child);
                                     pset.add(cl);
-                                    pset.addAll(superclasses.get(cl));
+                                    if (superclasses != null && superclasses.get(cl) != null)
+                                        pset.addAll(superclasses.get(cl));
                                     instanceOf.put(child, pset);
                                 }
                             }
