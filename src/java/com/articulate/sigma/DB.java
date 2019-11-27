@@ -656,9 +656,9 @@ public class DB {
                         pw = new PrintWriter(new FileWriter(canonicalPath));
                         foundFirstOne = true;
                     }
-                    printF.read(StringUtil.normalizeSpaceChars(f.theFormula));
+                    printF.read(StringUtil.normalizeSpaceChars(f.getFormula()));
                     if (printF.getArgument(0).equalsIgnoreCase("contentRegexPattern"))
-                        printF.theFormula = StringUtil.escapeEscapeChars(printF.theFormula);
+                        printF.read(StringUtil.escapeEscapeChars(printF.getFormula()));
                     // stmt = StringUtil.removeEscapedEscapes(stmt);
                     pw.println(printF.toString());
                     pw.println("");
