@@ -129,7 +129,7 @@ public class SUMOKBtoTPTPKB {
             if (result != null) {
                 for (int i = 0; i < result.size(); i++) {
                     Formula f = result.get(i);
-                    String s = f.theFormula.replace(value,key);
+                    String s = f.getFormula().replace(value,key);
                     if (!onlyPlainFOL) {
                         pr.println(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++ +
                                 ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
@@ -269,7 +269,7 @@ public class SUMOKBtoTPTPKB {
             int counter = 0;
             int formCount = 0;
             for (Formula f : orderedFormulae) {
-                if (!f.theFormula.startsWith("(documentation")) {
+                if (!f.getFormula().startsWith("(documentation")) {
                     pr.println("% f: " + f.format("", "", " "));
                     pr.println("% " + formCount++ + " of " + orderedFormulae.size() +
                             " from file " + f.sourceFile + " at line " + f.startLine);
@@ -291,7 +291,7 @@ public class SUMOKBtoTPTPKB {
                     for (Formula f3 : withRelnRenames) {
                         if (lang.equals("fof")) {
                             SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula(lang);
-                            result = stptp.tptpParseSUOKIFString(f3.theFormula, false);
+                            result = stptp.tptpParseSUOKIFString(f3.getFormula(), false);
                             //pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null)
                                 f.theTptpFormulas.add(result);
@@ -303,7 +303,7 @@ public class SUMOKBtoTPTPKB {
                             stfa.sorts = stfa.missingSorts(f3);
                             if (stfa.sorts != null && stfa.sorts.size() > 0)
                                 f3.tffSorts.addAll(stfa.sorts);
-                            result = stfa.process(f3.theFormula);
+                            result = stfa.process(f3.getFormula());
                             if (!StringUtil.emptyString(result))
                                 f.theTptpFormulas.add(result);
                             else
