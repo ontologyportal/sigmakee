@@ -11,38 +11,57 @@ import static org.junit.Assert.assertEquals;
  */
 public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestBase {
 
+    /** ***************************************************************
+     */
+    public void test(String label, String stmt, String expected) {
+
+        System.out.println("=============================");
+        System.out.println("FormulaPreprocessorAddTypeRestrictionsTest: " + label);
+        System.out.println();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        KB kb = SigmaTestBase.kb;
+        Formula f = new Formula(stmt);
+        Formula actualF = fp.addTypeRestrictions(f, kb);
+        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.getFormula(), false);
+
+        Formula expectedF = new Formula(expected);
+        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.getFormula(), false);
+
+        System.out.println("actual: " + actualTPTP);
+        System.out.println("expected: " + expectedTPTP);
+        if (!StringUtil.emptyString(actualTPTP) && actualTPTP.equals(expectedTPTP))
+            System.out.println(label + " : Success");
+        else
+            System.out.println(label + " : fail!");
+        assertEquals(expectedTPTP, actualTPTP);
+    }
+
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions1() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(<=>\n" +
                 "   (instance ?GRAPH PseudoGraph)\n" +
                 "   (exists (?LOOP)\n" +
                 "      (and\n" +
                 "         (instance ?LOOP GraphLoop)\n" +
                 "         (graphPart ?LOOP ?GRAPH))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(<=>\n" +
+        String expected = "(<=>\n" +
                 "   (instance ?GRAPH PseudoGraph)\n" +
                 "   (exists (?LOOP)\n" +
                 "      (and\n" +
                 "         (instance ?LOOP GraphLoop)\n" +
-                "         (graphPart ?LOOP ?GRAPH))))");
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+                "         (graphPart ?LOOP ?GRAPH))))";
+        test("testAddTypeRestrictions1",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions2() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "  (and\n" +
                 "    (graphMeasure ?G ?M)\n" +
@@ -52,12 +71,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "    (abstractCounterpart ?AA ?PA)\n" +
                 "    (arcWeight ?AA (MeasureFn ?N ?M)))\n" +
                 "  (measure ?PA (MeasureFn ?N ?M)))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=> \n" +
+        String expected = "(=> \n" +
                 "  (and \n" +
                 "    (instance ?PA Object)\n" +
                 "    (instance ?G Graph)\n" +
@@ -72,17 +87,16 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "        (abstractCounterpart ?AN ?PN)\n" +
                 "        (abstractCounterpart ?AA ?PA)\n" +
                 "        (arcWeight ?AA (MeasureFn ?N ?M)) )\n" +
-                "      (measure ?PA (MeasureFn ?N ?M)) ))");
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
+                "      (measure ?PA (MeasureFn ?N ?M)) ))";
 
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions2",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions3() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "   (instance ?CLOUD WaterCloud)\n" +
                 "   (forall (?PART)\n" +
@@ -97,12 +111,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "               (measure ?WATER ?MEASURE1)\n" +
                 "               (measure ?PART ?MEASURE2)\n" +
                 "               (greaterThan ?MEASURE1 ?MEASURE2))))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=> \n" +
+        String expected = "(=> \n" +
                 "  (and \n" +
                 "    (instance ?MEASURE1 PhysicalQuantity)\n" +
                 "    (instance ?MEASURE2 PhysicalQuantity) )\n" +
@@ -110,7 +120,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "    (instance ?CLOUD WaterCloud)\n" +
                 "    (forall (?PART)\n" +
                 "      (=>\n" +
-                "        (and (instance ?PART Object))\n" +
+                "        (instance ?PART Object)\n" +
                 "        (=>\n" +
                 "          (and\n" +
                 "            (part ?PART ?CLOUD)\n" +
@@ -121,48 +131,40 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "              (part ?WATER ?CLOUD)\n" +
                 "              (measure ?WATER ?MEASURE1)\n" +
                 "              (measure ?PART ?MEASURE2)\n" +
-                "              (greaterThan ?MEASURE1 ?MEASURE2) )))))))");
+                "              (greaterThan ?MEASURE1 ?MEASURE2) )))))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions3()",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions4() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "   (and\n" +
                 "      (instance ?MIXTURE Mixture)\n" +
                 "      (part ?SUBSTANCE ?MIXTURE)\n" +
                 "      (not (instance ?SUBSTANCE Mixture)))\n" +
                 "   (instance ?SUBSTANCE PureSubstance))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=>\n" +
-                "(and (instance ?SUBSTANCE Object))\n" +
+        String expected = "(=>\n" +
+                "(instance ?SUBSTANCE Object)\n" +
                 "(=>\n" +
                 "  (and\n" +
                 "    (instance ?MIXTURE Mixture)\n" +
                 "    (part ?SUBSTANCE ?MIXTURE)\n" +
                 "    (not (instance ?SUBSTANCE Mixture) ))\n" +
-                "  (instance ?SUBSTANCE PureSubstance) ))");
+                "  (instance ?SUBSTANCE PureSubstance) ))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions4()",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions5() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "  (axis ?AXIS ?OBJ)\n" +
                 "  (exists (?R)\n" +
@@ -176,12 +178,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "            (instance ?R2 Rotating)\n" +
                 "            (subProcess ?R2 ?R)\n" +
                 "            (experiencer ?R2 ?AXIS)))))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=> \n" +
+        String expected = "(=> \n" +
                 "  (and \n" +
                 "    (instance ?OBJ Agent)\n" +
                 "    (instance ?AXIS Agent) )\n" +
@@ -197,18 +195,16 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "            (and\n" +
                 "              (instance ?R2 Rotating)\n" +
                 "              (subProcess ?R2 ?R)\n" +
-                "              (experiencer ?R2 ?AXIS) )))))))");
+                "              (experiencer ?R2 ?AXIS) )))))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions5",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions6() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "    (serviceFee ?Bank ?Action ?Amount)\n" +
                 "    (exists (?Fee)\n" +
@@ -217,12 +213,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "            (agent ?Fee ?Bank)\n" +
                 "            (causes ?Action ?Fee)\n" +
                 "            (amountCharged ?Fee ?Amount))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=> \n" +
+        String expected = "(=> \n" +
                 "  (and \n" +
                 "    (instance ?Amount CurrencyMeasure)\n" +
                 "    (instance ?Action FinancialTransaction)\n" +
@@ -234,53 +226,43 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "        (instance ?Fee ChargingAFee)\n" +
                 "        (agent ?Fee ?Bank)\n" +
                 "        (causes ?Action ?Fee)\n" +
-                "        (amountCharged ?Fee ?Amount) ))))");
+                "        (amountCharged ?Fee ?Amount) ))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions6",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions7() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "    (forall (?ELEMENT)\n" +
                 "        (<=>\n" +
                 "            (element ?ELEMENT ?SET1)\n" +
                 "            (element ?ELEMENT ?SET2)))\n" +
                 "    (equal ?SET1 ?SET2))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=> \n" +
+        String expected = "(=> \n" +
                 "  (and \n" +
                 "    (instance ?SET1 Set)\n" +
                 "    (instance ?SET2 Set) )\n" +
                 "  (=>\n" +
                 "    (forall (?ELEMENT)\n" +
-                "      (=> " +
-                "        (and (instance ?ELEMENT Entity))" +
                 "        (<=>\n" +
                 "          (element ?ELEMENT ?SET1)\n" +
-                "          (element ?ELEMENT ?SET2)) ))\n" +
-                "    (equal ?SET1 ?SET2) ))");
+                "          (element ?ELEMENT ?SET2)) )\n" +
+                "    (equal ?SET1 ?SET2) ))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions7",stmt,expected);
     }
 
-    @Ignore
+    /** ***************************************************************
+     */
+ //   @Ignore
     @Test
     public void testAddTypeRestrictions8() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "    (and\n" +
                 "        (typicalPart ?PART ?WHOLE)\n" +
@@ -299,16 +281,12 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "                            (instance ?Z ?WHOLE)\n" +
                 "                            (part ?X ?Z)))))))\n" +
                 "    (greaterThan ?PARTPROB ?NOTPARTPROB))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=> \n" +
+        String expected = "(=> \n" +
                 "  (and \n" +
-                "    (instance ?NOTPARTPROB Quantity)\n" +
+                "    (instance ?NOTPARTPROB RealNumber)\n" +
                 "    (instance ?X Object)\n" +
-                "    (instance ?PARTPROB Quantity) )\n" +
+                "    (instance ?PARTPROB RealNumber))\n" +
                 "  (=>\n" +
                 "    (and\n" +
                 "      (typicalPart ?PART ?WHOLE)\n" +
@@ -325,54 +303,41 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "            (exists (?Z)\n" +
                 "              (and\n" +
                 "                (instance ?Z ?WHOLE)\n" +
-                "                (part ?X ?Z)))))) )\n" +
-                "    (greaterThan ?PARTPROB ?NOTPARTPROB) ))");
+                "                (part ?X ?Z)))))))\n" +
+                "    (greaterThan ?PARTPROB ?NOTPARTPROB)))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions8",stmt,expected);
     }
 
-    /**
-     * To pass testAddTypeRestrictions9, we need to add (domain located 1 Physical)
-     * and (domain located 2 Object) in Merge.kif
+    /** ***************************************************************
      */
-    @Ignore
     @Test
     public void testAddTypeRestrictions9() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(<=>\n" +
                 "  (instance ?PHYS Physical)\n" +
                 "  (exists (?LOC ?TIME)\n" +
                 "    (and\n" +
                 "      (located ?PHYS ?LOC)\n" +
                 "      (time ?PHYS ?TIME))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(<=>\n" +
+        String expected = "(<=>\n" +
                 "  (instance ?PHYS Physical)\n" +
                 "  (exists (?LOC ?TIME)\n" +
                 "    (and\n" +
-                "      (instance ?TIME TimePosition)\n" +
                 "      (instance ?LOC Object)\n" +
+                "      (instance ?TIME TimePosition)\n" +
                 "      (located ?PHYS ?LOC)\n" +
-                "      (time ?PHYS ?TIME))))");
+                "      (time ?PHYS ?TIME))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions9",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions10() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(=>\n" +
                 "  (instance ?GROUP BeliefGroup)\n" +
                 "  (exists (?BELIEF)\n" +
@@ -380,35 +345,27 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "      (=>\n" +
                 "        (member ?MEMB ?GROUP)\n" +
                 "        (believes ?MEMB ?BELIEF)))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=>\n" +
+        String expected = "(=>\n" +
                 "  (instance ?GROUP BeliefGroup)\n" +
                 "  (exists (?BELIEF)\n" +
                 "    (and\n" +
                 "      (instance ?BELIEF Formula)\n" +
                 "      (forall (?MEMB)\n" +
                 "        (=>\n" +
-                "          (and " +
-                "            (instance ?MEMB SelfConnectedObject)" +
-                "            (instance ?MEMB CognitiveAgent))\n" +
+                "          (instance ?MEMB CognitiveAgent)\n" +
                 "          (=>\n" +
                 "            (member ?MEMB ?GROUP)\n" +
-                "            (believes ?MEMB ?BELIEF) ))))))");
+                "            (believes ?MEMB ?BELIEF) ))))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions10",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions11() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
         String stmt = "(<=>\n" +
                 "  (instance ?OBJ SelfConnectedObject)\n" +
                 "  (forall (?PART1 ?PART2)\n" +
@@ -416,12 +373,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "    (equal ?OBJ\n" +
                 "      (MereologicalSumFn ?PART1 ?PART2))\n" +
                 "    (connected ?PART1 ?PART2))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(<=>\n" +
+        String expected = "(<=>\n" +
                 "  (instance ?OBJ SelfConnectedObject)\n" +
                 "  (forall (?PART1 ?PART2)\n" +
                 "    (=>\n" +
@@ -431,18 +384,17 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "      (=>\n" +
                 "        (equal ?OBJ\n" +
                 "          (MereologicalSumFn ?PART1 ?PART2))\n" +
-                "        (connected ?PART1 ?PART2) ))))");
+                "        (connected ?PART1 ?PART2) ))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions11",stmt,expected);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testAddTypeRestrictions12() {
 
-        FormulaPreprocessor fp = new FormulaPreprocessor();
-        KB kb = SigmaTestBase.kb;
+        SUMOformulaToTPTPformula.debug = true;
         String stmt = "(=>\n" +
                 "  (instance ?S Seafood)\n" +
                 "  (exists (?X ?SEA)\n" +
@@ -451,12 +403,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "      (instance ?X ?ANIMAL)\n" +
                 "      (instance ?SEA BodyOfWater)\n" +
                 "      (inhabits ?X ?SEA))))";
-        Formula f = new Formula();
-        f.read(stmt);
-        Formula actualF = fp.addTypeRestrictions(f, kb);
-        String actualTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(actualF.theFormula, false);
 
-        Formula expectedF = new Formula("(=>\n" +
+        String expected = "(=>\n" +
                 "  (and\n" +
                 "    (subclass ?S Meat)\n" +
                 "    (subclass ?ANIMAL Animal)\n" +
@@ -468,10 +416,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "        (meatOfAnimal ?S ?ANIMAL)\n" +
                 "        (instance ?X ?ANIMAL)\n" +
                 "        (instance ?SEA BodyOfWater)\n" +
-                "        (inhabits ?X ?SEA))))))");
+                "        (inhabits ?X ?SEA)))))";
 
-        String expectedTPTP = SUMOformulaToTPTPformula.tptpParseSUOKIFString(expectedF.theFormula, false);
-
-        assertEquals(expectedTPTP, actualTPTP);
+        test("testAddTypeRestrictions12",stmt,expected);
     }
 }
