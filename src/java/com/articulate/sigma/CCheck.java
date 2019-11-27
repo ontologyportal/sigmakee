@@ -214,7 +214,7 @@ public class CCheck implements Runnable {
         
            pw.println("    <entry>");
         pw.println("      <query>");            
-        pw.println("        " + query.theFormula);
+        pw.println("        " + query.getFormula());
         pw.println("      </query>");
         pw.println("      <processedStatement>");
         pw.println("        " + processedQ);
@@ -294,7 +294,7 @@ public class CCheck implements Runnable {
         
         pw.println("    <entry>");
         pw.println("      <query>");            
-        pw.println("        " + query.theFormula);
+        pw.println("        " + query.getFormula());
         pw.println("      </query>");
         pw.println("      <processedStatement>");
         pw.println("        " + processedQ);
@@ -369,7 +369,7 @@ public class CCheck implements Runnable {
                         System.out.println("Error from inference engine: " + e.getMessage());
                     }
                 }                                
-                empty.tell(query.theFormula);
+                empty.tell(query.getFormula());
             }
             pw.println("  </entries>");
             pw.print("</ConsistencyCheck>");
