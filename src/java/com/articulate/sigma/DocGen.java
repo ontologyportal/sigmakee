@@ -5150,7 +5150,7 @@ public class DocGen {
                     for (int i = 0; i < localLimit; i++) {
                         Formula form = (Formula) forms.get(i);
                         result.append(NLGUtils.htmlParaphrase(kbHref,
-                                form.theFormula,
+                                form.getFormula(),
                                 kb.getFormatMap(language),
                                 kb.getTermFormatMap(language),
                                 kb,
@@ -5175,7 +5175,7 @@ public class DocGen {
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
-                            form.theFormula,
+                            form.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
@@ -5198,7 +5198,7 @@ public class DocGen {
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
-                            form.theFormula,
+                            form.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
@@ -5221,7 +5221,7 @@ public class DocGen {
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
-                            form.theFormula,
+                            form.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
@@ -5245,7 +5245,7 @@ public class DocGen {
                 for (int i = 0; i < localLimit; i++) {
                     Formula form = (Formula) forms.get(i);
                     result.append(NLGUtils.htmlParaphrase(kbHref,
-                            form.theFormula,
+                            form.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,

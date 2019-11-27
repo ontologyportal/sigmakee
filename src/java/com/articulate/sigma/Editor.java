@@ -20,9 +20,9 @@ public class Editor {
      */
     public static String createFormPage(KB kb, String term, Formula f) {
 
-        if (f.theFormula.indexOf("(",1) < 0) {  // a simple statement
+        if (f.getFormula().indexOf("(",1) < 0) {  // a simple statement
             Formula temp = new Formula();
-            temp.read(f.theFormula);
+            temp.read(f.getFormula());
             String relation = temp.car();
             temp.read(temp.cdr());
             
