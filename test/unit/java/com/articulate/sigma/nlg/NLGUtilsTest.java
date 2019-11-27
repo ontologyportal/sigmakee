@@ -116,7 +116,7 @@ public class NLGUtilsTest extends UnitTestBase {
                 "                    (agent ?event ?he)))";
         Formula formula = new Formula(stmt);
 
-        List<String> actual = NLGUtils.collectOrderedVariables(formula.theFormula);
+        List<String> actual = NLGUtils.collectOrderedVariables(formula.getFormula());
 
         List<String> expected = Lists.newArrayList("?he", "?event");
 
@@ -128,7 +128,7 @@ public class NLGUtilsTest extends UnitTestBase {
         String stmt =   "(agent ?event ?he)";
         Formula formula = new Formula(stmt);
 
-        List<String> actual = NLGUtils.collectOrderedVariables(formula.theFormula);
+        List<String> actual = NLGUtils.collectOrderedVariables(formula.getFormula());
 
         List<String> expected = Lists.newArrayList("?event", "?he");
 
@@ -140,7 +140,7 @@ public class NLGUtilsTest extends UnitTestBase {
         String stmt =   "(names \"John\" ?H)";
         Formula formula = new Formula(stmt);
 
-        List<String> actual = NLGUtils.collectOrderedVariables(formula.theFormula);
+        List<String> actual = NLGUtils.collectOrderedVariables(formula.getFormula());
 
         List<String> expected = Lists.newArrayList("?H");
 
