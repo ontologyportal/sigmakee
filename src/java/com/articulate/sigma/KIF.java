@@ -242,8 +242,8 @@ public class KIF {
                     expression.append(")");
                     if (parenLevel == 0) { // The end of the statement...
                         String fstr = StringUtil.normalizeSpaceChars(expression.toString());
-                        f.theFormula = fstr.intern();
-                        if (formulaMap.keySet().contains(f.theFormula) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
+                        f.read(fstr.intern());
+                        if (formulaMap.keySet().contains(f.getFormula()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
                             String warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
@@ -262,37 +262,37 @@ public class KIF {
                                 throw new ParseException(errStr, f.startLine);
                             }
                         }
-                        keySet.add(f.theFormula); // Make the formula itself a key
+                        keySet.add(f.getFormula()); // Make the formula itself a key
                         keySet.add(f.createID());
                         f.endLine = st.lineno() + totalLinesForComments;
                         Iterator<String> it = keySet.iterator();
                         while (it.hasNext()) { // Add the expression but ...
                             String fkey = it.next();
                             if (formulas.containsKey(fkey)) {
-                                if (!formulaMap.keySet().contains(f.theFormula)) { // don't add keys if formula is already present
+                                if (!formulaMap.keySet().contains(f.getFormula())) { // don't add keys if formula is already present
                                     ArrayList<String> list = formulas.get(fkey);
-                                    if (StringUtil.emptyString(f.theFormula)) {
+                                    if (StringUtil.emptyString(f.getFormula())) {
                                         System.out.println("Error in KIF.parse(): Storing empty formula from line: "
                                                 + f.startLine);
                                         errorSet.add(errStr);
                                     }
-                                    else if (!list.contains(f.theFormula))
-                                        list.add(f.theFormula);
+                                    else if (!list.contains(f.getFormula()))
+                                        list.add(f.getFormula());
                                 }
                             }
                             else {
                                 ArrayList<String> list = new ArrayList<String>();
-                                if (StringUtil.emptyString(f.theFormula)) {
+                                if (StringUtil.emptyString(f.getFormula())) {
                                     System.out.println(
                                             "Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
                                     errorSet.add(errStr);
                                 }
-                                else if (!list.contains(f.theFormula))
-                                    list.add(f.theFormula);
+                                else if (!list.contains(f.getFormula()))
+                                    list.add(f.getFormula());
                                 formulas.put(fkey, list);
                             }
                         }
-                        formulaMap.put(f.theFormula, f);
+                        formulaMap.put(f.getFormula(), f);
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
@@ -469,7 +469,7 @@ public class KIF {
             }
             this.filename = file.getCanonicalPath();
             fr = new FileReader(file);
-            parse(fr);
+            parse(new BufferedReader(fr));
         }
         catch (Exception ex) {
             exThr = ex;
@@ -506,7 +506,7 @@ public class KIF {
             pr = new PrintWriter(fr);
             Iterator<Formula> it = formulaMap.values().iterator();
             while (it.hasNext())
-                pr.println(it.next().theFormula);
+                pr.println(it.next().getFormula());
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
