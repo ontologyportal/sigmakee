@@ -15,12 +15,12 @@ import static org.junit.Assert.*;
         CaseRoleTest.class,
         FormatTest.class,
         FormulaPreprocessorAddTypeRestrictionsTest.class,
-        FormulaPreprocessorIntegrationTest.class,
-        KBcacheTest.class,
-        KbIntegrationTest.class,
-        KBmanagerInitIntegrationTest.class,
-        PredVarInstIntegrationTest.class,
-        HtmlParaphraseIntegrationTest.class,
+        //FormulaPreprocessorIntegrationTest.class,
+        //KBcacheTest.class,
+        //KbIntegrationTest.class,
+        //KBmanagerInitIntegrationTest.class,
+        //PredVarInstIntegrationTest.class,
+        //HtmlParaphraseIntegrationTest.class,
 })
 public class IntegrationTestSuite extends IntegrationTestBase {
 
