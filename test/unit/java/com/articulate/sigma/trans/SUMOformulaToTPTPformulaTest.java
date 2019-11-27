@@ -1,5 +1,6 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.StringUtil;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import org.junit.Test;
 
@@ -16,18 +17,21 @@ public class SUMOformulaToTPTPformulaTest {
 
     /** ***************************************************************
      */
-    public void test(String kif, String actual, String expected, String label) {
+    public void test(String kif, String expected, String label) {
 
         System.out.println("=============================");
-        System.out.println(label);
+        System.out.println("SUMOformulaToTPTPformulaTest: " + label);
         System.out.println();
-        actual = actual.replaceAll("  "," ");
-        System.out.println("Actual:   " + actual);
+        String actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
+        if (!StringUtil.emptyString(actualRes))
+            actualRes = actualRes.replaceAll("  "," ");
+        System.out.println("Actual:   " + actualRes);
         System.out.println("Expected: " + expected);
-        if (actual.equals(expected))
+        if (!StringUtil.emptyString(actualRes) && actualRes.equals(expected))
             System.out.println(label + " : Success");
         else
             System.out.println(label + " : fail!");
+        assertEquals(expected, actualRes);
     }
 
     /** ***************************************************************
@@ -41,9 +45,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "(instance ?X P)" +
                 "(instance ?X Q))";
         expectedRes = "( ( ! [V__X] : (s__instance(V__X,s__P) => s__instance(V__X,s__Q)) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string1");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string1");
     }
 
     /** ***************************************************************
@@ -58,9 +60,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "(instance ?X R))" +
                 "(instance ?X ?T))";
         expectedRes = "( ( ! [V__X,V__T] : ((s__instance(V__X,s__Q) | s__instance(V__X,s__R)) => s__instance(V__X,V__T)) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string2");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string2");
     }
 
     /** ***************************************************************
@@ -74,9 +74,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "(instance ?X Q))" +
                 "(instance ?X R))";
         expectedRes = "( ( ! [V__X] : ((~ s__instance(V__X,s__Q)) | s__instance(V__X,s__R)) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string3");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string3");
     }
 
     /** ***************************************************************
@@ -92,9 +90,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "        (instance ?NUMBER RealNumber)))";
         expectedRes = "( ( ! [V__NUMBER] : (s__instance(V__NUMBER,s__NegativeRealNumber) <=> " +
                 "(s__lessThan(V__NUMBER,0) & s__instance(V__NUMBER,s__RealNumber))) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string4");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string4");
     }
 
     /** ***************************************************************
@@ -110,9 +106,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "        (instance ?NUMBER RealNumber)))";
         expectedRes = "( ( ! [V__NUMBER] : (s__instance(V__NUMBER,s__NegativeRealNumber) <=> " +
                 "(s__lessThan(V__NUMBER,0.001) & s__instance(V__NUMBER,s__RealNumber))) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string5");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string5");
     }
 
     /** ***************************************************************
@@ -123,9 +117,7 @@ public class SUMOformulaToTPTPformulaTest {
         String kifstring, expectedRes, actualRes;
         kifstring = "(<=> (temporalPart ?POS (WhenFn ?THING)) (time ?THING ?POS))";
         expectedRes = "( ( ! [V__POS,V__THING] : (s__temporalPart(V__POS,s__WhenFn(V__THING)) <=> s__time(V__THING,V__POS)) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string6");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string6");
     }
 
     /** ***************************************************************
@@ -147,9 +139,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "s__lessThanOrEqualTo(V__LM1,V__LM)) => " +
                 "s__capability(s__KappaFn(V__KILLING,(s__instance(V__KILLING,s__Killing) & " +
                 "s__patient(V__KILLING,V__O))),s__instrument__m,V__GUN)) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"hol");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"hol");
     }
 
     /** ***************************************************************
@@ -163,9 +153,7 @@ public class SUMOformulaToTPTPformulaTest {
         expectedRes = "( ( ! [V__ARTIFACT] : ((? [V__BUILD] : " +
                 "(s__instance(V__BUILD,s__Constructing) & s__result(V__BUILD,V__ARTIFACT))) <=> " +
                 "s__instance(V__ARTIFACT,s__StationaryArtifact)) ) )";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"string7");
-        assertEquals(expectedRes, actualRes);
+        test(kifstring,expectedRes,"string7");
     }
 
     /** ***************************************************************
@@ -175,10 +163,9 @@ public class SUMOformulaToTPTPformulaTest {
 
         String kifstring, expectedRes, actualRes;
 
+        //SUMOformulaToTPTPformula.debug = true;
         kifstring = "(instance equal BinaryPredicate)";
-        expectedRes = "s__instance(s__equal__m,s__BinaryPredicate)";
-        actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kifstring, false);
-        test(kifstring,actualRes,expectedRes,"embedded");
-        assertEquals(expectedRes, actualRes);
+        expectedRes = "( s__instance(s__equal__m,s__BinaryPredicate) )";
+        test(kifstring,expectedRes,"embedded");
     }
 }
