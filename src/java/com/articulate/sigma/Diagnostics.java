@@ -363,8 +363,8 @@ public class Diagnostics {
         HashSet<String> result = new HashSet<String>();
         Set<String> vars = f.collectAllVariables();
         for (String v : vars) {
-            int index = f.theFormula.indexOf(v);
-            int index2 = f.theFormula.indexOf(v,index+v.length());
+            int index = f.getFormula().indexOf(v);
+            int index2 = f.getFormula().indexOf(v,index+v.length());
             if (index2 == -1)
                 result.add(v);
         }
@@ -377,7 +377,7 @@ public class Diagnostics {
      */
     public static boolean quantifierNotInStatement(Formula f) {
 
-        if (f.theFormula == null || f.theFormula.length() < 1 ||
+        if (f.getFormula() == null || f.getFormula().length() < 1 ||
             !f.listP() || f.empty())
             return false;
         if (!Arrays.asList("forall", "exists").contains(f.car())) {
@@ -388,7 +388,7 @@ public class Diagnostics {
             return (quantifierNotInStatement(f1) || quantifierNotInStatement(f2));
         }
         Formula form = new Formula();
-        form.read(f.theFormula);
+        form.read(f.getFormula());
         if (form.car() != null && form.car().length() > 0) {    // This test shouldn't be needed.
             String rest = form.cdr();                   // Quantifier list plus rest of statement
             Formula quant = new Formula();
@@ -429,8 +429,8 @@ public class Diagnostics {
             Formula form = (Formula) it.next();
             if (!StringUtil.noPath(form.sourceFile).equals(fname))
                 continue;
-            if ((form.theFormula.indexOf("forall") != -1)
-                    || (form.theFormula.indexOf("exists") != -1)) {
+            if ((form.getFormula().indexOf("forall") != -1)
+                    || (form.getFormula().indexOf("exists") != -1)) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -452,8 +452,8 @@ public class Diagnostics {
 		Iterator<Formula> it = kb.formulaMap.values().iterator();
 		while (it.hasNext()) { 
 			Formula form = (Formula) it.next();
-			if ((form.theFormula.indexOf("forall") != -1)
-					|| (form.theFormula.indexOf("exists") != -1)) {
+			if ((form.getFormula().indexOf("forall") != -1)
+					|| (form.getFormula().indexOf("exists") != -1)) {
 				if (quantifierNotInStatement(form)) 
 					result.add(form);					
 			}
@@ -784,7 +784,7 @@ public class Diagnostics {
         if (proof.indexOf("Syntax error detected") != -1) {
             html = html.append("Syntax error in formula : <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
-            result = HTMLformatter.formatProofResult(proof,query.theFormula,
+            result = HTMLformatter.formatProofResult(proof,query.getFormula(),
                                                      pQuery,lineHtml,kbName,language);
             html = html.append(result);
             return html.toString();
@@ -797,7 +797,7 @@ public class Diagnostics {
         if (!ansstr.equalsIgnoreCase("no")) {
             html = html.append(testType + ": <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
-            result = HTMLformatter.formatProofResult(proof,query.theFormula,
+            result = HTMLformatter.formatProofResult(proof,query.getFormula(),
                                                      pQuery,lineHtml,kbName,language);
             html = html.append(result);
             return html.toString();
@@ -837,7 +837,7 @@ public class Diagnostics {
                 System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
                 while (q.hasNext()) {
                     Formula f = (Formula) q.next();
-                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.theFormula);
+                    System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     proof = empty.ask(processedQuery,timeout,maxAnswers) + " ";
@@ -855,7 +855,7 @@ public class Diagnostics {
                         return answer.toString();
                     }
                 }
-                empty.tell(query.theFormula);
+                empty.tell(query.getFormula());
             }
         }
         catch ( Exception ex ) {
@@ -906,15 +906,15 @@ public class Diagnostics {
         HashSet<String> alreadyCounted = new HashSet<>();
         HashMap<String,HashSet<String>> termsByFile = new HashMap<>();
         for (Formula f : kb.formulaMap.values()) {
-            if (debug) if (f.theFormula.contains("AppleComputerCorporation"))
+            if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): " + f);
             String fname = f.sourceFile;
             String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
-            if (debug) if (f.theFormula.contains("AppleComputerCorporation"))
+            if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): simple name: " + simpleName);
             HashSet<String> terms = (HashSet) f.collectTerms();
             HashSet<String> goodTerms = new HashSet<>();
-            if (debug) if (f.theFormula.contains("AppleComputerCorporation"))
+            if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): terms: " + terms);
             for (String t : terms) {
                 if (!Formula.isVariable(t) && t.charAt(0) != '"' && !StringUtil.isNumeric(t))
