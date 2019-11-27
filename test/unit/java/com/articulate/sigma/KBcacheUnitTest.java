@@ -84,8 +84,9 @@ public class KBcacheUnitTest {
     public void testRelations() {
 
         System.out.println("Test relations");
-        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute", "rel", "relsub", "subclass",
-                "subrelation", "CitizenryFn", "ResidentFn"));
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+                "var", "rel", "subclass", "CitizenryFn", "ResidentFn", "relsub",
+                "subrelation"));
         HashSet<String> actual = kb.kbCache.relations;
         assertEquals(expected, actual);
     }
@@ -173,7 +174,8 @@ public class KBcacheUnitTest {
     public void testInstances() {
 
         System.out.println("Test instances");
-        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute", "rel", "relsub", "subclass",
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+                "var", "rel", "relsub", "subclass",
                 "subrelation", "CitizenryFn", "ResidentFn"));
         HashSet<String> actual = kb.kbCache.instances.get("Relation");
         assertEquals(expected, actual);
@@ -215,8 +217,9 @@ public class KBcacheUnitTest {
     public void testInstancesForType() {
 
         System.out.println("Test testInstancesForType");
-        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute", "rel", "relsub", "subclass",
-                "subrelation", "CitizenryFn", "ResidentFn"));
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+                "var", "subclass", "rel", "CitizenryFn", "ResidentFn", "relsub",
+                "subrelation"));
         HashSet<String> actual = kb.kbCache.getInstancesForType("Relation");
         assertEquals(expected,actual);
     }
