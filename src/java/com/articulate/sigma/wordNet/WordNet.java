@@ -612,7 +612,7 @@ public class WordNet implements Serializable {
             long t1 = System.currentTimeMillis();
             FileReader r = new FileReader(nounFile);
             // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
-            lr = new LineNumberReader(r);
+            lr = new LineNumberReader(new BufferedReader(r));
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
@@ -756,7 +756,7 @@ public class WordNet implements Serializable {
             }
             long t1 = System.currentTimeMillis();
             FileReader r = new FileReader(verbFile);
-            lr = new LineNumberReader(r);
+            lr = new LineNumberReader(new BufferedReader(r));
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
@@ -849,8 +849,8 @@ public class WordNet implements Serializable {
                 return;
             }
             long t1 = System.currentTimeMillis();
-            FileReader r = new FileReader( adjFile );
-            lr = new LineNumberReader(r);
+            FileReader r = new FileReader(adjFile);
+            lr = new LineNumberReader(new BufferedReader(r));
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
@@ -918,8 +918,8 @@ public class WordNet implements Serializable {
                 return;
             }
             long t1 = System.currentTimeMillis();
-            FileReader r = new FileReader( advFile );
-            lr = new LineNumberReader(r);
+            FileReader r = new FileReader(advFile);
+            lr = new LineNumberReader(new BufferedReader(r));
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
@@ -3305,11 +3305,11 @@ public class WordNet implements Serializable {
      */
     public void synsetFromTermFormat(Formula form, String tf, String SUMOterm, KB kb) {
 
+        long millis = System.currentTimeMillis();
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf);
         String synsetID = null;
         String pos = null;
-        if (kb.kbCache.getParentClasses(SUMOterm) != null && 
-            kb.kbCache.getParentClasses(SUMOterm).contains("Process")) {  // like a verb
+        if (kb.kbCache.subclassOf(SUMOterm,"Process")) {  // like a verb
             pos = "2";
             synsetID = "2" + verbSynsetFromTermFormat(tf,SUMOterm,kb);
         }
@@ -3360,6 +3360,7 @@ public class WordNet implements Serializable {
         }
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): term, sensekey, synset, SUMOterm: " +
         //        tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
+        //System.out.println("WordNet.synsetFromTermFormat(): millis: " + (System.currentTimeMillis() - millis));
     }
     
     /** ***************************************************************
@@ -3367,6 +3368,7 @@ public class WordNet implements Serializable {
      */
     public void termFormatsToSynsets(KB kb) {
 
+        long millis = System.currentTimeMillis();
         if (kb == null) {
             System.out.println("INFO in WordNet.termFormatsToSynsets(): KB is null");
             return;
@@ -3381,10 +3383,14 @@ public class WordNet implements Serializable {
         int counter = 0;
         int totalcount = 0;
         //System.out.println("INFO in WordNet.termFormatsToSynsets()");
+        long millis2 = System.currentTimeMillis();
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
-        for (int i = 0; i < forms.size(); i++) {
-            Formula form = forms.get(i);
-            ArrayList<String> args = form.argumentsToArrayList(1);
+        System.out.println("WordNet.termFormatsToSynsets(): just the ask in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("WordNet.termFormatsToSynsets(): termFormats: " + forms.size());
+        for (Formula form : forms) {
+            //System.out.println("WordNet.termFormatsToSynsets(): form: " + form);
+            ArrayList<String> args = form.argumentsToArrayList(0);
+            //System.out.println("WordNet.termFormatsToSynsets(): args: " + args);
             if (args == null || args.size() < 2)
                 continue;
             counter++;
@@ -3393,17 +3399,16 @@ public class WordNet implements Serializable {
                 totalcount = totalcount + counter;
                 counter = 0;
             }
-            if (args.size() != 3) {
+            if (args.size() != 4) {
                 String errStr = "Error in WordNet.termFormatsToSynsets(): wrong number of arguments: " +
                     form.toString();
                 kb.errors.add(errStr);
                 continue;
             }
-            String SUMOterm = form.getArgument(2);
+            String SUMOterm = args.get(2);
             //if (SUMOterm.equals("FourStrokeEngine"))
             //    System.out.println("INFO in WordNet.termFormatsToSynsets(): formula: " + form);
-            String tf = form.getArgument(3).substring(1); // remove first quote
-            tf = tf.substring(0,tf.length()-1); // remove last quote
+            String tf = StringUtil.removeEnclosingQuotes(args.get(3));
             tf = tf.replaceAll(" ", "_");
             if (tf.indexOf("_") > 0) {
                 //System.out.println("INFO in WordNet.termFormatsToSynsets() multiword:" + tf + " SUMO: " + SUMOterm);
@@ -3413,6 +3418,7 @@ public class WordNet implements Serializable {
         }
         System.out.println("\nINFO in WordNet.termFormatsToSynsets(): result (orig,max): " +
                 origMaxNounSynsetID + " and: " + maxNounSynsetID);
+        System.out.println("WordNet.termFormatsToSynsets(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
     }
     
     /** ***************************************************************
