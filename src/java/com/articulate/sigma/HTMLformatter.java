@@ -135,12 +135,12 @@ public class HTMLformatter {
         Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.axiom);
-        f.theFormula = Formula.postProcess(f.theFormula);
-        f.theFormula = ProofProcessor.removeNestedAnswerClause(f.theFormula);
+        f.read(Formula.postProcess(f.getFormula()));
+        f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
         String kbHref = HTMLformatter.createKBHref(kbName,language);
 
-        if (f.theFormula.equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
-            f.theFormula = "True";                           // Change "FALSE" to "True" so it makes more sense to the user.
+        if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
+            f.read("True");                           // Change "FALSE" to "True" so it makes more sense to the user.
             result.append("<td valign=\"top\" width=\"50%\">" + "True" + "</td>");
         }
         else
@@ -168,7 +168,7 @@ public class HTMLformatter {
         result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
             String pph = NLGUtils.htmlParaphrase(kbHref,
-                    f.theFormula,
+                    f.getFormula(),
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
                     KBmanager.getMgr().getKB(kbName).getTermFormatMap(language),
                     kb,
@@ -532,7 +532,7 @@ public class HTMLformatter {
             localLimit = forms.size();
         for (int i = start; i < localLimit; i++) {
         	//System.out.println("formatFormulaList(): " + forms.get(i).getClass().getName());
-        	String strForm = forms.get(i).theFormula;
+        	String strForm = forms.get(i).getFormula();
         	if (printedForms.contains(strForm))
         	    continue;
         	printedForms.add(strForm);
@@ -574,7 +574,7 @@ public class HTMLformatter {
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                 String pph = null;
                 if (!Formula.DOC_PREDICATES.contains(arg0))
-                    pph = NLGUtils.htmlParaphrase(kbHref, f.theFormula,
+                    pph = NLGUtils.htmlParaphrase(kbHref, f.getFormula(),
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb, language);
@@ -789,7 +789,7 @@ public class HTMLformatter {
 				begin += err.substring(0, p + 1);
                 end = err.substring(p + 1);
                 Formula f = new Formula();
-                f.theFormula = end;
+                f.read(end);
                 //end = f.htmlFormat(kbHref);
                 end = f.htmlFormat(kb,kbHref);
             }
