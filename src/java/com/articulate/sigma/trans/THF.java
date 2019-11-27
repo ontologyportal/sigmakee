@@ -409,7 +409,7 @@ public class THF {
                 f.read(form.makeQuantifiersExplicit(false));
             else if (taggedFormulas.get(form).equals(conTag))
                 f.read(form.makeQuantifiersExplicit(true));
-            System.out.println("\nKIF2THF -- translating KIF formula: " + f.theFormula.trim());
+            System.out.println("\nKIF2THF -- translating KIF formula: " + f.getFormula().trim());
             // we request some semantic type-relevant information on the
             // function and
             // relation symbols involved; this information is used with priority
@@ -443,8 +443,8 @@ public class THF {
                     f = new Formula();
                     f.read(kifFormula.toString());
                     kifFormula = new StringBuilder();
-                    localsig = clearMapFor(localsig, f.theFormula.trim());
-                    subst = clearMapFor(subst, f.theFormula.trim());
+                    localsig = clearMapFor(localsig, f.getFormula().trim());
+                    subst = clearMapFor(subst, f.getFormula().trim());
                 } else {
                     THFdebugOut("\n Debug: Enter new topmost call to THF2 with constant symbol substitution");
                     oldsig = (HashMap) localsig.clone();
@@ -468,8 +468,8 @@ public class THF {
                     f = new Formula();
                     f.read(kifFormula.toString());
                     kifFormula = new StringBuilder();
-                    localsig = clearMapFor(localsig, f.theFormula.trim());
-                    subst = clearMapFor(subst, f.theFormula.trim());
+                    localsig = clearMapFor(localsig, f.getFormula().trim());
+                    subst = clearMapFor(subst, f.getFormula().trim());
                 }
             }
             // this final one-more call to toTHF2 seems not needed anymore
@@ -477,7 +477,7 @@ public class THF {
             // if (res.contains(unknownTp)) {
             // THFdebugOut("\n Debug: Enter one more topmost call to THF2");
             res = toTHF2(f);
-            localsig = clearMapSpecial(localsig, f.theFormula.trim());
+            localsig = clearMapSpecial(localsig, f.getFormula().trim());
             // }
             // now we can add the computed THF translation for
             // formula f to the appropriate result string builder
@@ -802,7 +802,7 @@ public class THF {
      */
     private String toTHFHelp1 (Formula f, String op_thf, String goalTp, String argsTp, boolean preferPrefix, HashMap relTpInfo) {
 
-        THFdebugOut("\n  Debug: logical connective at head position in " + f.theFormula);
+        THFdebugOut("\n  Debug: logical connective at head position in " + f.getFormula());
         // resTerm will contain the result
         StringBuilder resTerm = new StringBuilder();
         Formula f1 = new Formula();
@@ -854,7 +854,7 @@ public class THF {
      */
     private String toTHFHelp2 (Formula f, String op_sumo, String op_thf, String goalTp, String argsTp, boolean preferPrefix) {
 
-        THFdebugOut("\n  Enter toTHFHelp2: " + f.theFormula);
+        THFdebugOut("\n  Enter toTHFHelp2: " + f.getFormula());
         // in toTHF2 and in this help function we always reconstruct the worked off 
         // formula (possible slightly modify it thereby) for later reuse 
         kifFormula.append("("+ op_sumo);
@@ -893,7 +893,7 @@ public class THF {
         // we also remember the new type information we gained for the resulting term; this is
         // very important 
         terms.put(resTerm.toString(),goalTp);
-        THFdebugOut("\n  Exit toTHFHelp2: " + f.theFormula);
+        THFdebugOut("\n  Exit toTHFHelp2: " + f.getFormula());
         return 	resTerm.toString();
     }
 
@@ -910,7 +910,7 @@ public class THF {
      */
     private String toTHFQuant1 (Formula f, String quant_thf, HashMap relTpInfo) {
 
-        THFdebugOut("\n  Debug: universal quantifier at head position in " + f.theFormula);
+        THFdebugOut("\n  Debug: universal quantifier at head position in " + f.getFormula());
         String varlist = f.getArgument(1);
         Formula varlistF = new Formula();
         varlistF.read(varlist);
@@ -954,7 +954,7 @@ public class THF {
      */
     private String toTHFKappaFN1 (Formula f, String kappa_thf, HashMap relTpInfo) {
 
-        THFdebugOut("\n  Debug: KappaFn at head position in " + f.theFormula);
+        THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
         StringBuilder resTerm = new StringBuilder();
         String var = f.getArgument(1);
         String varTHF = toTHFKifVar(var);
@@ -980,7 +980,7 @@ public class THF {
      */
     private String toTHFQuant2 (Formula f,String quant_sumo,String quant_thf) {
 
-        THFdebugOut("\n  Debug: universal quantifier at head position in " + f.theFormula);
+        THFdebugOut("\n  Debug: universal quantifier at head position in " + f.getFormula());
         String varlist = f.getArgument(1);
         kifFormula.append("("+ quant_sumo + " " + varlist + " ");
         Formula varlistF = new Formula();
@@ -1021,7 +1021,7 @@ public class THF {
      */
     private String toTHFKappaFN2 (Formula f, String kappa_sumo, String kappa_thf) {
 
-        THFdebugOut("\n  Debug: KappaFn at head position in " + f.theFormula);
+        THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
         StringBuilder resTerm = new StringBuilder();	
         String var = f.getArgument(1);
         kifFormula.append("("+ kappa_sumo + " " + var + " ");
@@ -1306,10 +1306,10 @@ public class THF {
         StringBuilder result = new StringBuilder();
         //boolean THFdebugOld = THFdebug;
         //THFdebug = true;
-        THFdebugOut("\n Enter toTHF1\n    f=" + f.theFormula + ",\n    type=" + type + ",\n    relTpInfo" + relTpInfo.toString() + "\n    terms=" + terms.toString() + "\n    localsig=" + localsig.toString() +  "\n    overallsig=" + overallsig.toString());
+        THFdebugOut("\n Enter toTHF1\n    f=" + f.getFormula() + ",\n    type=" + type + ",\n    relTpInfo" + relTpInfo.toString() + "\n    terms=" + terms.toString() + "\n    localsig=" + localsig.toString() +  "\n    overallsig=" + overallsig.toString());
         //THFdebug = THFdebugOld;
         if (!f.listP()) {
-            String sym = f.theFormula;
+            String sym = f.getFormula();
             /* sym might be logical connective TRUE */
             if (sym.equals(Formula.LOG_TRUE)) { 
                 THFdebugOut("\n  Debug: " + sym + " equals LOG_TRUE");
@@ -1357,25 +1357,25 @@ public class THF {
         }
         /* the empty list should not be occuring */
         else if (f.empty()) {
-            THFdebugOut("\n  Debug: something went wrong; empty formula: " + f.theFormula);
+            THFdebugOut("\n  Debug: something went wrong; empty formula: " + f.getFormula());
             result.append("something_went_wrong");
         }
         /* double bracketed formula or bracketed Boolean constant */
         else if (Formula.listP(f.car()) || (f.listLength() == 1)) {
-            THFdebugOut("\n  Debug: double bracketed formula or bracketed Boolean constant" + f.theFormula);
+            THFdebugOut("\n  Debug: double bracketed formula or bracketed Boolean constant" + f.getFormula());
             String arg1 = f.car();
             Formula arg1F = new Formula();
             arg1F.read(arg1);
             String arg1FTHF = toTHF1(arg1F,boolTp,relTpInfo);
             result.append(arg1FTHF);
-            terms.put(f.theFormula,boolTp);
+            terms.put(f.getFormula(),boolTp);
         }
         /* the formula has form (h arg1 ... argN) */	    
         else {
             String h = f.getArgument(0);
             /* documentation formulas and some others are not translated */
             if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
-                result.append(notTranslatedStr + f.theFormula.trim());
+                result.append(notTranslatedStr + f.getFormula().trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -1453,7 +1453,7 @@ public class THF {
             }
             /* now h must be some non-logical symbol h with arguments arg1 ... argN */
             else {
-                THFdebugOut("\n  Debug: non-logical head position in " + f.theFormula);
+                THFdebugOut("\n  Debug: non-logical head position in " + f.getFormula());
                 StringBuilder resTerm = new StringBuilder();
                 StringBuilder resType = new StringBuilder();
                 String hconv = null;
@@ -1661,9 +1661,9 @@ public class THF {
     private String toTHF2(Formula f) {
 
         StringBuilder result = new StringBuilder();
-        THFdebugOut("\n Enter toTHF2\n    f=" + f.theFormula + "\n    terms=" + terms.toString() + "\n    localsig=" + localsig.toString() +  "\n    overallsig=" + overallsig.toString() + "\n    kifFormula=" + kifFormula.toString());
+        THFdebugOut("\n Enter toTHF2\n    f=" + f.getFormula() + "\n    terms=" + terms.toString() + "\n    localsig=" + localsig.toString() +  "\n    overallsig=" + overallsig.toString() + "\n    kifFormula=" + kifFormula.toString());
         if (!f.listP()) {
-            String sym = f.theFormula;
+            String sym = f.getFormula();
             /* sym might be logical connective TRUE */
             if (sym.equals(Formula.LOG_TRUE)) { 
                 result.append("$true"); 
@@ -1720,7 +1720,7 @@ public class THF {
             String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
             /* documentation formulas are not translated */
             if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  || h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
-                result.append(notTranslatedStr + f.theFormula.trim());
+                result.append(notTranslatedStr + f.getFormula().trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -1797,7 +1797,7 @@ public class THF {
             }
             /* now h must be some non-logical symbol h with arguments arg1 ... argN */
             else {
-                THFdebugOut("\n  Debug: non-logical head position in " + f.theFormula);
+                THFdebugOut("\n  Debug: non-logical head position in " + f.getFormula());
                 StringBuilder resTerm = new StringBuilder();
                 StringBuilder resType = new StringBuilder();
                 String hconv = null;
@@ -1895,7 +1895,7 @@ public class THF {
         Set funcPosL = new HashSet();
         Set argPosL = new HashSet();
         List resL = new ArrayList();
-        String formStr = form.theFormula.trim();
+        String formStr = form.getFormula().trim();
         if (isKifVar(formStr)) {
             resL.add(funcPosL);
             resL.add(argPosL);
