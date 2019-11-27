@@ -20,10 +20,10 @@ public class RowVars {
 
         //System.out.println("Info in RowVars.findRowVars(): F: " + f);
         HashSet<String> result = new HashSet<String>();
-        if (!StringUtil.emptyString(f.theFormula)
-            && f.theFormula.contains(Formula.R_PREF)) {
+        if (!StringUtil.emptyString(f.getFormula())
+            && f.getFormula().contains(Formula.R_PREF)) {
             Formula fnew = new Formula();
-            fnew.read(f.theFormula);
+            fnew.read(f.getFormula());
             while (fnew.listP() && !fnew.empty()) {
                 String arg = fnew.getArgument(0);
                 if (arg.startsWith(Formula.R_PREF))
@@ -99,9 +99,9 @@ public class RowVars {
                 // If row variables in an argument list with other arguments,
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int nonRowVar = 0;
-                int start = f.theFormula.indexOf("(" + pred);
-                int end = f.theFormula.indexOf(")", start);
-                String simpleFS = f.theFormula.substring(start, end+1);
+                int start = f.getFormula().indexOf("(" + pred);
+                int end = f.getFormula().indexOf(")", start);
+                String simpleFS = f.getFormula().substring(start, end+1);
                 if (DEBUG)
                     System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
                 Formula simpleF = new Formula();
@@ -156,9 +156,9 @@ public class RowVars {
                 // If row variables in an argument list with other arguments,
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int nonRowVar = 0;
-                int start = f.theFormula.indexOf("(" + pred);
-                int end = f.theFormula.indexOf(")", start);
-                String simpleFS = f.theFormula.substring(start, end+1);
+                int start = f.getFormula().indexOf("(" + pred);
+                int end = f.getFormula().indexOf(")", start);
+                String simpleFS = f.getFormula().substring(start, end+1);
                 if (DEBUG)
                     System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
                 Formula simpleF = new Formula();
@@ -274,10 +274,10 @@ public class RowVars {
         
         //System.out.println("Info in RowVars.getRowVarRelations(): f: " + f);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
-        if (!f.theFormula.contains("@") || f.empty() || f.atom())
+        if (!f.getFormula().contains("@") || f.empty() || f.atom())
             return result;
         String pred = f.getArgument(0);
-        if (!f.theFormula.substring(1).contains("(")) {  // no higher order or functions
+        if (!f.getFormula().substring(1).contains("(")) {  // no higher order or functions
             //System.out.println("Info in RowVars.getRowVarRelations(): simple clause f: " + f);
             HashSet<String> rowvars = findRowVars(f);
             Iterator<String> it = rowvars.iterator();
@@ -295,11 +295,11 @@ public class RowVars {
             ArrayList<String> args = f.complexArgumentsToArrayList(1);
             for (int i = 0; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
-                if (f2.theFormula.startsWith("@")) {
+                if (f2.getFormula().startsWith("@")) {
                     //System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " + f2.theFormula + ", " + pred);
-                    addToValueSet(result,f2.theFormula,pred);
+                    addToValueSet(result,f2.getFormula(),pred);
                 }
-                else if (f2.theFormula.contains("@"))
+                else if (f2.getFormula().contains("@"))
                     result = mergeValueSets(result,getRowVarRelations(f2));
             }
         }
@@ -338,7 +338,7 @@ public class RowVars {
         
         ArrayList<String> result = new ArrayList<String>();
         ArrayList<Formula> formresult = new ArrayList<Formula>();
-        if (!f.theFormula.contains("@")) {
+        if (!f.getFormula().contains("@")) {
             // If there are no row variables, return the original formula
             formresult.add(f);
             return formresult;
@@ -348,7 +348,7 @@ public class RowVars {
         HashMap<String,HashSet<String>> rels = getRowVarRelations(f);   
         HashMap<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
         HashMap<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, f);
-        result.add(f.theFormula);
+        result.add(f.getFormula());
         HashSet<String> rowvars = findRowVars(f);
         Iterator<String> it = rowvars.iterator();
         while (it.hasNext()) {

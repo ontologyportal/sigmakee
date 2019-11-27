@@ -70,7 +70,7 @@ public class RowVarTest extends UnitTestBase  {
 
         RowVars.DEBUG = true;
         ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
-        String result = results.get(0).theFormula;
+        String result = results.get(0).getFormula();
         String expected = "(=>\n" +
                 "  (and\n" +
                 "    (minValue links ?ARG ?N)\n" +
