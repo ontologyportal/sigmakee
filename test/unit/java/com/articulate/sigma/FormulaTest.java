@@ -4,9 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
@@ -19,17 +17,17 @@ public class FormulaTest {
 
         String stmt = "(domain date 1 Physical)";
         Formula f = new Formula(stmt);
-        assertEquals(stmt, f.theFormula);
+        assertEquals(stmt, f.getFormula());
 
         stmt = "(=> (and (instance ?REL ObjectAttitude) (?REL ?AGENT ?THING)) (instance ?THING Physical))";
         f = new Formula();
         f.read(stmt);
-        assertEquals(stmt, f.theFormula);
+        assertEquals(stmt, f.getFormula());
 
         stmt = "aabbc";
         f = new Formula();
         f.read(stmt);
-        assertEquals(stmt, f.theFormula);
+        assertEquals(stmt, f.getFormula());
 
     }
 
@@ -44,22 +42,22 @@ public class FormulaTest {
         String car = f.car();
         assertEquals("exists", car);
         Formula cdrF = f.cdrAsFormula();
-        assertEquals("((?M))", cdrF.theFormula);
+        assertEquals("((?M))", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("(?M)", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
     }
 
     /** ***************************************************************
@@ -74,17 +72,17 @@ public class FormulaTest {
         String car = f.car();
         assertEquals("time", car);
         Formula cdrF = f.cdrAsFormula();
-        assertEquals("(JohnsBirth (MonthFn ?M (YearFn 2000)))", cdrF.theFormula);
+        assertEquals("(JohnsBirth (MonthFn ?M (YearFn 2000)))", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("JohnsBirth", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("((MonthFn ?M (YearFn 2000)))", cdrF.theFormula);
+        assertEquals("((MonthFn ?M (YearFn 2000)))", cdrF.getFormula());
 
         String functionStr = cdrF.car();
         assertEquals("(MonthFn ?M (YearFn 2000))", functionStr);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
 
         System.out.println("testRecursiveCdrComplex(): functionStr: " + functionStr);
         assertTrue(Formula.isFunctionalTerm(functionStr));
@@ -95,17 +93,17 @@ public class FormulaTest {
         car = f.car();
         assertEquals("MonthFn", car);
         cdrF = f.cdrAsFormula();
-        assertEquals("(?M (YearFn 2000))", cdrF.theFormula);
+        assertEquals("(?M (YearFn 2000))", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("?M", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("((YearFn 2000))", cdrF.theFormula);
+        assertEquals("((YearFn 2000))", cdrF.getFormula());
 
         functionStr = cdrF.car();
         assertEquals("(YearFn 2000)", functionStr);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
 
         assertTrue(Formula.isFunctionalTerm(functionStr));
 
@@ -115,17 +113,17 @@ public class FormulaTest {
         car = f.car();
         assertEquals("YearFn", car);
         cdrF = f.cdrAsFormula();
-        assertEquals("(2000)", cdrF.theFormula);
+        assertEquals("(2000)", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("2000", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
 
         car = cdrF.car();
         assertEquals("", car);
         cdrF = cdrF.cdrAsFormula();
-        assertEquals("()", cdrF.theFormula);
+        assertEquals("()", cdrF.getFormula());
     }
 
     /*
@@ -191,8 +189,7 @@ public class FormulaTest {
     @Test
     public void testCollectQuantifiedVariables() {
 
-        List<String> expected = Lists.newArrayList("?T", "?Z");
-
+        HashSet<String> expected = new HashSet<>(Arrays.asList("?T", "?Z"));
         Formula f1 = new Formula();
         f1.read("(=> " +
                 "  (and " +
@@ -253,8 +250,7 @@ public class FormulaTest {
     @Test
     public void testUnquantifiedVariables() {
 
-        List<String> expected = Lists.newArrayList("?C", "?W", "?H", "?Y");
-
+        HashSet<String> expected = new HashSet<>(Arrays.asList("?C", "?W", "?H", "?Y"));
         Formula f1 = new Formula();
         f1.read("(=> " +
                 "  (and " +
@@ -677,7 +673,7 @@ public class FormulaTest {
         String stmt = "(equal\n" +
                 "  (AbsoluteValueFn ?NUMBER1) ?NUMBER2)";
         Formula f = new Formula(stmt);
-        String expected = "[(AbsoluteValueFn ?NUMBER1),?NUMBER2]";
+        String expected = "[(AbsoluteValueFn ?NUMBER1), ?NUMBER2]";
         ArrayList<String> actual = f.complexArgumentsToArrayList(1);
         System.out.println("testComplexArgumentsToArrayListAbsolute(): actual: " + actual);
         System.out.println("testComplexArgumentsToArrayListAbsolute(): expected: " + expected);
