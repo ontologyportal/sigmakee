@@ -251,7 +251,7 @@ public class PredVarInst {
                         Formula f = input.deepCopy();
                         f = f.replaceVar(var, rel);
                         Formula f2 = input.deepCopy();
-                        f2.theFormula = f.theFormula;
+                        f2.read(f.getFormula());
                         result.add(f);
                     }
                 }
@@ -259,7 +259,7 @@ public class PredVarInst {
         }
         if (result.size() == 0) {   // Return null if input contains predicate variables but cannot be initialized
             String errStr = "No predicate instantiations for ";
-            errStr += input.theFormula;
+            errStr += input.getFormula();
             input.errors.add(errStr);
             return null;
         }
@@ -271,8 +271,8 @@ public class PredVarInst {
     private static String hasCorrectArityRecurse(Formula f, KB kb)
             throws IllegalArgumentException, TypeNotPresentException {
 
-        if (f == null || StringUtil.emptyString(f.theFormula) || f.empty() ||
-                Formula.atom(f.theFormula) || f.isVariable())
+        if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() ||
+                Formula.atom(f.getFormula()) || f.isVariable())
             return null;
         String rel = f.getArgument(0);
         ArrayList<String> l = f.complexArgumentsToArrayList(1);
@@ -377,7 +377,7 @@ public class PredVarInst {
         
         HashSet<String> ans = new HashSet<String>();
         //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
-        if (f == null || f.empty() || Formula.atom(f.theFormula) || f.isVariable())
+        if (f == null || f.empty() || Formula.atom(f.getFormula()) || f.isVariable())
             return ans;
         if (f.isSimpleClause(kb)) {
             String arg0 = f.getArgument(0);
@@ -444,7 +444,7 @@ public class PredVarInst {
         
         HashSet<String> varlist = null;
         HashMap<String,HashSet<String>> ans = new HashMap<String,HashSet<String>>();
-        if (!StringUtil.emptyString(f.theFormula)) {
+        if (!StringUtil.emptyString(f.getFormula())) {
             varlist = gatherPredVarRecurse(kb,f);
         }
         return varlist;
