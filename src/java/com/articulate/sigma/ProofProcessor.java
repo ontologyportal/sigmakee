@@ -280,9 +280,9 @@ public class ProofProcessor {
      */
     private static Formula removeNestedAnswerClauseRecurse(Formula f) {
 
-    	if (StringUtil.emptyString(f.theFormula.trim()))
+    	if (StringUtil.emptyString(f.getFormula().trim()))
     		return null;
-    	if (f.theFormula.indexOf("answer") == -1)
+    	if (f.getFormula().indexOf("answer") == -1)
     		return f;
     	String relation = f.car(); 
     	if (relation.equals("answer")) 
@@ -290,7 +290,7 @@ public class ProofProcessor {
     	if (relation.equals("not")) {
     		Formula fcdar = f.cdrAsFormula().carAsFormula();
     		if (fcdar == null) {
-    			System.out.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.theFormula + "'");
+    			System.out.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
     			return null;
     		}
     		Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
@@ -298,7 +298,7 @@ public class ProofProcessor {
     			return null;
     		else {
     			Formula result = new Formula();
-    			result.read("(not " + fnew.theFormula + ")");    
+    			result.read("(not " + fnew.getFormula() + ")");
     			return result;
     		}
     	}
@@ -318,7 +318,7 @@ public class ProofProcessor {
     		else {
     			if (arg > 1)
     				strArgs = strArgs + " ";
-    			strArgs = strArgs + argRes.theFormula;
+    			strArgs = strArgs + argRes.getFormula();
     		}
     		arg = arg + 1;
     	}
@@ -346,7 +346,7 @@ public class ProofProcessor {
 		Formula removeNestedAnswerFormula = removeNestedAnswerClauseRecurse(f);
 		if (removeNestedAnswerFormula == null)
 			return st;
-    	return removeNestedAnswerFormula.theFormula;
+    	return removeNestedAnswerFormula.getFormula();
     }
 
     /** ***************************************************************
