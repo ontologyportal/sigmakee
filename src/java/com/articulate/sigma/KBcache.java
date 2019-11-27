@@ -1382,7 +1382,8 @@ public class KBcache implements Serializable {
      * that the file can be processed and loaded by the inference engine.
      */
     public void writeCacheFile() {
-                           
+
+        long millis = System.currentTimeMillis();
         FileWriter fw = null;
         try {
             File dir = new File(KBmanager.getMgr().getPref("kbDir"));
@@ -1411,6 +1412,7 @@ public class KBcache implements Serializable {
                     }
                 }                
             }
+
             it = instanceOf.keySet().iterator();
             while (it.hasNext()) {
                 String inst = it.next();
@@ -1429,8 +1431,11 @@ public class KBcache implements Serializable {
                 fw.close();
                 fw = null;
             }
+            System.out.println("KBcache.writeCacheFile(): done writing cache file, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+            millis = System.currentTimeMillis();
             kb.constituents.remove(filename);
             kb.addConstituent(filename);
+            System.out.println("KBcache.writeCacheFile(): add cache file, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
             //kb.addConstituent(filename, false, false, false);
             //KBmanager.getMgr().writeConfiguration();
         }                   
@@ -1498,21 +1503,50 @@ public class KBcache implements Serializable {
      */
     public void buildCaches() {
 
+        long millis = System.currentTimeMillis();
         if (debug) System.out.println("INFO in KBcache.buildCaches()");
         buildInsts();
+        System.out.println("KBmanager.buildCaches(): buildInsts seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildRelationsSet();
+        System.out.println("KBmanager.buildCaches(): buildRelationsSet seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildTransitiveRelationsSet();
+        System.out.println("KBmanager.buildCaches(): buildTransitiveRelationsSet seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildParents();
+        System.out.println("KBmanager.buildCaches(): buildParents seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildChildren(); // note that buildTransInstOf() depends on this
+        System.out.println("KBmanager.buildCaches(): buildChildren seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         collectDomains();  // note that buildInstTransRels() depends on this
+        System.out.println("KBmanager.buildCaches(): collectDomains seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildInstTransRels();
+        System.out.println("KBmanager.buildCaches(): buildInstTransRels seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildDirectInstances();
+        System.out.println("KBmanager.buildCaches(): buildDirectInstances seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         addTransitiveInstances();
+        System.out.println("KBmanager.buildCaches(): addTransitiveInstances seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildTransInstOf();
+        System.out.println("KBmanager.buildCaches(): buildTransInstOf seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildExplicitDisjointMap(); // find relations under partition definition
+        System.out.println("KBmanager.buildCaches(): buildExplicitDisjointMap seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildDisjointMap();
+        System.out.println("KBmanager.buildCaches(): buildDisjointMap seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         buildFunctionsSet();
+        System.out.println("KBmanager.buildCaches(): buildFunctionsSet seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         writeCacheFile();
+        System.out.println("KBmanager.buildCaches(): writeCacheFile seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
         initialized = true;
     }
