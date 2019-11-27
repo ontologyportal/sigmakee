@@ -493,12 +493,12 @@ public class InterfaceTPTP {
 		//-----------------------------------------------------------------------------
 		//----Add KB contents here
 		conjectureFormula = new Formula();
-		conjectureFormula.theFormula = stmt;
+		conjectureFormula.read(stmt);
 
-		String oldConjecture = conjectureFormula.theFormula;
-		conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
-		boolean suppressAnswerExtraction = oldConjecture.equals(conjectureFormula.theFormula);
-		logger.finest("conjectureFormula.theFormula == " + conjectureFormula.theFormula + "\nsuppressAnswerExtraction == " + suppressAnswerExtraction);
+		String oldConjecture = conjectureFormula.getFormula();
+		conjectureFormula.read(conjectureFormula.makeQuantifiersExplicit(true));
+		boolean suppressAnswerExtraction = oldConjecture.equals(conjectureFormula.getFormula());
+		logger.finest("conjectureFormula.theFormula == " + conjectureFormula.getFormula() + "\nsuppressAnswerExtraction == " + suppressAnswerExtraction);
 		//if (suppressAnswerExtraction) resultAll += "suppress definite answers<br/>";
 		SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
     	stptp._f = conjectureFormula;
