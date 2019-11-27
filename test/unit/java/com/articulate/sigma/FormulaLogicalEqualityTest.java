@@ -95,11 +95,11 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
         testCount++;
         if (areEqual) {
             assertTrue("The following should be equal: \n" +
-                    f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
+                    f1.getFormula() + "\n and \n" + f2.getFormula(), comparisonResult);
         }
         else {
             assertFalse("The following should be equal: \n" +
-                    f1.theFormula + "\n and \n" + f2.theFormula, comparisonResult);
+                    f1.getFormula() + "\n and \n" + f2.getFormula(), comparisonResult);
         }
     }
 }
