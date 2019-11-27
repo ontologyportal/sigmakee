@@ -24,7 +24,7 @@ public class SumoProcessEntityProperty implements Comparable {
         formula = form;
         predicate = form.car();
 
-        String formAsString = form.theFormula;
+        String formAsString = form.getFormula();
         // Remove enclosing parens.
         formAsString = formAsString.substring(1, formAsString.length() - 1);
         arguments = Arrays.asList(formAsString.split(" "));
@@ -56,7 +56,7 @@ public class SumoProcessEntityProperty implements Comparable {
      */
     @Override
     public String toString()    {
-        return formula.theFormula;
+        return formula.getFormula();
     }
 
     /***********************************************************************************
