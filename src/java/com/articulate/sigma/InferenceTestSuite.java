@@ -166,8 +166,8 @@ public class InferenceTestSuite {
         String tptpresult = "";
         Formula conjectureFormula;
         conjectureFormula = new Formula();
-        conjectureFormula.theFormula = processedStmt;
-        conjectureFormula.theFormula = conjectureFormula.makeQuantifiersExplicit(true);
+        conjectureFormula.read(processedStmt);
+        conjectureFormula.read(conjectureFormula.makeQuantifiersExplicit(true));
         SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
     	stptp._f = conjectureFormula;
     	stptp.tptpParse(conjectureFormula,true,kb);
@@ -304,13 +304,13 @@ public class InferenceTestSuite {
 
                     Formula theQuery = new Formula();
                     Set<Formula> theQueries = null;
-                    theQuery.theFormula = query;
+                    theQuery.read(query);
 
                     FormulaPreprocessor fp = new FormulaPreprocessor();
                     theQueries = fp.preProcess(theQuery,true,kb);
                     Iterator q = theQueries.iterator();
                     while (q.hasNext()) {
-                        processedStmt = ((Formula)q.next()).theFormula;
+                        processedStmt = ((Formula)q.next()).getFormula();
                         long start = System.currentTimeMillis();
                         if (systemChosen != null && systemChosen.equals("EProver")) {
                             System.out.println("INFO in InferenceTestSuite.test(): Query is posed to EProver ");
@@ -450,12 +450,12 @@ public class InferenceTestSuite {
         int maxAnswers = expectedAnswers.size();
         Formula theQuery = new Formula();
         Set<Formula> theQueries = null;
-        theQuery.theFormula = query;
+        theQuery.read(query);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         theQueries = fp.preProcess(theQuery,true,kb);
         Iterator q = theQueries.iterator();
         while (q.hasNext()) {
-            String processedStmt = ((Formula)q.next()).theFormula;
+            String processedStmt = ((Formula)q.next()).getFormula();
             ArrayList<String> tmpAnswers = kb.askNoProof(processedStmt,timeout,maxAnswers);
             actualAnswers.addAll(tmpAnswers);
         }
