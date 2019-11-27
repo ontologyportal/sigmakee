@@ -274,17 +274,19 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         Formula expected = new Formula();
-        String expectedString = "(=> (and (instance ?SET2 Set) (instance ?SET1 Set)) " +
-                "(=> (forall (?ELEMENT) (=> (instance ?ELEMENT Entity) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2)))) " +
+        String expectedString = "(=> (and (instance ?SET1 Set) (instance ?SET2 Set)) " +
+                "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) (element ?ELEMENT ?SET2))) " +
                 "(equal ?SET1 ?SET2)))";
 
         expected.read(expectedString);
 
         Formula actual = fp.addTypeRestrictions(f, SigmaTestBase.kb);
+        System.out.println("testLogicallyEqualsPerformance: expected: " + expected);
+        System.out.println("testLogicallyEqualsPerformance: actual: " + actual);
         long start = System.nanoTime();
 //        assertTrue(expected.logicallyEquals(actual));
         assertTrue(expected.unifyWith(actual));
         long stop = System.nanoTime();
-        System.out.println("Execution time (in microseconds): " + ((stop - start)/1000));
+        System.out.println("Execution time (in microseconds): " + ((stop - start) / 1000));
     }
 }
