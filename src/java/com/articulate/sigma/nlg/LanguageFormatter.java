@@ -417,7 +417,7 @@ public class LanguageFormatter {
                         HashSet<String> vals = variableTypes.get(processInstanceName);
                         if (NLGUtils.containsProcess(vals, kb))  {
                             // Mark the argument as PROCESSED.
-                            theStack.markFormulaArgAsProcessed(formula.theFormula);
+                            theStack.markFormulaArgAsProcessed(formula.getFormula());
                             // Get the data in the stack's topmost element.
                             Map<String, SumoProcessCollector> thisProcessMap = theStack.getCurrProcessMap();
                             if (thisProcessMap.containsKey(processInstanceName)) {
@@ -837,7 +837,7 @@ public class LanguageFormatter {
         String arg = "";
         String para = "";
         while (strFormat.contains(argPointer)) {
-            if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + f.theFormula);
+            if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + f.getFormula());
             if (debug) System.out.println("arg: " + f.getArgument(num));
             if (debug) System.out.println("num: " + num);
             if (debug) System.out.println("str: " + strFormat);
@@ -1199,7 +1199,7 @@ public class LanguageFormatter {
         String stmt =  "(and (instance ?GUIE1 GUIElement) (hasGUEState ?GUIE1 GUE_ActiveState)" +
                 " (properPart ?GUIE1 ?GUIE2) (instance ?GUIE2 GUIElement))";
         Formula f = new Formula(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println();
     }
@@ -1222,7 +1222,7 @@ public class LanguageFormatter {
                 "       (instance ?H Human)\n" +
                 "       (agent ?D ?H)))";
         Formula f = new Formula(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         //LanguageFormatter lf = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
         //        kb.getTermFormatMap("EnglishLanguage"),kb,"EnglishLanguage");
@@ -1237,7 +1237,7 @@ public class LanguageFormatter {
                 "       (agent ?D ?H)))";
         f = new Formula();
         f.read(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println();
 
@@ -1251,7 +1251,7 @@ public class LanguageFormatter {
                 "       (patient ?D ?Car)))";
         f = new Formula();
         f.read(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println();
 
@@ -1267,7 +1267,7 @@ public class LanguageFormatter {
                 "       (patient ?D ?C)))";
         f = new Formula();
         f.read(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println();
     }
@@ -1287,14 +1287,14 @@ public class LanguageFormatter {
         // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
         String stmt =  "(exists (?FINANCIALTRANSACTION1 ?AGENT2 ) (broker ?FINANCIALTRANSACTION1 ?AGENT2 ))";
         Formula f = new Formula(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println(NLGUtils.outputMap);
         System.out.println();
 
         stmt =  "(exists (?MOTION1 ?OBJECT2 ) (moves ?MOTION1 ?OBJECT2 ))";
         f = new Formula(stmt);
-        System.out.println("Formula: " + f.theFormula);
+        System.out.println("Formula: " + f.getFormula());
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         System.out.println(NLGUtils.outputMap);
         System.out.println();
