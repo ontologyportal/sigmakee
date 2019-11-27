@@ -423,8 +423,8 @@ public class KB implements Serializable {
                 String term = PredVarInst.hasCorrectArity(f, this);
                 if (!StringUtil.emptyString(term)) {
                     errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
-                            + " in formula: \n" + f.theFormula);
-                    toRemove.add(f.theFormula);
+                            + " in formula: \n" + f.getFormula());
+                    toRemove.add(f.getFormula());
                 }
             }
             System.out.println();
@@ -1423,7 +1423,7 @@ public class KB implements Serializable {
                     boolean found = false;
                     for (int j = 0; j < oldFormulas.size(); j++) {
                         Formula oldFormula = formulaMap.get(oldFormulas.get(j));
-                        if (oldFormula != null && newFormula.theFormula.equals(oldFormula.theFormula)) {
+                        if (oldFormula != null && newFormula.getFormula().equals(oldFormula.getFormula())) {
                             found = true;
                             // no duplicate formulas are allowed in
                             // formulasPresent
@@ -1432,8 +1432,8 @@ public class KB implements Serializable {
                         }
                     }
                     if (!found) {
-                        oldFormulas.add(newFormula.theFormula);
-                        formulaMap.put(newFormula.theFormula.intern(), newFormula);
+                        oldFormulas.add(newFormula.getFormula());
+                        formulaMap.put(newFormula.getFormula().intern(), newFormula);
                     }
                 }
             }
@@ -1447,9 +1447,9 @@ public class KB implements Serializable {
                     f = formulaMap.get(newformulaStr);
                     if (f == null) // If kb.formulaMap does not contain the new
                         // formula, should we add it into the kb?
-                        formulaMap.put(newFormula.theFormula.intern(), newFormula);
-                    else if (StringUtil.isNonEmptyString(f.theFormula))
-                        formulaMap.put(f.theFormula.intern(), f);
+                        formulaMap.put(newFormula.getFormula().intern(), newFormula);
+                    else if (StringUtil.isNonEmptyString(f.getFormula()))
+                        formulaMap.put(f.getFormula().intern(), f);
                 }
             }
         }
@@ -1472,7 +1472,7 @@ public class KB implements Serializable {
         Iterator<Formula> it = formulas.iterator();
         while (it.hasNext()) {
             Formula f = it.next();
-            f.theFormula = f.rename(term2, term1).theFormula;
+            f.read(f.rename(term2, term1).getFormula());
         }
     }
 
@@ -1599,7 +1599,7 @@ public class KB implements Serializable {
                     if (!StringUtil.emptyString(term)) {
                         result = result + "Formula in " + parsedF.sourceFile
                                 + " rejected due to arity error of predicate " + term + " in formula: \n"
-                                + parsedF.theFormula;
+                                + parsedF.getFormula();
                     }
                     else
                         parsedFormulas.add(parsedF);
@@ -1618,7 +1618,7 @@ public class KB implements Serializable {
                     while (pfit.hasNext()) {
                         Formula parsedF = pfit.next();
                         // 4. Write the formula to the user assertions file.
-                        parsedF.endFilePosition = writeUserAssertion(parsedF.theFormula, filename);
+                        parsedF.endFilePosition = writeUserAssertion(parsedF.getFormula(), filename);
                         parsedF.sourceFile = filename;
                     }
                     result = "The formula has been added for browsing";
@@ -1681,7 +1681,7 @@ public class KB implements Serializable {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedStmts.iterator().next().theFormula;
+                String strQuery = processedStmts.iterator().next().getFormula();
                 result = this.eprover.submitQuery(strQuery, this);
                 if (result == null || result.isEmpty())
                     System.out.println("KB.ask: No response from EProver!");
@@ -1722,7 +1722,7 @@ public class KB implements Serializable {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                String strQuery = processedStmts.iterator().next().theFormula;
+                String strQuery = processedStmts.iterator().next().getFormula();
                 result = this.eprover.submitQuery(strQuery, this);
             }
 
@@ -1735,7 +1735,7 @@ public class KB implements Serializable {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedStmts.iterator().next().theFormula;
+                String strQuery = processedStmts.iterator().next().getFormula();
                 result = this.eprover.submitQuery(strQuery, this);
             }
         }
@@ -1769,7 +1769,7 @@ public class KB implements Serializable {
                 catch (IOException e) {
                     e.printStackTrace();
                 }
-                String strQuery = processedStmts.iterator().next().theFormula;
+                String strQuery = processedStmts.iterator().next().getFormula();
                 String EResult = this.eprover.submitQuery(strQuery, this);
                 if (EResult == null || EResult.isEmpty())
                     System.out.println("No response from EProver!");
@@ -1811,7 +1811,7 @@ public class KB implements Serializable {
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             try {
                 if (!processedStmts.isEmpty()) {
-                    String strQuery = processedStmts.iterator().next().theFormula;
+                    String strQuery = processedStmts.iterator().next().getFormula();
                     result = engine.submitQuery(strQuery, timeout, maxAnswers);
                 }
             }
@@ -2517,8 +2517,8 @@ public class KB implements Serializable {
      *            - The full path of the file being added
      */
     public void addConstituent(String filename) {
-        // , boolean buildCachesP, boolean loadEProverP, boolean performArity) {
 
+        long millis = System.currentTimeMillis();
         System.out.println("INFO in KB.addConstituent(): " + filename);
         String canonicalPath = null;
         KIF file = new KIF();
@@ -2587,7 +2587,7 @@ public class KB implements Serializable {
         Iterator<Formula> it2 = file.formulaMap.values().iterator();
         while (it2.hasNext()) { // Iterate through values
             Formula f = (Formula) it2.next();
-            String internedFormula = f.theFormula.intern();
+            String internedFormula = f.getFormula().intern();
             if ((count++ % 100) == 1)
                 System.out.print(".");
             if (!formulaMap.containsKey(internedFormula))
@@ -2595,6 +2595,7 @@ public class KB implements Serializable {
         }
         System.out.println("INFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
                 + file.terms.size() + " terms.");
+        System.out.println("INFO in KB.addConstituent(): " + filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / 1000);
         this.getTerms().addAll(file.terms);
         if (!constituents.contains(canonicalPath))
             constituents.add(canonicalPath);
@@ -3303,7 +3304,7 @@ public class KB implements Serializable {
             if (tptpParseP) {
                 SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
                 for (Formula pform : processed) {
-                    tptp.add(stptp.tptpParseSUOKIFString(pform.theFormula, false)); // not a query
+                    tptp.add(stptp.tptpParseSUOKIFString(pform.getFormula(), false)); // not a query
                     errors.addAll(pform.getErrors());
                 }
             }
