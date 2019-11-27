@@ -93,8 +93,8 @@ public class Prolog {
         Iterator<Formula> it = kb.formulaMap.values().iterator();
         while (it.hasNext()) {
             Formula f = it.next();
-            if (f.isRule() && f.isHorn(kb) && !f.theFormula.contains("exists") &&
-                !f.theFormula.contains("forall")) 
+            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains("exists") &&
+                !f.getFormula().contains("forall"))
                 writeOneHornClause(f,pw);  
             else if (f.isSimpleClause(kb))
                 pw.println(f.toProlog() + ".");
