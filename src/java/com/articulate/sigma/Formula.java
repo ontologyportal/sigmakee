@@ -138,7 +138,7 @@ public class Formula implements Comparable, Serializable {
     public TreeSet<String> warnings = new TreeSet<String>();
 
     /** The formula in textual forms. */
-    public String theFormula;
+    private String theFormula;
 
     public static final String termMentionSuffix  = "__m";
     public static final String classSymbolSuffix  = "__t";  // for the case when a class is used as an instance
@@ -146,6 +146,9 @@ public class Formula implements Comparable, Serializable {
     public static final String termVariablePrefix = "V__";
 
     public boolean higherOrder = false;
+    public boolean simpleClause = false;
+
+    public ArrayList<String> args = new ArrayList<>(); // cached - only in the case of a simpleClause
 
     public String getSourceFile() {
         return this.sourceFile;
@@ -211,8 +214,15 @@ public class Formula implements Comparable, Serializable {
      */
 	public Formula(String f) {
 		theFormula = f;
-	}	
-	
+	}
+
+    /** *****************************************************************
+     * g the textual version of the formula
+     */
+    public String getFormula() {
+        return theFormula;
+    }
+
     /** ***************************************************************
      * Returns a List of the clauses that together constitute the
      * resolution form of this Formula.  The list could be empty if
@@ -286,7 +296,15 @@ public class Formula implements Comparable, Serializable {
      * Read a String into the variable 'theFormula'.
      */
     public void read(String s) {
+
         theFormula = s;
+        allVarsCache = new HashSet<>();
+        allVarsPairCache = new ArrayList<HashSet<String>>();
+        quantVarsCache = new HashSet<>();
+        unquantVarsCache = new HashSet<>();
+        existVarsCache = new HashSet<>();
+        univVarsCache = new HashSet<>();
+        termCache = new HashSet<>();
     }
 
     /** ***************************************************************
@@ -1359,6 +1377,8 @@ public class Formula implements Comparable, Serializable {
      */
     public String getArgument(int argnum) {
 
+        if (args != null && args.size() > argnum)
+            return args.get(argnum);
         String ans = "";
         Formula form = new Formula();
         form.read(theFormula);
@@ -1400,6 +1420,15 @@ public class Formula implements Comparable, Serializable {
      */
     public ArrayList<String> argumentsToArrayList(int start) {
 
+        if (start > 1)
+            System.out.println("Error in Formula.argumentsToArrayList() start greater than 1 : " + start);
+        ArrayList<String> result = new ArrayList<String>();
+        if (args != null && args.size() > 0) {
+            if (start == 0)
+                return args;
+            result.addAll(args.subList(start, args.size()));
+            return result;
+        }
         if (theFormula.indexOf('(',1) != -1) {
             ArrayList<String> erList = complexArgumentsToArrayList(0);
             for (String s : erList) {
@@ -1412,10 +1441,13 @@ public class Formula implements Comparable, Serializable {
             }
         }
         int index = start;
-        ArrayList<String> result = new ArrayList<String>();
+
+        if (start > 0)
+            args.add(getArgument(0));
         String arg = getArgument(index);
         while (arg != null && arg != "" && arg.length() > 0) {
             result.add(arg.intern());
+            args.add(arg.intern());
             index++;
             arg = getArgument(index);
         }
