@@ -305,6 +305,7 @@ public class KBmanager implements Serializable {
      */
     private static void kbsFromXML(SimpleElement configuration) {
 
+        long milis = System.currentTimeMillis();
         boolean SUMOKBexists = false;
         if (!configuration.getTagName().equals("configuration"))
         	System.out.println("Error in KBmanager.kbsFromXML(): Bad tag: " + configuration.getTagName());
@@ -339,6 +340,7 @@ public class KBmanager implements Serializable {
             }
         }
         System.out.println("kbsFromXML(): Completed loading KBs");
+        System.out.println("kbsFromXML(): seconds: " + (System.currentTimeMillis() - milis) / 1000);
         if (!SUMOKBexists)
             System.out.println("Error in KBmanager.kbsFromXML(): no SUMO kb.  Some Sigma functions will not work.");
     }
@@ -419,10 +421,11 @@ public class KBmanager implements Serializable {
             return false;
         }
 
+        long millis = System.currentTimeMillis();
         kb.kbCache = new KBcache(kb);
         kb.kbCache.buildCaches();
         kb.checkArity();
-
+        System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
         if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
             kb.loadEProver();
         return true;
@@ -570,6 +573,7 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce(String configFileDir) {
 
+        long millis = System.currentTimeMillis();
         boolean loaded = false;
         if (initializing || initialized) {
             System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
@@ -631,6 +635,7 @@ public class KBmanager implements Serializable {
         System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
         if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
                 preferences.keySet().size());
+        System.out.println("KBmanager.initializeOnce(): total init time in seconds: " + (System.currentTimeMillis() - millis) / 1000);
         return;
     }
 
@@ -645,11 +650,13 @@ public class KBmanager implements Serializable {
         kbsFromXML(configuration);
         String kbDir = (String) preferences.get("kbDir");
         System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
+        long milis = System.currentTimeMillis();
         NLGUtils.init(kbDir);
         WordNet.wn.initOnce();
         VerbNet.initOnce();
         VerbNet.processVerbs();
         OMWordnet.readOMWfiles();
+        System.out.println("KBmanager.setConfiguration(): linguistics load time: " + (System.currentTimeMillis() - milis) / 1000);
         if (kbs != null && kbs.size() > 0 && !WordNet.initNeeded) {
             for (String kbName : kbs.keySet()) {
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
