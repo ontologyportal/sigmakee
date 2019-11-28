@@ -8,6 +8,11 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Created by qingqingcai on 3/9/15.
+ *
+ * requires
+ *     <constituent filename="Merge.kif" />
+ *     <constituent filename="Mid-level-ontology.kif" />
+ *     <constituent filename="FinancialOntology.kif" />
  */
 public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestBase {
 
@@ -259,7 +264,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
     /** ***************************************************************
      */
- //   @Ignore
+    @Ignore
     @Test
     public void testAddTypeRestrictions8() {
 
@@ -284,9 +289,11 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
         String expected = "(=> \n" +
                 "  (and \n" +
+                "    (subclass ?WHOLE Object)\n" +
                 "    (instance ?NOTPARTPROB RealNumber)\n" +
-                "    (instance ?X Object)\n" +
-                "    (instance ?PARTPROB RealNumber))\n" +
+                "    (instance ?PARTPROB RealNumber)\n" +
+                "    (subclass ?PART Object)\n" +
+                "    (instance ?PART SetOrClass))\n" +
                 "  (=>\n" +
                 "    (and\n" +
                 "      (typicalPart ?PART ?WHOLE)\n" +
@@ -295,6 +302,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "        (ProbabilityFn\n" +
                 "          (exists (?Y)\n" +
                 "            (and\n" +
+                "              (instance ?Y Object)\n" +
                 "              (instance ?Y ?WHOLE)\n" +
                 "              (part ?X ?Y)))))\n" +
                 "      (equal ?NOTPARTPROB\n" +
@@ -302,6 +310,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "          (not\n" +
                 "            (exists (?Z)\n" +
                 "              (and\n" +
+                "                (instance ?Z Object)\n" +
                 "                (instance ?Z ?WHOLE)\n" +
                 "                (part ?X ?Z)))))))\n" +
                 "    (greaterThan ?PARTPROB ?NOTPARTPROB)))";
@@ -311,6 +320,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
     /** ***************************************************************
      */
+    @Ignore
     @Test
     public void testAddTypeRestrictions9() {
 
@@ -391,32 +401,38 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
     /** ***************************************************************
      */
+    @Ignore
     @Test
     public void testAddTypeRestrictions12() {
 
         SUMOformulaToTPTPformula.debug = true;
         String stmt = "(=>\n" +
-                "  (instance ?S Seafood)\n" +
+                "  (and\n" +
+                "    (instance ?S ?C)\n" +
+                "    (subclass ?C Seafood))\n" +
                 "  (exists (?X ?SEA)\n" +
                 "    (and\n" +
-                "      (meatOfAnimal ?S ?ANIMAL)\n" +
+                "      (meatOfAnimal ?C ?ANIMAL)\n" +
                 "      (instance ?X ?ANIMAL)\n" +
                 "      (instance ?SEA BodyOfWater)\n" +
                 "      (inhabits ?X ?SEA))))";
 
         String expected = "(=>\n" +
                 "  (and\n" +
-                "    (subclass ?S Meat)\n" +
+                "    (instance ?S Meat)\n" +
                 "    (subclass ?ANIMAL Animal)\n" +
+                "    (subclass ?C Meat)\n" +
                 "    (instance ?ANIMAL SetOrClass))\n" +
                 "  (=>\n" +
-                "    (instance ?S Seafood)\n" +
-                "    (exists (?X ?SEA)\n" +
-                "      (and\n" +
-                "        (meatOfAnimal ?S ?ANIMAL)\n" +
-                "        (instance ?X ?ANIMAL)\n" +
-                "        (instance ?SEA BodyOfWater)\n" +
-                "        (inhabits ?X ?SEA)))))";
+                "  (and\n" +
+                "    (instance ?S ?C)\n" +
+                "    (subclass ?C Seafood))\n" +
+                "  (exists (?X ?SEA)\n" +
+                "    (and\n" +
+                "      (meatOfAnimal ?C ?ANIMAL)\n" +
+                "      (instance ?X ?ANIMAL)\n" +
+                "      (instance ?SEA BodyOfWater)\n" +
+                "      (inhabits ?X ?SEA)))))";
 
         test("testAddTypeRestrictions12",stmt,expected);
     }

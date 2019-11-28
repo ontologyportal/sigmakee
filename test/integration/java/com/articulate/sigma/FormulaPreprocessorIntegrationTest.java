@@ -46,13 +46,11 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
     public void testFindTypes2() {
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?NOTPARTPROB", Sets.newHashSet("Quantity"));
+        expected.put("?NOTPARTPROB", Sets.newHashSet("RealNumber"));
         expected.put("?PART", Sets.newHashSet("SetOrClass", "Object+"));
-        expected.put("?PARTPROB", Sets.newHashSet("Quantity"));
-        expected.put("?X", Sets.newHashSet("Object"));
-        expected.put("?WHOLE", Sets.newHashSet("SetOrClass", "Object+"));
-        expected.put("?Y", Sets.newHashSet("Object"));
-        expected.put("?Z", Sets.newHashSet("Object"));
+        expected.put("?PARTPROB", Sets.newHashSet("RealNumber"));
+        expected.put("?X", Sets.newHashSet("Entity"));
+        expected.put("?WHOLE", Sets.newHashSet("Object+"));
 
         String strf = "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
                 "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and " +

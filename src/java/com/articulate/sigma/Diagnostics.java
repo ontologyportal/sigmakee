@@ -427,7 +427,7 @@ public class Diagnostics {
         Iterator<Formula> it = kb.formulaMap.values().iterator();
         while (it.hasNext()) {
             Formula form = (Formula) it.next();
-            if (!StringUtil.noPath(form.sourceFile).equals(fname))
+            if (!FileUtil.noPath(form.sourceFile).equals(fname))
                 continue;
             if ((form.getFormula().indexOf("forall") != -1)
                     || (form.getFormula().indexOf("exists") != -1)) {

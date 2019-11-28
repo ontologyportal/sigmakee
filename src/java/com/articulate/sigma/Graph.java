@@ -24,6 +24,7 @@ import java.util.*;
 import javax.imageio.ImageIO;
 
 import com.articulate.sigma.KB;
+import com.articulate.sigma.utils.FileUtil;
 
 /** Handle operations for creating a graphical representation of partial
  *  ordering relations.  Supports Graph.jsp.  */
@@ -430,7 +431,7 @@ public class Graph {
                     String parent = f.getArgument(2);
                     if (rejectedTerm(parent))
                         continue;
-                    if (!StringUtil.emptyString(fileRestrict) && !StringUtil.noPath(f.getSourceFile()).equals(fileRestrict))
+                    if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
                     String rel = f.getArgument(0);
                     if (Formula.DOC_PREDICATES.contains(rel))
@@ -459,7 +460,7 @@ public class Graph {
                     String parent = f.getArgument(1);
                     if (rejectedTerm(parent))
                         continue;
-                    if (!StringUtil.emptyString(fileRestrict) && !StringUtil.noPath(f.getSourceFile()).equals(fileRestrict))
+                    if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
                     String rel = f.getArgument(0);
                     if (Formula.DOC_PREDICATES.contains(rel))
@@ -492,7 +493,7 @@ public class Graph {
                     for (String s : terms) {
                         if (rejectedTerm(s) || term.equals(s))
                             continue;
-                        if (!StringUtil.emptyString(fileRestrict) && !StringUtil.noPath(f.getSourceFile()).equals(fileRestrict))
+                        if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                             continue;
                         String rel = "link";
                         String link = "[ dir=none, label = \"" + rel + "\" ]";

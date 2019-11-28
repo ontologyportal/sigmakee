@@ -61,6 +61,7 @@ Infosys LTD.
 
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.trans.*;
+import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.Pair;
 import com.articulate.sigma.utils.SetUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
@@ -2120,7 +2121,7 @@ public class KB implements Serializable {
 
         for (String path : constituents) {
             if (path.contains("/")) {
-                path = StringUtil.noPath(path);
+                path = FileUtil.noPath(path);
             }
             if (path.equals(fname))
                 return true;
