@@ -877,6 +877,23 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
+     * Safer than getPref().equals() since it can check for null
+     */
+    public boolean prefEquals(String key, String value) {
+
+        if (!configKeys.contains(key)) {
+            System.out.println("Error in KBmanager.getPref(): bad key: " + key);
+            return false;
+        }
+        String ans = (String) preferences.get(key);
+        if (ans == null)
+            ans = "";
+        if (ans.equals(value))
+            return true;
+        return false;
+    }
+
+    /** ***************************************************************
      * Set the preference to the given value.
      */
     public void setPref(String key, String value) {
