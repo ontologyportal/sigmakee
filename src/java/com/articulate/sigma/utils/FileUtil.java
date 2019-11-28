@@ -101,6 +101,17 @@ public class FileUtil {
         }
     }
 
+    /****************************************************************
+     * Removes the path from a file specifier and returns just the
+     * file name
+     */
+    public static String noPath(String s) {
+
+        if (!s.contains(File.separator) || s.indexOf(File.separator) == s.length()-1)
+            return s;
+        return s.substring(s.lastIndexOf(File.separator)+1);
+    }
+
     /** ***************************************************************
      * A test method.
      */
