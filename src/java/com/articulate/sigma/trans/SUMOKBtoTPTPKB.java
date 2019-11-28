@@ -278,6 +278,8 @@ public class SUMOKBtoTPTPKB {
                     pr.println("% is higher order");
                     continue;
                 }
+                if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
+                    continue;
                 pr.println("% not higher order");
                 counter++;
                 if (counter == 100) { System.out.print("."); counter = 0; }
