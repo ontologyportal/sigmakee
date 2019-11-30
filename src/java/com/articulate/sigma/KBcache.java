@@ -61,6 +61,11 @@ public class KBcache implements Serializable {
     // all the transitive relations between instances in the kb
     public HashSet<String> instTransRels = new HashSet<String>();
 
+    // all the transitive relations that are known to be appropriate to use at the time
+    // this code was created - used to provide warnings
+    public static final List<String> intendedTransRels =
+            Arrays.asList("subclass", "subrelation", "subAttribute");
+
     /** All the cached "parent" relations of all transitive relations
      * meaning the relations between all first arguments and the
      * transitive closure of second arguments.  The external HashMap
@@ -627,17 +632,27 @@ public class KBcache implements Serializable {
     // Iterate through the temporary list of instances built during creation of the @see children map
         for (String child : insts) {
             ArrayList<Formula> forms = kb.ask("arg",1,child);
+            if (debug) System.out.println("buildTransInstOf(): forms: " + forms);
             for (Formula f : forms) {
                 String rel = f.getArgument(0);
-                if (instTransRels.contains(rel) && !rel.equals("subclass")) {
+                if (debug) System.out.println("buildTransInstOf(): rel: " + rel);
+                if (instTransRels.contains(rel) && !rel.equals("subclass") && !rel.equals("relatedInternalConcept")) {
+                    if (!intendedTransRels.contains(rel)) {
+                        System.out.println("WARNING in buildTransInstOf(): using non-standard transitive relation " +
+                                rel + " with child " + child + " .  May need to add to KBcache.intendedTransRels");
+                    }
                     HashMap<String,HashSet<String>> prentList = parents.get(rel);
+                    if (debug) System.out.println("buildTransInstOf(): prentList: " + prentList);
                     if (prentList != null) {
                         HashSet<String> prents = prentList.get(f.getArgument(1));  // include all parents of the child
+                        if (debug) System.out.println("buildTransInstOf(): prents: " + prents);
                         if (prents != null) {
                             for (String p : prents) {
                                 ArrayList<Formula> forms2 = kb.askWithRestriction(0,"instance",1,p);
+                                if (debug) System.out.println("buildTransInstOf(): forms2: " + forms2);
                                 for (Formula f2 : forms2) {
                                     String cl = f2.getArgument(2);
+                                    if (debug) System.out.println("buildTransInstOf(): cl: " + cl);
                                     HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                                     HashSet<String> pset = new HashSet<String>();
                                     if (instanceOf.get(child) != null)
@@ -652,9 +667,8 @@ public class KBcache implements Serializable {
                     }
                 }
                 else if (rel.equals("instance")) {
-                	if (child.equals("exhaustiveAttribute"))
-                		System.out.println("INFO in KBcache.buildTransInstOf(): f: " + f);
                 	String cl = f.getArgument(2);
+                    if (debug) System.out.println("buildTransInstOf(): cl2: " + cl);
                     HashMap<String,HashSet<String>> superclasses = parents.get("subclass");
                     HashSet<String> iset = new HashSet<String>();
                     if (instanceOf.get(child) != null)
@@ -669,6 +683,7 @@ public class KBcache implements Serializable {
                 }
             }            
         }
+        debug = false;
         buildDirectInstances();
     }
 

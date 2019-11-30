@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.Ignore;
 
@@ -8,6 +9,21 @@ import java.util.*;
 import static org.junit.Assert.*;
 
 public class KBcacheTest extends IntegrationTestBase {
+
+    /** *************************************************************
+     */
+    @BeforeClass
+    public static void requiredKB() {
+
+        List<String> reqFiles =
+                Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
+        for (String s : reqFiles) {
+            if (!KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s)) {
+                System.out.println("Error in KBcacheTest required file " + s + " missing");
+                System.exit(-1);
+            }
+        }
+    }
 
     /** *************************************************************
      */
@@ -51,6 +67,7 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testBuildChildren() {
 
+        System.out.println("\n============= testBuildChildren ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
 
         System.out.println("testbuildChildren(): KBs: " + KBmanager.getMgr().getKB("SUMO").constituents);
@@ -83,9 +100,8 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testBuildChildren2() {
 
+        System.out.println("\n============= testBuildChildren2 ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
-
-        System.out.println("testbuildChildren(): KBs: " + KBmanager.getMgr().getKB("SUMO").constituents);
         String parent = "RealNumber";
         /* HashSet<String> expected = new HashSet<>(Arrays.asList("AnimacyAttribute", "BodyPosition", "DevelopmentalAttribute",
                 "DiseaseOrSyndrome", "Fingerprint", "PsychologicalAttribute", "SexAttribute", "VisualAcuityAttribute",
@@ -107,8 +123,9 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
-    public void testBuildTransInstOf() {
+    public void testTransitiveRelations() {
 
+        System.out.println("\n============= testTransitiveRelations ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
 
         String relation = "abbreviation";
@@ -208,10 +225,11 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
-    public void testTransitiveRelations() {
+    public void testTransitiveRelations2() {
 
+        System.out.println("\n============= testTransitiveRelations2 ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
-        System.out.println("transRels: " + cache.transRels);
+        System.out.println("testTransitiveRelations2: " + cache.transRels);
         assertTrue(cache.transRels.contains("subAttribute"));
         assertTrue(cache.transRels.contains("subrelation"));
     }
@@ -221,6 +239,7 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testDisjoint() {
 
+        System.out.println("\n============= testDisjoint ==================");
         System.out.println("Test testDisjoint");
         HashSet<String> classes = new HashSet<>(Arrays.asList("Arthropod", "Bird"));
         System.out.println("KBcacheTest.testDisjoint(): Arthropod&Bird");
@@ -263,6 +282,7 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testSignature() {
 
+        System.out.println("\n============= testSignature ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
         //System.out.println("parents of Shirt (as instance): " + cache.getParentClassesOfInstance("Shirt"));
         //System.out.println("parents of Shirt: " + cache.parents.get("subclass").get("Shirt"));
@@ -277,10 +297,28 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testTransInst() {
 
+        System.out.println("\n============= testTransInst ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
         System.out.println("testTransInst(): cache.transInstOf(Anger,Entity): " + cache.transInstOf("Anger","Entity"));
         System.out.println("testTransInst(): insts.contains(Anger): " + cache.insts.contains("Anger"));
         System.out.println("testTransInst(): instancesOf.get(Anger): " + cache.instanceOf.get("Anger"));
         assertTrue(cache.transInstOf("Anger","Entity"));
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testRealization() {
+
+        System.out.println("\n============= testRealization ==================");
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("testRealization(): cache.isInstanceOf(realization,AntisymmetricRelation): " + cache.isInstanceOf("realization","AntisymmetricRelation"));
+        System.out.println("testRealization(): cache.isInstanceOf(realization,SymmetricRelation): " + cache.isInstanceOf("realization","SymmetricRelation"));
+        //System.out.println("testRealization(): cache.instances.get(AntisymmetricRelation): " + cache.instances.get("AntisymmetricRelation"));
+        //System.out.println("testRealization(): cache.instances.get(SymmetricRelation): " + cache.instances.get("SymmetricRelation"));
+        //System.out.println("testRealization(): cache.parents.get(intsance).get(realization): " + cache.parents.get("subrelation").get("realization"));
+        //System.out.println("testRealization(): cache.instanceOf.get(realization): " + cache.instanceOf.get("realization"));
+        assertTrue(!cache.isInstanceOf("realization","SymmetricRelation"));
+        assertTrue(cache.isInstanceOf("realization","AntisymmetricRelation"));
     }
 }
