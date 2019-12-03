@@ -53,12 +53,16 @@ public class KBmanager implements Serializable {
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
                     "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire",
-                    "reportDup", "reportFnError", "verbnet", "jedit", "editdir");
+                    "reportDup", "reportFnError", "verbnet", "jedit", "editdir", "termFormats");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
                     "systemsDir","graphVizDir", "kbDir", "celtdir", "tptpHomeDir", "logDir",
                     "englishPCFG");
+
+    public enum Prover { NONE, EPROVER, VAMPIRE };
+
+    public Prover prover = Prover.NONE;
 
     /** ***************************************************************
      */
@@ -250,7 +254,6 @@ public class KBmanager implements Serializable {
             // Default logging things
             preferences.put("logDir", logDir.getCanonicalPath());
             preferences.put("logLevel", "warning");
-
         }
         catch (Exception ex) {
             System.out.println("Error in KBmanager.setDefaultAttributes(): " + Arrays.toString(ex.getStackTrace()));
@@ -426,8 +429,18 @@ public class KBmanager implements Serializable {
         kb.kbCache.buildCaches();
         kb.checkArity();
         System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
-        if (KBmanager.getMgr().getPref("TPTP").equals("yes"))
-            kb.loadEProver();
+        if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
+            if (KBmanager.getMgr().getPref("vampire") != null) {
+                System.out.println("KBmanager.loadKB(): loading Vampire");
+                kb.loadVampire();
+                prover = Prover.VAMPIRE;
+            }
+            else if (KBmanager.getMgr().getPref("eprover") != null) {
+                System.out.println("KBmanager.loadKB(): loading EProver");
+                kb.loadEProver();
+                prover = Prover.EPROVER;
+            }
+        }
         return true;
     }
 
@@ -660,8 +673,12 @@ public class KBmanager implements Serializable {
         if (kbs != null && kbs.size() > 0 && !WordNet.initNeeded) {
             for (String kbName : kbs.keySet()) {
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
-                WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
-                WordNet.wn.serialize(); // have to serialize it again if there are new synsets
+                if (KBmanager.getMgr().getPref("termFormats").equals("yes")) {
+                    WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
+                    WordNet.wn.serialize(); // have to serialize it again if there are new synsets
+                }
+                else
+                    System.out.println("INFO in WordNet.termFormatsToSynsets(): term format to synsets is not activated");
             }
         }
         else
