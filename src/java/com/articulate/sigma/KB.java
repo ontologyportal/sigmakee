@@ -60,6 +60,7 @@ Infosys LTD.
 */
 
 import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.Pair;
@@ -70,6 +71,7 @@ import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -113,6 +115,9 @@ public class KB implements Serializable {
 
     /** The String constant that is the suffix for files of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
+
+    /** The String constant that is the suffix for TPTP files of user assertions. */
+    public static final String _userAssertionsTPTP = "_UserAssertions.tptp";
 
     /* The String constant that is the suffix for files of cached assertions.     */
     public static final String _cacheFileSuffix = "_Cache.kif";
@@ -1551,7 +1556,12 @@ public class KB implements Serializable {
      */
     public String tell(String input) {
 
-        System.out.println("KB.tell: eprover: " + eprover);
+        //System.out.println("KB.tell: eprover: " + eprover);
+        //if (eprover == null) {
+        //    System.out.println("Error in KB.tell: eprover not initialized");
+        //    return null;
+        //}
+
         String result = "The formula could not be added";
         KBmanager mgr = KBmanager.getMgr();
         KIF kif = new KIF(); // 1. Parse the input string.
@@ -1577,12 +1587,9 @@ public class KB implements Serializable {
             ArrayList<Formula> formulasAlreadyPresent = merge(kif, filename);
             // only check formulasAlreadyPresent when filterSimpleOnly = false;
             // otherwise, some user assertions/axioms will not be asserted for
-            // inference,
-            // since these axioms do exist in formulasAlreadyPresent but not in
-            // SUMO.tptp
-            // In the future, when SUMO can completely run using whole KB, we
-            // can remove
-            // SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
+            // inference, since these axioms do exist in formulasAlreadyPresent but not in
+            // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
+            // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
             if (SUMOKBtoTPTPKB.filterSimpleOnly == false && !formulasAlreadyPresent.isEmpty()) {
                 String sf = ((Formula) formulasAlreadyPresent.get(0)).sourceFile;
                 result = "The formula was already added from " + sf;
@@ -1591,8 +1598,7 @@ public class KB implements Serializable {
                 ArrayList<Formula> parsedFormulas = new ArrayList<Formula>();
                 Iterator<Formula> it = kif.formulaMap.values().iterator();
                 while (it.hasNext()) { // 2. Confirm that the input has been
-                    // converted into
-                    // at least one Formula object and
+                    // converted into at least one Formula object and
                     // stored in this.formulaMap.
                     Formula parsedF = it.next();
                     System.out.println("KB.tell: " + parsedF.toString());
@@ -1607,8 +1613,7 @@ public class KB implements Serializable {
                 }
                 if (!parsedFormulas.isEmpty()) {
                     if (!constituents.contains(filename)) {
-                        if (kiffile.exists()) // 3. If the assertions file
-                            // exists, delete it.
+                        if (kiffile.exists()) // 3. If the assertions file exists, delete it.
                             kiffile.delete();
                         if (tptpfile.exists())
                             tptpfile.delete();
@@ -1626,13 +1631,19 @@ public class KB implements Serializable {
                     System.out.println("KB.tell: eprover: " + eprover);
                     // 5. Write the formula to the kb.name_UserAssertions.tptp
                     boolean allAdded = false;
-                    if (eprover != null) {
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                         eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // 6. Add the new tptp file into EBatching.txt
                         eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60);
                         // 7. Reload eprover
                         eprover = new EProver(mgr.getPref("inferenceEngine"));
+                    }
+                    else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+                        // nothing much to do since Vampire has to load it all at query time
+                        // just create a single file
+                        String vampAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
+                        String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                     }
                     result += (allAdded ? " and inference" : " but not for local inference");
                 }
@@ -1738,6 +1749,62 @@ public class KB implements Serializable {
                 }
                 String strQuery = processedStmts.iterator().next().getFormula();
                 result = this.eprover.submitQuery(strQuery, this);
+            }
+        }
+        return result;
+    }
+
+    /***************************************************************
+     * Submits a
+     * query to the inference engine. Returns an XML formatted String that
+     * contains the response of the inference engine. It should be in the form
+     * "<queryResponse>...</queryResponse>".
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF query.
+     * @param timeout       The number of seconds after which the inference engine should
+     *                      give up.
+     * @param maxAnswers    The maximum number of answers (binding sets) the inference
+     *                      engine should return.
+     * @return A String indicating the status of the ask operation.
+     */
+    public String askVampire(String suoKifFormula, int timeout, int maxAnswers) {
+
+        String result = "";
+        // Start by assuming that the ask is futile.
+        result = ("<queryResponse>" + System.getProperty("line.separator")
+                + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
+                + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator") + "</queryResponse>"
+                + System.getProperty("line.separator"));
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedStmts = fp.preProcess(query, true, this);
+            if (!processedStmts.isEmpty()) {
+                int axiomIndex = 0;
+                File s = new File("/home/apease/.sigmakee/KBs/SUMO.tptp");
+                if (!s.exists())
+                    System.out.println("Vampire.main(): no such file: " + s);
+                else {
+                    HashSet<String> tptpquery = new HashSet<>();
+                    SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
+                    for (Formula p : processedStmts) {
+                        String theTPTPstatement = "fof(query" + "_" + axiomIndex++ +
+                                ",conjecture,(" +
+                                stptp.tptpParseSUOKIFString(p.getFormula(), true) // true - it's a query
+                                + ")).";
+                        tptpquery.add(theTPTPstatement);
+                    }
+                    try {
+                        System.out.println("Vampire.main(): calling with: " + s + ", " + timeout + ", " + tptpquery);
+                        Vampire vampire = new Vampire(s, timeout, tptpquery);
+                        return vampire.output.toString();
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    //vampire.terminate();
+                }
             }
         }
         return result;
@@ -2643,7 +2710,10 @@ public class KB implements Serializable {
             // rebuilt the relation caches, and, if cache == yes, have
             // written out the _Cache.kif file. Now we reload the
             // inference engine.
-            loadEProver();
+            if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
+                loadEProver();
+            if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
+                loadVampire();
         }
         return "";
     }
@@ -3228,6 +3298,42 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Checks for a Vampire executable, preprocesses and loads all of the constituents into
+     * it.
+     */
+    public void loadVampire() {
+
+        System.out.println("INFO in KB.loadVampire()");
+        KBmanager mgr = KBmanager.getMgr();
+        String vampex = KBmanager.getMgr().getPref("vampire");
+        if (StringUtil.emptyString(vampex)) {
+            System.out.println("Error in Vampire: no executable string in preferences");
+            return;
+        }
+        File executable = new File(vampex);
+        if (!executable.exists()) {
+            System.out.println("Error in Vampire: no executable " + vampex);
+            return;
+        }
+        try {
+            if (!formulaMap.isEmpty()) {
+                HashSet<String> formulaStrings = new HashSet<String>();
+                formulaStrings.addAll(formulaMap.keySet());
+                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                skb.kb = this;
+                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+                System.out.println("INFO in KB.loadVampire(): generating TPTP file");
+                skb.writeFile(tptpFilename, true);
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        return;
+    }
+
+    /***************************************************************
      * Starts EProver and collects, preprocesses and loads all of the constituents into
      * it.
      */
@@ -3235,10 +3341,10 @@ public class KB implements Serializable {
 
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
-        if (!mgr.initialized) {
-            System.out.println("INFO in KB.loadEProver(): KBmanager not initialized, exiting");
-            return;
-        }
+        //if (!mgr.initialized) {
+        //    System.out.println("INFO in KB.loadEProver(): KBmanager not initialized, exiting");
+        //    return;
+        //}
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
@@ -3261,8 +3367,10 @@ public class KB implements Serializable {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
-        if (eprover == null)
+        if (eprover == null) {
             mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
+            System.out.println("Error in KB.loadEProver(): EProver not loaded");
+        }
         return;
     }
 
