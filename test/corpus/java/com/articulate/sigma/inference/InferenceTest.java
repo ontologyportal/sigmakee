@@ -12,7 +12,9 @@ import org.junit.runners.Parameterized;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,6 +33,14 @@ public class InferenceTest {
 
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        List<String> reqFiles =
+                Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
+        for (String s : reqFiles) {
+            if (!kb.containsFile(s)) {
+                System.out.println("Error in KBcacheTest required file " + s + " missing");
+                System.exit(-1);
+            }
+        }
     }
 
     /** ***************************************************************
@@ -90,7 +100,7 @@ public class InferenceTest {
     @Test
     public void test() {
 
-        System.out.println(fInput);
+        System.out.println("InferenceTest.test(): " + fInput);
         ArrayList<String> expectedAnswers = new ArrayList<>();
         ArrayList<String> actualAnswers = new ArrayList<>();
         InferenceTestSuite.inferenceUnitTest(fInput, kb, expectedAnswers, actualAnswers);
