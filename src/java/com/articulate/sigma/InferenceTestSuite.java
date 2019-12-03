@@ -408,8 +408,6 @@ public class InferenceTestSuite {
         KIF kif = new KIF();
         try {
             kif.readFile(file.getCanonicalPath());
-        } catch (IOException e) {
-            e.printStackTrace();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -423,7 +421,7 @@ public class InferenceTestSuite {
             String formula = (String) it.next();
             if (formula.indexOf(";") != -1)
                 formula = formula.substring(0,formula.indexOf(";"));
-            System.out.println("INFO in InferenceTestSuite.test(): Formula: " + formula);
+            System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): Formula: " + formula);
             if (formula.startsWith("(note"))
                 note = formula.substring(6,formula.length()-1);
             else if (formula.startsWith("(query"))
@@ -449,23 +447,25 @@ public class InferenceTestSuite {
         }
         int maxAnswers = expectedAnswers.size();
         Formula theQuery = new Formula();
-        Set<Formula> theQueries = null;
         theQuery.read(query);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        theQueries = fp.preProcess(theQuery,true,kb);
-        Iterator q = theQueries.iterator();
-        while (q.hasNext()) {
-            String processedStmt = ((Formula)q.next()).getFormula();
+        Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
+        for (Formula f : theQueries) {
+            String processedStmt = f.getFormula();
+            System.out.println("\n============================");
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
             ArrayList<String> tmpAnswers = kb.askNoProof(processedStmt,timeout,maxAnswers);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): result: " + tmpAnswers);
             actualAnswers.addAll(tmpAnswers);
         }
 
-        if (expectedAnswers.size()==1 && expectedAnswers.get(0).equals("yes")) {
+        if (expectedAnswers.size() == 1 && expectedAnswers.get(0).equals("yes")) {
             if (actualAnswers.size() > 0) {
                 actualAnswers.clear();
                 actualAnswers.add("yes");
             }
         }
+        System.out.println("\n============================");
     }
 
     /** ***************************************************************
