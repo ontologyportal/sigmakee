@@ -85,7 +85,7 @@ public class EProver {
         if (inputFilename != null && !inputFilename.isEmpty())
             ebatchfiles.add(inputFilename);
 
-        // Collect existed TPTP files
+        // Collect existing TPTP files
         try {
             FileInputStream fis = new FileInputStream(initFile);
             InputStreamReader isr = new InputStreamReader(fis);
@@ -239,7 +239,7 @@ public class EProver {
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
-        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        	eproverPath = KBmanager.getMgr().getPref("eproverPath");
         }
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
