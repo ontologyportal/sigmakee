@@ -13,10 +13,7 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 
 package com.articulate.sigma.tp;
 
-import com.articulate.sigma.InferenceEngine;
-import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.KIF;
-import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.*;
 
 import java.io.*;
 import java.util.*;
@@ -33,6 +30,8 @@ import java.util.*;
  */
 
 public class Vampire {
+
+    public ArrayList<String> output = new ArrayList<>();
 
     /** *************************************************************
      * To obtain a new instance of Vampire, use the static factory
@@ -72,9 +71,6 @@ public class Vampire {
     /** *************************************************************
      * Creates a running instance of Vampire.
      *
-     * @param executable A File object denoting the platform-specific
-     * Vampire executable.
-     *
      * @param kbFile A File object denoting the initial knowledge base
      * to be loaded by the Vampire executable.
      *
@@ -83,7 +79,14 @@ public class Vampire {
      */
     private Vampire (File kbFile, int timeout) throws Exception {
 
-        File executable = new File(KBmanager.getMgr().getPref("vampire"));
+        String vampex = KBmanager.getMgr().getPref("vampire");
+        if (StringUtil.emptyString(vampex)) {
+            System.out.println("Error in Vampire: no executable string in preferences");
+        }
+        File executable = new File(vampex);
+        if (!executable.exists()) {
+            System.out.println("Error in Vampire: no executable " + vampex);
+        }
         String[] cmds = createCommandList(executable, timeout, kbFile);
         System.out.println("Initializing Vampire with:\n" + Arrays.toString(cmds));
         Runtime rt = Runtime.getRuntime();
@@ -93,7 +96,6 @@ public class Vampire {
         BufferedWriter _writer = new BufferedWriter(new OutputStreamWriter(proc.getOutputStream()));
         BufferedReader _error = new BufferedReader(new InputStreamReader(proc.getErrorStream()));
 
-        ArrayList<String> output = new ArrayList<>();
         String line = null;
         while ((line = _reader.readLine()) != null) {
             output.add(line);
@@ -181,7 +183,7 @@ public class Vampire {
      * in TFF or TPTP language to a file and then calling Vampire.
      * Note that any query must be given as a "conjecture"
      */
-    private Vampire (File kbFile, int timeout, HashSet<String> stmts) throws Exception {
+    public Vampire (File kbFile, int timeout, HashSet<String> stmts) throws Exception {
 
         String type = "tff";
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
@@ -209,11 +211,21 @@ public class Vampire {
         vampire.terminate();
         */
         KBmanager.getMgr().initializeOnce();
-        File s = new File("/home/apease/.sigmakee/KBs/SUMO.tff");
-        HashSet<String> stmts = new HashSet<>();
-        stmts.add("tff(conj1,conjecture,?[V__X] : (s__subclass(V__X,s__Object))).");
-        Vampire vampire = new Vampire(s,30,stmts);
-        //vampire.terminate();
+        File s = new File("/home/apease/.sigmakee/KBs/SUMO.tptp");
+        if (!s.exists())
+            System.out.println("Vampire.main(): no such file: " + s);
+        else {
+            System.out.println("Vampire.main(): first test");
+            HashSet<String> query = new HashSet<>();
+            query.add("tff(conj1,conjecture,?[V__X] : (s__subclass(V__X,s__Entity))).");
+            System.out.println("Vampire.main(): calling Vampire with: " + s + ", 30, " + query);
+            Vampire vampire = new Vampire(s, 30, query);
+
+            System.out.println("Vampire.main(): second test");
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            System.out.println(kb.askVampire("(subclass ?X Entity)",30,1));
+            //vampire.terminate();
+        }
     }
     
 }
