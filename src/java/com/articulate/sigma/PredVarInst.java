@@ -216,6 +216,10 @@ public class PredVarInst {
                     " in " + input);
             // 3.1 check: predVarArity should match arity of substituted relation
             for (String rel : kb.kbCache.relations) {
+                if (kb.isFunction(rel) || rel.endsWith("Fn")) { // can't substitute a function for where a relation is expected
+                    if (debug) System.out.println("instantiatePredVars(): excluding function: " + rel);
+                    continue;
+                }
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
