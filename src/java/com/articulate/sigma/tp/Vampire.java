@@ -36,6 +36,8 @@ public class Vampire {
 
     public ArrayList<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
+    public enum ModeType {AVATAR, CASC}; // Avatar is faster but doesn't provide answer variables
+    public static ModeType mode = ModeType.AVATAR;
 
     /** *************************************************************
      */
@@ -65,7 +67,8 @@ public class Vampire {
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
         String opts = "--question_answering answer_literal -av off --proof tptp -t";
-        //String opts = "--mode casc -t";
+        if (mode == ModeType.CASC)
+            opts = "--mode casc -t";
         String[] optar = opts.split(" ");
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();
