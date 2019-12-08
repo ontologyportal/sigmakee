@@ -1548,8 +1548,6 @@ public class KB implements Serializable {
      * "<assertionResponse>...</assertionResponse>" where the body should be "
      * Formula has been added to the session database" if all went well.
      * <p>
-     * TODO: If we find a way to directly add assertions into opened inference
-     * engine, we can roll back to 1.111 version
      *
      * @param input The String representation of a SUO-KIF Formula.
      * @return A String indicating the status of the tell operation.
@@ -1601,7 +1599,7 @@ public class KB implements Serializable {
                     // converted into at least one Formula object and
                     // stored in this.formulaMap.
                     Formula parsedF = it.next();
-                    System.out.println("KB.tell: " + parsedF.toString());
+                    System.out.println("KB.tell(): " + parsedF.toString());
                     String term = PredVarInst.hasCorrectArity(parsedF, this);
                     if (!StringUtil.emptyString(term)) {
                         result = result + "Formula in " + parsedF.sourceFile
@@ -1628,10 +1626,10 @@ public class KB implements Serializable {
                         parsedF.sourceFile = filename;
                     }
                     result = "The formula has been added for browsing";
-                    System.out.println("KB.tell: eprover: " + eprover);
                     // 5. Write the formula to the kb.name_UserAssertions.tptp
                     boolean allAdded = false;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+                        System.out.println("KB.tell: using eprover: " + eprover);
                         eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // 6. Add the new tptp file into EBatching.txt
@@ -1640,10 +1638,13 @@ public class KB implements Serializable {
                         eprover = new EProver(mgr.getPref("inferenceEngine"));
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+                        System.out.println("KB.tell: using vampire");
+                        Vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                                !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // nothing much to do since Vampire has to load it all at query time
                         // just create a single file
-                        String vampAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
-                        String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+                        //String vampAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
+                        //String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                     }
                     result += (allAdded ? " and inference" : " but not for local inference");
                 }
@@ -1767,7 +1768,7 @@ public class KB implements Serializable {
      *                      engine should return.
      * @return A String indicating the status of the ask operation.
      */
-    public String askVampire(String suoKifFormula, int timeout, int maxAnswers) {
+    public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers) {
 
         String result = "";
         // Start by assuming that the ask is futile.
@@ -1797,8 +1798,10 @@ public class KB implements Serializable {
                     }
                     try {
                         System.out.println("Vampire.main(): calling with: " + s + ", " + timeout + ", " + tptpquery);
-                        Vampire vampire = new Vampire(s, timeout, tptpquery);
-                        return vampire.output.toString();
+                        Vampire vampire = new Vampire();
+                        vampire.run(this, s, timeout, tptpquery);
+                        ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(vampire.output.toString(), this, fp);
+                        return vampire;
                     }
                     catch (Exception e) {
                         e.printStackTrace();
@@ -1807,7 +1810,7 @@ public class KB implements Serializable {
                 }
             }
         }
-        return result;
+        return null;
     }
 
     /***************************************************************
