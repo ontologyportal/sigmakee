@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import TPTPWorld.InterfaceTPTP;
 import TPTPWorld.SystemOnTPTP;
+import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTP2SUMO;
@@ -397,12 +398,15 @@ public class InferenceTestSuite {
     /** ***************************************************************
      * The method will be called in InferenceTest in unit test;
      * It takes a TQG file path, reading the kif statements and queries and expected answers;
-     * It parses E's inference output for actual answers;
+     * It parses the theorem prover's inference output for actual answers;
      * Note that this procedure DOES NOT delete any prior user assertions.
      */
     public static void inferenceUnitTest(String testpath, KB kb,
-           ArrayList expectedAnswers, ArrayList<String> actualAnswers) {
+           ArrayList<String> expectedAnswers, ArrayList<String> actualAnswers) {
 
+        System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): testpath: " + testpath);
+        if (actualAnswers == null)
+            actualAnswers = new ArrayList<String>();
         // read the test file
         File file = new File(testpath);
         KIF kif = new KIF();
@@ -415,7 +419,7 @@ public class InferenceTestSuite {
         Iterator it = kif.formulaMap.keySet().iterator();
         String note = file.getName();
         String query = null;
-        int timeout = 0;
+        int timeout = 10;
 
         while (it.hasNext()) {
             String formula = (String) it.next();
@@ -445,6 +449,8 @@ public class InferenceTestSuite {
             else
                 kb.tell(formula);
         }
+
+        System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): expected answers: " + expectedAnswers);
         int maxAnswers = expectedAnswers.size();
         Formula theQuery = new Formula();
         theQuery.read(query);
@@ -454,9 +460,15 @@ public class InferenceTestSuite {
             String processedStmt = f.getFormula();
             System.out.println("\n============================");
             System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
-            ArrayList<String> tmpAnswers = kb.askNoProof(processedStmt,timeout,maxAnswers);
-            System.out.println("InferenceTestSuite.inferenceUnitTest(): result: " + tmpAnswers);
-            actualAnswers.addAll(tmpAnswers);
+            Vampire vampire = kb.askVampire(processedStmt,timeout,maxAnswers);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): output: " + vampire.toString());
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vampire.output,kb);
+            ArrayList<String> tmpAnswers = new ArrayList<>();
+            tmpAnswers.addAll(tpp.bindings);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): answers: " + tmpAnswers);
+            if (tmpAnswers != null)
+                actualAnswers.addAll(tmpAnswers);
         }
 
         if (expectedAnswers.size() == 1 && expectedAnswers.get(0).equals("yes")) {
@@ -469,21 +481,47 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("InferenceTestSuite class");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t <name> - run named test file in config.xml inferenceTestDir");
+    }
+
+    /** ***************************************************************
      * Test method
      */
-    public static void main(String[] args) {
+    public static void cmdLineTest(String filename) {
 
         try {
             KBmanager.getMgr().initializeOnce();
-            KBmanager.getMgr().setPref("inferenceTestDir",System.getProperty("user.home") + "/infTest");
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println(InferenceTestSuite.test(kb, "STP2", 10));
-        } catch (Exception e) {
+            String path = KBmanager.getMgr().getPref("inferenceTestDir");
+            inferenceUnitTest(path + File.separator + filename, kb,
+                    new ArrayList<String>(), new ArrayList<String>());
+        }
+        catch (Exception e) {
             System.out.println("Error in InferenceTestSuite.main()");
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+    }
 
+    /** ***************************************************************
+     * Test method
+     */
+    public static void main(String[] args) {
+
+        if (args != null && args.length > 1 && args[0].equals("-t")) {
+            cmdLineTest(args[1]);
+        }
+        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+            showHelp();
+        }
+        else
+            showHelp();
     }
 }
  
