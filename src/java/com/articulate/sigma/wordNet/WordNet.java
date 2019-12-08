@@ -1836,14 +1836,14 @@ public class WordNet implements Serializable {
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
                 System.out.println("WordNet.initOnce(): disable: " + disable);
                 baseDirFile = new File(WordNet.baseDir);
-                if (KBmanager.getMgr().getPref("loadFresh").equals("false")) {
+                if (KBmanager.getMgr().getPref("loadFresh").equals("true")) {
+                    loadFresh();
+                    initNeeded = false;
+                }
+                else {
                     loadSerialized();
                     if (wn == null)
                         loadFresh();
-                }
-                else {
-                    loadFresh();
-                    initNeeded = false;
                 }
                 DB.readSentimentArray();                
             }
