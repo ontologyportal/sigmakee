@@ -108,6 +108,7 @@ public class InferenceTest {
             System.out.println("Success in " + fInput);
         else
             System.out.println("Failure in " + fInput);
+        System.out.println("\n\n");
         assertEquals(expectedAnswers, actualAnswers);
     }
 }
