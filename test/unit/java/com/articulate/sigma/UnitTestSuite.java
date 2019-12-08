@@ -10,6 +10,7 @@ import java.util.Set;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import com.articulate.sigma.wordNet.*;
+import com.articulate.sigma.trans.*;
 
 import static org.junit.Assert.*;
 
@@ -36,6 +37,7 @@ import static org.junit.Assert.*;
         RowVarTest.class,
         StringUtilTest.class,
         SUMOformulaToTPTPformulaTest.class,
+        TPTP3ProofProcTest.class,
         UnitNLGTestSuite.class,
         WordNetTest.class,
 })
