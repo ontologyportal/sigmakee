@@ -505,7 +505,7 @@ public class InferenceTestSuite {
             Vampire.mode = Vampire.ModeType.CASC;
         List<String> passingSet = Arrays.asList("TQG2","TQG3","TQG4","TQG13","TQG18","TQG30","TQG31","TQG32");
         for (String s : passingSet) {
-            cmdLineTest(s + ".kif");
+            cmdLineTest(s + ".kif.tq");
         }
     }
 
