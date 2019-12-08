@@ -316,10 +316,8 @@ public class EProver {
         try {
             pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
             HashSet<Formula> processedFormulas = new HashSet<Formula>();
-            Iterator<Formula> it2 = parsedFormulas.iterator();
-            while (it2.hasNext()) {
+            for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                Formula parsedF = it2.next();          // 1. Preproccess the formula.
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
