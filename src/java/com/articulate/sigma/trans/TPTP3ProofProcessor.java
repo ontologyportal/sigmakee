@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 
 public class TPTP3ProofProcessor {
 
-	public static boolean debug = true;
+	public static boolean debug = false;
 	public String status;
 	public ArrayList<String> bindings = new ArrayList<String>();
 	public ArrayList<ProofStep> proof = new ArrayList<ProofStep>();
@@ -45,8 +45,10 @@ public class TPTP3ProofProcessor {
 		sb.append("Answers:");
 		for (int i = 0; i < bindings.size(); i++)
 			sb.append(bindings.get(i) + " ");
+		sb.append("\n");
 		for (int i = 0; i < proof.size(); i++)
-			sb.append(proof.get(i));
+			sb.append(proof.get(i) + "\n");
+		sb.append(status + "\n");
 		return sb.toString();
 	}
 
@@ -513,7 +515,7 @@ public class TPTP3ProofProcessor {
 					line = lnr.readLine();
 				}
 				if (line.indexOf("SZS status") != -1) {
-					tpp.status = line.substring(15);
+					tpp.status = line.substring(13);
 				}
 				if (line.indexOf("SZS answers") != -1) {
 					if (!finishAnswersTuple) {
@@ -553,10 +555,10 @@ public class TPTP3ProofProcessor {
      */
     public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, KB kb) {
 
-		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): before reverse: " +
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): before reverse: " +
 				lines);
     	lines = joinNreverseInputLines(lines);
-		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): after reverse: " +
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): after reverse: " +
 				lines);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         try {
@@ -566,18 +568,20 @@ public class TPTP3ProofProcessor {
             Iterator<String> it = lines.iterator();
             while (it.hasNext()) {
                 line = it.next();
-				if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): looking at line: " +
+				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): looking at line: " +
 						line);
-				if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): in proof: " +
+				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): in proof: " +
 						inProof);
-				if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): finishAnswersTuple: " +
+				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): finishAnswersTuple: " +
 						finishAnswersTuple);
                 if (line.indexOf("SZS output start") != -1) {
                     inProof = true;
                     line = it.next();
                 }
                 if (line.indexOf("SZS status") != -1) {
-                    tpp.status = line.substring(15);
+                    tpp.status = line.substring(13);
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): tpp.status: " +
+							tpp.status);
                 }
                 if (line.indexOf("SZS answers") != -1) {
                     if (!finishAnswersTuple) {
@@ -597,7 +601,7 @@ public class TPTP3ProofProcessor {
                         ProofStep ps = tpp.parseProofStep(line);
                         if (ps != null) {
                             tpp.proof.add(ps);
-                            if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): adding line: " +
+                            if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(2): adding line: " +
 									line + "\nas " + ps);
                         }
                     }
