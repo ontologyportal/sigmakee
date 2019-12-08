@@ -463,12 +463,15 @@ public class InferenceTestSuite {
             Vampire vampire = kb.askVampire(processedStmt,timeout,maxAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): output: " + vampire.toString());
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp.parseProofOutput(vampire.output,kb);
+            tpp = tpp.parseProofOutput(vampire.output,kb);
             ArrayList<String> tmpAnswers = new ArrayList<>();
             tmpAnswers.addAll(tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): answers: " + tmpAnswers);
             if (tmpAnswers != null)
                 actualAnswers.addAll(tmpAnswers);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): tpp status: " + tpp.status);
+            if (tpp.status != null && tpp.status.startsWith("Theorem") && actualAnswers.size() == 0)
+                actualAnswers.add("yes");
         }
 
         if (expectedAnswers.size() == 1 && expectedAnswers.get(0).equals("yes")) {
@@ -488,25 +491,52 @@ public class InferenceTestSuite {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t <name> - run named test file in config.xml inferenceTestDir");
+        System.out.println("  -it <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
     }
 
     /** ***************************************************************
      * Test method
      */
-    public static void cmdLineTest(String filename) {
+    public static void runPassing(String mode) {
 
+        if (mode.equals("AVATAR"))
+            Vampire.mode = Vampire.ModeType.AVATAR;
+        if (mode.equals("CASC"))
+            Vampire.mode = Vampire.ModeType.CASC;
+        List<String> passingSet = Arrays.asList("TQG2","TQG3","TQG4","TQG13","TQG18","TQG30","TQG31","TQG32");
+        for (String s : passingSet) {
+            cmdLineTest(s);
+        }
+    }
+
+    /** ***************************************************************
+     * Test method
+     */
+    public static boolean cmdLineTest(String filename) {
+
+        ArrayList<String> expected = new ArrayList<String>();
+        ArrayList<String> actual = new ArrayList<String>();
         try {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             String path = KBmanager.getMgr().getPref("inferenceTestDir");
             inferenceUnitTest(path + File.separator + filename, kb,
-                    new ArrayList<String>(), new ArrayList<String>());
+                    expected, actual);
+            if (actual.equals(expected)) {
+                System.out.println("InferenceTestSuite.cmdLineTest() : Success on " + filename);
+                return true;
+            }
+            else {
+                System.out.println("InferenceTestSuite.cmdLineTest() : Failure on " + filename);
+                return false;
+            }
         }
         catch (Exception e) {
-            System.out.println("Error in InferenceTestSuite.main()");
+            System.out.println("Error in InferenceTestSuite.cmdLineTest()");
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+        return false;
     }
 
     /** ***************************************************************
@@ -516,6 +546,9 @@ public class InferenceTestSuite {
 
         if (args != null && args.length > 1 && args[0].equals("-t")) {
             cmdLineTest(args[1]);
+        }
+        else if (args != null && args.length > 1 && args[0].equals("-it")) {
+            runPassing(args[1]);
         }
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
