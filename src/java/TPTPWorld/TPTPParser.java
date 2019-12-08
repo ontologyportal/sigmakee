@@ -9,7 +9,10 @@ public class TPTPParser {
     public Hashtable<String,TPTPFormula> ftable;
     public Vector<SimpleTptpParserOutput.TopLevelItem> Items;
 
+    /** ***************************************************************
+     */
     public static class Symbol {
+
         String text;
         int arity;
         Symbol (String text, int arity) {
@@ -21,7 +24,10 @@ public class TPTPParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public static class SymbolComparator implements Comparator {
+
         public int compare(Object obj1, Object obj2) {
             String s1 = ((Symbol)obj1).text;
             String s2 = ((Symbol)obj2).text;
@@ -30,7 +36,10 @@ public class TPTPParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public TPTPParser (BufferedReader reader) throws Exception {
+
         StringBuffer result = new StringBuffer();
         TptpLexer lexer = new TptpLexer(reader);
         TptpParser parser = new TptpParser(lexer);
@@ -75,7 +84,10 @@ public class TPTPParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public static void checkArguments (String args[]) {
+
         // has to have at least one argument (for filename or stdin)
         if (args.length < 1) {
             System.out.println("%ERROR: Please supply filename or -- for stdin");
@@ -84,7 +96,10 @@ public class TPTPParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public static BufferedReader createReader (String arg) throws Exception {
+
         BufferedReader reader;
         if (arg.equals("--")) {
             // read from stdin
@@ -103,12 +118,17 @@ public class TPTPParser {
         return reader;
     }
 
+    /** ***************************************************************
+     */
     public static TPTPParser parse (BufferedReader reader) throws Exception {
         return new TPTPParser(reader);
     }
 
+    /** ***************************************************************
+     */
     public static void gatherParents (SimpleTptpParserOutput.Source source, 
                                       Vector<String> parents) {
+
         for (SimpleTptpParserOutput.ParentInfo p 
                  : ((SimpleTptpParserOutput.Source.Inference)source).getParentInfoList()) {
             SimpleTptpParserOutput.Source psource = p.getSource();
@@ -130,7 +150,10 @@ public class TPTPParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public static String getType (SimpleTptpParserOutput.TopLevelItem item) {
+
         if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
             SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
             return AF.getRole().toString();
@@ -142,7 +165,10 @@ public class TPTPParser {
         }
     }
 
+    /** ***************************************************************
+     */
     public static String getName (SimpleTptpParserOutput.TopLevelItem item) {
+
         if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
             SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
             return AF.getName();
@@ -153,10 +179,13 @@ public class TPTPParser {
             return null;
         }
     }
-  
+
+    /** ***************************************************************
+     */
     public static ArrayList<String> identifyTermVariables (SimpleTptpParserOutput.Formula.Atomic 
                                                            atom,
                                                            ArrayList<String> variables) {
+
         // if arguments.size() > 1, then definetly is not a variable
         for (int j = 0; j < atom.getNumberOfArguments(); j++) {
             SimpleTptpParserOutput.Term term = 
@@ -177,10 +206,13 @@ public class TPTPParser {
         return variables;
     }
 
+    /** ***************************************************************
+     */
     // given an fof, identify all quantified variables in order from start of
     public static ArrayList<String> identifyQuantifiedVariables (SimpleTptpParserOutput.Formula 
                                                                  formula,
                                                                  ArrayList<String> variables) {
+
         switch(formula.getKind()) {
         case Atomic:
             // no more quantified variables
@@ -210,9 +242,12 @@ public class TPTPParser {
         return variables;    
     }
 
+    /** ***************************************************************
+     */
     public static ArrayList<String> identifyFormulaVariables (SimpleTptpParserOutput.Formula 
                                                               formula,
                                                               ArrayList<String> variables) {
+
         switch(formula.getKind()) {
         case Atomic:
             variables = identifyTermVariables((SimpleTptpParserOutput.Formula.Atomic)formula, 
@@ -233,9 +268,12 @@ public class TPTPParser {
         }
         return variables;
     }
-  
+
+    /** ***************************************************************
+     */
     public static ArrayList<String> identifyClauseVariables (SimpleTptpParserOutput.Clause clause,
                                                              ArrayList<String> variables) {
+
         LinkedList<SimpleTptpParserOutput.Literal> literals = (LinkedList)clause.getLiterals();
         if (literals == null) {
             return variables;
@@ -246,9 +284,12 @@ public class TPTPParser {
         }
         return variables;
     }
-  
+
+    /** ***************************************************************
+     */
     // identify variables in the formula, store as ArrayList of Strings
     public static ArrayList<String> identifyVariables (TPTPFormula formula) {
+
         ArrayList<String> variables = new ArrayList();
         SimpleTptpParserOutput.TopLevelItem item = formula.item;
         if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
@@ -261,7 +302,10 @@ public class TPTPParser {
         return variables;     
     }
 
+    /** ***************************************************************
+     */
     private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Term term, TreeSet set) {
+
         //    System.out.println("Looking at term: " + term.toString());
         LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)term.getArguments();
         if (arguments == null) {
@@ -280,7 +324,10 @@ public class TPTPParser {
         return set;
     }
 
+    /** ***************************************************************
+     */
     private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Formula.Atomic atom, TreeSet set) {
+
         //        System.out.println("Looking at atom: " + atom.toString());
         LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)atom.getArguments();
         if (arguments == null) {
@@ -303,7 +350,10 @@ public class TPTPParser {
         return set;
     }
 
+    /** ***************************************************************
+     */
     private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Formula formula, TreeSet set) {
+
         //    System.out.println("Looking at formula: " + formula.toString());
         switch(formula.getKind()) {
         case Atomic:
@@ -325,12 +375,17 @@ public class TPTPParser {
         return set;
     }
 
+    /** ***************************************************************
+     */
     private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Literal literal, TreeSet set) {
         set = getSymbolList((SimpleTptpParserOutput.Formula.Atomic)literal.getAtom(), set);
         return set;
     }
 
+    /** ***************************************************************
+     */
     private static TreeSet<Symbol> getSymbolList (SimpleTptpParserOutput.Clause clause, TreeSet set) {
+
         //    System.out.println("Looking at clause: " + clause.toString());
         LinkedList<SimpleTptpParserOutput.Literal> literals = (LinkedList)clause.getLiterals();
         if (literals == null) {
@@ -343,7 +398,10 @@ public class TPTPParser {
         return set;
     }
 
+    /** ***************************************************************
+     */
     public static TreeSet<Symbol> getSymbolList (BufferedReader reader) throws Exception {
+
         TreeSet<Symbol> set = new TreeSet(new TPTPParser.SymbolComparator());
         TPTPParser parser = TPTPParser.parse(reader);
         for (int i = 0; i < parser.Items.size(); i++) {
@@ -359,7 +417,10 @@ public class TPTPParser {
         return set;
     }
 
+    /** ***************************************************************
+     */
     public static TreeSet<Symbol> getSymbolList (String filename) throws Exception {
+
         TreeSet<Symbol> result = null;
         try {
             BufferedReader reader = TPTPParser.createReader(filename);
@@ -374,8 +435,11 @@ public class TPTPParser {
         return result;
     }
 
+    /** ***************************************************************
+     */
     // given a list of bindings, get list of symbols
     public static TreeSet<Symbol> getSymbolList (ArrayList<Binding> bindings) throws Exception {
+
         String temp = "";
         int count = 0;
         for (Binding bind : bindings) {
@@ -385,7 +449,10 @@ public class TPTPParser {
         return getSymbolList(reader);
     }
 
+    /** ***************************************************************
+     */
     public static void main (String args[]) throws Exception {
+
          TPTPParser.checkArguments(args);
         // assumption: filename is args[0] or "--" for stdin
        
@@ -398,7 +465,5 @@ public class TPTPParser {
             System.out.println("[" + count + "]: " + it.next());
             count++;
         }
-
     }
-    
 }
