@@ -104,6 +104,10 @@ public class InferenceTest {
         ArrayList<String> expectedAnswers = new ArrayList<>();
         ArrayList<String> actualAnswers = new ArrayList<>();
         InferenceTestSuite.inferenceUnitTest(fInput, kb, expectedAnswers, actualAnswers);
+        if (expectedAnswers.equals(actualAnswers))
+            System.out.println("Success in " + fInput);
+        else
+            System.out.println("Failure in " + fInput);
         assertEquals(expectedAnswers, actualAnswers);
     }
 }
