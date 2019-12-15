@@ -37,7 +37,7 @@ public class Vampire {
     public ArrayList<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC}; // Avatar is faster but doesn't provide answer variables
-    public static ModeType mode = ModeType.AVATAR;
+    public static ModeType mode = ModeType.CASC;
 
     /** *************************************************************
      */
