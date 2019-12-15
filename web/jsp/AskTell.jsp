@@ -202,8 +202,7 @@ if (!role.equalsIgnoreCase("admin")) {
     if (req != null && !syntaxError) {
         try {
             if (req.equalsIgnoreCase("tell")) {
-                Formula statement = new Formula();
-                statement.theFormula = stmt;
+                Formula statement = new Formula(stmt);
                 System.out.println("INFO in AskTell.jsp: statement: " + stmt);
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
