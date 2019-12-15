@@ -379,6 +379,23 @@ public class StringUtil {
         return sb.toString();
     }
 
+    /*****************************************************************
+     * Count the number of appearances of a certain character in a string.
+     *
+     * @param str - the string to be tested.
+     * @param c   - the character to be counted.
+     */
+    public static int countChar(String str, char c) {
+
+        int len = 0;
+        char[] cArray = str.toCharArray();
+        for (int i = 0; i < cArray.length; i++) {
+            if (cArray[i] == c)
+                len++;
+        }
+        return len;
+    }
+
     /****************************************************************
      * Removes all balanced ASCII double-quote characters from each
      * end of the String s, if any are present.
@@ -574,6 +591,22 @@ public class StringUtil {
         for (int i = 0; i < al.size(); i++) {
             if (i != 0)
                 sb.append(" ");
+            sb.append(al.get(i));
+        }
+        return sb.toString();
+    }
+
+    /***************************************************************
+     * Convert an ArrayList, to a set of lines
+     */
+    public static String arrayListToCRLFString(ArrayList<String> al) {
+
+        if (al == null || al.size() < 1)
+            return "";
+        StringBuffer sb = new StringBuffer();
+        for (int i = 0; i < al.size(); i++) {
+            if (i != 0)
+                sb.append("\n");
             sb.append(al.get(i));
         }
         return sb.toString();
