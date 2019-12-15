@@ -179,15 +179,16 @@ public class StreamTokenizer_s {
     public double nval;
 
     /** Private constructor that initializes everything except the streams. */
-    private StreamTokenizer_s() {
-	wordChars('a', 'z');
-	wordChars('A', 'Z');
-	wordChars(128 + 32, 255);
-	whitespaceChars(0, ' ');
-	commentChar('/');
-	quoteChar('"');
-	quoteChar('\'');
-	// parseNumbers();
+    public StreamTokenizer_s() {
+
+        wordChars('a', 'z');
+        wordChars('A', 'Z');
+        wordChars(128 + 32, 255);
+        whitespaceChars(0, ' ');
+        commentChar('/');
+        quoteChar('"');
+        quoteChar('\'');
+        // parseNumbers();
     }
 
     /**
@@ -223,11 +224,12 @@ public class StreamTokenizer_s {
      */
     @Deprecated
     public StreamTokenizer_s(InputStream is) {
-	this();
-        if (is == null) {
-            throw new NullPointerException();
-        }
-	input = is;
+
+        this();
+            if (is == null) {
+                throw new NullPointerException();
+            }
+        input = is;
     }
 
     /**
@@ -237,11 +239,12 @@ public class StreamTokenizer_s {
      * @since   JDK1.1
      */
     public StreamTokenizer_s(Reader r) {
-	this();
-        if (r == null) {
-            throw new NullPointerException();
-        }
-	reader = r;
+
+        this();
+            if (r == null) {
+                throw new NullPointerException();
+            }
+        reader = r;
     }
 
     /**
@@ -266,12 +269,13 @@ public class StreamTokenizer_s {
      * @param   hi    the high end of the range.
      */
     public void wordChars(int low, int hi) {
-	if (low < 0)
-	    low = 0;
-	if (hi >= ctype.length)
-	    hi = ctype.length - 1;
-	while (low <= hi)
-	    ctype[low++] |= CT_ALPHA;
+
+        if (low < 0)
+            low = 0;
+        if (hi >= ctype.length)
+            hi = ctype.length - 1;
+        while (low <= hi)
+            ctype[low++] |= CT_ALPHA;
     }
 
     /**
@@ -284,12 +288,13 @@ public class StreamTokenizer_s {
      * @param   hi    the high end of the range.
      */
     public void whitespaceChars(int low, int hi) {
-	if (low < 0)
-	    low = 0;
-	if (hi >= ctype.length)
-	    hi = ctype.length - 1;
-	while (low <= hi)
-	    ctype[low++] = CT_WHITESPACE;
+
+        if (low < 0)
+            low = 0;
+        if (hi >= ctype.length)
+            hi = ctype.length - 1;
+        while (low <= hi)
+            ctype[low++] = CT_WHITESPACE;
     }
 
     /**
@@ -304,12 +309,13 @@ public class StreamTokenizer_s {
      * @see     java.io.StreamTokenizer_s#ordinaryChar(int)
      */
     public void ordinaryChars(int low, int hi) {
-	if (low < 0)
-	    low = 0;
-	if (hi >= ctype.length)
-	    hi = ctype.length - 1;
-	while (low <= hi)
-	    ctype[low++] = 0;
+
+        if (low < 0)
+            low = 0;
+        if (hi >= ctype.length)
+            hi = ctype.length - 1;
+        while (low <= hi)
+            ctype[low++] = 0;
     }
 
     /**
@@ -389,10 +395,11 @@ public class StreamTokenizer_s {
      * @see     java.io.StreamTokenizer_s#ttype
      */
     public void parseNumbers() {
-	for (int i = '0'; i <= '9'; i++)
-	    ctype[i] |= CT_DIGIT;
-	ctype['.'] |= CT_DIGIT;
-	ctype['-'] |= CT_DIGIT;
+
+        for (int i = '0'; i <= '9'; i++)
+            ctype[i] |= CT_DIGIT;
+        ctype['.'] |= CT_DIGIT;
+        ctype['-'] |= CT_DIGIT;
     }
 
     /**
@@ -478,12 +485,13 @@ public class StreamTokenizer_s {
 
     /** Read the next character */
     private int read() throws IOException {
-	if (reader != null)
-	    return reader.read();
-	else if (input != null)
-	    return input.read();
-	else
-	    throw new IllegalStateException();
+
+        if (reader != null)
+            return reader.read();
+        else if (input != null)
+            return input.read();
+        else
+            throw new IllegalStateException();
     }
 
     /**
