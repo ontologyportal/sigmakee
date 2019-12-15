@@ -311,7 +311,7 @@ public class KIF {
                         expression.append(" ");
                     expression.append("\"");
                     String com = st.sval;
-                    totalLinesForComments += countChar(com, (char) 0X0A);
+                    totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
                     expression.append(com);
                     expression.append("\"");
                     if (parenLevel < 2) // Don't care if parenLevel > 1
@@ -403,7 +403,7 @@ public class KIF {
      * @param parenLevel      - if the paren level is > 1 then the term appears nested in a
      *            statement and the argument number is ignored.
      */
-    private String createKey(String sval, boolean inAntecedent, boolean inConsequent, int argumentNum, int parenLevel) {
+    public static String createKey(String sval, boolean inAntecedent, boolean inConsequent, int argumentNum, int parenLevel) {
 
         if (sval == null) {
             sval = "null";
@@ -430,23 +430,6 @@ public class KIF {
             key = key.concat(sval);
         }
         return (key);
-    }
-
-    /*****************************************************************
-     * Count the number of appearances of a certain character in a string.
-     *
-     * @param str - the string to be tested.
-     * @param c   - the character to be counted.
-     */
-    private int countChar(String str, char c) {
-
-        int len = 0;
-        char[] cArray = str.toCharArray();
-        for (int i = 0; i < cArray.length; i++) {
-            if (cArray[i] == c)
-                len++;
-        }
-        return len;
     }
 
     /****************************************************************
