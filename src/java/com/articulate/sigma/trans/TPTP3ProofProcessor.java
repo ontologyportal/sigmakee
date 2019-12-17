@@ -19,11 +19,12 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.LineNumberReader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,6 +34,8 @@ public class TPTP3ProofProcessor {
 	public String status;
 	public ArrayList<String> bindings = new ArrayList<String>();
 	public ArrayList<ProofStep> proof = new ArrayList<ProofStep>();
+
+	// a map of original ID keys and renumbered key values
 	public HashMap<String,Integer> idTable = new HashMap<String,Integer>();
 	int idCounter = 0;
 
@@ -214,6 +217,12 @@ public class TPTP3ProofProcessor {
 			int firstComma = supportId.indexOf(",");
 			inferenceType = supportId.substring(firstParen+1, firstComma);
 		}
+		else if (supportId.startsWith("file(")) {
+			int firstParen = supportId.indexOf("(");
+			int firstComma = supportId.indexOf(",");
+			int secondParen = supportId.indexOf(")",firstComma+1);
+			inferenceType = supportId.substring(firstComma+1, secondParen);
+		}
 		return inferenceType;
 	}
 
@@ -311,7 +320,7 @@ public class TPTP3ProofProcessor {
 		//int comma1 = withoutWrapper.indexOf(","); // the end of "cnf(u402," or "fof(myId25,"
 		//String id = withoutWrapper.substring(0,comma1).trim();
 		String id = args.get(1);
-		if (debug) System.out.println("ID       : " + id);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): ID       : " + id);
 		Integer intID = Integer.valueOf(idCounter++);
 		idTable.put(id,intID);
 		ps.number = intID;
@@ -320,7 +329,7 @@ public class TPTP3ProofProcessor {
 		//String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
 		String formulaType = args.get(2);
 		ps.formulaType = formulaType;
-		if (debug) System.out.println("type     : " + formulaType);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): type     : " + formulaType);
 		//String rest = withoutWrapper.substring(comma2 + 1).trim();
 		//int statementEnd = StringUtil.findBalancedParen(rest.indexOf("("), rest);	// startIndex =  index_of_first_"(", instead of 0;
 		// TODO: check if exists "="
@@ -333,9 +342,9 @@ public class TPTP3ProofProcessor {
 		//	stmnt = trimParens(rest);
 		if (stmnt.startsWith("("))
 			stmnt = trimParens(stmnt);
-		if (debug) System.out.println("stmnt    : " + stmnt);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): stmnt    : " + stmnt);
 		line = line.replaceAll("\\$answer\\(","answer(");
-		System.out.println("after remove $answer: " + line);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
 		StringReader reader = new StringReader(line);
 		//StringReader reader = new StringReader(stmnt);
 		// kif = TPTP2SUMO.convert(reader, false);
@@ -352,13 +361,13 @@ public class TPTP3ProofProcessor {
 		catch (Exception e) {
 			System.out.println("Error in TPTP3ProofProcessor.parseProofStep(): " + e.getMessage());
 			e.printStackTrace();
-			System.out.println("with input: " + line);
+			System.out.println("TPTP3ProofProcessor.parseProofStep(): with input: " + line);
 		}
-		if (debug) System.out.println("KIF stmnt : " + stmnt);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): KIF stmnt : " + stmnt);
 		ps.axiom = stmnt;
 		//String supportId = rest.substring(statementEnd+2,rest.length()).trim();
-		String supportId = args.get(4);;
-		if (debug) System.out.println("supportID: " + supportId);
+		String supportId = args.get(4);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): supportID: " + supportId);
 		// add an inference type
 		ps.inferenceType = getInferenceType(supportId.trim());
 		ps.premises.addAll(parseSupports(supportId.trim()));
@@ -531,7 +540,7 @@ public class TPTP3ProofProcessor {
 						ProofStep ps = tpp.parseProofStep(line);
 						if (ps != null) {
 							tpp.proof.add(ps);
-							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): adding line: " +
+							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): adding line: " +
 									line + "\nas " + ps);
 						}
 					}
@@ -544,7 +553,6 @@ public class TPTP3ProofProcessor {
 		// remove unnecessary steps, eg: conjectures, duplicate trues
 		tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
 		tpp.proof = ProofStep.removeDuplicates(tpp.proof);
-
 		// find types for skolem terms
 		findTypesForSkolemTerms(tpp, kb);
 		return tpp;
