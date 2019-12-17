@@ -151,20 +151,20 @@ public class Vampire {
 
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
-            System.out.println("Error in run(): no executable string in preferences");
+            System.out.println("Error in Vampire.run(): no executable string in preferences");
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.out.println("Error in run(): no executable " + vampex);
+            System.out.println("Error in Vampire.run(): no executable " + vampex);
         }
         String[] cmds = createCommandList(executable, timeout, kbFile);
-        System.out.println("Initializing Vampire with:\n" + Arrays.toString(cmds));
+        System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(true);
 
         Process _vampire = _builder.start();
-        System.out.println("Vampire.run(): process: " + _vampire);
+        //System.out.println("Vampire.run(): process: " + _vampire);
 
         BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()));
         String line = null;
@@ -173,9 +173,9 @@ public class Vampire {
         }
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
-            System.out.println("Abnormal process termination");
+            System.out.println("Vampire.run(): Abnormal process termination");
         }
-        System.out.println("run() done executing");
+        System.out.println("Vampire.run() done executing");
     }
 
     /** ***************************************************************
@@ -241,7 +241,12 @@ public class Vampire {
 
         String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
-        return FileUtil.readLines(dir + File.separator + userAssertionTPTP,false);
+        String fname = dir + File.separator + userAssertionTPTP;
+        File ufile = new File(fname);
+        if (ufile.exists())
+            return FileUtil.readLines(dir + File.separator + userAssertionTPTP,false);
+        else
+            return new ArrayList<String>();
     }
 
     /** *************************************************************
@@ -255,6 +260,12 @@ public class Vampire {
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String outfile = dir + "temp-comb." + type;
         String stmtFile = dir + "temp-stmt." + type;
+        File fout = new File(outfile);
+        if (fout.exists())
+            fout.delete();
+        File fstmt = new File(stmtFile);
+        if (fstmt.exists())
+            fstmt.delete();
         List<String> userAsserts = getUserAssertions(kb);
         if (userAsserts != null && stmts != null)
             stmts.addAll(userAsserts);
