@@ -1797,7 +1797,7 @@ public class KB implements Serializable {
                         tptpquery.add(theTPTPstatement);
                     }
                     try {
-                        System.out.println("Vampire.main(): calling with: " + s + ", " + timeout + ", " + tptpquery);
+                        System.out.println("Vampire.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                         Vampire vampire = new Vampire();
                         vampire.run(this, s, timeout, tptpquery);
                         ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(vampire.output.toString(), this, fp);
@@ -3468,7 +3468,22 @@ public class KB implements Serializable {
         try {
             KBmanager.getMgr().initializeOnce();
             kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println(kb.getAllSub("ColorAttribute","subAttribute"));
+            System.out.println("KB.test(): " + kb.getAllSub("ColorAttribute","subAttribute"));
+
+            String contents = "(subclass ?X Entity)";
+            System.out.println("KB.test(): query Vampire with: " + contents);
+            String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+            String type = "tptp";
+            String outfile = dir + "temp-comb." + type;
+            System.out.println("KB.test(): query Vampire on file: " + outfile);
+            Vampire vamp = kb.askVampire(contents,30,1);
+            //System.out.println("KB.test(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,kb);
+            System.out.println("queryExp(): bindings: " + tpp.bindings);
+            System.out.println("queryExp(): proof: " + tpp.proof);
+            ArrayList<String> proofStepsStr = new ArrayList<>();
+            for (ProofStep ps : tpp.proof)
+                proofStepsStr.add(ps.toString());
             //kb.writeTerms();
             // System.out.println("KB.main(): " + kb.isChildOf("Africa",
             // "Region"));
@@ -3523,7 +3538,10 @@ public class KB implements Serializable {
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
         }
-        else
+        else if (args != null && args.length > 0 && args[0].equals("-t"))
             test();
+        else
+            showHelp();
+
     }
 }
