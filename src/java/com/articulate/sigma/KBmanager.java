@@ -662,6 +662,7 @@ public class KBmanager implements Serializable {
         preferencesFromXML(configuration);
         kbsFromXML(configuration);
         String kbDir = (String) preferences.get("kbDir");
+        String sep = File.separator;
         System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
         long milis = System.currentTimeMillis();
         NLGUtils.init(kbDir);
@@ -673,6 +674,10 @@ public class KBmanager implements Serializable {
         if (kbs != null && kbs.size() > 0 && !WordNet.initNeeded) {
             for (String kbName : kbs.keySet()) {
                 System.out.println("INFO in KBmanager.setConfiguration(): " + kbName);
+                File f3 = new File(kbDir + sep + kbName + KB._userAssertionsString);
+                f3.delete();
+                File f4 = new File(kbDir + sep + kbName + KB._userAssertionsTPTP);
+                f4.delete();
                 if (KBmanager.getMgr().getPref("termFormats").equals("yes")) {
                     WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
                     WordNet.wn.serialize(); // have to serialize it again if there are new synsets
