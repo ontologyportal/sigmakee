@@ -208,18 +208,16 @@ public class PredVarInst {
         // 2. add explicitly defined types for predicate variables
         varTypes = addExplicitTypes(kb,input,varTypes);
         if (debug) System.out.println("instantiatePredVars(): types: " + varTypes);
-        Iterator<String> it = varTypes.keySet().iterator();
-        while (it.hasNext()) {
-            String var = it.next();
+        for (String var : varTypes.keySet()) {
             if (predVarArity == null || var == null || predVarArity.get(var) == null)
                 System.out.println("instantiatePredVars(): pred var arity null for: " + var +
                     " in " + input);
             // 3.1 check: predVarArity should match arity of substituted relation
-            for (String rel : kb.kbCache.relations) {
-                if (kb.isFunction(rel) || rel.endsWith("Fn")) { // can't substitute a function for where a relation is expected
-                    if (debug) System.out.println("instantiatePredVars(): excluding function: " + rel);
-                    continue;
-                }
+            for (String rel : kb.kbCache.predicates) {
+                //if (kb.isFunction(rel) || rel.endsWith("Fn")) { // can't substitute a function for where a relation is expected
+                //    if (debug) System.out.println("instantiatePredVars(): excluding function: " + rel);
+                //    continue;
+                //}
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
