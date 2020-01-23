@@ -422,10 +422,10 @@ public class KB implements Serializable {
             Iterator<String> formulas = formulaMap.keySet().iterator();
             while (formulas.hasNext()) {
                 Formula f = (Formula) formulaMap.get(formulas.next());
-                if (counter == 100) {
+                if (counter++ % 100 == 0)
                     System.out.print(".");
-                    counter = 0;
-                }
+                if (counter % 4000 == 0)
+                    System.out.print("\nINFO in KB.checkArity(): Still performing Arity Check");
                 String term = PredVarInst.hasCorrectArity(f, this);
                 if (!StringUtil.emptyString(term)) {
                     errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
@@ -569,9 +569,11 @@ public class KB implements Serializable {
      */
     public boolean isFunction(String i) {
 
-        if (Formula.listP(i))
-            System.out.println("Warning in KB.isFunction(): not a constant: " + i);
+        //if (Formula.listP(i))
+        //    System.out.println("Warning in KB.isFunction(): not a constant: " + i);
         if (kbCache != null && !StringUtil.emptyString(i)) {
+            return kbCache.functions.contains(i);
+            /*
             if (isInstanceOf(i, "Function")) {
                 if (!i.endsWith(Formula.FN_SUFF) && !i.matches("\\w+Fn_\\d+") &&
                         !KBmanager.getMgr().getPref("reportFnError").equals("no")) {
@@ -587,6 +589,7 @@ public class KB implements Serializable {
                 System.out.println(warn);
                 warnings.add(warn);
             }
+             */
         }
         return false;
     }
@@ -2628,27 +2631,30 @@ public class KB implements Serializable {
 
         Iterator<String> it = file.formulas.keySet().iterator();
         int count = 0;
+        System.out.println("INFO in KB.addConstituent(): add keys");
         while (it.hasNext()) { // Iterate through keys.
             String key = it.next();
             if ((count++ % 100) == 1)
                 System.out.print(".");
+            if ((count % 4000) == 1)
+                System.out.println("\nINFO in KB.addConstituent(): still adding keys");
             ArrayList<String> newlist = file.formulas.get(key);
 
             // temporary debug test to find nulls
-            for (int i = 0; i < newlist.size(); i++) {
-                String form = newlist.get(i);
-                if (StringUtil.emptyString(form))
-                    System.out.println("Error in KB.addConstituent() 1: formula is null ");
-            }
+            //for (int i = 0; i < newlist.size(); i++) {
+            //    String form = newlist.get(i);
+            //    if (StringUtil.emptyString(form))
+            //        System.out.println("Error in KB.addConstituent() 1: formula is null ");
+            //}
             ArrayList<String> list = formulas.get(key);
 
             if (list != null) {
                 // temporary debug test to find nulls
-                for (int i = 0; i < list.size(); i++) {
-                    String form = list.get(i);
-                    if (StringUtil.emptyString(form))
-                        System.out.println("Error in KB.addConstituent() 2: formula is null ");
-                }
+                //for (int i = 0; i < list.size(); i++) {
+                //    String form = list.get(i);
+                //    if (StringUtil.emptyString(form))
+                //        System.out.println("Error in KB.addConstituent() 2: formula is null ");
+                //}
                 newlist.addAll(list);
             }
             formulas.put(key, newlist);
@@ -2656,11 +2662,14 @@ public class KB implements Serializable {
 
         count = 0;
         Iterator<Formula> it2 = file.formulaMap.values().iterator();
+        System.out.println("INFO in KB.addConstituent(): add values");
         while (it2.hasNext()) { // Iterate through values
             Formula f = (Formula) it2.next();
             String internedFormula = f.getFormula().intern();
             if ((count++ % 100) == 1)
                 System.out.print(".");
+            if ((count % 4000) == 1)
+                System.out.println("\nINFO in KB.addConstituent(): still adding values");
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -3326,7 +3335,9 @@ public class KB implements Serializable {
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 System.out.println("INFO in KB.loadVampire(): generating TPTP file");
+                long millis = System.currentTimeMillis();
                 skb.writeFile(tptpFilename, true);
+                System.out.println("KB.loadVampire(): write TPTP, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
             }
         }
         catch (Exception e) {
@@ -3388,6 +3399,7 @@ public class KB implements Serializable {
     public TreeSet<String> preProcess(HashSet<String> forms) {
 
         System.out.println("INFO in KB.preProcess(): ");
+        long millis = System.currentTimeMillis();
         TreeSet<String> newTreeSet = new TreeSet<String>();
         KBmanager mgr = KBmanager.getMgr();
         boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
@@ -3397,10 +3409,13 @@ public class KB implements Serializable {
             return newTreeSet;
         Iterator<String> it = forms.iterator();
         int counter = 0;
+        FormulaPreprocessor fp = new FormulaPreprocessor();
         while (it.hasNext()) {
             String form = it.next();
             if ((counter++ % 100) == 1)
                 System.out.print(".");
+            if ((counter % 4000) == 1)
+                System.out.println("\nINFO in KB.preProcess(): : still working");
             Formula f = formulaMap.get(form);
             if (f == null) {
                 String warn = "Warning in KB.preProcess(): No formula for : " + form;
@@ -3408,9 +3423,8 @@ public class KB implements Serializable {
                 warnings.add(warn);
                 continue;
             }
-            // System.out.println("INFO in KB.preProcess(): form : " + form);
-            // System.out.println("INFO in KB.preProcess(): f : " + f);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
+            if (debug) System.out.println("INFO in KB.preProcess(): form : " + form);
+            if (debug) System.out.println("INFO in KB.preProcess(): f : " + f);
             Set<Formula> processed = fp.preProcess(f, false, this); // not queries
             Set<String> tptp = new HashSet<>();
             if (tptpParseP) {
@@ -3420,8 +3434,6 @@ public class KB implements Serializable {
                     errors.addAll(pform.getErrors());
                 }
             }
-
-            Iterator<String> itp = tptp.iterator();
             for (String p : tptp) {
                 if (StringUtil.isNonEmptyString(p)) {
                     newTreeSet.add(p);
@@ -3435,6 +3447,8 @@ public class KB implements Serializable {
         }
         System.out.println();
         // kbCache.clearSortalTypeCache();
+        System.out.println("INFO in KB.preProcess(): completed in " +
+                (System.currentTimeMillis() - millis) / 1000 + " seconds");
         return newTreeSet;
     }
 
