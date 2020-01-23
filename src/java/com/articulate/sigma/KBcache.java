@@ -52,6 +52,9 @@ public class KBcache implements Serializable {
     // all the functions in the kb
     public HashSet<String> functions = new HashSet<String>();
 
+    // all relations that are not functions
+    public HashSet<String> predicates = new HashSet<>();
+
     // all the transitive relations in the kb
     public HashSet<String> transRels = new HashSet<String>();
 
@@ -997,6 +1000,8 @@ public class KBcache implements Serializable {
         for (String s : relations)
             if (kb.isFunction(s))
                 functions.add(s);
+            else
+                predicates.add(s);
     }
 
     /** ***************************************************************
@@ -1183,7 +1188,7 @@ public class KBcache implements Serializable {
         HashSet<String> rels = new HashSet<>();
         rels.add("instance");
         rels.add("subAttribute");
-        rels.add("subrelation");
+        rels.add("subField");
         for (String r : rels) {
             ArrayList<Formula> forms = kb.ask("arg",0,r);
             for (Formula f : forms) {
@@ -1286,6 +1291,11 @@ public class KBcache implements Serializable {
                 for (int i = 0; i < forms.size(); i++) {
                     Formula form = forms.get(i);
                     if (debug) System.out.println("INFO in KBcache.collectDomains(): form " + form);
+                    String arg2 = form.getArgument(2);
+                    if (StringUtil.emptyString(arg2) || !StringUtil.isNumeric(arg2)) {
+                        System.out.println("Error in KBcache.collectDomains(): arg2 not a number in:  " + form);
+                        continue;
+                    }
                     int arg = Integer.valueOf(form.getArgument(2));
                     String type = form.getArgument(3); 
                     domainArray[arg] = type; 
