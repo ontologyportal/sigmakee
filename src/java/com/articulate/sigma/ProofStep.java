@@ -195,7 +195,7 @@ public class ProofStep {
     public String toString() {
 
         StringBuffer sb = new StringBuffer();
-        sb.append(number + ". " + axiom + " " + premises + " "  + inferenceType + "\n");
+        sb.append(number + ". " + new Formula(axiom).format("","  ","\n") + " " + premises + " "  + inferenceType + "\n");
         return sb.toString();
     }
 }
