@@ -226,7 +226,7 @@ public class Vampire {
 
         br = new BufferedReader(new FileReader(f2));
         line = br.readLine();
-        while(line != null) {
+        while (line != null) {
             pw.println(line);
             line = br.readLine();
         }
@@ -307,7 +307,7 @@ public class Vampire {
         f3.delete();
         File f4 = new File(dir + "SUMO" + KB._userAssertionsTPTP);
         f4.delete();
-        File s = new File("/home/apease/.sigmakee/KBs/SUMO.tptp");
+        File s = new File(dir + "SUMO.tptp");
         if (!s.exists())
             System.out.println("Vampire.main(): no such file: " + s);
         else {
