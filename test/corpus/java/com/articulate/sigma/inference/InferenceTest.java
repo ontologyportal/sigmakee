@@ -90,6 +90,8 @@ public class InferenceTest {
             }
         }
         catch (IOException e) {
+            System.out.println("Error in InferenceTest.getTestFiles(): using path: " + testDataDirectoryPath);
+            System.out.println(e.getMessage());
             e.printStackTrace();
         }
         return result;
