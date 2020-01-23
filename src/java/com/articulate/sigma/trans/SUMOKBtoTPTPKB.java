@@ -281,8 +281,9 @@ public class SUMOKBtoTPTPKB {
                 if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
                     continue;
                 pr.println("% not higher order");
-                counter++;
-                if (counter == 100) { System.out.print("."); counter = 0; }
+                if (counter++ == 100) System.out.print(".");
+                if ((counter % 4000) == 1)
+                    System.out.println("\nSUMOKBtoTPTPKB.writeFile() : still working");
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //fp.debug = true;
                 Set<Formula> processed = fp.preProcess(f,false,kb);
