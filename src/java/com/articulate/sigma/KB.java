@@ -1786,7 +1786,8 @@ public class KB implements Serializable {
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty()) {
                 int axiomIndex = 0;
-                File s = new File("/home/apease/.sigmakee/KBs/SUMO.tptp");
+                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                File s = new File(dir + "SUMO.tptp");
                 if (!s.exists())
                     System.out.println("Vampire.main(): no such file: " + s);
                 else {
