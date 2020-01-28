@@ -2031,29 +2031,37 @@ public class Formula implements Comparable, Serializable {
             return true;
         if (this.listP()) {
             String pred = this.car();
+            //System.out.println("Formula.isHigherOrder(): pred: " + pred);
             ArrayList sig = kb.kbCache.getSignature(pred);
             if (sig != null && sig.contains("Formula"))
                 return true;
             boolean logop = isLogicalOperator(pred);
+            //System.out.println("Formula.isHigherOrder(): logop: " + logop);
             ArrayList<String> al = literalToArrayList();
             for (String arg : al) {
                 Formula f = new Formula();
                 f.read(arg);
+                //System.out.println("Formula.isHigherOrder(): arg: " + arg);
+                //System.out.println("Formula.isHigherOrder(): atom: " + atom(arg));
+                //System.out.println("Formula.isHigherOrder(): isFunctional: " + kb.isFunctional(f.theFormula));
                 if (!atom(arg) && !kb.isFunctional(f.theFormula)) {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
+                            //System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                             return true;
                         }
                     }
                     else {
                         higherOrder = true;
+                        //System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                         return true;
                     }
                 }
                 else
                     if (f.isHigherOrder(kb)) {
                         higherOrder = true;
+                        //System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                         return true;
                     }
             }
