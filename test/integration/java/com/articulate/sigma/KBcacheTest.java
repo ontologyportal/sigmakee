@@ -321,4 +321,16 @@ public class KBcacheTest extends IntegrationTestBase {
         assertTrue(!cache.isInstanceOf("realization","SymmetricRelation"));
         assertTrue(cache.isInstanceOf("realization","AntisymmetricRelation"));
     }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testFunctions() {
+
+        System.out.println("\n============= testFunctions ==================");
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        System.out.println("cache.functions.contains(\"AfternoonFn\"): " + cache.functions.contains("AfternoonFn"));
+        assertTrue(cache.functions.contains("AfternoonFn"));
+
+    }
 }
