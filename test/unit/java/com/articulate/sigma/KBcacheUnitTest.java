@@ -94,6 +94,32 @@ public class KBcacheUnitTest {
     /** ***************************************************************
      */
     @Test
+    public void testFunctions() {
+
+        System.out.println("Test functions");
+        HashSet<String> expected = new HashSet<>(Arrays.asList("CitizenryFn", "ResidentFn"));
+        HashSet<String> actual = kb.kbCache.functions;
+        System.out.println("functions:" + actual);
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testPredicates() {
+
+        System.out.println("Test predicates");
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+                "var", "rel", "subclass", "relsub",
+                "subrelation"));
+        HashSet<String> actual = kb.kbCache.predicates;
+        System.out.println("predicates:" + actual);
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
     public void transRels() {
 
         System.out.println("Test transRels");
