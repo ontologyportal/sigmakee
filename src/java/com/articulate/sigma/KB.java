@@ -571,6 +571,7 @@ public class KB implements Serializable {
 
         //if (Formula.listP(i))
         //    System.out.println("Warning in KB.isFunction(): not a constant: " + i);
+        //System.out.println("KB.isFunction(): functions: " + kbCache.functions);
         if (kbCache != null && !StringUtil.emptyString(i)) {
             return kbCache.functions.contains(i);
             /*
@@ -596,7 +597,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Returns
-     * true if i is functional expression, else returns
+     * true if argument is functional expression, else returns
      * false.
      *
      * @param s A String denoting a possibly functional literal.
@@ -619,6 +620,8 @@ public class KB implements Serializable {
             return false;
         }
         String pred = form.car();
+        //System.out.println("KB.isFunctional(): pred: " + pred);
+        //System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
         if (!isFunction(pred))
             return false;
         return true;
