@@ -60,4 +60,31 @@ public class KbIntegrationTest extends IntegrationTestBase {
         Formula f = new Formula(stmt);
         assertTrue(f.isHigherOrder(SigmaTestBase.kb));
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testIsHigherOrder2() {
+
+        String stmt;
+
+        stmt = "(and\n" +
+                "  (instance Tunnel1 Tunnel)\n" +
+                "  (equal ?P (AfternoonFn Tunnel))\n" +  // should be TransitFn but that's not in Merge.kif
+                "  (holeMouth M1 Tunnel1)\n" +
+                "  (holeMouth M2 Tunnel1)\n" +
+                "  (not\n" +
+                "    (equal M1 M2))\n" +
+                "  (not\n" +
+                "    (connected M1 M2))\n" +
+                "  (located Jane M1)\n" +
+                "  (origin ?P M1)\n" +
+                "  (destination ?P M2)\n" +
+                "  (agent ?P John)\n" +
+                "  (length Tunnel1 L))";
+        Formula f = new Formula(stmt);
+        System.out.println("testIsHigherOrder2: " + f);
+        System.out.println("isHigherOrder: " + f.isHigherOrder(SigmaTestBase.kb));
+        assertFalse(f.isHigherOrder(SigmaTestBase.kb));
+    }
 }
