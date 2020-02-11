@@ -3,6 +3,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.StringUtil;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import org.junit.Test;
+import org.junit.Before;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,6 +15,14 @@ import static org.junit.Assert.assertEquals;
  * // adam.pease@infosys.com
  */
 public class SUMOformulaToTPTPformulaTest {
+
+    /** ***************************************************************
+     */
+    @Before
+    public void init() {
+        SUMOformulaToTPTPformula.hideNumbers = true;
+        SUMOformulaToTPTPformula.lang = "tptp";
+    }
 
     /** ***************************************************************
      */
