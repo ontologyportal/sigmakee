@@ -182,12 +182,12 @@ public class OWLtranslator {
             String term = (String) functionTable.get(functionTerm);
             Formula f = new Formula();
             f.read(functionTerm);
-            String func = f.getArgument(0);
+            String func = f.getStringArgument(0);
             ArrayList ranges = kb.askWithRestriction(0,"range",1,func);
             String range;
             if (ranges.size() > 0) {
                 Formula f2 = (Formula) ranges.get(0);
-                range = f2.getArgument(2);
+                range = f2.getStringArgument(2);
                 pw.println("<owl:Thing rdf:about=\"#" + term + "\">");
                 pw.println("  <rdf:type rdf:resource=\"" + (range.equals("Entity") ? "&owl;Thing" : "#" + range) + "\"/>");
                 pw.println("  <rdfs:comment>A term generated automatically in the " +
@@ -201,7 +201,7 @@ public class OWLtranslator {
                 ArrayList subranges = kb.askWithRestriction(0,"rangeSubclass",1,functionTerm);
                 if (subranges.size() > 0) {
                     Formula f2 = (Formula) subranges.get(0);
-                    range = f2.getArgument(2);
+                    range = f2.getStringArgument(2);
                     pw.println("<owl:Class rdf:about=\"#" + term + "\">");
                     pw.println("  <rdfs:subClassOf rdf:resource=\"" + (range.equals("Entity") ? "&owl;Thing" : "#" + range) + "\"/>");
                     pw.println("  <rdfs:comment>A term generated automatically in the "+
@@ -504,10 +504,10 @@ public class OWLtranslator {
         if (al.size() > 0) {
             for (int i = 0; i < al.size(); i++) {
                 Formula form = (Formula) al.get(i);
-                String lang = form.getArgument(1);
+                String lang = form.getStringArgument(1);
                 if (lang.equals("EnglishLanguage")) 
                     lang = "en";
-                String st = form.getArgument(3);
+                String st = form.getStringArgument(3);
                 st = removeQuotes(st);
                 pw.println("  <rdfs:label xml:lang=\"" + lang + "\">" + st + "</rdfs:label>");
             }
@@ -522,9 +522,9 @@ public class OWLtranslator {
         if (syn.size() > 0) {
             for (int i = 0; i < syn.size(); i++) {
                 Formula form = (Formula) syn.get(i);
-                String st = form.getArgument(1);
+                String st = form.getStringArgument(1);
                 st = StringUtil.StringToKIFid(st);
-                String lang = form.getArgument(3);
+                String lang = form.getStringArgument(3);
                 if (termType.equals("relation")) 
                     pw.println("  <owl:equivalentProperty rdf:resource=\"" + (lang.equals("Entity") ? "&owl;Thing" : "#" + lang) + ":" + st + "\" />");
                 else if (termType.equals("instance")) 
@@ -654,8 +654,8 @@ public class OWLtranslator {
         if (doc.size() > 0) {
             for (int i = 0; i < doc.size(); i++) {
                 Formula form = (Formula) doc.get(i);
-                String lang = form.getArgument(2);
-                String documentation = form.getArgument(3);
+                String lang = form.getStringArgument(2);
+                String documentation = form.getStringArgument(3);
                 String langString = "";
                 if (lang.equals("EnglishLanguage")) 
                     langString = " xml:lang=\"en\"";
@@ -699,8 +699,8 @@ public class OWLtranslator {
                 Formula form = (Formula) argTypes.get(i);
                 if (form.isCached())
                     continue;
-                String arg = form.getArgument(2);
-                String argType = form.getArgument(3);
+                String arg = form.getStringArgument(2);
+                String argType = form.getStringArgument(3);
                 if (arg.equals("1") && Formula.atom(argType)) 
                     pw.println("  <rdfs:domain rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
                 if (arg.equals("2") && Formula.atom(argType)) 
@@ -711,7 +711,7 @@ public class OWLtranslator {
         ArrayList ranges = kb.askWithRestriction(0,"range",1,term);  // domain expressions for term.
         if (ranges.size() > 0) {
             Formula form = (Formula) ranges.get(0);
-            String argType = form.getArgument(2);
+            String argType = form.getStringArgument(2);
             if (Formula.atom(argType) && !form.isCached())
                 pw.println("  <rdfs:range rdf:resource=\"" + (argType.equals("Entity") ? "&owl;Thing" : "#" + argType) + "\" />");
         }
@@ -719,7 +719,7 @@ public class OWLtranslator {
         ArrayList inverses = kb.askWithRestriction(0,"inverse",1,term);  // inverse expressions for term.
         if (inverses.size() > 0) {
             Formula form = (Formula) inverses.get(0);
-            String arg = form.getArgument(2);
+            String arg = form.getStringArgument(2);
             if (Formula.atom(arg) && !form.isCached())
                 pw.println("  <owl:inverseOf rdf:resource=\"" + (arg.equals("Entity") ? "&owl;Thing" : "#" + arg) + "\" />");
         }
@@ -728,7 +728,7 @@ public class OWLtranslator {
         if (subs.size() > 0) {
             for (int i = 0; i < subs.size(); i++) {
                 Formula form = (Formula) subs.get(i);
-                String superProp = form.getArgument(2);
+                String superProp = form.getStringArgument(2);
                 if (!form.isCached())
                     pw.println("  <owl:subPropertyOf rdf:resource=\"" + (superProp.equals("Entity") ? "&owl;Thing" : "#" + superProp) + "\" />");
             }
@@ -751,7 +751,7 @@ public class OWLtranslator {
         pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
         for (int i = 0; i < instances.size(); i++) {
             Formula form = (Formula) instances.get(i);
-            String parent = form.getArgument(2);
+            String parent = form.getStringArgument(2);
             if (Formula.atom(parent)) 
                 pw.println("  <rdf:type rdf:resource=\"" + (parent.equals("Entity") ? "&owl;Thing" : "#" + parent) + "\"/>");
         }
@@ -759,11 +759,11 @@ public class OWLtranslator {
         ArrayList statements = kb.ask("arg",1,term); 
         for (int i = 0; i < statements.size(); i++) {
             Formula form = (Formula) statements.get(i);
-            String rel = form.getArgument(0);
+            String rel = form.getStringArgument(0);
             if (!rel.equals("instance") && !rel.equals("subclass") && 
                !rel.equals("documentation") && 
                !rel.equals("subrelation") && kb.childOf(rel,"BinaryRelation")) { 
-                String range = form.getArgument(2);
+                String range = form.getStringArgument(2);
                 if (range == null || range == "" ) {
                     System.out.println("Error in OWLtranslator.writeInstance(): missing range in statement: " + form);
                     continue;
@@ -809,7 +809,7 @@ public class OWLtranslator {
         pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
         for (int i = 0; i < classes.size(); i++) {
             Formula form = (Formula) classes.get(i);
-            String parent = form.getArgument(2);
+            String parent = form.getStringArgument(2);
             if (Formula.atom(parent)) 
                 pw.println("  <rdfs:subClassOf rdf:resource=\"" + (parent.equals("Entity") ? "&owl;Thing" : "#" + parent) + "\"/>");
         }
@@ -817,11 +817,11 @@ public class OWLtranslator {
         ArrayList statements = kb.ask("arg",1,term); 
         for (int i = 0; i < statements.size(); i++) {
              Formula form = (Formula) statements.get(i);
-             String rel = form.getArgument(0);
+             String rel = form.getStringArgument(0);
              if (!rel.equals("instance") && !rel.equals("subclass") && 
                 !rel.equals("documentation") &&
                 !rel.equals("subrelation") && kb.childOf(rel,"BinaryRelation")) { 
-                 String range = form.getArgument(2);
+                 String range = form.getStringArgument(2);
                  if (Formula.listP(range)) 
                      range = instantiateFunction(range);
                  if (rel.equals("disjoint")) 
@@ -850,9 +850,9 @@ public class OWLtranslator {
         if (syn.size() > 0) {
             for (int i = 0; i < syn.size(); i++) {
                 Formula form = (Formula) syn.get(i);
-                String st = form.getArgument(1);
+                String st = form.getStringArgument(1);
                 st = StringUtil.StringToKIFid(st);
-                String lang = form.getArgument(3);
+                String lang = form.getStringArgument(3);
                 pw.println("  <owl:equivalentClass rdf:resource=\"" + (lang.equals("Entity") ? "&owl;Thing" : "#" + lang) + ":" + st + "\" />");
             }
         }
