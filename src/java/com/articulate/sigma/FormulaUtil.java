@@ -17,7 +17,7 @@ public class FormulaUtil {
 
         if (f == null || !f.isRule())
             return null;
-        return f.getArgument(1);
+        return f.getStringArgument(1);
     }
 
     /** ***************************************************************
@@ -27,7 +27,7 @@ public class FormulaUtil {
 
         if (f == null || !f.isRule())
             return null;
-        return f.getArgument(2);
+        return f.getStringArgument(2);
     }
 
     /** ***************************************************************
@@ -36,11 +36,21 @@ public class FormulaUtil {
     public static String toProlog(Formula f) {
 
         StringBuffer sb = new StringBuffer();
-        sb.append(f.car() + "(");
-        for (int i = 1; i < f.argumentsToArrayList(0).size(); i ++) {
+        String car = f.car();
+        sb.append(car + "(");
+        if (Formula.listP(car)) {
+            System.out.println("Error in FormulaUtil.toProlog(): not a simple clause: " + car);
+            return "";
+        }
+        for (int i = 1; i < f.argumentsToArrayListString(0).size(); i ++) {
             if (i != 1)
                 sb.append(",");
-            sb.append(f.getArgument(i));
+            String arg = f.getStringArgument(i);
+            if (Formula.listP(arg)) {
+                System.out.println("Error in FormulaUtil.toProlog(): not a simple clause: " + arg);
+                return "";
+            }
+            sb.append(arg);
         }
         sb.append(")");
         return sb.toString();
