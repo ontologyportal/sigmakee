@@ -118,7 +118,7 @@ public class LanguageFormatterStack {
      */
     public void insertFormulaArgs(Formula formula) {
 
-        List<String> args = formula.complexArgumentsToArrayList(1);
+        List<String> args = formula.complexArgumentsToArrayListString(1);
         if (! isEmpty() && args != null) {
             // Put the args list into the stack for later reference.
             StackElement element = getTop();
@@ -391,7 +391,7 @@ public class LanguageFormatterStack {
     public void translateCurrProcessInstantiation(KB kb, Formula formula) {
 
         // Expecting the instantiation of a process, e.g. (instance ?FLY FlyingAircraft)
-        String process = formula.complexArgumentsToArrayList(2).get(0);
+        String process = formula.complexArgumentsToArrayListString(2).get(0);
         if (kb.isSubclass(process, "IntentionalProcess"))  {
             String kbForm = kb.getTermFormatMap("EnglishLanguage").get(process);
             if(kbForm == null)  {
