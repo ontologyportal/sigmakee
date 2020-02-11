@@ -325,7 +325,7 @@ public class SUMOtoTFAform {
             return f;
         }
         Formula car = f.carAsFormula();
-        ArrayList<String> args = f.complexArgumentsToArrayList(1);
+        ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         if (isMathFunction(car.getFormula()) ||
                 (isComparisonOperator(car.getFormula()) && !car.getFormula().equals("equal"))) {
             StringBuffer argsStr = new StringBuffer();
@@ -433,7 +433,7 @@ public class SUMOtoTFAform {
             if (args.get(0) != null) {
                 //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid varlist: " + args.get(0));
                 Formula varlist = new Formula(args.get(0));
-                ArrayList<String> vars = varlist.argumentsToArrayList(0);
+                ArrayList<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("SUMOtoTFAform.processRecurse(): valid vars: " + vars);
                 StringBuffer varStr = new StringBuffer();
                 for (String v : vars) {
@@ -685,7 +685,7 @@ public class SUMOtoTFAform {
         Formula car = f.carAsFormula();
         //System.out.println("SUMOtoTFAform.processRecurse(): car: " + car);
         //System.out.println("SUMOtoTFAform.processRecurse(): car: " + car.theFormula);
-        ArrayList<String> args = f.complexArgumentsToArrayList(1);
+        ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
             System.out.println("Error in SUMOtoTFAform.processRecurse(): formula " + f);
             return "";
@@ -812,8 +812,9 @@ public class SUMOtoTFAform {
                     types.add(vtype);
             }
             else if (Formula.listP(s)) {
-                if (kb.isFunctional(s)) {
-                    String op = (new Formula(s)).car();
+                Formula newf = new Formula(s);
+                if (kb.isFunctional(newf)) {
+                    String op = newf.car();
                     String range = kb.kbCache.getRange(op);
                     if (!StringUtil.emptyString(range))
                         types.add(range);
@@ -1031,7 +1032,7 @@ public class SUMOtoTFAform {
         String op = f.car();
         if (!kb.containsTerm(op))
             System.out.println("Error in SUMOtoTFAform.getOpReturnType(): no term: " + op);
-        if (kb.isFunctional(arg)) {
+        if (kb.isFunctional(f)) {
             String range = kb.kbCache.getRange(op);
             if (range != null)
                 return range;
@@ -1199,7 +1200,7 @@ public class SUMOtoTFAform {
             return f.getFormula();
         //System.out.println("SUMOtoTFAform.processRecurse(): car: " + car);
         //System.out.println("SUMOtoTFAform.processRecurse(): car: " + car.theFormula);
-        ArrayList<String> args = f.complexArgumentsToArrayList(1);
+        ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         args.add(0,""); // empty argument for the relation or operator
         if (car.listP()) {
             System.out.println("Error in SUMOtoTFAform.constrainFunctVarsRecurse(): formula " + f);
@@ -1293,7 +1294,7 @@ public class SUMOtoTFAform {
             if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): atomic result: " + f.getFormula());
             return f.getFormula();
         }
-        ArrayList<String> args = f.complexArgumentsToArrayList(0);
+        ArrayList<String> args = f.complexArgumentsToArrayListString(0);
         if (args == null) return "";
         if (debug) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): args: " + args);
         if (debug && args != null) System.out.println("SUMOtoTFAform.elimUnitaryLogops(): size: " + args.size());
@@ -1367,7 +1368,7 @@ public class SUMOtoTFAform {
         if (Formula.listP(s)) {
             if (f.isSimpleClause(kb)) {
                 if (f.car().equals("instance")) {
-                    ArrayList<String> al = f.complexArgumentsToArrayList(0);
+                    ArrayList<String> al = f.complexArgumentsToArrayListString(0);
                     if (al.size() < 3) {
                         System.out.println("Error SUMOtoTFAform.removeNumericInstance(): wrong # or args to: " + f);
                         return s;
@@ -1397,7 +1398,7 @@ public class SUMOtoTFAform {
                 }
             }
             else {
-                ArrayList<String> args = f.complexArgumentsToArrayList(1);
+                ArrayList<String> args = f.complexArgumentsToArrayListString(1);
                 StringBuffer sb = new StringBuffer();
                 sb.append("(" + f.car());
                 for (String a : args)
@@ -1443,7 +1444,7 @@ public class SUMOtoTFAform {
             return false;
         if (f.atom())
             return false;
-        if (!kb.isFunctional(f.getFormula()))
+        if (!kb.isFunctional(f))
             return false;
         ArrayList<String> sig = kb.kbCache.getSignature(f.car());
         String rangeType = sig.get(0);
@@ -1483,7 +1484,7 @@ public class SUMOtoTFAform {
         String op = f.car();
         if (debug) System.out.println("SUMOtoTFAform.typeConflict(): op: " + op);
         if (Formula.isQuantifier(op)) {
-            ArrayList<String> args = f.complexArgumentsToArrayList(1);
+            ArrayList<String> args = f.complexArgumentsToArrayListString(1);
             for (String s : args) {
                 Formula farg = new Formula(s);
                 if (farg.listP() && typeConflict(farg))
@@ -1492,7 +1493,7 @@ public class SUMOtoTFAform {
         }
         else {
             ArrayList<String> sig = kb.kbCache.getSignature(op);
-            ArrayList<String> args = f.complexArgumentsToArrayList(0);
+            ArrayList<String> args = f.complexArgumentsToArrayListString(0);
             if (debug) System.out.println("SUMOtoTFAform.typeConflict(): args: " + args);
             if (debug) System.out.println("SUMOtoTFAform.typeConflict(): sig: " + sig);
             for (int i = 1; i < args.size(); i++) {
@@ -1502,7 +1503,7 @@ public class SUMOtoTFAform {
                     sigType = sig.get(i);
                 if (debug) System.out.println("SUMOtoTFAform.typeConflict(): check arg: " + s + " with type: " + sigType);
                 Formula farg = new Formula(s);
-                if (farg.listP() && kb.isFunctional(farg.getFormula())) {
+                if (farg.listP() && kb.isFunctional(farg)) {
                     if (typeConflict(farg, sigType))
                         return true;
                     if (typeConflict(farg))
