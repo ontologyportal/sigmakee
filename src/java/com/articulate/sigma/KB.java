@@ -379,7 +379,7 @@ public class KB implements Serializable {
                 col.addAll(col2);
             for (int i = 0; i < col.size(); i++) {
                 Formula f = (Formula) col.get(i);
-                String lang = f.getArgument(1);
+                String lang = f.getStringArgument(1);
                 if (!al.contains(lang.intern()))
                     al.add(lang.intern());
             }
@@ -422,9 +422,9 @@ public class KB implements Serializable {
             Iterator<String> formulas = formulaMap.keySet().iterator();
             while (formulas.hasNext()) {
                 Formula f = (Formula) formulaMap.get(formulas.next());
-                if (counter++ % 100 == 0)
+                if (counter++ % 10 == 0)
                     System.out.print(".");
-                if (counter % 4000 == 0)
+                if (counter % 400 == 0)
                     System.out.print("\nINFO in KB.checkArity(): Still performing Arity Check");
                 String term = PredVarInst.hasCorrectArity(f, this);
                 if (!StringUtil.emptyString(term)) {
@@ -510,7 +510,7 @@ public class KB implements Serializable {
         Set<String> result = new HashSet<>();
         ArrayList<Formula> forms = askWithRestriction(2, term, 0, "instance");
         for (Formula f : forms) {
-            result.add(f.getArgument(1));
+            result.add(f.getStringArgument(1));
         }
         return result;
     }
@@ -560,68 +560,47 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Returns
-     * true if i is an instance of Function in any loaded KB, else returns
-     * false.
+     * Returns true if i is an instance of Function, else returns false.
      *
      * @param i A String denoting a constant.
      * @return true or false.
      */
     public boolean isFunction(String i) {
 
-        //if (Formula.listP(i))
-        //    System.out.println("Warning in KB.isFunction(): not a constant: " + i);
-        //System.out.println("KB.isFunction(): functions: " + kbCache.functions);
         if (kbCache != null && !StringUtil.emptyString(i)) {
             return kbCache.functions.contains(i);
-            /*
-            if (isInstanceOf(i, "Function")) {
-                if (!i.endsWith(Formula.FN_SUFF) && !i.matches("\\w+Fn_\\d+") &&
-                        !KBmanager.getMgr().getPref("reportFnError").equals("no")) {
-                    String warn = "Warnings in KB.isFunction(): functional relation type without 'Fn' suffix: " + i;
-                    System.out.println(warn);
-                    warnings.add(warn);
-                }
-                return true;
-            }
-            else if (i.endsWith(Formula.FN_SUFF) || i.matches("\\w+Fn_\\d+") &&
-                    !KBmanager.getMgr().getPref("reportFnError").equals("no")) {
-                String warn = "Warnings in KB.isFunction(): 'Fn' suffix without functional relation type : " + i;
-                System.out.println(warn);
-                warnings.add(warn);
-            }
-             */
         }
         return false;
     }
 
     /***************************************************************
-     * Returns
-     * true if argument is functional expression, else returns
+     * Returns true if argument is functional expression, else returns
      * false.
      *
-     * @param s A String denoting a possibly functional literal.
+     * @param form is a possibly functional literal.
      * @return true or false.
      */
-    public boolean isFunctional(String s) {
+    public boolean isFunctional(Formula form) {
 
-        if (StringUtil.emptyString(s)) {
-            System.out.println("Warning - KB.isFunctional(): empty: " + s);
+        if (form == null || form.empty()) {
+            System.out.println("Warning - KB.isFunctional(): empty");
             return false;
         }
-        if (!Formula.listP(s)) {
-            System.out.println("Warning - KB.isFunctional(): not a list: " + s);
+        if (!form.listP()) {
+            System.out.println("Warning - KB.isFunctional(): not a list: " + form);
             //Thread.dumpStack();
-            return false;
-        }
-        Formula form = new Formula(s);
-        if (form.empty()) {
-            System.out.println("Warning - KB.isFunctional(): empty list: " + s);
             return false;
         }
         String pred = form.car();
         //System.out.println("KB.isFunctional(): pred: " + pred);
         //System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
+        if (Formula.isVariable(pred)) {
+            HashSet<String> varTypes = form.getVarType(this,pred);
+            if (varTypes != null)
+                for (String s : varTypes)
+                    if (kbCache.subclassOf(s,"Function"))
+                        return false;
+        }
         if (!isFunction(pred))
             return false;
         return true;
@@ -841,7 +820,7 @@ public class KB implements Serializable {
             Iterator<Formula> it = formulae.iterator();
             while (it.hasNext()) {
                 f = it.next();
-                result.add(f.getArgument(targetArgnum));
+                result.add(f.getStringArgument(targetArgnum));
             }
             if (predicatesUsed instanceof Set) {
                 Iterator<Formula> it2 = formulae.iterator();
@@ -896,12 +875,16 @@ public class KB implements Serializable {
      */
     public ArrayList<Formula> askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
 
+        //System.out.println("INFO in KB.askWithRestriction(): argnum1: " + argnum1);
+        //System.out.println("INFO in KB.askWithRestriction(): term1: " + term1);
+        //System.out.println("INFO in KB.askWithRestriction(): argnum2: " + argnum2);
+        //System.out.println("INFO in KB.askWithRestriction(): term2: " + term2);
         ArrayList<Formula> result = new ArrayList<Formula>();
         if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
             ArrayList<Formula> partial1 = ask("arg", argnum1, term1);
             ArrayList<Formula> partial2 = ask("arg", argnum2, term2);
-            // System.out.println("INFO in KB.askWithRestriction(): partial 2: "
-            // + partial2);
+            //System.out.println("INFO in KB.askWithRestriction(): partial 1: " + partial1);
+            //System.out.println("INFO in KB.askWithRestriction(): partial 2: " + partial2);
             ArrayList<Formula> partial = partial1;
             // partial.retainAll(partial2); - this should be faster than below
             int arg = argnum2;
@@ -911,20 +894,22 @@ public class KB implements Serializable {
                 arg = argnum1;
                 term = term1;
             }
-            Formula f = null;
-            int plen = partial.size();
-            for (int i = 0; i < plen; i++) {
-                f = (Formula) partial.get(i);
+            //System.out.println("INFO in KB.askWithRestriction(): partial: " + partial);
+            //System.out.println("INFO in KB.askWithRestriction(): arg: " + arg);
+            //System.out.println("INFO in KB.askWithRestriction(): term: " + term);
+            for (Formula f : partial) {
                 if (f == null)
                     System.out.println("Error in KB.askWithRestriction(): null formula searching on term: " + term);
-                String thisArg = f.getArgument(arg);
+                String thisArg = f.getStringArgument(arg);
+                //System.out.println("INFO in KB.askWithRestriction(): thisArg: " + thisArg);
                 if (thisArg == null) {
                     System.out.println("Error in KB.askWithRestriction(): null argument: " + f);
                 }
-                else if (f.getArgument(arg).equals(term))
+                else if (f.getStringArgument(arg).equals(term))
                     result.add(f);
             }
         }
+        //System.out.println("INFO in KB.askWithRestriction(): result: " + result);
         return result;
     }
 
@@ -947,11 +932,11 @@ public class KB implements Serializable {
         args[0] = "argnum3 = " + argnum3;
         args[1] = "term3 = " + term3;
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        ArrayList<Formula> result = new ArrayList<>();
         if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)
                 && StringUtil.isNonEmptyString(term3)) {
             // a will get the smallest list then b then c
-            ArrayList<Formula> partiala = new ArrayList<Formula>();
+            ArrayList<Formula> partiala = new ArrayList<>();
             ArrayList<Formula> partial1 = ask("arg", argnum1, term1);
             ArrayList<Formula> partial2 = ask("arg", argnum2, term2);
             ArrayList<Formula> partial3 = ask("arg", argnum3, term3);
@@ -1006,8 +991,10 @@ public class KB implements Serializable {
             if (partiala != null) {
                 for (int i = 0; i < partiala.size(); i++) {
                     Formula f = partiala.get(i);
-                    if (f.getArgument(argb).equals(termb)) {
-                        if (f.getArgument(argc).equals(termc))
+                    Formula fargb = f.getArgument(argb);
+                    Formula fargc = f.getArgument(argc);
+                    if (f != null && fargb != null && f.getArgument(argb).equals(termb)) {
+                        if (fargc != null && f.getArgument(argc).equals(termc))
                             result.add(f);
                     }
                 }
@@ -1031,7 +1018,7 @@ public class KB implements Serializable {
         Formula f = null;
         for (int i = 0; i < formulae.size(); i++) {
             f = formulae.get(i);
-            ans.add(f.getArgument(targetArgnum));
+            ans.add(f.getStringArgument(targetArgnum));
         }
         return ans;
     }
@@ -1075,7 +1062,7 @@ public class KB implements Serializable {
             Iterator<Formula> it = formulae.iterator();
             while (it.hasNext()) {
                 f = it.next();
-                ts.add(f.getArgument(targetArgnum));
+                ts.add(f.getStringArgument(targetArgnum));
             }
             result.addAll(ts);
         }
@@ -1174,14 +1161,14 @@ public class KB implements Serializable {
             ArrayList<Formula> subrelForms = askWithRestriction(0, "subrelation", 2, relation);
             for (int i = 0; i < subrelForms.size(); i++) {
                 Formula f = subrelForms.get(i);
-                String arg = f.getArgument(1);
+                String arg = f.getStringArgument(1);
                 relns.add(arg);
             }
             ArrayList<Formula> forms = ask("arg", idxArgnum, idxTerm);
             for (int i = 0; i < forms.size(); i++) {
                 Formula f = forms.get(i);
                 if (!accumulator.contains(f)) {
-                    String arg = f.getArgument(0);
+                    String arg = f.getStringArgument(0);
                     if (relns.contains(arg))
                         accumulator.add(f);
                 }
@@ -2063,8 +2050,8 @@ public class KB implements Serializable {
         if (term.startsWith("(UnionFn")) {
             System.out.println("KB.termDepth(): warning - composite term: " + term);
             Formula f = new Formula(term);
-            String arg1 = f.getArgument(1);
-            String arg2 = f.getArgument(2);
+            String arg1 = f.getStringArgument(1);
+            String arg2 = f.getStringArgument(2);
             return Integer.max(termDepth(arg1), termDepth(arg2));
         }
         if (!terms.contains(term)) {
@@ -2106,7 +2093,7 @@ public class KB implements Serializable {
         while (it.hasNext()) {
             Formula f = it.next();
             if (!f.isCached())
-                result.add(f.getArgument(2));
+                result.add(f.getStringArgument(2));
         }
         //System.out.println("KB.immediateParents(): result: " + result);
         return result;
@@ -2451,8 +2438,8 @@ public class KB implements Serializable {
                 Iterator<Formula> ite = col.iterator();
                 while (ite.hasNext()) {
                     Formula f = (Formula) ite.next();
-                    String key = f.getArgument(2);
-                    String format = f.getArgument(3);
+                    String key = f.getStringArgument(2);
+                    String format = f.getStringArgument(3);
                     format = StringUtil.removeEnclosingQuotes(format);
                     langFormatMap.put(key, format);
                 }
@@ -2465,8 +2452,8 @@ public class KB implements Serializable {
                 Iterator<Formula> ite = col.iterator();
                 while (ite.hasNext()) {
                     Formula f = (Formula) ite.next();
-                    String key = f.getArgument(2);
-                    String format = f.getArgument(3);
+                    String key = f.getStringArgument(2);
+                    String format = f.getStringArgument(3);
                     format = StringUtil.removeEnclosingQuotes(format);
                     langTermFormatMap.put(key, format);
                 }
@@ -3535,6 +3522,7 @@ public class KB implements Serializable {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - run test");
+        System.out.println("  -a \"<query>\"- ask query");
         System.out.println("  -c <term1> <term2> - compare term depth");
     }
 
@@ -3558,6 +3546,16 @@ public class KB implements Serializable {
         }
         else if (args != null && args.length > 0 && args[0].equals("-t"))
             test();
+        else if (args != null && args.length > 1 && args[0].equals("-a")) {
+            Vampire vamp = kb.askVampire(args[1],30,1);
+            System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,kb);
+            System.out.println("KB.main(): bindings: " + tpp.bindings);
+            System.out.println("KB.main(): proof: " + tpp.proof);
+            ArrayList<String> proofStepsStr = new ArrayList<>();
+            for (ProofStep ps : tpp.proof)
+                proofStepsStr.add(ps.toString());
+        }
         else
             showHelp();
 
