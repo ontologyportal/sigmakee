@@ -78,7 +78,7 @@ public class KButilities {
             return null;
         if (form.argumentsToArrayList(0).size() < 3)
             return null;
-        return form.getArgument(3);
+        return form.getStringArgument(3);
     }
 
     /** *************************************************************
@@ -100,7 +100,7 @@ public class KButilities {
         ArrayList<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
         HashSet<String> terms = new HashSet<>();
         for (Formula f : forms) {
-            String s = f.getArgument(2);
+            String s = f.getStringArgument(2);
             terms.add(s);
         }
         return terms.size();
@@ -240,7 +240,7 @@ public class KButilities {
         ArrayList<Formula> results = kb.ask("arg",0,"externalImage");
         for (int i = 0; i < results.size(); i++) {
             Formula f = (Formula) results.get(i);
-            String url = StringUtil.removeEnclosingQuotes(f.getArgument(2));
+            String url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
             if (!uRLexists(url)) 
                 System.out.println(f + " doesn't exist");
         }
@@ -329,11 +329,11 @@ public class KButilities {
                 }
             }
             else {
-                String predicate = f.getArgument(0);            
-                ArrayList<String> args = f.argumentsToArrayList(1);
+                String predicate = f.getStringArgument(0);
+                ArrayList<String> args = f.argumentsToArrayListString(1);
                 if (args != null && args.size() == 2) { // could have a function which would return null
-                    String arg1 = f.getArgument(1);
-                    String arg2 = f.getArgument(2);  
+                    String arg1 = f.getStringArgument(1);
+                    String arg2 = f.getStringArgument(2);
                     if (!Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
                             !StringUtil.isQuotedString(arg1) && !StringUtil.isQuotedString(arg2))
                         resultSet.add(arg1 + " " + predicate + " " +  arg2);
@@ -372,19 +372,19 @@ public class KButilities {
             ArrayList<Formula> al = kb.askWithRestriction(0,"instance",1,term);
             for (int i = 0; i < al.size(); i++) {
                 Formula f = (Formula) al.get(i);
-                String term2 = f.getArgument(2);
+                String term2 = f.getStringArgument(2);
                 if (Formula.atom(term2)) {
                     ArrayList<Formula> al2 = kb.askWithRestriction(0,"instance",1,term2);
                     if (al2.size() > 0)
                         result = true;
                     for (int j = 0; j < al2.size(); j++) {
                         Formula f2 = (Formula) al2.get(j);
-                        String term3 = f2.getArgument(2);
+                        String term3 = f2.getStringArgument(2);
                         if (Formula.atom(term3)) {
                             ArrayList<Formula> al3 = kb.askWithRestriction(0,"instance",1,term3);
                             for (int k = 0; k < al3.size(); k++) {
                                 Formula f3 = (Formula) al3.get(k);
-                                String term4 = f3.getArgument(2);
+                                String term4 = f3.getStringArgument(2);
                             }
                         }
                     }
@@ -408,16 +408,16 @@ public class KButilities {
             HashMap<String,String> termMap = new HashMap<String,String>();            
             for (int i = 0; i < terms.size(); i++) {
                 Formula term = terms.get(i);                
-                String key = term.getArgument(2);
-                String value = term.getArgument(3);                
+                String key = term.getStringArgument(2);
+                String value = term.getStringArgument(3);
                 if (key != "" && value != "") 
                     termMap.put(key, value);                
             }            
             for (int i = 0; i < formats.size(); i++) {
                 Formula format = formats.get(i);                
                 // This is the current predicate whose format we are keeping track of. 
-                String key = format.getArgument(2);
-                String value = format.getArgument(3);                
+                String key = format.getStringArgument(2);
+                String value = format.getStringArgument(3);
                 if (key != "" && value != "") {                
                     // This basically gets all statements that use the current predicate in the 0 position
                     ArrayList<Formula> predInstances = kb.ask("arg", 0, key);                    
@@ -431,7 +431,7 @@ public class KButilities {
                         // check if each of the arguments for the statements is to be replaced in its
                         // format statement.
                         for (int k = 1; k < arguments.size(); k++) {
-                            String argName = f.getArgument(k);
+                            String argName = f.getStringArgument(k);
                             String term = (String) termMap.get(argName);
                             term = StringUtil.removeEnclosingQuotes(term);
                             String argNum = "%" + String.valueOf(k);
