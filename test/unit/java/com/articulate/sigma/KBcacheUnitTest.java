@@ -146,7 +146,12 @@ public class KBcacheUnitTest {
 
         System.out.println("Test children");
         HashSet<String> expected = new HashSet<>(Arrays.asList("relsub"));
-        HashSet<String> actual = kb.kbCache.children.get("subrelation").get("rel");
+        System.out.println("testChildren(): subrelations: " + kb.kbCache.children.get("subrelation"));
+        HashSet<String> actual = null;
+        if (kb.kbCache.children.get("subrelation") != null)
+            actual = kb.kbCache.children.get("subrelation").get("rel");
+        System.out.println("testChildren(): actual: " + actual);
+        System.out.println("testChildren(): expected: " + expected);
         assertEquals(expected, actual);
     }
 
@@ -213,6 +218,8 @@ public class KBcacheUnitTest {
     public void testTransInsts() {
 
         System.out.println("Test testTransInsts");
+        System.out.println("kb.kbCache.transInstOf(\"Attorney\", \"Attribute\"): " +
+                kb.kbCache.transInstOf("Attorney", "Attribute"));
         assertTrue(kb.kbCache.transInstOf("Attorney", "Attribute"));
     }
 
@@ -281,5 +288,24 @@ public class KBcacheUnitTest {
         else
             System.out.println("KBcacheUnitTest.testDisjoint(): fail");
         assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testCollectArgsFromFormulas() {
+
+        System.out.println("Test testCollectArgsFromFormulas");
+        String rel = "TransitiveRelation";
+        ArrayList<Formula> forms = kb.askWithRestriction(0,"instance",2,rel);
+        System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): forms2: " + forms);
+        HashSet<String> actual = new HashSet<>();
+        if (forms != null)
+            actual.addAll(KBcache.collectArgFromFormulas(1,forms));
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+                 "subclass", "relsub", "subrelation"));
+        System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): actual: " + actual);
+        System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): expected: " + expected);
+        assertEquals(expected,actual);
     }
 }
