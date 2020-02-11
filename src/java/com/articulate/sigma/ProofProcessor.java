@@ -311,7 +311,7 @@ public class ProofProcessor {
     	String strArgs = "";
     	while (!StringUtil.emptyString(f.getArgument(arg))) {
     		Formula argForm = new Formula();
-    		argForm.read(f.getArgument(arg));
+    		argForm.read(f.getStringArgument(arg));
     		Formula argRes = removeNestedAnswerClauseRecurse(argForm);
     		if (argRes == null) 
     			foundAnswer = true;    
