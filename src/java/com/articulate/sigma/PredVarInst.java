@@ -269,15 +269,18 @@ public class PredVarInst {
     }
      
     /** ***************************************************************
+     * @return null if correct arity, otherwise return a message
      */
     private static String hasCorrectArityRecurse(Formula f, KB kb)
             throws IllegalArgumentException, TypeNotPresentException {
 
+        //System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
         if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() ||
                 Formula.atom(f.getFormula()) || f.isVariable())
             return null;
-        String rel = f.getArgument(0);
-        ArrayList<String> l = f.complexArgumentsToArrayList(1);
+        String rel = f.getStringArgument(0);
+        ArrayList<Formula> l = f.complexArgumentsToArrayList(1);
+        //System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): args" + l);
         int val = 0;
         //if the relation position is also a list, this condition is due to Formula.cdr()
         if (Formula.listP(rel)) {
@@ -299,7 +302,9 @@ public class PredVarInst {
                 val = intval.intValue();
             else {
                 if (l.size() != 0 && !logicalTerms.contains(rel) && !rel.startsWith("?")) {
-                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): Predicate %s does not have an arity defined in KB, can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
+                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): " +
+                            "Predicate %s does not have an arity defined in KB, " +
+                            "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
                     //throw new IllegalArgumentException();
                 }
             }
@@ -314,9 +319,9 @@ public class PredVarInst {
             }
             if (f.isSimpleClause(kb)) {
                 //check if the clause has function clause and check arity of function clause
-                for (String arg : l) {
-                    if ((Formula.atom(arg) && kb.isFunction(arg)) ||
-                            (Formula.listP(arg) && kb.isFunctional(arg)))   {
+                for (Formula arg : l) {
+                    if ((arg.atom() && kb.isFunction(arg.getFormula())) ||
+                            (arg.listP() && kb.isFunctional(arg)))   {
                         String result = hasCorrectArityRecurse(new Formula(arg), kb);
                         if (!StringUtil.emptyString(result))
                             return result;
@@ -330,12 +335,10 @@ public class PredVarInst {
             }
         }
         if (l != null && l.size() != 0) {
-            for (String k : l) {
-                if (Formula.atom(k))
+            for (Formula k : l) {
+                if (k.atom())
                     continue;
-                Formula ff = new Formula();
-                ff.read(k);
-                String res = hasCorrectArityRecurse(ff, kb);
+                String res = hasCorrectArityRecurse(k, kb);
                 if (!StringUtil.emptyString(res))
                     return res;
             }
@@ -362,10 +365,10 @@ public class PredVarInst {
 
     /** ***************************************************************
      */
-    private static boolean containsRowVariable(ArrayList<String> arglist) {
+    private static boolean containsRowVariable(ArrayList<Formula> arglist) {
 
-        for (String s : arglist)
-            if (s.startsWith("@"))
+        for (Formula s : arglist)
+            if (s.isRowVar())
                 return true;
         return false;
     }
@@ -382,18 +385,18 @@ public class PredVarInst {
         if (f == null || f.empty() || Formula.atom(f.getFormula()) || f.isVariable())
             return ans;
         if (f.isSimpleClause(kb)) {
-            String arg0 = f.getArgument(0);
+            Formula arg0 = f.getArgument(0);
             //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
-            if (arg0.startsWith("?")) {
-                ArrayList<String> arglist = f.complexArgumentsToArrayList(1);
+            if (arg0.isRegularVariable()) {
+                ArrayList<Formula> arglist = f.complexArgumentsToArrayList(1);
                 if (arglist != null && arglist.size() > 0) {// a variable could be an argument to a higher-order formula
                     //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
                     //        " with arglist: " + arglist);
-                    ans.add(arg0);
+                    ans.add(arg0.getFormula());
                     if (containsRowVariable(arglist))
-                        predVarArity.put(arg0,0);  // note that when expanding row vars we expand them to Formula.MAX_ARITY
+                        predVarArity.put(arg0.getFormula(),0);  // note that when expanding row vars we expand them to Formula.MAX_ARITY
                     else
-                        predVarArity.put(arg0,Integer.valueOf(arglist.size()));
+                        predVarArity.put(arg0.getFormula(),Integer.valueOf(arglist.size()));
                 }
                 else {
                     //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not a predicate var: " + arg0);
