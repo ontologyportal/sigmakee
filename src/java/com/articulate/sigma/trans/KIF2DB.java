@@ -56,7 +56,7 @@ public class KIF2DB {
 
         HashSet<String> result = new HashSet();
         for (Formula f : forms) {
-            String rel = f.getArgument(0);
+            String rel = f.getStringArgument(0);
             result.add(rel + " varchar(255)");
         }
 
@@ -91,9 +91,9 @@ public class KIF2DB {
                 }
                 continue;
             }
-            String rel = f.getArgument(0);
+            String rel = f.getStringArgument(0);
             if (f.argumentsToArrayList(0).size() > 1) {
-                String arg = f.getArgument(2);
+                String arg = f.getStringArgument(2);
                 if (!inst) {
                     HashMap<String,HashMap<String,HashSet<String>>> table = null;
                     if (!tables.keySet().contains("Class")) {
