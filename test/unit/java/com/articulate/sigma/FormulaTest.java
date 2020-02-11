@@ -85,7 +85,7 @@ public class FormulaTest {
         assertEquals("()", cdrF.getFormula());
 
         System.out.println("testRecursiveCdrComplex(): functionStr: " + functionStr);
-        assertTrue(Formula.isFunctionalTerm(functionStr));
+        //assertTrue(Formula.isFunctionalTerm(functionStr));
 
         f = new Formula();
         f.read(functionStr);
@@ -105,7 +105,7 @@ public class FormulaTest {
         cdrF = cdrF.cdrAsFormula();
         assertEquals("()", cdrF.getFormula());
 
-        assertTrue(Formula.isFunctionalTerm(functionStr));
+        //assertTrue(Formula.isFunctionalTerm(functionStr));
 
         f = new Formula();
         f.read(functionStr);
@@ -210,8 +210,11 @@ public class FormulaTest {
                 "      (monetaryValue ?T ?C) " +
                 "      (greaterThan ?C " +
                 "        (MultiplicationFn ?W 0.025)))) Obligation)) ");
-
-        assertEquals(expected, f1.collectQuantifiedVariables());
+        System.out.println("testCollectQuantifiedVariables(): f1: " + f1);
+        System.out.println("testCollectQuantifiedVariables(): expected: " + expected);
+        Set<String> result = f1.collectQuantifiedVariables();
+        System.out.println("testCollectQuantifiedVariables(): result: " + result);
+        assertEquals(expected, result);
     }
 
     /** ***************************************************************
@@ -334,7 +337,7 @@ public class FormulaTest {
         Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
 
-        assertEquals(expected, f1.complexArgumentsToArrayList(1));
+        assertEquals(expected, f1.complexArgumentsToArrayListString(1));
     }
 
     /** ***************************************************************
@@ -347,7 +350,7 @@ public class FormulaTest {
         Formula f1 = new Formula();
         f1.read("(during ?Y (WhenFn ?H))");
 
-        assertEquals(expected, f1.complexArgumentsToArrayList(2));
+        assertEquals(expected, f1.complexArgumentsToArrayListString(2));
     }
 
     /** ***************************************************************
@@ -360,7 +363,7 @@ public class FormulaTest {
         Formula f1 = new Formula();
         f1.read("(instance ?DRIVE Driving)");
 
-        assertEquals(expected, f1.complexArgumentsToArrayList(1));
+        assertEquals(expected, f1.complexArgumentsToArrayListString(1));
     }
 
     /** ***************************************************************
@@ -373,7 +376,7 @@ public class FormulaTest {
         Formula f1 = new Formula();
         f1.read("(instance ?DRIVE Driving)");
 
-        assertEquals(expected, f1.complexArgumentsToArrayList(2));
+        assertEquals(expected, f1.complexArgumentsToArrayListString(2));
     }
 
     /** ***************************************************************
@@ -386,7 +389,7 @@ public class FormulaTest {
         Formula f1 = new Formula();
         f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
 
-        assertEquals(expected, f1.complexArgumentsToArrayList(1));
+        assertEquals(expected, f1.complexArgumentsToArrayListString(1));
     }
 
     /** ***************************************************************
@@ -399,7 +402,7 @@ public class FormulaTest {
         Formula f1 = new Formula();
         f1.read("(instance (GovernmentFn ?Place) StateGovernment))");
 
-        assertEquals(expected, f1.complexArgumentsToArrayList(2));
+        assertEquals(expected, f1.complexArgumentsToArrayListString(2));
     }
 
     /** ***************************************************************
@@ -434,7 +437,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.argumentsToArrayList(0);
+        ArrayList<String> actual = f.argumentsToArrayListString(0);
 
         assertEquals(null, actual);
     }
@@ -452,7 +455,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.argumentsToArrayList(1);
+        ArrayList<String> actual = f.argumentsToArrayListString(1);
 
         assertEquals(null, actual);
     }
@@ -469,7 +472,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.argumentsToArrayList(0);
+        ArrayList<String> actual = f.argumentsToArrayListString(0);
 
         assertEquals(null, actual);
     }
@@ -483,7 +486,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.argumentsToArrayList(0);
+        ArrayList<String> actual = f.argumentsToArrayListString(0);
         ArrayList<String> expected = Lists.newArrayList("instance", "?D", "Driving");
 
         assertEquals(expected, actual);
@@ -502,7 +505,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(0);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(0);
         String temp = "(and\n" +
                 "                   (instance ?D Driving)\n" +
                 "                   (instance ?H Human)\n" +
@@ -525,7 +528,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(1);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(1);
         String temp = "(and\n" +
                 "                   (instance ?D Driving)\n" +
                 "                   (instance ?H Human)\n" +
@@ -548,7 +551,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(2);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(2);
         String temp = "(and\n" +
                 "                   (instance ?D Driving)\n" +
                 "                   (instance ?H Human)\n" +
@@ -571,7 +574,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(3);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(3);
 
         assertEquals(null, actual);
     }
@@ -588,7 +591,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(0);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(0);
         ArrayList<String> expected = Lists.newArrayList("and", "(instance ?D Driving)", "(instance ?H Human)", "(agent ?D ?H)");
 
         assertEquals(expected, actual);
@@ -606,7 +609,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(1);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(1);
         ArrayList<String> expected = Lists.newArrayList("(instance ?D Driving)", "(instance ?H Human)", "(agent ?D ?H)");
 
         assertEquals(expected, actual);
@@ -624,7 +627,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(2);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(2);
         ArrayList<String> expected = Lists.newArrayList("(instance ?H Human)", "(agent ?D ?H)");
 
         assertEquals(expected, actual);
@@ -642,7 +645,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(3);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(3);
         ArrayList<String> expected = Lists.newArrayList("(agent ?D ?H)");
 
         assertEquals(expected, actual);
@@ -660,7 +663,7 @@ public class FormulaTest {
 
         Formula f = new Formula(stmt);
 
-        ArrayList<String> actual = f.complexArgumentsToArrayList(4);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(4);
 
         assertEquals(null, actual);
     }
@@ -674,10 +677,100 @@ public class FormulaTest {
                 "  (AbsoluteValueFn ?NUMBER1) ?NUMBER2)";
         Formula f = new Formula(stmt);
         String expected = "[(AbsoluteValueFn ?NUMBER1), ?NUMBER2]";
-        ArrayList<String> actual = f.complexArgumentsToArrayList(1);
+        ArrayList<String> actual = f.complexArgumentsToArrayListString(1);
         System.out.println("testComplexArgumentsToArrayListAbsolute(): actual: " + actual);
         System.out.println("testComplexArgumentsToArrayListAbsolute(): expected: " + expected);
         assertEquals(expected, actual.toString());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testComplexArgumentsToArrayList2() {
+
+        String stmt = "(termFormat EnglishLanguage WestMakianLanguage \"west makian language\")";
+        Formula f = new Formula(stmt);
+        String expected = "";
+        ArrayList<Formula> l = f.complexArgumentsToArrayList(1);
+        System.out.println("testComplexArgumentsToArrayList2(): actual: " + l.size());
+        System.out.println("testComplexArgumentsToArrayList2(): expected: " + 3);
+        assertEquals(l.size(),3);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testGetArg() {
+
+        List<String> expected = Lists.newArrayList("during","?Y", "(WhenFn ?H)");
+        ArrayList<String> actual = new ArrayList<>();
+        Formula f1 = new Formula();
+        f1.read("(during ?Y (WhenFn ?H))");
+        for (int i = 0; i < 3; i++) {
+            String arg = f1.getArgument(i).getFormula();
+            System.out.println("testGetArg(): adding: " + arg);
+            actual.add(arg);
+        }
+        System.out.println("testGetArg(): actual: " + actual);
+        System.out.println("testGetArg(): expected: " + expected);
+        Formula a = f1.getArgument(1);  // test caching of argument list
+        String e = "?Y";
+        System.out.println("testGetArg(): a: " + a.getFormula());
+        System.out.println("testGetArg(): e: " + e);
+        assertEquals(expected, actual);
+        assertEquals(e, a.toString());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testGetArg2() {
+
+        Formula expected = null;
+        Formula f1 = new Formula();
+        f1.read("(during ?Y (WhenFn ?H))");
+        Formula actual = f1.getArgument(3);
+        System.out.println("testGetArg(): actual: " + actual);
+        System.out.println("testGetArg(): expected: " + expected);
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testGetArgString() {
+
+        List<String> expected = Lists.newArrayList("during","?Y", "(WhenFn ?H)");
+        ArrayList<String> actual = new ArrayList<>();
+        Formula f1 = new Formula();
+        f1.read("(during ?Y (WhenFn ?H))");
+        for (int i = 0; i < 3; i++) {
+            String arg = f1.getStringArgument(i);
+            System.out.println("testGetArgString(): adding: " + arg);
+            actual.add(arg);
+        }
+        System.out.println("testGetArgString(): actual: " + actual);
+        System.out.println("testGetArgString(): expected: " + expected);
+        assertEquals(expected, actual);
+        String a = f1.getStringArgument(1); // test caching of argument list
+        String e = "?Y";
+        System.out.println("testGetArgString(): a: " + a);
+        System.out.println("testGetArgString(): e: " + e);
+        assertEquals(e, a);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testGetArgString2() {
+
+        String expected = "";
+        Formula f1 = new Formula();
+        f1.read("(during ?Y (WhenFn ?H))");
+        String actual = f1.getStringArgument(3);
+        System.out.println("testGetArg(): actual: " + actual);
+        System.out.println("testGetArg(): expected: " + expected);
+        assertEquals(expected, actual);
     }
 
     /** ***************************************************************
