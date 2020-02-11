@@ -105,7 +105,7 @@ public class Diagnostics {
             Iterator<Formula> it = forms.iterator();
             while (it.hasNext()) {
             	Formula f = it.next();                
-                String term = f.getArgument(1);   // Append term and language to make a key.
+                String term = f.getStringArgument(1);   // Append term and language to make a key.
                 isNaN = true;
                 try {
                     double dval = Double.parseDouble(term);
@@ -251,8 +251,8 @@ public class Diagnostics {
             Iterator<Formula> it = forms.iterator();
             while (go && it.hasNext()) {
                 Formula form = it.next();
-                String parent = form.getArgument(1);
-                ArrayList<String> partition = form.argumentsToArrayList(2);
+                String parent = form.getStringArgument(1);
+                ArrayList<String> partition = form.argumentsToArrayListString(2);
                 List<String> instances = kb.getTermsViaPredicateSubsumption("instance",2,parent,1,true);
                 if ((instances != null) && !instances.isEmpty()) {
                     boolean isInstanceSubsumed = false;
@@ -396,7 +396,7 @@ public class Diagnostics {
             String q = quant.car();                     // Now just the quantifier list.
             String body = quant.cdr();
             quant.read(q);
-            ArrayList<String> qList = quant.argumentsToArrayList(0);  // Put all the quantified variables into a list.
+            ArrayList<String> qList = quant.argumentsToArrayListString(0);  // Put all the quantified variables into a list.
             if (rest.indexOf("exists") != -1 || rest.indexOf("forall") != -1) { //nested quantifiers
                 Formula restForm = new Formula();
                 restForm.read(rest);
@@ -508,7 +508,7 @@ public class Diagnostics {
             // Only definitional uses are in the arg 1 position
             if (forms != null && forms.size() > 0) {
                 for (Formula formula : forms) {
-                    String relation = formula.getArgument(0);
+                    String relation = formula.getStringArgument(0);
                     String filename = formula.sourceFile;
                     if (definitionalRelations.contains(relation))
                         addToMapList(termsDefined,term,filename);
@@ -881,7 +881,7 @@ public class Diagnostics {
                 ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
                 HashSet<String> tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
-                    String str = f.getArgument(3);
+                    String str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
                 String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
@@ -951,7 +951,7 @@ public class Diagnostics {
                 ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
                 HashSet<String> tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
-                    String str = f.getArgument(3);
+                    String str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
                 System.out.print(term + "\t" + fname + "\t");
@@ -975,7 +975,7 @@ public class Diagnostics {
             ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
             HashSet<String> tformstrs = new HashSet<>();
             for (Formula f : tforms) {
-                String str = f.getArgument(3);
+                String str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
             System.out.print(term + "\t");
@@ -1012,7 +1012,7 @@ public class Diagnostics {
             ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
             HashSet<String> tformstrs = new HashSet<>();
             for (Formula f : tforms) {
-                String str = f.getArgument(3);
+                String str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
             System.out.print(term + "\t"); //  + fname + "\t");
