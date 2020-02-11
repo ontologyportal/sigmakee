@@ -220,7 +220,7 @@ public class DocGen {
      * int value that represents the bit values used to control the
      * document generation process for this DocGen instance.
      *
-     * @param val An integer representing bit values
+     * @param token A String representing bit values
      *
      * @return An int value representing the result of the bitwise OR
      * operation.
@@ -477,7 +477,7 @@ public class DocGen {
                         Formula f = null;
                         for (it = formulae.iterator(); it.hasNext();) {
                             f = (Formula) it.next();
-                            candidates.add(f.getArgument(1));
+                            candidates.add(f.getStringArgument(1));
                         }
                     }
                 }
@@ -775,8 +775,8 @@ public class DocGen {
                         Formula f = null;
                         for (Iterator it = formulae.iterator(); it.hasNext();) {
                             f = (Formula) it.next();
-                            srMap.put(StringUtil.removeEnclosingQuotes(f.getArgument(2)),
-                                      StringUtil.removeEnclosingQuotes(f.getArgument(4)));
+                            srMap.put(StringUtil.removeEnclosingQuotes(f.getStringArgument(2)),
+                                      StringUtil.removeEnclosingQuotes(f.getStringArgument(4)));
                         }
                     }
                 }
@@ -1045,7 +1045,7 @@ public class DocGen {
      * tries to create the directory pathname if it does not already
      * exist.
      *
-     * @param pathname A String representing a directory pathname
+     * @param pathnameComponents A String representing a directory pathname
      */
     public void setOutputParentDir(List pathnameComponents) {
 
@@ -1852,7 +1852,7 @@ public class DocGen {
      * displayed.
      * 
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.
-     *                   @see createAlphaList()
+     *                   @see createAlphaList(KB)
      */
     public String createPage(KB kb, 
                              String kbHref, 
@@ -2658,7 +2658,7 @@ public class DocGen {
                     if (formulae != null) {
                         for (it2 = formulae.iterator(); it2.hasNext();) {
                             f = (Formula) it2.next();
-                            p1 = f.getArgument(1);
+                            p1 = f.getStringArgument(1);
                             if (requireNamespace) {
                                 namespace = getTermNamespace(kb, p1);
                                 if (StringUtil.isNonEmptyString(namespace)
@@ -2670,7 +2670,7 @@ public class DocGen {
                             else {
                                 predSet.add(p1);
                             }
-                            p2 = f.getArgument(2);
+                            p2 = f.getStringArgument(2);
                             if (requireNamespace) {
                                 namespace = getTermNamespace(kb, p2);
                                 if (StringUtil.isNonEmptyString(namespace)
@@ -2809,7 +2809,7 @@ public class DocGen {
                         for (int j = 0; j < forms.size(); j++) {
                             f = (Formula) forms.get(j);
                             if (f.getArgument(1).equals(ctx)) {
-                                ans = f.getArgument(3);
+                                ans = f.getStringArgument(3);
                                 break;
                             }
                         }
@@ -2857,7 +2857,7 @@ public class DocGen {
                     Formula f = null;
                     if (StringUtil.isLocalTermReference(term) && (forms.size() == 1)) {
                         f = (Formula) forms.get(0);
-                        ans = f.getArgument(3);
+                        ans = f.getStringArgument(3);
                     }
                     else {
                         if (contexts == null) 
@@ -2874,8 +2874,8 @@ public class DocGen {
                             ctx = (String) itc.next();
                             for (itf = forms.iterator(); itf.hasNext();) {
                                 f = (Formula) itf.next();
-                                if (f.getArgument(2).equals(ctx)) {
-                                    ans = f.getArgument(3);
+                                if (f.getStringArgument(2).equals(ctx)) {
+                                    ans = f.getStringArgument(3);
                                     break;
                                 }
                             }
@@ -3403,9 +3403,9 @@ public class DocGen {
                         String prefix = null;
                         for (Iterator it = alternates.iterator(); it.hasNext();) {
                             f = (Formula) it.next();
-                            namespace = f.getArgument(1);
+                            namespace = f.getStringArgument(1);
                             prefix = stripNamespacePrefix(kb, namespace);
-                            syn = StringUtil.removeEnclosingQuotes(f.getArgument(3));
+                            syn = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
                             if (!syn.equals(basePresentationName)) {
                                 if (prefix.matches("^iso\\d+.*")) {
                                     sidx = prefix.lastIndexOf(hwsuff);
@@ -3782,7 +3782,7 @@ public class DocGen {
                 for (Iterator it = forms.iterator(); it.hasNext();) {
                     f = (Formula) it.next();
                     if (!KButilities.isCacheFile(f.sourceFile)) {
-                        s = f.getArgument(2);
+                        s = f.getStringArgument(2);
                         if (isLegalForDisplay(s)) {
                             parents.add(s);
                         }
@@ -3889,7 +3889,7 @@ public class DocGen {
             for (Iterator it = forms.iterator(); it.hasNext();) {
                 f = (Formula) it.next();
                 if (!KButilities.isCacheFile(f.sourceFile)) {
-                    s = f.getArgument(1);
+                    s = f.getStringArgument(1);
                     if (isLegalForDisplay(s) && !kids.contains(s)) {
                         kids.add(s);
                     }
@@ -3987,7 +3987,7 @@ public class DocGen {
                     for (Iterator itf = forms.iterator(); itf.hasNext();) {
                         f = (Formula) itf.next();
                         if (!KButilities.isCacheFile(f.sourceFile)) {
-                            inst = f.getArgument(1); 
+                            inst = f.getStringArgument(1);
                             if (!excluded.contains(inst) && isLegalForDisplay(inst)) {
                                 instances.add(inst);
                             }
@@ -4356,7 +4356,7 @@ public class DocGen {
                 Formula f = (Formula) cardForms.get(0);
                 // if (context.equals("") || context.equals(f.getArgument(1)))             
                 //     return f.getArgument(3);
-                cardVal = f.getArgument(2);
+                cardVal = f.getStringArgument(2);
             }
             else {
                 String minCard = "0";
@@ -4367,7 +4367,7 @@ public class DocGen {
                     Formula f = (Formula) cardForms.get(0);
                     // if (context == "" || context.equals(f.getArgument(1)))             
                     //     minCard = f.getArgument(3);
-                    minCard = f.getArgument(2);
+                    minCard = f.getStringArgument(2);
                 }
                 cardForms = kb.askWithPredicateSubsumption("hasMaxCardinality", 1, term);
                 // kb.askWithRestriction(0,"maxCardinality",2,term);
@@ -4375,7 +4375,7 @@ public class DocGen {
                     Formula f = (Formula) cardForms.get(0);
                     // if (context.equals("") || context.equals(f.getArgument(1)))             
                     //     maxCard = f.getArgument(3);
-                    maxCard = f.getArgument(2);
+                    maxCard = f.getStringArgument(2);
                 }
                 cardVal = (minCard + "-" + maxCard);
             }
@@ -4406,7 +4406,7 @@ public class DocGen {
      *
      * @param term A String that denotes a SUO-KIF term
      * 
-     * @param ident A int value that determines the depth to which
+     * @param indent A int value that determines the depth to which
      * term will be indented when displayed
      * 
      * @param language A String denoting a SUO-KIF namespace, a
@@ -4440,7 +4440,7 @@ public class DocGen {
             // System.out.println("1. instanceForms == " + instanceForms);
             if (instanceForms != null && instanceForms.size() > 0) {
                 Formula f = (Formula) instanceForms.get(0);
-                parentClass = f.getArgument(2);
+                parentClass = f.getStringArgument(2);
             }
             ArrayList termForms = null;
             if (StringUtil.isNonEmptyString(term)) {
@@ -4452,7 +4452,7 @@ public class DocGen {
                 for (Iterator ita = termForms.iterator(); ita.hasNext();) {               
                     Formula f = (Formula) ita.next();
                     sb.append(indentChars("&nbsp;&nbsp;",indent));
-                    String termFormat = StringUtil.removeEnclosingQuotes(f.getArgument(3));
+                    String termFormat = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
                     sb.append("<a href=\"");
                     sb.append(kbHref); 
                     sb.append(StringUtil.toSafeNamespaceDelimiter(kbHref, parentClass));
@@ -4525,10 +4525,6 @@ public class DocGen {
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or another type of entity that contextualizes
      * or indexes termFormat Strings in kb
-     * 
-     * @param withSpanTags If true, the returned String is wrapped in
-     * HTML span tags that allow additional formatting for term via a
-     * style sheet
      * 
      * @return A String providing a context-specific name for term,
      * possibly including HTML markup, or just term if no
@@ -4665,7 +4661,7 @@ public class DocGen {
      * @param isAttribute If true, this parameter indicates that term
      * denotes an XML attribute
      * 
-     * @param int An integer indicating the depth or level to which
+     * @param indent An integer indicating the depth or level to which
      * term should be indented when displayed
      * 
      * @return A List containing two Lists, the first of which is a
@@ -4724,12 +4720,6 @@ public class DocGen {
      *
      * @param term A String that denotes a SUO-KIF term
      * 
-     * @param isAttribute If true, this parameter indicates that term
-     * denotes an XML attribute
-     * 
-     * @param int An integer indicating the depth or level to which
-     * term should be indented when displayed
-     * 
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
      * 
@@ -4778,7 +4768,7 @@ public class DocGen {
      * 
      * @param instance A String that denotes a SUO-KIF term
      * 
-     * @param ident An int value that determines the depth to which
+     * @param indent An int value that determines the depth to which
      * instance will be indented when displayed
      * 
      * @param language A String denoting a SUO-KIF namespace, a
@@ -4815,7 +4805,7 @@ public class DocGen {
                 String context = null;
                 for (Iterator it = docForms.iterator(); it.hasNext();) {
                     f = (Formula) it.next();
-                    context = f.getArgument(2);
+                    context = f.getStringArgument(2);
                     if (context.equals(containingComp)) {
                         sb.append("<tr>");
                         sb.append(StringUtil.getLineSeparator());
@@ -4837,7 +4827,7 @@ public class DocGen {
                         sb.append(processDocString(kb, 
                                                    kbHref, 
                                                    language, 
-                                                   f.getArgument(3), 
+                                                   f.getStringArgument(3),
                                                    false, 
                                                    true));
                         sb.append(StringUtil.getLineSeparator());
@@ -5510,8 +5500,6 @@ public class DocGen {
      * Generate and save all the index pages that link to the
      * individual term pages.
      *
-     * @param pageList is a map of all term pages keyed by term
-     *                  name
      * @param dir is the directory in which to save the pages
      * 
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
@@ -5737,16 +5725,9 @@ public class DocGen {
     /** *************************************************************
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
-     * 
-     * @param inverseHeadwordMap is a HashMap where the keys are the
-     *          headwords and the values are ArrayLists of term
-     *          names (since headwords are not unique identifiers
-     *          for terms). If there's no headword, the term name is
-     *          used.
      */
     protected TreeMap generateHTMLPages(KB kb, 
                                         TreeMap alphaList,
-                                        // HashMap inverseHeadwordMap, 
                                         String language,
                                         String formatToken) {
 
@@ -5903,7 +5884,7 @@ public class DocGen {
      * Generate a single HTML page showing all terms.
      *
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.
-     *                  @see createAlphaList()
+     *                  @see createAlphaList(KB)
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
      * 
@@ -5963,7 +5944,7 @@ public class DocGen {
                                 docStr = processDocString(kb, 
                                                           "", 
                                                           language, 
-                                                          f.getArgument(3), 
+                                                          f.getStringArgument(3),
                                                           false, 
                                                           true);
                             }
