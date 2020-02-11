@@ -28,6 +28,7 @@ import static org.junit.Assert.*;
         FormulaPreprocessorFindExplicitTypesTest.class,
         FormulaPreprocessorTest.class,
         FormulaTest.class,
+        FormulaUtilTest.class,
         FormulaUnificationTest.class,
         KBcacheUnitTest.class,
         KBmanagerInitTest.class,
