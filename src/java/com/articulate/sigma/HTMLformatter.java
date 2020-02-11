@@ -265,9 +265,9 @@ public class HTMLformatter {
         int zoom = 12;
         if (lats != null && lats.size() > 0 && lons != null && lons.size() > 0) {
             Formula f = lats.get(0);
-            String lat = f.getArgument(2);
+            String lat = f.getStringArgument(2);
             f = lons.get(0);
-            String lon = f.getArgument(2);
+            String lon = f.getStringArgument(2);
             if (kb.childOf(term,"Nation"))
                 zoom = 6;
             if (kb.childOf(term,"Ocean"))
@@ -307,7 +307,7 @@ public class HTMLformatter {
             }
             for (int i = 0; i < numPictures; i++) {
                 Formula f = pictures.get(i);
-                String url = f.getArgument(2);
+                String url = f.getStringArgument(2);
                 if (url.startsWith("\"https://upload.wikimedia.org")) {
                     String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
                     if (imageFile.matches("\\d+px-.*"))
@@ -546,7 +546,7 @@ public class HTMLformatter {
             //System.out.println("INFO in HTMLformatter.formatFormulaList(): structured formula: " + f);
             if (KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes") ||
                     !KButilities.isCacheFile(f.sourceFile)) {
-                String arg0 = f.getArgument(0);
+                String arg0 = f.getStringArgument(0);
                 show.append("<tr><td width=\"50%\" valign=\"top\">");
                 String formattedFormula = null;
                 if (flang.equals("TPTP") || flang.equals("traditionalLogic"))
