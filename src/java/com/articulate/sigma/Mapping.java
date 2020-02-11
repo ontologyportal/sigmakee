@@ -222,7 +222,7 @@ public class Mapping {
             ArrayList al = kb.askWithRestriction(0,"termFormat",2,term);
             if (al != null && al.size() > 0) {
                 Formula f = (Formula) al.get(0);
-                String t = f.getArgument(3);
+                String t = f.getStringArgument(3);
                 t = OWLtranslator.removeQuotes(t);
                 return t;
             }
