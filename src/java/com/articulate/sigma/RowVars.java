@@ -16,25 +16,28 @@ public class RowVars {
      * names, each of which will start with the row variable
      * designator '@'.
      */
-    private static HashSet<String> findRowVars(Formula f) {
+    public static HashSet<String> findRowVars(Formula f) {
 
-        //System.out.println("Info in RowVars.findRowVars(): F: " + f);
+        if (DEBUG) System.out.println("Info in RowVars.findRowVars(): f: " + f);
         HashSet<String> result = new HashSet<String>();
         if (!StringUtil.emptyString(f.getFormula())
             && f.getFormula().contains(Formula.R_PREF)) {
+            if (DEBUG) System.out.println("Info in RowVars.findRowVars(): contains at least one");
             Formula fnew = new Formula();
             fnew.read(f.getFormula());
             while (fnew.listP() && !fnew.empty()) {
-                String arg = fnew.getArgument(0);
+                String arg = fnew.getStringArgument(0);
+                if (DEBUG) System.out.println("Info in RowVars.findRowVars(): arg: " + arg);
                 if (arg.startsWith(Formula.R_PREF))
                     result.add(arg);
-                else {
+                else if (Formula.listP(arg)) {
                     Formula argF = new Formula();
                     argF.read(arg);
                     if (argF.listP())
                         result.addAll(findRowVars(argF));
                 }
                 fnew.read(fnew.cdr());
+                if (DEBUG) System.out.println("Info in RowVars.findRowVars(): fnew.cdr(): " + fnew);
             }
         }
         return result;
@@ -107,7 +110,7 @@ public class RowVars {
                 Formula simpleF = new Formula();
                 simpleF.read(simpleFS);
                 for (int i = 0; i < simpleF.listLength(); i++) {
-                    if (simpleF.getArgument(i).startsWith(Formula.V_PREF)) // a '?'
+                    if (simpleF.getStringArgument(i).startsWith(Formula.V_PREF)) // a '?'
                         nonRowVar++;
                 }
 
@@ -164,7 +167,7 @@ public class RowVars {
                 Formula simpleF = new Formula();
                 simpleF.read(simpleFS);
                 for (int i = 0; i < simpleF.listLength(); i++) {
-                    if (simpleF.getArgument(i).startsWith(Formula.V_PREF)) // a '?'
+                    if (simpleF.getStringArgument(i).startsWith(Formula.V_PREF)) // a '?'
                         nonRowVar++;
                 }
 
@@ -255,7 +258,7 @@ public class RowVars {
                 return result;
         }
         else {  // AND or OR
-            ArrayList<String> args = f.complexArgumentsToArrayList(1);
+            ArrayList<String> args = f.complexArgumentsToArrayListString(1);
             for (int i = 1; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
                 result = mergeValueSets(result,getRowVarRelations(f2));
@@ -271,19 +274,20 @@ public class RowVars {
      * predicate names as values. 
      */
     protected static HashMap<String,HashSet<String>> getRowVarRelations(Formula f) {
-        
-        //System.out.println("Info in RowVars.getRowVarRelations(): f: " + f);
+
+        if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): f: " + f);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         if (!f.getFormula().contains("@") || f.empty() || f.atom())
             return result;
-        String pred = f.getArgument(0);
+        String pred = f.getStringArgument(0);
         if (!f.getFormula().substring(1).contains("(")) {  // no higher order or functions
-            //System.out.println("Info in RowVars.getRowVarRelations(): simple clause f: " + f);
+            if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): simple clause f: " + f);
             HashSet<String> rowvars = findRowVars(f);
+            if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): found rowvars: " + rowvars);
             Iterator<String> it = rowvars.iterator();
             while (it.hasNext()) {
                 String var = it.next();
-                //System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " + var + ", " + pred);
+                if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " + var + ", " + pred);
                 addToValueSet(result,var,pred);
             }
             return result;
@@ -292,11 +296,12 @@ public class RowVars {
             return getRowVarRelLogOps(f,pred);
         }
         else {  // regular predicate
-            ArrayList<String> args = f.complexArgumentsToArrayList(1);
+            ArrayList<String> args = f.complexArgumentsToArrayListString(1);
             for (int i = 0; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
                 if (f2.getFormula().startsWith("@")) {
-                    //System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " + f2.theFormula + ", " + pred);
+                    if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " +
+                            f2.getFormula() + ", " + pred);
                     addToValueSet(result,f2.getFormula(),pred);
                 }
                 else if (f2.getFormula().contains("@"))
