@@ -96,7 +96,7 @@ public class Graph {
         ArrayList<Formula> docStmts = kb.askWithRestriction(0,"documentation",1,term);
         if (docStmts.size() > 0) {
             Formula doc = (Formula) docStmts.get(0);
-            docString = doc.getArgument(3);
+            docString = doc.getStringArgument(3);
             if (!DB.emptyString(docString)) {
                 if (docString.length() > 100) 
                     docString = docString.substring(1,100) + "...";
@@ -253,7 +253,7 @@ public class Graph {
                     stmtAbove = kb.askWithRestriction(0,relation,1,term);
                 for (int i = 0; i < stmtAbove.size(); i++) {
                     Formula f = stmtAbove.get(i);
-                    String newTerm = f.getArgument(2);
+                    String newTerm = f.getStringArgument(2);
                     if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
                         result.addAll(createGraphBody(kb,check,newTerm,relation,above-1,0,level-1,true,instances,language));
                     check.add(term);
@@ -286,7 +286,7 @@ public class Graph {
                 ArrayList<Formula> stmtBelow = kb.askWithRestriction(0,relation,2,term);
                 for (int i = 0; i < stmtBelow.size(); i++) {
                     Formula f = stmtBelow.get(i);
-                    String newTerm = f.getArgument(1);
+                    String newTerm = f.getStringArgument(1);
                     if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
                         result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
                     check.add(term);
@@ -295,7 +295,7 @@ public class Graph {
                     stmtBelow = kb.askWithRestriction(0,"instance",2,term);
                     for (int i = 0; i < stmtBelow.size(); i++) {
                         Formula f = stmtBelow.get(i);
-                        String newTerm = f.getArgument(1);
+                        String newTerm = f.getStringArgument(1);
                         if (!newTerm.equals(term) && !KButilities.isCacheFile(f.sourceFile))
                             result.addAll(createGraphBody(kb,check,newTerm,relation,0,below-1,level+1,true,instances,language));
                         check.add(term);
@@ -428,12 +428,12 @@ public class Graph {
                 if (f.isCached())
                     continue;
                 else {
-                    String parent = f.getArgument(2);
+                    String parent = f.getStringArgument(2);
                     if (rejectedTerm(parent))
                         continue;
                     if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
-                    String rel = f.getArgument(0);
+                    String rel = f.getStringArgument(0);
                     if (Formula.DOC_PREDICATES.contains(rel))
                         continue;
                     String link = "[ label = \"" + rel + "\" ]";
@@ -457,12 +457,12 @@ public class Graph {
                 if (f.isCached())
                     continue;
                 else {
-                    String parent = f.getArgument(1);
+                    String parent = f.getStringArgument(1);
                     if (rejectedTerm(parent))
                         continue;
                     if (!StringUtil.emptyString(fileRestrict) && !FileUtil.noPath(f.getSourceFile()).equals(fileRestrict))
                         continue;
-                    String rel = f.getArgument(0);
+                    String rel = f.getStringArgument(0);
                     if (Formula.DOC_PREDICATES.contains(rel))
                         continue;
                     String link = "[ label = \"" + rel + "\" ]";
@@ -559,11 +559,11 @@ public class Graph {
                 if (f.isCached())
                     continue;
                 else {
-                    String child = f.getArgument(1);
-                    String parent = f.getArgument(2);
+                    String child = f.getStringArgument(1);
+                    String parent = f.getStringArgument(2);
                     String link = "";
                     String arrow = "->";
-                    String rel = f.getArgument(0);
+                    String rel = f.getStringArgument(0);
                     if (relation.equals("all")) {
                         link = "[ label = \"" + rel + "\" ]";
                         arrow = "--";
