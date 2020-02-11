@@ -152,7 +152,7 @@ public class THF {
      * such as 'terms' or 'localsig' above contain some type information
      * involving the 'unkownTp'.
      *
-     * @param a term-to-type mapping (where types are encoded as strings) 
+     * @param map a term-to-type mapping (where types are encoded as strings)
      */
     private boolean containsUnknownTp(HashMap map) {
         
@@ -177,11 +177,11 @@ public class THF {
      * returns "(whatever (which (somewhat which)))"
      * and not "(whichever (what (somewhich what)))"   
      *
-     * @param a string to replace 
+     * @param key a string to replace
      *
-     * @param the string to use as replacement
+     * @param keysubst the string to use as replacement
      *
-     * @param the string to apply the substitution to
+     * @param str the string to apply the substitution to
      * 
      */
     private String applySubstTo(String key, String keysubst, String str) {
@@ -806,7 +806,7 @@ public class THF {
         // resTerm will contain the result
         StringBuilder resTerm = new StringBuilder();
         Formula f1 = new Formula();
-        f1.read(f.getArgument(1));
+        f1.read(f.getStringArgument(1));
         // we perform a (recursive) call to toTHF1 for the first argument
         String arg1 = toTHF1(f1,argsTp,relTpInfo);
         // we similarly work of the remaining arguments and distinguish between the prefix
@@ -816,7 +816,7 @@ public class THF {
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
-                fi.read(f.getArgument(i));
+                fi.read(f.getStringArgument(i));
                 String argi = toTHF1(fi,argsTp,relTpInfo);
                 resTerm.append(" @ " + argi);
             }
@@ -826,7 +826,7 @@ public class THF {
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
-                fi.read(f.getArgument(i));
+                fi.read(f.getStringArgument(i));
                 String argi = toTHF1(fi,argsTp,relTpInfo);
                 resTerm.append(" " + op_thf + " " + argi);
             }
@@ -861,7 +861,7 @@ public class THF {
         // a string builder for the result
         StringBuilder resTerm = new StringBuilder();
         Formula f1 = new Formula();
-        f1.read(f.getArgument(1));
+        f1.read(f.getStringArgument(1));
         kifFormula.append(" ");	 
         // a (recursive) call to toTHF2 for the first argument
         String arg1 = toTHF2(f1);
@@ -871,7 +871,7 @@ public class THF {
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
-                fi.read(f.getArgument(i));
+                fi.read(f.getStringArgument(i));
                 kifFormula.append(" ");	 
                 String argi = toTHF2(fi);
                 resTerm.append(" @ " + argi);
@@ -882,7 +882,7 @@ public class THF {
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
-                fi.read(f.getArgument(i));
+                fi.read(f.getStringArgument(i));
                 kifFormula.append(" ");	 
                 String argi = toTHF2(fi);
                 resTerm.append(" " + op_thf + " " + argi);
@@ -911,23 +911,23 @@ public class THF {
     private String toTHFQuant1 (Formula f, String quant_thf, HashMap relTpInfo) {
 
         THFdebugOut("\n  Debug: universal quantifier at head position in " + f.getFormula());
-        String varlist = f.getArgument(1);
+        String varlist = f.getStringArgument(1);
         Formula varlistF = new Formula();
         varlistF.read(varlist);
         StringBuilder resTerm = new StringBuilder();
         resTerm.append("(" + quant_thf + " ["); 
         int len = varlistF.listLength();
-        String arg2 = f.getArgument(2);
+        String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
         arg2F.read(arg2);
         for (int i = 0; i < len; i++) {
-            String var = varlistF.getArgument(i);
+            String var = varlistF.getStringArgument(i);
             String varTHF = toTHFKifVar(var);
             terms.put(varTHF,unknownTp);
         }
         String arg2FTHF = toTHF1(arg2F,boolTp,relTpInfo);
         for (int i = 0; i < len; i++) {
-            String var = varlistF.getArgument(i);
+            String var = varlistF.getStringArgument(i);
             String varTHF = toTHFKifVar(var);
             if (i < 1) {
                 resTerm.append(varTHF + ": " + terms.get(varTHF));
@@ -956,10 +956,10 @@ public class THF {
 
         THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
         StringBuilder resTerm = new StringBuilder();
-        String var = f.getArgument(1);
+        String var = f.getStringArgument(1);
         String varTHF = toTHFKifVar(var);
         terms.put(varTHF,unknownTp);
-        String arg2 = f.getArgument(2);
+        String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
         arg2F.read(arg2);
         String arg2FTHF = toTHF1(arg2F,boolTp,relTpInfo);
@@ -981,19 +981,19 @@ public class THF {
     private String toTHFQuant2 (Formula f,String quant_sumo,String quant_thf) {
 
         THFdebugOut("\n  Debug: universal quantifier at head position in " + f.getFormula());
-        String varlist = f.getArgument(1);
+        String varlist = f.getStringArgument(1);
         kifFormula.append("("+ quant_sumo + " " + varlist + " ");
         Formula varlistF = new Formula();
         varlistF.read(varlist);
         StringBuilder resTerm = new StringBuilder();
         resTerm.append("(" + quant_thf + " ["); 
         int len = varlistF.listLength();
-        String arg2 = f.getArgument(2);
+        String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
         arg2F.read(arg2);
         String arg2FTHF = toTHF2(arg2F);
         for (int i = 0; i < len; i++) {
-            String var = varlistF.getArgument(i);
+            String var = varlistF.getStringArgument(i);
             String varTHF = toTHFKifVar(var);
             if (i < 1) {
                 resTerm.append(varTHF + ": " + terms.get(varTHF));
@@ -1016,18 +1016,18 @@ public class THF {
      *
      * @param kappa_thf is the THF quantifier to use at head postion ("^")
      *
-     * @param relTpInfo is the passed on semantic 'type' information for symbols in f
+     * @param kappa_sumo is the passed on semantic 'type' information for symbols in f
      *
      */
     private String toTHFKappaFN2 (Formula f, String kappa_sumo, String kappa_thf) {
 
         THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
         StringBuilder resTerm = new StringBuilder();	
-        String var = f.getArgument(1);
+        String var = f.getStringArgument(1);
         kifFormula.append("("+ kappa_sumo + " " + var + " ");
         String varTHF = toTHFKifVar(var);
         terms.put(varTHF,unknownTp);
-        String arg2 = f.getArgument(2);
+        String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
         arg2F.read(arg2);
         String arg2FTHF = toTHF2(arg2F);
@@ -1210,7 +1210,7 @@ public class THF {
      * specified arity
      * e.g. for int 3 it computes "uknownTp>uknownTp>uknownTp" 
      *
-     * @param int is the requested arity 
+     * @param num is the requested arity
      */
     private String makeUnknownTp (int num) {
         
@@ -1372,7 +1372,7 @@ public class THF {
         }
         /* the formula has form (h arg1 ... argN) */	    
         else {
-            String h = f.getArgument(0);
+            String h = f.getStringArgument(0);
             /* documentation formulas and some others are not translated */
             if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
                 result.append(notTranslatedStr + f.getFormula().trim());
@@ -1394,12 +1394,12 @@ public class THF {
                 result.append(toTHFHelp1(f,"<=>",boolTp,boolTp,false,relTpInfo));
             }
             else if (h.equals(Formula.EQUAL)) { 
-                String arg1 = f.getArgument(1);
+                String arg1 = f.getStringArgument(1);
                 Formula arg1F = new Formula();
                 arg1F.read(arg1);
                 String arg1FTHF = toTHF1(arg1F,unknownTp,relTpInfo);
                 String arg1Tp = (String) terms.get(arg1FTHF);
-                String arg2 = f.getArgument(2);
+                String arg2 = f.getStringArgument(2);
                 Formula arg2F = new Formula();
                 arg1F.read(arg2);
                 String arg2FTHF = toTHF1(arg1F,unknownTp,relTpInfo);
@@ -1522,7 +1522,7 @@ public class THF {
                 for (int i = 1; i < Math.min(len,7); i++) {
                     String sumoTp = (String) typeInfo.get(i);
                     String argiTp = KIFType2THF(sumoTp);
-                    String argi = (f.getArgument(i));
+                    String argi = (f.getStringArgument(i));
                     Formula argiF = new Formula();
                     argiF.read(argi);
                     String argiFTHF = toTHF1(argiF,argiTp,relTpInfo);
@@ -1629,7 +1629,7 @@ public class THF {
      * suitably encodes some given THF type information (one problem is 
      * that '$' is not allowed in THF constant names).
      *
-     * @param oldconst is the name of the given constant
+     * @param oldConst is the name of the given constant
      *
      * @param thfTp is the THF type to encode
      *
@@ -1715,7 +1715,7 @@ public class THF {
         }
         /* the formula has form (h arg1 ... argN) */	    
         else {
-            String h = f.getArgument(0);
+            String h = f.getStringArgument(0);
             String arith_pred_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + boolTp + ")";
             String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
             /* documentation formulas are not translated */
@@ -1825,7 +1825,7 @@ public class THF {
                     if (i < typeInfo.size()) {
                         suggArgiTp = toTHFTp(typeInfo.get(i));
                     }
-                    String argi = (f.getArgument(i));
+                    String argi = (f.getStringArgument(i));
                     Formula argiF = new Formula();
                     argiF.read(argi);
                     kifFormula.append(" ");
@@ -1887,7 +1887,7 @@ public class THF {
      * A method.that extracts the symbols in a formula that occur at function/predicate position and 
      * at argument position
      *
-     * @param f A formula to investigate
+     * @param form A formula to investigate
      */
     private List analyzeFormula (Formula form) {
 
@@ -1906,10 +1906,10 @@ public class THF {
             resL.add(argPosL);
         }
         else if (form.listP()) {
-            String h = form.getArgument(0);
+            String h = form.getStringArgument(0);
             if (h.equals(Formula.UQUANT) || h.equals(Formula.EQUANT) || h.equals(Formula.KAPPAFN)) { 
                 Formula argF = new Formula();
-                argF.read(form.getArgument(2));
+                argF.read(form.getStringArgument(2));
                 resL = analyzeFormula(argF);
             }
             else {
@@ -1917,7 +1917,7 @@ public class THF {
                     funcPosL.add(h);
                 }
                 for (int i = 1; i < form.listLength(); i++) {
-                    String argStr = form.getArgument(i);
+                    String argStr = form.getStringArgument(i);
                     Formula argF = new Formula();
                     argF.read(argStr);
                     List recResultL = analyzeFormula(argF);
@@ -1942,9 +1942,9 @@ public class THF {
                 THFdebugOut("\n   enter compare with " + o1.toString() + " and " + o2.toString());
                 int res = 0;
                 Formula f1 = (Formula) o1;
-                String f1head = f1.getArgument(0);
+                String f1head = f1.getStringArgument(0);
                 Formula f2 = (Formula) o2;
-                String f2head = f2.getArgument(0);
+                String f2head = f2.getStringArgument(0);
                 if (f1head.equals("instance") ||
                         f1head.equals("subclass") ||
                         f1head.equals("domain") ||
@@ -2015,7 +2015,7 @@ public class THF {
             public int compare(Object o1, Object o2){
                 Formula f1 = (Formula) o1;
                 Formula f2 = (Formula) o2;
-                String h1 = f1.getArgument(0);
+                String h1 = f1.getStringArgument(0);
                 // String h2 = f2.getArgument(0);
                 if (h1.equals("instance") || 
                         h1.equals("domain") || 
