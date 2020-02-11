@@ -82,7 +82,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
-        String string2 = formula1.complexArgumentsToArrayList(1).get(1);
+        String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
         Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
@@ -112,7 +112,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
-        String string2 = formula1.complexArgumentsToArrayList(1).get(1);
+        String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
         Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
@@ -147,7 +147,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
-        String string2 = formula1.complexArgumentsToArrayList(1).get(1);
+        String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
         Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
@@ -181,7 +181,7 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
-        String string2 = formula1.complexArgumentsToArrayList(1).get(1);
+        String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
         Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
 
@@ -221,11 +221,11 @@ public class LanguageFormatterStackTest extends SigmaMockTestBase {
         Formula formula1 = new Formula(string1);
         stack.insertFormulaArgs(formula1);
         stack.pushNew();
-        String string2 = formula1.complexArgumentsToArrayList(1).get(1);
+        String string2 = formula1.complexArgumentsToArrayListString(1).get(1);
         Formula formula2 = new Formula(string2);
         stack.insertFormulaArgs(formula2);
         stack.pushNew();
-        String string3 = formula2.complexArgumentsToArrayList(1).get(1);
+        String string3 = formula2.complexArgumentsToArrayListString(1).get(1);
         Formula formula3 = new Formula(string3);
         stack.insertFormulaArgs(formula3);
 
