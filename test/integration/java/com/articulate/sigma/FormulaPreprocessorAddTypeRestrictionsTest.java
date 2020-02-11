@@ -207,6 +207,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
     /** ***************************************************************
      */
+    @Ignore  // serviceFee is in Financial ontology not merge or MILO
     @Test
     public void testAddTypeRestrictions6() {
 
