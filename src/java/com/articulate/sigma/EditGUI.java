@@ -109,12 +109,12 @@ public class EditGUI {
         ArrayList<Formula> res = kb.askWithRestriction(0,"instance",1,term);
         for (int i = 0; i < res.size(); i++) {
             Formula f = res.get(i);
-            immedParents.add(f.getArgument(2));
+            immedParents.add(f.getStringArgument(2));
         }
         res = kb.askWithRestriction(0,"subclass",1,term);
         for (int i = 0; i < res.size(); i++) {
             Formula f = res.get(i);
-            immedParents.add(f.getArgument(2));
+            immedParents.add(f.getStringArgument(2));
         }
         parents.addAll(kb.getAllSuperClasses(immedParents));
         return parents;
@@ -130,12 +130,12 @@ public class EditGUI {
         ArrayList<Formula> res = kb.askWithRestriction(0,"instance",1,term);
         for (int i = 0; i < res.size(); i++) {
             Formula f = res.get(i);
-            parents.add(f.getArgument(2));
+            parents.add(f.getStringArgument(2));
         }
         res = kb.askWithRestriction(0,"subclass",1,term);
         for (int i = 0; i < res.size(); i++) {
             Formula f = res.get(i);
-            parents.add(f.getArgument(2));
+            parents.add(f.getStringArgument(2));
         }
         return parents;
     }
@@ -161,7 +161,7 @@ public class EditGUI {
             //		  "(domain ?X ?Y " + parent + ")");
             for (int k = 0; k < res.size(); k++) {
                 Formula f = res.get(k);
-                relations.add(f.getArgument(1));
+                relations.add(f.getStringArgument(1));
             }
         }
 
@@ -212,7 +212,7 @@ public class EditGUI {
             //		  "(domain ?X ?Y " + parent + ")");
             for (int k = 0; k < res.size(); k++) {
                 Formula f = res.get(k);
-                relations.add(f.getArgument(1));
+                relations.add(f.getStringArgument(1));
             }
         }
 
