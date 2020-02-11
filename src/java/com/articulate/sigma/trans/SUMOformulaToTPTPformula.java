@@ -324,7 +324,7 @@ public class SUMOformulaToTPTPformula {
             if (args.get(0) != null) {
                 //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid varlist: " + args.get(0));
                 Formula varlist = new Formula(args.get(0));
-                ArrayList<String> vars = varlist.argumentsToArrayList(0);
+                ArrayList<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): valid vars: " + vars);
                 StringBuffer varStr = new StringBuffer();
                 for (String v : vars) {
@@ -446,7 +446,7 @@ public class SUMOformulaToTPTPformula {
         Formula car = f.carAsFormula();
         //System.out.println("SUMOformulaToTPTPformula.processRecurse(): car: " + car);
         //System.out.println("SUMOformulaToTPTPformula.processRecurse(): car: " + car.theFormula);
-        ArrayList<String> args = f.complexArgumentsToArrayList(1);
+        ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
             System.out.println("Error in SUMOformulaToTPTPformula.processRecurse(): formula " + f);
             return "";
@@ -535,7 +535,7 @@ public class SUMOformulaToTPTPformula {
                                             // to be an instance of itself
         if (tempF.getArgument(0).equals("instance") &&
             tempF.getArgument(2).equals("SetOrClass")) {
-            String arg1 = tempF.getArgument(1);
+            String arg1 = tempF.getStringArgument(1);
             // suoString = "(instance " + arg1 + Formula.classSymbolSuffix + " SetOrClass)";
             suoString = "(instance " + arg1 + " SetOrClass)";
         }
