@@ -492,7 +492,7 @@ public class LanguageFormatter {
             ArrayList<String> args = new ArrayList<>();
             Formula f = new Formula();
             f.read(stmt);
-            String pred = f.getArgument(0);
+            String pred = f.getStringArgument(0);
             f.read(f.cdr());
 
             String ans = null;
@@ -841,7 +841,7 @@ public class LanguageFormatter {
             if (debug) System.out.println("arg: " + f.getArgument(num));
             if (debug) System.out.println("num: " + num);
             if (debug) System.out.println("str: " + strFormat);
-            arg = f.getArgument(num);
+            arg = f.getStringArgument(num);
             if (Formula.isVariable(arg))
                 para = arg;
             else
