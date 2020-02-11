@@ -29,7 +29,7 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
         //kifSet.add("Economy.kif");
         //kifSet.add("engineering.kif");
         kifSet.add("SUMO_Cache.kif");
-        kifSet.add("FinancialOntology.kif");
+        //kifSet.add("FinancialOntology.kif");
         //kifSet.add("domainEnglishFormat.kif");
         //kifSet.add("english_format.kif");
         //kifSet.add("Food.kif");
