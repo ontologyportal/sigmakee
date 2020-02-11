@@ -2893,7 +2893,7 @@ public class WordNet implements Serializable {
                         ArrayList<Formula> al = kb.askWithRestriction(1,bareSumoTerm,0,"instance");
                         String parentTerm = "";
                         if (al != null && al.size() > 0) {
-                            parentTerm = al.get(0).getArgument(2);
+                            parentTerm = al.get(0).getStringArgument(2);
                         }
                         else
                             parentTerm = bareSumoTerm;
@@ -3245,7 +3245,7 @@ public class WordNet implements Serializable {
         ArrayList<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (forms.size() > 0) {
             Formula f = forms.get(0);
-            String doc = f.getArgument(3);
+            String doc = f.getStringArgument(3);
             if (StringUtil.emptyString(doc))
                 doc = "no gloss";
             nounDocumentationHash.put(synsetID, doc);
@@ -3268,7 +3268,7 @@ public class WordNet implements Serializable {
         ArrayList<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (forms.size() > 0) {
             Formula f = forms.get(0);
-            String doc = f.getArgument(3);
+            String doc = f.getStringArgument(3);
             if (StringUtil.emptyString(doc))
                 doc = "no gloss";
             verbDocumentationHash.put(synsetID, doc);
@@ -3389,7 +3389,7 @@ public class WordNet implements Serializable {
         System.out.println("WordNet.termFormatsToSynsets(): termFormats: " + forms.size());
         for (Formula form : forms) {
             //System.out.println("WordNet.termFormatsToSynsets(): form: " + form);
-            ArrayList<String> args = form.argumentsToArrayList(0);
+            ArrayList<String> args = form.argumentsToArrayListString(0);
             //System.out.println("WordNet.termFormatsToSynsets(): args: " + args);
             if (args == null || args.size() < 2)
                 continue;
