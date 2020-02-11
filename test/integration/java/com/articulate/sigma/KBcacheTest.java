@@ -301,7 +301,8 @@ public class KBcacheTest extends IntegrationTestBase {
         KBcache cache = SigmaTestBase.kb.kbCache;
         System.out.println("testTransInst(): cache.transInstOf(Anger,Entity): " + cache.transInstOf("Anger","Entity"));
         System.out.println("testTransInst(): insts.contains(Anger): " + cache.insts.contains("Anger"));
-        System.out.println("testTransInst(): instancesOf.get(Anger): " + cache.instanceOf.get("Anger"));
+        //System.out.println("testTransInst(): insts.contains(Anger): " + cache.insts.contains("Anger"));
+        //System.out.println("testTransInst(): instancesOf: " + cache.instanceOf);
         assertTrue(cache.transInstOf("Anger","Entity"));
     }
 
