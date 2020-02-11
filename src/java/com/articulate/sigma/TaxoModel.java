@@ -104,7 +104,7 @@ public class TaxoModel {
         for (int i = 0; i < forms.size(); i++) {
             Formula form = (Formula) forms.get(i);
             TaxoNode parent = new TaxoNode();
-            parent.name = form.getArgument(2);
+            parent.name = form.getStringArgument(2);
             if (parent.name.equals(n.name)) 
                 return;
             parent.childrenExpanded = false;
@@ -168,7 +168,7 @@ public class TaxoModel {
         for (int i = 0; i < forms.size(); i++) {
             Formula form = (Formula) forms.get(i);
             TaxoNode child = new TaxoNode();
-            child.name = form.getArgument(1);
+            child.name = form.getStringArgument(1);
             n.children.add(child);
             String childKey = kbName + ":" + child.name;
             nodeMap.put(childKey,child);
