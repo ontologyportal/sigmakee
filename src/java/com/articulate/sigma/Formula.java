@@ -148,7 +148,9 @@ public class Formula implements Comparable, Serializable {
     public boolean higherOrder = false;
     public boolean simpleClause = false;
 
-    public ArrayList<String> args = new ArrayList<>(); // cached - only in the case of a simpleClause
+    public ArrayList<String> stringArgs = new ArrayList<>(); // cached - only in the case of a simpleClause
+
+    public ArrayList<Formula> args = new ArrayList<>();
 
     public String getSourceFile() {
         return this.sourceFile;
@@ -287,6 +289,32 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
+     * Returns a map of the variable types.
+     *
+     * @return A Map of String (SUO-KIF variable) key-value pairs.
+     */
+    public HashMap<String,HashSet<String>> getVarTypes(KB kb) {
+
+        if (varTypeCache != null)
+            return varTypeCache;
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        varTypeCache = fp.computeVariableTypes(this,kb);
+        return varTypeCache;
+    }
+
+    /** ***************************************************************
+     * Returns the type of a variable or null if it doesn't exist.
+     */
+    public HashSet<String> getVarType(KB kb, String var) {
+
+        HashMap<String,HashSet<String>> varTypes = getVarTypes(kb);
+        if (varTypes.containsKey(var))
+            return varTypes.get(var);
+        else
+            return null;
+    }
+
+    /** ***************************************************************
      * This constant indicates the maximum predicate arity supported
      * by the current implementation of Sigma.
      */
@@ -305,6 +333,8 @@ public class Formula implements Comparable, Serializable {
         existVarsCache = new HashSet<>();
         univVarsCache = new HashSet<>();
         termCache = new HashSet<>();
+        args = new ArrayList<>();
+        stringArgs = new ArrayList<>();
     }
 
     /** ***************************************************************
@@ -652,7 +682,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String cadr() {
     	
-        return this.getArgument(1);
+        return this.getStringArgument(1);
     }
 
     /** ***************************************************************
@@ -699,7 +729,7 @@ public class Formula implements Comparable, Serializable {
      *
      */
     public String caddr() {
-        return this.getArgument(2);
+        return this.getStringArgument(2);
     }
 
     /** ***************************************************************
@@ -1164,7 +1194,7 @@ public class Formula implements Comparable, Serializable {
 
         //not memo hit, carrying on the actual computations
         //null tests first
-        if(f1 == null && f2 == null) {
+        if (f1 == null && f2 == null) {
             ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
             result.add(new HashSet<VariableMapping>());
             return result;
@@ -1210,8 +1240,8 @@ public class Formula implements Comparable, Serializable {
         }
 
         //comparing arguments
-        ArrayList<String> args1 = f1.complexArgumentsToArrayList(1);
-        ArrayList<String> args2 = f2.complexArgumentsToArrayList(1);
+        ArrayList<String> args1 = f1.complexArgumentsToArrayListString(1);
+        ArrayList<String> args2 = f2.complexArgumentsToArrayListString(1);
         if (args1.size() != args2.size()) {
             return null;
         }
@@ -1338,7 +1368,7 @@ public class Formula implements Comparable, Serializable {
         f.read(formula);
 
         //normalizing parameters
-        ArrayList<String> args = f.complexArgumentsToArrayList(1);
+        ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         if (args == null || args.size() == 0) {
             return formula;
         }
@@ -1375,19 +1405,75 @@ public class Formula implements Comparable, Serializable {
      * element of a formula (i.e. the predicate position) is number 0.
      * Returns the empty string if there is no such argument position.
      */
-    public String getArgument(int argnum) {
+    public String getStringArgument(int argnum) {
 
-        if (args != null && args.size() > argnum)
-            return args.get(argnum);
+        if (debug) System.out.println("Formula.getStringArgument(): " + this.theFormula);
+        if (debug) System.out.println("Formula.getStringArgument(): args: " + stringArgs);
+        if (debug) System.out.println("Formula.getStringArgument(): argnum: " + argnum);
+        if (stringArgs != null && stringArgs.size() > argnum)
+            return stringArgs.get(argnum);
         String ans = "";
         Formula form = new Formula();
         form.read(theFormula);
-        for (int i = 0; form.listP(); i++) {
+        int i = 0;
+        while (form.listP() && !form.empty()) {
             ans = form.car();
+            if (stringArgs == null)
+                stringArgs = new ArrayList<>();
+            if (i >= stringArgs.size()) { // opportunistically fill the cache
+                stringArgs.add(ans);
+                if (debug) System.out.println("Formula.getStringArgument(): adding: " + ans + " to " + stringArgs);
+            }
             if (i == argnum) break;
-            form.read(form.cdr());
+            if (i > argnum) return "";
+            String cdr = form.cdr();
+            form = new Formula();
+            form.read(cdr);
+            if (form.empty())
+                return "";
+            i++;
         }
+        if (form.empty())
+            ans = "";
         if (ans == null) ans = ""; 
+        return ans;
+    }
+
+    /** ***************************************************************
+     * Return the numbered argument of the given formula.  The first
+     * element of a formula (i.e. the predicate position) is number 0.
+     * Returns the empty string if there is no such argument position.
+     */
+    public Formula getArgument(int argnum) {
+
+        if (debug) System.out.println("Formula.getArgument(): " + this.theFormula);
+        if (debug) System.out.println("Formula.getArgument(): args: " + args);
+        if (debug) System.out.println("Formula.getArgument(): argnum: " + argnum);
+        if (args != null && args.size() > argnum)
+            return args.get(argnum);
+        Formula ans = null;
+        Formula form = deepCopy();
+        int i = 0;
+        while (form.listP() && !form.empty()) {
+            ans = form.carAsFormula();
+            if (args == null)
+                args = new ArrayList<Formula>();
+            if (i >= args.size()) { // opportunistically fill the cache
+                args.add(ans);
+                if (debug) System.out.println("Formula.getArgument(): adding: " + ans.theFormula + " to " + stringArgs);
+            }
+            if (debug) System.out.println("Formula.getArgument(): arg: " + ans.theFormula);
+            if (i == argnum) break;
+            if (i > argnum) return null;
+            if (debug) System.out.println("Formula.getArgument(): form: " + form.theFormula);
+            form = form.cdrAsFormula();
+            if (debug) System.out.println("Formula.getArgument(): cdr form: " + form.theFormula);
+            if (debug) System.out.println("Formula.getArgument(): list?: " + form.listP());
+            if (debug) System.out.println("Formula.getArgument(): empty?: " + form.empty());
+            if (form.empty())
+                return null;
+            i++;
+        }
         return ans;
     }
 
@@ -1401,11 +1487,11 @@ public class Formula implements Comparable, Serializable {
      * @return A non-negative int, or -1.
      */
     public int listLength() {
-    	
+
         int ans = -1;
         if (this.listP()) {
             ans = 0;
-            while (!StringUtil.emptyString(this.getArgument(ans)))
+            while (!StringUtil.emptyString(this.getStringArgument(ans)))
                 ++ans;
         }
         return ans;
@@ -1418,19 +1504,26 @@ public class Formula implements Comparable, Serializable {
      * argument is greater than the number of arguments, also return
      * null.
      */
-    public ArrayList<String> argumentsToArrayList(int start) {
+    public ArrayList<String> argumentsToArrayListString(int start) {
 
         if (start > 1)
             System.out.println("Error in Formula.argumentsToArrayList() start greater than 1 : " + start);
-        ArrayList<String> result = new ArrayList<String>();
+        if (debug) System.out.println("Formula.argumentsToArrayList(): formula: " + getFormula());
+        if (debug) System.out.println("Formula.argumentsToArrayList(): stringArgs: " + stringArgs);
+        ArrayList<String> result = new ArrayList<>();
         if (args != null && args.size() > 0) {
             if (start == 0)
-                return args;
-            result.addAll(args.subList(start, args.size()));
+                return stringArgs;
+            if (start > stringArgs.size()) {
+                System.out.println("Error in Formula.argumentsToArrayList() start " +
+                        start + " greater than end : " + stringArgs.size() + " in formula " + getFormula());
+                return result;
+            }
+            result.addAll(stringArgs.subList(start, stringArgs.size()));
             return result;
         }
         if (theFormula.indexOf('(',1) != -1) {
-            ArrayList<String> erList = complexArgumentsToArrayList(0);
+            ArrayList<String> erList = complexArgumentsToArrayListString(0);
             for (String s : erList) {
                 if (s.indexOf('(') != -1 && !StringUtil.quoted(s)) {
                     //String err = "Error in Formula.argumentsToArrayList() complex formula: " + this.toString();
@@ -1442,14 +1535,48 @@ public class Formula implements Comparable, Serializable {
         }
         int index = start;
 
-        if (start > 0)
-            args.add(getArgument(0));
-        String arg = getArgument(index);
+        String arg = getStringArgument(index);
         while (arg != null && arg != "" && arg.length() > 0) {
             result.add(arg.intern());
-            args.add(arg.intern());
+            index++;
+            arg = getStringArgument(index);
+        }
+        if (index == start)
+            return null;
+        return result;
+    }
+
+    /** ***************************************************************
+     * Return all the arguments in a simple formula as a list, starting
+     * at the given argument.  If formula is complex (i.e. an argument
+     * is a function or sentence), then return null.  If the starting
+     * argument is greater than the number of arguments, also return
+     * null.
+     */
+    public ArrayList<Formula> argumentsToArrayList(int start) {
+
+        ArrayList<Formula> result = new ArrayList<>();
+        System.out.println("Error not implemented Formula.argumentsToArrayList()");
+        return result;
+    }
+
+    /** ***************************************************************
+     * Return all the arguments in a formula as a list, starting
+     * at the given argument.  If the starting
+     * argument is greater than the number of arguments, return null.
+     */
+    public ArrayList<Formula> complexArgumentsToArrayList(int start) {
+
+        int index = start;
+        ArrayList<Formula> result = new ArrayList<>();
+        Formula arg = getArgument(index);
+        while (arg != null && !arg.empty() && index < 7) {
+            result.add(arg);
             index++;
             arg = getArgument(index);
+            if (debug) System.out.println("Formula.complexArgumentsToArrayList(): arg: " + arg);
+            if (debug && arg != null)
+                System.out.println("Formula.complexArgumentsToArrayList(): empty?: " + arg.empty());
         }
         if (index == start)
             return null;
@@ -1461,21 +1588,21 @@ public class Formula implements Comparable, Serializable {
      * at the given argument.  If the starting
      * argument is greater than the number of arguments, return null.
      */
-    public ArrayList<String> complexArgumentsToArrayList(int start) {
+    public ArrayList<String> complexArgumentsToArrayListString(int start) {
 
         int index = start;
-        ArrayList<String> result = new ArrayList<String>();
-        String arg = getArgument(index);
-        while (arg != null && arg != "" && arg.length() > 0) {
-            result.add(arg.intern());
+        ArrayList<String> result = new ArrayList<>();
+        String arg = getStringArgument(index);
+        while (!StringUtil.emptyString(arg)) {
+            result.add(arg);
             index++;
-            arg = getArgument(index);
+            arg = getStringArgument(index);
         }
         if (index == start)
             return null;
         return result;
     }
-    
+
     /** ***************************************************************
      * Translate SUMO inequalities to the typical inequality symbols that
      * some theorem provers require.
@@ -1567,7 +1694,7 @@ public class Formula implements Comparable, Serializable {
         String carstr = f.car();
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
             if (carstr.equals(f.EQUANT) || carstr.equals(f.UQUANT)) {
-                String varString = f.getArgument(1);
+                String varString = f.getStringArgument(1);
                 String[] varArray = (varString.substring(1, varString.length()-1)).split(" ");
                 for (String var : varArray) {
                     quantifiedVariables.add(var);
@@ -1588,7 +1715,7 @@ public class Formula implements Comparable, Serializable {
         }
         else {
             for (int i = 0; i < f.listLength(); i++) {
-                String arg = f.getArgument(i);
+                String arg = f.getStringArgument(i);
                 if (arg.startsWith("?") || arg.startsWith("@")) {
                     if (!varFlag.containsKey(arg) && !quantifiedVariables.contains(arg)) {
                         unquantifiedVariables.add(arg);
@@ -1729,11 +1856,11 @@ public class Formula implements Comparable, Serializable {
         if (quantVarsCache.size() > 0)
             return quantVarsCache;
     	HashSet<String> resultSet = new HashSet<String>();
-    	if (listLength() < 1)
+    	if (empty())
     		return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
-    	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) { 
+    	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
         	Formula remainder = new Formula();
         	remainder.read(this.cdr());
         	if (!remainder.listP()) {
@@ -1882,7 +2009,7 @@ public class Formula implements Comparable, Serializable {
             String arg = null;
             sb.append("(");
             for (int i = 0 ; i < flen ; i++) {
-                arg = f.getArgument(i);
+                arg = f.getStringArgument(i);
                 if (i > 0)
                     sb.append(" ");
                 String func = "";
@@ -1974,7 +2101,7 @@ public class Formula implements Comparable, Serializable {
                             if (!empty(arg)) accumulator.add(arg);
                         }
                         else if (isQuantifier(arg)) {
-                            accumulator.add(f.getArgument(2));
+                            accumulator.add(f.getStringArgument(2));
                             break;
                         }
                         else if ((i == 0)
@@ -2044,7 +2171,7 @@ public class Formula implements Comparable, Serializable {
                 //System.out.println("Formula.isHigherOrder(): arg: " + arg);
                 //System.out.println("Formula.isHigherOrder(): atom: " + atom(arg));
                 //System.out.println("Formula.isHigherOrder(): isFunctional: " + kb.isFunctional(f.theFormula));
-                if (!atom(arg) && !kb.isFunctional(f.theFormula)) {
+                if (!atom(arg) && !kb.isFunctional(f)) {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
@@ -2088,6 +2215,20 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
+     * Test whether the Formula is a regular '?' variable
+     */
+    public boolean isRegularVariable() {
+        return !empty() && getFormula().startsWith(V_PREF);
+    }
+
+    /** ***************************************************************
+     * Test whether the Formula is a row variable
+     */
+    public boolean isRowVar() {
+        return !empty() && getFormula().startsWith(R_PREF);
+    }
+
+    /** ***************************************************************
      * Test whether the Formula is automatically created by caching
      */
     public boolean isCached() {
@@ -2107,7 +2248,7 @@ public class Formula implements Comparable, Serializable {
         if (this.listP()) {
             String arg0 = this.car();
             if (isQuantifier(arg0)) {
-                String arg2 = this.getArgument(2);
+                String arg2 = this.getStringArgument(2);
                 if (Formula.listP(arg2)) {
                     Formula newF = new Formula();
                     newF.read(arg2);
@@ -2166,7 +2307,7 @@ public class Formula implements Comparable, Serializable {
         String arg = null;
         int argnum = 1;
         do {
-        	arg = this.getArgument(argnum);
+        	arg = this.getStringArgument(argnum);
         	argnum++;        	
             if (listP(arg)) {
             	Formula f = new Formula(arg);
@@ -2359,7 +2500,7 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean isBinary() {
 
-        ArrayList<String> l = argumentsToArrayList(0);
+        ArrayList<String> l = argumentsToArrayListString(0);
         if (l == null)
             return false;
         return argumentsToArrayList(0).size() == 3;
@@ -2462,7 +2603,7 @@ public class Formula implements Comparable, Serializable {
 
         Formula param = new Formula();
         param.read(this.cadr());
-        ArrayList<String> existVars = param.complexArgumentsToArrayList(0);
+        ArrayList<String> existVars = param.complexArgumentsToArrayListString(0);
 
         if (existVars.size() != vars.size()) {
             throw new Exception("Wrong number of variables: " + vars + " to substitute in existentially quantified formula: " + this);
@@ -2528,6 +2669,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String format(String hyperlink, String indentChars, String eolChars) {
 
+        if (debug) System.out.println("Formula.format(): "  + this.theFormula);
         if (this.theFormula == null)
             return "";
         String result = this.theFormula;
