@@ -287,4 +287,22 @@ public class PredVarInstTest extends UnitTestBase  {
             System.out.println("PredVarInstTest.testPredVarCount(): fail");
         assertTrue(predVars.contains("?REL1") && predVars.contains("?REL2") && predVars.size() == 2);
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testArity() {
+
+        String stmt = "(termFormat EnglishLanguage WestMakianLanguage \"west makian language\")";
+        Formula f = new Formula();
+        f.read(stmt);
+        System.out.println("\n--------------------");
+        System.out.println("PredVarInstTest.testArity(): formula: " + f);
+        String hasCorrectArity = PredVarInst.hasCorrectArity(f,kb);
+        if (hasCorrectArity == null)
+            System.out.println("PredVarInstTest.testPredVarCount(): pass");
+        else
+            System.out.println("PredVarInstTest.testPredVarCount(): fail");
+        assertTrue(hasCorrectArity == null);
+    }
 }
