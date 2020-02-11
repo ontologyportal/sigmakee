@@ -178,13 +178,13 @@ public class DB {
         System.out.println("alter table " + element + " add column documentation varchar(255);");
         if (docs.size() > 0) {
             Formula f = (Formula) docs.get(0);
-            String doc = f.getArgument(4);
+            String doc = f.getStringArgument(4);
             System.out.println("insert into " + element + "(documentation) values ('" + doc + "');");
         }
         ArrayList subs = kb.askWithRestriction(0,"HasDatabaseColumn",1,element);
         for (int i = 0; i < subs.size(); i++) {
             Formula f = (Formula) subs.get(i);
-            String t = f.getArgument(2);
+            String t = f.getStringArgument(2);
             System.out.println("alter table " + element + " add column " + t + " varchar(255);");
         }
     }
@@ -201,7 +201,7 @@ public class DB {
         ArrayList composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
         for (int i = 0; i < composites.size(); i++) {
             Formula f = (Formula) composites.get(i);
-            String element = f.getArgument(1);
+            String element = f.getStringArgument(1);
             System.out.println("create table " + element + ";");
             generateDBElement(kb, element);
         }
@@ -657,7 +657,7 @@ public class DB {
                         foundFirstOne = true;
                     }
                     printF.read(StringUtil.normalizeSpaceChars(f.getFormula()));
-                    if (printF.getArgument(0).equalsIgnoreCase("contentRegexPattern"))
+                    if (printF.getStringArgument(0).equalsIgnoreCase("contentRegexPattern"))
                         printF.read(StringUtil.escapeEscapeChars(printF.getFormula()));
                     // stmt = StringUtil.removeEscapedEscapes(stmt);
                     pw.println(printF.toString());
@@ -765,11 +765,11 @@ public class DB {
                 TreeMap row = new TreeMap();
                 for (Iterator its = statements.iterator(); its.hasNext();) {
                     Formula f = (Formula) its.next();
-                    String arg1 = f.getArgument(1);
+                    String arg1 = f.getStringArgument(1);
                     if (Character.isUpperCase(arg1.charAt(0)) && !arg1.endsWith("Fn")) {
                         if (!usedRelations.contains(term))
                             usedRelations.add(term);
-                        String arg2 = f.getArgument(2);
+                        String arg2 = f.getStringArgument(2);
                         if (rows.get(f.getArgument(1)) == null) {
                             row = new TreeMap();
                             rows.put(arg1,row);
