@@ -19,6 +19,56 @@ public class RowVarTest extends UnitTestBase  {
     /** ***************************************************************
      */
     @Test
+    public void testFindRowVars() {
+
+        System.out.println("\n=========== testFindRowVars =================");
+        String stmt1 = "(links @ARGS)";
+
+        Formula f = new Formula();
+        f.read(stmt1);
+
+        RowVars.DEBUG = true;
+        HashSet<String> vars = RowVars.findRowVars(f);
+        assertTrue(vars != null && vars.size() > 0);
+        if (vars.contains("@ARGS") && vars.size() == 1)
+            System.out.println("testFindRowVars(): success!");
+        else
+            System.out.println("testFindRowVars(): failure");
+        assertTrue(vars.contains("@ARGS") && vars.size() == 1);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testRowVarRels() {
+
+        System.out.println("\n=========== testRowVarRels =================");
+        String stmt1 = "(=>\n" +
+                "  (and\n" +
+                "    (minValue links ?ARG ?N)\n" +
+                "    (links @ARGS)\n" +
+                "    (equal ?VAL\n" +
+                "      (ListOrderFn\n" +
+                "        (ListFn @ARGS) ?ARG)))\n" +
+                "  (greaterThan ?VAL ?N))";
+
+        Formula f = new Formula();
+        f.read(stmt1);
+
+        RowVars.DEBUG = true;
+        HashMap<String, HashSet<String>> rels = RowVars.getRowVarRelations(f);
+        assertTrue(rels != null && rels.keySet().size() > 0);
+        System.out.println("testRowVarRels(): rels: " + rels);
+        if (rels.get("@ARGS").contains("links"))
+            System.out.println("testRowVarRels(): success!");
+        else
+            System.out.println("testRowVarRels(): failure");
+        assertTrue(rels.get("@ARGS").contains("links"));
+    }
+
+    /** ***************************************************************
+     */
+    @Test
     public void testLinks() {
 
         System.out.println("\n=========== testLinks =================");
