@@ -310,7 +310,7 @@ public class FormulaPreprocessor {
                 //   and if ?X, ?Y are not explicitly restricted in the following statements,
                 // we need to add type restrictions for ?X, ?Y
                 sb.append(f.getArgument(1) + " ");
-                ArrayList<String> quantifiedVariables = collectVariables(f.getArgument(1));
+                ArrayList<String> quantifiedVariables = collectVariables(f.getStringArgument(1));
                 // set addSortals = true, if at least one variable is existentially quantified variable,
                 // and it is not explicitly restricted
                 boolean addSortals = false;
@@ -377,7 +377,7 @@ public class FormulaPreprocessor {
         else {
             if (debug) System.out.println("addTypeRestrictionsRecurse: here3: f: " + f);
             sb.append("(");
-            ArrayList<String> args = f.complexArgumentsToArrayList(0);
+            ArrayList<String> args = f.complexArgumentsToArrayListString(0);
             for (String s : args)
                 addTypeRestrictionsRecurse(kb, new Formula(s), sb);
             sb.append(")");
@@ -718,29 +718,32 @@ public class FormulaPreprocessor {
             int start = 1;
             if (Formula.isQuantifier(carstr))  // skip the quantified variable list
                 start = 2;
-            for (int i = start; i <= f.listLength(); i++)
-                result = mergeToMap(result,computeVariableTypesRecurse(kb,new Formula(f.getArgument(i)),input), kb);
+            for (int i = start; i <= f.listLength(); i++) {
+                Formula farg = f.getArgument(i);
+                if (farg != null)
+                    result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
+            }
         }
         else { //if (f.isSimpleClause(kb)) { // simple clauses include functions
             String pred = carstr;
             if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): simple clause ");
             if (f.getFormula().indexOf("?") > -1 && !Formula.isVariable(pred)) {
-                ArrayList<String> args = f.complexArgumentsToArrayList(1);
+                ArrayList<Formula> args = f.complexArgumentsToArrayList(1);
                 if (args == null)
                     System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() args = null found while processing: \n" + f);
                 if (pred.equals(Formula.EQUAL) && args.size() > 1) {
-                    if (Formula.isVariable(args.get(0)) && Formula.listP(args.get(1)) &&
+                    if (args.get(0).isVariable() && args.get(1).listP() &&
                             kb.isFunctional(args.get(1)))
-                        setEqualsVartype(kb, args.get(1), args.get(0),result);
-                    if (Formula.isVariable(args.get(1)) && Formula.listP(args.get(0)) &&
+                        setEqualsVartype(kb, args.get(1).getFormula(), args.get(0).getFormula(),result);
+                    if (args.get(1).isVariable() && args.get(0).listP() &&
                             kb.isFunctional(args.get(0)))
-                        setEqualsVartype(kb, args.get(0), args.get(1),result);
+                        setEqualsVartype(kb, args.get(0).getFormula(), args.get(1).getFormula(),result);
                 }
                 int argnum = 1;
-                for (String arg : args) {
+                for (Formula arg : args) {
                     if (debug) System.out.println("arg,pred,argnum: " + arg + ", " + pred + ", " + argnum +
                             "\nnewf: " + args + "\nis function?: " + kb.isFunctional(arg));
-                    if (Formula.isVariable(arg)) {
+                    if (arg.isVariable()) {
                         String cl = findType(argnum, pred, kb);
                         if (debug) System.out.println("cl: " + cl);
                         if (StringUtil.emptyString(cl)) {
@@ -749,9 +752,9 @@ public class FormulaPreprocessor {
                                         "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                         }
                         else
-                            addToMap(result, arg, cl);
+                            addToMap(result, arg.getFormula(), cl);
                     }
-                    else if (Formula.listP(arg) && kb.isFunctional(arg)) { // If formula is function then recurse.
+                    else if (arg.listP() && kb.isFunctional(arg)) { // If formula is function then recurse.
                         if (debug) System.out.println("arg is a function: " + arg);
                         result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
@@ -846,7 +849,7 @@ public class FormulaPreprocessor {
                 if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
                     if (!Formula.isLogicalOperator(pred) && !Formula.isQuantifierList(pred,previousPred))
                         prefix = "holds_";
-                    if (kb.isFunctional(f.getFormula()))
+                    if (kb.isFunctional(f))
                         prefix = "apply_";
                     if (pred.equals("holds")) {
                         pred = "";
@@ -1029,7 +1032,8 @@ public class FormulaPreprocessor {
                         else if (arg0.equals("instance")) start = 1;
                         if (start > -1) {
                             ArrayList<String> args =
-                                    new ArrayList<String>(Arrays.asList(f.getArgument(1),f.getArgument(2)));
+                                    new ArrayList<>(Arrays.asList(f.getStringArgument(1),
+                                                                  f.getStringArgument(2)));
                             int argslen = args.size();
                             String ioStr = null;
                             Formula ioF = null;
