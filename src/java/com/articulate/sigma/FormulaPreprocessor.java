@@ -141,6 +141,9 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
+     * Find all the type restrictions on the variables in a formula,
+     * including constraints from relation argument typing as well as
+     * explicitly stated types from instance and subclass expressions.
      */
     public HashMap<String,HashSet<String>> findTypeRestrictions(Formula form, KB kb) {
 
