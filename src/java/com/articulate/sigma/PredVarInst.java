@@ -213,7 +213,10 @@ public class PredVarInst {
                 System.out.println("instantiatePredVars(): pred var arity null for: " + var +
                     " in " + input);
             // 3.1 check: predVarArity should match arity of substituted relation
-            for (String rel : kb.kbCache.predicates) {
+            Collection<String> rels = kb.kbCache.predicates;
+            if (varTypes.get(var).contains("Function"))
+                rels = kb.kbCache.functions;
+            for (String rel : rels) {
                 //if (kb.isFunction(rel) || rel.endsWith("Fn")) { // can't substitute a function for where a relation is expected
                 //    if (debug) System.out.println("instantiatePredVars(): excluding function: " + rel);
                 //    continue;
@@ -430,15 +433,18 @@ public class PredVarInst {
     protected static HashMap<String, HashSet<String>> findPredVarTypes(Formula f, KB kb) {
         
         HashSet<String> predVars = gatherPredVars(kb,f);
+        if (debug) System.out.println("findPredVarTypes(): predVars: " + predVars);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);
+        //HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);  // <- this skips explicit types
+        //HashMap<String,HashSet<String>> typeMap = fp.findTypeRestrictions(f, kb);  // <- won't get instance relations
+        HashMap<String,HashSet<String>> typeMap = fp.findAllTypeRestrictions(f, kb);
+        if (debug) System.out.println("findPredVarTypes(): typeMap: " + typeMap);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
-        Iterator<String> it = predVars.iterator();
-        while (it.hasNext()) {
-            String var = it.next();
+        for (String var : predVars) {
             if (typeMap.containsKey(var))
                 result.put(var, typeMap.get(var));
         }
+        if (debug) System.out.println("findPredVarTypes(): " + result);
         return result;
     }
     
