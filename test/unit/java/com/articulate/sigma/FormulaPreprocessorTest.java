@@ -443,4 +443,32 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
             System.out.println("testTVRPreprocess(): fail");
         assertTrue(actual.size() > expectedSize);
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testFunctionVariable() {
+
+        System.out.println("\n============= testFunctionVariable ==================");
+        String stmt = "(and\n" +
+                "  (instance ?F Function)\n" +
+                "  (instance ?I (?F ?X)))";
+        Formula f = new Formula();
+        f.read(stmt);
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        PredVarInst.debug = true;
+        FormulaPreprocessor.debug = true;
+        //RowVars.DEBUG = true;
+        Set<Formula> actual = fp.preProcess(f, false, kb);
+        System.out.println("testFunctionVariable(): actual: " + actual);
+        Set<Formula> expected = Sets.newHashSet();
+        int expectedSize = 1;
+        System.out.println("testFunctionVariable(): expected: " + expectedSize);
+        if (actual.size() > expectedSize)
+            System.out.println("testFunctionVariable(): pass");
+        else
+            System.out.println("testFunctionVariable(): fail");
+        assertTrue(actual.size() > expectedSize);
+    }
 }
