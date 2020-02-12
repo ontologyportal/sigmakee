@@ -27,7 +27,7 @@ public class RowVarTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt1);
 
-        RowVars.DEBUG = true;
+        //RowVars.DEBUG = true;
         HashSet<String> vars = RowVars.findRowVars(f);
         assertTrue(vars != null && vars.size() > 0);
         if (vars.contains("@ARGS") && vars.size() == 1)
@@ -55,7 +55,7 @@ public class RowVarTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt1);
 
-        RowVars.DEBUG = true;
+        //RowVars.DEBUG = true;
         HashMap<String, HashSet<String>> rels = RowVars.getRowVarRelations(f);
         assertTrue(rels != null && rels.keySet().size() > 0);
         System.out.println("testRowVarRels(): rels: " + rels);
@@ -84,7 +84,7 @@ public class RowVarTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt1);
 
-        RowVars.DEBUG = true;
+        //RowVars.DEBUG = true;
         HashMap<String,HashSet<String>> rels = RowVars.getRowVarRelations(f);
         HashMap<String,Integer> rowVarMaxArities = RowVars.getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
         int arity = kb.kbCache.valences.get("links").intValue();
@@ -118,7 +118,7 @@ public class RowVarTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt1);
 
-        RowVars.DEBUG = true;
+        //RowVars.DEBUG = true;
         ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
         String result = results.get(0).getFormula();
         String expected = "(=>\n" +
@@ -148,7 +148,7 @@ public class RowVarTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt);
 
-        RowVars.DEBUG = true;
+        //RowVars.DEBUG = true;
         ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
         System.out.println("testRowVarExp(: input: " + stmt);
         System.out.println("testRowVarExp(): results: " + results);
