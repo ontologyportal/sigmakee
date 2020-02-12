@@ -457,8 +457,8 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        PredVarInst.debug = true;
-        FormulaPreprocessor.debug = true;
+        //PredVarInst.debug = true;
+        //FormulaPreprocessor.debug = true;
         //RowVars.DEBUG = true;
         Set<Formula> actual = fp.preProcess(f, false, kb);
         System.out.println("testFunctionVariable(): actual: " + actual);
