@@ -1774,6 +1774,7 @@ public class KB implements Serializable {
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
+            System.out.println("KB.askVampire(): processed query: " + processedStmts);
             if (!processedStmts.isEmpty()) {
                 int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
@@ -1783,15 +1784,28 @@ public class KB implements Serializable {
                 else {
                     HashSet<String> tptpquery = new HashSet<>();
                     SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                    for (Formula p : processedStmts) {
+                    StringBuffer combined = new StringBuffer();
+                    if (processedStmts.size() > 1) {
+                        combined.append("(or ");
+                        for (Formula p : processedStmts) {
+                            combined.append(p.getFormula() + " ");
+                        }
+                        combined.append(")");
                         String theTPTPstatement = "fof(query" + "_" + axiomIndex++ +
                                 ",conjecture,(" +
-                                stptp.tptpParseSUOKIFString(p.getFormula(), true) // true - it's a query
+                                stptp.tptpParseSUOKIFString(combined.toString(), true) // true - it's a query
+                                + ")).";
+                        tptpquery.add(theTPTPstatement);
+                    }
+                    else {
+                        String theTPTPstatement = "fof(query" + "_" + axiomIndex++ +
+                                ",conjecture,(" +
+                                stptp.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true) // true - it's a query
                                 + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     try {
-                        System.out.println("Vampire.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
+                        System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                         Vampire vampire = new Vampire();
                         vampire.run(this, s, timeout, tptpquery);
                         ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(vampire.output.toString(), this, fp);
@@ -1803,6 +1817,8 @@ public class KB implements Serializable {
                     //vampire.terminate();
                 }
             }
+            else
+                System.out.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
         }
         return null;
     }
