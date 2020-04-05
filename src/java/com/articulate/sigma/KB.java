@@ -592,14 +592,21 @@ public class KB implements Serializable {
             return false;
         }
         String pred = form.car();
-        //System.out.println("KB.isFunctional(): pred: " + pred);
-        //System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
+        if (debug) System.out.println("KB.isFunctional(): pred: " + pred);
+        if (debug) System.out.println("KB.isFunctional(): isFunction: " + isFunction(pred));
         if (Formula.isVariable(pred)) {
             HashSet<String> varTypes = form.getVarType(this,pred);
-            if (varTypes != null)
-                for (String s : varTypes)
-                    if (kbCache.subclassOf(s,"Function"))
-                        return false;
+            if (varTypes != null) {
+                for (String s : varTypes) {
+                    if (debug) System.out.println("KB.isFunctional(): s: " + s);
+                    if (debug) System.out.println("KB.isFunctional(): kbCache.subclassOf(s, \"Function\") " +
+                            kbCache.subclassOf(s, "Function"));
+                    if (s.equals("Function") || kbCache.subclassOf(s, "Function")) {
+                        if (debug) System.out.println("KB.isFunctional(): returning true");
+                        return true;
+                    }
+                }
+            }
         }
         if (!isFunction(pred))
             return false;
