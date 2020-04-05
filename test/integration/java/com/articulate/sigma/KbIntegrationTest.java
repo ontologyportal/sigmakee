@@ -87,4 +87,29 @@ public class KbIntegrationTest extends IntegrationTestBase {
         System.out.println("isHigherOrder: " + f.isHigherOrder(SigmaTestBase.kb));
         assertFalse(f.isHigherOrder(SigmaTestBase.kb));
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testIsHigherOrder3() {
+
+        String stmt;
+   // KB.debug = true;
+   // Formula.debug = true;
+        stmt = "(=>\n" +
+                "  (and\n" +
+                "    (instance ?F Function)\n" +
+                "    (rangeSubclass ?F ?C)\n" +
+                "    (instance ?I (?F ?X)))\n" +
+                "  (instance ?I ?C))";
+        Formula f = new Formula(stmt);
+        System.out.println("testIsHigherOrder3: " + f);
+        System.out.println("testIsHigherOrder3: results: " + f.isHigherOrder(SigmaTestBase.kb));
+        System.out.println("testIsHigherOrder3(): expected: " + false);
+        if (!f.isHigherOrder(SigmaTestBase.kb))
+            System.out.println("testIsHigherOrder3(): success!");
+        else
+            System.out.println("testIsHigherOrder3(): failure");
+        assertTrue(!f.isHigherOrder(SigmaTestBase.kb));
+    }
 }
