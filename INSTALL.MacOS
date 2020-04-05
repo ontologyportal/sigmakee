@@ -56,16 +56,19 @@ make
 make install (this step is optional, it will copy E files to /usr/local making it available for the whole system)
 cd ..
 
+mkdir ~/.sigmakee/KBs/
+cp -R ~/workspace/sumo/* ~/.sigmakee/KBs/
+mkdir ~/.sigmakee/KBs/WordNetMappings
+cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
+
 cp ../.sigmakee/config.xml $SIGMA_HOME/KBs
 (edit the config.xml changing all `~` to the value of `$HOME` and adapting all variables)
-
-
-
 
 cd ~/workspace/sigmakee
 ant
 
-Follow the steps in section "Account Management" from the README.txt below to set up accounts
+If you want to support multiple users, follow the steps in section "Account Management" from the
+README.txt below to set up accounts.  Please note however this is not working as of Apr, 2020.
 
 To test run
 
@@ -86,3 +89,5 @@ Debugging
 - If you are on mac and getting errors related to not finding jars
   when running com.articulate.sigma.KB, copy all jars from
   ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+
+Vampire theorem prover - follow instructions in the main README
