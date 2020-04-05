@@ -241,7 +241,7 @@ public class FormulaPreprocessor {
         //ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables =
         //        form.collectQuantifiedUnquantifiedVariables();
         HashSet<String> unquantifiedVariables = form.collectUnquantifiedVariables();
-        if (hasFormulaType(form,varmap))
+        if (hasFormulaType(form,varmap)) // one of the types of the variables is Formula
             form.higherOrder = true;
         // add sortals for unquantifiedVariables
         StringBuffer sb = new StringBuffer();
