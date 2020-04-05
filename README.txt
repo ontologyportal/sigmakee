@@ -246,6 +246,33 @@ again.
 from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
 
+Vampire
+==================
+If you want to use Vampire instead of or in addition to E (and can do so consistent with its
+license (https://github.com/vprover/vampire/blob/master/LICENCE), follow these instructions.
+You may need to install the Zlib library if you don't have it already installed
+
+ sudo apt-get install libz-dev
+
+and also possibly
+
+  sudo apt=get install g++
+
+then execute the following:
+
+  cd $ONTOLOGYPORTAL_GIT
+  git clone https://github.com/vprover/vampire
+  cd vampire
+  make vampire_rel
+  mv vampire_rel_master* vampire
+
+You'll then need to edit your config.xml file to point to the vampire executable.  Add the line
+
+  <preference name="vampire" value="/home/theuser/workspace/vampire/vampire" />
+
+editing the path to conform to your system
+
+
 MacOS install notes
 ===================
 
@@ -314,6 +341,8 @@ than just com.articulate.sigma.KB
 
 Account Management
 ======================
+
+Please note this is not working as of Apr, 2020.
 
 Create the account database with
 
