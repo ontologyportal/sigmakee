@@ -2150,50 +2150,62 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Test whether a Formula contains a Formula as an argument to
      * other than a logical operator.
+     * TODO: get var types in case there is a function variable, and
+     * copy that var type list down to the arguments
      */
     public boolean isHigherOrder(KB kb) {
 
         //System.out.println("Formula.isHigherOrder(): " + this);
-        if (higherOrder)
-            return true;
+        if (varTypeCache == null || varTypeCache.keySet().size() == 0) {
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            varTypeCache = fp.findAllTypeRestrictions(this,kb);
+        }
+        if (!KBmanager.getMgr().initialized)
+            return false;
+        //if (higherOrder) {
+        //    if (debug) if (debug) System.out.println("Formula.isHigherOrder(): cached as higher order: " + this);
+        //    return true;
+        //}
         if (this.listP()) {
             String pred = this.car();
-            //System.out.println("Formula.isHigherOrder(): pred: " + pred);
+            if (debug) System.out.println("Formula.isHigherOrder(): pred: " + pred);
             ArrayList sig = kb.kbCache.getSignature(pred);
-            if (sig != null && sig.contains("Formula"))
+            if (sig != null && !Formula.isVariable(pred) && sig.contains("Formula"))
                 return true;
             boolean logop = isLogicalOperator(pred);
-            //System.out.println("Formula.isHigherOrder(): logop: " + logop);
+            if (debug) System.out.println("Formula.isHigherOrder(): logop: " + logop);
             ArrayList<String> al = literalToArrayList();
             for (String arg : al) {
                 Formula f = new Formula();
                 f.read(arg);
-                //System.out.println("Formula.isHigherOrder(): arg: " + arg);
-                //System.out.println("Formula.isHigherOrder(): atom: " + atom(arg));
-                //System.out.println("Formula.isHigherOrder(): isFunctional: " + kb.isFunctional(f.theFormula));
+                f.varTypeCache = this.varTypeCache;
+                if (debug) System.out.println("Formula.isHigherOrder(): varTypeCache: " + varTypeCache);
+                if (debug) System.out.println("Formula.isHigherOrder(): arg: " + arg);
+                if (debug) System.out.println("Formula.isHigherOrder(): atom: " + atom(arg));
+                if (debug) System.out.println("Formula.isHigherOrder(): isFunctional: " + kb.isFunctional(f));
                 if (!atom(arg) && !kb.isFunctional(f)) {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
-                            //System.out.println("Formula.isHigherOrder(): is HOL: " + this);
+                            if (debug) System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                             return true;
                         }
                     }
                     else {
                         higherOrder = true;
-                        //System.out.println("Formula.isHigherOrder(): is HOL: " + this);
+                        if (debug) System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                         return true;
                     }
                 }
                 else
                     if (f.isHigherOrder(kb)) {
                         higherOrder = true;
-                        //System.out.println("Formula.isHigherOrder(): is HOL: " + this);
+                        if (debug) System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                         return true;
                     }
             }
         }
-        //System.out.println("Formula.isHigherOrder(): not HOL: " + this);
+        if (debug) System.out.println("Formula.isHigherOrder(): not HOL: " + this);
         return false;
     }
 
