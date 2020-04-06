@@ -324,6 +324,10 @@ python Interface
 
 Compile SigmaKEE then run with
 
+java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.KBmanager -p
+
+then start python
+
 user@user-machine:~/workspace/sigmakee$ python
 Python 2.7.12 (default, Nov 19 2016, 06:48:10)
 [GCC 5.4.0 20160609] on linux2
