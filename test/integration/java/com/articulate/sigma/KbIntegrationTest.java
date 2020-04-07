@@ -51,7 +51,6 @@ public class KbIntegrationTest extends IntegrationTestBase {
     public void testIsHigherOrder() {
 
         String stmt;
-
         stmt = "(=> (and (instance ?GUN Gun) (effectiveRange ?GUN ?LM) " +
                 "(distance ?GUN ?O ?LM1) (instance ?O Organism) (not (exists (?O2) " +
                 "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
@@ -67,7 +66,6 @@ public class KbIntegrationTest extends IntegrationTestBase {
     public void testIsHigherOrder2() {
 
         String stmt;
-
         stmt = "(and\n" +
                 "  (instance Tunnel1 Tunnel)\n" +
                 "  (equal ?P (AfternoonFn Tunnel))\n" +  // should be TransitFn but that's not in Merge.kif
@@ -93,10 +91,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
     @Test
     public void testIsHigherOrder3() {
 
-        String stmt;
-   // KB.debug = true;
-   // Formula.debug = true;
-        stmt = "(=>\n" +
+        String stmt = "(=>\n" +
                 "  (and\n" +
                 "    (instance ?F Function)\n" +
                 "    (rangeSubclass ?F ?C)\n" +
@@ -111,5 +106,30 @@ public class KbIntegrationTest extends IntegrationTestBase {
         else
             System.out.println("testIsHigherOrder3(): failure");
         assertTrue(!f.isHigherOrder(SigmaTestBase.kb));
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testIsHigherOrder4() {
+
+        String stmt = "(=> " +
+                "(instance ?N SCNuclearSilo) " +
+                "(hasPurpose ?N " +
+                "  (exists (?M ?W) " +
+                "    (and " +
+                "      (instance ?M Manufacture) " +
+                "      (located ?M ?N) " +
+                "      (instance ?W NuclearWeapon) " +
+                "      (result ?M ?W))))";
+        Formula f = new Formula(stmt);
+        System.out.println("testIsHigherOrder4: " + f);
+        System.out.println("testIsHigherOrder4: results: " + f.isHigherOrder(SigmaTestBase.kb));
+        System.out.println("testIsHigherOrder4(): expected: " + true);
+        if (f.isHigherOrder(SigmaTestBase.kb))
+            System.out.println("testIsHigherOrder4(): success!");
+        else
+            System.out.println("testIsHigherOrder4(): failure");
+        assertTrue(f.isHigherOrder(SigmaTestBase.kb));
     }
 }
