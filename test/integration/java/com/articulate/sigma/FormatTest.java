@@ -17,7 +17,6 @@ public class FormatTest extends IntegrationTestBase {
 
         StringBuilder problems = new StringBuilder("\n");
         for (Map.Entry<String, String> entry : phraseMap.entrySet())   {
-
             String value = entry.getValue();
             if (value.matches(".*%(p|n)\\(.*"))  {
                 problems.append("Syntax error. '").append(entry.getKey()).append("' has a p (pos) or n (neg) followed by a left paren instead of a left curly brace: '").append(value).append("'\n");
@@ -41,7 +40,6 @@ public class FormatTest extends IntegrationTestBase {
 
         StringBuilder problems = new StringBuilder("\n");
         for (Map.Entry<String, String> entry : phraseMap.entrySet()) {
-
             String value = entry.getValue();
             int leftParensCt = value.length() - value.replace("(", "").length();
             int rightParensCt = value.length() - value.replace(")", "").length();
