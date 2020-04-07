@@ -239,6 +239,10 @@ public class SUMOKBtoTPTPKB {
                             String reasoner, boolean isQuestion, PrintWriter pw) {
 
         //if (debug && pw != null) pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(5): onlyPlainFOL: " + onlyPlainFOL);
+        if (!KBmanager.initialized) {
+            System.out.println("Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed");
+            return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
+        }
         String result = null;
         PrintWriter pr = null;
         try {
