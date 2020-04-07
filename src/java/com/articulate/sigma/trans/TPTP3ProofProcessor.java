@@ -291,6 +291,7 @@ public class TPTP3ProofProcessor {
 			return null;
 		if (line.contains("\n"))
 			System.out.println("Error in TPTP3ProofProcessor.parseProofStep() carriage return in: " + line);
+		line = line.replaceAll("\n","");
 		if (line.startsWith("%")) {
 			if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep() skipping comment: " + line);
 			return null;
@@ -664,103 +665,14 @@ public class TPTP3ProofProcessor {
 		return parseProofOutput(lnr, kb);
 	}
 
-	/** ***************************************************************
-	 */
-	public static void testParseProofFile () {
-
-		KB kb = null;
-		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-		try {
-			FileReader r = new FileReader(System.getProperty("user.home") + "/Programs/E/PROVER/eltb_out.txt");
-			LineNumberReader lnr = new LineNumberReader(r);
-			tpp = parseProofOutput(lnr, kb);
-		}
-		catch (Exception ex) {
-			System.out.println(ex.getMessage());
-		}
-		System.out.println("-------------------------------------------------");
-		System.out.println(tpp.proof);
-	}
-
-	/** ***************************************************************
-	 */
-	public static void testE () {
-
-		try {
-			System.out.println("INFO in EProver.main()");
-			//KBmanager.getMgr().initializeOnce();
-			//KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-			KB kb = null;
-			System.out.println("------------- INFO in EProver.main() completed initialization--------");
-			EProver eprover = new EProver(System.getProperty("user.home") + "/Programs/E/PROVER/e_ltb_runner",
-					System.getenv("SIGMA_HOME") + "/KBs/SUMO.tptp");
-			String result = eprover.submitQuery("(subclass Patio Object)", kb);
-			StringReader sr = new StringReader(result);
-			LineNumberReader lnr = new LineNumberReader(sr);
-			TPTP3ProofProcessor tpp = parseProofOutput(lnr, kb);
-			System.out.println("-------------------------------------------------");
-			System.out.println(tpp.proof);
-			eprover.terminate();
-		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-	}
-
-	/** ***************************************************************
-	 */
-	public static void testVampire () {
-
-		try {
-			System.out.println("INFO in EProver.main()");
-			//KBmanager.getMgr().initializeOnce();
-			//KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-			KB kb = null;
-			System.out.println("------------- INFO in EProver.main() completed initialization--------");
-			EProver eprover = new EProver(System.getProperty("user.home") + "/Programs/E/PROVER/e_ltb_runner",
-					System.getenv("SIGMA_HOME") + "/KBs/SUMO.tptp");
-
-			String result = eprover.submitQuery("(subclass Patio Object)",kb);
-			//Vampire vampire = new Vampire(s, timeout, tptpquery);
-			StringReader sr = new StringReader(result);
-			LineNumberReader lnr = new LineNumberReader(sr);
-			TPTP3ProofProcessor tpp = parseProofOutput(lnr, kb);
-			System.out.println("-------------------------------------------------");
-			System.out.println(tpp.proof);
-			eprover.terminate();
-		}
-		catch (Exception e) {
-			System.out.println(e.getMessage());
-		}
-	}
-
-	/** ***************************************************************
-	 */
-	public static void testParseProofStep () {
-
-		String ps1 = "fof(c_0_5, axiom, (s__subclass(s__Artifact,s__Object)), c_0_3).";
-		String ps2 = "fof(c_0_2, negated_conjecture,(~(?[X1]:(s__subclass(X1,s__Object)&~$answer(esk1_1(X1)))))," +
-				"inference(assume_negation,[status(cth)],[inference(add_answer_literal,[status(thm)],[c_0_0, theory(answers)])])).";
-		String ps3 = "cnf(c_0_14,negated_conjecture,($false), " +
-				"inference(eval_answer_literal,[status(thm)], [inference(spm,[status(thm)],[c_0_12, c_0_13, theory(equality)]), theory(answers)]), ['proof']).";
-		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-		tpp.idTable.put("c_0_0", Integer.valueOf(0));
-		tpp.idTable.put("c_0_3", Integer.valueOf(1));
-		tpp.idTable.put("c_0_12", Integer.valueOf(2));
-		tpp.idTable.put("c_0_13", Integer.valueOf(3));
-		System.out.println(tpp.parseProofStep(ps1));
-		System.out.println();
-		System.out.println(tpp.parseProofStep(ps1));
-		System.out.println();
-		System.out.println(tpp.parseProofStep(ps3));
-	}
 
 	/** ***************************************************************
 	 */
 	public static void main (String[] args) {
 
-		//testParseProofStep();
+		//testVampire();
+		//testParseProofStep2();
 		//testParseProofFile();
-		testE();
+		//testE();
 	}
 }
