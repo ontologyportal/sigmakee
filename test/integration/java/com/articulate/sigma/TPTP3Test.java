@@ -78,14 +78,12 @@ public class TPTP3Test extends IntegrationTestBase {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
             Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
-            StringReader sr = new StringReader(vampire.toString());
-            LineNumberReader lnr = new LineNumberReader(sr);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(lnr, kb);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
             System.out.println("-------------------testVampire------------------------------");
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             System.out.println(result);
-            assertEquals(8,tpp.proof.size());
+            assertEquals(4,tpp.proof.size());
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
