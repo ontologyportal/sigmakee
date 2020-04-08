@@ -101,10 +101,10 @@ if (!role.equalsIgnoreCase("admin")) {
     int timeout = 30;
 
     if (chosenEngine == null) {
-        if (kb.eprover == null) 
-            chosenEngine = "SoTPTP";
-        else
+        if (kb.eprover != null)
             chosenEngine = "EProver";
+        else
+            chosenEngine = "Vampire";
     }
     System.out.println("INFO in AskTell.jsp: Engine: " + chosenEngine);
     if (request.getParameter("maxAnswers") != null) 
@@ -193,6 +193,7 @@ if (!role.equalsIgnoreCase("admin")) {
         tstpFormat = "";
 
     String resultEProver = null;
+    com.articulate.sigma.tp.Vampire vampire = null;
     String resultSoTPTP = null;           
     String resultLeo = null;    
 
@@ -201,6 +202,8 @@ if (!role.equalsIgnoreCase("admin")) {
 
     if (req != null && !syntaxError) {
         try {
+            if (stmt.indexOf('@') != -1)
+                throw(new IOException("Row variables not allowed in query: " + stmt));
             if (req.equalsIgnoreCase("tell")) {
                 Formula statement = new Formula(stmt);
                 System.out.println("INFO in AskTell.jsp: statement: " + stmt);
@@ -208,30 +211,25 @@ if (!role.equalsIgnoreCase("admin")) {
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("EProver")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
 		        resultEProver = kb.askEProver(stmt, timeout, maxAnswers);
 		        System.out.println("INFO in AskTell.jsp------------------------------------");
 		        System.out.println(resultEProver);
             }
+            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("Vampire")) {
+                vampire = kb.askVampire(stmt, timeout, maxAnswers);
+                System.out.println("INFO in AskTell.jsp------------------------------------");
+                System.out.println(vampire.toString());
+            }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoSine");
             }	
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoLocal")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoLocal");
             }
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoGlobal")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoGlobal");
             }	
             if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
-                if (stmt.indexOf('@') != -1)
-                    throw(new IOException("Row variables not allowed in query: " + stmt));
                 systemChosen = systemChosen.replace("%2E", ".");
                 resultSoTPTP = InterfaceTPTP.queryTPTP(stmt, timeout, maxAnswers, lineHtml,
                                                         systemChosen, location, quietFlag, 
@@ -262,6 +260,13 @@ if (!role.equalsIgnoreCase("admin")) {
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if (kb.eprover == null) { %> DISABLED <% } %> >
     EProver <BR>
+
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (chosenEngine.equals("Vampire")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'"
+    <% if (KBmanager.getMgr().getPref("vampire") == null) { %> DISABLED <% } %> >
+    Vampire <BR>
+
+<!--
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (chosenEngine.equals("LeoSine")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II with SInE (experimental)<BR>
@@ -274,9 +279,12 @@ if (!role.equalsIgnoreCase("admin")) {
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
+    -->
+
 <%
 //----System selection
 %>
+<!--
   <DIV ID="SoTPTPControl" <% if (!chosenEngine.equals("SoTPTP")) {%>style="display:none;"<%}%>>
     <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
@@ -334,6 +342,8 @@ if (!role.equalsIgnoreCase("admin")) {
     >Hyperlinked KIF
     <br>
   </DIV>
+-->
+
     <INPUT type="submit" name="request" value="Ask">
 
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
@@ -355,6 +365,19 @@ if (!role.equalsIgnoreCase("admin")) {
         	System.out.println("in AskTell.jsp: trying EProver--------------");
         	com.articulate.sigma.trans.TPTP3ProofProcessor tpp = com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(resultEProver, kb);
         	System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
+            out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+        }
+    }
+    if (chosenEngine.equals("Vampire")) {
+        if (vampire == null || vampire.output == null)
+            out.println("<font color='red'>Error.  No response from Vampire.</font>");
+        else if ((vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
+            out.println("<font color='red'>A syntax error was detected in your input.</font>");
+        else if (vampire.output != null){
+            System.out.println("in AskTell.jsp: trying Vampire--------------");
+            com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
+                com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
     }
