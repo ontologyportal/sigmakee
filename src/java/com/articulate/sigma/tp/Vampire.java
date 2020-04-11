@@ -66,9 +66,11 @@ public class Vampire {
      */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
-        String opts = "--question_answering answer_literal -av off --proof tptp -t";
+        String opts = "";
+        if (mode == ModeType.AVATAR)
+            opts = "--proof tptp -t";
         if (mode == ModeType.CASC)
-            opts = "--mode casc -t";
+            opts = "--avatar off -qa answer_literal --mode casc --proof tptp -t";
         String[] optar = opts.split(" ");
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();
