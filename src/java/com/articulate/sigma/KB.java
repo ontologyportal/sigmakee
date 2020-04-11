@@ -1831,6 +1831,22 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Return a SUMO-formatted proof string
+     */
+    public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
+
+        StringBuffer sb = new StringBuffer();
+        Vampire.mode = Vampire.ModeType.CASC;
+        Vampire vampire = askVampire(suoKifFormula,30,1);
+        TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, this);
+        String result = tpp.proof.toString().trim();
+        sb.append(result + "\n");
+        result = tpp.bindings.toString();
+        sb.append("answers: " + result + "\n");
+        return sb.toString();
+    }
+
+    /***************************************************************
      * Submits a
      * query to the inference engine. Returns a list of answers from inference
      * engine. If no proof is found, return null;
