@@ -70,13 +70,14 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    public void testVampire () {
+    public void testVampireAvatar () {
 
         try {
             System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
+            Vampire.mode = Vampire.ModeType.AVATAR;
             Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
             TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
             System.out.println("-------------------testVampire------------------------------");
@@ -84,6 +85,34 @@ public class TPTP3Test extends IntegrationTestBase {
             String result = tpp.proof.toString().trim();
             System.out.println(result);
             assertEquals(4,tpp.proof.size());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("\n\n");
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testVampireCASC () {
+
+        try {
+            System.out.println("INFO in EProver.main()");
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+            Vampire.mode = Vampire.ModeType.CASC;
+            Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            System.out.println("-------------------testVampireCASC------------------------------");
+            System.out.println(vampire.toString());
+            String result = tpp.proof.toString().trim();
+            System.out.println(result);
+            assertEquals(7,tpp.proof.size());
+            result = tpp.bindings.toString();
+            System.out.println("answers: " + result);
+            assertTrue(result.contains("Relation"));
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
