@@ -93,20 +93,25 @@ if (!role.equalsIgnoreCase("admin")) {
 
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
-    String chosenEngine = request.getParameter("inferenceEngine");
+    String inferenceEngine = request.getParameter("inferenceEngine");
+    String vampireMode = request.getParameter("vampireMode");
+    if (StringUtil.emptyString(vampireMode))
+        vampireMode = "CASC";
+    System.out.println("INFO in AskTell.jsp: inferenceEngine: " + inferenceEngine);
+    System.out.println("INFO in AskTell.jsp: vampireMode: " + vampireMode);
     boolean syntaxError = false;
     boolean english = false;
     String englishStatement = null;
     int maxAnswers = 1;
     int timeout = 30;
 
-    if (chosenEngine == null) {
+    if (inferenceEngine == null) {
         if (kb.eprover != null)
-            chosenEngine = "EProver";
+            inferenceEngine = "EProver";
         else
-            chosenEngine = "Vampire";
+            inferenceEngine = "Vampire";
     }
-    System.out.println("INFO in AskTell.jsp: Engine: " + chosenEngine);
+    System.out.println("INFO in AskTell.jsp: Engine: " + inferenceEngine);
     if (request.getParameter("maxAnswers") != null) 
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
     if (request.getParameter("timeout") != null)
@@ -210,26 +215,26 @@ if (!role.equalsIgnoreCase("admin")) {
                 String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?kb=" + kbName;
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("EProver")) {
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("EProver")) {
 		        resultEProver = kb.askEProver(stmt, timeout, maxAnswers);
 		        System.out.println("INFO in AskTell.jsp------------------------------------");
 		        System.out.println(resultEProver);
             }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("Vampire")) {
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("Vampire")) {
                 vampire = kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println(vampire.toString());
             }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoSine")) {
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoSine")) {
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoSine");
             }	
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoLocal")) {
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoLocal")) {
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoLocal");
             }
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("LeoGlobal")) {
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoGlobal")) {
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoGlobal");
             }	
-            if (req.equalsIgnoreCase("ask") && chosenEngine.equals("SoTPTP")) {
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("SoTPTP")) {
                 systemChosen = systemChosen.replace("%2E", ".");
                 resultSoTPTP = InterfaceTPTP.queryTPTP(stmt, timeout, maxAnswers, lineHtml,
                                                         systemChosen, location, quietFlag, 
@@ -256,27 +261,33 @@ if (!role.equalsIgnoreCase("admin")) {
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     Choose an inference engine:<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (chosenEngine.equals("EProver")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (inferenceEngine.equals("EProver")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if (kb.eprover == null) { %> DISABLED <% } %> >
     EProver <BR>
 
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (chosenEngine.equals("Vampire")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (inferenceEngine.equals("Vampire")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if (KBmanager.getMgr().getPref("vampire") == null) { %> DISABLED <% } %> >
-    Vampire <BR>
+    Vampire : [
+      <input type="radio" id="CASC" name="vampireMode" value="CASC"
+          <% if (vampireMode.equals("CASC")) { out.print(" CHECKED"); } %> >
+          <label>CASC mode</label>
+      <input type="radio" id="Avatar" name="vampireMode" value="Avatar"
+          <% if (vampireMode.equals("Avatar")) { out.print(" CHECKED"); } %> >
+          <label>Avatar mode</label> ]<BR>
 
 <!--
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (chosenEngine.equals("LeoSine")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (inferenceEngine.equals("LeoSine")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II with SInE (experimental)<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoLocal" <% if (chosenEngine.equals("LeoLocal")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoLocal" <% if (inferenceEngine.equals("LeoLocal")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II local (experimental)<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoGlobal" <% if (chosenEngine.equals("LeoGlobal")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoGlobal" <% if (inferenceEngine.equals("LeoGlobal")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
     LEO-II global (experimental)<BR>	
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (inferenceEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
     System on TPTP<BR>
     -->
@@ -285,7 +296,7 @@ if (!role.equalsIgnoreCase("admin")) {
 //----System selection
 %>
 <!--
-  <DIV ID="SoTPTPControl" <% if (!chosenEngine.equals("SoTPTP")) {%>style="display:none;"<%}%>>
+  <DIV ID="SoTPTPControl" <% if (!inferenceEngine.equals("SoTPTP")) {%>style="display:none;"<%}%>>
     <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
     <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
 <% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
@@ -358,7 +369,7 @@ if (!role.equalsIgnoreCase("admin")) {
         out.println("Status: ");
         out.println(status.toString());
     }
-    if (chosenEngine.equals("EProver")) {
+    if (inferenceEngine.equals("EProver")) {
         if ((resultEProver != null) && (resultEProver.indexOf("Syntax error detected") != -1))         
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else if (resultEProver != null){
@@ -368,7 +379,11 @@ if (!role.equalsIgnoreCase("admin")) {
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
     }
-    if (chosenEngine.equals("Vampire")) {
+    if (inferenceEngine.equals("Vampire")) {
+        if (vampireMode.equals("CASC"))
+            com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
+        if (vampireMode.equals("Avatar"))
+            com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
         if (vampire == null || vampire.output == null)
             out.println("<font color='red'>Error.  No response from Vampire.</font>");
         else if ((vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
@@ -381,9 +396,9 @@ if (!role.equalsIgnoreCase("admin")) {
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
     }
-    if ((chosenEngine.equals("SoTPTP")) && (resultSoTPTP != null))
+    if ((inferenceEngine.equals("SoTPTP")) && (resultSoTPTP != null))
         out.print(resultSoTPTP);
-    if (chosenEngine.equals("LeoSine") || chosenEngine.equals("LeoLocal") || chosenEngine.equals("LeoGlobal")) {
+    if (inferenceEngine.equals("LeoSine") || inferenceEngine.equals("LeoLocal") || inferenceEngine.equals("LeoGlobal")) {
         if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else 
