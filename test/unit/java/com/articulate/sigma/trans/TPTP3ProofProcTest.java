@@ -81,6 +81,7 @@ public class TPTP3ProofProcTest extends UnitTestBase {
      */
     @Test
     public void testGetPrologArgs4() {
+
         String input = "fof(f185,conjecture,(" +
                     "  ? [X15] : s__subclass(X15,s__Entity))," +
                     "  file('/home/apease/.sigmakee/KBs/temp-comb.tptp',unknown)).";
@@ -116,5 +117,41 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         System.out.println();
         tpp.idTable.put("f185", Integer.valueOf(4));
         System.out.println(tpp.parseProofStep(ps4));
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testParseAnswers () {
+
+        System.out.println("========================");
+        String label = "testParseAnswers";
+        System.out.println("TPTP3ProofProcTest: " + label);
+        System.out.println();
+        String line = "[[s__A,s__B]|_]";
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.processAnswers(line);
+        String actual = tpp.bindings.toString();
+        String expected = "[A, B]";
+        System.out.println("Actual: " + actual);
+        System.out.println("Expected: " + expected);
+        if (!StringUtil.emptyString(actual) && actual.equals(expected))
+            System.out.println(label + " : Success");
+        else
+            System.out.println(label + " : fail!");
+        assertEquals(expected, actual);
+
+        line = "% SZS answers Tuple [[s__A,s__B]|_] for temp-comb";
+        tpp = new TPTP3ProofProcessor();
+        tpp.processAnswers(line.substring(20,line.lastIndexOf(']')+1).trim());
+        actual = tpp.bindings.toString();
+        expected = "[A, B]";
+        System.out.println("Actual: " + actual);
+        System.out.println("Expected: " + expected);
+        if (!StringUtil.emptyString(actual) && actual.equals(expected))
+            System.out.println(label + " : Success");
+        else
+            System.out.println(label + " : fail!");
+        assertEquals(expected, actual);
     }
 }
