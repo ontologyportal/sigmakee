@@ -393,6 +393,24 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      */
+    public void loadKBforInference(KB kb) {
+
+        if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
+            if (KBmanager.getMgr().getPref("vampire") != null) {
+                System.out.println("KBmanager.loadKB(): loading Vampire");
+                kb.loadVampire();
+                prover = Prover.VAMPIRE;
+            }
+            else if (KBmanager.getMgr().getPref("eprover") != null) {
+                System.out.println("KBmanager.loadKB(): loading EProver");
+                kb.loadEProver();
+                prover = Prover.EPROVER;
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
     public boolean loadKB(String kbName, List<String> constituents) {
 
         KB kb = null;
@@ -429,18 +447,6 @@ public class KBmanager implements Serializable {
         kb.kbCache.buildCaches();
         kb.checkArity();
         System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
-        if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
-            if (KBmanager.getMgr().getPref("vampire") != null) {
-                System.out.println("KBmanager.loadKB(): loading Vampire");
-                kb.loadVampire();
-                prover = Prover.VAMPIRE;
-            }
-            else if (KBmanager.getMgr().getPref("eprover") != null) {
-                System.out.println("KBmanager.loadKB(): loading EProver");
-                kb.loadEProver();
-                prover = Prover.EPROVER;
-            }
-        }
         return true;
     }
 
@@ -616,8 +622,6 @@ public class KBmanager implements Serializable {
                         VerbNet.processVerbs();
                     }
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
-                    //for (KB aKB : manager.kbs.values())
-                    //    aKB.loadEProver();
                     initializing = false;
                     initialized = true;
                 }
@@ -638,6 +642,8 @@ public class KBmanager implements Serializable {
                 serialize();
                 initializing = false;
                 initialized = true;
+                for (KB kb : kbs.values())  // transform to TPTP only once all other initialization complete
+                    loadKBforInference(kb);
             }
         }
         catch (Exception ex) {
