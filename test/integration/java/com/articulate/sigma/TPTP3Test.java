@@ -44,7 +44,6 @@ public class TPTP3Test extends IntegrationTestBase {
     public void testE () {
 
         try {
-            System.out.println("INFO in EProver.main()");
             //KBmanager.getMgr().initializeOnce();
             //KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             KB kb = null;
@@ -73,14 +72,13 @@ public class TPTP3Test extends IntegrationTestBase {
     public void testVampireAvatar () {
 
         try {
-            System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
             Vampire.mode = Vampire.ModeType.AVATAR;
             Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
             TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
-            System.out.println("-------------------testVampire------------------------------");
+            System.out.println("-------------------testVampireAvatar------------------------------");
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             System.out.println(result);
@@ -98,7 +96,6 @@ public class TPTP3Test extends IntegrationTestBase {
     public void testVampireCASC () {
 
         try {
-            System.out.println("INFO in EProver.main()");
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
@@ -113,6 +110,56 @@ public class TPTP3Test extends IntegrationTestBase {
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
             assertTrue(result.contains("Relation"));
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("\n\n");
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testVampireCASCBindings () {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+            Vampire.mode = Vampire.ModeType.CASC;
+            Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            System.out.println("-------------------testVampireCASCBindings------------------------------");
+            String expected = "[Relation]";
+            System.out.println("expected: " + expected);
+            String result = tpp.bindings.toString();
+            System.out.println("Actual: " + result);
+            assertEquals(expected,result);
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+        System.out.println("\n\n");
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testVampireCASCBindings2 () {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+            Vampire.mode = Vampire.ModeType.CASC;
+            Vampire vampire = kb.askVampire("(subclass ?X ?Y)",30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            System.out.println("-------------------testVampireCASCBindings2------------------------------");
+            String expected = "[Integer, Quantity]";
+            System.out.println("expected: " + expected);
+            String result = tpp.bindings.toString();
+            System.out.println("Actual: " + result);
+            assertEquals(expected,result);
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
