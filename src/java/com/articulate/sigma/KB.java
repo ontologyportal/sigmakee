@@ -3340,8 +3340,7 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Checks for a Vampire executable, preprocesses and loads all of the constituents into
-     * it.
+     * Checks for a Vampire executable, preprocesses all of the constituents
      */
     public void loadVampire() {
 
