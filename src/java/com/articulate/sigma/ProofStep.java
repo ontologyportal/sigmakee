@@ -34,7 +34,6 @@ public class ProofStep {
      /** A String of the inference type, e.g. add_answer_literal | assume_negation | etc. */
      public String inferenceType = null;
 
-
      /** A String containing a valid KIF expression, that is the axiom 
       *  expressing the conclusion of this proof step. */
     public String axiom = null;
@@ -170,7 +169,8 @@ public class ProofStep {
         boolean firstTimeSeeFALSE = true;
         for (int i = 0; i < proofSteps.size(); i++) {
             ProofStep ps = proofSteps.get(i);
-            if (ps.formulaType != null && !ps.formulaType.equals("conjecture")) {    // conjecture is not allowed in the proof step
+            if (ps.formulaType != null &&
+                    !ps.formulaType.equals("conjecture") ) { // conjecture is not allowed in the proof step
                 if (ps.axiom.equalsIgnoreCase("FALSE")) {
                     if (firstTimeSeeFALSE) {    // only add when it is the first time to see contradiction
                         results.add(ps);
