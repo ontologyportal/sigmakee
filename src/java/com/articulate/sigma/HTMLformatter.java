@@ -126,6 +126,61 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
+     *  Create the text for a single step in a proof.
+     */
+    public static String proofTextFormat(String query, ProofStep step, String kbName, String language) {
+
+        StringBuilder result = new StringBuilder();
+        Formula f = new Formula();
+        KB kb = KBmanager.getMgr().getKB(kbName);
+        f.read(step.axiom);
+        f.read(Formula.postProcess(f.getFormula()));
+        f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
+
+        if (StringUtil.isNonEmptyString(language)) {
+            String pph = NLGUtils.htmlParaphrase(kbHref,
+                    f.getFormula(),
+                    KBmanager.getMgr().getKB(kbName).getFormatMap(language),
+                    KBmanager.getMgr().getKB(kbName).getTermFormatMap(language),
+                    kb,
+                    language);
+            if (StringUtil.emptyString(pph))
+                pph = "";
+            else {
+                pph = NLGUtils.upcaseFirstVisibleChar(pph, true, language);
+            }
+            result.append(pph);
+        }
+        else {
+            if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
+                f.read("true");                           // Change "FALSE" to "True" so it makes more sense to the user.
+                result.append("QED");
+            }
+            else
+                result.append(f.textFormat(f.getFormula()));
+            if (step.inferenceType != null && step.inferenceType.equals("assume_negation")) {
+                result.append("[Negated Query]");
+            }
+            else {
+                for (int i = 0; i < step.premises.size(); i++) {
+                    Integer stepNum = (Integer) step.premises.get(i);
+                    result.append(stepNum.toString() + " ");
+                }
+                if (step.premises.size() == 0) {
+                    if (step.formulaType != null && step.formulaType.equals("conjecture"))
+                        result.append("[Query]");
+                    else if (step.formulaRole != null)
+                        result.append(step.formulaRole);
+                    else
+                        result.append("[KB]");
+                }
+            }
+        }
+
+        return result.toString();
+    }
+
+    /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
     public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
@@ -140,15 +195,15 @@ public class HTMLformatter {
         String kbHref = HTMLformatter.createKBHref(kbName,language);
 
         if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
-            f.read("True");                           // Change "FALSE" to "True" so it makes more sense to the user.
-            result.append("<td valign=\"top\" width=\"50%\">" + "True" + "</td>");
+            f.read("true");                           // Change "FALSE" to "True" so it makes more sense to the user.
+            result.append("<td valign=\"top\" width=\"50%\">" + "QED" + "</td>");
         }
         else
             result.append("<td valign=\"top\" width=\"50%\">" + f.htmlFormat(kbHref) + "</td>");
         result.append("<td valign=\"top\" width=\"10%\">");
 
         // System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.premises);
-        if (step.inferenceType!=null && step.inferenceType.equals("assume_negation")) {
+        if (step.inferenceType != null && step.inferenceType.equals("assume_negation")) {
             result.append("[Negated Query]");
         }
         else {
