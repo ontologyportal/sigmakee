@@ -162,7 +162,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 * Remove brackets if it contains
-	 */
+
 	public static String trimBrackets (String line) {
 
 		if (line.startsWith("[") && line.endsWith("]"))
@@ -172,10 +172,10 @@ public class TPTP3ProofProcessor {
 			return null;
 		}
 	}
-
+*/
 	/** ***************************************************************
 	 * Remove parentheses if line contains a matching pair
-	 */
+
 	public static String trimParens (String line) {
 
 		if (line.indexOf("(") != -1 && line.indexOf(")") != -1) {
@@ -186,7 +186,7 @@ public class TPTP3ProofProcessor {
 			return null;
 		}
 	}
-
+*/
 	/** ***************************************************************
 	 */
 	public ArrayList<Integer> parseInferenceObject(String supportId) {
@@ -235,7 +235,8 @@ public class TPTP3ProofProcessor {
 
 		ArrayList<Integer> prems = new ArrayList<Integer>();
 		if (supportId.startsWith("[")) {
-			supportId = trimBrackets(supportId).trim();
+			//supportId = trimBrackets(supportId).trim();
+            supportId = StringUtil.removeEnclosingCharPair(supportId,1,'[',']').trim();
 			//System.out.println("Info in TPTP3ProofProcessor.parseSupports()2: " + supportId);
 			if (supportId.startsWith("inference("))
 				return parseInferenceObject(supportId);
@@ -342,7 +343,8 @@ public class TPTP3ProofProcessor {
 		//if (rest.startsWith("("))
 		//	stmnt = trimParens(rest);
 		if (stmnt.startsWith("("))
-			stmnt = trimParens(stmnt);
+            stmnt = StringUtil.removeEnclosingCharPair(stmnt,1,'(',')');
+			//stmnt = trimParens(stmnt);
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): stmnt    : " + stmnt);
 		line = line.replaceAll("\\$answer\\(","answer(");
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
@@ -380,20 +382,31 @@ public class TPTP3ProofProcessor {
 	 */
 	public void processAnswers (String line) {
 
-		String trimmed = trimBrackets(line);
+		System.out.println("INFO in processAnswers(): line: " + line);
+		//String trimmed = trimBrackets(line);
+        String trimmed = StringUtil.removeEnclosingCharPair(line,1,'[',']');
+		System.out.println("INFO in processAnswers(): trimmed: " + trimmed);
 		if (trimmed == null) {
 			System.out.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
 			return;
 		}
 		String[] answers = trimmed.split("\\|");
+		System.out.println("INFO in processAnswers(): answers: " + Arrays.toString(answers));
 		for (int i = 0; i < answers.length; i++) {
 			if (answers[i].equals("_"))
 				break;
-			String answer = trimBrackets(answers[i]);
+			//String answer = trimBrackets(answers[i]);
+            String answer = answers[i];
+			System.out.println("INFO in processAnswers(): answer: " + answer);
 			if (answer != null) {
-				String[] esks = answer.split(", ");
+				if (answer.startsWith("["))
+					answer = StringUtil.removeEnclosingCharPair(answer,1,'[',']');
+				String[] esks = answer.split(",");
 				for (String esk : esks) {
+					System.out.println("INFO in processAnswers(): esk: " + esk);
 					answer = removeEsk(esk);
+					answer = removePrefix(answer);
+					System.out.println("INFO in processAnswers(): binding: " + answer);
 					bindings.add(answer);
 				}
 			}
@@ -500,6 +513,20 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Input: s__Arc13_1
+	 * Output: Arc13_1
+	 */
+	private String removePrefix(String st) {
+
+		System.out.println("removePrefix(): " + st);
+		String tsp = Formula.termSymbolPrefix;
+		if (st.startsWith(tsp))
+			return st.substring(tsp.length(),st.length());
+		else
+			return st;
+	}
+
+	/** ***************************************************************
 	 * Print out prover's bindings
 	 */
 	public void printAnswers () {
@@ -529,7 +556,7 @@ public class TPTP3ProofProcessor {
 				}
 				if (line.indexOf("SZS answers") != -1) {
 					if (!finishAnswersTuple) {
-						tpp.processAnswers(line.substring(20).trim());
+						tpp.processAnswers(line.substring(20,line.lastIndexOf(']')+1).trim());
 						finishAnswersTuple = true;
 					}
 				}
