@@ -216,9 +216,17 @@ public class HTMLformatter {
                     result.append("[Query]");
                 else if (step.formulaRole != null)
                     result.append(step.formulaRole);
+                else if (!StringUtil.emptyString(step.inferenceType) &&
+                        !step.inferenceType.equals("input") &&
+                        !step.inferenceType.startsWith("kb_"))
+                    result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
+                else if (f.getFormula().contains("ans0"))
+                    result.append("answer literal introduction");
                 else
                     result.append("[KB]");
             }
+            else if (!StringUtil.emptyString(step.inferenceType))
+                result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
         }
         result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
