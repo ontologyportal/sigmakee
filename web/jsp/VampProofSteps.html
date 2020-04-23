@@ -1,0 +1,49 @@
+<title>Vampire Proof Steps</title>
+<h2>Vampire Proof Steps</h2>
+
+More details on these can be found in section 2.3 of a Vampire
+<a href="https://easychair.org/publications/open/1DlL">paper</a> where the numbers below
+refer to references listed at the end of the paper.<P>
+
+<ul>
+    <li>Inputs:
+    <ul>
+        <li>input: an input formula
+        <li>negated conjecture: the conjecture in negated form
+        <li>equality/theory axiom: assumed axioms not in the input
+    </ul>
+    <li>Preprocessing:
+    <ul>
+        <li>flattening, rectify, *nf transformation, skolemisation: clausification steps (see [10])
+        <li>FOOL *: elimination of FOOL elements (see [3, 4])
+        <li>equality proxy *: used to axiomatise equality (necessary for InstGen)
+        <li>definition unfolding, unused predicate definition removal, pure predicate removal:
+        eliminating function and predicate definitions and pure predicates
+        <li>predicate definition introduction, definition folding: naming subformulas (see Section 3)
+        <li>general splitting: splitting a clause by naming subclauses (see Section 3)
+        <li>inequality splitting: split a clause based on an inequality
+    </ul>
+    <li>Simplification:
+    <ul>
+        <li>duplicate literal removal, trivial inequality removal, distinct equality removal: literal removal operations
+        <li>evaluation: evaluating ground theory terms
+    </ul>
+    <li>Superposition and Resolution Calculus:
+    <ul>
+        <li>resolution
+        <li>subsumption resolution
+        <li>superposition
+        <li>equality factoring
+        <li>equality resolution
+        <li>backward/forward demodulation
+        <li>unit resulting resolution
+    </ul>
+    <li>Other:
+    <ul>
+        <li>avatar *: steps relating to AVATAR, see Sec. 5 (previously splitting *)
+        <li>extensionality resolution: a special inference step (see [2])
+        <li>instance generation: from the InstGen calculus (see [8])
+        <li>global subsumption: a useful simplification step (see [7, 8])
+    </ul>
+</ul><P>
+
