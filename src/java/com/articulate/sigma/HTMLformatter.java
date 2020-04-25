@@ -950,23 +950,36 @@ public class HTMLformatter {
     }
  
     /** *************************************************************
+     * Create HTML formatted output for a TPTP3 proof
      */    
     public static String formatTPTP3ProofResult(TPTP3ProofProcessor tpp, String stmt,
                                                 String lineHtml, String kbName, String language) {
 
     	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number steps" + tpp.proof.size());
     	StringBuffer html = new StringBuffer();
-    	for (int i = 0; i < tpp.bindings.size(); i++) {
-    		if (i != 0)
-    			html.append(lineHtml + "\n");
-    		html.append("Answer " + "\n");
-    		html.append(i+1);                
-    		html.append(". ");
-    		String term = TPTP2SUMO.transformTerm(tpp.bindings.get(i));
-            String kbHref = HTMLformatter.createKBHref(kbName,language);
-    		html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-    		html.append("<br/>");
-    	}
+    	if (tpp.bindingMap != null && tpp.bindingMap.keySet().size() > 0) { // if an answer predicate appears in the proof, use it
+            for (String s : tpp.bindingMap.keySet()) {
+                html.append("Answer " + "\n");
+                html.append(s + " = ");
+                String term = TPTP2SUMO.transformTerm(tpp.bindingMap.get(s));
+                String kbHref = HTMLformatter.createKBHref(kbName, language);
+                html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+                html.append("<br/>");
+            }
+        }
+    	else {
+            for (int i = 0; i < tpp.bindings.size(); i++) {
+                if (i != 0)
+                    html.append(lineHtml + "\n");
+                html.append("Answer " + "\n");
+                html.append(i+1);
+                html.append(". ");
+                String term = TPTP2SUMO.transformTerm(tpp.bindings.get(i));
+                String kbHref = HTMLformatter.createKBHref(kbName,language);
+                html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
+                html.append("<br/>");
+            }
+        }
     	html.append("<p><table width=\"95%\">" + "\n");
     	for (int l = 0; l < tpp.proof.size(); l++) {
     		if (l % 2 == 1)
