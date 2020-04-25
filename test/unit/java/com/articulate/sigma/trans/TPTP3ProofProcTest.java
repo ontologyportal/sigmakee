@@ -154,4 +154,63 @@ public class TPTP3ProofProcTest extends UnitTestBase {
             System.out.println(label + " : fail!");
         assertEquals(expected, actual);
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testExtractAnswerClause () {
+
+        System.out.println("========================");
+        String label = "testExtractAnswerClause";
+        String input = "(forall (?X0) (or (not (instance ?X0 Relation)) (not (ans0 ?X0))))";
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        Formula ans = tpp.extractAnswerClause(new Formula(input));
+        assertFalse(ans == null);
+        String actual = ans.toString();
+        String expected = "(ans0 ?X0)";
+        System.out.println("Actual: " + actual);
+        System.out.println("Expected: " + expected);
+        if (!StringUtil.emptyString(actual) && actual.equals(expected))
+            System.out.println(label + " : Success");
+        else
+            System.out.println(label + " : fail!");
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testProcessAnswersFromProof () {
+
+        System.out.println("========================");
+        String label = "testProcessAnswersFromProof";
+        ArrayList<String> input = new ArrayList();
+        input.add("% SZS status Theorem for temp-comb");
+        input.add("% SZS answers Tuple [[s__TransitFn__m]|_] for temp-comb");
+        input.add("% SZS output start Proof for temp-comb");
+        input.add("fof(f916,plain,( $false), inference(unit_resulting_resolution,[],[f915,f914])).");
+        input.add("fof(f914,plain,( ~ans0(s__TransitFn__m)), inference(resolution,[],[f601,f822])).");
+        input.add("fof(f822,plain,( s__instance(s__TransitFn__m,s__Relation)), inference(cnf_transformation,[],[f200])).");
+        input.add("fof(f200,axiom,( s__instance(s__TransitFn__m,s__Relation)), file('/home/apease/.sigmakee/KBs/temp-comb.tptp',kb_SUMO_200)).");
+        input.add("fof(f601,plain,( ( ! [X0] : (~s__instance(X0,s__Relation) | ~ans0(X0)) )), inference(cnf_transformation,[],[f553])).");
+        input.add("fof(f553,plain,( ! [X0] : (~s__instance(X0,s__Relation) | ~ans0(X0))), inference(ennf_transformation,[],[f395])).");
+        input.add("fof(f395,plain,( ~? [X0] : (s__instance(X0,s__Relation) & ans0(X0))), inference(rectify,[],[f394])).");
+        input.add("fof(f394,plain,( ~? [X16] : (s__instance(X16,s__Relation) & ans0(X16))), inference(answer_literal,[],[f393])).");
+        input.add("fof(f393,negated_conjecture,( ~? [X16] : s__instance(X16,s__Relation)), inference(negated_conjecture,[],[f392])).");
+        input.add("fof(f392,conjecture,( ? [X16] : s__instance(X16,s__Relation)), file('/home/apease/.sigmakee/KBs/temp-comb.tptp',query_0)).");
+        input.add("fof(f915,plain,( ( ! [X0] : (ans0(X0)) )), introduced(answer_literal,[])).");
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        tpp = tpp.parseProofOutput(input,kb);
+        tpp.processAnswersFromProof("(instance ?X Entity)");
+        String actual = tpp.bindingMap.toString();
+        String expected = "{?X=TransitFn}";
+        System.out.println("Actual: " + actual);
+        System.out.println("Expected: " + expected);
+        if (!StringUtil.emptyString(actual) && actual.equals(expected))
+            System.out.println(label + " : Success");
+        else
+            System.out.println(label + " : fail!");
+        assertEquals(expected, actual);
+    }
 }
