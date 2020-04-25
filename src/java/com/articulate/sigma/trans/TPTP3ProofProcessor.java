@@ -32,7 +32,9 @@ public class TPTP3ProofProcessor {
 
 	public static boolean debug = false;
 	public String status;
+	public String origQuery = "";
 	public ArrayList<String> bindings = new ArrayList<String>();
+	public HashMap<String,String> bindingMap = new HashMap<>();
 	public ArrayList<ProofStep> proof = new ArrayList<ProofStep>();
 
 	// a map of original ID keys and renumbered key values
@@ -227,14 +229,14 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 * Parse support / proof statements in E's response
+	 * Parse support / proof statements in the response
 	 */
 	public ArrayList<Integer> parseSupports(String supportId) {
 
-		//System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
+		if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
 
 		ArrayList<Integer> prems = new ArrayList<Integer>();
-		if (supportId.startsWith("[")) {
+		if (supportId.startsWith("[") && !supportId.equals("[]")) {
 			//supportId = trimBrackets(supportId).trim();
             supportId = StringUtil.removeEnclosingCharPair(supportId,1,'[',']').trim();
 			//System.out.println("Info in TPTP3ProofProcessor.parseSupports()2: " + supportId);
@@ -382,34 +384,103 @@ public class TPTP3ProofProcessor {
 	 */
 	public void processAnswers (String line) {
 
-		System.out.println("INFO in processAnswers(): line: " + line);
+		if (debug) System.out.println("INFO in processAnswers(): line: " + line);
 		//String trimmed = trimBrackets(line);
         String trimmed = StringUtil.removeEnclosingCharPair(line,1,'[',']');
-		System.out.println("INFO in processAnswers(): trimmed: " + trimmed);
+		if (debug) System.out.println("INFO in processAnswers(): trimmed: " + trimmed);
 		if (trimmed == null) {
 			System.out.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
 			return;
 		}
 		String[] answers = trimmed.split("\\|");
-		System.out.println("INFO in processAnswers(): answers: " + Arrays.toString(answers));
+		if (debug) System.out.println("INFO in processAnswers(): answers: " + Arrays.toString(answers));
 		for (int i = 0; i < answers.length; i++) {
 			if (answers[i].equals("_"))
 				break;
 			//String answer = trimBrackets(answers[i]);
             String answer = answers[i];
-			System.out.println("INFO in processAnswers(): answer: " + answer);
+			if (debug) System.out.println("INFO in processAnswers(): answer: " + answer);
 			if (answer != null) {
 				if (answer.startsWith("["))
 					answer = StringUtil.removeEnclosingCharPair(answer,1,'[',']');
 				String[] esks = answer.split(",");
 				for (String esk : esks) {
-					System.out.println("INFO in processAnswers(): esk: " + esk);
+					if (debug) System.out.println("INFO in processAnswers(): esk: " + esk);
 					answer = removeEsk(esk);
 					answer = removePrefix(answer);
-					System.out.println("INFO in processAnswers(): binding: " + answer);
+					if (debug) System.out.println("INFO in processAnswers(): binding: " + answer);
 					bindings.add(answer);
 				}
 			}
+		}
+	}
+
+	/** ***************************************************************
+	 * Return the answer clause, or null if not present
+	 */
+	public Formula extractAnswerClause(Formula ax) {
+
+		if (debug) System.out.println("extractAnswerClause(): " + ax.getFormula());
+		if (!ax.listP())
+			return null;
+		String pred = ax.car();
+		if (debug) System.out.println("extractAnswerClause(): pred: " + pred);
+		if (Formula.atom(pred)) {
+			if (pred.equals("ans0"))
+				return ax;
+		}
+		else {
+			Formula predF = extractAnswerClause(ax.carAsFormula());
+			if (debug) System.out.println("extractAnswerClause(): predF: " + predF);
+			if (predF != null)
+				return predF;
+		}
+		ArrayList<Formula> args = ax.complexArgumentsToArrayList(1);
+		if (debug) System.out.println("extractAnswerClause(): args: " + args);
+
+		if (args == null)
+			return null;
+		if (debug) System.out.println("extractAnswerClause(): args size: " + args.size());
+		for (Formula f : args) {
+			if (debug) System.out.println("extractAnswerClause(): check arg: " + f);
+			Formula argF = extractAnswerClause(f);
+			if (debug) System.out.println("extractAnswerClause(): argF: " + argF);
+			if (argF != null)
+				return argF;
+			else
+				if (debug) System.out.println("extractAnswerClause(): returns null for check arg: " + argF);
+		}
+		return null;
+	}
+
+	/** ***************************************************************
+	 * Return bindings from TPTP3 proof
+	 */
+	public void processAnswersFromProof(String query) {
+
+		Formula qform = new Formula(query);
+		ArrayList<String> answers = null;
+		ArrayList<String> vars = qform.collectAllVariablesOrdered();
+		if (debug) System.out.println("processAnswersFromProof(): vars: " + vars);
+		if (debug) System.out.println("processAnswersFromProof(): proof: " + proof);
+		for (ProofStep ps : proof) {
+			if (debug) System.out.println("processAnswersFromProof(): ps: " + ps);
+			if (ps != null && !StringUtil.emptyString(ps.axiom) &&
+					ps.axiom.contains("ans0") && !ps.axiom.contains("?")) {
+				if (debug) System.out.println("processAnswersFromProof(): has ans clause: " + ps);
+				Formula answerClause = extractAnswerClause(new Formula(ps.axiom));
+				if (debug) System.out.println("processAnswersFromProof(): answerClause: " + answerClause);
+				answers = answerClause.argumentsToArrayListString(1);
+				if (debug) System.out.println("processAnswersFromProof(): answers: " + answers);
+				break;
+			}
+		}
+		if (answers == null || vars.size() != answers.size()) {
+			if (debug) System.out.println("Error in processAnswersFromProof(): null result");
+			return;
+		}
+		for (int i = 0; i < vars.size(); i++) {
+			bindingMap.put(vars.get(i),answers.get(i));
 		}
 	}
 
@@ -637,7 +708,7 @@ public class TPTP3ProofProcessor {
                         ProofStep ps = tpp.parseProofStep(line);
                         if (ps != null) {
                             tpp.proof.add(ps);
-                            if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(2): adding line: " +
+							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(2): adding line: " +
 									line + "\nas " + ps);
                         }
                     }
@@ -692,11 +763,23 @@ public class TPTP3ProofProcessor {
 		return parseProofOutput(lnr, kb);
 	}
 
+	/** ***************************************************************
+	 */
+	public static void testExtractAnswerClause () {
+
+		System.out.println("========================");
+		String label = "testExtractAnswerClause";
+		String input = "(forall (?X0) (or (not (instance ?X0 Relation)) (not (ans0 ?X0))))";
+		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+		Formula ans = tpp.extractAnswerClause(new Formula(input));
+		System.out.println("result: " + ans);
+	}
 
 	/** ***************************************************************
 	 */
 	public static void main (String[] args) {
 
+		testExtractAnswerClause();
 		//testVampire();
 		//testParseProofStep2();
 		//testParseProofFile();
