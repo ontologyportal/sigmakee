@@ -1807,7 +1807,42 @@ public class Formula implements Comparable, Serializable {
         allVarsCache.addAll(resultSet);
     	return resultSet;
     }
-   
+
+    /** ***************************************************************
+     * Collects all variables in this Formula in lexical order.  Returns an ArrayList
+     * of String variable names (with initial '?'). Note that unlike
+     * collectAllVariables() this is not cached and therefore potentially much
+     * slower, although it does fill the cache of variable names so using
+     * this method first, will make calls to collectAllVariables() fast
+     * if that method is called on the same formula after this method is called.
+     *
+     * @return An ArrayList of String variable names
+     */
+    public ArrayList<String> collectAllVariablesOrdered() {
+
+        ArrayList<String> result = new ArrayList<String>();
+        if (listLength() < 1)
+            return result;
+        Formula fcar = new Formula();
+        fcar.read(this.car());
+        if (fcar.isVariable())
+            result.add(fcar.theFormula);
+        else {
+            if (fcar.listP())
+                result.addAll(fcar.collectAllVariablesOrdered());
+        }
+        Formula fcdr = new Formula();
+        fcdr.read(this.cdr());
+        if (fcdr.isVariable())
+            result.add(fcdr.theFormula);
+        else {
+            if (fcdr.listP())
+                result.addAll(fcdr.collectAllVariablesOrdered());
+        }
+        allVarsCache.addAll(result);
+        return result;
+    }
+
     /** ***************************************************************
      * Collects all quantified variables in this Formula.  Returns an ArrayList
      * of String variable names (with initial '?').  Note that 
@@ -2155,7 +2190,7 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean isHigherOrder(KB kb) {
 
-        //System.out.println("Formula.isHigherOrder(): " + this);
+        System.out.println("Formula.isHigherOrder(): " + this);
         if (varTypeCache == null || varTypeCache.keySet().size() == 0) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             varTypeCache = fp.findAllTypeRestrictions(this,kb);
