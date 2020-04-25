@@ -221,6 +221,10 @@ if (!role.equalsIgnoreCase("admin")) {
 		        System.out.println(resultEProver);
             }
             if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("Vampire")) {
+                if (vampireMode.equals("CASC"))
+                    com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
+                if (vampireMode.equals("Avatar"))
+                    com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
                 vampire = kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println(vampire.toString());
@@ -392,6 +396,7 @@ if (!role.equalsIgnoreCase("admin")) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
                 com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            tpp.processAnswersFromProof(stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
