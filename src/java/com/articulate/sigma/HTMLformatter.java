@@ -138,7 +138,7 @@ public class HTMLformatter {
         f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
 
         if (StringUtil.isNonEmptyString(language)) {
-            String pph = NLGUtils.htmlParaphrase(kbHref,
+            String pph = NLGUtils.htmlParaphrase("",
                     f.getFormula(),
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
                     KBmanager.getMgr().getKB(kbName).getTermFormatMap(language),
@@ -218,8 +218,13 @@ public class HTMLformatter {
                     result.append(step.formulaRole);
                 else if (!StringUtil.emptyString(step.inferenceType) &&
                         !step.inferenceType.equals("input") &&
-                        !step.inferenceType.startsWith("kb_"))
-                    result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
+                        !step.inferenceType.startsWith("kb_")) {
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
+                        result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
+                    else
+                        result.append("[" + step.inferenceType + "]");
+                }
+
                 else if (f.getFormula().contains("ans0"))
                     result.append("answer literal introduction");
                 else
