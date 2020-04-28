@@ -28,8 +28,9 @@ public class EProver {
     private Process _eprover;
     private BufferedReader _reader; 
     private BufferedWriter _writer;
-    private static String __dummyKBdir;
+    private static String kbdir;
     private static int axiomIndex = 0;
+    public ArrayList<String> output = new ArrayList<>();
 
     /** *************************************************************
      * Create a new batch specification file.
@@ -46,7 +47,7 @@ public class EProver {
 
     	try {
             System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
-            File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
+            File initFile = new File(kbdir, "EBatchConfig.txt");
             PrintWriter pw = new PrintWriter(initFile);
     
             pw.println("% SZS start BatchConfiguration");
@@ -80,7 +81,7 @@ public class EProver {
      *  */
     public static void addBatchConfig(String inputFilename, int timeout) {
 
-        File initFile = new File(__dummyKBdir, "EBatchConfig.txt");
+        File initFile = new File(kbdir, "EBatchConfig.txt");
         HashSet<String> ebatchfiles = new HashSet<>();
         if (inputFilename != null && !inputFilename.isEmpty())
             ebatchfiles.add(inputFilename);
@@ -110,7 +111,7 @@ public class EProver {
             System.out.println(e.getMessage());
         }
 
-        // write existed TPTP files and new tptp files (inputFilename) into EBatching.txt
+        // write existing TPTP files and new tptp files (inputFilename) into EBatchConfig.txt
         try {
             PrintWriter pw = new PrintWriter(initFile);
             pw.println("% SZS start BatchConfiguration");
@@ -152,13 +153,10 @@ public class EProver {
 
         if (this._eprover != null)
             this.terminate();
-
+        kbdir = KBmanager.getMgr().getPref("kbDir");
         writeBatchConfig(kbFile, 60);
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
-
-        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
-              
         // To make sigma work on windows. 
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
         String eproverPath = null;
@@ -169,7 +167,7 @@ public class EProver {
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
 
         System.out.println("EProver(): command: " + commands);
@@ -194,7 +192,7 @@ public class EProver {
         if (this._eprover != null)
             this.terminate();
 
-        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        kbdir = KBmanager.getMgr().getPref("kbDir");
 
         // To make sigma work on windows
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
@@ -207,7 +205,7 @@ public class EProver {
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
 
         System.out.println("EProver(): command: " + commands);
@@ -233,7 +231,7 @@ public class EProver {
 
         if (this._eprover != null)
             this.terminate();
-        __dummyKBdir = KBmanager.getMgr().getPref("kbDir");
+        kbdir = KBmanager.getMgr().getPref("kbDir");
         // To make sigma work on windows
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
         String eproverPath = null;
@@ -245,9 +243,9 @@ public class EProver {
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         //ArrayList<String> commands = new ArrayList<>(Arrays.asList(
         //        executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-        //        eproverPath));
+       //        eproverPath));
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
+                executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
@@ -269,6 +267,7 @@ public class EProver {
 
         System.out.println("EProver.assertFormula(1): process: " + _eprover);
         String result = "";
+        output = new ArrayList<String>();
         try {
             String assertion = "";
             _writer.write(assertion);
@@ -282,6 +281,7 @@ public class EProver {
                     throw new IOException(line);
                 System.out.println("INFO EProver(): Response: " + line);
                 result += line + "\n";
+                output.add(line);
                 if (line.indexOf("# Processing finished") != -1)
                     break;
             } while (line != null);
@@ -406,13 +406,14 @@ public class EProver {
             System.out.println("\nINFO in EProver.submitQuery() write: go.");
             _writer.write("go.\n");
             _writer.flush();
-
+            output = new ArrayList<>();
             String line = _reader.readLine();
             System.out.println("INFO in EProver.submitQuery(1): line: " + line);
             line = _reader.readLine();
             System.out.println("INFO in EProver.submitQuery(1): line: " + line);
             boolean inProof = false;
             while (line != null) {
+                output.add(line);
                 if (line.indexOf("# SZS status") != -1)
                     inProof = true;
                 if (inProof) {
@@ -457,9 +458,10 @@ public class EProver {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("------------- INFO in EProver.main() completed initialization--------");
-            EProver eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"),
+            EProver eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
                     KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
-            System.out.println(eprover.submitQuery("(subclass ?X Object)",kb));
+            System.out.println("------------- INFO in EProver.main() completed init of E --------");
+            System.out.println("Result: " + eprover.submitQuery("(subclass ?X Object)",kb));
             eprover.terminate();
         } 
         catch (Exception e) {
