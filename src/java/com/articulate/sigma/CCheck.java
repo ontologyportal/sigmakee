@@ -188,7 +188,7 @@ public class CCheck implements Runnable {
         KB empty = KBmanager.getMgr().getKB(ccheck_kb);
 
         try { // Fails elsewhere if no constituents, or empty constituent, thus...
-            empty.eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+            empty.eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
             fwriter = new FileWriter( emptyCFile );
             pwriter = new PrintWriter(fwriter);   
             pwriter.println("(instance instance BinaryPredicate)\n");
