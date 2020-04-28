@@ -255,6 +255,7 @@ public class PredVarInst {
                         if (debug) System.out.println("instantiatePredVars(): replacing: " + var + " with " + rel);
                         Formula f = input.deepCopy();
                         f = f.replaceVar(var, rel);
+                        if (debug) System.out.println("instantiatePredVars(): replaced: " + f);
                         Formula f2 = input.deepCopy();
                         f2.read(f.getFormula());
                         result.add(f);
