@@ -662,11 +662,11 @@ public class TPTP3ProofProcessor {
      */
     public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, KB kb) {
 
-		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): before reverse: " +
-				lines);
-    	lines = joinNreverseInputLines(lines);
-		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): after reverse: " +
-				lines);
+		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): before reverse: " +
+		//		lines);
+    	//lines = joinNreverseInputLines(lines);
+		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): after reverse: " +
+		//		lines);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         try {
             boolean inProof = false;
