@@ -46,7 +46,7 @@ public class KBmanager implements Serializable {
 
     public static final List<String> configKeys =
             Arrays.asList("sumokbname", "testOutputDir", "TPTPDisplay", "semRewrite",
-                    "inferenceEngine", "inferenceTestDir", "baseDir", "hostname",
+                    "eprover", "inferenceTestDir", "baseDir", "hostname",
                     "logLevel", "systemsDir", "dbUser", "loadFresh", "userBrowserLimit",
                     "adminBrowserLimit", "https", "graphWidth", "overwrite", "typePrefix",
                     "graphDir", "nlpTools","TPTP","cache","editorCommand","graphVizDir",
@@ -56,7 +56,7 @@ public class KBmanager implements Serializable {
                     "reportDup", "reportFnError", "verbnet", "jedit", "editdir", "termFormats");
 
     public static final List<String> fileKeys =
-            Arrays.asList("testOutputDir", "inferenceEngine", "inferenceTestDir", "baseDir",
+            Arrays.asList("testOutputDir", "eprover", "inferenceTestDir", "baseDir",
                     "systemsDir","graphVizDir", "kbDir", "celtdir", "tptpHomeDir", "logDir",
                     "englishPCFG");
 
