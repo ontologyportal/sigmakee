@@ -251,6 +251,8 @@ public class FormulaPreprocessor {
             HashSet<String> types = varmap.get(unquantifiedV);
             if (types != null && !types.isEmpty()) {
                 for (String t : types) {
+                    if (StringUtil.emptyString(t))
+                        continue;
                     if (begin) {
                         sb.append("(=> \n  (and \n");  // TODO: need test for singular list
                         begin = false;
@@ -341,6 +343,8 @@ public class FormulaPreprocessor {
                     HashSet<String> types = varmap.get(existentiallyQV);
                     if (types != null && !types.isEmpty()) {
                         for (String t : types) {
+                            if (StringUtil.emptyString(t))
+                                continue;
                             if (!t.endsWith("+")) {
                                 if (!t.equals("Entity"))
                                     sb.append(" (instance " + existentiallyQV + " " + t + ") ");
