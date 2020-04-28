@@ -105,6 +105,11 @@ if (!role.equalsIgnoreCase("admin")) {
     int maxAnswers = 1;
     int timeout = 30;
 
+    String eproverExec = KBmanager.getMgr().getPref("eprover");
+    String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
+    File ep = new File(eproverExec);
+    if (kb.eprover == null && ep.exists())
+        kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec,tptpFile);
     if (inferenceEngine == null) {
         if (kb.eprover != null)
             inferenceEngine = "EProver";
@@ -197,7 +202,7 @@ if (!role.equalsIgnoreCase("admin")) {
     if (tstpFormat == null) 
         tstpFormat = "";
 
-    String resultEProver = null;
+    com.articulate.sigma.tp.EProver eProver = null;
     com.articulate.sigma.tp.Vampire vampire = null;
     String resultSoTPTP = null;           
     String resultLeo = null;    
@@ -216,9 +221,9 @@ if (!role.equalsIgnoreCase("admin")) {
                 status.append(kb.tell(stmt) + "<P>\n" + statement.htmlFormat(kbHref));
             }
             if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("EProver")) {
-		        resultEProver = kb.askEProver(stmt, timeout, maxAnswers);
+		        eProver = kb.askEProver(stmt, timeout, maxAnswers);
 		        System.out.println("INFO in AskTell.jsp------------------------------------");
-		        System.out.println(resultEProver);
+		        System.out.println("EProver output: " + eProver.output);
             }
             if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("Vampire")) {
                 if (vampireMode.equals("CASC"))
@@ -227,7 +232,7 @@ if (!role.equalsIgnoreCase("admin")) {
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
                 vampire = kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
-                System.out.println(vampire.toString());
+                System.out.println("Vampire output: " + vampire.toString());
             }
             if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoSine")) {
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoSine");
@@ -374,13 +379,18 @@ if (!role.equalsIgnoreCase("admin")) {
         out.println(status.toString());
     }
     if (inferenceEngine.equals("EProver")) {
-        if ((resultEProver != null) && (resultEProver.indexOf("Syntax error detected") != -1))         
+        if ((eProver != null) && (eProver.output.contains("Syntax error detected")))
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else if (resultEProver != null){
-        	System.out.println("in AskTell.jsp: trying EProver--------------");
-        	com.articulate.sigma.trans.TPTP3ProofProcessor tpp = com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(resultEProver, kb);
-        	System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
+        else if (eProver != null) {
+        	System.out.println("in AskTell.jsp: parsing EProver results--------------");
+        	System.out.println("output size: " + eProver.output.size());
+        	com.articulate.sigma.trans.TPTP3ProofProcessor tpp = com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(eProver.output, kb);
+        	System.out.println("in AskTell.jsp: HTML format results --------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+            System.out.println("in AskTell.jsp: EProver status: " + tpp.status);
+            if (!StringUtil.emptyString(tpp.status))
+                out.println("Status: " + tpp.status);
+            //out.println("Output: " + eProver.output);
         }
     }
     if (inferenceEngine.equals("Vampire")) {
@@ -392,7 +402,7 @@ if (!role.equalsIgnoreCase("admin")) {
             out.println("<font color='red'>Error.  No response from Vampire.</font>");
         else if ((vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else if (vampire.output != null){
+        else if (vampire.output != null) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
                 com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
