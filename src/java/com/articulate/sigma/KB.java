@@ -1635,7 +1635,7 @@ public class KB implements Serializable {
                         // 6. Add the new tptp file into EBatching.txt
                         eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60);
                         // 7. Reload eprover
-                        eprover = new EProver(mgr.getPref("inferenceEngine"));
+                        eprover = new EProver(mgr.getPref("eprover"));
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                         System.out.println("KB.tell: using vampire");
@@ -1689,7 +1689,7 @@ public class KB implements Serializable {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     eprover.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
                 }
                 catch (IOException e) {
                     e.printStackTrace();
@@ -1721,14 +1721,8 @@ public class KB implements Serializable {
      *                      engine should return.
      * @return A String indicating the status of the ask operation.
      */
-    public String askEProver(String suoKifFormula, int timeout, int maxAnswers) {
+    public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
-        String result = "";
-        // Start by assuming that the ask is futile.
-        result = ("<queryResponse>" + System.getProperty("line.separator")
-                + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
-                + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator") + "</queryResponse>"
-                + System.getProperty("line.separator"));
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
@@ -1736,23 +1730,23 @@ public class KB implements Serializable {
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
                 String strQuery = processedStmts.iterator().next().getFormula();
-                result = this.eprover.submitQuery(strQuery, this);
+                this.eprover.submitQuery(strQuery, this);
             }
 
             if (!processedStmts.isEmpty() && this.eprover != null) {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     eprover.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"), maxAnswers < 1 ? 1 : maxAnswers);
+                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"), maxAnswers < 1 ? 1 : maxAnswers);
                 }
                 catch (IOException e) {
                     e.printStackTrace();
                 }
                 String strQuery = processedStmts.iterator().next().getFormula();
-                result = this.eprover.submitQuery(strQuery, this);
+                this.eprover.submitQuery(strQuery, this);
             }
         }
-        return result;
+        return this.eprover;
     }
 
     /***************************************************************
@@ -1770,12 +1764,6 @@ public class KB implements Serializable {
      */
     public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers) {
 
-        String result = "";
-        // Start by assuming that the ask is futile.
-        result = ("<queryResponse>" + System.getProperty("line.separator")
-                + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
-                + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator") + "</queryResponse>"
-                + System.getProperty("line.separator"));
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
@@ -1815,7 +1803,6 @@ public class KB implements Serializable {
                         System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                         Vampire vampire = new Vampire();
                         vampire.run(this, s, timeout, tptpquery);
-                        ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(vampire.output.toString(), this, fp);
                         return vampire;
                     }
                     catch (Exception e) {
@@ -1868,7 +1855,7 @@ public class KB implements Serializable {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     eprover.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("inferenceEngine"));
+                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
                 }
                 catch (IOException e) {
                     e.printStackTrace();
@@ -3270,7 +3257,7 @@ public class KB implements Serializable {
         PrintWriter pw = null;
         String filename = null;
         try {
-            String inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
+            String inferenceEngine = KBmanager.getMgr().getPref("eprover");
             if (StringUtil.isNonEmptyString(inferenceEngine)) {
                 File executable = new File(inferenceEngine);
                 if (executable.exists()) {
@@ -3402,8 +3389,8 @@ public class KB implements Serializable {
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 System.out.println("INFO in KB.loadEProver(): generating TPTP file");
                 skb.writeFile(tptpFilename, true);
-                if (StringUtil.isNonEmptyString(mgr.getPref("inferenceEngine")))
-                    eprover = new EProver(mgr.getPref("inferenceEngine"), tptpFilename);
+                if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
+                    eprover = new EProver(mgr.getPref("eprover"), tptpFilename);
             }
         }
         catch (Exception e) {
