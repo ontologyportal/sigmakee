@@ -384,7 +384,7 @@ public class SUMOformulaToTPTPformula {
             }
             else
                 return "(" + processRecurse(new Formula(args.get(0))) + " => " +
-                        processRecurse(new Formula(args.get(1))) + ")";
+                        "(" + processRecurse(new Formula(args.get(1))) + "))";
         }
         if (op.equals("<=>")) {
             if (args.size() < 2) {
