@@ -1723,6 +1723,15 @@ public class KB implements Serializable {
      */
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
+        try {
+            if (this.eprover == null)
+                this.eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
+                        System.getenv("SIGMA_HOME") + "/KBs/" + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
