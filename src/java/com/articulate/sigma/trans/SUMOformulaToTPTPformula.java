@@ -382,9 +382,14 @@ public class SUMOformulaToTPTPformula {
                 System.out.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
-            else
-                return "(" + processRecurse(new Formula(args.get(0))) + " => " +
+            else {
+                if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
+                    return "(" + processRecurse(new Formula(args.get(0))) + " => " +
                         "(" + processRecurse(new Formula(args.get(1))) + "))";
+                else
+                    return "(" + processRecurse(new Formula(args.get(0))) + " => " +
+                            processRecurse(new Formula(args.get(1))) + ")";
+            }
         }
         if (op.equals("<=>")) {
             if (args.size() < 2) {
