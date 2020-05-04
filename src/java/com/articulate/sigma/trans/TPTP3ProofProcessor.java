@@ -58,6 +58,32 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Join TPTP3 proof statements that are formatted over multiple lines. Note
+	 * that comment lines are left unchanged.
+	 */
+	public static ArrayList<String> joinLines (ArrayList<String> inputs) {
+
+		ArrayList<String> outputs = new ArrayList<String>();
+		StringBuffer sb = new StringBuffer();
+		boolean before = true;
+		for (String s : inputs) {
+			if (s.trim().startsWith("%")) {
+				sb = new StringBuffer();
+				outputs.add(s.trim());
+			}
+			else if (s.trim().endsWith(").")) {
+				before = false;
+				sb.append(s);
+				outputs.add(sb.toString());
+				sb = new StringBuffer();
+			}
+			else
+				sb.append(s.trim());
+		}
+		return outputs;
+	}
+
+	/** ***************************************************************
 	 * Join TPTP3 proof statements that are formatted over multiple lines and
 	 * reverse them for Vampire, which presents proofs in reverse order. Note
 	 * that comment lines are left unchanged.
@@ -290,11 +316,13 @@ public class TPTP3ProofProcessor {
 	 */
 	public ProofStep parseProofStep (String line) {
 
+		//System.out.println("parseProofStep() last char: " + line.charAt(line.length()-1));
+		//System.out.println("parseProofStep() second to last char: " + line.charAt(line.length()-2));
 		if (StringUtil.emptyString(line))
 			return null;
-		if (line.contains("\n"))
-			System.out.println("Error in TPTP3ProofProcessor.parseProofStep() carriage return in: " + line);
-		line = line.replaceAll("\n","");
+		if (line.contains(System.lineSeparator()))
+			System.out.println("warning in TPTP3ProofProcessor.parseProofStep() carriage return in: " + line);
+		line = line.replaceAll(System.lineSeparator(),"");
 		if (line.startsWith("%")) {
 			if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep() skipping comment: " + line);
 			return null;
@@ -667,6 +695,7 @@ public class TPTP3ProofProcessor {
     	//lines = joinNreverseInputLines(lines);
 		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): after reverse: " +
 		//		lines);
+		lines = joinLines(lines);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         try {
             boolean inProof = false;
