@@ -13,7 +13,7 @@ import java.io.StringReader;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class TPTP3Test extends IntegrationTestBase {
+public class TPTP3Test extends UnitTestBase {
 
     /** ***************************************************************
      */
@@ -32,7 +32,11 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println(ex.getMessage());
         }
         String result = tpp.proof.toString().trim();
-        System.out.println(result);
+        System.out.println("Result: " + result);
+        if (!StringUtil.emptyString(result) && (tpp.proof.size() == 22))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
         assertTrue(!StringUtil.emptyString(result));
         assertEquals(tpp.proof.size(),22);
         System.out.println("\n\n");
@@ -62,6 +66,10 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println("BindingsMap: " + tpp.bindingMap);
             System.out.println("Bindings: " + tpp.bindings);
             System.out.println("Status: " + tpp.status);
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 6))
+                System.out.println("Success");
+            else
+                System.out.println("FAIL");
             assertTrue(!StringUtil.emptyString(result));
             assertEquals(6,tpp.proof.size());
             eprover.terminate();
@@ -86,8 +94,12 @@ public class TPTP3Test extends IntegrationTestBase {
             TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
-            System.out.println(result);
-            assertEquals(4,tpp.proof.size());
+            System.out.println("Result: " + result);
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 7))
+                System.out.println("Success");
+            else
+                System.out.println("FAIL");
+            assertEquals(7,tpp.proof.size());
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -109,10 +121,19 @@ public class TPTP3Test extends IntegrationTestBase {
             TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
-            System.out.println(result);
-            assertEquals(7,tpp.proof.size());
+            System.out.println("Result: " + result);
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 10))
+                System.out.println("Success");
+            else
+                System.out.println("FAIL");
+            assertEquals(10,tpp.proof.size());
+
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
+            if (!StringUtil.emptyString(result) && result.contains("Relation"))
+                System.out.println("Success");
+            else
+                System.out.println("FAIL");
             assertTrue(result.contains("Relation"));
         }
         catch (Exception e) {
@@ -137,6 +158,10 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
+            if (!StringUtil.emptyString(result) && expected.equals(result))
+                System.out.println("Success");
+            else
+                System.out.println("FAIL");
             assertEquals(expected,result);
         }
         catch (Exception e) {
@@ -159,10 +184,14 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire vampire = kb.askVampire("(subclass ?X ?Y)",30,1);
             TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
 
-            String expected = "[Relation, Entity]";
+            String expected = "[Integer, Quantity]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
+            if (!StringUtil.emptyString(result) && expected.equals(result))
+                System.out.println("Success");
+            else
+                System.out.println("FAIL");
             assertEquals(expected,result);
         }
         catch (Exception e) {
@@ -201,13 +230,21 @@ public class TPTP3Test extends IntegrationTestBase {
                 "        (answer\n" +
                 "          (?X1)))))) [0] assume_negation";
         result = tpp.parseProofStep(ps2).toString().trim();
-        System.out.println(result);
+        System.out.println("Result: " + result);
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
         assertEquals(expected,result);
         System.out.println();
 
         expected = "3. false [2, 3] eval_answer_literal";
         result = tpp.parseProofStep(ps3).toString().trim();
-        System.out.println(result);
+        System.out.println("Result: " + result);
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
         assertEquals(expected,result);
         System.out.println("\n\n");
     }
@@ -229,7 +266,57 @@ public class TPTP3Test extends IntegrationTestBase {
         System.out.println("Result: " + result);
         String expected = "0. false [0, 1] resolution";
         System.out.println("\n\n");
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
         assertEquals(expected,result);
     }
 
+    /** ***************************************************************
+     */
+    @Test
+    public void testParseProofStep3 () {
+
+        String ps1 = "fof(f559,plain,(\n" +
+                "  s__subclass(s__Abstract,s__Entity)),\n" +
+                "  inference(cnf_transformation,[],[f225])).";
+        //ps1 = ps1.replaceAll("\n","");
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.idTable.put("f225", Integer.valueOf(0));
+        System.out.println("----------------------testParseProofStep3---------------------------");
+        String result = tpp.parseProofStep(ps1).toString().trim();
+        System.out.println("Result: " + result);
+        String expected = "0. (subclass Abstract Entity) [0] cnf_transformation";
+        System.out.println("\n\n");
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
+        assertEquals(expected,result);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testParseProofStep4 () {
+
+        String ps1 = "fof(f324,plain,(\n" +
+                "  $false),\n" +
+                "  inference(unit_resulting_resolution,[],[f323,f322])).";
+        //ps1 = ps1.replaceAll("\n","");
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.idTable.put("f323", Integer.valueOf(0));
+        tpp.idTable.put("f322", Integer.valueOf(1));
+        System.out.println("----------------------testParseProofStep4---------------------------");
+        String result = tpp.parseProofStep(ps1).toString().trim();
+        System.out.println("Result: " + result);
+        String expected = "0. false [0, 1] unit_resulting_resolution";
+        System.out.println("\n\n");
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
+        assertEquals(expected,result);
+    }
 }
