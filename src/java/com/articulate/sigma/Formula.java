@@ -2190,7 +2190,7 @@ public class Formula implements Comparable, Serializable {
      */
     public boolean isHigherOrder(KB kb) {
 
-        System.out.println("Formula.isHigherOrder(): " + this);
+        if (debug) System.out.println("Formula.isHigherOrder(): " + this);
         if (varTypeCache == null || varTypeCache.keySet().size() == 0) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             varTypeCache = fp.findAllTypeRestrictions(this,kb);
