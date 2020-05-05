@@ -1834,7 +1834,7 @@ public class KB implements Serializable {
         StringBuffer sb = new StringBuffer();
         Vampire.mode = Vampire.ModeType.CASC;
         Vampire vampire = askVampire(suoKifFormula,30,1);
-        TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, this);
+        TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, suoKifFormula, this);
         String result = tpp.proof.toString().trim();
         sb.append(result + "\n");
         result = tpp.bindings.toString();
@@ -3517,7 +3517,7 @@ public class KB implements Serializable {
             System.out.println("KB.test(): query Vampire on file: " + outfile);
             Vampire vamp = kb.askVampire(contents,30,1);
             //System.out.println("KB.test(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,kb);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,contents,kb);
             System.out.println("queryExp(): bindings: " + tpp.bindings);
             System.out.println("queryExp(): proof: " + tpp.proof);
             ArrayList<String> proofStepsStr = new ArrayList<>();
@@ -3583,7 +3583,7 @@ public class KB implements Serializable {
         else if (args != null && args.length > 1 && args[0].equals("-a")) {
             Vampire vamp = kb.askVampire(args[1],30,1);
             System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,kb);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,args[1],kb);
             System.out.println("KB.main(): bindings: " + tpp.bindings);
             System.out.println("KB.main(): proof: " + tpp.proof);
             ArrayList<String> proofStepsStr = new ArrayList<>();
