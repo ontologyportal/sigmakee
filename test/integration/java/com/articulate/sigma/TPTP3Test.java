@@ -13,7 +13,7 @@ import java.io.StringReader;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public class TPTP3Test extends UnitTestBase {
+public class TPTP3Test extends IntegrationTestBase {
 
     /** ***************************************************************
      */
@@ -90,8 +90,9 @@ public class TPTP3Test extends UnitTestBase {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Vampire.mode = Vampire.ModeType.AVATAR;
-            Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            String query = "(subclass ?X Entity)";
+            Vampire vampire = kb.askVampire(query,30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query, kb);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             System.out.println("Result: " + result);
@@ -117,10 +118,12 @@ public class TPTP3Test extends UnitTestBase {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Vampire.mode = Vampire.ModeType.CASC;
-            Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            String query = "(subclass ?X Entity)";
+            Vampire vampire = kb.askVampire(query,30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query, kb);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
+            String expected = "[PositiveInteger]";
             System.out.println("Result: " + result);
             if (!StringUtil.emptyString(result) && (tpp.proof.size() == 10))
                 System.out.println("Success");
@@ -130,11 +133,11 @@ public class TPTP3Test extends UnitTestBase {
 
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
-            if (!StringUtil.emptyString(result) && result.contains("Relation"))
+            if (!StringUtil.emptyString(result) && result.equals(expected))
                 System.out.println("Success");
             else
                 System.out.println("FAIL");
-            assertTrue(result.contains("Relation"));
+            assertEquals(expected,result);
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -152,9 +155,10 @@ public class TPTP3Test extends UnitTestBase {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             Vampire.mode = Vampire.ModeType.CASC;
-            Vampire vampire = kb.askVampire("(subclass ?X Entity)",30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
-            String expected = "[Relation]";
+            String query = "(subclass ?X Entity)";
+            Vampire vampire = kb.askVampire(query,30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query,kb);
+            String expected = "[PositiveInteger]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
@@ -181,10 +185,11 @@ public class TPTP3Test extends UnitTestBase {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
             Vampire.mode = Vampire.ModeType.CASC;
-            Vampire vampire = kb.askVampire("(subclass ?X ?Y)",30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            String query = "(subclass ?X ?Y)";
+            Vampire vampire = kb.askVampire(query,30,1);
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query, kb);
 
-            String expected = "[Integer, Quantity]";
+            String expected = "[RealNumber, Quantity]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
@@ -318,5 +323,47 @@ public class TPTP3Test extends UnitTestBase {
         else
             System.out.println("FAIL");
         assertEquals(expected,result);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testExtractAnswerClauseVamp () {
+
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+        System.out.println("========================");
+        String label = "testExtractAnswerClauseVamp";
+        System.out.println(label);
+        String input = "(forall (?X0) (or (not (instance ?X0 Relation)) (not (ans0 ?X0))))";
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        Formula ans = tpp.extractAnswerClause(new Formula(input));
+        String result = ans.toString();
+        System.out.println("result: " + ans);
+        String expected = "(ans0 ?X0)";
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testExtractAnswerClauseE () {
+
+        KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+        System.out.println("========================");
+        String label = "testExtractAnswerClauseE";
+        System.out.println(label);
+        String input = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) (answer (?VAR1))))";
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        Formula ans = tpp.extractAnswerClause(new Formula(input));
+        String result = ans.toString();
+        System.out.println("result: " + ans);
+        String expected = "(answer (?VAR1))";
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
     }
 }
