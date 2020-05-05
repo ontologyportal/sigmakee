@@ -200,9 +200,10 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         input.add("fof(f392,conjecture,( ? [X16] : s__instance(X16,s__Relation)), file('/home/apease/.sigmakee/KBs/temp-comb.tptp',query_0)).");
         input.add("fof(f915,plain,( ( ! [X0] : (ans0(X0)) )), introduced(answer_literal,[])).");
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        String query = "(instance ?X Relation)";
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        tpp = tpp.parseProofOutput(input,kb);
-        tpp.processAnswersFromProof("(instance ?X Entity)");
+        tpp = tpp.parseProofOutput(input,query,kb);
+        tpp.processAnswersFromProof(query);
         String actual = tpp.bindingMap.toString();
         String expected = "{?X=TransitFn}";
         System.out.println("Actual: " + actual);
