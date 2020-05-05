@@ -463,7 +463,7 @@ public class InferenceTestSuite {
             Vampire vampire = kb.askVampire(processedStmt,timeout,maxAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): output: " + vampire.toString());
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp = tpp.parseProofOutput(vampire.output,kb);
+            tpp = tpp.parseProofOutput(vampire.output,processedStmt,kb);
             ArrayList<String> tmpAnswers = new ArrayList<>();
             tmpAnswers.addAll(tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): answers: " + tmpAnswers);
