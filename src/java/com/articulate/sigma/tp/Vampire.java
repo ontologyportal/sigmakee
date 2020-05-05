@@ -322,7 +322,8 @@ public class Vampire {
             System.out.println("----------------\nVampire output\n");
             for (String l : vampire.output)
                 System.out.println(l);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output,kb);
+            String queryStr = "(subclass ?X ?Y)";
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output,queryStr,kb);
             System.out.println("Vampire.main(): bindings: " + tpp.bindings);
             System.out.println("Vampire.main(): proof: " + tpp.proof);
             System.out.println("-----------------\n");
