@@ -138,13 +138,20 @@ System preparation on Linux
 ==========================
 
 create user theuser
-  useradd theuser
+  sudo useradd theuser
 
 add password for theuser
-  passwd theuser
+  sudo passwd theuser
 
 add to sudoers file
-  usermod -aG sudo theuser
+  sudo usermod -aG sudo theuser
+
+switch over to the new user
+  su theuser
+  cd /home
+  sudo mkdir theuser
+  sudo chown theuser theuser
+  cd theuser
 
 install unzip
   sudo apt-get install unzip
@@ -162,8 +169,8 @@ handy to add stuff to .bashrc
 You may need to download Java and set your
 JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
 The following command line version may work
-  wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie"
-    http://download.oracle.com/otn-pub/java/jdk/8u112-b15/jdk-8u112-linux-x64.tar.gz
+wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie"
+  https://download.oracle.com/otn-pub/java/jdk/14.0.1+7/664493ef4a6946b186ff29eb326336a2/jdk-14.0.1_linux-x64_bin.tar.gz
 
 but you also may need to go to the web site, accept the license, then copy the download link
 into this command
