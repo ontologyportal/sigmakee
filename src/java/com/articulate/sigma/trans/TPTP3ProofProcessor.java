@@ -454,7 +454,9 @@ public class TPTP3ProofProcessor {
 		String pred = ax.car();
 		if (debug) System.out.println("extractAnswerClause(): pred: " + pred);
 		if (Formula.atom(pred)) {
-			if (pred.equals("ans0"))
+			if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE && pred.equals("ans0"))
+				return ax;
+			if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER && pred.equals("answer"))
 				return ax;
 		}
 		else {
@@ -482,7 +484,7 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 * Return bindings from TPTP3 proof
+	 * Return bindings from TPTP3 proof answer variables
 	 */
 	public void processAnswersFromProof(String query) {
 
@@ -686,9 +688,9 @@ public class TPTP3ProofProcessor {
 	}
 
     /** ***************************************************************
-	 * Compute binding and proof from E's response
+	 * Compute binding and proof from the theorem prover's response
      */
-    public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, KB kb) {
+    public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb) {
 
 		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): before reverse: " +
 		//		lines);
@@ -751,7 +753,7 @@ public class TPTP3ProofProcessor {
         // remove unnecessary steps, eg: conjectures, duplicate trues
         tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
         tpp.proof = ProofStep.removeDuplicates(tpp.proof);
-
+        tpp.processAnswersFromProof(kifQuery);
         // find types for skolem terms
         findTypesForSkolemTerms(tpp, kb);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): result: " + tpp);
@@ -794,24 +796,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
-	public static void testExtractAnswerClause () {
-
-		System.out.println("========================");
-		String label = "testExtractAnswerClause";
-		String input = "(forall (?X0) (or (not (instance ?X0 Relation)) (not (ans0 ?X0))))";
-		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-		Formula ans = tpp.extractAnswerClause(new Formula(input));
-		System.out.println("result: " + ans);
-	}
-
-	/** ***************************************************************
-	 */
 	public static void main (String[] args) {
 
-		testExtractAnswerClause();
-		//testVampire();
-		//testParseProofStep2();
-		//testParseProofFile();
-		//testE();
 	}
 }
