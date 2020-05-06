@@ -136,6 +136,7 @@ latest: digest: sha256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx size: 2417
 
 System preparation on Linux
 ==========================
+Make sure that throughout the commands below that you replace "theuser" with your desired user name
 
 create user theuser
   sudo useradd theuser
@@ -166,11 +167,21 @@ handy to add stuff to .bashrc
   echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
   echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
 
+  source .bashrc
+
 You may need to download Java and set your
-JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .
-The following command line version may work
+JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .  First,
+
+  mkdir /home/theuser/Programs
+  cd Programs
+
+The following command line version may work but you may need to update the name of the jdk zipfile
+
 wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie"
   https://download.oracle.com/otn-pub/java/jdk/14.0.1+7/664493ef4a6946b186ff29eb326336a2/jdk-14.0.1_linux-x64_bin.tar.gz
+  mkdir /home/theuser/Programs
+  cd Programs
+  gunzip jdk-14.0.1_linux-x64_bin.tar.gz
 
 but you also may need to go to the web site, accept the license, then copy the download link
 into this command
@@ -179,6 +190,10 @@ On AWS it helps to be reminded of which server you're on.  I use machine size as
 
 export HOST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
 PS1="$HOST_TYPE:"PS1
+
+or on Vagrant, something like
+
+PS1=Vagrant:$PS1
 
 
 Linux Installation
