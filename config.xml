@@ -1,39 +1,37 @@
 <configuration>
-  <preference name="nlpTools" value="yes" />
-  <preference name="sumokbname" value="SUMO" />
-  <preference name="testOutputDir" value="~/.sigmakee/KBs/tests" />
-  <preference name="TPTPDisplay" value="no" />
-  <preference name="inferenceEngine" value="~/Programs/E/PROVER/e_ltb_runner" />
-  <!--  Added config for eproverPath to read eprover's path on Windows OS.
-   If sigma is running on linux it is ignored.  -->
-  <preference name="eproverPath" value="~/Programs/E/EPROVER_BIN/eprover" />  
-  <preference name="inferenceTestDir" value="~/.sigmakee/KBs/tests" />
-  <preference name="baseDir" value="~/.sigmakee" />
+  <preference name="adminBrowserLimit" value="200" />
+  <preference name="baseDir" value="/home/theuser/.sigmakee" />
+  <preference name="cache" value="yes" />
+  <preference name="celtdir" value="" />
+  <preference name="editDir" value="/home/theuser/workspace/sumo" />
+  <preference name="eprover" value="/home/theuser/E/bin/e_ltb_runner" />
+  <preference name="graphVizDir" value="/usr/bin" />
+  <preference name="holdsPrefix" value="no" />
   <preference name="hostname" value="localhost" />
   <preference name="https" value="false" />
-  <preference name="logLevel" value="warning" />
-  <preference name="systemsDir" value="~/workspace/sigma/sigma" />
-  <preference name="userBrowserLimit" value="25" />
-  <preference name="adminBrowserLimit" value="200" />
-  <preference name="SemRewrite" value="~/.sigmakee/KBs/WordNetMappings/SemRewrite.txt" />
-  <preference name="typePrefix" value="yes" />
-  <preference name="graphDir" value="graph" />
-  <preference name="graphWidth" value="600" />
-  <preference name="TPTP" value="yes" />
-  <preference name="cache" value="yes" />
-  <preference name="editorCommand" value="" />
-  <preference name="graphVizDir" value="/usr/bin" />
-  <preference name="kbDir" value="~/.sigmakee/KBs" />
-  <preference name="loadCELT" value="no" />
-  <preference name="celtdir" value="" />
+  <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
+  <preference name="jedit" value="jedit" />
+  <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
+  <preference name="leoExecutable" value="/home/theuser/leo" />
   <preference name="lineNumberCommand" value="" />
-  <preference name="prolog" value="" />
+  <preference name="loadCELT" value="no" />
+  <preference name="logDir" value="/home/theuser/.sigmakee/logs" />
+  <preference name="logLevel" value="warning" />
   <preference name="port" value="8080" />
-  <preference name="tptpHomeDir" value="~/workspace/sigma/sigma" />
+  <preference name="prolog" value="" />
+  <preference name="reportDup" value="no" />
+  <preference name="reportFnError" value="no" />
   <preference name="showcached" value="no" />
-  <preference name="leoExecutable" value="" />
-  <preference name="holdsPrefix" value="no" />
-  <preference name="logDir" value="~/.sigmakee/logs" />
+  <preference name="sumokbname" value="SUMO" />
+  <preference name="systemsDir" value="/home/theuser" />
+  <preference name="termFormats" value="no" />
+  <preference name="testOutputDir" value="/var/tomcat/apache-tomcat-5.5.25/webapps/sigma/tests" />
+  <preference name="TPTPDisplay" value="no" />
+  <preference name="tptpHomeDir" value="/home/theuser" />
+  <preference name="TPTP" value="yes" />
+  <preference name="typePrefix" value="yes" />
+  <preference name="userBrowserLimit" value="25" />
+  <preference name="vampire" value="/home/theuser/workspace/vampire/vampire" />
   <kb name="SUMO" >
     <constituent filename="english_format.kif" />
     <constituent filename="domainEnglishFormat.kif" />
