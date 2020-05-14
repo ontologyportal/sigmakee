@@ -74,7 +74,7 @@ You'll need to add two commands to the Vagrantfile configuration
 
 config.vm.network "forwarded_port", guest: 8080, host: 8888
 config.vm.provider "virtualbox" do |vb|
-  vb.memory = "5000"
+  vb.memory = "9000"
 end
 
 Then execute the following
@@ -165,6 +165,13 @@ handy to add stuff to .bashrc
   echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
   echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
   echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
+
+load the definitions into your environment
+
+  source .bashrc
+
+then you can add the last one
+
   echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
 
   source .bashrc
@@ -179,8 +186,6 @@ The following command line version may work but you may need to update the name 
 
 wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie"
   https://download.oracle.com/otn-pub/java/jdk/14.0.1+7/664493ef4a6946b186ff29eb326336a2/jdk-14.0.1_linux-x64_bin.tar.gz
-  mkdir /home/theuser/Programs
-  cd Programs
   gunzip jdk-14.0.1_linux-x64_bin.tar.gz
 
 but you also may need to go to the web site, accept the license, then copy the download link
@@ -209,6 +214,8 @@ tar -xvzf E.tgz
 unzip apache-tomcat-8.5.23.zip
 rm apache-tomcat-8.5.23.zip
 cd ~/Programs/apache-tomcat-8.5.23/bin
+chmod 777 *
+cd ../webapps
 chmod 777 *
 cd ~/workspace/
 sudo apt-get install git
@@ -334,6 +341,8 @@ java -Xmx4g -classpath /home/apease/workspace/sigmakee/build/classes:
   /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 
+You will have to edit the resources files that correspond to config.xml to conform to your
+paths.  They are in test/integration/java/resources/config*.xml and test/unit/java/resources/config*.xml
 
 RESTful Interface
 ================
