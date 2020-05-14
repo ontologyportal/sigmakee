@@ -66,10 +66,12 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println("BindingsMap: " + tpp.bindingMap);
             System.out.println("Bindings: " + tpp.bindings);
             System.out.println("Status: " + tpp.status);
-            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 6))
+            String bindExpect = "[SetOrClass]";
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 6) && (tpp.bindings.toString().equals(bindExpect)))
                 System.out.println("Success");
             else
                 System.out.println("FAIL");
+            assertEquals(bindExpect,tpp.bindings.toString());
             assertTrue(!StringUtil.emptyString(result));
             assertEquals(6,tpp.proof.size());
             eprover.terminate();
