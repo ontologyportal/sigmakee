@@ -3556,7 +3556,8 @@ public class KB implements Serializable {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - run test");
-        System.out.println("  -a \"<query>\"- ask query");
+        System.out.println("  -av \"<query>\"- ask query of Vampire");
+        System.out.println("  -ae \"<query>\"- ask query of EProver");
         System.out.println("  -c <term1> <term2> - compare term depth");
     }
 
@@ -3580,10 +3581,24 @@ public class KB implements Serializable {
         }
         else if (args != null && args.length > 0 && args[0].equals("-t"))
             test();
-        else if (args != null && args.length > 1 && args[0].equals("-a")) {
+        else if (args != null && args.length > 1 && args[0].equals("-av")) {
+            KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+            kb.loadVampire();
             Vampire vamp = kb.askVampire(args[1],30,1);
             System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
             TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,args[1],kb);
+            System.out.println("KB.main(): bindings: " + tpp.bindings);
+            System.out.println("KB.main(): proof: " + tpp.proof);
+            ArrayList<String> proofStepsStr = new ArrayList<>();
+            for (ProofStep ps : tpp.proof)
+                proofStepsStr.add(ps.toString());
+        }
+        else if (args != null && args.length > 1 && args[0].equals("-ae")) {
+            KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+            kb.loadEProver();
+            EProver eprover = kb.askEProver(args[1],30,1);
+            System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
+            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(eprover.output,args[1],kb);
             System.out.println("KB.main(): bindings: " + tpp.bindings);
             System.out.println("KB.main(): proof: " + tpp.proof);
             ArrayList<String> proofStepsStr = new ArrayList<>();
