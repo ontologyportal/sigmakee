@@ -47,6 +47,7 @@ public class TPTP3Test extends IntegrationTestBase {
     @Test
     public void testE () {
 
+        KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         try {
             System.out.println("----------------------testE---------------------------");
             //KBmanager.getMgr().initializeOnce();
@@ -87,6 +88,7 @@ public class TPTP3Test extends IntegrationTestBase {
     @Test
     public void testVampireAvatar () {
 
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireAvatar------------------------------");
         try {
             KBmanager.getMgr().initializeOnce();
@@ -98,11 +100,11 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             System.out.println("Result: " + result);
-            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 7))
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 4))
                 System.out.println("Success");
             else
                 System.out.println("FAIL");
-            assertEquals(7,tpp.proof.size());
+            assertEquals(4,tpp.proof.size());
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -115,6 +117,7 @@ public class TPTP3Test extends IntegrationTestBase {
     @Test
     public void testVampireCASC () {
 
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireCASC------------------------------");
         try {
             KBmanager.getMgr().initializeOnce();
@@ -127,12 +130,15 @@ public class TPTP3Test extends IntegrationTestBase {
             String result = tpp.proof.toString().trim();
             String expected = "[PositiveInteger]";
             System.out.println("Result: " + result);
-            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 10))
+            if (!StringUtil.emptyString(result) &&
+                    (tpp.proof.size() == 7) &&
+                    (tpp.proof.get(7).axiom.equals("false")))
                 System.out.println("Success");
             else
                 System.out.println("FAIL");
             assertEquals(10,tpp.proof.size());
-
+            System.out.println("answers: " + result);
+            assertEquals("false",tpp.proof.get(7).axiom);
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
             if (!StringUtil.emptyString(result) && result.equals(expected))
@@ -152,6 +158,7 @@ public class TPTP3Test extends IntegrationTestBase {
     @Test
     public void testVampireCASCBindings () {
 
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireCASCBindings------------------------------");
         try {
             KBmanager.getMgr().initializeOnce();
@@ -181,6 +188,7 @@ public class TPTP3Test extends IntegrationTestBase {
     @Test
     public void testVampireCASCBindings2 () {
 
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("-------------------testVampireCASCBindings2------------------------------");
         try {
             KBmanager.getMgr().initializeOnce();
@@ -360,12 +368,13 @@ public class TPTP3Test extends IntegrationTestBase {
         String input = "(forall (?VAR1) (or (not (subclass ?VAR1 Object)) (answer (?VAR1))))";
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         Formula ans = tpp.extractAnswerClause(new Formula(input));
-        String result = ans.toString();
+        String result = ans.getFormula();
         System.out.println("result: " + ans);
         String expected = "(answer (?VAR1))";
         if (!StringUtil.emptyString(result) && expected.equals(result))
             System.out.println("Success");
         else
             System.out.println("FAIL");
+        assertEquals(expected,result);
     }
 }
