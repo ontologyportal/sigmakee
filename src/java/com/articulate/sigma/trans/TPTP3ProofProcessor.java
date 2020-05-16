@@ -189,33 +189,6 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 * Remove brackets if it contains
-
-	public static String trimBrackets (String line) {
-
-		if (line.startsWith("[") && line.endsWith("]"))
-			return line.substring(1,line.length()-1);
-		else {
-			System.out.println("Error in TPTP3ProofProcessor.trimBrackets() bad format: " + line);
-			return null;
-		}
-	}
-*/
-	/** ***************************************************************
-	 * Remove parentheses if line contains a matching pair
-
-	public static String trimParens (String line) {
-
-		if (line.indexOf("(") != -1 && line.indexOf(")") != -1) {
-			return line.substring(line.indexOf("(") + 1, line.lastIndexOf(")"));
-		}
-		else {
-			System.out.println("Error in TPTP3ProofProcessor.trimParens() bad format: " + line);
-			return null;
-		}
-	}
-*/
-	/** ***************************************************************
 	 */
 	public ArrayList<Integer> parseInferenceObject(String supportId) {
 
@@ -697,7 +670,10 @@ public class TPTP3ProofProcessor {
     	//lines = joinNreverseInputLines(lines);
 		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): after reverse: " +
 		//		lines);
-		lines = joinLines(lines);
+		if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
+			lines = joinNreverseInputLines(lines);
+		if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
+			lines = joinLines(lines);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         try {
             boolean inProof = false;
