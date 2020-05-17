@@ -395,14 +395,15 @@ public class KBmanager implements Serializable {
      */
     public void loadKBforInference(KB kb) {
 
+        System.out.println("KBmanager.loadKBforInference(): KB: " + kb.name);
         if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
             if (KBmanager.getMgr().getPref("vampire") != null) {
-                System.out.println("KBmanager.loadKB(): loading Vampire");
+                System.out.println("KBmanager.loadKBforInference(): loading Vampire");
                 kb.loadVampire();
                 prover = Prover.VAMPIRE;
             }
             else if (KBmanager.getMgr().getPref("eprover") != null) {
-                System.out.println("KBmanager.loadKB(): loading EProver");
+                System.out.println("KBmanager.loadKBforInference(): loading EProver");
                 kb.loadEProver();
                 prover = Prover.EPROVER;
             }
@@ -626,7 +627,8 @@ public class KBmanager implements Serializable {
                     initialized = true;
                 }
             }
-            if (!loaded) { // if there was an error loading the serialized file, then reload from sources
+            if (!loaded) { // if there was an error loading the serialized file, or there is none,
+                            // then reload from sources
                 System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
                 if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
                         preferences.keySet().size());
