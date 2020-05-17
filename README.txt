@@ -285,7 +285,7 @@ You may need to install the Zlib library if you don't have it already installed
 
 and also possibly
 
-  sudo apt=get install g++
+  sudo apt-get install g++
 
 then execute the following:
 
