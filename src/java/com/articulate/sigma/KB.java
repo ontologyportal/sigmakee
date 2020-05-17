@@ -3352,6 +3352,7 @@ public class KB implements Serializable {
             System.out.println("Error in Vampire: no executable " + vampex);
             return;
         }
+        /*
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
@@ -3369,6 +3370,7 @@ public class KB implements Serializable {
             System.out.println(e.getMessage());
             e.printStackTrace();
         }
+        */
         return;
     }
 
@@ -3384,6 +3386,7 @@ public class KB implements Serializable {
         //    System.out.println("INFO in KB.loadEProver(): KBmanager not initialized, exiting");
         //    return;
         //}
+
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
@@ -3397,7 +3400,7 @@ public class KB implements Serializable {
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                skb.writeFile(tptpFilename, true);
+                //skb.writeFile(tptpFilename, true);
                 if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
                     eprover = new EProver(mgr.getPref("eprover"), tptpFilename);
             }
