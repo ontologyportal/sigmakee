@@ -3566,47 +3566,47 @@ public class KB implements Serializable {
     public static void main(String[] args) throws IOException {
 
         System.out.println("INFO in KB.main()");
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        if (args != null && args.length > 2 && args[0].equals("-c")) {
-            int eqrel = kb.compareTermDepth(args[1],args[2]);
-            String eqText = KButilities.eqNum2Text(eqrel);
-            System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));
-            System.out.println("KB.main() term depth of " + args[2] + " : " + kb.termDepth(args[2]));
-            System.out.println("KB.main() eqrel " + eqrel);
-            System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+        if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
+        else {
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            if (args != null && args.length > 2 && args[0].equals("-c")) {
+                int eqrel = kb.compareTermDepth(args[1], args[2]);
+                String eqText = KButilities.eqNum2Text(eqrel);
+                System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));
+                System.out.println("KB.main() term depth of " + args[2] + " : " + kb.termDepth(args[2]));
+                System.out.println("KB.main() eqrel " + eqrel);
+                System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-t"))
+                test();
+            else if (args != null && args.length > 1 && args[0].equals("-av")) {
+                KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+                kb.loadVampire();
+                Vampire vamp = kb.askVampire(args[1], 30, 1);
+                System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+                TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output, args[1], kb);
+                System.out.println("KB.main(): bindings: " + tpp.bindings);
+                System.out.println("KB.main(): proof: " + tpp.proof);
+                ArrayList<String> proofStepsStr = new ArrayList<>();
+                for (ProofStep ps : tpp.proof)
+                    proofStepsStr.add(ps.toString());
+            }
+            else if (args != null && args.length > 1 && args[0].equals("-ae")) {
+                KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+                kb.loadEProver();
+                EProver eprover = kb.askEProver(args[1], 30, 1);
+                System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
+                TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(eprover.output, args[1], kb);
+                System.out.println("KB.main(): bindings: " + tpp.bindings);
+                System.out.println("KB.main(): proof: " + tpp.proof);
+                ArrayList<String> proofStepsStr = new ArrayList<>();
+                for (ProofStep ps : tpp.proof)
+                    proofStepsStr.add(ps.toString());
+            }
+            else
+                showHelp();
         }
-        else if (args != null && args.length > 0 && args[0].equals("-t"))
-            test();
-        else if (args != null && args.length > 1 && args[0].equals("-av")) {
-            KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
-            kb.loadVampire();
-            Vampire vamp = kb.askVampire(args[1],30,1);
-            System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,args[1],kb);
-            System.out.println("KB.main(): bindings: " + tpp.bindings);
-            System.out.println("KB.main(): proof: " + tpp.proof);
-            ArrayList<String> proofStepsStr = new ArrayList<>();
-            for (ProofStep ps : tpp.proof)
-                proofStepsStr.add(ps.toString());
-        }
-        else if (args != null && args.length > 1 && args[0].equals("-ae")) {
-            KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
-            kb.loadEProver();
-            EProver eprover = kb.askEProver(args[1],30,1);
-            System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(eprover.output,args[1],kb);
-            System.out.println("KB.main(): bindings: " + tpp.bindings);
-            System.out.println("KB.main(): proof: " + tpp.proof);
-            ArrayList<String> proofStepsStr = new ArrayList<>();
-            for (ProofStep ps : tpp.proof)
-                proofStepsStr.add(ps.toString());
-        }
-        else
-            showHelp();
-
     }
 }

@@ -607,34 +607,30 @@ public class KButilities {
      */
     public static void main(String[] args) {
 
-        try {
+        if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
             KBmanager.getMgr().initializeOnce();
-            // WordNet.initOnce();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            //countRelations(kb);
+            //checkURLs(kb);
+            //validatePictureList();
+            //for (String s : generateSemanticNetwork(kb))
+            //    System.out.println(s);
+            if (args != null && args.length > 1 && args[0].equals("-c")) {
+                genSynLinks(args[1]);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-s")) {
+                countStringWords(kb);
+                countProcesses(kb);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-n")) {
+                Set<String> tuples = generateSemanticNetwork(kb);
+                System.out.println(semnetAsDot(tuples));
+            }
+            else
+                showHelp();
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        //countRelations(kb);
-        //checkURLs(kb);
-        //validatePictureList();
-        //for (String s : generateSemanticNetwork(kb))
-        //    System.out.println(s);
-        if (args != null && args.length > 1 && args[0].equals("-c")) {
-            genSynLinks(args[1]);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-h")) {
-            showHelp();
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-s")) {
-            countStringWords(kb);
-            countProcesses(kb);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-n")) {
-            Set<String> tuples = generateSemanticNetwork(kb);
-            System.out.println(semnetAsDot(tuples));
-        }
-        else
-            showHelp();
     }
 }
 
