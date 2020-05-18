@@ -38,12 +38,6 @@
  	nonRelTerm = "";
  if (StringUtil.emptyString(relTerm))
     relTerm = "";
- 
- String KBPOS = request.getParameter("KBPOS");
- if (KBPOS == null && term == null)
-    KBPOS = "1";
- else if (KBPOS == null && term != null)
- 	KBPOS = kb.REswitch(term);
  	
  String contract = request.getParameter("contract");
  if (StringUtil.isNonEmptyString(contract)) 
