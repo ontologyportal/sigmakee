@@ -473,9 +473,13 @@ public class InferenceTestSuite {
             System.out.println("\n============================");
             System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
             Vampire vampire = kb.askVampire(processedStmt,timeout,maxAnswers);
-            System.out.println("InferenceTestSuite.inferenceUnitTest(): output: " + vampire.toString());
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp = tpp.parseProofOutput(vampire.output,processedStmt,kb);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): bindings: " + tpp.bindings);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): bindingMap: " + tpp.bindingMap);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + tpp.proof);
+
             ArrayList<String> tmpAnswers = new ArrayList<>();
             tmpAnswers.addAll(tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): answers: " + tmpAnswers);
