@@ -55,6 +55,8 @@ public class InferenceTestSuite {
     /** Default timeout for queries with unspecified timeouts */
     public static int _DEFAULT_TIMEOUT = 600;
 
+    public static ArrayList<String> kbFiles = new ArrayList<>();
+
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
      * true if any pair of answers is different.  Return false otherwise.
@@ -213,9 +215,17 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     */
+    public static void addKBfile(String filePath)  {
+        kbFiles.add(filePath);
+    }
+
+    /** ***************************************************************
      * The main method that controls running a set of tests and returning
      * the result as an HTML page showing test results and links to proofs.
      * Note that this procedure deletes any prior user assertions.
+     * If a test file has a set of KIF files different from what is already
+     * loaded, create a new KB for it.
      */
     public static String test(KB kb, String systemChosen, int defaultTimeout, String TPTPlocation) 
         throws IOException {
@@ -296,9 +306,12 @@ public class InferenceTestSuite {
                         answerList.add(formula.substring(8,formula.length()-1));
                     else if (formula.startsWith("(time")) 
                         timeout = Integer.parseInt(formula.substring(6,formula.length()-1));
+                    else if (formula.startsWith("(file"))
+                        addKBfile(formula);
                     else 
                     	kb.tell(formula);                    
                 }
+                //compareFilesets();
                 maxAnswers = answerList.size();
                 try {
                     System.out.println("INFO in InferenceTestSuite.test(): Query: " + query);
@@ -404,6 +417,7 @@ public class InferenceTestSuite {
     public static void inferenceUnitTest(String testpath, KB kb,
            ArrayList<String> expectedAnswers, ArrayList<String> actualAnswers) {
 
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): testpath: " + testpath);
         if (actualAnswers == null)
             actualAnswers = new ArrayList<String>();
@@ -416,13 +430,11 @@ public class InferenceTestSuite {
             e.printStackTrace();
         }
 
-        Iterator it = kif.formulaMap.keySet().iterator();
         String note = file.getName();
         String query = null;
         int timeout = 10;
 
-        while (it.hasNext()) {
-            String formula = (String) it.next();
+        for (String formula : kif.formulaMap.keySet()) {
             if (formula.indexOf(";") != -1)
                 formula = formula.substring(0,formula.indexOf(";"));
             System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): Formula: " + formula);
@@ -488,6 +500,10 @@ public class InferenceTestSuite {
     public static void showHelp() {
 
         System.out.println("InferenceTestSuite class");
+        System.out.println("Test files are s-expressions that take valid SUMO formulas");
+        System.out.println("or meta-predicates that are one of (note \"message\"), ");
+        System.out.println("(query <formula>), (answer <term>), (time <integer>)");
+        System.out.println("or (file \"path\")");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t <name> - run named test file in config.xml inferenceTestDir");
