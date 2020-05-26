@@ -64,10 +64,11 @@ public class InferenceTestSuite {
     private static boolean compareAnswers(ProofProcessor pp, ArrayList answerList) {
 
     
-        System.out.println("INFO in InferenceTestSuite.compareAnswers(): num answers: " + String.valueOf(pp.numAnswers()));
+        System.out.println("INFO in InferenceTestSuite.compareAnswers(): num answers: "
+			   + String.valueOf(pp.numAnswers()));
         for (int j = 0; j < pp.numAnswers(); j++) {
-            //System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: " + pp.returnAnswer(j, "") + " expected: " + (String) answerList.get(j));
-            System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: " + "" + " expected: " + (String) answerList.get(j));
+            System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: "
+			       + "" + " expected: " + (String) answerList.get(j));
             if (!pp.equalsAnswer(j,(String) answerList.get(j)))
                 return true;
         }
@@ -541,7 +542,7 @@ public class InferenceTestSuite {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             String path = KBmanager.getMgr().getPref("inferenceTestDir");
             inferenceUnitTest(path + File.separator + filename, kb,
-                    expected, actual);
+			      expected, actual);
             if (actual.equals(expected)) {
                 System.out.println("InferenceTestSuite.cmdLineTest() : Success on " + filename);
                 return true;
