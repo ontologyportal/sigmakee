@@ -53,7 +53,8 @@ public class KBmanager implements Serializable {
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
                     "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire",
-                    "reportDup", "reportFnError", "verbnet", "jedit", "editdir", "termFormats");
+                    "reportDup", "reportFnError", "verbnet", "jedit", "editdir", "termFormats",
+                    "loadLexicons");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "eprover", "inferenceTestDir", "baseDir",
@@ -615,12 +616,14 @@ public class KBmanager implements Serializable {
                 loaded = loadSerialized();
                 if (loaded) {
                     if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
-                    WordNet.initOnce();
-                    NLGUtils.init(configFileDir);
-                    OMWordnet.readOMWfiles();
-                    if (!VerbNet.disable) {
-                        VerbNet.initOnce();
-                        VerbNet.processVerbs();
+                    if (!prefEquals("loadLexicons","false")) {
+                        WordNet.initOnce();
+                        NLGUtils.init(configFileDir);
+                        OMWordnet.readOMWfiles();
+                        if (!VerbNet.disable) {
+                            VerbNet.initOnce();
+                            VerbNet.processVerbs();
+                        }
                     }
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     initializing = false;
@@ -674,10 +677,12 @@ public class KBmanager implements Serializable {
         System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
         long milis = System.currentTimeMillis();
         NLGUtils.init(kbDir);
-        WordNet.wn.initOnce();
-        VerbNet.initOnce();
-        VerbNet.processVerbs();
-        OMWordnet.readOMWfiles();
+        if (!prefEquals("loadLexicons","false")) {
+            WordNet.wn.initOnce();
+            VerbNet.initOnce();
+            VerbNet.processVerbs();
+            OMWordnet.readOMWfiles();
+        }
         System.out.println("KBmanager.setConfiguration(): linguistics load time: " + (System.currentTimeMillis() - milis) / 1000);
         if (kbs != null && kbs.size() > 0 && !WordNet.initNeeded) {
             for (String kbName : kbs.keySet()) {
