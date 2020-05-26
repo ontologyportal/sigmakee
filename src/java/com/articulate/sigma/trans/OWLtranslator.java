@@ -1512,53 +1512,55 @@ public class OWLtranslator {
      */
     public static void main(String args[]) {
 
-        System.out.println("INFO in OWL.main()");
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
-        System.out.println("OWL.main(): completed initialization");
-        if (args != null && args.length > 1 && args[0].equals("-t")) {
-            try {
-                OWLtranslator.read(args[1]);
-            }
-            catch (Exception e ) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
-            }
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-s")) {
-            OWLtranslator ot = new OWLtranslator();
-            try {
-                System.out.println("OWL.main(): starting translation");
-                ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-                ot.createAxiomMap();
-                ot.writeDefsAsFiles();
-                ot.writeKB();
-                //ot.readYAGOSUMOMappings();
-            }
-            catch (Exception e ) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
-            }
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-y")) {
-            OWLtranslator ot = new OWLtranslator();
-            try {
-                ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-                ot.createAxiomMap();
-                ot.writeDefsAsFiles();
-                ot.readYAGOSUMOMappings();
-                ot.writeKB();
-            }
-            catch (Exception e ) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
-            }
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-h")) {
+        if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
         }
-        else
-            showHelp();
-        System.out.println("OWL.main(): finished");
+        else {
+            System.out.println("INFO in OWL.main()");
+            KBmanager.getMgr().initializeOnce();
+            KB kb = KBmanager.getMgr().getKB("SUMO");
+            System.out.println("OWL.main(): completed initialization");
+            if (args != null && args.length > 1 && args[0].equals("-t")) {
+                try {
+                    OWLtranslator.read(args[1]);
+                }
+                catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-s")) {
+                OWLtranslator ot = new OWLtranslator();
+                try {
+                    System.out.println("OWL.main(): starting translation");
+                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                    ot.createAxiomMap();
+                    ot.writeDefsAsFiles();
+                    ot.writeKB();
+                    //ot.readYAGOSUMOMappings();
+                }
+                catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-y")) {
+                OWLtranslator ot = new OWLtranslator();
+                try {
+                    ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                    ot.createAxiomMap();
+                    ot.writeDefsAsFiles();
+                    ot.readYAGOSUMOMappings();
+                    ot.writeKB();
+                }
+                catch (Exception e) {
+                    System.out.println(e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+            else
+                showHelp();
+            System.out.println("OWL.main(): finished");
+        }
     }
 }
