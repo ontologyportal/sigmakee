@@ -157,6 +157,11 @@ public class EProver {
         writeBatchConfig(kbFile, 60);
         System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
+        if (!(new File(kbFile)).exists()) {
+            System.out.println("EProver(): no such file: " + kbFile + ". Creating it.");
+            KB kb = KBmanager.getMgr().getKB(kbFile);
+            KBmanager.getMgr().loadKBforInference(kb);
+        }
         // To make sigma work on windows. 
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
         String eproverPath = null;
