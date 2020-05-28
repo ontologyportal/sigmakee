@@ -554,10 +554,11 @@ public class ProofProcessor {
 			 FileReader r = new FileReader(f);
 			 // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
 			 lr = new LineNumberReader(r);
+			 String kbName = KBmanager.getMgr().getPref("sumokbname");
 			 while ((line = lr.readLine()) != null) {
 				 if (lr.getLineNumber() % 1000 == 0)
 					 System.out.print('.');
-                 Pattern p = Pattern.compile("fof\\((kb_SUMO_\\d+)");
+                 Pattern p = Pattern.compile("fof\\((kb_" + kbName + "_\\d+)");
 				 Matcher m = p.matcher(line);
 				 if (m.find()) {
 					 axioms.put(m.group(1),line);
