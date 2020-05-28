@@ -1892,7 +1892,8 @@ public class SUMOtoTFAform {
         if (initialized)
             return;
         KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB("SUMO");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        kb = KBmanager.getMgr().getKB(kbName);
         fp = new FormulaPreprocessor();
         fp.addOnlyNonNumericTypes = true;
         buildNumericConstraints();
@@ -2067,7 +2068,8 @@ public class SUMOtoTFAform {
         debug = true;
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tff";
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new FileWriter(filename));

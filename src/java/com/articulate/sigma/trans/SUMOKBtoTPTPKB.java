@@ -419,9 +419,9 @@ public class SUMOKBtoTPTPKB {
         KBmanager.getMgr().initializeOnce();
 
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
-
-        skbtptpkb.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tptp";
         String fileWritten = skbtptpkb.writeFile(filename, null, true, "none");
         if (StringUtil.isNonEmptyString(fileWritten))
             System.out.println("File written: " + fileWritten);

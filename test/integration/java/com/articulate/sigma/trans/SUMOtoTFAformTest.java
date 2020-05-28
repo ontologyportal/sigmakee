@@ -35,7 +35,8 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         SUMOformulaToTPTPformula.lang = "tff";
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tff";
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new FileWriter(filename));
