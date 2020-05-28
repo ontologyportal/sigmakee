@@ -748,7 +748,8 @@ public class OWLtranslator {
     private void writeInstances(PrintWriter pw, String term, ArrayList instances) {
 
         pw.println("<owl:Thing rdf:about=\"#" + term + "\">");
-        pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/" + kbName + ".owl\"/>");
         for (int i = 0; i < instances.size(); i++) {
             Formula form = (Formula) instances.get(i);
             String parent = form.getStringArgument(2);
@@ -806,7 +807,8 @@ public class OWLtranslator {
             pw.println("<owl:Class rdf:about=\"#" + term + "\">");
         else
             pw.println("<owl:Class rdf:about=\"#" + term + "\">");
-        pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        pw.println("  <rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/" + kbName + ".owl\"/>");
         for (int i = 0; i < classes.size(); i++) {
             Formula form = (Formula) classes.get(i);
             String parent = form.getStringArgument(2);
@@ -932,6 +934,7 @@ public class OWLtranslator {
     	pw.println("   <!ENTITY owl \"http://www.w3.org/2002/07/owl#\">");
     	pw.println("]>");
         pw.println("<rdf:RDF");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
         pw.println("xmlns=\"http://www.ontologyportal.org/SUMO.owl#\"");
         pw.println("xml:base=\"http://www.ontologyportal.org/SUMO.owl\"");
         pw.println("xmlns:wnd=\"http://www.ontologyportal.org/WNDefs.owl#\"");
@@ -988,8 +991,9 @@ public class OWLtranslator {
 
          System.out.println("INFO in OWLtranslator.write(): writing " + path);
          //readYAGOSUMOMappings();
+         String kbName = KBmanager.getMgr().getPref("sumokbname");
          if (StringUtil.emptyString(path))
-             path = "SUMO.owl";
+             path = kbName + ".owl";
          FileWriter fw = new FileWriter(path);
          PrintWriter pw = new PrintWriter(fw);
          writeKBHeader(pw);
@@ -1503,7 +1507,8 @@ public class OWLtranslator {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t <fname> - read OWL file and write translation to fname.kif");
-        System.out.println("  -s - translate and write OWL version of kb to SUMO.owl");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        System.out.println("  -s - translate and write OWL version of kb to " + kbName + ".owl");
         System.out.println("  -y - translate and write OWL version of kb including YAGO mappings to stdout");
     }
 
@@ -1518,7 +1523,8 @@ public class OWLtranslator {
         else {
             System.out.println("INFO in OWL.main()");
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            KB kb = KBmanager.getMgr().getKB(kbName);
             System.out.println("OWL.main(): completed initialization");
             if (args != null && args.length > 1 && args[0].equals("-t")) {
                 try {
