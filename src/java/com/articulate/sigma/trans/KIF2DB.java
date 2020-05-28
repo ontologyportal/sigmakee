@@ -212,14 +212,15 @@ public class KIF2DB {
 
         KIF2DB kif2db = new KIF2DB();
         KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB("SUMO");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        kb = KBmanager.getMgr().getKB(kbName);
         System.out.println("KIF2DB()");
         try {
             //server = Server.createTcpServer().start();
             Class.forName("org.h2.Driver");
             kif2db.conn = DriverManager.getConnection(JDBCString, UserName, "");
             System.out.println("main(): Opened DB " + JDBCString);
-            String path = System.getenv("SIGMA_HOME") + File.separator + "SUMODB.csv";
+            String path = System.getenv("SIGMA_HOME") + File.separator + kbName + "DB.csv";
             kif2db.writeKB(kif2db.conn,path);
         }
         catch (Exception e) {
