@@ -295,7 +295,8 @@ public class DB2KIF {
      */
     public static void initValues(DB2KIF dbkif) {
 
-        kb = KBmanager.getMgr().getKB("SUMO");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        kb = KBmanager.getMgr().getKB(kbName);
         for (String r : column2Rel.values()) {
             String t = kb.getArgType(r,2);
             if (StringUtil.emptyString(t))
