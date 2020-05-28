@@ -196,7 +196,8 @@ public class VerbNet {
 
         KBmanager.getMgr().initializeOnce();
         WordNet.initOnce();
-        kb = KBmanager.getMgr().getKB("SUMO");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        kb = KBmanager.getMgr().getKB(kbName);
         System.out.println("VerbNet.main()");
         initOnce();
         processVerbs();
