@@ -566,7 +566,8 @@ public class DB {
         //System.out.println(rows.size());
         System.out.println("<rdf:RDF");
         System.out.println("  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
-        System.out.println("  xmlns:op=\"http://ontologyportal.org/SUMO.owl.txt\">");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        System.out.println("  xmlns:op=\"http://ontologyportal.org/" + kbName + ".owl.txt\">");
         String domain = "";
         String subject = "";
         String relator = "";
