@@ -69,8 +69,8 @@ public class KBcacheTest extends IntegrationTestBase {
 
         System.out.println("\n============= testBuildChildren ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
-
-        System.out.println("testbuildChildren(): KBs: " + KBmanager.getMgr().getKB("SUMO").constituents);
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        System.out.println("testbuildChildren(): KBs: " + KBmanager.getMgr().getKB(kbName).constituents);
         String parent = "BiologicalAttribute";
         /* HashSet<String> expected = new HashSet<>(Arrays.asList("AnimacyAttribute", "BodyPosition", "DevelopmentalAttribute",
                 "DiseaseOrSyndrome", "Fingerprint", "PsychologicalAttribute", "SexAttribute", "VisualAcuityAttribute",
