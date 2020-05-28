@@ -462,6 +462,7 @@ public class InferenceTestSuite {
                 kb.tell(formula);
         }
 
+        KBmanager.getMgr().loadKBforInference(kb);
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): expected answers: " + expectedAnswers);
         int maxAnswers = expectedAnswers.size();
         Formula theQuery = new Formula();
@@ -472,10 +473,19 @@ public class InferenceTestSuite {
             String processedStmt = f.getFormula();
             System.out.println("\n============================");
             System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
-            Vampire vampire = kb.askVampire(processedStmt,timeout,maxAnswers);
-            System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
-            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp = tpp.parseProofOutput(vampire.output,processedStmt,kb);
+            TPTP3ProofProcessor tpp = null;
+            if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+                Vampire vampire = kb.askVampire(processedStmt, timeout, maxAnswers);
+                System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
+                tpp = new TPTP3ProofProcessor();
+                tpp = tpp.parseProofOutput(vampire.output, processedStmt, kb);
+            }
+            if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+                com.articulate.sigma.tp.EProver eprover = kb.askEProver(processedStmt, timeout, maxAnswers);
+                System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
+                tpp = new TPTP3ProofProcessor();
+                tpp = tpp.parseProofOutput(eprover.output, processedStmt, kb);
+            }
             System.out.println("InferenceTestSuite.inferenceUnitTest(): bindings: " + tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): bindingMap: " + tpp.bindingMap);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + tpp.proof);
