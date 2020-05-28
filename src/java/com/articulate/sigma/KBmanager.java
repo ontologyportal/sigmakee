@@ -625,6 +625,11 @@ public class KBmanager implements Serializable {
                             VerbNet.processVerbs();
                         }
                     }
+                    else {
+                        WordNet.disable = true;
+                        VerbNet.disable = true;
+                        OMWordnet.disable = true;
+                    }
                     if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                     initializing = false;
                     initialized = true;
