@@ -1782,9 +1782,13 @@ public class KB implements Serializable {
             if (!processedStmts.isEmpty()) {
                 int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                File s = new File(dir + "SUMO.tptp");
-                if (!s.exists())
-                    System.out.println("Vampire.main(): no such file: " + s);
+                String kbName = KBmanager.getMgr().getPref("sumokbname");
+                File s = new File(dir + kbName + ".tptp");
+                if (!s.exists()) {
+                    System.out.println("Vampire.askVampire(): no such file: " + s + ". Creating it.");
+                    KB kb = KBmanager.getMgr().getKB(kbName);
+                    KBmanager.getMgr().loadKBforInference(kb);
+                }
                 else {
                     HashSet<String> tptpquery = new HashSet<>();
                     SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
@@ -3352,25 +3356,24 @@ public class KB implements Serializable {
             System.out.println("Error in Vampire: no executable " + vampex);
             return;
         }
-        /*
-        try {
-            if (!formulaMap.isEmpty()) {
-                HashSet<String> formulaStrings = new HashSet<String>();
-                formulaStrings.addAll(formulaMap.keySet());
-                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                skb.kb = this;
-                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-                System.out.println("INFO in KB.loadVampire(): generating TPTP file");
-                long millis = System.currentTimeMillis();
-                skb.writeFile(tptpFilename, true);
-                System.out.println("KB.loadVampire(): write TPTP, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+        if (!(new File(tptpFilename).exists())) {
+            try {
+                if (!formulaMap.isEmpty()) {
+                    HashSet<String> formulaStrings = new HashSet<String>();
+                    formulaStrings.addAll(formulaMap.keySet());
+                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                    skb.kb = this;
+                    System.out.println("INFO in KB.loadVampire(): generating TPTP file");
+                    long millis = System.currentTimeMillis();
+                    skb.writeFile(tptpFilename, true);
+                    System.out.println("KB.loadVampire(): write TPTP, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                }
+            } catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
             }
         }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-        */
         return;
     }
 
@@ -3573,7 +3576,8 @@ public class KB implements Serializable {
             showHelp();
         else {
             KBmanager.getMgr().initializeOnce();
-            KB kb = KBmanager.getMgr().getKB("SUMO");
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null && args.length > 2 && args[0].equals("-c")) {
                 int eqrel = kb.compareTermDepth(args[1], args[2]);
                 String eqText = KButilities.eqNum2Text(eqrel);
