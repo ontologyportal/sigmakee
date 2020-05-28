@@ -297,7 +297,8 @@ public class Vampire {
         vampire.terminate();
         */
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB("SUMO");
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
         String outfile = dir + "temp-comb.tptp";
         String stmtFile = dir + "temp-stmt.tptp";
@@ -305,11 +306,11 @@ public class Vampire {
         f1.delete();
         File f2 = new File(stmtFile);
         f2.delete();
-        File f3 = new File(dir + "SUMO" + KB._userAssertionsString);
+        File f3 = new File(dir + kbName + KB._userAssertionsString);
         f3.delete();
-        File f4 = new File(dir + "SUMO" + KB._userAssertionsTPTP);
+        File f4 = new File(dir + kbName + KB._userAssertionsTPTP);
         f4.delete();
-        File s = new File(dir + "SUMO.tptp");
+        File s = new File(dir + kbName + ".tptp");
         if (!s.exists())
             System.out.println("Vampire.main(): no such file: " + s);
         else {
