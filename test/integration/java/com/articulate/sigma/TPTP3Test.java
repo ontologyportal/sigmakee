@@ -338,6 +338,33 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    public void testParseProofStep5 () {
+
+        String ps1 = "cnf(c_0_8, negated_conjecture, ($false), " +
+                "inference(cn,[status(thm)]," +
+                  "[inference(rw,[status(thm)]," +
+                    "[inference(rw,[status(thm)],[c_0_5, c_0_6]), c_0_7])])," +
+                " ['proof']).\n";
+        //ps1 = ps1.replaceAll("\n","");
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.idTable.put("c_0_5", Integer.valueOf(0));
+        tpp.idTable.put("c_0_6", Integer.valueOf(1));
+        tpp.idTable.put("c_0_7", Integer.valueOf(2));
+        System.out.println("----------------------testParseProofStep5---------------------------");
+        String result = tpp.parseProofStep(ps1).toString().trim();
+        System.out.println("Result: " + result);
+        String expected = "0. false [0, 1, 2] cn";
+        System.out.println("\n\n");
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
+        assertEquals(expected,result);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
     public void testExtractAnswerClauseVamp () {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
