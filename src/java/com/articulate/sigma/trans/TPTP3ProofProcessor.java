@@ -18,6 +18,12 @@ import TPTPWorld.TPTPParser;
 import com.articulate.sigma.*;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
+import com.igormaznitsa.prologparser.DefaultParserContext;
+import com.igormaznitsa.prologparser.GenericPrologParser;
+import com.igormaznitsa.prologparser.ParserContext;
+import com.igormaznitsa.prologparser.PrologParser;
+import com.igormaznitsa.prologparser.terms.*;
+import com.igormaznitsa.prologparser.tokenizer.Op;
 
 import java.io.*;
 import java.util.*;
@@ -27,6 +33,8 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.igormaznitsa.prologparser.terms.TermType.*;
 
 public class TPTP3ProofProcessor {
 
@@ -189,9 +197,11 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 */
+	 * parse an 'inference()' string
+
 	public ArrayList<Integer> parseInferenceObject(String supportId) {
 
+		if (debug) System.out.println("Info in TPTP3ProofProcessor.parseInferenceObject(): " + supportId);
 		ArrayList<Integer> prems = new ArrayList<Integer>();
 		int firstParen = supportId.indexOf("(");
 		int secondParen = StringUtil.findBalancedParen(firstParen, supportId);
@@ -202,12 +212,23 @@ public class TPTP3ProofProcessor {
 			supports = "[" + supportId + "]";
 		supports = supportId.substring(secondComma+1,secondParen);
 
-		if (supports.startsWith("inference"))
-			return parseInferenceObject(supports);
-		else
-			return parseSupports(supports.trim());
-	}
+		if (debug) System.out.println("Info in TPTP3ProofProcessor.parseInferenceObject(): supports: " + supports);
 
+		ArrayList<Integer> xtraPrems = new ArrayList<Integer>();
+		int thirdComma = -1;
+		if (secondComma+1 < supportId.length())
+			thirdComma = supportId.indexOf(",",secondComma+1);
+		if (thirdComma != -1) {
+			xtraPrems = parseSupports(supportId.substring(thirdComma+1,supportId.length()));
+		}
+		if (supports.startsWith("inference"))
+			prems = parseInferenceObject(supports);
+		else
+			prems = parseSupports(supports.trim());
+		prems.addAll(xtraPrems);
+		return prems;
+	}
+*/
 	/** ***************************************************************
 	 */
 	public String getInferenceType(String supportId) {
@@ -229,7 +250,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 * Parse support / proof statements in the response
-	 */
+     */
 	public ArrayList<Integer> parseSupports(String supportId) {
 
 		if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
@@ -240,7 +261,7 @@ public class TPTP3ProofProcessor {
             supportId = StringUtil.removeEnclosingCharPair(supportId,1,'[',']').trim();
 			//System.out.println("Info in TPTP3ProofProcessor.parseSupports()2: " + supportId);
 			if (supportId.startsWith("inference("))
-				return parseInferenceObject(supportId);
+				return getSupports(supportId + ".");
 			String[] supportSet = supportId.split(",");
 			for (int i = 0; i < supportSet.length; i++) {
 				//System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet[i]);
@@ -260,7 +281,7 @@ public class TPTP3ProofProcessor {
 			return prems;
 		}
 		else if (supportId.startsWith("inference(")) {
-			return parseInferenceObject(supportId);
+			return getSupports(supportId + ".");
 		}
 		else if (supportId.startsWith("introduced(")) {
 			return prems;
@@ -772,7 +793,98 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
+	public static void printPrologTerm (PrologTerm pt, String indent) {
+
+		System.out.println(indent + pt.toString() + "\t" + pt.getType());
+		if (pt.getType() == STRUCT) {
+			System.out.println("arity: " + ((PrologStruct) pt).getArity());
+			for (PrologTerm pit : (PrologStruct) pt)
+				printPrologTerm(pit, indent + "\t");
+		}
+		else if (pt.getType() == LIST) {
+			System.out.println("arity: " + ((PrologList) pt).getArity());
+			for (PrologTerm pit : (PrologList) pt)
+				printPrologTerm(pit,indent+"\t");
+		}
+	}
+
+	/** ***************************************************************
+	 */
+	public static void printPrologTerm (PrologTerm pt) {
+
+		printPrologTerm(pt,"");
+	}
+
+	/** ***************************************************************
+	 */
+	public ArrayList<Integer> getSupports (PrologTerm pt) {
+
+		if (debug) System.out.println("TPTP3ProofProcess.getSupports(PrologTerm): " + pt);
+		if (debug) System.out.println("getSupports(): " + pt.toString() + "\t" + pt.getType());
+		ArrayList<Integer> supports = new ArrayList<>();
+		if (pt.getType() == ATOM)
+			supports.add(idTable.get(pt.toString()));
+		else if (pt.getType() == LIST) {
+			for (PrologTerm pit : (PrologList) pt)
+				supports.addAll(getSupports(pit));
+		}
+		else if (pt.getType() == STRUCT) {
+			String predString = ((PrologStruct) pt).getFunctor().toString();
+			if (predString.equals("inference"))
+				supports.addAll(getSupports(((PrologStruct) pt).getTermAt(2)));
+			else if (predString.equals("cnf") || predString.equals("fof") ||
+					predString.equals("tff"))
+				supports.addAll(getSupports(((PrologStruct) pt).getTermAt(3)));
+		}
+		return supports;
+	}
+
+	/** ***************************************************************
+	 */
+	public ArrayList<Integer> getSupports (String input) {
+
+		if (debug) System.out.println("TPTP3ProofProcess.getSupports(String): " + input);
+		ArrayList<Integer> supports = new ArrayList<>();
+		Reader reader = new StringReader(input);
+		if (debug) System.out.println(input);
+		DefaultParserContext dpc = new DefaultParserContext(ParserContext.FLAG_CURLY_BRACKETS).addOps(Op.SWI);
+		PrologParser parser = new GenericPrologParser(reader,dpc);
+		for (PrologTerm pt : parser)
+			supports.addAll(getSupports(pt));
+		return supports;
+	}
+
+	/** ***************************************************************
+	 */
+	public void testPrologParser () {
+
+		//Reader reader = new StringReader("hello(world). some({1,2,3})."); // power(X,Y,Z) :- Z is X ** Y.");
+		String input = "cnf(c_0_8, negated_conjecture, ($false), " +
+				"inference(cn,[status(thm)]," +
+				"[inference(rw,[status(thm)]," +
+				"[inference(rw,[status(thm)],[c_0_5, c_0_6]), c_0_7])])," +
+				" ['proof']).";
+		idTable.put("c_0_5", Integer.valueOf(0));
+		idTable.put("c_0_6", Integer.valueOf(1));
+		idTable.put("c_0_7", Integer.valueOf(2));
+		Reader reader = new StringReader(input);
+		System.out.println(input);
+//		PrologParser parser = new GenericPrologParser(reader, new DefaultParserContext(ParserContext.FLAG_CURLY_BRACKETS, Op.SWI));
+		DefaultParserContext dpc = new DefaultParserContext(ParserContext.FLAG_CURLY_BRACKETS).addOps(Op.SWI);
+		PrologParser parser = new GenericPrologParser(reader,dpc);
+		//for (PrologTerm pt : parser) {
+		//	printPrologTerm(pt);
+		//}
+		System.out.println("--------------------------");
+		for (PrologTerm pt : parser)
+			System.out.println(getSupports(pt));
+	}
+
+	/** ***************************************************************
+	 */
 	public static void main (String[] args) {
 
+		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+		tpp.testPrologParser();
 	}
 }
