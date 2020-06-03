@@ -26,7 +26,7 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             FileReader r = new FileReader(System.getProperty("user.home") + "/Programs/E/PROVER/eltb_out.txt");
             LineNumberReader lnr = new LineNumberReader(r);
-            tpp = TPTP3ProofProcessor.parseProofOutput(lnr, kb);
+            tpp.parseProofOutput(lnr, kb);
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
@@ -60,7 +60,8 @@ public class TPTP3Test extends IntegrationTestBase {
             String result = eprover.submitQuery(query, kb);
             StringReader sr = new StringReader(result);
             LineNumberReader lnr = new LineNumberReader(sr);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(lnr, kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(lnr, kb);
             result = tpp.proof.toString().trim();
             System.out.println("Proof: " + result);
             //System.out.println("HTML Proof: " + HTMLformatter.formatTPTP3ProofResult(tpp,query, "", "SUMO", "EnglishLanguage"));
@@ -96,7 +97,8 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire.mode = Vampire.ModeType.AVATAR;
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query, kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vampire.output, query, kb);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             System.out.println("Result: " + result);
@@ -125,7 +127,8 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire.mode = Vampire.ModeType.CASC;
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query, kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vampire.output, query, kb);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             String expected = "[PositiveInteger]";
@@ -166,7 +169,8 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire.mode = Vampire.ModeType.CASC;
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query,kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vampire.output, query,kb);
             String expected = "[PositiveInteger]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
@@ -197,7 +201,8 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire.mode = Vampire.ModeType.CASC;
             String query = "(subclass ?X ?Y)";
             Vampire vampire = kb.askVampire(query,30,1);
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, query, kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vampire.output, query, kb);
 
             String expected = "[RealNumber, Quantity]";
             System.out.println("expected: " + expected);
