@@ -254,7 +254,8 @@ public class CCheck implements Runnable {
         else if (inferenceEngine.equals("EProver")) {
     		StringReader sr = new StringReader(proof);
     		LineNumberReader lnr = new LineNumberReader(sr);
-    		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(lnr, kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(lnr, kb);
             if (tpp.proof != null && tpp.proof.size() > 0) 
                 printReport(query,processedQ,sourceFile,false,proof,testType);            
         }
