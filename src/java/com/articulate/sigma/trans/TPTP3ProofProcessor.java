@@ -494,7 +494,8 @@ public class TPTP3ProofProcessor {
 				if (debug) System.out.println("processAnswersFromProof(): has ans clause: " + ps);
 				Formula answerClause = extractAnswerClause(new Formula(ps.axiom));
 				if (debug) System.out.println("processAnswersFromProof(): answerClause: " + answerClause);
-				answers = answerClause.argumentsToArrayListString(1);
+				if (answerClause != null)
+					answers = answerClause.argumentsToArrayListString(1);
 				if (debug) System.out.println("processAnswersFromProof(): answers: " + answers);
 				break;
 			}
