@@ -109,7 +109,9 @@ public class InferenceTest {
         InferenceTestSuite.InfTestData itd = its.inferenceUnitTest(fInput,kb);
         System.out.println("expected: " + itd.expectedAnswers);
         System.out.println("actual: " + itd.actualAnswers);
-        if (itd.expectedAnswers.equals(itd.actualAnswers))
+        if (itd.inconsistent)
+            System.out.println("Failure (**inconsistent**) in " + fInput);
+        else if (itd.expectedAnswers.equals(itd.actualAnswers))
             System.out.println("Success in " + fInput);
         else
             System.out.println("Failure in " + fInput);
