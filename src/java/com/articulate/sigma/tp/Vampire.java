@@ -112,8 +112,10 @@ public class Vampire {
                     Set<String> tptpFormulas = new HashSet<>();
                     if (tptp) {
                         SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-                        for (Formula p : processedFormulas)
-                            tptpFormulas.add(stptp.tptpParseSUOKIFString(p.getFormula(),false));
+                        for (Formula p : processedFormulas) {
+                            if (!p.isHigherOrder(kb))
+                                tptpFormulas.add(stptp.tptpParseSUOKIFString(p.getFormula(), false));
+                        }
                     }
                     // 3. Write to new tptp file
                     for (String theTPTPFormula : tptpFormulas) {
