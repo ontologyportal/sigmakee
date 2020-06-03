@@ -1542,12 +1542,7 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Adds a
-     * formula to the knowledge base. Returns an XML formatted String that
-     * contains the response of the inference engine. It should be of the form
-     * "<assertionResponse>...</assertionResponse>" where the body should be "
-     * Formula has been added to the session database" if all went well.
-     * <p>
+     * Adds a formula to the knowledge base.
      *
      * @param input The String representation of a SUO-KIF Formula.
      * @return A String indicating the status of the tell operation.
@@ -1643,8 +1638,6 @@ public class KB implements Serializable {
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // nothing much to do since Vampire has to load it all at query time
                         // just create a single file
-                        //String vampAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
-                        //String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                     }
                     result += (allAdded ? " and inference" : " but not for local inference");
                 }
