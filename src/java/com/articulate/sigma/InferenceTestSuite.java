@@ -227,6 +227,7 @@ public class InferenceTestSuite {
         public int timeout = 30;
         public ArrayList<String> files = new ArrayList<>();
         public ArrayList<String> statements = new ArrayList<>();
+        public boolean inconsistent = false;
     }
 
     /** ***************************************************************
@@ -399,11 +400,11 @@ public class InferenceTestSuite {
             String rfn = itd.filename;
             String resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
             File resultsFile = new File(outputDir, resultsFilename);
-            TPTP3ProofProcessor tpp = null;
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             try {
                 fw = new FileWriter(resultsFile);
                 pw = new PrintWriter(fw);
-                tpp = TPTP3ProofProcessor.parseProofOutput(proof, kb);
+                tpp.parseProofOutput(proof, kb);
                 pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
                 itd.actualAnswers = tpp.bindings;
             }
@@ -416,13 +417,17 @@ public class InferenceTestSuite {
                     if (fw != null) { fw.close(); }
                 }
                 catch (Exception ex) {
+                    ex.printStackTrace();
                 }
+            }
+            if (tpp.inconsistency) {
+                result.append("<h1>InferenceTestSuite.inferenceUnitTest(): Danger! possible inconsistency!</h1>");
             }
             boolean different = true;
             if (proof != null)
                 different = compareAnswers(tpp,itd.expectedAnswers);
             String resultString = "";
-            if (different) {
+            if (different || tpp.inconsistency) {
                 resultString = "fail";
                 fail++;
             }
@@ -430,11 +435,11 @@ public class InferenceTestSuite {
                 resultString = "succeed";
                 pass++;
             }
-            result = result.append("<tr><td>" + itd.note + "</td><td><a href=\"" + outputDir.getName() +
+            result.append("<tr><td>" + itd.note + "</td><td><a href=\"" + outputDir.getName() +
                                    "/" + itd.note + "\">" + itd.filename + "</a></td>");
-            result = result.append("<td><a href=\"" + outputDir.getName() + "/" + resultsFile.getName() +
+            result.append("<td><a href=\"" + outputDir.getName() + "/" + resultsFile.getName() +
                                    "\">" + resultString + "</a></td>");
-            result = result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
+            result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
             System.out.println("FINISHED TEST #" + counter + " of " + files.size() + " : " + itd.filename);
             counter++;
         }
@@ -443,18 +448,18 @@ public class InferenceTestSuite {
         System.out.println("ALL TEST QUERIES FINISHED");
         System.out.println();
 
-        result = result.append("</table><P>\n");
-        result = result.append("Total time: ");
-        result = result.append(String.valueOf(totalTime/1000));
-        result = result.append(" seconds<P>\n");
+        result.append("</table><P>\n");
+        result.append("Total time: ");
+        result.append(String.valueOf(totalTime/1000));
+        result.append(" seconds<P>\n");
 
-        result = result.append("Total correct: ");
-        result = result.append(String.valueOf(pass));
-        result = result.append("<P>\n");
+        result.append("Total correct: ");
+        result.append(String.valueOf(pass));
+        result.append("<P>\n");
         
-        result = result.append("Total failed: ");
-        result = result.append(String.valueOf(fail));
-        result = result.append("<P>\n");
+        result.append("Total failed: ");
+        result.append(String.valueOf(fail));
+        result.append("<P>\n");
         kb.deleteUserAssertionsAndReload();
         return result.toString();
     }
@@ -480,7 +485,7 @@ public class InferenceTestSuite {
         theQuery.read(itd.query);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
-        TPTP3ProofProcessor tpp = null;
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         for (Formula f : theQueries) {
             String processedStmt = f.getFormula();
             System.out.println("\n============================");
@@ -489,22 +494,27 @@ public class InferenceTestSuite {
             if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                 Vampire vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
                 System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
-                tpp = new TPTP3ProofProcessor();
-                tpp = tpp.parseProofOutput(vampire.output, processedStmt, kb);
+                tpp.parseProofOutput(vampire.output, processedStmt, kb);
             }
             else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                 com.articulate.sigma.tp.EProver eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
                 System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
-                tpp = new TPTP3ProofProcessor();
-                tpp = tpp.parseProofOutput(eprover.output, processedStmt, kb);
+                tpp.parseProofOutput(eprover.output, processedStmt, kb);
             }
             else {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
                 continue;
             }
+            if (tpp.inconsistency) {
+                System.out.println("*****************************************");
+                System.out.println("InferenceTestSuite.inferenceUnitTest(): Danger! possible inconsistency!");
+                System.out.println("proof with no negated conjecture in " + itd.filename);
+                System.out.println("*****************************************");
+            }
             System.out.println("InferenceTestSuite.inferenceUnitTest(): bindings: " + tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): bindingMap: " + tpp.bindingMap);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + tpp.proof);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): inconsistency: " + tpp.inconsistency);
 
             itd.actualAnswers.addAll(tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): answers: " + itd.actualAnswers);
@@ -514,6 +524,10 @@ public class InferenceTestSuite {
             System.out.println("InferenceTestSuite.inferenceUnitTest(): actual answers: " + itd.actualAnswers);
             if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.size() == 0)
                 itd.actualAnswers.add("yes");
+            if (tpp.inconsistency) {
+                itd.inconsistent = true;
+                itd.actualAnswers = new ArrayList<>();
+            }
             System.out.println("InferenceTestSuite.inferenceUnitTest(): actual answers(2): " + itd.actualAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): expected answers(2): " + itd.expectedAnswers);
         }
@@ -565,7 +579,13 @@ public class InferenceTestSuite {
             kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             String path = KBmanager.getMgr().getPref("inferenceTestDir");
             InfTestData itd = inferenceUnitTest(path + File.separator + filename,kb);
-            if (itd.actualAnswers.equals(itd.expectedAnswers)) {
+            if (itd.inconsistent) {
+                System.out.println("*****************************************");
+                System.out.println("InferenceTestSuite.cmdLineTest(): Danger! possible inconsistency!");
+                System.out.println("proof with no negated conjecture in " + itd.filename);
+                System.out.println("*****************************************");
+            }
+            if (itd.actualAnswers.equals(itd.expectedAnswers) && !itd.inconsistent) {
                 System.out.println("InferenceTestSuite.cmdLineTest() : Success on " + filename);
                 return true;
             }
