@@ -37,7 +37,7 @@ public class InferenceTest {
                 Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {
             if (!kb.containsFile(s)) {
-                System.out.println("Error in KBcacheTest required file " + s + " missing");
+                System.out.println("Error in InferenceTest.setKB(): required file " + s + " missing");
                 System.exit(-1);
             }
         }
@@ -105,12 +105,15 @@ public class InferenceTest {
         System.out.println("InferenceTest.test(): " + fInput);
         ArrayList<String> expectedAnswers = new ArrayList<>();
         ArrayList<String> actualAnswers = new ArrayList<>();
-        InferenceTestSuite.inferenceUnitTest(fInput, kb, expectedAnswers, actualAnswers);
-        if (expectedAnswers.equals(actualAnswers))
+        InferenceTestSuite its = new InferenceTestSuite();
+        InferenceTestSuite.InfTestData itd = its.inferenceUnitTest(fInput,kb);
+        System.out.println("expected: " + itd.expectedAnswers);
+        System.out.println("actual: " + itd.actualAnswers);
+        if (itd.expectedAnswers.equals(itd.actualAnswers))
             System.out.println("Success in " + fInput);
         else
             System.out.println("Failure in " + fInput);
         System.out.println("\n\n");
-        assertEquals(expectedAnswers, actualAnswers);
+        assertEquals(itd.expectedAnswers, itd.actualAnswers);
     }
 }
