@@ -16,8 +16,6 @@ package com.articulate.sigma.trans;
 import TPTPWorld.TPTPFormula;
 import TPTPWorld.TPTPParser;
 import com.articulate.sigma.*;
-import com.articulate.sigma.tp.EProver;
-import com.articulate.sigma.tp.Vampire;
 import com.igormaznitsa.prologparser.DefaultParserContext;
 import com.igormaznitsa.prologparser.GenericPrologParser;
 import com.igormaznitsa.prologparser.ParserContext;
@@ -27,10 +25,6 @@ import com.igormaznitsa.prologparser.tokenizer.Op;
 
 import java.io.*;
 import java.util.*;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,27 +34,27 @@ public class TPTP3ProofProcessor {
 
 	public static boolean debug = false;
 	public String status;
-	public String origQuery = "";
-	public ArrayList<String> bindings = new ArrayList<String>();
+	public boolean inconsistency = false;
+	public ArrayList<String> bindings = new ArrayList<>();
 	public HashMap<String,String> bindingMap = new HashMap<>();
-	public ArrayList<ProofStep> proof = new ArrayList<ProofStep>();
+	public ArrayList<ProofStep> proof = new ArrayList<>();
 
 	// a map of original ID keys and renumbered key values
-	public HashMap<String,Integer> idTable = new HashMap<String,Integer>();
-	int idCounter = 0;
+	public HashMap<String,Integer> idTable = new HashMap<>();
+	private int idCounter = 0;
 
 	/** ***************************************************************
 	 * Convert bindings in list to string
 	 */
 	public String toString () {
 
-		StringBuffer sb = new StringBuffer();
+		StringBuilder sb = new StringBuilder();
 		sb.append("Answers:");
-		for (int i = 0; i < bindings.size(); i++)
-			sb.append(bindings.get(i) + " ");
+		for (String s : bindings)
+			sb.append(s + " ");
 		sb.append("\n");
-		for (int i = 0; i < proof.size(); i++)
-			sb.append(proof.get(i) + "\n");
+		for (ProofStep ps : proof)
+			sb.append(ps + "\n");
 		sb.append(status + "\n");
 		return sb.toString();
 	}
@@ -69,7 +63,7 @@ public class TPTP3ProofProcessor {
 	 * Join TPTP3 proof statements that are formatted over multiple lines. Note
 	 * that comment lines are left unchanged.
 	 */
-	public static ArrayList<String> joinLines (ArrayList<String> inputs) {
+	private static ArrayList<String> joinLines(ArrayList<String> inputs) {
 
 		ArrayList<String> outputs = new ArrayList<String>();
 		StringBuffer sb = new StringBuffer();
@@ -197,39 +191,6 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 * parse an 'inference()' string
-
-	public ArrayList<Integer> parseInferenceObject(String supportId) {
-
-		if (debug) System.out.println("Info in TPTP3ProofProcessor.parseInferenceObject(): " + supportId);
-		ArrayList<Integer> prems = new ArrayList<Integer>();
-		int firstParen = supportId.indexOf("(");
-		int secondParen = StringUtil.findBalancedParen(firstParen, supportId);
-		int firstComma = supportId.indexOf(",");
-		int secondComma = supportId.indexOf(",",firstComma+1);
-		String supports = "";
-		if (secondComma+1 >= secondParen)       // supportID = 10997,['proof']
-			supports = "[" + supportId + "]";
-		supports = supportId.substring(secondComma+1,secondParen);
-
-		if (debug) System.out.println("Info in TPTP3ProofProcessor.parseInferenceObject(): supports: " + supports);
-
-		ArrayList<Integer> xtraPrems = new ArrayList<Integer>();
-		int thirdComma = -1;
-		if (secondComma+1 < supportId.length())
-			thirdComma = supportId.indexOf(",",secondComma+1);
-		if (thirdComma != -1) {
-			xtraPrems = parseSupports(supportId.substring(thirdComma+1,supportId.length()));
-		}
-		if (supports.startsWith("inference"))
-			prems = parseInferenceObject(supports);
-		else
-			prems = parseSupports(supports.trim());
-		prems.addAll(xtraPrems);
-		return prems;
-	}
-*/
-	/** ***************************************************************
 	 */
 	public String getInferenceType(String supportId) {
 
@@ -355,6 +316,10 @@ public class TPTP3ProofProcessor {
 		//String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
 		String formulaType = args.get(2);
 		ps.formulaType = formulaType;
+		if (formulaType.equals("negated_conjecture")) {
+			if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): found negated_conjecture, setting inconsistency to false");
+			inconsistency = false;
+		}
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): type     : " + formulaType);
 		//String rest = withoutWrapper.substring(comma2 + 1).trim();
 		//int statementEnd = StringUtil.findBalancedParen(rest.indexOf("("), rest);	// startIndex =  index_of_first_"(", instead of 0;
@@ -512,7 +477,6 @@ public class TPTP3ProofProcessor {
 	/** ***************************************************************
 	 * Return the most specific type for skolem variable.
 	 *
-	 * @param tpp The structure learned from E's response
 	 * @param kb The knowledge base used to find skolem term's types
 	 *
 	 * For example,
@@ -524,14 +488,13 @@ public class TPTP3ProofProcessor {
 	 * set binding = "An instance of Human, Agent" (If multiple types
 	 *              are found for esk3_1)
 	 */
-	public static void findTypesForSkolemTerms(TPTP3ProofProcessor tpp, KB kb) {
+	public void findTypesForSkolemTerms(KB kb) {
 
-		ArrayList<String> bindings = tpp.bindings;
 		FormulaPreprocessor fp = new FormulaPreprocessor();
 		for (int i = 0; i < bindings.size(); i++) {
 			String binding = bindings.get(i);
 			if (binding.startsWith("esk")) {
-				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, tpp.proof);
+				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, proof);
 				HashSet<String> types = new HashSet<>();
 				for (String skolemStmt : skolemStmts) {
 
@@ -635,24 +598,25 @@ public class TPTP3ProofProcessor {
 	/** ***************************************************************
 	 * Compute bindings and proof from theorem prover's response
 	 */
-	public static TPTP3ProofProcessor parseProofOutput (LineNumberReader lnr, KB kb) {
+	public void parseProofOutput (LineNumberReader lnr, KB kb) {
 
-		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 		try {
 			boolean inProof = false;
 			boolean finishAnswersTuple = false;
 			String line;
 			while ((line = lnr.readLine()) != null) {
 				if (line.indexOf("SZS output start") != -1) {
+					inconsistency = true; // if negated_conjecture found in the proof then it's not inconsistent
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): found proof, seeing inconsistency to true");
 					inProof = true;
 					line = lnr.readLine();
 				}
 				if (line.indexOf("SZS status") != -1) {
-					tpp.status = line.substring(13);
+					status = line.substring(13);
 				}
 				if (line.indexOf("SZS answers") != -1) {
 					if (!finishAnswersTuple) {
-						tpp.processAnswers(line.substring(20,line.lastIndexOf(']')+1).trim());
+						processAnswers(line.substring(20,line.lastIndexOf(']')+1).trim());
 						finishAnswersTuple = true;
 					}
 				}
@@ -661,31 +625,35 @@ public class TPTP3ProofProcessor {
 						inProof = false;
 					}
 					else {
-						ProofStep ps = tpp.parseProofStep(line);
+						ProofStep ps = parseProofStep(line);
 						if (ps != null) {
-							tpp.proof.add(ps);
+							proof.add(ps);
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): adding line: " +
 									line + "\nas " + ps);
 						}
 					}
 				}
 			}
+			if (inconsistency) {
+				System.out.println("*****************************************");
+				System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): Danger! possible inconsistency!");
+				System.out.println("*****************************************");
+			}
 		}
 		catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
 		// remove unnecessary steps, eg: conjectures, duplicate trues
-		tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
-		tpp.proof = ProofStep.removeDuplicates(tpp.proof);
+		proof = ProofStep.removeUnnecessary(proof);
+		proof = ProofStep.removeDuplicates(proof);
 		// find types for skolem terms
-		findTypesForSkolemTerms(tpp, kb);
-		return tpp;
+		findTypesForSkolemTerms(kb);
 	}
 
     /** ***************************************************************
 	 * Compute binding and proof from the theorem prover's response
      */
-    public static TPTP3ProofProcessor parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb) {
+    public void parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb) {
 
 		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): before reverse: " +
 		//		lines);
@@ -696,7 +664,6 @@ public class TPTP3ProofProcessor {
 			lines = joinNreverseInputLines(lines);
 		if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
 			lines = joinLines(lines);
-        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         try {
             boolean inProof = false;
             boolean finishAnswersTuple = false;
@@ -711,13 +678,15 @@ public class TPTP3ProofProcessor {
 				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): finishAnswersTuple: " +
 						finishAnswersTuple);
                 if (line.indexOf("SZS output start") != -1) {
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): found proof, seeing inconsistency to true");
+					inconsistency = true; // if negated_conjecture found in the proof then it's not inconsistent
                     inProof = true;
                     line = it.next();
                 }
                 if (line.indexOf("SZS status") != -1) {
-                    tpp.status = line.substring(13);
+                    status = line.substring(13);
 					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): tpp.status: " +
-							tpp.status);
+							status);
                 }
                 if (line.indexOf("SZS answers") != -1) {
                     if (!finishAnswersTuple) {
@@ -725,7 +694,7 @@ public class TPTP3ProofProcessor {
                     	if (end == -1 || (line.length() < end + 1))
 							end = line.length();
 						String bracketedAnswers = line.substring(20,end + 1);
-                        tpp.processAnswers(bracketedAnswers);
+                        processAnswers(bracketedAnswers);
                         finishAnswersTuple = true;
                     }
                 }
@@ -734,28 +703,32 @@ public class TPTP3ProofProcessor {
                         inProof = false;
                     }
                     else {
-                        ProofStep ps = tpp.parseProofStep(line);
+                        ProofStep ps = parseProofStep(line);
                         if (ps != null) {
-                            tpp.proof.add(ps);
+                            proof.add(ps);
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(2): adding line: " +
 									line + "\nas " + ps);
                         }
                     }
                 }
             }
+			if (inconsistency) {
+				System.out.println("*****************************************");
+				System.out.println("TPTP3ProofProcessor.parseProofOutput(): Danger! possible inconsistency!");
+				System.out.println("*****************************************");
+			}
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): before pruning: " + tpp);
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): before pruning: " + this);
         // remove unnecessary steps, eg: conjectures, duplicate trues
-        tpp.proof = ProofStep.removeUnnecessary(tpp.proof);
-        tpp.proof = ProofStep.removeDuplicates(tpp.proof);
-        tpp.processAnswersFromProof(kifQuery);
+        proof = ProofStep.removeUnnecessary(proof);
+        proof = ProofStep.removeDuplicates(proof);
+        processAnswersFromProof(kifQuery);
         // find types for skolem terms
-        findTypesForSkolemTerms(tpp, kb);
-		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): result: " + tpp);
-        return tpp;
+        findTypesForSkolemTerms(kb);
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): result: " + this);
     }
     
 	/** ***************************************************************
@@ -770,40 +743,40 @@ public class TPTP3ProofProcessor {
 	 * Output = [An instance of Human] (Human is the most specific type
 	 * for esk3_0 in the given proof)
 	 */
-	public static ArrayList<String> parseAnswerTuples(String st, KB kb, FormulaPreprocessor fp) {
+	public ArrayList<String> parseAnswerTuples(String st, KB kb, FormulaPreprocessor fp) {
 
 		ArrayList<String> answers = new ArrayList<>();
-		TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(st, kb);
-		if (tpp.bindings == null || tpp.bindings.isEmpty()) {
-			if (tpp.proof != null && !tpp.proof.isEmpty()) {
+		parseProofOutput(st, kb);
+		if (bindings == null || bindings.isEmpty()) {
+			if (proof != null && !proof.isEmpty()) {
 				answers.add("Proof Found");		// for boolean queries
 			}
 			return answers;
 		}
-		return tpp.bindings;
+		return bindings;
 	}
 
 	/** ***************************************************************
 	 */
-	public static TPTP3ProofProcessor parseProofOutput (String st, KB kb) {
+	public void parseProofOutput (String st, KB kb) {
 
 		StringReader sr = new StringReader(st);
 		LineNumberReader lnr = new LineNumberReader(sr);
-		return parseProofOutput(lnr, kb);
+		parseProofOutput(lnr, kb);
 	}
 
 	/** ***************************************************************
 	 */
-	public static void printPrologTerm (PrologTerm pt, String indent) {
+	private static void printPrologTerm (PrologTerm pt, String indent) {
 
 		System.out.println(indent + pt.toString() + "\t" + pt.getType());
 		if (pt.getType() == STRUCT) {
-			System.out.println("arity: " + ((PrologStruct) pt).getArity());
+			System.out.println("arity: " + pt.getArity());
 			for (PrologTerm pit : (PrologStruct) pt)
 				printPrologTerm(pit, indent + "\t");
 		}
 		else if (pt.getType() == LIST) {
-			System.out.println("arity: " + ((PrologList) pt).getArity());
+			System.out.println("arity: " + pt.getArity());
 			for (PrologTerm pit : (PrologList) pt)
 				printPrologTerm(pit,indent+"\t");
 		}
@@ -818,7 +791,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
-	public ArrayList<Integer> getSupports (PrologTerm pt) {
+	private ArrayList<Integer> getSupports (PrologTerm pt) {
 
 		if (debug) System.out.println("TPTP3ProofProcess.getSupports(PrologTerm): " + pt);
 		if (debug) System.out.println("getSupports(): " + pt.toString() + "\t" + pt.getType());
@@ -830,7 +803,7 @@ public class TPTP3ProofProcessor {
 				supports.addAll(getSupports(pit));
 		}
 		else if (pt.getType() == STRUCT) {
-			String predString = ((PrologStruct) pt).getFunctor().toString();
+			String predString = pt.getFunctor().toString();
 			if (predString.equals("inference"))
 				supports.addAll(getSupports(((PrologStruct) pt).getTermAt(2)));
 			else if (predString.equals("cnf") || predString.equals("fof") ||
@@ -842,7 +815,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
-	public ArrayList<Integer> getSupports (String input) {
+	private ArrayList<Integer> getSupports (String input) {
 
 		if (debug) System.out.println("TPTP3ProofProcess.getSupports(String): " + input);
 		ArrayList<Integer> supports = new ArrayList<>();
@@ -857,7 +830,7 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
-	public void testPrologParser () {
+	private void testPrologParser () {
 
 		//Reader reader = new StringReader("hello(world). some({1,2,3})."); // power(X,Y,Z) :- Z is X ** Y.");
 		String input = "cnf(c_0_8, negated_conjecture, ($false), " +
