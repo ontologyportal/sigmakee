@@ -332,7 +332,8 @@ public class EProver {
                     if (tptp) {
                         SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
                         for (Formula p : processedFormulas)
-                            tptpFormulas.add(stptp.tptpParseSUOKIFString(p.getFormula(),false));
+                            if (!p.isHigherOrder(kb))
+                                tptpFormulas.add(stptp.tptpParseSUOKIFString(p.getFormula(),false));
                     }
                     // 3. Write to new tptp file
                     if (eprover != null) {
