@@ -1694,7 +1694,8 @@ public class KB implements Serializable {
                 else
                     System.out.println("KB.ask: Get response from EProver, start for parsing ...");
                 // System.out.println("Results returned from E = \n" + EResult);
-                ArrayList<String> answers = TPTP3ProofProcessor.parseAnswerTuples(result, this, fp);
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                ArrayList<String> answers = tpp.parseAnswerTuples(result, this, fp);
                 return answers;
             }
         }
@@ -1831,7 +1832,8 @@ public class KB implements Serializable {
         StringBuffer sb = new StringBuffer();
         Vampire.mode = Vampire.ModeType.CASC;
         Vampire vampire = askVampire(suoKifFormula,30,1);
-        TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vampire.output, suoKifFormula, this);
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.parseProofOutput(vampire.output, suoKifFormula, this);
         String result = tpp.proof.toString().trim();
         sb.append(result + "\n");
         result = tpp.bindings.toString();
@@ -1873,7 +1875,8 @@ public class KB implements Serializable {
                 else
                     System.out.println("Get response from EProver, start for parsing ...");
                 // System.out.println("Results returned from E = \n" + EResult);
-                answers = TPTP3ProofProcessor.parseAnswerTuples(EResult, this, fp);
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                answers = tpp.parseAnswerTuples(EResult, this, fp);
                 return answers;
             }
         }
@@ -3516,7 +3519,8 @@ public class KB implements Serializable {
             System.out.println("KB.test(): query Vampire on file: " + outfile);
             Vampire vamp = kb.askVampire(contents,30,1);
             //System.out.println("KB.test(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-            TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output,contents,kb);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vamp.output,contents,kb);
             System.out.println("queryExp(): bindings: " + tpp.bindings);
             System.out.println("queryExp(): proof: " + tpp.proof);
             ArrayList<String> proofStepsStr = new ArrayList<>();
@@ -3586,24 +3590,20 @@ public class KB implements Serializable {
                 kb.loadVampire();
                 Vampire vamp = kb.askVampire(args[1], 30, 1);
                 System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-                TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(vamp.output, args[1], kb);
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                tpp.parseProofOutput(vamp.output, args[1], kb);
                 System.out.println("KB.main(): bindings: " + tpp.bindings);
                 System.out.println("KB.main(): proof: " + tpp.proof);
-                ArrayList<String> proofStepsStr = new ArrayList<>();
-                for (ProofStep ps : tpp.proof)
-                    proofStepsStr.add(ps.toString());
             }
             else if (args != null && args.length > 1 && args[0].equals("-ae")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
                 kb.loadEProver();
                 EProver eprover = kb.askEProver(args[1], 30, 1);
                 System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
-                TPTP3ProofProcessor tpp = TPTP3ProofProcessor.parseProofOutput(eprover.output, args[1], kb);
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                tpp.parseProofOutput(eprover.output, args[1], kb);
                 System.out.println("KB.main(): bindings: " + tpp.bindings);
                 System.out.println("KB.main(): proof: " + tpp.proof);
-                ArrayList<String> proofStepsStr = new ArrayList<>();
-                for (ProofStep ps : tpp.proof)
-                    proofStepsStr.add(ps.toString());
             }
             else
                 showHelp();
