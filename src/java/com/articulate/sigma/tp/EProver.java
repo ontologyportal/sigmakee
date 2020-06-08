@@ -33,6 +33,16 @@ public class EProver {
     public ArrayList<String> output = new ArrayList<>();
 
     /** *************************************************************
+     */
+    public String toString() {
+
+        StringBuffer sb = new StringBuffer();
+        for (String s : output)
+            sb.append(s + "\n");
+        return sb.toString();
+    }
+
+    /** *************************************************************
      * Create a new batch specification file.
      *
      * e_ltb_runner processes a batch specification file; it contains
@@ -160,7 +170,7 @@ public class EProver {
         if (!(new File(kbFile)).exists()) {
             System.out.println("EProver(): no such file: " + kbFile + ". Creating it.");
             KB kb = KBmanager.getMgr().getKB(kbFile);
-            KBmanager.getMgr().loadKBforInference(kb);
+
         }
         // To make sigma work on windows. 
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
