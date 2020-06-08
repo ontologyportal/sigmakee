@@ -546,7 +546,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         try {
             pw = new PrintWriter(new FileWriter(filename));
             skbtfakb.writeSorts(pw,filename);
-            skbtfakb.writeFile(filename, null, false, "", false, pw);
+            skbtfakb.writeFile(filename, null, false, pw);
             pw.flush();
             pw.close();
         }
