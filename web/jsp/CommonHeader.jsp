@@ -28,7 +28,7 @@
         <%
             if (pageName == null || !pageName.equals("KBs"))
                 out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
-            if (kb.eprover != null && role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("AskTell")))
+            if (kb != null && kb.eprover != null && role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("AskTell")))
                 out.println("<a href=\"AskTell.jsp?kb=" + kbName + "&lang=" + language + "\"><b>Ask/Tell</b></a>&nbsp;|&nbsp;");
             if (pageName == null || !pageName.equals("Graph"))
                 out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" +
