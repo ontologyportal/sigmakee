@@ -78,8 +78,11 @@ if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
 }
 
 String kbName = request.getParameter("kb");
-if (StringUtil.emptyString(kbName))
+if (StringUtil.emptyString(kbName)) {
     kbName = "SUMO";
+    if (!KBmanager.getMgr().kbs.keySet().contains("SUMO"))
+        kbName = KBmanager.getMgr().getPref("sumokbname");
+}
 
 KB kb = null;
 kb = KBmanager.getMgr().getKB(kbName);
