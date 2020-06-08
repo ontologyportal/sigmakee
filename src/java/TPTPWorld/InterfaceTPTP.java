@@ -512,7 +512,7 @@ public class InterfaceTPTP {
 			conjectureTPTPFormula =  "fof(1" + ",conjecture,(" + theTPTPFormula + ")).";		
 		SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
     	stptpkb.kb = kb;
-		originalKBFileName = stptpkb.writeFile(null,null,true,systemChosen,isQuestion);
+		originalKBFileName = stptpkb.writeFile(null,null,isQuestion);
 		ArrayList<Binding> lastAnswer = null;
 		ArrayList<Binding> originalAnswer = null;
 		int numAnswers = 0;
