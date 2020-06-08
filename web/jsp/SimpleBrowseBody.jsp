@@ -70,7 +70,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     DocGen gen = DocGen.getInstance(kb.name);
     String ontology = gen.getOntology(kb);
     if (StringUtil.emptyString(ontology))
-        ontology = "SUMO";
+        ontology = KBmanager.getMgr().getPref("sumokbname");
     String formatToken = DocGen.getFirstHtmlFormatToken(kb, ontology);
     if (StringUtil.emptyString(formatToken)) 
         formatToken = kb.name;
