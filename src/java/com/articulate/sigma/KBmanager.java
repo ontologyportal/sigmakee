@@ -398,15 +398,13 @@ public class KBmanager implements Serializable {
 
         System.out.println("KBmanager.loadKBforInference(): KB: " + kb.name);
         if (KBmanager.getMgr().getPref("TPTP").equals("yes")) {
-            if (KBmanager.getMgr().getPref("vampire") != null) {
+            if (KBmanager.getMgr().prover.equals(Prover.VAMPIRE)) {
                 System.out.println("KBmanager.loadKBforInference(): loading Vampire");
                 kb.loadVampire();
-                prover = Prover.VAMPIRE;
             }
-            else if (KBmanager.getMgr().getPref("eprover") != null) {
+            else if (KBmanager.getMgr().prover.equals(Prover.EPROVER)) {
                 System.out.println("KBmanager.loadKBforInference(): loading EProver");
                 kb.loadEProver();
-                prover = Prover.EPROVER;
             }
         }
     }
@@ -649,6 +647,7 @@ public class KBmanager implements Serializable {
                 else
                     setDefaultAttributes();
                 System.out.println("Info in KBmanager.initializeOnce(): completed initialization");
+                if (debug) System.out.println("KBmanager.initializeOnce(): kbs: " + manager.kbs.values());
                 serialize();
                 initializing = false;
                 initialized = true;
