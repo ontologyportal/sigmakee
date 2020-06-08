@@ -37,6 +37,7 @@ public class TPTP3ProofProcessor {
 	public boolean inconsistency = false;
 	public ArrayList<String> bindings = new ArrayList<>();
 	public HashMap<String,String> bindingMap = new HashMap<>();
+	public HashMap<String,String> skolemTypes = new HashMap<>();
 	public ArrayList<ProofStep> proof = new ArrayList<>();
 
 	// a map of original ID keys and renumbered key values
@@ -206,6 +207,11 @@ public class TPTP3ProofProcessor {
 			int secondParen = supportId.indexOf(")",firstComma+1);
 			inferenceType = supportId.substring(firstComma+1, secondParen);
 		}
+		else if (supportId.startsWith("introduced(")) {
+			int firstParen = supportId.indexOf("(");
+			int firstComma = supportId.indexOf(",");
+			inferenceType = "introduced:" + supportId.substring(firstParen+1, firstComma);
+		}
 		return inferenceType;
 	}
 
@@ -244,7 +250,7 @@ public class TPTP3ProofProcessor {
 		else if (supportId.startsWith("inference(")) {
 			return getSupports(supportId + ".");
 		}
-		else if (supportId.startsWith("introduced(")) {
+		else if (supportId.startsWith("introduced(")) { // there should never be premises for this
 			return prems;
 		}
 		else {
@@ -443,13 +449,26 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
-	 * Return bindings from TPTP3 proof answer variables
+	 * Remove duplicates in an Array without changing the order
+	 */
+	public ArrayList<String> removeDupInArray(ArrayList<String> input) {
+
+		ArrayList<String> result = new ArrayList<>();
+		for (String s : input)
+			if (!result.contains(s))
+				result.add(s);
+		return result;
+	}
+
+	/** ***************************************************************
+	 * Put bindings from TPTP3 proof answer variables into bindingMap
 	 */
 	public void processAnswersFromProof(String query) {
 
 		Formula qform = new Formula(query);
 		ArrayList<String> answers = null;
 		ArrayList<String> vars = qform.collectAllVariablesOrdered();
+		vars = removeDupInArray(vars);
 		if (debug) System.out.println("processAnswersFromProof(): vars: " + vars);
 		if (debug) System.out.println("processAnswersFromProof(): proof: " + proof);
 		for (ProofStep ps : proof) {
@@ -460,7 +479,7 @@ public class TPTP3ProofProcessor {
 				Formula answerClause = extractAnswerClause(new Formula(ps.axiom));
 				if (debug) System.out.println("processAnswersFromProof(): answerClause: " + answerClause);
 				if (answerClause != null)
-					answers = answerClause.argumentsToArrayListString(1);
+					answers = answerClause.complexArgumentsToArrayListString(1);
 				if (debug) System.out.println("processAnswersFromProof(): answers: " + answers);
 				break;
 			}
@@ -488,69 +507,59 @@ public class TPTP3ProofProcessor {
 	 * set binding = "An instance of Human, Agent" (If multiple types
 	 *              are found for esk3_1)
 	 */
-	public void findTypesForSkolemTerms(KB kb) {
+	public String findTypesForSkolemTerms(KB kb) {
 
+		String result = "";
+		if (debug) System.out.println("findTypesForSkolemTerms(): bindings: " + bindings);
+		if (debug) System.out.println("findTypesForSkolemTerms(): bindings map: " + bindingMap);
 		FormulaPreprocessor fp = new FormulaPreprocessor();
-		for (int i = 0; i < bindings.size(); i++) {
-			String binding = bindings.get(i);
-			if (binding.startsWith("esk")) {
+		for (String binding : bindingMap.values()) {
+			if (binding.startsWith("esk") || binding.startsWith("(sK")) {
 				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, proof);
+				if (debug) System.out.println("findTypesForSkolemTerms(): skolem stmts: " + skolemStmts);
 				HashSet<String> types = new HashSet<>();
 				for (String skolemStmt : skolemStmts) {
-
-					Pattern p = Pattern.compile("\\(names ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
-					Matcher m = p.matcher(skolemStmt);
-					while (m.find()) {
-						String cl = m.group(2);
-						types.add(cl);
-					}
-
-					// only find instance/subclass expression if no specific name is found
-					if (types.isEmpty()) {
-						p = Pattern.compile("\\(instance ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-_]+)");
-						m = p.matcher(skolemStmt);
-						while (m.find()) {
-							String cl = m.group(2);
-							types.add(cl);
-						}
-
-						p = Pattern.compile("\\(subclass ([a-zA-Z0-9\\-_]+) ([a-zA-Z0-9\\-]+)");
-						m = p.matcher(skolemStmt);
-						while (m.find()) {
-							String cl = m.group(2);
-							types.add(cl);
-						}
-					}
+					Formula f = new Formula(skolemStmt);
+					ArrayList<String> l = f.complexArgumentsToArrayListString(0);
+					if (l.size() != 3)
+						continue;
+					if (l.get(0).equals("names") || l.get(0).equals("instance") || l.get(0).equals("subclass"))
+						types.add(l.get(2));
 				}
 				if (kb.kbCache.checkDisjoint(kb, types) == true) {
-					// check if there are contradiction among the types returned from E
-					bindings.remove(binding);
-					binding = "Get type contradiction for " + binding + " in " + types;
-					bindings.add(binding);
+					// check if there are contradiction among the types returned
+					//bindings.remove(binding);
+					result = "Get type contradiction for " + binding + " in " + types;
+					//bindings.add(binding);
 				}
 				else {
 					fp.winnowTypeList(types, kb);
-					if (types!=null && types.size()>0) {
+					if (types != null && types.size() > 0) {
 						if (types.size() == 1) {
-							binding = "an instance of " + types.toArray()[0];
+							result = "an instance of " + types.toArray()[0];
 						}
 						else {
-							binding = "an instance of ";
+							result = "an instance of ";
 							boolean start = true;
 							for (String t : types) {
-								if (start) { binding += t; start = false; }
-								else { binding += ", " + t; }
+								if (start) {
+									result += t;
+									start = false;
+								}
+								else {
+									result += ", " + t;
+								}
 							}
 						}
-						bindings.set(i, binding);
 					}
 				}
 			}
 			else {
-				binding = TPTP2SUMO.transformTerm(binding);
-				bindings.set(i, binding);
+				result = TPTP2SUMO.transformTerm(binding);
 			}
 		}
+		if (debug) System.out.println("findTypesForSkolemTerms(): result: " + result);
+		return result;
 	}
 
 	/** ***************************************************************
@@ -562,7 +571,7 @@ public class TPTP3ProofProcessor {
 	 */
 	private String removeEsk(String line) {
 
-		if (line.startsWith("esk")) {
+		if (line.startsWith("esk") || line.startsWith("sK")) {
 			int leftParen = line.indexOf("(");
 			int rightParen = line.indexOf(")");
 			if (leftParen != -1 && rightParen != -1)
