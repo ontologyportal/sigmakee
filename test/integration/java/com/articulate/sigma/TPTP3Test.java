@@ -370,6 +370,28 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    public void testParseProofStep6 () {
+
+        String ps1 = "fof(f16682,plain,(\n" +
+                "  ! [X0] : (? [X1] : (s__member(X1,X0) & s__instance(X1,s__Object)) => " +
+                "(s__member(sK5(X0),X0) & s__instance(sK5(X0),s__Object)))),\n" +
+                "  introduced(choice_axiom,[])).\n";
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        System.out.println("----------------------testParseProofStep6---------------------------");
+        ProofStep ps = tpp.parseProofStep(ps1);
+        String result = ps.inferenceType;
+        System.out.println("Result: " + result);
+        String expected = "introduced:choice_axiom";
+        System.out.println("\n\n");
+        if (!StringUtil.emptyString(result) && expected.equals(result))
+            System.out.println("Success");
+        else
+            System.out.println("FAIL");
+        assertEquals(expected,result);
+    }
+    /** ***************************************************************
+     */
+    @Test
     public void testExtractAnswerClauseVamp () {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
