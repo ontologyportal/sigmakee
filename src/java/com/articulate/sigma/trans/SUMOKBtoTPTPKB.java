@@ -119,7 +119,7 @@ public class SUMOKBtoTPTPKB {
      *                    value is the original name.
      */
     protected void printVariableArityRelationContent(PrintWriter pr, TreeMap<String,String> relationMap,
-                                                     String sanitizedKBName, int axiomIndex, boolean onlyPlainFOL) {
+                                                     String sanitizedKBName, int axiomIndex) {
 
         Iterator<String> it = relationMap.keySet().iterator();
         while (it.hasNext()) {
@@ -130,56 +130,21 @@ public class SUMOKBtoTPTPKB {
                 for (int i = 0; i < result.size(); i++) {
                     Formula f = result.get(i);
                     String s = f.getFormula().replace(value,key);
-                    if (!onlyPlainFOL) {
-                        pr.println(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                                ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
-                    }
-                    else {
-                    //    pr.println("%FOL fof(kb_" + sanitizedKBName + "_" + axiomIndex++ +
-                    //            ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
-                    }
+                    pr.println(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++ +
+                            ",axiom,(" + SUMOformulaToTPTPformula.tptpParseSUOKIFString(s, false) + ")).");
                 }
             }
         }
     }
 
     /** *************************************************************
-     *  Sets reasoner and calls writeTPTPFile() below
-     */
-    public String writeFile(String fileName,
-                                boolean onlyPlainFOL) {
-
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(1): onlyPlainFOL: " + onlyPlainFOL);
-        final String reasoner = "EProver";
-        return writeFile(fileName,onlyPlainFOL,
-                reasoner);
-    }
-
-    /** *************************************************************
-     *  Sets conjecture and calls writeTPTPFile() below
-     */
-    public String writeFile(String fileName,
-                                boolean onlyPlainFOL,
-                                String reasoner) {
-
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(2): onlyPlainFOL: " + onlyPlainFOL);
-        final Formula conjecture = null;
-        return writeFile(fileName,conjecture,onlyPlainFOL,
-                reasoner);
-    }
-
-    /** *************************************************************
      *  Sets isQuestion and calls writeTPTPFile() below
      */
     public String writeFile(String fileName,
-                                Formula conjecture,
-                                boolean onlyPlainFOL,
-                                String reasoner) {
+                                Formula conjecture) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(3): onlyPlainFOL: " + onlyPlainFOL);
         final boolean isQuestion = false;
-        return writeFile(fileName,conjecture,onlyPlainFOL,
-                reasoner,isQuestion);
+        return writeFile(fileName,conjecture,isQuestion);
     }
 
     /** *************************************************************
@@ -187,14 +152,10 @@ public class SUMOKBtoTPTPKB {
      */
     public String writeFile(String fileName,
                                 Formula conjecture,
-                                boolean onlyPlainFOL,
-                                String reasoner,
                                 boolean isQuestion) {
 
-        if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeTPTPFile(4): onlyPlainFOL: " + onlyPlainFOL);
         final PrintWriter pw = null;
-        return writeFile(fileName,conjecture,onlyPlainFOL,
-                reasoner,isQuestion,pw);
+        return writeFile(fileName,conjecture,isQuestion,pw);
     }
 
     /** *************************************************************
@@ -235,10 +196,9 @@ public class SUMOKBtoTPTPKB {
      *
      * @param fileName - the full pathname of the file to write
      */
-    public String writeFile(String fileName, Formula conjecture, boolean onlyPlainFOL,
-                            String reasoner, boolean isQuestion, PrintWriter pw) {
+    public String writeFile(String fileName, Formula conjecture,
+                            boolean isQuestion, PrintWriter pw) {
 
-        //if (debug && pw != null) pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(5): onlyPlainFOL: " + onlyPlainFOL);
         if (!KBmanager.initialized) {
             System.out.println("Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed");
             return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
@@ -339,7 +299,7 @@ public class SUMOKBtoTPTPKB {
                 pr.flush();
             }
             System.out.println();
-            printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex,onlyPlainFOL);
+            printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex);
             if (conjecture != null) {  //----Print conjecture if one has been supplied
                 // conjecture.getTheTptpFormulas() should return a
                 // List containing only one String, so the iteration
@@ -422,7 +382,7 @@ public class SUMOKBtoTPTPKB {
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tptp";
-        String fileWritten = skbtptpkb.writeFile(filename, null, true, "none");
+        String fileWritten = skbtptpkb.writeFile(filename, null);
         if (StringUtil.isNonEmptyString(fileWritten))
             System.out.println("File written: " + fileWritten);
         else
