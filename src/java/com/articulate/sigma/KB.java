@@ -3362,10 +3362,11 @@ public class KB implements Serializable {
                     skb.kb = this;
                     System.out.println("INFO in KB.loadVampire(): generating TPTP file");
                     long millis = System.currentTimeMillis();
-                    skb.writeFile(tptpFilename, true);
+                    skb.writeFile(tptpFilename,null);
                     System.out.println("KB.loadVampire(): write TPTP, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
                 }
-            } catch (Exception e) {
+            }
+            catch (Exception e) {
                 System.out.println(e.getMessage());
                 e.printStackTrace();
             }
@@ -3381,11 +3382,6 @@ public class KB implements Serializable {
 
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
-        //if (!mgr.initialized) {
-        //    System.out.println("INFO in KB.loadEProver(): KBmanager not initialized, exiting");
-        //    return;
-        //}
-
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
@@ -3398,8 +3394,10 @@ public class KB implements Serializable {
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-                System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                //skb.writeFile(tptpFilename, true);
+                if (!(new File(tptpFilename).exists())) {
+                    System.out.println("INFO in KB.loadEProver(): generating TPTP file");
+                    skb.writeFile(tptpFilename,null);
+                }
                 if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
                     eprover = new EProver(mgr.getPref("eprover"), tptpFilename);
             }
@@ -3549,6 +3547,18 @@ public class KB implements Serializable {
          * String foo = "(rel bar \"test\")"; Formula f = new Formula();
          * f.read(foo); System.out.println(f.getArgument(2).equals("\"test\""));
          */
+    }
+
+    /** ***************************************************************
+     */
+    public String toString() {
+
+        StringBuffer sb = new StringBuffer();
+        sb.append(name);
+        sb.append(" : ");
+        if (formulaMap != null)
+            sb.append(formulaMap.keySet().size() + " formulas");
+        return sb.toString();
     }
 
     /** ***************************************************************
