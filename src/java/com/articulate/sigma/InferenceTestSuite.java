@@ -162,7 +162,7 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
-     */
+
     private static String askSoTPTP(String processedStmt, int timeout, int maxAnswers,
                                     String systemChosen, KB kb, String TPTPlocation) throws Exception {
 
@@ -177,8 +177,7 @@ public class InferenceTestSuite {
     	stptp.tptpParse(conjectureFormula,true,kb);
     	SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
     	stptpkb.kb = kb;
-        String kbFileName = stptpkb.writeFile(null,conjectureFormula,true,
-                                             systemChosen,false);
+        String kbFileName = stptpkb.writeFile(null,conjectureFormula,true);
         InterfaceTPTP.init();
         String res = InterfaceTPTP.callTPTP(TPTPlocation, systemChosen, kbFileName,
                                             timeout, "-q3", "-S");
@@ -197,7 +196,7 @@ public class InferenceTestSuite {
             return "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n" +
                    "<summary proofs=\"0\"/>\n</queryResponse>\n";                            
     }
-
+*/
     /** ***************************************************************
      * Convenience method that sets default parameters
     */
@@ -369,7 +368,7 @@ public class InferenceTestSuite {
             kb.deleteUserAssertionsAndReload();
             for (String s : itd.statements)
                 kb.tell(s);
-            //compareFilesets();
+            compareFiles(itd);
             maxAnswers = itd.expectedAnswers.size();
             try {
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
@@ -379,12 +378,9 @@ public class InferenceTestSuite {
                 Iterator q = theQueries.iterator();
                 for (Formula processed : theQueries) {
                     long start = System.currentTimeMillis();
-                    if (KBmanager.getMgr().prover.equals(KBmanager.Prover.EPROVER)) {
-                        System.out.println("INFO in InferenceTestSuite.test(): Query is posed to EProver ");
-                        proof = kb.ask(processed.getFormula(), itd.timeout, maxAnswers) + " ";
-                    }
-                    //else  // SoTPTP:
-                    //    proof = askSoTPTP(processed.getFormula(),itd.timeout,maxAnswers,systemChosen,kb, TPTPlocation);
+                    System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
+                    proof = kb.ask(processed.getFormula(), itd.timeout, maxAnswers) + " ";
+
                     duration = System.currentTimeMillis() - start;
                     System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                     System.out.println(duration);
@@ -472,10 +468,10 @@ public class InferenceTestSuite {
      */
     public InfTestData inferenceUnitTest(String testpath, KB kb) {
 
-        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): testpath: " + testpath);
         // read the test file
         InfTestData itd = readTestFile(new File(testpath));
+        compareFiles(itd);
         for (String formula : itd.statements)
              kb.tell(formula);
         KBmanager.getMgr().loadKBforInference(kb);
@@ -490,7 +486,7 @@ public class InferenceTestSuite {
             String processedStmt = f.getFormula();
             System.out.println("\n============================");
             System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
-
+            System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
             if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                 Vampire vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
                 System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
@@ -548,19 +544,18 @@ public class InferenceTestSuite {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t <name> - run named test file in config.xml inferenceTestDir");
-        System.out.println("  -it <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
+        System.out.println("  -i <mode> - run test files known to pass in the given mode in config.xml inferenceTestDir");
+        System.out.println("  -a <mode> - run all test files in the given mode in config.xml inferenceTestDir");
+        System.out.println("     e - run with eprover (add letter to options above)");
+        System.out.println("     v - run with vampire (add letter to options above)");
     }
 
     /** ***************************************************************
      * Test method
      */
-    public void runPassing(String mode) {
+    public void runPassing() {
 
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        if (mode.equals("AVATAR"))
-            Vampire.mode = Vampire.ModeType.AVATAR;
-        if (mode.equals("CASC"))
-            Vampire.mode = Vampire.ModeType.CASC;
         List<String> passingSet = Arrays.asList("TQG2","TQG3","TQG4","TQG13","TQG18","TQG30","TQG31","TQG32");
         for (String s : passingSet) {
             cmdLineTest(s + ".kif.tq");
@@ -575,7 +570,6 @@ public class InferenceTestSuite {
         ArrayList<String> expected = new ArrayList<String>();
         ArrayList<String> actual = new ArrayList<String>();
         try {
-            KBmanager.getMgr().initializeOnce();
             kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             String path = KBmanager.getMgr().getPref("inferenceTestDir");
             InfTestData itd = inferenceUnitTest(path + File.separator + filename,kb);
@@ -607,15 +601,28 @@ public class InferenceTestSuite {
      */
     public static void main(String[] args) {
 
-        InferenceTestSuite its = new InferenceTestSuite();
-        if (args != null && args.length > 1 && args[0].equals("-t")) {
-            its.cmdLineTest(args[1]);
-        }
-        else if (args != null && args.length > 1 && args[0].equals("-it")) {
-            its.runPassing(args[1]);
-        }
-        else if (args != null && args.length > 0 && args[0].equals("-h")) {
-            showHelp();
+        if (args != null && args.length > 1) {
+            if (args[0].equals("-h"))
+                showHelp();
+            else {
+                KBmanager.getMgr().initializeOnce();
+                InferenceTestSuite its = new InferenceTestSuite();
+                KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                if (args[0].indexOf('e') != -1) {
+                    KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+                    kb.loadEProver();
+                }
+                if (args[0].indexOf('v') != -1)
+                    KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+                System.out.println("in InferenceTestSuite.main(): using prover: " + KBmanager.getMgr().prover);
+
+                if (args != null && args.length > 1 && args[0].contains("t")) {
+                    its.cmdLineTest(args[1]);
+                }
+                else if (args != null && args.length > 1 && args[0].contains("i")) {
+                    its.runPassing();
+                }
+            }
         }
         else
             showHelp();
