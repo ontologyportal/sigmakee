@@ -33,7 +33,7 @@ if (!role.equalsIgnoreCase("admin")) {
 
     if ((kbName == null) || kbName.equals("")) {
         System.out.println("Error: No knowledge base specified");
-        kbName = "SUMO";
+        kbName = KBmanager.getMgr().getPref("sumokbname");
     }
     
     if (stmt != null)
