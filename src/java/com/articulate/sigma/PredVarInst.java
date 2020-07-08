@@ -385,17 +385,17 @@ public class PredVarInst {
     protected static HashSet<String> gatherPredVarRecurse(KB kb, Formula f) {
         
         HashSet<String> ans = new HashSet<String>();
-        //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
+        if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
         if (f == null || f.empty() || Formula.atom(f.getFormula()) || f.isVariable())
             return ans;
         if (f.isSimpleClause(kb)) {
             Formula arg0 = f.getArgument(0);
-            //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
+            if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
             if (arg0.isRegularVariable()) {
                 ArrayList<Formula> arglist = f.complexArgumentsToArrayList(1);
                 if (arglist != null && arglist.size() > 0) {// a variable could be an argument to a higher-order formula
-                    //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
-                    //        " with arglist: " + arglist);
+                    if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
+                            " with arglist: " + arglist);
                     ans.add(arg0.getFormula());
                     if (containsRowVariable(arglist))
                         predVarArity.put(arg0.getFormula(),0);  // note that when expanding row vars we expand them to Formula.MAX_ARITY
@@ -403,21 +403,21 @@ public class PredVarInst {
                         predVarArity.put(arg0.getFormula(),Integer.valueOf(arglist.size()));
                 }
                 else {
-                    //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not a predicate var: " + arg0);
+                    if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not a predicate var: " + arg0);
                 }
             }
         }
         else if (Formula.isQuantifier(f.car())) {
-            //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): found quantifier: " + f);
+            if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): found quantifier: " + f);
             Formula f2 = f.cddrAsFormula();
             ans.addAll(gatherPredVarRecurse(kb,f2));
         }
         else {
-            //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not simple or quant: " + f);
+            if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): not simple or quant: " + f);
             ans.addAll(gatherPredVarRecurse(kb,f.carAsFormula()));
             ans.addAll(gatherPredVarRecurse(kb,f.cdrAsFormula()));
         }
-        //System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): returning: " + ans);
+        if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): returning: " + ans);
         return ans;
     }
 
@@ -452,13 +452,19 @@ public class PredVarInst {
     /** ***************************************************************
      * Collect and return all predicate variables for the given formula
      */
-    protected static HashSet<String> gatherPredVars(KB kb, Formula f) {
-        
+    public static HashSet<String> gatherPredVars(KB kb, Formula f) {
+
+        if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): " + f);
+        if (f.predVarCache != null) {
+            if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): returning cache " + f.predVarCache);
+            return f.predVarCache;
+        }
         HashSet<String> varlist = null;
         HashMap<String,HashSet<String>> ans = new HashMap<String,HashSet<String>>();
         if (!StringUtil.emptyString(f.getFormula())) {
             varlist = gatherPredVarRecurse(kb,f);
         }
+        f.predVarCache = varlist;
         return varlist;
     }
 
