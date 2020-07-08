@@ -173,6 +173,8 @@ public class Formula implements Comparable, Serializable {
     public HashSet<String> univVarsCache = new HashSet<>();
     public HashSet<String> termCache = new HashSet<>();
 
+    public HashSet<String> predVarCache = null; // null if not set, empty if no pred vars
+
     // includes the leading '?'.  Does not include row variables
     public HashMap<String,HashSet<String>> varTypeCache = new HashMap<>();
 
@@ -385,6 +387,15 @@ public class Formula implements Comparable, Serializable {
                                          + "Class cast exception for argument of class: "
                                          + f.getClass().getName());
         return theFormula.compareTo(((Formula) f).theFormula);
+    }
+
+    /** ***************************************************************
+     */
+    static class SortByLine implements Comparator<Formula> {
+
+        public int compare(Formula a, Formula b) {
+            return a.startLine - b.startLine;
+        }
     }
 
     /** ***************************************************************
