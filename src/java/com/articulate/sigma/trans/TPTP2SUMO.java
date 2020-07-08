@@ -68,7 +68,7 @@ public class TPTP2SUMO {
   /** ***************************************************************
    * Convert a TPTP proof to a SUMO XML-wrapped proof
    */
-  public static String convert(BufferedReader reader, ArrayList<Binding> answer, 
+  public static String convert(BufferedReader reader, ArrayList<Binding> answer,
                                boolean instantiated) throws Exception {
 
       StringBuffer result = new StringBuffer();
@@ -125,6 +125,30 @@ public class TPTP2SUMO {
       return result.toString();
   }
 
+    /** ***************************************************************
+     * Convert a TPTP file to SUMO
+     */
+    public static String convertBare(Reader in, boolean instantiated) throws Exception {
+
+        BufferedReader reader = new BufferedReader(in);
+        ArrayList<Binding> answer = null;
+        TPTPParser parser = TPTPParser.parse(reader);
+        Hashtable<String,TPTPFormula> ftable = parser.ftable;
+        Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
+
+        //----Start output
+        StringBuffer result = new StringBuffer();
+        for (SimpleTptpParserOutput.TopLevelItem item : Items) {
+            String name = TPTPParser.getName(item);
+            TPTPFormula formula = ftable.get(name);
+            String sumo = convertBareTPTPFormula(formula, ftable, instantiated).toString();
+            Formula sumoFormula = new Formula(sumo);
+            result.append(sumoFormula.textFormat(sumo) + "\n\n");
+        }
+        result.append(result);
+        return result.toString();
+    }
+
   /** ***************************************************************
    * Convert a TPTP proof step to a SUMO XML-wrapped proof step
    */
@@ -165,6 +189,32 @@ public class TPTP2SUMO {
       result.append("      </proofStep>\n");
       return result;
   }
+
+    /** ***************************************************************
+     * Convert a TPTP statement to SUMO
+     */
+    private static StringBuffer convertBareTPTPFormula (TPTPFormula formula,
+                                                    Hashtable<String,TPTPFormula> ftable,
+                                                    boolean instantiated) {
+
+        StringBuffer result = new StringBuffer();
+        int indent = 12;
+        int indented = 0;
+
+        SimpleTptpParserOutput.Annotations annotations = null;
+        SimpleTptpParserOutput.Source source = null;
+        String sourceInfo = "";
+
+        //----Add parents info as "premises"
+        for (TPTPFormula parent : formula.parent) {
+            //result.append(convertBareType(parent, indent+2, indented,true));
+            result.append(convertBareType(parent, 0, indented,true));
+        }
+        //result.append(convertBareType(formula, indent, indented,true));
+        result.append(convertBareType(formula, 0, indented,true));
+        result.append("\n\n");
+        return result;
+    }
 
   /** ***************************************************************
    * Convert a single annotated TPTP clause to a single XML-wrapped SUMO formula.
@@ -207,6 +257,31 @@ public class TPTP2SUMO {
           result.append("Error: TPTP Formula syntax unknown for converting");      
       return result;
   }
+
+    /** ***************************************************************
+     * Convert a single annotated TPTP clause to a single SUMO formula, possibly XML-wrapped.
+     * This is the main entry point for this class.
+     */
+    public static StringBuffer convertBareType (TPTPFormula formula, int indent, int indented, boolean noXML) {
+
+        StringBuffer result = new StringBuffer();
+        String type = "";
+        int id = formula.id;
+        SimpleTptpParserOutput.TopLevelItem item = formula.item;
+        if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
+            SimpleTptpParserOutput.AnnotatedFormula AF = (SimpleTptpParserOutput.AnnotatedFormula) item;
+            type = "formula";
+            result.append(convertFormula(AF.getFormula(),indent,indented));
+        }
+        else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
+            SimpleTptpParserOutput.AnnotatedClause AC = (SimpleTptpParserOutput.AnnotatedClause) item;
+            type = "clause";
+            result.append(convertClause(AC.getClause(),indent,indented));
+        }
+        else
+            result.append("Error: TPTP Formula syntax unknown for converting");
+        return result;
+    }
 
   /** ***************************************************************
    */
@@ -461,43 +536,57 @@ public class TPTP2SUMO {
       return result;
   }
 
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("KB class");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t - run test");
+        System.out.println("  -c <fname> - convert file to SUO-KIF");
+    }
+
   /** ***************************************************************
    */
   public static void main (String args[]) {
 
-      //String formula = "fof(1,axiom,(    s_holds_2__(s_p,s_a) ),    file('/tmp/SystemOnTPTP11002/Simple2965.tptp',kb_Simple_1)).fof(2,conjecture,(    s_holds_2__(s_p,s_a) ),    file('/tmp/SystemOnTPTP11002/Simple2965.tptp',prove_from_Simple)).fof(3,negated_conjecture,(    ~ s_holds_2__(s_p,s_a) ),    inference(assume_negation,[status(cth)],[2])).fof(4,negated_conjecture,(    ~ s_holds_2__(s_p,s_a) ),    inference(fof_simplification,[status(thm)],[3,theory(equality)])).cnf(5,plain,    ( s_holds_2__(s_p,s_a) ),    inference(split_conjunct,[status(thm)],[1])).cnf(6,negated_conjecture,    ( ~ s_holds_2__(s_p,s_a) ),    inference(split_conjunct,[status(thm)],[4])).cnf(7,negated_conjecture,    ( $false ),    inference(rw,[status(thm)],[6,5,theory(equality)])).cnf(8,negated_conjecture,    ( $false ),    inference(cn,[status(thm)],[7,theory(equality)])).cnf(9,negated_conjecture,    ( $false ),    8,    [proof]).";
-      //String formula = "fof(pel55,conjecture,(killed(X,Z) )). cnf(1,plain,( agatha = butler| hates(agatha,agatha) ),inference(subst,[[X,$fot(X0)]],[pel55])). cnf(6,plain,( a ) , inference(subst,[[X0,$fot(skolemFOFtoCNF_X)],[Z,$fot(a)]],[1]))."; 
-      //String formula = "fof(pel55_1,axiom,(? [X] : (lives(X) & killed(X,agatha) ) )).fof(pel55,conjecture,(? [X] : killed(X,agatha) )).cnf(0,plain,(killed(skolemFOFtoCNF_X,agatha)), inference(fof_to_cnf,[],[pel55_1])).cnf(1,plain,(~killed(X,agatha)),inference(fof_to_cnf,[],[pel55])).cnf(2,plain,(~killed(skolemFOFtoCNF_X,agatha)),inference(subst,[[X,$fot(skolemFOFtoCNF_X)]],[1])).cnf(3,theorem,($false),inference(resolve,[$cnf(killed(skolemFOFtoCNF_X,agatha))],[0,2])).";
-      //String formula = "fof(ax1,axiom,(! [X0] : (~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ! [X1] : (~s__instance(X0,s__SetOrClass) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))))).";
-      //String clause  = "cnf(ax1,axiom,(~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ~s__instance(X0,s__SetOrClass) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))).";
-      String clause = "cnf(c_0_10,negated_conjecture,($answer(esk1_1(X1))|~s__subclass(X1,s__Object)), c_0_8).";
-      String inFile;
-      FileReader file;
-      String kif = "";
-      try {
-          if (args.length == 1) {
-              inFile = args[0];
-	          file = new FileReader(inFile);
-	          kif = TPTP2SUMO.convert(file, false);
-	          System.out.println("START---");
-	          System.out.println(kif);
-	          System.out.println("END-----");
-          }
-          else {
-              StringReader reader = new StringReader(clause);
-              // kif = TPTP2SUMO.convert(reader, false);
-              TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
-              System.out.println(tptpP.Items.get(0));
-              Iterator<String> it = tptpP.ftable.keySet().iterator();
-              while (it.hasNext()) {
-            	  String id = it.next();
-            	  TPTPFormula tptpF = tptpP.ftable.get(id);
-            	  System.out.println(convertType(tptpF,0,0));
+      System.out.println("INFO in KB.main()");
+      if (args != null && args.length > 0 && args[0].equals("-h"))
+          showHelp();
+      else {
+          //String formula = "fof(1,axiom,(    s_holds_2__(s_p,s_a) ),    file('/tmp/SystemOnTPTP11002/Simple2965.tptp',kb_Simple_1)).fof(2,conjecture,(    s_holds_2__(s_p,s_a) ),    file('/tmp/SystemOnTPTP11002/Simple2965.tptp',prove_from_Simple)).fof(3,negated_conjecture,(    ~ s_holds_2__(s_p,s_a) ),    inference(assume_negation,[status(cth)],[2])).fof(4,negated_conjecture,(    ~ s_holds_2__(s_p,s_a) ),    inference(fof_simplification,[status(thm)],[3,theory(equality)])).cnf(5,plain,    ( s_holds_2__(s_p,s_a) ),    inference(split_conjunct,[status(thm)],[1])).cnf(6,negated_conjecture,    ( ~ s_holds_2__(s_p,s_a) ),    inference(split_conjunct,[status(thm)],[4])).cnf(7,negated_conjecture,    ( $false ),    inference(rw,[status(thm)],[6,5,theory(equality)])).cnf(8,negated_conjecture,    ( $false ),    inference(cn,[status(thm)],[7,theory(equality)])).cnf(9,negated_conjecture,    ( $false ),    8,    [proof]).";
+          //String formula = "fof(pel55,conjecture,(killed(X,Z) )). cnf(1,plain,( agatha = butler| hates(agatha,agatha) ),inference(subst,[[X,$fot(X0)]],[pel55])). cnf(6,plain,( a ) , inference(subst,[[X0,$fot(skolemFOFtoCNF_X)],[Z,$fot(a)]],[1])).";
+          //String formula = "fof(pel55_1,axiom,(? [X] : (lives(X) & killed(X,agatha) ) )).fof(pel55,conjecture,(? [X] : killed(X,agatha) )).cnf(0,plain,(killed(skolemFOFtoCNF_X,agatha)), inference(fof_to_cnf,[],[pel55_1])).cnf(1,plain,(~killed(X,agatha)),inference(fof_to_cnf,[],[pel55])).cnf(2,plain,(~killed(skolemFOFtoCNF_X,agatha)),inference(subst,[[X,$fot(skolemFOFtoCNF_X)]],[1])).cnf(3,theorem,($false),inference(resolve,[$cnf(killed(skolemFOFtoCNF_X,agatha))],[0,2])).";
+          //String formula = "fof(ax1,axiom,(! [X0] : (~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ! [X1] : (~s__instance(X0,s__SetOrClass) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))))).";
+          //String clause  = "cnf(ax1,axiom,(~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ~s__instance(X0,s__SetOrClass) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))).";
+          String clause = "cnf(c_0_10,negated_conjecture,($answer(esk1_1(X1))|~s__subclass(X1,s__Object)), c_0_8).";
+          String inFile;
+          FileReader file;
+          String kif = "";
+          try {
+              if (args.length > 1 && args[0].equals("-c")) {
+                  inFile = args[1];
+                  file = new FileReader(inFile);
+                  kif = TPTP2SUMO.convertBare(file, false);
+                  System.out.println(kif);
+              }
+              else {
+                  StringReader reader = new StringReader(clause);
+                  // kif = TPTP2SUMO.convert(reader, false);
+                  TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
+                  System.out.println(tptpP.Items.get(0));
+                  Iterator<String> it = tptpP.ftable.keySet().iterator();
+                  while (it.hasNext()) {
+                      String id = it.next();
+                      TPTPFormula tptpF = tptpP.ftable.get(id);
+                      System.out.println(convertType(tptpF, 0, 0));
+                  }
               }
           }
-      } 
-      catch (Exception e) { 
-          System.out.println("e: " + e);
+          catch (Exception e) {
+              System.out.println("e: " + e);
+          }
       }
   }
 }
