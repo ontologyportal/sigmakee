@@ -509,6 +509,18 @@ public class KIF {
     }
 
     /*****************************************************************
+     * Return an ArrayList of Formula in the same lexical order as their
+     * source file
+     */
+    public ArrayList<Formula> lexicalOrder() {
+
+        ArrayList<Formula> ordered = new ArrayList<>();
+        ordered.addAll(formulaMap.values());
+        Collections.sort(ordered,new Formula.SortByLine());
+        return ordered;
+    }
+
+    /*****************************************************************
      * Parse a single formula.
      */
     public String parseStatement(String formula) {
