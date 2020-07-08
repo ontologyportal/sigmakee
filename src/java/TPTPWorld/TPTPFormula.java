@@ -1,5 +1,5 @@
 package TPTPWorld;
-
+;
 import tptp_parser.SimpleTptpParserOutput;
 
 import java.util.ArrayList;
