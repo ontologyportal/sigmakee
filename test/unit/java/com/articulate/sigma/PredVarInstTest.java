@@ -2,8 +2,8 @@ package com.articulate.sigma;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
-// Copyright 2019 Infosys
-// adam.pease@infosys.com
+// Copyright 2019 Infosys, 2020- Articulate Software
+// apease@articulatesoftware.com
 
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
@@ -34,6 +34,8 @@ public class PredVarInstTest extends UnitTestBase  {
             "(instance ?DECISION LegalDecision) " +
             "(agent ?DECISION ?JURY))) ?JURY))";
 
+    private static final String stmt3 = "(=> (instance ?R TransitiveRelation) (=> (and (?R ?A ?B) (?R ?B ?C)) (?R ?A ?C)))";
+
     /** ***************************************************************
      */
     @Test
@@ -41,10 +43,15 @@ public class PredVarInstTest extends UnitTestBase  {
 
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt1);
-
         Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
-
         Set<String> expected = Sets.newHashSet("?REL");
+        System.out.println("\n--------------------");
+        System.out.println("testGatherPredVarsStmt1() actual: " + actual);
+        System.out.println("testGatherPredVarsStmt1() expected: " + expected);
+        if (expected.equals(actual))
+            System.out.println("testGatherPredVarsStmt1(): success!");
+        else
+            System.out.println("testGatherPredVarsStmt1(): failure");
         assertEquals(expected, actual);
     }
 
@@ -56,8 +63,33 @@ public class PredVarInstTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
         Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
-
         Set<String> expected = Sets.newHashSet();
+        System.out.println("\n--------------------");
+        System.out.println("testGatherPredVarsStmt2() actual: " + actual);
+        System.out.println("testGatherPredVarsStmt2() expected: " + expected);
+        if (expected.equals(actual))
+            System.out.println("testGatherPredVarsStmt2(): success!");
+        else
+            System.out.println("testGatherPredVarsStmt2(): failure");
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testGatherPredVarsStmt3() {
+
+        Formula f = new Formula();
+        f.read(PredVarInstTest.stmt3);
+        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
+        Set<String> expected = Sets.newHashSet("?R");
+        System.out.println("\n--------------------");
+        System.out.println("testGatherPredVarsStmt3() actual: " + actual);
+        System.out.println("testGatherPredVarsStmt3() expected: " + expected);
+        if (expected.equals(actual))
+            System.out.println("testGatherPredVarsStmt3(): success!");
+        else
+            System.out.println("testGatherPredVarsStmt3(): failure");
         assertEquals(expected, actual);
     }
 
@@ -68,10 +100,15 @@ public class PredVarInstTest extends UnitTestBase  {
 
         Formula f = new Formula();
         f.read(PredVarInstTest.stmt2);
-
         Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
-
         Set<Formula> expected = Sets.newHashSet();
+        System.out.println("\n--------------------");
+        System.out.println("testInstantiatePredStmt2() actual: " + actual);
+        System.out.println("testInstantiatePredStmt2() expected: " + expected);
+        if (expected.equals(actual))
+            System.out.println("testInstantiatePredStmt2(): success!");
+        else
+            System.out.println("testInstantiatePredStmt2(): failure");
         assertEquals(expected, actual);
     }
 
@@ -91,8 +128,13 @@ public class PredVarInstTest extends UnitTestBase  {
 
         System.out.println("\n--------------------");
         Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
-        System.out.println("PredVarInstTest.testInstantiatePredStmt3(): actual: " + actual);
         Set<Formula> expected = Sets.newHashSet();
+        System.out.println("testInstantiatePredStmt3() actual: " + actual);
+        System.out.println("testInstantiatePredStmt3() expected: " + expected);
+        if (actual.size() > 100)
+            System.out.println("testInstantiatePredStmt3(): success!");
+        else
+            System.out.println("testInstantiatePredStmt3(): failure");
         assertTrue(actual.size() > 100);
     }
 
@@ -107,11 +149,23 @@ public class PredVarInstTest extends UnitTestBase  {
         f.read(stmt);
         System.out.println("\n--------------------");
         HashSet<String>  actual = PredVarInst.gatherPredVarRecurse(SigmaTestBase.kb,f);
-        System.out.println("PredVarInstTest.testPredVarArity(): actual: " + actual);
-        System.out.println("PredVarInstTest.testPredVarArity(): arity: " + PredVarInst.predVarArity.get("?REL").intValue());
+
         HashSet<String> expected = new HashSet<>();
         expected.add("?REL");
+        System.out.println("testPredVarArity() actual: " + actual);
+        System.out.println("testPredVarArity() expected: " + expected);
+        if (expected.equals(actual))
+            System.out.println("testPredVarArity(): success!");
+        else
+            System.out.println("testPredVarArity(): failure");
         assertEquals(expected, actual);
+
+        System.out.println("PredVarInstTest.testPredVarArity(): actual arity: " + PredVarInst.predVarArity.get("?REL").intValue());
+        System.out.println("PredVarInstTest.testPredVarArity(): expected arity: " + 2);
+        if (PredVarInst.predVarArity.get("?REL").intValue() == 2)
+            System.out.println("testPredVarArity(): success!");
+        else
+            System.out.println("testPredVarArity(): failure");
         assertEquals(2,PredVarInst.predVarArity.get("?REL").intValue());
     }
 
