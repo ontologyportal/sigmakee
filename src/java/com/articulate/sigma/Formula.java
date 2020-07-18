@@ -147,6 +147,7 @@ public class Formula implements Comparable, Serializable {
 
     public boolean higherOrder = false;
     public boolean simpleClause = false;
+    public boolean comment = false;
 
     public ArrayList<String> stringArgs = new ArrayList<>(); // cached - only in the case of a simpleClause
 
@@ -166,7 +167,14 @@ public class Formula implements Comparable, Serializable {
 
     // caches of frequently computed sets of variables in the formula
     public HashSet<String> allVarsCache = new HashSet<>();
+
+    /* an ArrayList
+     * containing a pair of ArrayLists.  The first contains all
+     * explicitly quantified variables in the Formula.  The second
+     * contains all variables in Formula that are not within the scope
+     * of some explicit quantifier. */
     public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<HashSet<String>>();
+
     public HashSet<String> quantVarsCache = new HashSet<>();
     public HashSet<String> unquantVarsCache = new HashSet<>();
     public HashSet<String> existVarsCache = new HashSet<>();
@@ -174,6 +182,7 @@ public class Formula implements Comparable, Serializable {
     public HashSet<String> termCache = new HashSet<>();
 
     public HashSet<String> predVarCache = null; // null if not set, empty if no pred vars
+    public HashSet<String> rowVarCache = null; // null if not set, empty if no row vars
 
     // includes the leading '?'.  Does not include row variables
     public HashMap<String,HashSet<String>> varTypeCache = new HashMap<>();
@@ -221,10 +230,45 @@ public class Formula implements Comparable, Serializable {
 	}
 
     /** *****************************************************************
-     * g the textual version of the formula
+     * the textual version of the formula
      */
     public String getFormula() {
         return theFormula;
+    }
+
+    /** *****************************************************************
+     * the textual version of the formula
+     */
+    public void setFormula(String f) {
+        theFormula = f;
+    }
+
+    /** *****************************************************************
+     * the textual version of the formula
+     */
+    public static Formula createComment(String input) {
+
+        Formula f = new Formula();
+        f.theFormula = input;
+        f.comment = true;
+        return f;
+    }
+
+    /** *****************************************************************
+     */
+    public void printCaches() {
+
+        System.out.println("Formula: " + this);
+        System.out.println("all vars: " + allVarsCache);
+        System.out.println("all vars pair: " + allVarsPairCache);
+        System.out.println("quant vars: " + quantVarsCache);
+        System.out.println("unquant vars: " + unquantVarsCache);
+        System.out.println("exist vars: " + existVarsCache);
+        System.out.println("univ vars: " + univVarsCache);
+        System.out.println("terms: " + termCache);
+
+        System.out.println("pred vars: " + predVarCache);
+        System.out.println("row vars: " + rowVarCache);
     }
 
     /** ***************************************************************
@@ -1658,41 +1702,6 @@ public class Formula implements Comparable, Serializable {
         return ans;
     }
 
-    /** ***************************************************************
-     * A new method to collect all quantified and unquantified variables
-     * in this Formula. Return an ArrayList containing a pair of ArrayLists.
-     * The first contains all explicitly quantified varialbles.
-     * The second contains all variables that are not within the scope of
-     * some explicit quantifiers.
-     *
-     * This function is different from the old version collectVariables()
-     * in that it can keep track of some bad axioms where a variable is both
-     * in quantified list and unquantified list;
-     *
-     * @return An ArrayList containing two ArrayLists, each of which could be empty.
-
-    public ArrayList<ArrayList<String>> collectQuantifiedUnquantifiedVariables() {
-
-        ArrayList<ArrayList<String>> quantifiedUnquantifiedVariables = new ArrayList<ArrayList<String>>();
-        HashSet<String> unquantifiedVariables = new HashSet<>();
-        HashSet<String> quantifiedVariables = new HashSet<>();
-        HashMap<String, Boolean> varFlag = new HashMap<>();
-        collectQuantifiedUnquantifiedVariablesRecurse
-                (this, varFlag, unquantifiedVariables, quantifiedVariables);
-
-        Set<String> intersections = Sets.intersection(quantifiedVariables, unquantifiedVariables);
-        if (intersections != null && !intersections.isEmpty())
-            System.out.println("Error in Formula.collectQuantifiedUnquantifiedVariables(): Some variables (" +
-                    intersections
-                    + ") are both quantified (" + quantifiedVariables
-                    + ") and unquantified (" + unquantifiedVariables + ") in formula \n" + theFormula);
-
-        quantifiedUnquantifiedVariables.add(new ArrayList(quantifiedVariables));
-        quantifiedUnquantifiedVariables.add(new ArrayList(unquantifiedVariables));
-
-        return quantifiedUnquantifiedVariables;
-    }
-*/
     /** ***************************************************************
      * Collect quantified and unquantified variables recursively
      */
