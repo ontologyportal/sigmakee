@@ -175,7 +175,7 @@ if (!role.equalsIgnoreCase("admin")) {
 
 <FORM name=kbmapper ID=kbmapper action="Mapping.jsp" method="GET">
 <%
-    ArrayList kbnames = new ArrayList();
+    //ArrayList kbnames = new ArrayList();
     kbnames.addAll(KBmanager.getMgr().getKBnames());
     kbnames.add("Select a KB");
     out.println("<table><tr><td>KB #1</td><td>KB #2</td></tr>");
