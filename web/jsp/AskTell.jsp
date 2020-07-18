@@ -1,7 +1,7 @@
 <%@include file="Prelude.jsp" %>
 <%
-/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
-    Infosys (c) 2017-present.
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-present,
+    Infosys (c) 2017-2020.
 
     This software is released under the GNU Public License
     <http://www.gnu.org/copyleft/gpl.html>.
@@ -384,7 +384,8 @@ if (!role.equalsIgnoreCase("admin")) {
         else if (eProver != null) {
         	System.out.println("in AskTell.jsp: parsing EProver results--------------");
         	System.out.println("output size: " + eProver.output.size());
-        	com.articulate.sigma.trans.TPTP3ProofProcessor tpp = com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(eProver.output, kb);
+            com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
+        	tpp.parseProofOutput(eProver.output, stmt, kb);
         	System.out.println("in AskTell.jsp: HTML format results --------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
             System.out.println("in AskTell.jsp: EProver status: " + tpp.status);
@@ -404,8 +405,8 @@ if (!role.equalsIgnoreCase("admin")) {
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else if (vampire.output != null) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
-            com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
-                com.articulate.sigma.trans.TPTP3ProofProcessor.parseProofOutput(vampire.output, kb);
+            com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
+            tpp.parseProofOutput(vampire.output, stmt, kb);
             tpp.processAnswersFromProof(stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
