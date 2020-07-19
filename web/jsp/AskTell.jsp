@@ -270,6 +270,7 @@ if (!role.equalsIgnoreCase("admin")) {
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
     Choose an inference engine:<BR>
+
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (inferenceEngine.equals("EProver")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if (kb.eprover == null) { %> DISABLED <% } %> >
