@@ -63,7 +63,6 @@ public class InferenceTestSuite {
      */
     private static boolean compareAnswers(ProofProcessor pp, ArrayList answerList) {
 
-    
         System.out.println("INFO in InferenceTestSuite.compareAnswers(): num answers: "
 			   + String.valueOf(pp.numAnswers()));
         for (int j = 0; j < pp.numAnswers(); j++) {
