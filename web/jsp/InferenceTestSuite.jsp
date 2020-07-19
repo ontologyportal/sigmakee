@@ -100,6 +100,12 @@ if (!role.equalsIgnoreCase("admin")) {
     int maxAnswers = 1;
     int timeout = 30;
 
+    String eproverExec = KBmanager.getMgr().getPref("eprover");
+    String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
+    File ep = new File(eproverExec);
+    if (kb.eprover == null && ep.exists())
+        kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec,tptpFile);
+
     if (chosenEngine == null) {
         if (kb.eprover == null)
             chosenEngine = "SoTPTP";
@@ -169,12 +175,14 @@ if (!role.equalsIgnoreCase("admin")) {
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
     <% if ( kb.eprover == null ) { %> DISABLED <% } %> >
     EProver <BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (chosenEngine.equals("LEO")) {%>CHECKED<%}%>
+
+    <!-- INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (chosenEngine.equals("LEO")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    LEO-II <BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
+    LEO-II <BR -->
+
+    <!-- INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (chosenEngine.equals("SoTPTP")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='inline'">
-    System on TPTP<BR>
+    System on TPTP<BR -->
 <%
 //----System selection
 %>
@@ -241,19 +249,20 @@ if (!role.equalsIgnoreCase("admin")) {
           req != null && req.equalsIgnoreCase("test")) {
           if (chosenEngine.equalsIgnoreCase("EProver")) {
               out.println("(Testing EProver)<br>");
-              sb = sb.append(InferenceTestSuite.test(kb, "EProver", timeout));
+              InferenceTestSuite its = new InferenceTestSuite();
+              sb = sb.append(its.test(kb, "EProver", timeout));
           }               
           //if (chosenEngine.equalsIgnoreCase("LEO")) {
           //    out.println("(Testing LEO)<br>");
           //    THF thf = new THF();
           //    sb = sb.append(thf.testLEO(kb).replaceAll("\\n","<br>"));
           //}          
-          if (chosenEngine.equalsIgnoreCase("SoTPTP")) {
-              if (location.equalsIgnoreCase("local")&&(!tptpWorldExists)&&builtInExists) {
+          /* if (chosenEngine.equalsIgnoreCase("SoTPTP")) {
+              if (location.equalsIgnoreCase("local")&&(!tptpWorldExists) && builtInExists) {
                   out.println("(Testing built-in SystemOnTPTP)<br>");
                   location="builtin";
               }
-              if (location.equalsIgnoreCase("local")&&tptpWorldExists) {
+              if (location.equalsIgnoreCase("local") && tptpWorldExists) {
                   out.println("(Testing local SystemOnTPTP)<br>");
                   location="local";
               }
@@ -262,7 +271,7 @@ if (!role.equalsIgnoreCase("admin")) {
                   location="remote";
               }
               sb = sb.append(InferenceTestSuite.test(kb, systemChosen, timeout, location));
-          }          
+          }   */
       }
       if (test != null && test.equalsIgnoreCase("english")) 
           sb = sb.append(CELTTestSuite.test(kb));
