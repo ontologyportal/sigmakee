@@ -216,7 +216,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
 
     @Test
     public void testComputeVariableTypesLowTerrain() {
-        Map<String, HashSet<String>> expected = ImmutableMap.of("?ZONE", Sets.newHashSet("Object"), "?SLOPE", Sets.newHashSet("Quantity"), "?AREA", Sets.newHashSet("Object"));
+        Map<String, HashSet<String>> expected = ImmutableMap.of("?ZONE", Sets.newHashSet("Object"),
+                "?SLOPE", Sets.newHashSet("Quantity"), "?AREA", Sets.newHashSet("Object"));
 
         String stmt = "(=> (and (attribute ?AREA LowTerrain) (part ?ZONE ?AREA)" +
                 " (slopeGradient ?ZONE ?SLOPE)) (greaterThan 0.03 ?SLOPE))";
