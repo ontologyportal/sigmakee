@@ -749,6 +749,21 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     */
+    public String getCommonChild(HashSet<String> t2) {
+
+        String common = "Entity";
+        System.out.println("types " + t2);
+        for (String c1 : t2) {
+            System.out.println("term depth " + c1 + " : " + kb.termDepth(c1));
+            System.out.println("term depth " + common + " : " + kb.termDepth(common));
+            if (kb.compareTermDepth(c1,common) > 0)
+                common = c1;
+        }
+        return common;
+    }
+
+    /** ***************************************************************
      * return parent classes for the given cl from subclass expressions.
      */
     public HashSet<String> getParentClasses(String cl) {
