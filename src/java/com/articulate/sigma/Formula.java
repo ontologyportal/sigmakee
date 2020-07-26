@@ -148,6 +148,8 @@ public class Formula implements Comparable, Serializable {
     public boolean higherOrder = false;
     public boolean simpleClause = false;
     public boolean comment = false;
+    public boolean isFunctional = false;
+    public String relation = null;
 
     public ArrayList<String> stringArgs = new ArrayList<>(); // cached - only in the case of a simpleClause
 
@@ -215,6 +217,21 @@ public class Formula implements Comparable, Serializable {
 		this.startLine = f.startLine;
 		this.sourceFile = f.sourceFile;
 		this.theFormula = f.theFormula;
+        this.allVarsPairCache.addAll(f.allVarsPairCache);
+        this.quantVarsCache.addAll(f.quantVarsCache);
+        this.unquantVarsCache.addAll(f.unquantVarsCache);
+        this.existVarsCache.addAll(f.existVarsCache);
+        this.univVarsCache.addAll(f.univVarsCache);
+        this.termCache.addAll(f.termCache);
+        if (f.predVarCache != null) {
+            this.predVarCache = new HashSet<>();
+            this.predVarCache.addAll(f.predVarCache);
+        }
+        if (f.rowVarCache != null) {
+            this.rowVarCache = new HashSet<>();
+            this.rowVarCache.addAll(f.rowVarCache);
+        }
+        this.varTypeCache.putAll(f.varTypeCache);
 	}
 	
     /** *****************************************************************
@@ -2195,6 +2212,7 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Test whether a Formula is a functional term
      */
+    @Deprecated
     public static boolean isFunctionalTerm(String s) {
 
         Formula f = new Formula();
