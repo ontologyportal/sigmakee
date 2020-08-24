@@ -62,7 +62,7 @@ public class KBcacheUnitTest {
         kif.parseStatement("(subrelation relsub rel)");
         kif.parseStatement("(subclass TransitiveRelation Relation)");
         kif.parseStatement("(subclass VariableArityRelation Relation)");
-        kif.parseStatement("(instance relsub TransitiveRelation)");
+        //kif.parseStatement("(instance relsub TransitiveRelation)");
         kif.parseStatement("(subclass Relation Entity)");
         kif.parseStatement("(subrelation CitizenryFn ResidentFn)");
         kif.parseStatement("(instance CitizenryFn Function)");
@@ -123,7 +123,7 @@ public class KBcacheUnitTest {
     public void transRels() {
 
         System.out.println("Test transRels");
-        HashSet<String> expected = new HashSet<>(Arrays.asList("relsub", "subclass", "subAttribute", "subrelation"));
+        HashSet<String> expected = new HashSet<>(Arrays.asList("subclass", "subAttribute", "subrelation"));
         HashSet<String> actual = kb.kbCache.transRels;
         assertEquals(expected, actual);
     }
@@ -187,6 +187,17 @@ public class KBcacheUnitTest {
         System.out.println("Test valences");
         int expected = 2;
         int actual = kb.kbCache.valences.get("rel");
+        assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testValences2() {
+
+        System.out.println("Test valences 2");
+        int expected = -1;
+        int actual = kb.kbCache.valences.get("var");
         assertEquals(expected, actual);
     }
 
@@ -303,7 +314,7 @@ public class KBcacheUnitTest {
         if (forms != null)
             actual.addAll(KBcache.collectArgFromFormulas(1,forms));
         HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
-                 "subclass", "relsub", "subrelation"));
+                 "subclass", "subrelation"));
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): actual: " + actual);
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): expected: " + expected);
         assertEquals(expected,actual);
