@@ -138,7 +138,7 @@ public class KBcacheTest extends IntegrationTestBase {
         relation = "during";  // TODO: since during is a subrelation of temporalPart it should be a superset here - bad test
         System.out.println("testbuildTransInstOf(): testing: " + relation);
         expected = new HashSet<>(Arrays.asList("Entity", "TransitiveRelation", "Abstract", "Relation",
-                "InheritableRelation", "IrreflexiveRelation", "BinaryRelation"));
+                "InheritableRelation", "IrreflexiveRelation", "BinaryPredicate", "BinaryRelation", "Predicate"));
         actual = cache.getParentClassesOfInstance(relation);
         assertEquals(expected, actual);
 
@@ -333,5 +333,33 @@ public class KBcacheTest extends IntegrationTestBase {
         System.out.println("cache.functions.contains(\"AfternoonFn\"): " + cache.functions.contains("AfternoonFn"));
         assertTrue(cache.functions.contains("AfternoonFn"));
 
+    }
+
+    /** *************************************************************
+     */
+    @Test
+    public void testPredicates() {
+
+        System.out.println("\n============= testPredicates ==================");
+        KBcache cache = SigmaTestBase.kb.kbCache;
+        HashSet<String> rels = cache.getChildInstances("Relation");
+        for (String rel : rels) {
+            if (!rel.endsWith("Fn")) {
+                if (!cache.isInstanceOf(rel, "Predicate")) {
+                    System.out.println("fail - " + rel + " not instance of Predicate");
+                    System.out.println("parents of " + rel + " " + cache.instanceOf.get(rel));
+                }
+            }
+        }
+        for (String rel : rels) {
+            if (!rel.endsWith("Fn")) {
+                if (!cache.isInstanceOf(rel, "Predicate")) {
+                    System.out.println("fail - " + rel + " not instance of Predicate");
+                    System.out.println("parents of " + rel + " " + cache.instanceOf.get(rel));
+                }
+                assertTrue(cache.isInstanceOf(rel, "Predicate"));
+            }
+        }
+        System.out.println("Success");
     }
 }
