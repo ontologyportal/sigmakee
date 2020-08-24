@@ -687,6 +687,18 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     * since domains are collected before we know the instances of
+     * VariableArityRelation we need to go back and correct valences
+     */
+    public void correctValences() {
+
+        HashSet<String> hs = instances.get("VariableArityRelation");
+        for (String s : hs) {
+            valences.put(s,-1);
+        }
+    }
+
+    /** ***************************************************************
      * @return the most specific parent of a set of classes
      */
     public String mostSpecificParent(HashSet<String> p1) {
@@ -755,8 +767,8 @@ public class KBcache implements Serializable {
         String common = "Entity";
         System.out.println("types " + t2);
         for (String c1 : t2) {
-            System.out.println("term depth " + c1 + " : " + kb.termDepth(c1));
-            System.out.println("term depth " + common + " : " + kb.termDepth(common));
+            if (debug) System.out.println("term depth " + c1 + " : " + kb.termDepth(c1));
+            if (debug) System.out.println("term depth " + common + " : " + kb.termDepth(common));
             if (kb.compareTermDepth(c1,common) > 0)
                 common = c1;
         }
@@ -1362,8 +1374,8 @@ public class KBcache implements Serializable {
             ArrayList<String> domains = new ArrayList<String>();
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
-            if (debug) System.out.println("INFO in KBcache.collectDomains(): rel " + rel);
-            if (debug) System.out.println("INFO in KBcache.collectDomains(): domains " + domains);
+            if (debug) System.out.println("INFO in KBcache.collectDomains(): rel: " + rel);
+            if (debug) System.out.println("INFO in KBcache.collectDomains(): domains: " + domains);
             signatures.put(rel,domains);
             valences.put(rel, Integer.valueOf(maxIndex));
         }
@@ -1578,6 +1590,7 @@ public class KBcache implements Serializable {
         System.out.println("KBcache.buildCaches(): addTransitiveInstances seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
         buildTransInstOf();
+        correctValences(); // correct VariableArityRelation valences
         System.out.println("KBcache.buildCaches(): buildTransInstOf seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
         buildExplicitDisjointMap(); // find relations under partition definition
