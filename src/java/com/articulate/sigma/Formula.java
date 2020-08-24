@@ -217,6 +217,8 @@ public class Formula implements Comparable, Serializable {
 		this.startLine = f.startLine;
 		this.sourceFile = f.sourceFile;
 		this.theFormula = f.theFormula;
+		if (f.higherOrder)
+		    this.higherOrder = true;
         this.allVarsPairCache.addAll(f.allVarsPairCache);
         this.quantVarsCache.addAll(f.quantVarsCache);
         this.unquantVarsCache.addAll(f.unquantVarsCache);
