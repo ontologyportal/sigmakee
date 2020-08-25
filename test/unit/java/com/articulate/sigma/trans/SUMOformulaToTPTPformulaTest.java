@@ -53,7 +53,7 @@ public class SUMOformulaToTPTPformulaTest {
         kifstring = "(=> " +
                 "(instance ?X P)" +
                 "(instance ?X Q))";
-        expectedRes = "( ( ! [V__X] : (s__instance(V__X,s__P) => s__instance(V__X,s__Q) ) ) )";
+        expectedRes = "( ( ! [V__X] : ((s__instance(V__X,s__P) => (s__instance(V__X,s__Q))) ) ) )";
         test(kifstring,expectedRes,"string1");
     }
 
@@ -68,7 +68,7 @@ public class SUMOformulaToTPTPformulaTest {
                 "(instance ?X Q)" +
                 "(instance ?X R))" +
                 "(instance ?X ?T))";
-        expectedRes = "( ( ! [V__T,V__X] : ((s__instance(V__X,s__Q) | s__instance(V__X,s__R)) => s__instance(V__X,V__T) ) ) )";
+        expectedRes = "( ( ! [V__T,V__X] : (((s__instance(V__X,s__Q) | s__instance(V__X,s__R)) => (s__instance(V__X,V__T))) ) ) )";
         test(kifstring,expectedRes,"string2");
     }
 
@@ -97,10 +97,10 @@ public class SUMOformulaToTPTPformulaTest {
                 "    (and\n" +
                 "        (lessThan ?NUMBER 0)\n" +
                 "        (instance ?NUMBER RealNumber)))";
-        expectedRes = "( ( ! [V__NUMBER] : ((s__instance(V__NUMBER,s__NegativeRealNumber) => " +
+        expectedRes = "( ( ! [V__NUMBER] : (((s__instance(V__NUMBER,s__NegativeRealNumber) => " +
                 "(s__lessThan(V__NUMBER,n__0) & s__instance(V__NUMBER,s__RealNumber))) & " +
                 "((s__lessThan(V__NUMBER,n__0) & s__instance(V__NUMBER,s__RealNumber)) => " +
-                "s__instance(V__NUMBER,s__NegativeRealNumber)) ) ) )";
+                "s__instance(V__NUMBER,s__NegativeRealNumber))) ) ) )";
         test(kifstring,expectedRes,"string4");
     }
 
@@ -115,10 +115,10 @@ public class SUMOformulaToTPTPformulaTest {
                 "    (and\n" +
                 "        (lessThan ?NUMBER 0.001)\n" +
                 "        (instance ?NUMBER RealNumber)))";
-        expectedRes = "( ( ! [V__NUMBER] : ((s__instance(V__NUMBER,s__NegativeRealNumber) => " +
+        expectedRes = "( ( ! [V__NUMBER] : (((s__instance(V__NUMBER,s__NegativeRealNumber) => " +
                 "(s__lessThan(V__NUMBER,n__0_001) & s__instance(V__NUMBER,s__RealNumber))) & " +
                 "((s__lessThan(V__NUMBER,n__0_001) & s__instance(V__NUMBER,s__RealNumber)) => " +
-                "s__instance(V__NUMBER,s__NegativeRealNumber)) ) ) )";
+                "s__instance(V__NUMBER,s__NegativeRealNumber))) ) ) )";
         test(kifstring,expectedRes,"string5");
     }
 
@@ -129,9 +129,8 @@ public class SUMOformulaToTPTPformulaTest {
 
         String kifstring, expectedRes, actualRes;
         kifstring = "(<=> (temporalPart ?POS (WhenFn ?THING)) (time ?THING ?POS))";
-        expectedRes = "( ( ! [V__POS,V__THING] : ((s__temporalPart(V__POS,s__WhenFn(V__THING)) => " +
-                "s__time(V__THING,V__POS)) & (s__time(V__THING,V__POS) => " +
-                "s__temporalPart(V__POS,s__WhenFn(V__THING))) ) ) )";
+        expectedRes = "( ( ! [V__POS,V__THING] : (((s__temporalPart(V__POS,s__WhenFn(V__THING)) => " +
+                "s__time(V__THING,V__POS)) & (s__time(V__THING,V__POS) => s__temporalPart(V__POS,s__WhenFn(V__THING)))) ) ) )";
         test(kifstring,expectedRes,"string6");
     }
 
@@ -147,12 +146,11 @@ public class SUMOformulaToTPTPformulaTest {
                 "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
                 "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
                 "(patient ?KILLING ?O))) instrument ?GUN))";
-        expectedRes = "( ( ! [V__LM,V__O,V__KILLING,V__GUN,V__LM1] : ((s__instance(V__GUN,s__Gun) & " +
-                "s__effectiveRange(V__GUN,V__LM) & s__distance(V__GUN,V__O,V__LM1) & " +
-                "s__instance(V__O,s__Organism) & ~(( ? [V__O2] : (s__between(V__O,V__O2,V__GUN)))) & " +
-                "s__lessThanOrEqualTo(V__LM1,V__LM)) => " +
-                "s__capability(s__KappaFn(V__KILLING,(s__instance(V__KILLING,s__Killing) & " +
-                "s__patient(V__KILLING,V__O))),s__instrument__m,V__GUN) ) ) )";
+        expectedRes = "( ( ! [V__LM,V__O,V__KILLING,V__GUN,V__LM1] : (((s__instance(V__GUN,s__Gun) & " +
+                "s__effectiveRange(V__GUN,V__LM) & s__distance(V__GUN,V__O,V__LM1) & s__instance(V__O,s__Organism) & " +
+                "~(( ? [V__O2] : (s__between(V__O,V__O2,V__GUN)))) & s__lessThanOrEqualTo(V__LM1,V__LM)) => " +
+                "(s__capability(s__KappaFn(V__KILLING,(s__instance(V__KILLING,s__Killing) & " +
+                "s__patient(V__KILLING,V__O))),s__instrument__m,V__GUN))) ) ) )";
         test(kifstring,expectedRes,"hol");
     }
 
@@ -164,10 +162,10 @@ public class SUMOformulaToTPTPformulaTest {
         String kifstring, expectedRes, actualRes;
         kifstring = "(<=> (exists (?BUILD) (and (instance ?BUILD Constructing) " +
                 "(result ?BUILD ?ARTIFACT))) (instance ?ARTIFACT StationaryArtifact))";
-        expectedRes = "( ( ! [V__ARTIFACT] : ((( ? [V__BUILD] : ((s__instance(V__BUILD,s__Constructing) & " +
+        expectedRes = "( ( ! [V__ARTIFACT] : (((( ? [V__BUILD] : ((s__instance(V__BUILD,s__Constructing) & " +
                 "s__result(V__BUILD,V__ARTIFACT)))) => s__instance(V__ARTIFACT,s__StationaryArtifact)) & " +
                 "(s__instance(V__ARTIFACT,s__StationaryArtifact) => " +
-                "( ? [V__BUILD] : ((s__instance(V__BUILD,s__Constructing) & s__result(V__BUILD,V__ARTIFACT))))) ) ) )";
+                "( ? [V__BUILD] : ((s__instance(V__BUILD,s__Constructing) & s__result(V__BUILD,V__ARTIFACT)))))) ) ) )";
         test(kifstring,expectedRes,"string7");
     }
 
@@ -194,9 +192,8 @@ public class SUMOformulaToTPTPformulaTest {
         //SUMOformulaToTPTPformula.debug = true;
         kifstring = "(=> (and (minValue minValue ?ARG ?N) (minValue ?ARGS2) " +
                 "(equal ?VAL (ListOrderFn (List__Fn__1Fn ?ARGS2) ?ARG))) (greaterThan ?VAL ?N))";
-        expectedRes = "( ( ! [V__ARG,V__ARGS2,V__N,V__VAL] : ((s__minValue(s__minValue__m,V__ARG,V__N) & " +
-                "s__minValue(V__ARGS2) & (V__VAL = s__ListOrderFn(s__List__Fn__1Fn(V__ARGS2),V__ARG))) => " +
-                "s__greaterThan(V__VAL,V__N) ) ) )";
+        expectedRes = "( ( ! [V__ARG,V__ARGS2,V__N,V__VAL] : (((s__minValue(s__minValue__m,V__ARG,V__N) & s__minValue(V__ARGS2) & " +
+                "(V__VAL = s__ListOrderFn(s__List__Fn__1Fn(V__ARGS2),V__ARG))) => (s__greaterThan(V__VAL,V__N))) ) ) )";
         test(kifstring,expectedRes,"equality");
     }
 }
