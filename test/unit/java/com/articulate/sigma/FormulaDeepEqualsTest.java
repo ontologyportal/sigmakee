@@ -1,6 +1,7 @@
 package com.articulate.sigma;
 
 import org.junit.Test;
+import org.junit.Ignore;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -244,7 +245,9 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
     }
 
     /***************************************************************
+     * Formula.unifyWith is deprecated
      */
+    @Ignore
     @Test
     public void testUnifyWithMiscPredicates() {
 
@@ -257,6 +260,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         f2.read(s2);
 
         Formula.debug = true;
+        //System.out.println("testUnifyWithMiscPredicates(): deepEquals: " +  f1.deepEquals(f2));
         long start = System.nanoTime();
         assertTrue(f1.unifyWith(f2));
         long stop = System.nanoTime();
