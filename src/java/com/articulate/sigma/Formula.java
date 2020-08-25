@@ -1210,6 +1210,7 @@ public class Formula implements Comparable, Serializable {
      *  returns a logical mapping between the variables
      *  of two formulae of one exists.
      */
+    @Deprecated
     public boolean unifyWith(Formula f) {
 
         if (debug) System.out.println("Formula.unifyWith(): input f : " + f);
