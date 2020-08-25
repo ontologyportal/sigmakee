@@ -88,17 +88,28 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
         f2.read(f2Text);
 
         long start = System.nanoTime();
-//        boolean comparisonResult = f1.logicallyEquals(f2);
-        boolean comparisonResult = f1.unifyWith(f2);
+      boolean comparisonResult = f1.logicallyEquals(f2);
+        //boolean comparisonResult = f1.unifyWith(f2);
         long stop = System.nanoTime();
         totalExecutionTime += (stop - start);
         testCount++;
+        System.out.println("FormulaLogicalEqualityTest.test() f1: " + f1);
+        System.out.println("FormulaLogicalEqualityTest.test() f2: " + f2);
+
         if (areEqual) {
+            if (comparisonResult)
+                System.out.println("FormulaLogicalEqualityTest.test() Equal: success");
+            else
+                System.out.println("FormulaLogicalEqualityTest.test() Not equal: fail!");
             assertTrue("The following should be equal: \n" +
                     f1.getFormula() + "\n and \n" + f2.getFormula(), comparisonResult);
         }
         else {
-            assertFalse("The following should be equal: \n" +
+            if (comparisonResult)
+                System.out.println("FormulaLogicalEqualityTest.test() equal: fail!");
+            else
+                System.out.println("FormulaLogicalEqualityTest.test() not equal: success");
+            assertFalse("The following should not be equal: \n" +
                     f1.getFormula() + "\n and \n" + f2.getFormula(), comparisonResult);
         }
     }
