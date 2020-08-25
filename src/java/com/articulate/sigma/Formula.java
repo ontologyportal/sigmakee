@@ -1209,14 +1209,16 @@ public class Formula implements Comparable, Serializable {
      *  unify their variables. The helper method mapFormulaVariables(....)
      *  returns a logical mapping between the variables
      *  of two formulae of one exists.
-     *
-     * @param f
-     * @return
      */
     public boolean unifyWith(Formula f) {
 
+        if (debug) System.out.println("Formula.unifyWith(): input f : " + f);
+        if (debug) System.out.println("Formula.unifyWith(): input this : " + this);
         Formula f1 = Clausifier.clausify(this);
         Formula f2 = Clausifier.clausify(f);
+
+        if (debug) System.out.println("Formula.unifyWith(): after clausify f : " + f2);
+        if (debug) System.out.println("Formula.unifyWith(): after clausify  this : " + f1);
 
         //the normalizeParameterOrder method should be moved to Clausifier
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
@@ -1224,6 +1226,8 @@ public class Formula implements Comparable, Serializable {
         HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap =
                 new HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>>();
         List<Set<VariableMapping>> result = mapFormulaVariables(f1, f2, kb, memoMap);
+
+        if (debug) System.out.println("Formula.unifyWith(): variable mapping : " + result);
         return result != null;
     }
 
@@ -1245,9 +1249,6 @@ public class Formula implements Comparable, Serializable {
      *
      * Note: for clauses with commutative
      *
-     * @param f1
-     * @param f2
-     * @param kb
      * @param memoMap a memo-ization mechanism designed to reduce the number
      *                of recursive calls in "dynamic programming"
      *                fashion
@@ -1481,9 +1482,9 @@ public class Formula implements Comparable, Serializable {
      */
     public String getStringArgument(int argnum) {
 
-        if (debug) System.out.println("Formula.getStringArgument(): " + this.theFormula);
-        if (debug) System.out.println("Formula.getStringArgument(): args: " + stringArgs);
-        if (debug) System.out.println("Formula.getStringArgument(): argnum: " + argnum);
+        //if (debug) System.out.println("Formula.getStringArgument(): " + this.theFormula);
+        //if (debug) System.out.println("Formula.getStringArgument(): args: " + stringArgs);
+        //if (debug) System.out.println("Formula.getStringArgument(): argnum: " + argnum);
         if (stringArgs != null && stringArgs.size() > argnum)
             return stringArgs.get(argnum);
         String ans = "";
@@ -1496,7 +1497,7 @@ public class Formula implements Comparable, Serializable {
                 stringArgs = new ArrayList<>();
             if (i >= stringArgs.size()) { // opportunistically fill the cache
                 stringArgs.add(ans);
-                if (debug) System.out.println("Formula.getStringArgument(): adding: " + ans + " to " + stringArgs);
+                //if (debug) System.out.println("Formula.getStringArgument(): adding: " + ans + " to " + stringArgs);
             }
             if (i == argnum) break;
             if (i > argnum) return "";
