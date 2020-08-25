@@ -256,6 +256,7 @@ public class FormulaDeepEqualsTest extends UnitTestBase{
         Formula f2 = new Formula();
         f2.read(s2);
 
+        Formula.debug = true;
         long start = System.nanoTime();
         assertTrue(f1.unifyWith(f2));
         long stop = System.nanoTime();
