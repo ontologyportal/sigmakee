@@ -306,7 +306,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(strf);
         //FormulaPreprocessor.debug = true;
         HashMap<String,HashSet<String>> actual = fp.findAllTypeRestrictions(f, kb);
-        String expected = "{?NUMBER1=[RealNumber], ?NUMBER2=[Entity, NonnegativeRealNumber]}";
+        String expected = "{?NUMBER1=[RealNumber], ?NUMBER2=[NonnegativeRealNumber]}";
         System.out.println("testAbsolute(): actual: " + actual);
         System.out.println("testAbsolute(): expected: " + expected);
         if (expected.equals(actual.toString()))
