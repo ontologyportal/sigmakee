@@ -112,6 +112,16 @@ public class FileUtil {
         return s.substring(s.lastIndexOf(File.separator)+1);
     }
 
+    /****************************************************************
+     * Removes the extension and just returns the file name
+     */
+    public static String noExt(String s) {
+
+        if (s == null || !s.contains("."))
+            return s;
+        return s.substring(0,s.lastIndexOf("."));
+    }
+
     /** ***************************************************************
      * A test method.
      */
