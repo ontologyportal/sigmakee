@@ -229,6 +229,14 @@ public class KBcache implements Serializable {
      */
     public int getArity(String rel) {
 
+        if (valences == null) {
+            System.out.println("Error in KBcache.getArity(): null valences");
+            return 0;
+        }
+        if (!valences.containsKey(rel)) {
+            System.out.println("Error in KBcache.getArity(): " + rel + " not found");
+            return 0;
+        }
         return valences.get(rel);
     }
 
