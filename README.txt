@@ -29,6 +29,8 @@ in their URL that will change every time. Change "theuser" below to your user na
 If your installation isn't working and you're getting funny "null"s in your paths
 try opening permissions on your $SIGMA_HOME, $CATALINA_HOME and $SIGMA_SRC directories.
 
+After installing, recommended reading is the Sigma manual
+https://github.com/ontologyportal/sigmakee/blob/master/doc/manual/SigmaManual.pdf
 
 Container-Based installation
 ==========================
@@ -244,7 +246,7 @@ sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export SIGMA_SRC=~/workspace/sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> .bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx5g\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
@@ -257,7 +259,7 @@ Follow the steps in section "Account Management" below to set up accounts
 
 To test run
 
-  java  -Xmx2500m -classpath ~/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+  java  -Xmx5g -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
     com.articulate.sigma.KB
 
 
@@ -353,15 +355,28 @@ see the SigmaRest project - https://github.com/ontologyportal/SigmaRest
 python Interface
 ================
 
+make sure you have python3
+
+python --version
+
+make sure you have pip or install with
+
+sudo apt install python3-pip
+
+install the py4j module
+
+pip3 install py4j
+
 Compile SigmaKEE then run with
 
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.KBmanager -p
+java -Xmx7g -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.KBmanager -p
 
 then start python
 
-user@user-machine:~/workspace/sigmakee$ python
-Python 2.7.12 (default, Nov 19 2016, 06:48:10)
-[GCC 5.4.0 20160609] on linux2
+user@user-machine:~/workspace/sigmakee$ python3
+Python 3.8.2 (default, Jul 16 2020, 14:00:26)
+[GCC 9.3.0] on linux
+
 Type "help", "copyright", "credits" or "license" for more information.
 >>> from py4j.java_gateway import JavaGateway
 >>> gateway = JavaGateway()
