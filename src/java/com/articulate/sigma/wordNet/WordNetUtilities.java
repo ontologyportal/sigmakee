@@ -2245,7 +2245,7 @@ public class WordNetUtilities {
 
         HashSet<String> newterms = null;
         if (kb.isAttribute(term))
-            newterms = kb.getAllSub(term,"subAttribute");
+            newterms = (HashSet) kb.getAllSub(term,"subAttribute");
         else
             newterms = kb.kbCache.getChildClasses(term);
         if (newterms != null)
@@ -2601,31 +2601,42 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("KB class");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  h - show this help screen");
+        System.out.println("  w \"word\" - show WordNet display page");
+        System.out.println("  t \"term\" - get words from SUMO Term");
+    }
+
+    /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
      */
     public static void main (String[] args) {
 
-        //KBmanager.getMgr().initializeOnce();
-        //lawDomainInfo();
-        WordNet.initOnce();
-        System.out.println(parseColonKey("worm%2:38:00"));
-        /*
-        withThoughtEmotion = false;
-        KBmanager.getMgr().initializeOnce();
-
-        //testWord();
-
-        testSynesthesia();
-        withThoughtEmotion = true;
-        testSynesthesia();
-*/
-        //String synset = "105786372";
-        //System.out.println(getAllHyponyms(synset));
-        //System.out.println(collapseSenses());
-        //if (args.length > 0)
-        //    generateHyponymSets(args[0]);
-        //testIsValidKey();
+        System.out.println("INFO in WordNet.main()");
+        if (args == null || args.length == 0 || args[0].equals("-h"))
+            showHelp();
+        else {
+            KBmanager.getMgr().initializeOnce();
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            if (args != null && args.length > 1 && args[0].equals("-w")) {
+                String result = WordNet.wn.page(StringUtil.removeEnclosingQuotes(args[1]), 0, kbName, "", "");
+                System.out.println(StringUtil.removeHTML(result));
+            }
+            else if (args != null && args.length > 1 && args[0].equals("-t")) {
+                String term = StringUtil.removeEnclosingQuotes(args[1]);
+                System.out.println("term: " +  term);
+                System.out.println(WordNet.wn.getWordsFromTerm(term).keySet());
+            }
+            else {
+                System.out.println("no such option or no option : " + args);
+                showHelp();
+            }
+        }
     }
 }
 
