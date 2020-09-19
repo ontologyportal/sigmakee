@@ -20,6 +20,7 @@ package com.articulate.sigma;
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.utils.PythonAPI;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 import py4j.GatewayServer;
@@ -962,8 +963,7 @@ public class KBmanager implements Serializable {
         catch (Exception e ) {
             System.out.println(e.getMessage());
         }
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        GatewayServer server = new GatewayServer(kb);
+        GatewayServer server = new GatewayServer(new PythonAPI());
         server.start();
         System.out.println("KBmanager.pythonServer(): completed initialization, server running");
     }
