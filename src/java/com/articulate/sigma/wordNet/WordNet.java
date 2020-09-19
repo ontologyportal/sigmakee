@@ -1713,6 +1713,14 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
+     */
+    public static boolean serializedExists() {
+
+        File serfile = new File(baseDir + File.separator + "wn.ser");
+        return serfile.exists();
+    }
+
+    /** ***************************************************************
      *  Check whether sources are newer than serialized version.
      */
     public static boolean serializedOld() {
@@ -1827,7 +1835,7 @@ public class WordNet implements Serializable {
      */
     public static void initOnce() {
 
-        System.out.println("WordNet.initOnce(): disable: " + disable);
+        System.out.println("WordNet.initOnce(): 'disable' is: " + disable);
         if (disable) return;
         try {
             if (initNeeded == true) {
@@ -1836,7 +1844,8 @@ public class WordNet implements Serializable {
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
                 System.out.println("WordNet.initOnce(): disable: " + disable);
                 baseDirFile = new File(WordNet.baseDir);
-                if (KBmanager.getMgr().getPref("loadFresh").equals("true")) {
+                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
+                    System.out.println("WordNet.initOnce(): loading WordNet source files ");
                     loadFresh();
                     initNeeded = false;
                 }
@@ -1853,6 +1862,7 @@ public class WordNet implements Serializable {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
+        System.out.println("WordNet.initOnce(): " + wn.reverseSenseIndex.keySet().size() + " senses loaded");
     }
 
     /** ***************************************************************
