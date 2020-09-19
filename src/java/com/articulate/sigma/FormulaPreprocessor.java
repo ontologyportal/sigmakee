@@ -89,7 +89,7 @@ public class FormulaPreprocessor {
         if (kb.kbCache != null && kb.kbCache.signatures != null)
             sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
-            if (!kb.isInstanceOf(pred, "VariableArityRelation"))
+            if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred))
                 System.out.println("Error in FormulaPreprocessor.findType(): " +
                         "no type information for predicate " + pred);
             return null;
