@@ -1375,7 +1375,8 @@ public class KB implements Serializable {
      * Get all children of the given term following instance and
      * subclass relations as well as the indicated rel
      */
-    public HashSet<String> getAllSub(String term, String rel) {
+    @Deprecated // should use KBcache getChildren
+    public Set<String> getAllSub(String term, String rel) {
 
         //System.out.println("KB.getAllSub(): "  + term + " : " + rel);
         ArrayList<String> temp = new ArrayList<>();
@@ -3566,7 +3567,7 @@ public class KB implements Serializable {
     public static void showHelp() {
 
         System.out.println("KB class");
-        System.out.println("  options (with a leading '-':");
+        System.out.println("  options (with a leading '-'):");
         System.out.println("  h - show this help screen");
         System.out.println("  t - run test");
         System.out.println("  a \"<query>\"- ask query");
@@ -3588,6 +3589,10 @@ public class KB implements Serializable {
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);
             if (args != null && args.length > 2 && args[0].contains("c")) {
+                if (!kb.containsTerm(args[1]))
+                    System.out.println("Error in KB.main() no such term: " + args[1]);
+                if (!kb.containsTerm(args[2]))
+                    System.out.println("Error in KB.main() no such term: " + args[2]);
                 int eqrel = kb.compareTermDepth(args[1], args[2]);
                 String eqText = KButilities.eqNum2Text(eqrel);
                 System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));
