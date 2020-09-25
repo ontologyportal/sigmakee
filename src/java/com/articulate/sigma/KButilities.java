@@ -15,12 +15,7 @@ http://sigmakee.sourceforge.net
 
 /*************************************************************************************************/
 package com.articulate.sigma;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.PrintWriter;
-import java.io.StringReader;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
@@ -358,6 +353,178 @@ public class KButilities {
     }
 
     /** *************************************************************
+     * A basic use of the JSON Graph Format http://jsongraphformat.info/
+     */
+    private static String semnetAsJSON(Set<String> triples, KB kb,String language) {
+
+        if (StringUtil.emptyString(language))
+            language = "EnglishLanguage";
+        StringBuffer sb = new StringBuffer();
+        sb.append("{\n");
+        sb.append("    \"graphs\" : [ \n");
+        sb.append("        {\n");
+        sb.append("            \"id\": \"" + kb.name + "\",\n");
+        sb.append("            \"type\": \"SUMO-graph\",\n");
+        sb.append("            \"label\": \"" + kb.name + "\",\n");
+        sb.append("            \"nodes\": {\n");
+        for (String s : kb.getTerms()) {
+            if (Formula.isLogicalOperator(s))
+                continue;
+            sb.append("                \"" + s + "\": {\n");
+            ArrayList<Formula> forms = kb.askWithTwoRestrictions(0,"termFormat",1,language,2,s);
+            String formStr = "";
+            if (forms != null && forms.size() > 0) {
+                Formula form = forms.iterator().next().getArgument(3);
+                if (form != null && form.atom())
+                    formStr = form.getFormula();
+                if (!StringUtil.emptyString(formStr))
+                    formStr = StringUtil.removeEnclosingQuotes(formStr);
+            }
+            else
+                formStr = s;
+            sb.append("                    \"label\" : \"" + formStr + "\"\n");
+            sb.append("                },\n");
+        }
+        sb.deleteCharAt(sb.length()-2);
+        sb.append("            },\n");
+        sb.append("            \"edges\": [\n");
+        for (String s : triples) {
+            String[] tuple = s.split(" ");
+            sb.append("                {\n");
+            sb.append("                    \"source\": \"" + tuple[0] + "\",\n");
+            sb.append("                    \"relation\": \"" + tuple[1] + "\",\n");
+            sb.append("                    \"target\": \"" + tuple[2] + "\"\n");
+            sb.append("                },\n");
+        }
+        sb.deleteCharAt(sb.length()-2);
+        sb.append("            ]\n");
+        sb.append("        }\n");
+        sb.append("    ]\n");
+        sb.append("}");
+        return sb.toString();
+    }
+
+    /** *************************************************************
+     * A basic use of the JSON Graph Format http://jsongraphformat.info/
+     */
+    private static void semnetAsJSON2(Set<String> triples, KB kb,String language) {
+
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String nodeFileStr = kbDir + File.separator + "nodes.json";
+        String edgeFileStr = kbDir + File.separator + "edges.json";
+        if (StringUtil.emptyString(language))
+            language = "EnglishLanguage";
+        StringBuffer sb = new StringBuffer();
+        PrintWriter nodepw = null;
+        PrintWriter edgepw = null;
+        try {
+            nodepw = new PrintWriter(new FileWriter(nodeFileStr, false));
+            edgepw = new PrintWriter(new FileWriter(edgeFileStr, false));
+            sb.append("[\n");
+            for (String s : kb.getTerms()) {
+                if (Formula.isLogicalOperator(s))
+                    continue;
+                sb.append("    { \"id\" : \"" + s + "\",\n");
+                ArrayList<Formula> forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
+                String formStr = "";
+                if (forms != null && forms.size() > 0) {
+                    Formula form = forms.iterator().next().getArgument(3);
+                    if (form != null && form.atom())
+                        formStr = form.getFormula();
+                    if (!StringUtil.emptyString(formStr))
+                        formStr = StringUtil.removeEnclosingQuotes(formStr);
+                }
+                else
+                    formStr = s;
+                sb.append("        \"label\" : \"" + formStr + "\"\n");
+                sb.append("    },\n");
+            }
+            sb.deleteCharAt(sb.length() - 2);
+            sb.append("]\n");
+            nodepw.print(sb.toString());
+
+            sb = new StringBuffer();
+            sb.append("[\n");
+            for (String s : triples) {
+                String[] tuple = s.split(" ");
+                sb.append("    {\n");
+                sb.append("        \"source\" : \"" + tuple[0] + "\",\n");
+                sb.append("        \"relation\" : \"" + tuple[1] + "\",\n");
+                sb.append("        \"target\" : \"" + tuple[2] + "\"\n");
+                sb.append("    },\n");
+            }
+            sb.deleteCharAt(sb.length() - 2);
+            sb.append("]\n");
+            edgepw.print(sb.toString());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
+            if (nodepw != null)
+                nodepw.close();
+            if (edgepw != null)
+                edgepw.close();
+        }
+    }
+
+    /** *************************************************************
+     * A basic use of the JSON Graph Format http://jsongraphformat.info/
+     */
+    private static void semnetAsSQLGraph(Set<String> triples, KB kb,String language) {
+
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String nodeFileStr = kbDir + File.separator + "nodes.sql";
+        String edgeFileStr = kbDir + File.separator + "edges.sql";
+        if (StringUtil.emptyString(language))
+            language = "EnglishLanguage";
+        StringBuffer sb = new StringBuffer();
+        PrintWriter nodepw = null;
+        PrintWriter edgepw = null;
+        try {
+            nodepw = new PrintWriter(new FileWriter(nodeFileStr, false));
+            edgepw = new PrintWriter(new FileWriter(edgeFileStr, false));
+            for (String s : kb.getTerms()) {
+                if (Formula.isLogicalOperator(s))
+                    continue;
+                sb.append("INSERT INTO nodes (id, label) values ('" + s + "',");
+                ArrayList<Formula> forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
+                String formStr = "";
+                if (forms != null && forms.size() > 0) {
+                    Formula form = forms.iterator().next().getArgument(3);
+                    if (form != null && form.atom())
+                        formStr = form.getFormula();
+                    if (!StringUtil.emptyString(formStr))
+                        formStr = StringUtil.removeEnclosingQuotes(formStr);
+                }
+                else
+                    formStr = s;
+                sb.append("'" + formStr + "');\n");
+            }
+            nodepw.print(sb.toString());
+
+            sb = new StringBuffer();
+            for (String s : triples) {
+                String[] tuple = s.split(" ");
+                sb.append(" INSERT INTO edges (source, rel, target) values ('" + tuple[0] + "'");
+                sb.append(", '" + tuple[1] + "', '" + tuple[2] + "');\n");
+            }
+            edgepw.print(sb.toString());
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
+            if (nodepw != null)
+                nodepw.close();
+            if (edgepw != null)
+                edgepw.close();
+        }
+    }
+
+    /** *************************************************************
      *  Find all cases of where (instance A B) (instance B C) as
      *  well as all cases of where (instance A B) (instance B C)
      *  (instance C D).  Report true if any such cases are found,
@@ -600,7 +767,9 @@ public class KButilities {
         System.out.println("  -h - show this help screen");
         System.out.println("  -c <fname> - generate external links from file fname");
         System.out.println("  -s - count strings and processes");
-        System.out.println("  -n - generate semantic network");
+        System.out.println("  -n - generate semantic network as .dot");
+        System.out.println("  -j - generate semantic network as JSON");
+        System.out.println("  -q - generate semantic network as SQL");
     }
 
     /** *************************************************************
@@ -619,6 +788,14 @@ public class KButilities {
             //    System.out.println(s);
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-j")) {
+                Set<String> tuples = generateSemanticNetwork(kb);
+                semnetAsJSON2(tuples,kb,"EnglishLanguage");
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-q")) {
+                Set<String> tuples = generateSemanticNetwork(kb);
+                semnetAsSQLGraph(tuples,kb,"EnglishLanguage");
             }
             else if (args != null && args.length > 0 && args[0].equals("-s")) {
                 countStringWords(kb);
