@@ -299,11 +299,12 @@ public class KButilities {
      *  an axiom to be related with a general "link" relation. Also
      *  use the subclass hierarchy to relate all parents of terms in
      *  domain statements, through the relation itself but with a
-     *  suffix designating it as a separate relation. Convert SUMO
-     *  terms to WordNet synsets. Don't show cached statements or
-     *  relations with String arguments.
+     *  suffix designating it as a separate relation.
+     *  Optionally don't show cached statements,
+     *  if cached is false, or relations with String arguments, if strings
+     *  is false.
      */
-    private static Set<String> generateSemanticNetwork(KB kb) {
+    private static Set<String> generateSemanticNetwork(KB kb, boolean cached, boolean strings) {
 
         TreeSet<String> resultSet = new TreeSet<String>();
         for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
@@ -312,15 +313,16 @@ public class KButilities {
             if (!f.isSimpleClause(kb) || !f.isGround()) {
                 Set<String> terms = f.collectTerms();
                 for (String term1 : terms) {
-                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || StringUtil.isQuotedString(term1))
+                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
                         continue;                
                     for (String term2 : terms) {
-                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || StringUtil.isQuotedString(term2))
+                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
                             continue;  
                         //resultSet.add("(link " + term1 + " " + term2 + ")");
                         if (!term1.equals(term2))
                             resultSet.add(term1 + " link " +  term2);
                     }
+                    resultSet.add(term1 + " inAxiom \"" + f.getFormula() + "\"");
                 }
             }
             else {
@@ -330,7 +332,7 @@ public class KButilities {
                     String arg1 = f.getStringArgument(1);
                     String arg2 = f.getStringArgument(2);
                     if (!Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
-                            !StringUtil.isQuotedString(arg1) && !StringUtil.isQuotedString(arg2))
+                            (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2)))
                         resultSet.add(arg1 + " " + predicate + " " +  arg2);
                 }
             }
@@ -790,11 +792,11 @@ public class KButilities {
                 genSynLinks(args[1]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-j")) {
-                Set<String> tuples = generateSemanticNetwork(kb);
+                Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 semnetAsJSON2(tuples,kb,"EnglishLanguage");
             }
             else if (args != null && args.length > 0 && args[0].equals("-q")) {
-                Set<String> tuples = generateSemanticNetwork(kb);
+                Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 semnetAsSQLGraph(tuples,kb,"EnglishLanguage");
             }
             else if (args != null && args.length > 0 && args[0].equals("-s")) {
@@ -802,7 +804,7 @@ public class KButilities {
                 countProcesses(kb);
             }
             else if (args != null && args.length > 0 && args[0].equals("-n")) {
-                Set<String> tuples = generateSemanticNetwork(kb);
+                Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 System.out.println(semnetAsDot(tuples));
             }
             else
