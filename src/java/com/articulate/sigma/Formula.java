@@ -217,6 +217,7 @@ public class Formula implements Comparable, Serializable {
 		this.startLine = f.startLine;
 		this.sourceFile = f.sourceFile;
 		this.theFormula = f.theFormula;
+		this.comment = f.comment;
 		if (f.higherOrder)
 		    this.higherOrder = true;
         this.allVarsPairCache.addAll(f.allVarsPairCache);
@@ -1582,8 +1583,8 @@ public class Formula implements Comparable, Serializable {
      */
     public ArrayList<String> argumentsToArrayListString(int start) {
 
-        if (start > 1)
-            System.out.println("Error in Formula.argumentsToArrayList() start greater than 1 : " + start);
+        //if (start > 1)
+        //    System.out.println("Error in Formula.argumentsToArrayList() start greater than 1 : " + start);
         if (debug) System.out.println("Formula.argumentsToArrayList(): formula: " + getFormula());
         if (debug) System.out.println("Formula.argumentsToArrayList(): stringArgs: " + stringArgs);
         ArrayList<String> result = new ArrayList<>();
