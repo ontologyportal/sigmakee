@@ -246,7 +246,7 @@ sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export SIGMA_SRC=~/workspace/sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx5g\"" >> .bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx7g\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
@@ -259,7 +259,7 @@ Follow the steps in section "Account Management" below to set up accounts
 
 To test run
 
-  java  -Xmx5g -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
+  java  -Xmx7g -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
     com.articulate.sigma.KB
 
 
