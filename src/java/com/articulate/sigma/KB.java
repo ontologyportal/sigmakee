@@ -2378,7 +2378,7 @@ public class KB implements Serializable {
      */
     public ArrayList<String> getNearestRelations(String term) {
 
-        term = Character.toUpperCase(term.charAt(0)) + term.substring(1, term.length());
+        term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
     }
 
@@ -2387,7 +2387,7 @@ public class KB implements Serializable {
      */
     public ArrayList<String> getNearestNonRelations(String term) {
 
-        term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
+        term = Character.toUpperCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
     }
 
@@ -2611,16 +2611,9 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Add a new KB constituent by reading in the file, and then merging the formulas with
-     * the existing set of formulas.
-     *
-     * @param filename
-     *            - The full path of the file being added
      */
-    public void addConstituent(String filename) {
+    public KIF readConstituent(String filename) {
 
-        long millis = System.currentTimeMillis();
-        System.out.println("INFO in KB.addConstituent(): " + filename);
         String canonicalPath = null;
         KIF file = new KIF();
         try {
@@ -2647,6 +2640,14 @@ public class KB implements Serializable {
             System.out.println("Error in KB.addConstituent(): " + error.toString());
             ex1.printStackTrace();
         }
+        file.filename = filename;
+        return file;
+    }
+
+    /***************************************************************
+     */
+    public void addConstituentInfo(KIF file) {
+
         for (Map.Entry<String, Integer> entry : file.termFrequency.entrySet()) {
             if (!termFrequency.containsKey(entry.getKey())) {
                 termFrequency.put(entry.getKey(), entry.getValue());
@@ -2656,32 +2657,16 @@ public class KB implements Serializable {
             }
         }
 
-        Iterator<String> it = file.formulas.keySet().iterator();
         int count = 0;
         System.out.println("INFO in KB.addConstituent(): add keys");
-        while (it.hasNext()) { // Iterate through keys.
-            String key = it.next();
+        for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
                 System.out.print(".");
             if ((count % 4000) == 1)
                 System.out.println("\nINFO in KB.addConstituent(): still adding keys");
             ArrayList<String> newlist = file.formulas.get(key);
-
-            // temporary debug test to find nulls
-            //for (int i = 0; i < newlist.size(); i++) {
-            //    String form = newlist.get(i);
-            //    if (StringUtil.emptyString(form))
-            //        System.out.println("Error in KB.addConstituent() 1: formula is null ");
-            //}
             ArrayList<String> list = formulas.get(key);
-
             if (list != null) {
-                // temporary debug test to find nulls
-                //for (int i = 0; i < list.size(); i++) {
-                //    String form = list.get(i);
-                //    if (StringUtil.emptyString(form))
-                //        System.out.println("Error in KB.addConstituent() 2: formula is null ");
-                //}
                 newlist.addAll(list);
             }
             formulas.put(key, newlist);
@@ -2700,12 +2685,28 @@ public class KB implements Serializable {
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
+         this.getTerms().addAll(file.terms);
+        if (!constituents.contains(file.filename))
+            constituents.add(file.filename);
+    }
+
+    /***************************************************************
+     * Add a new KB constituent by reading in the file, and then merging the formulas with
+     * the existing set of formulas.
+     *
+     * @param filename
+     *            - The full path of the file being added
+     */
+    public void addConstituent(String filename) {
+
+        long millis = System.currentTimeMillis();
+        System.out.println("INFO in KB.addConstituent(): " + filename);
+        KIF file = readConstituent(filename);
+        addConstituentInfo(file);
         System.out.println("INFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
                 + file.terms.size() + " terms.");
-        System.out.println("INFO in KB.addConstituent(): " + filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / 1000);
-        this.getTerms().addAll(file.terms);
-        if (!constituents.contains(canonicalPath))
-            constituents.add(canonicalPath);
+        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+
     }
 
     /*****************************************************************
