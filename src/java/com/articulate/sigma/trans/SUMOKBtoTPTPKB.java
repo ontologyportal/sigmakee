@@ -199,6 +199,8 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
+        long millis = System.currentTimeMillis();
+        System.out.println("KBcache.buildCaches(): buildInsts seconds: " + (System.currentTimeMillis() - millis) / 1000);
         if (!KBmanager.initialized) {
             System.out.println("Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed");
             return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
@@ -324,7 +326,7 @@ public class SUMOKBtoTPTPKB {
                 ioe.printStackTrace();
             }
         }
-
+        System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
         return result;
     }
 
