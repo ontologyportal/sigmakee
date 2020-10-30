@@ -149,6 +149,7 @@ public class Formula implements Comparable, Serializable {
     public boolean simpleClause = false;
     public boolean comment = false;
     public boolean isFunctional = false;
+    public boolean isGround = true; // assume true unless a variable is found during parsing
     public String relation = null;
 
     public ArrayList<String> stringArgs = new ArrayList<>(); // cached - only in the case of a simpleClause
@@ -235,6 +236,7 @@ public class Formula implements Comparable, Serializable {
             this.rowVarCache.addAll(f.rowVarCache);
         }
         this.varTypeCache.putAll(f.varTypeCache);
+        this.isGround = f.isGround;
 	}
 	
     /** *****************************************************************
@@ -384,7 +386,7 @@ public class Formula implements Comparable, Serializable {
      * This constant indicates the maximum predicate arity supported
      * by the current implementation of Sigma.
      */
-    protected static final int MAX_PREDICATE_ARITY = 7;
+    public static final int MAX_PREDICATE_ARITY = 7;
 
     /** ***************************************************************
      * Read a String into the variable 'theFormula'.
