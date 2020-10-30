@@ -67,7 +67,7 @@ public class KBcache implements Serializable {
     // all the transitive relations that are known to be appropriate to use at the time
     // this code was created - used to provide warnings
     public static final List<String> intendedTransRels =
-            Arrays.asList("subclass", "subrelation", "subAttribute");
+            Arrays.asList("subclass", "subrelation", "subAttribute", "located", "geographicSubregion");
 
     /** All the cached "parent" relations of all transitive relations
      * meaning the relations between all first arguments and the
@@ -94,7 +94,7 @@ public class KBcache implements Serializable {
     /** A temporary list of instances built during creation of the
      * children map, in order to efficiently create the instances map
      **/
-    public HashSet<String> insts = new HashSet<String>();
+    public HashSet<String> insts = new HashSet<>();
 
     /** All the cached "child" relations of all transitive relations
      * meaning the relations between all first arguments and the
@@ -144,9 +144,25 @@ public class KBcache implements Serializable {
 
     /****************************************************************
      */
-    public KBcache(KB kb) {
+    public KBcache(KB kbin) {
 
-        this.kb = kb;
+        relations = new HashSet<String>(kbin.getCountTerms()/3,(float) 0.75);
+        functions = new HashSet<String>(kbin.getCountTerms()/9,(float) 0.75);
+        predicates = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
+        transRels = new HashSet<String>(60,(float) 0.75);
+        // instRels = new HashSet<String>();
+        instTransRels = new HashSet<String>(50,(float) 0.75);
+        parents = new HashMap<String, HashMap<String, HashSet<String>>>(60,(float) 0.75);
+        instanceOf = new HashMap<String, HashSet<String>>(kbin.getCountTerms()/3,(float) 0.75);
+        instances = new HashMap<>(kbin.getCountTerms(),(float) 0.75);
+        insts = new HashSet<>(kbin.getCountTerms(),(float) 0.75);
+        children = new HashMap<String, HashMap<String, HashSet<String>>>(60,(float) 0.75);
+        signatures = new HashMap<String, ArrayList<String>>(kbin.getCountTerms()/3,(float) 0.75);
+        valences = new HashMap<String, Integer>(kbin.getCountTerms()/3,(float) 0.75);
+        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
+        disjoint = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
+        disjointRelations = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
+        this.kb = kbin;
     }
 
     /****************************************************************
@@ -1221,7 +1237,7 @@ public class KBcache implements Serializable {
      */
     public void buildInsts() {
 
-        HashSet<String> rels = new HashSet<>();
+        HashSet<String> rels = new HashSet<>(50,(float) 0.75);
         rels.add("instance");
         rels.add("subAttribute");
         rels.add("subField");
@@ -1246,7 +1262,7 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("INFO in KBcache.buildParents():");
         Iterator<String> it = transRels.iterator();
         for (String rel : transRels) {
-            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
+            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>(50,(float) 0.75);
             HashSet<String> roots = findRoots(rel);
             if (debug) System.out.println("INFO in KBcache.buildParents(): roots for rel: " +
                     rel + "\n" + roots);
@@ -1270,7 +1286,7 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("INFO in KBcache.buildChildren()");
         for (String rel : transRels) {
             if (debug) System.out.println("INFO in KBcache.buildChildren(): rel: " + rel);
-            HashMap<String,HashSet<String>> value = new HashMap<String,HashSet<String>>();
+            HashMap<String,HashSet<String>> value = new HashMap<>(50,(float) 0.75);
             HashSet<String> roots = findRoots(rel);
             if (debug) System.out.println("INFO in KBcache.buildChildren(): roots: " + roots);
             children.put(rel, value);
@@ -1458,37 +1474,25 @@ public class KBcache implements Serializable {
                 f.delete();                                           
             String filename = f.getCanonicalPath();
             fw = new FileWriter(f, true);
-            Iterator<String> it = parents.keySet().iterator();
-            while (it.hasNext()) {
-                String rel = it.next();
+            for (String rel : parents.keySet()) {
                 HashMap<String,HashSet<String>> valSet = parents.get(rel);
-                Iterator<String> it2 = valSet.keySet().iterator();
-                while (it2.hasNext()) {
-                    String child = it2.next();
+                for (String child : valSet.keySet()) {
                     HashSet<String> prents = valSet.get(child);
-                    Iterator<String> it3 = prents.iterator();
-                    while (it3.hasNext()) {
-                        String parent = it3.next();
+                    for (String parent : prents) {
                         String tuple = "(" + rel + " " + child + " " + parent + ")";
                         if (!kb.formulaMap.containsKey(tuple)) {
-                            fw.write(tuple);
-                            fw.write(System.getProperty("line.separator"));
+                            fw.write(tuple + System.getProperty("line.separator"));
                         }
                     }
                 }                
             }
 
-            it = instanceOf.keySet().iterator();
-            while (it.hasNext()) {
-                String inst = it.next();
+            for (String inst : instanceOf.keySet()) {
                 HashSet<String> valSet = instanceOf.get(inst);
-                Iterator<String> it2 = valSet.iterator();
-                while (it2.hasNext()) {
-                    String parent = it2.next();
+                for (String parent : valSet) {
                     String tuple = "(instance " + inst + " " + parent + ")";
                     if (!kb.formulaMap.containsKey(tuple)) {
-                        fw.write(tuple);
-                        fw.write(System.getProperty("line.separator"));
+                        fw.write(tuple + System.getProperty("line.separator"));
                     }
                 }
             }
@@ -1501,8 +1505,6 @@ public class KBcache implements Serializable {
             kb.constituents.remove(filename);
             kb.addConstituent(filename);
             System.out.println("KBcache.writeCacheFile(): add cache file, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
-            //kb.addConstituent(filename, false, false, false);
-            //KBmanager.getMgr().writeConfiguration();
         }                   
         catch (Exception ex) {
             ex.printStackTrace();
@@ -1516,6 +1518,49 @@ public class KBcache implements Serializable {
                 ex.printStackTrace();
             }
         }
+    }
+
+    /** *************************************************************
+     * Add the cached formulas as though there were from a file
+     * There's no need to write the file since if it hasn't been created,
+     * it must be created new.  If it has been created already, then it
+     * will be written out as part of the serialized info.
+     */
+    public void storeCacheAsFormulas() {
+
+        long cacheCount = 0;
+        KIF kif = new KIF();
+        kif.filename = kb.name + _cacheFileSuffix;
+        long millis = System.currentTimeMillis();
+        for (String rel : parents.keySet()) {
+            HashMap<String,HashSet<String>> valSet = parents.get(rel);
+            for (String child : valSet.keySet()) {
+                HashSet<String> prents = valSet.get(child);
+                for (String parent : prents) {
+                    String tuple = "(" + rel + " " + child + " " + parent + ")";
+                    if (!kb.formulaMap.containsKey(tuple)) {
+                        kif.parse(new StringReader(tuple));
+                        cacheCount++;
+                    }
+                }
+            }
+        }
+
+        for (String inst : instanceOf.keySet()) {
+            HashSet<String> valSet = instanceOf.get(inst);
+            for (String parent : valSet) {
+                String tuple = "(instance " + inst + " " + parent + ")";
+                if (!kb.formulaMap.containsKey(tuple)) {
+                    kif.parse(new StringReader(tuple));
+                    cacheCount++;
+                }
+            }
+        }
+
+        System.out.println("KBcache.storeCacheAsFormulas(): done creating cache formulas, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        millis = System.currentTimeMillis();
+        System.out.println("KBcache.storeCacheAsFormulas(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("KBcache.storeCacheAsFormulas(): cached statements: " + cacheCount);
     }
 
     /** ***************************************************************
@@ -1610,8 +1655,9 @@ public class KBcache implements Serializable {
         buildFunctionsSet();
         System.out.println("KBcache.buildCaches(): buildFunctionsSet seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
-        writeCacheFile();
-        System.out.println("KBcache.buildCaches(): writeCacheFile seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        //writeCacheFile();
+        storeCacheAsFormulas();
+        System.out.println("KBcache.buildCaches(): store cached formulas seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
         initialized = true;
@@ -1652,26 +1698,24 @@ public class KBcache implements Serializable {
 
     /** *************************************************************
      */
-    public void showState() {
+    public static void showState(KBcache nkbc) {
 
         System.out.println("-------------- relations ----------------");
-        Iterator<String> it = this.relations.iterator();
+        Iterator<String> it = nkbc.relations.iterator();
         while (it.hasNext())
             System.out.print(it.next() + " ");
         System.out.println();
-        //nkbc.buildTransitiveRelationsSet();
         System.out.println("-------------- transitives ----------------");
-        it = this.transRels.iterator();
+        it = nkbc.transRels.iterator();
         while (it.hasNext())
             System.out.print(it.next() + " ");
         System.out.println();
         System.out.println("-------------- parents ----------------");
-        //nkbc.buildParents();
-        it = this.parents.keySet().iterator();
+        it = nkbc.parents.keySet().iterator();
         while (it.hasNext()) {
             String rel = it.next();
             System.out.println("Relation: " + rel);
-            HashMap<String,HashSet<String>> relmap = this.parents.get(rel);
+            HashMap<String,HashSet<String>> relmap = nkbc.parents.get(rel);
             Iterator<String> it2 = relmap.keySet().iterator();
             while (it2.hasNext()) {
                 String term = it2.next();
@@ -1681,12 +1725,11 @@ public class KBcache implements Serializable {
         }
         System.out.println();
         System.out.println("-------------- children ----------------");
-        //nkbc.buildChildren();
-        it = this.children.keySet().iterator();
+        it = nkbc.children.keySet().iterator();
         while (it.hasNext()) {
             String rel = it.next();
             System.out.println("Relation: " + rel);
-            HashMap<String,HashSet<String>> relmap = this.children.get(rel);
+            HashMap<String,HashSet<String>> relmap = nkbc.children.get(rel);
             Iterator<String> it2 = relmap.keySet().iterator();
             while (it2.hasNext()) {
                 String term = it2.next();
@@ -1696,129 +1739,175 @@ public class KBcache implements Serializable {
         }
         System.out.println();
         System.out.println("-------------- disjoint ----------------");
-        System.out.println(kb.kbCache.explicitDisjoint);
+        System.out.println(nkbc.explicitDisjoint);
         System.out.println();
         System.out.println("-------------- domains ----------------");
-        //nkbc.collectDomains();
-        Iterator<String> it3 = this.relations.iterator();
+        Iterator<String> it3 = nkbc.relations.iterator();
         while (it3.hasNext()) {
             String rel = it3.next();
-            ArrayList<String> domains = this.signatures.get(rel);
+            ArrayList<String> domains = nkbc.signatures.get(rel);
             System.out.println(rel + ": " + domains);
         }
         System.out.println();
         System.out.println("-------------- valences ----------------");
-        for (String rel : this.valences.keySet()) {
-            Integer arity = this.valences.get(rel);
+        for (String rel : nkbc.valences.keySet()) {
+            Integer arity = nkbc.valences.get(rel);
             System.out.println(rel + ": " + arity);
         }
         System.out.println();
         System.out.println("-------------- signatures ----------------");
-        for (String rel : this.signatures.keySet()) {
-            ArrayList<String> sig = this.signatures.get(rel);
+        for (String rel : nkbc.signatures.keySet()) {
+            ArrayList<String> sig = nkbc.signatures.get(rel);
             System.out.println(rel + ": " + sig);
         }
         System.out.println();
         System.out.println("-------------- insts ----------------");
-        for (String inst : this.insts)
+        for (String inst : nkbc.insts)
             System.out.print(inst + ", ");
         System.out.println();
         System.out.println();
         System.out.println("-------------- instancesOf ----------------");
-        for (String inst : this.instanceOf.keySet())
-            System.out.println(inst + ": " + this.instanceOf.get(inst));
+        for (String inst : nkbc.instanceOf.keySet())
+            System.out.println(inst + ": " + nkbc.instanceOf.get(inst));
         System.out.println();
         System.out.println();
         System.out.println("-------------- instances ----------------");
-        for (String inst : this.instances.keySet())
-            System.out.println(inst + ": " + this.instances.get(inst));
+        for (String inst : nkbc.instances.keySet())
+            System.out.println(inst + ": " + nkbc.instances.get(inst));
     }
 
     /** *************************************************************
      */
     public static void showAll(KBcache nkbc) {
 
-        System.out.println("KBcache.main(): transRels: " + nkbc.transRels);
-        System.out.println("KBcache.main(): instTransRels: " + nkbc.instTransRels);
-        System.out.println("KBcache.main(): instTransRels: " + nkbc.instanceOf);
-        System.out.println("KBcache.main(): subclass signature: " + nkbc.signatures.get("subclass"));
-        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.instanceOf.get("PrimaryColor"));
-        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.instanceOf.get("ColorAttribute"));
-        System.out.println("KBcache.main(): PrimaryColor: " + nkbc.getInstancesForType("PrimaryColor"));
-        System.out.println("KBcache.main(): ColorAttribute: " + nkbc.getInstancesForType("ColorAttribute"));
-        System.out.println("KBcache.main(): FormOfGovernment: " + nkbc.getInstancesForType("FormOfGovernment"));
+        System.out.println("KBcache.showAll(): transRels: " + nkbc.transRels);
+        System.out.println("KBcache.showAll(): instTransRels: " + nkbc.instTransRels);
+        System.out.println("KBcache.showAll(): instTransRels: " + nkbc.instanceOf);
+        System.out.println("KBcache.showAll(): subclass signature: " + nkbc.signatures.get("subclass"));
+        System.out.println("KBcache.showAll(): PrimaryColor: " + nkbc.instanceOf.get("PrimaryColor"));
+        System.out.println("KBcache.showAll(): ColorAttribute: " + nkbc.instanceOf.get("ColorAttribute"));
+        System.out.println("KBcache.showAll(): PrimaryColor: " + nkbc.getInstancesForType("PrimaryColor"));
+        System.out.println("KBcache.showAll(): ColorAttribute: " + nkbc.getInstancesForType("ColorAttribute"));
+        System.out.println("KBcache.showAll(): FormOfGovernment: " + nkbc.getInstancesForType("FormOfGovernment"));
     }
 
     /** *************************************************************
      */
-    public static void main(String[] args) {
+    public static void showChildren(KBcache nkbc) {
 
-        //debug = true;
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("**** Finished loading KB ***");
-        KBcache nkbc = kb.kbCache;
-        showAll(nkbc);
         String term = "Integer";
         HashSet<String> classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         //nkbc.children = new HashMap<>();
         //nkbc.buildChildrenNew("Entity","subclass");
         term = "Integer";
         classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         term = "PositiveInteger";
         classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         term = "PositiveRealNumber";
         classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         term = "NonnegativeRealNumber";
         classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         term = "Number";
         classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         term = "RealNumber";
         classes = nkbc.getChildClasses(term);
-        System.out.println("KBcache.main(): children of " + term + ": " +
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
-        nkbc.showState();
-        /*
-        String term = "Object";
-        HashSet<String> classes = nkbc.getChildClasses(term);
-        HashSet<String> instances = nkbc.getChildInstances(term);
-        System.out.println("number of child classes of " + term + ": " + classes.size());
-        System.out.println("KBcache.main(): children of " + term + ": " +
-                classes);
-        System.out.println("number of instances of " + term + ": " + instances.size());
-        System.out.println("KBcache.main(): instances of " + term + ": " +
-               instances);
-        term = "Process";
-        classes = nkbc.getChildClasses(term);
-        instances = nkbc.getChildInstances(term);
-        System.out.println("number of classes of " + term + ": " + classes.size());
-        System.out.println("KBcache.main(): children of " + term + ": " +
-                classes);
-        System.out.println("number of instances of " + term + ": " + instances.size());
-        System.out.println("KBcache.main(): instances of " + term + ": " +
-                instances);
+    }
 
-        System.out.println("KBcache.main(): " + nkbc.getCommonParent("Kicking","Pushing"));
-*/
-        //showAll(nkbc);
+    /** *************************************************************
+     * Informational routine to show the sizes of the caches as a way
+     * to determine what might be the best sizes to pre-allocate, relative
+     * to the number of statements in a knowledge base
+     */
+    public static void showSizes(KBcache nkbc) {
 
-        /* List<Formula> forms = kb.ask("arg",0,"subrelation");
-        for (Formula f : forms) {
-            String rel = f.getArgument(1);
-            System.out.println("is " + rel + " a relation: " + kb.isInstanceOf(rel,"Relation"));
+        System.out.println("KBcache.showSizes(): relations size: " + nkbc.relations.size());
+        System.out.println("KBcache.showSizes(): functions size: " + nkbc.functions.size());
+        System.out.println("KBcache.showSizes(): predicates size: " + nkbc.predicates.size());
+        System.out.println("KBcache.showSizes(): transRels size: " + nkbc.transRels.size());
+        System.out.println("KBcache.showSizes(): instRels size: " + nkbc.instRels.size());
+        System.out.println("KBcache.showSizes(): instTransRels size: " + nkbc.instTransRels.size());
+        System.out.println("KBcache.showSizes(): parents keySet size (# relations): " + nkbc.parents.keySet().size());
+        int total = 0;
+        for (HashMap<String, HashSet<String>> seconds : nkbc.parents.values())
+            total = total + seconds.keySet().size();
+        System.out.println("KBcache.showSizes(): parents average values size (# parents for relations): " +
+                total / nkbc.parents.keySet().size());
+        System.out.println("KBcache.showSizes(): instanceOf size: " + nkbc.instanceOf.size());
+        total = 0;
+        for (HashSet<String> seconds : nkbc.instances.values())
+            total = total + seconds.size();
+        System.out.println("KBcache.showSizes(): instances average values size (# instances ): " +
+                total / nkbc.instances.keySet().size());
+        total = 0;
+        for (HashMap<String, HashSet<String>> seconds : nkbc.children.values())
+            total = total + seconds.keySet().size();
+        System.out.println("KBcache.showSizes(): children average values size (# children for relations): " +
+                total / nkbc.children.keySet().size());
+        System.out.println("KBcache.showSizes(): signature size: " + nkbc.signatures.size());
+        System.out.println("KBcache.showSizes(): explicitDisjoint size: " + nkbc.explicitDisjoint.size());
+        System.out.println("KBcache.showSizes(): disjointRelations size: " + nkbc.disjointRelations.size());
+    }
+
+    /** ***************************************************************
+     */
+    public static void printHelp() {
+
+        System.out.println("Sigma Knowledge Engineering Environment: KBcache");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -a - show All cache contents");
+        System.out.println("  -s - show size of cache elements");
+        System.out.println("  -c - show children");
+        System.out.println("  -t - show complete sTate of cache");
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) {
+
+        if (args == null) {
+            printHelp();
         }
-        */
+        else {
+            try {
+                KBmanager.getMgr().initializeOnce();
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+            }
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("**** Finished loading KB ***");
+            System.out.println(HTMLformatter.showStatistics(kb));
+            KBcache nkbc = kb.kbCache;
+            if (args != null && args.length > 0 && args[0].equals("-a")) {
+                showAll(nkbc);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-s")) {
+                showSizes(nkbc);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-c")) {
+                showChildren(nkbc);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-t")) {
+                showState(nkbc);
+            }
+            else {
+                printHelp();
+            }
+        }
     }
 }
