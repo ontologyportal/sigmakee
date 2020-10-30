@@ -75,7 +75,7 @@ public class KBcacheUnitTest {
         for (Formula f : kb.formulaMap.values())
             f.sourceFile = "test"; // without a source file kbCache assumes it's a cached formula and ignores it
         kb.kbCache.buildCaches();
-        kb.kbCache.showState();
+        KBcache.showState(kb.kbCache);
     }
 
     /** ***************************************************************
