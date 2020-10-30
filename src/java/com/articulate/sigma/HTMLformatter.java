@@ -430,9 +430,9 @@ public class HTMLformatter {
 
                     show.append("<tr>\n");
                     show.append("  <td><a href=\"" + kbHref +"&term=");
-                    show.append(   relation + "\">" + relation + " (" + relationName + ")</a>" + "</td>");
-                    show.append("  <td><a href=\"" + kbHref +"&term=");
                     show.append(   nonRelation + "\">" + nonRelation + " (" + nonRelationName + ")</a>" + "</td>");
+                    show.append("  <td><a href=\"" + kbHref +"&term=");
+                    show.append(   relation + "\">" + relation + " (" + relationName + ")</a>" + "</td>");
                     show.append("</tr>\n");
                     if (i == 14) 
                         show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + uppercaseTerm + " </FONT></td>" +
