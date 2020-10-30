@@ -24,11 +24,15 @@ import java.util.regex.Pattern;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.wordNet.WordNet;
+import org.json.simple.JSONAware;
+import org.json.simple.JSONValue;
 
 /** *****************************************************************
  *  Contains utility methods for KBs
  */
 public class KButilities {
+
+    public static boolean debug = false;
 
     /** *************************************************************
      */
@@ -241,7 +245,6 @@ public class KButilities {
         }
     }
 
-
     /** *************************************************************
      */
     public static void validatePictureList() {
@@ -291,7 +294,145 @@ public class KButilities {
             }
         }
     }
-    
+
+    /** *************************************************************
+     */
+    public class GraphArc implements JSONAware, Comparable {
+
+        public GraphArc(String s, String r, String t) {
+            source = s;
+            rel = r;
+            target = t;
+        }
+        public String source = "";
+        public String rel = "";
+        public String target = "";
+
+        public int compareTo(Object o) {
+
+            if (o.getClass().toString().endsWith("GraphArc")) {
+                GraphArc ga2 = (GraphArc) o;
+                String s1 = source + rel + target;
+                String s2 = ga2.source + ga2.rel + ga2.target;
+                return s1.compareTo(s2);
+            }
+            else {
+                throw new ClassCastException(o.getClass().toString());
+            }
+        }
+
+        public boolean equals(Object o) {
+            if (o.getClass().toString().endsWith("GraphArc")) {
+                GraphArc ga2 = (GraphArc) o;
+                String s1 = source + rel + target;
+                String s2 = ga2.source + ga2.rel + ga2.target;
+                return s1.equals(s2);
+            }
+            else throw new ClassCastException();
+        }
+
+        public String toString() {
+
+            StringBuffer sb = new StringBuffer();
+            sb.append("{\"source\":\"" + source + ",\"rel\":\"" + rel + "\",\"target\":\"" + target + "\"}");
+            return sb.toString();
+        }
+
+        public String toJSONString() {
+            return toString();
+        }
+    }
+
+    /** *************************************************************
+     */
+    public String semnetAsJSON3(KB kb, boolean cached, boolean strings) {
+
+        Set<String> s = generateSemanticNetwork(kb, cached, strings);
+        ArrayList<GraphArc> al = new ArrayList();
+        for (String st : s) {
+            String[] sp = st.split(" ");
+            GraphArc ga = this.new GraphArc(sp[0],sp[1],sp[2]);
+            al.add(ga);
+        }
+        StringBuffer sb = new StringBuffer();
+        sb.append(JSONValue.toJSONString(al));
+        return sb.toString();
+    }
+
+    /** *************************************************************
+     */
+    public Set<GraphArc> generateSemNetNeighbors(KB kb, boolean cached, boolean strings, boolean links, String term, int count) {
+
+        if (debug) System.out.println("generateSemNetNeighbors(): term: " + term + " count: " + count);
+        TreeSet<GraphArc> resultSet = new TreeSet<>();
+        TreeSet<String> targets = new TreeSet<>();
+        for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
+            //if (debug) System.out.println("generateSemNetNeighbors(): check formula: " + f);
+            if (isCacheFile(f.sourceFile)  && !cached) {
+                if (debug) System.out.println("generateSemNetNeighbors(): cached: ");
+                continue;
+            }
+            if ((!f.isSimpleClause(kb) || !f.isGround()) && links) {
+                if (debug) System.out.println("generateSemNetNeighbors(): not simple");
+                Set<String> terms = f.collectTerms();
+                for (String term1 : terms) {
+                    if (!term1.equals(term))
+                        continue;
+                    if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
+                        continue;
+                    for (String term2 : terms) {
+                        if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
+                            continue;
+                        if (!term1.equals(term2)) {
+                            GraphArc ga = new GraphArc(term1,"link",term2);
+                            resultSet.add(ga);
+                            targets.add(term2);
+                        }
+                    }
+                    GraphArc ga = new GraphArc(term1,"inAxiom", "\"" + f.getFormula() + "\"");
+                    resultSet.add(ga);
+                }
+            }
+            else {
+                String predicate = f.getStringArgument(0);
+                if (debug) System.out.println("generateSemNetNeighbors(): simple");
+                ArrayList<String> args = f.argumentsToArrayListString(0);
+                if ((args != null && args.size() == 3) || args.get(0).equals("documentation")) { // could have a function which would return null
+                    String arg1 = f.getStringArgument(1);
+                    if (arg1.equals(term)) {
+                        if (debug) System.out.println("generateSemNetNeighbors(): check ground formula: " + f);
+                        String arg2 = f.getStringArgument(2);
+                        if (args.get(0).equals("documentation"))
+                            arg2 = f.getStringArgument(3);
+                        if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
+                                (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
+                            GraphArc ga = new GraphArc(arg1, predicate, arg2);
+                            resultSet.add(ga);
+                            targets.add(arg2);
+                        }
+                    }
+                    arg1 = f.getStringArgument(2);
+                    if (arg1.equals(term)) {
+                        if (debug) System.out.println("generateSemNetNeighbors(): check ground formula: " + f);
+                        String arg2 = f.getStringArgument(1);
+                        if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
+                                (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
+                            GraphArc ga = new GraphArc(arg2, predicate, arg1);
+                            resultSet.add(ga);
+                            targets.add(arg2);
+                        }
+                    }
+                }
+            }
+        }
+        //System.out.println("generateSemNetNeighbors(): before recursion: " + resultSet);
+        if (count > 0)
+            for (String s : targets)
+                resultSet.addAll(generateSemNetNeighbors(kb,cached,strings,links,s,count-1));
+        //System.out.println("generateSemNetNeighbors(): returning: " + resultSet);
+        return resultSet;
+    }
+
     /** *************************************************************
      *  Turn SUMO into a semantic network by extracting all ground
      *  binary relations, turning all higher arity relations into a
@@ -769,8 +910,9 @@ public class KButilities {
         System.out.println("  -h - show this help screen");
         System.out.println("  -c <fname> - generate external links from file fname");
         System.out.println("  -s - count strings and processes");
-        System.out.println("  -n - generate semantic network as .dot");
+        System.out.println("  -d - generate semantic network as .dot");
         System.out.println("  -j - generate semantic network as JSON");
+        System.out.println("  -o - generate semantic network as another JSON format");
         System.out.println("  -q - generate semantic network as SQL");
     }
 
@@ -788,12 +930,21 @@ public class KButilities {
             //validatePictureList();
             //for (String s : generateSemanticNetwork(kb))
             //    System.out.println(s);
+            KButilities kbu = new KButilities();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-j")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 semnetAsJSON2(tuples,kb,"EnglishLanguage");
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-o")) {
+                System.out.println(kbu.semnetAsJSON3(kb,true,true));
+            }
+            else if (args != null && args.length > 2 && args[0].equals("-n")) {
+                // KB kb, boolean cached, boolean strings, boolean links, String term, int count
+                Set<GraphArc> ts = kbu.generateSemNetNeighbors(kb,false,true,false,args[1],Integer.parseInt(args[2]));
+                System.out.println(JSONValue.toJSONString(ts).replaceAll("\\{\"","\n\\{\""));
             }
             else if (args != null && args.length > 0 && args[0].equals("-q")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);
@@ -803,7 +954,7 @@ public class KButilities {
                 countStringWords(kb);
                 countProcesses(kb);
             }
-            else if (args != null && args.length > 0 && args[0].equals("-n")) {
+            else if (args != null && args.length > 0 && args[0].equals("-d")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 System.out.println(semnetAsDot(tuples));
             }
