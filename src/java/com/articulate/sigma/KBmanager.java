@@ -420,11 +420,8 @@ public class KBmanager implements Serializable {
                 removeKB(kbName);
             addKB(kbName);
             kb = getKB(kbName);
-
             if (!(constituents.isEmpty())) {
-                Iterator<String> it = constituents.iterator();
-                while (it.hasNext()) {
-                    String filename = it.next();
+                for (String filename : constituents) {
                     try {
                         System.out.println("KBmanager.loadKB(): add constituent " + filename + " to " + kbName);
                         kb.addConstituent(filename);
