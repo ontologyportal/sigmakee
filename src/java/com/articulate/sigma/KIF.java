@@ -81,6 +81,44 @@ public class KIF {
     public TreeSet<String> errorSet = new TreeSet<String>();
 
     /*****************************************************************
+     */
+    public KIF() {
+    }
+
+    /*****************************************************************
+     * Pre-allocate space for hashes, based on file size
+     */
+    public KIF(String filename) {
+
+        long size = getKIFFileSize(filename);
+        if (size != 0) {
+            termFrequency = new HashMap<String, Integer>((int) size/25, (float) 0.75);
+            formulas = new HashMap<String, ArrayList<String>>((int) size/3, (float) 0.75);
+            formulaMap = new HashMap<String, Formula>((int) size/3, (float) 0.75);
+        }
+    }
+
+    /*****************************************************************
+     * @return long file size in bytes handling any errors
+     */
+    public long getKIFFileSize(String filename) {
+
+        try {
+            File f = new File(filename);
+            if (!f.exists()) {
+                System.out.println("KIF.getKIFFileSize(): error file " + filename + "does not exist");
+                return 0;
+            }
+            return f.length();
+        }
+        catch (Exception ex) {
+            System.out.println("KIF.getKIFFileSize(): error file " + ex.getMessage());
+            ex.printStackTrace();
+        }
+        return 0;
+    }
+
+    /*****************************************************************
      * @return int Returns an integer value denoting the current parse mode.
      */
     public int getParseMode() {
