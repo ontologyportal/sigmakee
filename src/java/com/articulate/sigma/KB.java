@@ -415,13 +415,12 @@ public class KB implements Serializable {
      */
     public void checkArity() {
 
+        long millis = System.currentTimeMillis();
         ArrayList<String> toRemove = new ArrayList<String>();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
         if (formulaMap != null && formulaMap.size() > 0) {
             int counter = 0;
-            Iterator<String> formulas = formulaMap.keySet().iterator();
-            while (formulas.hasNext()) {
-                Formula f = (Formula) formulaMap.get(formulas.next());
+            for (Formula f : formulaMap.values()) {
                 if (counter++ % 10 == 0)
                     System.out.print(".");
                 if (counter % 400 == 0)
@@ -435,8 +434,7 @@ public class KB implements Serializable {
             }
             System.out.println();
         }
-        // for (int i = 0; i < toRemove.size(); i++)
-        // formulaMap.remove(toRemove.get(i));
+        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
     }
 
     /***************************************************************
@@ -2615,7 +2613,7 @@ public class KB implements Serializable {
     public KIF readConstituent(String filename) {
 
         String canonicalPath = null;
-        KIF file = new KIF();
+        KIF file = null;
         try {
             if (filename.endsWith(".owl") || filename.endsWith(".OWL") || filename.endsWith(".rdf")
                     || filename.endsWith(".RDF")) {
@@ -2627,6 +2625,7 @@ public class KB implements Serializable {
             canonicalPath = constituent.getCanonicalPath();
             if (constituents.contains(canonicalPath))
                 errors.add("Error. " + canonicalPath + " already loaded.");
+            file = new KIF(canonicalPath);
             file.readFile(canonicalPath);
             warnings.addAll(file.warningSet);
         }
@@ -2685,7 +2684,7 @@ public class KB implements Serializable {
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
-         this.getTerms().addAll(file.terms);
+        this.getTerms().addAll(file.terms);
         if (!constituents.contains(file.filename))
             constituents.add(file.filename);
     }
@@ -3572,6 +3571,7 @@ public class KB implements Serializable {
         System.out.println("  h - show this help screen");
         System.out.println("  t - run test");
         System.out.println("  a \"<query>\"- ask query");
+        System.out.println("  l - load KB files");
         System.out.println("  v - ask query of Vampire");
         System.out.println("  e - ask query of EProver");
         System.out.println("  o <seconds> - set the query timeout");
@@ -3608,6 +3608,9 @@ public class KB implements Serializable {
             }
             else if (args != null && args.length > 1 && args[0].contains("e")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+            }
+            else if (args != null && args.length > 0 && args[0].contains("l")) {
+                System.out.println("KB.main(): Normal completion");
             }
             else
                 showHelp();
