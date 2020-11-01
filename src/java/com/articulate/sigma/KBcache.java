@@ -1614,6 +1614,7 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         long millis = System.currentTimeMillis();
+        long startMillis = millis;
         if (debug) System.out.println("INFO in KBcache.buildCaches()");
         buildInsts();
         System.out.println("KBcache.buildCaches(): buildInsts seconds: " + (System.currentTimeMillis() - millis) / 1000);
@@ -1660,6 +1661,7 @@ public class KBcache implements Serializable {
         System.out.println("KBcache.buildCaches(): store cached formulas seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
         System.out.println("INFO in KBcache.buildCaches(): size: " + instanceOf.keySet().size());
+        System.out.println("KBcache.buildCaches(): total seconds: " + (System.currentTimeMillis() - startMillis) / 1000);
         initialized = true;
     }
 
