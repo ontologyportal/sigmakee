@@ -334,7 +334,7 @@ public class KButilities {
         public String toString() {
 
             StringBuffer sb = new StringBuffer();
-            sb.append("{\"source\":\"" + source + ",\"rel\":\"" + rel + "\",\"target\":\"" + target + "\"}");
+            sb.append("{\"source\":\"" + source + "\",\"rel\":\"" + rel + "\",\"target\":\"" + target + "\"}");
             return sb.toString();
         }
 
@@ -406,6 +406,8 @@ public class KButilities {
                             arg2 = f.getStringArgument(3);
                         if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
                                 (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
+                            if (StringUtil.isQuotedString(arg2))
+                                arg2 = StringUtil.removeEnclosingQuotes(arg2);
                             GraphArc ga = new GraphArc(arg1, predicate, arg2);
                             resultSet.add(ga);
                             targets.add(arg2);
@@ -417,6 +419,8 @@ public class KButilities {
                         String arg2 = f.getStringArgument(1);
                         if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
                                 (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
+                            if (StringUtil.isQuotedString(arg1))
+                                arg2 = StringUtil.removeEnclosingQuotes(arg1);
                             GraphArc ga = new GraphArc(arg2, predicate, arg1);
                             resultSet.add(ga);
                             targets.add(arg2);
