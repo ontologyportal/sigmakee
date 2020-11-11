@@ -32,30 +32,18 @@ Articulate Software
     public static boolean debug = false;
     public static int maxForDebug = 10;
     public KB kb;
-    /** Relations in SUMO that have a corresponding relation in
-     *  OWL and therefore require special treatment. */
-    private static ArrayList SUMOReservedRelations =
-            new ArrayList(Arrays.asList("disjoint",                 // owl:disjointWith
-                    "disjointDecomposition",    // owl:distinctMembers
-                    "documentation",            // rdfs:comment
-                    "domain",                   // rdfs:domain
-                    "instance",
-                    "inverse",                  // owl:inverseOf
-                    "range",                    // rdfs:range
-                    "subclass",                 // rdfs:subClassOf
-                    "subrelation",
-                    "synonymousExternalConcept")); // owl:sameAs or owl:equivalentClass or owl:equivalentProperty
 
     /** A map of functional statements and the automatically
      *  generated term that is created for it. */
     private HashMap functionTable = new HashMap();
-    /** Keys are SUMO term name Strings, values are YAGO/DBPedia
-     *  term name Strings. */
-    private HashMap SUMOYAGOMap = new HashMap();
+    private int functionKeyNum = 0;
+
     private TreeMap axiomMap = new TreeMap();
     private static String termPrefix = "";
 
     private static int _debugLevelCounter = 0;
+
+    private PrintWriter pw = null;
 
     /** ***************************************************************
      *  Remove quotes around a string
@@ -72,21 +60,55 @@ Articulate Software
         return s;
     }
 
+    /** ***************************************************************
+     * Create a new formula, inserting a new first argument that is the
+     * database table foreign key that identifies the function
+     */
+    private Formula createNewFunction(Formula f, String funcID) {
+
+        StringBuilder sb = new StringBuilder();
+        String pred = f.getStringArgument(0);
+        ArrayList<String> l = f.complexArgumentsToArrayListString(1);
+        if (l == null || l.size() == 0)
+            System.out.println("Error in KIF2SQL.createNewFunction(): null argument list for: " + f);
+        sb.append("(" + pred +  " " + funcID);
+        for (String s : l)
+            sb.append(" " + s);
+        sb.append(")");
+        return new Formula(sb.toString());
+    }
+
    /** ***************************************************************
      */
-    private static String processArg(String doc, int limit) {
+    private String processArg(String arg, int limit) {
 
-        String result = doc;
-        result = result.replaceAll("'","''");
-        result = removeQuotes(result);
-        if (result.length() > limit)
-            result = result.substring(0,limit);
-        return result;
+        if (!Formula.atom(arg)) {
+            Formula f = new Formula(arg);
+            if (kb.isFunctional(f)) {
+                System.out.println("EIF2SQL.createNewFunction(): f: " + f);
+                String pred = f.getStringArgument(0);
+                int arity = kb.kbCache.getArity(pred);
+                String funcID = "Function" + functionKeyNum;
+                f = createNewFunction(f, funcID);
+                writeAxiom(f);
+                functionKeyNum++;
+                return funcID;
+            }
+            return null;
+        }
+        else {
+            String result = arg;
+            result = result.replaceAll("'", "''");
+            result = removeQuotes(result);
+            if (result.length() > limit)
+                result = result.substring(0, limit);
+            return result;
+        }
     }
 
     /** ***************************************************************
      */
-    private void writeWordNetLink(PrintWriter pw, String term) {
+    private void writeWordNetLink(String term) {
 
         WordNet.wn.initOnce();
         // get list of synsets with part of speech prepended to the synset number.
@@ -119,75 +141,101 @@ Articulate Software
     }
 
     /** ***************************************************************
+     * note that for the function tables, the first argument is a key
+     * used in the original relation to point to this function
      */
-    private void writeBinary(PrintWriter pw, Formula form) {
+    private void writeBinary(Formula form) {
 
         String rel = form.getStringArgument(0);
+        String table = "edges";
+        if (kb.isFunction(rel))
+            table = "edgesFn";
         String arg1 = processArg(form.getStringArgument(1),50);
         String arg2 = processArg(form.getStringArgument(2),50);
-        pw.println("INSERT INTO edges (source, rel, target) values ('" + arg1 + "', '" + rel + "', '" + arg2 + "');");
+        pw.println("INSERT INTO " + table + " (source, rel, target) values ('" + arg1 + "', '" + rel + "', '" + arg2 + "');");
     }
 
     /** ***************************************************************
+     *  note that for the function tables, the first argument is a key
+     *  used in the original relation to point to this function
      */
-    private void writeTernary(PrintWriter pw, Formula form) {
+    private void writeTernary(Formula form) {
 
         String rel = form.getStringArgument(0);
+        String table = "ternary";
+        if (kb.isFunction(rel))
+            table = "ternaryFn";
         String arg1 = processArg(form.getStringArgument(1),50);
         String arg2 = processArg(form.getStringArgument(2),50);
         String arg3 = processArg(form.getStringArgument(3),50);
-        pw.println("INSERT INTO ternary (rel, arg1, arg2, arg3) values ('" + rel + "', '" + arg1 + "', '" + arg2 + "', '" + arg3 + "');");
+        pw.println("INSERT INTO " + table + " (rel, arg1, arg2, arg3) values ('" + rel + "', '" + arg1 + "', '" + arg2 + "', '" + arg3 + "');");
     }
 
     /** ***************************************************************
      */
-    private void writeQuaternary(PrintWriter pw, Formula form) {
+    private void writeQuaternary(Formula form) {
 
         String rel = form.getStringArgument(0);
+        String table = "quaternary";
+        if (kb.isFunction(rel))
+            table = "quaternaryFn";
         String arg1 = processArg(form.getStringArgument(1),50);
         String arg2 = processArg(form.getStringArgument(2),50);
         String arg3 = processArg(form.getStringArgument(3),50);
         String arg4 = processArg(form.getStringArgument(4),50);
-        pw.println("INSERT INTO quaternary (rel, arg1, arg2, arg3, arg4) values ('" + rel + "', '" + arg1 + "', '" + arg2 + "', '" + arg3 + "', '" + arg4 + "');");
+        pw.println("INSERT INTO " + table + " (rel, arg1, arg2, arg3, arg4) values ('" + rel + "', '" + arg1 + "', '" + arg2 + "', '" + arg3 + "', '" + arg4 + "');");
     }
 
     /** ***************************************************************
      */
-    private void writeQuinntary(PrintWriter pw, Formula form) {
+    private void writeQuinntary(Formula form) {
 
         String rel = form.getStringArgument(0);
+        String table = "quintary";
+        if (kb.isFunction(rel))
+            table = "quintaryFn";
         String arg1 = processArg(form.getStringArgument(1),50);
         String arg2 = processArg(form.getStringArgument(2),50);
         String arg3 = processArg(form.getStringArgument(3),50);
         String arg4 = processArg(form.getStringArgument(4),50);
         String arg5 = processArg(form.getStringArgument(5),50);
-        pw.println("INSERT INTO quintary (rel, arg1, arg2, arg3, arg4, arg5) values ('" + rel + "', '" + arg1 + "', '" + arg2 + "', '" + arg3 + "', '" + arg4 +  "', '" + arg5 + "');");
+        pw.println("INSERT INTO " + table + " (rel, arg1, arg2, arg3, arg4, arg5) values ('" + rel + "', '" + arg1 + "', '" + arg2 + "', '" + arg3 + "', '" + arg4 +  "', '" + arg5 + "');");
     }
 
     /** ***************************************************************
      */
-    private void writeAxioms(PrintWriter pw) {
+    private void writeAxiom(Formula f) {
+
+        if (f.isRule())
+            pw.println("INSERT INTO doc (lang, term, doc)  values ('SUOKIF', 'axiom-" + f.createID() + "', '" + processArg(f.getFormula(),500) + "');");
+        else if (f.isSimpleClause(kb)) {
+            if (f.argumentsToArrayListString(1).size() == 2)
+                writeBinary(f);
+            if (f.argumentsToArrayListString(1).size() == 3 && !f.getArgument(0).equals("documentation"))
+                writeTernary(f);
+            if (f.argumentsToArrayListString(1).size() == 4)
+                writeQuaternary(f);
+            if (f.argumentsToArrayListString(1).size() == 5)
+                writeQuinntary(f);
+        }
+        else
+            System.out.println("writeAxioms(): not a simple clause: " + f);
+    }
+
+    /** ***************************************************************
+     */
+    private void writeAxioms() {
 
         Iterator it = kb.formulaMap.values().iterator();
         for (Formula f : kb.formulaMap.values()) {
-            if (f.isRule())
-                pw.println("INSERT INTO doc (lang, term, doc)  values ('SUOKIF', 'axiom-" + f.createID() + "', '" + processArg(f.getFormula(),500) + "');");
-            else if (f.isSimpleClause(kb)){
-                if (f.argumentsToArrayListString(1).size() == 2)
-                    writeBinary(pw,f);
-                if (f.argumentsToArrayListString(1).size() == 3 && !f.getArgument(0).equals("documentation"))
-                    writeTernary(pw,f);
-                if (f.argumentsToArrayListString(1).size() == 4)
-                    writeQuaternary(pw,f);
-                if (f.argumentsToArrayListString(1).size() == 5)
-                    writeQuinntary(pw,f);
-            }
+            System.out.println("writeAxioms(): f: " + f);
+            writeAxiom(f);
         }
     }
 
     /** ***************************************************************
      */
-    private void writeDocumentation(PrintWriter pw, String term) {
+    private void writeDocumentation(String term) {
 
         ArrayList doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
         if (doc.size() > 0) {
@@ -203,7 +251,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    public void writeSUMOTerm(PrintWriter pw, String term) {
+    public void writeSUMOTerm(String term) {
 
         pw.println("INSERT INTO nodes (id, label) values ('" + term + "', '" + term + "');");
     }
@@ -211,25 +259,25 @@ Articulate Software
     /** ***************************************************************
      * Write SQL format.
      */
-    public void writeKB(PrintWriter pw) {
+    public void writeKB() {
 
         int counter = 0;
         Set<String> kbterms = kb.getTerms();
         for (String term : kbterms) {
             if (debug && counter++ > maxForDebug)
                 continue;
-            writeSUMOTerm(pw,term);
-            writeDocumentation(pw,term);
-            writeWordNetLink(pw,term);
+            writeSUMOTerm(term);
+            writeDocumentation(term);
+            writeWordNetLink(term);
             pw.flush();
         }
-        writeAxioms(pw);
+        writeAxioms();
         pw.close();
     }
 
     /** ***************************************************************
      */
-    private void writeVerbFrames(PrintWriter pw) throws IOException {
+    private void writeVerbFrames() throws IOException {
 
         ArrayList VerbFrames = new ArrayList(Arrays.asList("Something ----s",
                 "Somebody ----s",
@@ -279,7 +327,7 @@ Articulate Software
      * Write OWL format for SUMO-WordNet mappings.
      * @param synset is a POS prefixed synset number
      */
-    private void writeWordNetSynset(PrintWriter pw, String synset) {
+    private void writeWordNetSynset(String synset) {
 
         //System.out.println("INFO in KIF2SQL.writeWordNetSynset(): " + synset);
         if (synset.startsWith("WN30-"))
@@ -311,7 +359,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    private void writeWordNetExceptions(PrintWriter pw) throws IOException {
+    private void writeWordNetExceptions() throws IOException {
 
         Iterator it = WordNet.wn.exceptionNounHash.keySet().iterator();
         while (it.hasNext()) {
@@ -329,7 +377,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    private void writeOneWordToSenses(PrintWriter pw, String word) {
+    private void writeOneWordToSenses(String word) {
 
         String wordAsID = StringUtil.StringToKIFid(word);
         String wordOrPhrase = "word";
@@ -350,19 +398,19 @@ Articulate Software
 
     /** ***************************************************************
      */
-    private void writeWordsToSenses(PrintWriter pw) throws IOException {
+    private void writeWordsToSenses() throws IOException {
 
         int counter = 0;
         for (String word : WordNet.wn.wordsToSenseKeys.keySet()) {
             if (debug && counter++ > maxForDebug)
                 continue;
-            writeOneWordToSenses(pw,word);
+            writeOneWordToSenses(word);
         }
     }
 
     /** ***************************************************************
      */
-    private void writeSenseIndex(PrintWriter pw) throws IOException {
+    private void writeSenseIndex() throws IOException {
 
         int counter = 0;
         for (String sense : WordNet.wn.senseIndex.keySet()) {
@@ -387,7 +435,7 @@ Articulate Software
 
     /** ***************************************************************
      */
-    public void writeWordNet(PrintWriter pw) throws IOException {
+    public void writeWordNet() throws IOException {
 
         System.out.println("INFO in KIF2SQL.writeWordNet()");
         // Get POS-prefixed synsets.
@@ -395,12 +443,12 @@ Articulate Software
         int counter = 0;
         for (String synset : WordNet.wn.synsetsToWords.keySet()) {
             if (!debug || counter++ < maxForDebug)
-                writeWordNetSynset(pw,synset);
+                writeWordNetSynset(synset);
         }
-        writeWordNetExceptions(pw);
-        writeVerbFrames(pw);
-        writeWordsToSenses(pw);
-        writeSenseIndex(pw);
+        writeWordNetExceptions();
+        writeVerbFrames();
+        writeWordsToSenses();
+        writeSenseIndex();
     }
 
     /** ***************************************************************
@@ -444,15 +492,16 @@ Articulate Software
             String path = kbDir + File.separator + kbName + ".sql";
             System.out.println("INFO in KIF2SQL.write(): writing " + path);
             FileWriter fw = new FileWriter(path);
-            PrintWriter pw = new PrintWriter(fw);
+
             System.out.println("KIF2SQL.main(): completed initialization");
             if (args != null && args.length > 0 && args[0].equals("-s")) {
                 KIF2SQL ot = new KIF2SQL();
+                ot.pw = new PrintWriter(fw);
                 try {
                     System.out.println("KIF2SQL.main(): starting translation");
                     ot.kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-                    ot.writeWordNet(pw);
-                    ot.writeKB(pw);
+                    //ot.writeWordNet(pw);
+                    ot.writeKB();
                 }
                 catch (Exception e) {
                     System.out.println(e.getMessage());
