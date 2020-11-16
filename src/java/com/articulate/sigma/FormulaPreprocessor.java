@@ -20,6 +20,7 @@
  */
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.*;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.google.common.collect.Sets;
 
@@ -618,42 +619,6 @@ public class FormulaPreprocessor {
         }
     }
 
-    /** ***************************************************************
-     * utility method to add a String element to a HashMap of String
-     * keys and a value of an HashSet of Strings
-     */
-    public static void addToMap(HashMap<String,HashSet<String>> map, String key, String element) {
-
-        //System.out.println("FormulaPreprocessor.addToMap(): key,element: " + key + ", " + element);
-        HashSet<String> al = map.get(key);
-        if (al == null)
-            al = new HashSet<String>();
-        al.add(element);
-        map.put(key, al);
-    }
-
-    /** ***************************************************************
-     * utility method to merge two HashMaps of String keys and a values
-     * of an HashSet of Strings.  Note that parent classes in the set of
-     * classes will be removed
-     */
-    static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
-                                                       HashMap<String, HashSet<String>> map2, KB kb) {
-
-        HashMap<String, HashSet<String>> result = new HashMap<String,HashSet<String>>(map1);
-
-        for (String key : map2.keySet()) {
-            Set<String> value = new HashSet<String>();
-            if (result.containsKey(key)) {
-                value = result.get(key);
-            }
-            value.addAll(map2.get(key));
-            value = kb.removeSuperClasses(value);
-            result.put(key, Sets.newHashSet(value));
-        }
-        return result;
-    }
-
     /*****************************************************************
      * This method returns a HashMap that maps each String variable in
      * this the names of types (classes) of which the variable must be
@@ -699,7 +664,7 @@ public class FormulaPreprocessor {
             type = "Entity";
             System.out.println("Error in FormulaPreprocessor.setEqualsVartype() no function type for " + fstr);
         }
-        addToMap(result,arg1,type);
+        MapUtils.addToMap(result,arg1,type);
     }
 
     /** ***************************************************************
@@ -728,7 +693,7 @@ public class FormulaPreprocessor {
             for (int i = start; i <= f.listLength(); i++) {
                 Formula farg = f.getArgument(i);
                 if (farg != null)
-                    result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
+                    result = MapUtils.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
             }
         }
         else { //if (f.isSimpleClause(kb)) { // simple clauses include functions
@@ -759,11 +724,11 @@ public class FormulaPreprocessor {
                                         "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                         }
                         else
-                            addToMap(result, arg.getFormula(), cl);
+                            MapUtils.addToMap(result, arg.getFormula(), cl);
                     }
                     else if (arg.listP() && kb.isFunctional(arg)) { // If formula is function then recurse.
                         if (debug) System.out.println("arg is a function: " + arg);
-                        result = mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
+                        result = MapUtils.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     argnum++;
                 }

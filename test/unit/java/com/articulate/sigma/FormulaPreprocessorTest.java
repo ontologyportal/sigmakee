@@ -8,6 +8,7 @@ package com.articulate.sigma;
 import com.articulate.sigma.trans.SUMOKBtoTFAKB;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.utils.MapUtils;
 import com.google.common.collect.*;
 import org.junit.*;
 
@@ -142,7 +143,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         expectedMap.put("?Hum", Sets.newHashSet("Man", "Woman"));
         expectedMap.put("?Time", Sets.newHashSet("Month"));
 
-        HashMap<String, HashSet<String>> actualMap = FormulaPreprocessor.mergeToMap(map1, map2, SigmaTestBase.kb);
+        HashMap<String, HashSet<String>> actualMap = MapUtils.mergeToMap(map1, map2, SigmaTestBase.kb);
 
         System.out.println("testMergeToMap1(): actual: " + actualMap);
         System.out.println("testMergeToMap1(): expected: " + expectedMap);
