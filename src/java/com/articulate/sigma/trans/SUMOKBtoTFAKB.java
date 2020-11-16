@@ -2,6 +2,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.utils.MapUtils;
 
 import java.io.*;
 import java.util.*;
@@ -301,19 +302,19 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): t,s,i: " + t + ", " + s + ", " + i);
             if ((kb.isSubclass("Integer",s) && kb.isSubclass(s,"Quantity")) ||
                     s.equals("Integer") || kb.isSubclass(s,"Integer"))
-                FormulaPreprocessor.addToMap(modsig,strnum,strnum + INT_SUFFIX);
+                MapUtils.addToMap(modsig,strnum,strnum + INT_SUFFIX);
             if ((kb.isSubclass("RationalNumber",s) && kb.isSubclass(s,"Quantity")) ||
                     s.equals("RationalNumber") || kb.isSubclass(s,"RationalNumber"))
-                FormulaPreprocessor.addToMap(modsig,strnum,strnum + RAT_SUFFIX);
+                MapUtils.addToMap(modsig,strnum,strnum + RAT_SUFFIX);
             if ((kb.isSubclass("RealNumber",s) && kb.isSubclass(s,"Quantity")) ||
                     s.equals("RealNumber") || kb.isSubclass(s,"RealNumber"))
-                FormulaPreprocessor.addToMap(modsig,strnum,strnum + REAL_SUFFIX);
-            FormulaPreprocessor.addToMap(modsig, strnum, ""); // no suffix
+                MapUtils.addToMap(modsig,strnum,strnum + REAL_SUFFIX);
+            MapUtils.addToMap(modsig, strnum, ""); // no suffix
             if (listOperator(t) && s.equals("Entity")) {
                 if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): list operator: " + t);
-                FormulaPreprocessor.addToMap(modsig, strnum, strnum + INT_SUFFIX);
-                FormulaPreprocessor.addToMap(modsig, strnum, strnum + RAT_SUFFIX);
-                FormulaPreprocessor.addToMap(modsig, strnum, strnum + REAL_SUFFIX);
+                MapUtils.addToMap(modsig, strnum, strnum + INT_SUFFIX);
+                MapUtils.addToMap(modsig, strnum, strnum + RAT_SUFFIX);
+                MapUtils.addToMap(modsig, strnum, strnum + REAL_SUFFIX);
             }
         }
         if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): modsig: " + modsig);
@@ -383,17 +384,17 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     private void handleMathAndComp(HashMap<String,HashSet<String>> toExtend) {
 
         for (String t : Formula.COMPARISON_OPERATORS) {
-            FormulaPreprocessor.addToMap(toExtend, t, "1Re2Re");
-            FormulaPreprocessor.addToMap(toExtend, t, "1Ra2Ra");
-            FormulaPreprocessor.addToMap(toExtend, t, "1In2In");
+            MapUtils.addToMap(toExtend, t, "1Re2Re");
+            MapUtils.addToMap(toExtend, t, "1Ra2Ra");
+            MapUtils.addToMap(toExtend, t, "1In2In");
         }
         for (String t : Formula.MATH_FUNCTIONS) {
             if (t.equals(Formula.FLOORFN))
-                FormulaPreprocessor.addToMap(toExtend, t, "0In1Re");
+                MapUtils.addToMap(toExtend, t, "0In1Re");
             else {
-                FormulaPreprocessor.addToMap(toExtend, t, "0Re1Re2Re");
-                FormulaPreprocessor.addToMap(toExtend, t, "0Ra1Ra2Ra");
-                FormulaPreprocessor.addToMap(toExtend, t, "0In1In2In");
+                MapUtils.addToMap(toExtend, t, "0Re1Re2Re");
+                MapUtils.addToMap(toExtend, t, "0Ra1Ra2Ra");
+                MapUtils.addToMap(toExtend, t, "0In1In2In");
             }
         }
     }
@@ -465,16 +466,16 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                     String newRaStr = Integer.toString(i) + fnSuffix + "__" + raStr.toString();
                     String newNoStr = Integer.toString(i);
                     if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(): adding term: " + newInStr);
-                    FormulaPreprocessor.addToMap(toExtend, r, newInStr);
-                    FormulaPreprocessor.addToMap(toExtend, r, newReStr);
-                    FormulaPreprocessor.addToMap(toExtend, r, newRaStr);
-                    FormulaPreprocessor.addToMap(toExtend, r, newNoStr);
+                    MapUtils.addToMap(toExtend, r, newInStr);
+                    MapUtils.addToMap(toExtend, r, newReStr);
+                    MapUtils.addToMap(toExtend, r, newRaStr);
+                    MapUtils.addToMap(toExtend, r, newNoStr);
                 }
             }
             else {
                 if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(): non numeric and non-list r: " + r);
                 for (int i = size; i < 7; i++) {
-                    FormulaPreprocessor.addToMap(toExtend, r, Integer.toString(i));
+                    MapUtils.addToMap(toExtend, r, Integer.toString(i));
                 }
             }
         }
