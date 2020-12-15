@@ -5,6 +5,7 @@ package com.articulate.sigma;
 // Copyright 2019 Infosys
 // adam.pease@infosys.com
 
+import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

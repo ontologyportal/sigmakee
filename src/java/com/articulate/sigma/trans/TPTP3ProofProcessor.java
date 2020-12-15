@@ -16,6 +16,7 @@ package com.articulate.sigma.trans;
 import TPTPWorld.TPTPFormula;
 import TPTPWorld.TPTPParser;
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.StringUtil;
 import com.igormaznitsa.prologparser.DefaultParserContext;
 import com.igormaznitsa.prologparser.GenericPrologParser;
 import com.igormaznitsa.prologparser.ParserContext;
@@ -25,8 +26,6 @@ import com.igormaznitsa.prologparser.tokenizer.Op;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static com.igormaznitsa.prologparser.terms.TermType.*;
 

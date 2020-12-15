@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.*;
 
 import static com.articulate.sigma.wordNet.WSD.readFileIntoArray;

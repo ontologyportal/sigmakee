@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
 import java.io.StreamTokenizer;

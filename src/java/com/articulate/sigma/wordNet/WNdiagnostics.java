@@ -18,6 +18,7 @@ import java.util.Iterator;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
 
 /** *****************************************************************
  * A class that finds problems in WordNet to KB mappings.  It is not meant

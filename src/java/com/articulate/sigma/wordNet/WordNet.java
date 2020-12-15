@@ -19,6 +19,7 @@ package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;

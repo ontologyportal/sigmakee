@@ -1,7 +1,7 @@
 package com.articulate.sigma.VerbNet;
 
 import com.articulate.sigma.SimpleElement;
-import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.wordNet.WordNet;
 import com.articulate.sigma.wordNet.WordNetUtilities;

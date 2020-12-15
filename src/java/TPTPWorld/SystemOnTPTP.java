@@ -18,7 +18,7 @@ import tptp_parser.TptpLexer;
 import tptp_parser.TptpParser;
 
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.utils.StringUtil;
 
 public class SystemOnTPTP {
     

@@ -1,7 +1,5 @@
 package com.articulate.sigma;
 
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -10,6 +8,7 @@ import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 
+import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

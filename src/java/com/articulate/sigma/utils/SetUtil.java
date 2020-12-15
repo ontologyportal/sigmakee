@@ -13,8 +13,6 @@ August 9, Acapulco, Mexico.
 
 package com.articulate.sigma.utils;
 
-import com.articulate.sigma.StringUtil;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;

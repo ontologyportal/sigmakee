@@ -1,18 +1,13 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.FormulaPreprocessor;
-import com.articulate.sigma.trans.*;
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
-import org.junit.Before;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.*;
 
 import static org.junit.Assert.*;
-import org.junit.Ignore;
+
 import org.junit.BeforeClass;
 
 /**

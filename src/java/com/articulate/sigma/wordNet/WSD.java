@@ -22,6 +22,7 @@ import java.util.*;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 
 public class WSD {

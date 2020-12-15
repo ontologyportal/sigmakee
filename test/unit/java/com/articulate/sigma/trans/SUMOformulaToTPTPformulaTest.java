@@ -1,7 +1,6 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.StringUtil;
-import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
 import org.junit.Before;
 

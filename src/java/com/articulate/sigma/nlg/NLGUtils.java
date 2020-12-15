@@ -1,7 +1,7 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
-import com.google.common.collect.Maps;
+import com.articulate.sigma.utils.StringUtil;
 import edu.stanford.nlp.ling.CoreLabel;
 
 import java.io.*;

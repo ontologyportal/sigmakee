@@ -1,8 +1,8 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.utils.MapUtils;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;

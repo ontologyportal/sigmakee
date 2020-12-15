@@ -1,7 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import org.junit.Assert;
+import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
 
 import java.io.File;

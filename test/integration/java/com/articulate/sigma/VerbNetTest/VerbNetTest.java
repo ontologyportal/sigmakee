@@ -1,14 +1,12 @@
 package com.articulate.sigma.VerbNet;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.*;
 import org.junit.Test;
-import org.junit.Ignore;
-import org.junit.Test;
-import org.junit.Ignore;
+
 import static org.junit.Assert.*;
 import java.util.*;
-import static org.junit.Assert.*;
 
 public class VerbNetTest extends IntegrationTestBase {
 

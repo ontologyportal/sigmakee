@@ -6,6 +6,7 @@ package com.articulate.sigma.trans;
 // adam.pease@infosys.com
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
 import java.io.FileWriter;

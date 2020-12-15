@@ -18,9 +18,9 @@ Adam Pease
 Infosys LTD.
 */
 
-package com.articulate.sigma;
+package com.articulate.sigma.utils;
 
-import com.articulate.sigma.utils.Base64;
+import com.articulate.sigma.Formula;
 
 import java.io.*;
 import java.net.URL;
@@ -618,7 +618,7 @@ public class StringUtil {
      * isJavaIdentifierPart() isn't sufficient, since it allows
      * characters KIF doesn't
      */
-    public static String StringToKIFid(String s) {
+    public static String stringToKIFid(String s) {
 
         if (s == null)
             return s;
@@ -906,7 +906,7 @@ public class StringUtil {
 
     /****************************************************************
      */
-    public static String allCapsToSUMOID(String str) {
+    public static String asSUMOID(String str) {
 
         if (emptyString(str)) {
             System.out.println("Error in StringUtil.allCapsToSUMOID(): str is null");
