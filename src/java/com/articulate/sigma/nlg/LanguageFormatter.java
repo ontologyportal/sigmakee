@@ -18,6 +18,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotation;

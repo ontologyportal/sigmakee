@@ -22,13 +22,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.KB;
+import com.articulate.sigma.dataProc.Infrastructure;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONAware;
-import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
-import org.json.simple.parser.JSONParser;
 
 /** *****************************************************************
  *  Contains utility methods for KBs
@@ -907,188 +905,6 @@ public class KButilities {
 		return result;
 	}
 
-    /** *************************************************************
-     */
-    public class Product {
-        public String SUMO = null;
-        public String ID = null;
-        public String name = null;
-        public String parent = null;
-        public HashMap<String,String> attributes = new HashMap<>();
-
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            if (SUMO != null)
-                sb.append("SUMO:" + SUMO + " ");
-            sb.append(ID + " : " + name + " : " + parent);
-            sb.append("    " + attributes);
-            return sb.toString();
-        }
-    }
-
-    /** *************************************************************
-     */
-    public class Category {
-        public String ID = null;
-        public String SUMO = null;
-        public String name = null;
-        public String parent = null;
-        public HashSet<String> sectors = new HashSet<>();
-
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            if (SUMO != null)
-                sb.append("SUMO:" + SUMO + " ");
-            sb.append(ID + " : " + name + " : " + parent);
-            sb.append("    " + sectors);
-            return sb.toString();
-        }
-    }
-
-    /** *************************************************************
-     * maps are old string ID keys and new (SUMO) id values
-     */
-    public class Mappings {
-        public HashMap<String,String> terms = new HashMap<>();
-        public HashMap<String,String> relations = new HashMap<>();
-        public HashMap<String,String> units = new HashMap<>();
-    }
-
-    /** *************************************************************
-     */
-    private Mappings processMappings(JSONObject objm) {
-
-        Mappings mappings = new Mappings();
-        JSONArray terms = (JSONArray) objm.get("terms");
-        for (Object o : terms) {
-            String old = (String) ((JSONObject) o).get("old");
-            String newTerm = (String) ((JSONObject) o).get("new");
-            mappings.terms.put(old,newTerm);
-        }
-        JSONArray relations = (JSONArray) objm.get("relations");
-        for (Object o : relations) {
-            String old = (String) ((JSONObject) o).get("old");
-            String newTerm = (String) ((JSONObject) o).get("new");
-            mappings.relations.put(old,newTerm);
-        }
-        JSONArray units = (JSONArray) objm.get("units");
-        for (Object o : relations) {
-            String old = (String) ((JSONObject) o).get("old");
-            String newTerm = (String) ((JSONObject) o).get("new");
-            mappings.units.put(old,newTerm);
-        }
-        return mappings;
-    }
-
-    /** *************************************************************
-     */
-    private HashMap<String,Category> processCategories(JSONArray arrayc,
-                                                       Mappings mappings) {
-
-        HashMap<String,Category> categories = new HashMap<>();
-        for (Object o : arrayc) {
-            JSONObject jso = (JSONObject) o;
-            JSONObject jso2 = (JSONObject) jso.get("_id");
-            String oid = (String) jso2.get("$oid");
-            String name = (String) jso.get("name");
-            JSONArray sectors = (JSONArray) jso.get("sectors");
-            Category c = this.new Category();
-            c.ID = oid;
-            c.name = name;
-            c.sectors.addAll(sectors);
-            JSONObject jsoParent = (JSONObject) jso.get("productTypeId");
-            c.parent = (String) jsoParent.get("$oid");
-            if (mappings.terms.containsKey(c.name))
-                c.SUMO = mappings.terms.get(c.name);
-            categories.put(c.ID,c);
-            System.out.println("processCategories(): " + c);
-        }
-        return categories;
-    }
-
-    /** *************************************************************
-     */
-    private HashMap<String,Product> processProducts(JSONArray arrayp,
-                                                    HashMap<String,Category> categories,
-                                                    Mappings mappings) {
-
-        HashMap<String,Product> products = new HashMap<>();
-        for (Object o : arrayp) {
-            JSONObject jso = (JSONObject) o;
-            JSONObject jso2 = (JSONObject) jso.get("_id");
-            String oid = (String) jso2.get("$oid");
-            String name = (String) jso.get("name");
-            JSONObject attrib = (JSONObject) jso.get("attributes");
-            Collection<String> relations = attrib.keySet();
-            Product p = this.new Product();
-            p.ID = oid;
-            p.name = name;
-            p.attributes = (HashMap<String,String>) attrib;
-            JSONObject jsocat = (JSONObject) jso.get("subCategoryId");
-            String cat = (String) jsocat.get("$oid");
-            if (categories.keySet().contains(cat)) { // points to a duplicate concepts in categories
-                System.out.println("processProducts(): found id: " + cat);
-                Category twin = categories.get(cat);
-                p.parent = twin.parent;
-                System.out.println("processProducts(): found parent: " + p.parent);
-            }
-            if (mappings.terms.containsKey(p.name))
-                p.SUMO = mappings.terms.get(p.name);
-            products.put(oid,p);
-            System.out.println(p);
-        }
-        return products;
-    }
-
-    /** *************************************************************
-     * Parse a sample of products and their categories formatted in a JSON.
-     * Uses JSON API at http://alex-public-doc.s3.amazonaws.com/json_simple-1.1/index.html
-     * @param filenamep must be full path
-     * @param filenamec must be full path
-     */
-    public void productCatJSONtoSUMO(String filenamep, String filenamec, String filenamem) {
-
-        FileReader frp = null;
-        FileReader frc = null;
-        FileReader frm = null;
-        JSONArray arrayp = null;
-        JSONArray arrayc = null;
-        JSONObject objm = null;
-        HashMap<String,Product> products = new HashMap<>();
-        HashMap<String,Category> categories = new HashMap<>();
-        Mappings mappings = new Mappings();
-        try {
-            // read products
-            frp = new FileReader(filenamep);
-            JSONParser jp = new JSONParser();
-            Object objp = jp.parse(frp);
-            arrayp = (JSONArray) objp;
-
-            // read categories
-            frc = new FileReader(filenamec);
-            JSONParser jpc = new JSONParser();
-            Object objc = jpc.parse(frc);
-            arrayc = (JSONArray) objc;
-
-            // read mapping
-            frm = new FileReader(filenamem);
-            JSONParser jpm = new JSONParser();
-            objm = (JSONObject) jpm.parse(frm);
-        }
-        catch (Exception e) {
-            System.out.println("Error reading " + filenamep + " " + filenamec + "\n" + e.getMessage());
-            e.printStackTrace();
-        }
-        mappings = processMappings((JSONObject) objm);
-
-        // process categories
-        categories = processCategories(arrayc,mappings);
-
-        System.out.println("Soil and Aggregate: " + categories.get("5faac9a131043254df44d70f"));
-        // process products
-        products = processProducts(arrayp,categories,mappings);
-    }
-
     /** ***************************************************************
      */
     public static void showHelp() {
@@ -1101,7 +917,6 @@ public class KButilities {
         System.out.println("  -d - generate semantic network as .dot");
         System.out.println("  -j - generate semantic network as JSON");
         System.out.println("  -o - generate semantic network as another JSON format");
-        System.out.println("  -p <fname> - parse sample product category JSON");
         System.out.println("  -q - generate semantic network as SQL");
     }
 
@@ -1114,17 +929,16 @@ public class KButilities {
         else {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("KBmutilities.main(): completed init");
             //countRelations(kb);
             //checkURLs(kb);
             //validatePictureList();
             //for (String s : generateSemanticNetwork(kb))
             //    System.out.println(s);
             KButilities kbu = new KButilities();
+            Infrastructure infra = new Infrastructure();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
-            }
-            else if (args != null && args.length > 3 && args[0].equals("-p")) {
-                kbu.productCatJSONtoSUMO(args[1],args[2],args[3]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-j")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);

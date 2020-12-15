@@ -10,6 +10,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTP2SUMO;
+import com.articulate.sigma.utils.StringUtil;
 
 public class InterfaceTPTP {
 

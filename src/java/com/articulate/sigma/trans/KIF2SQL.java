@@ -2,6 +2,7 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 
@@ -350,7 +351,7 @@ Articulate Software
             if (al != null) {
                 for (int i = 0; i < al.size(); i++) {
                     AVPair avp = (AVPair) al.get(i);
-                    String rel = StringUtil.StringToKIFid(avp.attribute);
+                    String rel = StringUtil.stringToKIFid(avp.attribute);
                     pw.println("INSERT INTO wordnet (source, rel, target) values ('WN30-" + synset + "', '" + rel + "', '" + avp.value + "');");
                 }
             }
@@ -379,7 +380,7 @@ Articulate Software
      */
     private void writeOneWordToSenses(String word) {
 
-        String wordAsID = StringUtil.StringToKIFid(word);
+        String wordAsID = StringUtil.stringToKIFid(word);
         String wordOrPhrase = "word";
         if (word.indexOf("_") != -1)
             wordOrPhrase = "phrase";
