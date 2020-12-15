@@ -65,13 +65,12 @@ import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.Pair;
 import com.articulate.sigma.utils.SetUtil;
-import com.articulate.sigma.wordNet.OMWordnet;
+import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.text.ParseException;
 import java.util.*;
 import java.util.regex.Matcher;

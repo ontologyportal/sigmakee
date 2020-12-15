@@ -17,6 +17,7 @@ import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPutil;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 
 import java.io.File;
@@ -880,6 +881,8 @@ public class HTMLformatter {
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
         result.append(" MULTIPLE size=");
+        if (options == null)
+            return "";
         result.append(Integer.toString(options.keySet().size()) + ">\n  ");
         Iterator<String> it = options.keySet().iterator();
         while (it.hasNext()) {
@@ -905,6 +908,11 @@ public class HTMLformatter {
     public static String createMenu(String menuName, String selectedOption, 
     		ArrayList<String> options, String params) {
 
+        System.out.println("createMenu(): menuName: " + menuName);
+        System.out.println("createMenu(): options: " + options);
+        System.out.println("createMenu(): selectedOption: " + selectedOption);
+        if (options == null)
+            return "";
         StringBuilder result = new StringBuilder();
         TreeSet<String> menuOptions = new TreeSet<String>();
         menuOptions.addAll(options);
@@ -914,9 +922,7 @@ public class HTMLformatter {
         if (params != null) 
             result.append(" " + params + " ");        
         result.append(">\n  ");
-        Iterator<String> it = menuOptions.iterator();
-        while (it.hasNext()) {
-            String menuItem = it.next();
+        for (String menuItem : menuOptions) {
             result.append("<option value='");
             String menuItemProcessed = encodeForURL(menuItem);
             result.append(menuItemProcessed);
@@ -928,6 +934,7 @@ public class HTMLformatter {
             result.append("</option>");
         }
         result.append("\n</select>\n");
+        System.out.println("createMenu(): result: " + result);
         return result.toString();
     }
 

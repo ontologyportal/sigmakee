@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 
 import java.io.File;

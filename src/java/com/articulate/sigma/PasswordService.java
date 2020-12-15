@@ -8,6 +8,8 @@ package com.articulate.sigma;
 
 //import org.h2.tools.Server;
 
+import com.articulate.sigma.utils.StringUtil;
+
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;

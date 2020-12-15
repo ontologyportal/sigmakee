@@ -13,6 +13,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 import com.articulate.sigma.trans.OWLtranslator;
+import com.articulate.sigma.utils.StringUtil;
 
 /** This code is copyright Articulate Software (c) 2004.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -205,8 +206,8 @@ public class Mapping {
                 int tab3 = line.indexOf("\t",tab2+1);
                 String term1 = line.substring(tab1+1,tab2);
                 String term2 = line.substring(tab2+1,tab3);
-                term1 = StringUtil.StringToKIFid(term1);
-                term2 = StringUtil.StringToKIFid(term2);
+                term1 = StringUtil.stringToKIFid(term1);
+                term2 = StringUtil.stringToKIFid(term2);
                 System.out.println("(" + relName + " " + term1 + " " + term2 + ")");
             }
         }

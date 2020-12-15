@@ -22,7 +22,6 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.utils.*;
 import com.articulate.sigma.trans.SUMOtoTFAform;
-import com.google.common.collect.Sets;
 
 import java.util.*;
 import java.util.regex.Matcher;

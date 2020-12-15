@@ -7,6 +7,8 @@
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.StringUtil;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;

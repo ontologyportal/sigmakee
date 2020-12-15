@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.
 */
 
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
 import java.io.FileReader;

@@ -9,6 +9,8 @@
  */
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.StringUtil;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -294,7 +296,7 @@ public class SimpleDOMParser {
      */
     public static String convertToReservedCharacters(String input) {
 
-        if (StringUtil.emptyString(input)) 
+        if (StringUtil.emptyString(input))
             return "";
         input = input.replaceAll("&gt;",">");
         input = input.replaceAll("&lt;","<");

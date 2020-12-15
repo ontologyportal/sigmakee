@@ -19,7 +19,7 @@ August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
 import java.io.FileReader;

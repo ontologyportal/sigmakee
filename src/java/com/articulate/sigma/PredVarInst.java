@@ -16,6 +16,7 @@ package com.articulate.sigma;
  */
 
 import com.articulate.sigma.trans.SUMOtoTFAform;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.util.*;
 

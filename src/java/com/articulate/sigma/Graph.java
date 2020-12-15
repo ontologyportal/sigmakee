@@ -23,8 +23,8 @@ import java.util.*;
 
 import javax.imageio.ImageIO;
 
-import com.articulate.sigma.KB;
 import com.articulate.sigma.utils.FileUtil;
+import com.articulate.sigma.utils.StringUtil;
 
 /** Handle operations for creating a graphical representation of partial
  *  ordering relations.  Supports Graph.jsp.  */

@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.StringUtil;
+
 import java.util.*;
 
 //This software is released under the GNU Public License
