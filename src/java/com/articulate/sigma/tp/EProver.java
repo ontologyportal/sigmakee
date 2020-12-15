@@ -17,9 +17,9 @@ Infosys LTD.
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
-import java.text.ParseException;
 import java.util.*;
 
 public class EProver {
