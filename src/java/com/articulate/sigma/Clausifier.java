@@ -19,7 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.util.*;
 
-import com.articulate.sigma.KB;
+import com.articulate.sigma.utils.StringUtil;
 
 /** **************************************************************
  *  The code in the section below implements an algorithm for
