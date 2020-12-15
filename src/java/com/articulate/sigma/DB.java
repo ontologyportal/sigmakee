@@ -42,7 +42,9 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.articulate.sigma.dataProc.Hotel;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WSD;
 import com.articulate.sigma.wordNet.WordNet;
 import com.articulate.sigma.wordNet.WordNetUtilities;
@@ -841,9 +843,9 @@ public class DB {
                     Matcher m = p.matcher(line);
                     if (m.matches()) {
                         count++;
-                        String table = StringUtil.allCapsToSUMOID(StringUtil.removeEnclosingQuotes(m.group(1)));
+                        String table = StringUtil.asSUMOID(StringUtil.removeEnclosingQuotes(m.group(1)));
                         String unprocessedRelation = StringUtil.removeEnclosingQuotes(m.group(2));
-                        String relation = StringUtil.asSUMORelationID(StringUtil.allCapsToSUMOID(unprocessedRelation));
+                        String relation = StringUtil.asSUMORelationID(StringUtil.asSUMOID(unprocessedRelation));
                         String dataType = StringUtil.removeEnclosingQuotes(m.group(3));
                         String dataLength = StringUtil.removeEnclosingQuotes(m.group(4));
                         String SUMO = StringUtil.removeEnclosingQuotes(m.group(5));
