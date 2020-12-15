@@ -11,7 +11,7 @@ Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
  */
-package com.articulate.sigma;
+package com.articulate.sigma.dataProc;
 
 import java.io.*;
 import java.util.*;
@@ -21,6 +21,9 @@ import java.util.regex.Pattern;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import com.articulate.sigma.DB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.wordNet.WordNet;
 import org.w3c.dom.Document;
@@ -1748,7 +1751,7 @@ public class Hotel {
 
         if (args[0].equals("-help") || StringUtil.emptyString(args[0]) ) {
             System.out.println("usage:");
-            System.out.println(">java -classpath . com.articulate.sigma.Hotel -js /home/me/data");
+            System.out.println(">java -classpath . com.articulate.sigma.dataProc.Hotel -js /home/me/data");
         }
         if (args[0].equals("-js")) {
             String path = ".";
