@@ -3,8 +3,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.DB;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.StringUtil;
-import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
 import java.util.*;
