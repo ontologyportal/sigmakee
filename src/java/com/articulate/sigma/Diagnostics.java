@@ -13,11 +13,9 @@ August 9, Acapulco, Mexico.
 */
 
 import com.articulate.sigma.utils.FileUtil;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
-import java.net.URL;
 import java.util.*;
 
 /** *****************************************************************
