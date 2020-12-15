@@ -22,7 +22,7 @@ about individual SUO-KIF formulas.
 
 package com.articulate.sigma;
 
-import com.google.common.collect.Sets;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.BufferedWriter;
 import java.io.File;
