@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.StringUtil;
+
 import java.io.File;
 import java.io.StringReader;
 import java.util.ArrayList;
