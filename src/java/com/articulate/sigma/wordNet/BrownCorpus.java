@@ -1,6 +1,6 @@
 package com.articulate.sigma.wordNet;
 
-import com.articulate.sigma.StringUtil;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -8,8 +8,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
 
 /** **************************************************************
  * Copyright 2016 Articulate Software
