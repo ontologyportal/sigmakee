@@ -908,9 +908,9 @@ public class HTMLformatter {
     public static String createMenu(String menuName, String selectedOption, 
     		ArrayList<String> options, String params) {
 
-        System.out.println("createMenu(): menuName: " + menuName);
-        System.out.println("createMenu(): options: " + options);
-        System.out.println("createMenu(): selectedOption: " + selectedOption);
+        //System.out.println("createMenu(): menuName: " + menuName);
+        //System.out.println("createMenu(): options: " + options);
+        //System.out.println("createMenu(): selectedOption: " + selectedOption);
         if (options == null)
             return "";
         StringBuilder result = new StringBuilder();
@@ -934,7 +934,7 @@ public class HTMLformatter {
             result.append("</option>");
         }
         result.append("\n</select>\n");
-        System.out.println("createMenu(): result: " + result);
+        //System.out.println("createMenu(): result: " + result);
         return result.toString();
     }
 

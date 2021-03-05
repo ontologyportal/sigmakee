@@ -364,7 +364,11 @@ public class Infrastructure {
      */
     public void productCatJSONtoSUMO(String filenamep, String filenamec, String filenamem, String filenamept) throws SQLException {
 
-        System.out.println("productCatJSONtoSUMO():");
+        System.out.println("productCatJSONtoSUMO(): reading files:");
+        System.out.println("productCatJSONtoSUMO(): reading product files: " + filenamep);
+        System.out.println("productCatJSONtoSUMO(): reading category files: " + filenamec);
+        System.out.println("productCatJSONtoSUMO(): reading mapping files: " + filenamem);
+        System.out.println("productCatJSONtoSUMO(): reading product type files: " + filenamept);
         FileReader frpt = null;
         FileReader frc = null;
         FileReader frm = null;
