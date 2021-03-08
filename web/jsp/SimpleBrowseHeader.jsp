@@ -19,6 +19,13 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     <%
         String pageName = "Simple";
         String pageString = "Simple Browser";
+
+        if (!KBmanager.initialized) {
+            KBmanager.getMgr().initializeOnce();
+            System.out.println("SimpleBrowse.jsp: initializing.  Redirecting to init.jsp.");
+            response.sendRedirect("init.jsp");
+            return;
+        }
     %>
     <%@include file="CommonHeader.jsp" %>
 

@@ -1285,7 +1285,6 @@ public class DocGen {
     protected TreeMap alphaList = new TreeMap(String.CASE_INSENSITIVE_ORDER);
 
     /** *************************************************************
-     *  @param stringMap is a map of String keys and values
      *  @return a TreeMap of TreeMaps of ArrayLists where the keys
      *          are uppercase single characters (of term formats or
      *          headwords) and the values are TreeMaps with a key of
@@ -1331,7 +1330,6 @@ public class DocGen {
     }
 
     /** *************************************************************
-     *  @param stringMap is a map of String keys and values
      *  @return a TreeMap of TreeMaps of ArrayLists where the keys
      *          are uppercase single characters (of term formats or
      *          headwords) and the values are TreeMaps with a key of
@@ -1853,7 +1851,6 @@ public class DocGen {
      * displayed.
      * 
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.
-     *                   @see createAlphaList(KB)
      */
     public String createPage(KB kb, 
                              String kbHref, 
@@ -1862,24 +1859,10 @@ public class DocGen {
                              int limit, 
                              String language,
                              String formatToken) {
-        /*              
-                        System.out.println("ENTER DocGen.createPage("
-                        + kb.name + ", "
-                        + kbHref + ", "
-                        + term + ", "
-                        + "[alphaList with " + alphaList.size() + " entries], "
-                        + limit + ", "
-                        + language + ", "
-                        + formatToken + ")");
-        */
+
         String output = "";
         try {
-            /*
-              if (formatToken.equalsIgnoreCase(F_DD2)) {
-              output = createPage(kb, kbHref, term, alphaList, limit, language);
-              }
-              else {
-            */
+            String sep = StringUtil.getLineSeparator();
             StringBuilder result = new StringBuilder();
             StringBuilder sb1 = new StringBuilder();
             StringBuilder sb2 = new StringBuilder();
@@ -1895,68 +1878,42 @@ public class DocGen {
                                                 INDEX_FILE_NAME
                                                 ));
             }
-            result.append("<table width=\"100%\">");
-            result.append(StringUtil.getLineSeparator());
-            result.append("  <tr bgcolor=\"#DDDDDD\">");
-            result.append(StringUtil.getLineSeparator());
-            result.append("    <td valign=\"top\" class=\"title\">");
-            result.append(StringUtil.getLineSeparator());
+            result.append("<table width=\"100%\">" + sep);
+            result.append("  <tr bgcolor=\"#DDDDDD\">" + sep);
+            result.append("    <td valign=\"top\" class=\"title\">"+ sep);
             result.append("      ");
-            result.append(showTermName(kb,term,language));
-            result.append(StringUtil.getLineSeparator());
-            result.append("      ");
-            result.append(StringUtil.getLineSeparator());
-            result.append("    </td>");
-            result.append(StringUtil.getLineSeparator());
-            result.append("  </tr>"); 
-            result.append(StringUtil.getLineSeparator());
+            result.append(showTermName(kb,term,language)+ sep);
+            result.append("      "+ sep);
+            result.append("    </td>"+ sep);
+            result.append("  </tr>"+ sep);
             String relevance = "";  // createTermRelevanceNotice(kb, kbHref, term, language);
             if (StringUtil.isNonEmptyString(relevance)) {
-                result.append("  <tr bgcolor=\"#DDDDDD\">");
-                result.append(StringUtil.getLineSeparator());
-                result.append("    <td valign=\"top\" class=\"cell\">");
-                result.append(StringUtil.getLineSeparator());
-                result.append(relevance);
-                result.append(StringUtil.getLineSeparator());
-                result.append("    </td>");
-                result.append(StringUtil.getLineSeparator());
-                result.append("  </tr>");
-                result.append(StringUtil.getLineSeparator());
+                result.append("  <tr bgcolor=\"#DDDDDD\">"+ sep);
+                result.append("    <td valign=\"top\" class=\"cell\">"+ sep);
+                result.append(relevance+ sep);
+                result.append("    </td>"+ sep);
+                result.append("  </tr>"+ sep);
             }
-            result.append(createDocs(kb, kbHref, term, language));
-            result.append(StringUtil.getLineSeparator());
-            result.append("</table>");
-            result.append(StringUtil.getLineSeparator());
-            result.append("<table width=\"100%\">");
-            result.append(StringUtil.getLineSeparator());
-            result.append(createDisplayNames(kb, kbHref, term, formatToken));
-            result.append(StringUtil.getLineSeparator());
-            result.append(createSynonyms(kb, kbHref, term, formatToken));
-            result.append(StringUtil.getLineSeparator());
-            result.append(createComments(kb, kbHref, term, language));
-            result.append(StringUtil.getLineSeparator());
+            result.append(createDocs(kb, kbHref, term, language)+ sep);
+            result.append("</table>"+ sep);
+            result.append("<table width=\"100%\">"+ sep);
+            result.append(createDisplayNames(kb, kbHref, term, formatToken)+ sep);
+            result.append(createSynonyms(kb, kbHref, term, formatToken)+ sep);
+            result.append(createComments(kb, kbHref, term, language)+ sep);
             Set<String> parents = new HashSet<String>();
             sb1.append(createParents(kb, kbHref, term, language, parents));
             sb1.append(StringUtil.getLineSeparator());
             sb2.append(createChildren(kb, kbHref, term, language));
             sb2.append(StringUtil.getLineSeparator());
             if ((sb1.length() > 0) || (sb2.length() > 0)) {
-                result.append("<tr class=\"title_cell\">");
-                result.append(StringUtil.getLineSeparator());
-                result.append("  <td valign=\"top\" class=\"label\">");
-                result.append(StringUtil.getLineSeparator());
-                result.append("    Relationships");
-                result.append(StringUtil.getLineSeparator());
-                result.append("  </td>");
-                result.append(StringUtil.getLineSeparator());
-                result.append("  <td>&nbsp;</td>");
-                result.append(StringUtil.getLineSeparator());
-                result.append("  <td>&nbsp;</td>");
-                result.append(StringUtil.getLineSeparator());
-                result.append("  <td>&nbsp;</td>");
-                result.append(StringUtil.getLineSeparator());
-                result.append("</tr>");
-                result.append(StringUtil.getLineSeparator());
+                result.append("<tr class=\"title_cell\">"+ sep);
+                result.append("  <td valign=\"top\" class=\"label\">"+ sep);
+                result.append("    Relationships"+ sep);
+                result.append("  </td>"+ sep);
+                result.append("  <td>&nbsp;</td>"+ sep);
+                result.append("  <td>&nbsp;</td>"+ sep);
+                result.append("  <td>&nbsp;</td>"+ sep);
+                result.append("</tr>"+ sep);
                 // Parents
                 result.append(sb1.toString());
                 sb1.setLength(0);
@@ -1966,14 +1923,10 @@ public class DocGen {
             }
             ArrayList superComposites = findContainingComposites(kb, term); 
             Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
-            result.append(createInstances(kb, kbHref, term, language, superComposites));
-            result.append(StringUtil.getLineSeparator());
-            result.append(createRelations(kb, kbHref, term, language, formatToken));
-            result.append(StringUtil.getLineSeparator());
-            result.append(createUsingSameComponents(kb, kbHref, term, language));
-            result.append(StringUtil.getLineSeparator());
-            result.append(createBelongsToClass(kb, kbHref, term, language, parents));
-            result.append(StringUtil.getLineSeparator());
+            result.append(createInstances(kb, kbHref, term, language, superComposites)+ sep);
+            result.append(createRelations(kb, kbHref, term, language, formatToken)+ sep);
+            result.append(createUsingSameComponents(kb, kbHref, term, language)+ sep);
+            result.append(createBelongsToClass(kb, kbHref, term, language, parents)+ sep);
             if (!superComposites.isEmpty()) {
                 String formattedContainingComposites = 
                     formatContainingComposites(kb,
@@ -1982,76 +1935,34 @@ public class DocGen {
                                                term,
                                                language);
                 if (StringUtil.isNonEmptyString(formattedContainingComposites)) {
-                    result.append("<tr>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  <td valign=\"top\" class=\"label\">");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("    Is Member of Composites");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  </td>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  <td valign=\"top\" class=\"title_cell\">");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("    Composite Name");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  </td>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  <td valign=\"top\" class=\"title_cell\">");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("    Description of Element Role");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  </td>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  <td valign=\"top\" class=\"title_cell\">");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("    Cardinality");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  </td>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("  <td> &nbsp; </td>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append("</tr>");
-                    result.append(StringUtil.getLineSeparator());
-                    result.append(formattedContainingComposites);
-                    result.append(StringUtil.getLineSeparator());
+                    result.append("<tr>"+ sep);
+                    result.append("  <td valign=\"top\" class=\"label\">"+ sep);
+                    result.append("    Is Member of Composites"+ sep);
+                    result.append("  </td>"+ sep);
+                    result.append("  <td valign=\"top\" class=\"title_cell\">"+ sep);
+                    result.append("    Composite Name"+ sep);
+                    result.append("  </td>"+ sep);
+                    result.append("  <td valign=\"top\" class=\"title_cell\">"+ sep);
+                    result.append("    Description of Element Role"+ sep);
+                    result.append("  </td>"+ sep);
+                    result.append("  <td valign=\"top\" class=\"title_cell\">"+ sep);
+                    result.append("    Cardinality"+ sep);
+                    result.append("  </td>"+ sep);
+                    result.append("  <td> &nbsp; </td>"+ sep);
+                    result.append("</tr>"+ sep);
+                    result.append(formattedContainingComposites+ sep);
                 }
             }
-            result.append("</table>");
-            result.append(StringUtil.getLineSeparator());
-            result.append(generateHtmlFooter(""));
-            result.append(StringUtil.getLineSeparator());
-            result.append("  </body>");
-            result.append(StringUtil.getLineSeparator());
-            result.append("</html>");
-            result.append(StringUtil.getLineSeparator());
+            result.append("</table>"+ sep);
+            result.append(generateHtmlFooter("")+ sep);
+            result.append("  </body>"+ sep);
+            result.append("</html>"+ sep);
             // result.append(createAllStatements(kb,kbHref,term,limit));
             output = result.toString();
-            /*
-              System.out.println("INFO createPage(" 
-              + kb.name + ", "
-              + kbHref + ", "
-              + term + ", "
-              + "[" + alphaList.size() + " pairs], "
-              + limit + ", "
-              + language + ")");
-              System.out.println("  ==> " + output);
-            */
-            // }
         }
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        /*           
-                     System.out.println("EXIT DocGen.createPage("
-                     + kb.name + ", "
-                     + kbHref + ", "
-                     + term + ", "
-                     + "[alphaList with " + alphaList.size() + " entries], "
-                     + limit + ", "
-                     + language + ", "
-                     + formatToken + ")");
-                     System.out.println("  output == " + output.length() + " chars");
-        */
         return output;
     }
 
@@ -2585,6 +2496,8 @@ public class DocGen {
             if (cached == null) {
                 TreeSet predSet = new TreeSet();
                 Set classNames = kb.kbCache.instanceOf.get("Predicate");
+                if (classNames == null)
+                    return null;
                 classNames.add("Predicate");
                 classNames.add("BinaryPredicate");
                 Iterator it = classNames.iterator();
@@ -4547,39 +4460,6 @@ public class DocGen {
         if (StringUtil.isNonEmptyString(termFormat)) {
             ans = StringUtil.removeEnclosingQuotes(termFormat);
         }
-        /*else {
-            String namespace = getTermNamespace(kb, term);
-            if (StringUtil.isNonEmptyString(namespace) 
-                && (namespace.equals(language)
-                    || namespace.equals(getDefaultNamespace()))) {
-                ans = stripNamespacePrefix(kb, term);
-            }
-            else {
-                ans = StringUtil.kifToW3c(term);
-            }
-        }
-        if (getCodedIdentifiers(kb).contains(term)) {  //(term, "IsoCode")) {
-            List<String> delims = Arrays.asList(StringUtil.getW3cNamespaceDelimiter(), 
-                                                StringUtil.getKifNamespaceDelimiter());
-            for (String delim : delims) {
-                int idx = ans.indexOf(delim);
-                if (idx > -1) {
-                    idx += delim.length();
-                    if (idx < ans.length()) {
-                        ans = ans.substring(idx);
-                        break;
-                    }
-                }
-            }
-        }
-        if (withSpanTags) {
-            if (StringUtil.isNonEmptyString(ans)) {
-                if (isXmlAttribute(kb, term)) {
-                    ans = ("<span class=\"attribute\">" + ans + "</span>");
-                }
-            }
-        }
-        */        
         return ans;
     }
 
@@ -5885,7 +5765,6 @@ public class DocGen {
      * Generate a single HTML page showing all terms.
      *
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.
-     *                  @see createAlphaList(KB)
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
      * 
@@ -6731,8 +6610,6 @@ public class DocGen {
      * ArrayLists.  If rowFlags contains any Strings, the method
      * concatenates sequential lines that do not start with one of the
      * Strings, else rowFlags is ignored.
-     * 
-     * @param fname The pathname of the file to be processed
      *
      * @param delimiter A char that delimits each field in a row
      *

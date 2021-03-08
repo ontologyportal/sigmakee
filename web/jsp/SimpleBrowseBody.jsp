@@ -67,21 +67,13 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 
-    DocGen gen = DocGen.getInstance(kb.name);
-    String ontology = gen.getOntology(kb);
-    if (StringUtil.emptyString(ontology))
-        ontology = KBmanager.getMgr().getPref("sumokbname");
-    String formatToken = DocGen.getFirstHtmlFormatToken(kb, ontology);
-    if (StringUtil.emptyString(formatToken)) 
-        formatToken = kb.name;
+    String ontology = KBmanager.getMgr().getPref("sumokbname");
+    String formatToken = kb.name;
     String defaultNS = gen.getDefaultNamespace();
     if (StringUtil.emptyString(defaultNS))
         defaultNS = language;
     TreeMap alphaList = gen.getAlphaList(kb); // tfm
-    if (DocGen.isComposite(kb,term)) 
-        show.append(DocGen.getInstance(kb.name).createCompositePage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));    
-    else 
-        show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));    
+    show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +
                 "</table><BR>\n");

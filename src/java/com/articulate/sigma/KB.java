@@ -2468,9 +2468,7 @@ public class KB implements Serializable {
                 System.out.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);
             else {
                 HashMap<String, String> langFormatMap = formatMap.get(lang);
-                Iterator<Formula> ite = col.iterator();
-                while (ite.hasNext()) {
-                    Formula f = (Formula) ite.next();
+                for (Formula f : col) {
                     String key = f.getStringArgument(2);
                     String format = f.getStringArgument(3);
                     format = StringUtil.removeEnclosingQuotes(format);
@@ -2482,9 +2480,7 @@ public class KB implements Serializable {
                 System.out.println("Error in KB.loadFormatMaps(): No term format file loaded for language: " + lang);
             else {
                 HashMap<String, String> langTermFormatMap = termFormatMap.get(lang);
-                Iterator<Formula> ite = col.iterator();
-                while (ite.hasNext()) {
-                    Formula f = (Formula) ite.next();
+                for (Formula f : col) {
                     String key = f.getStringArgument(2);
                     String format = f.getStringArgument(3);
                     format = StringUtil.removeEnclosingQuotes(format);
@@ -2564,6 +2560,15 @@ public class KB implements Serializable {
         if ((langFormatMap == null) || langFormatMap.isEmpty())
             loadFormatMaps(lang);
         return formatMap.get(lang);
+    }
+
+    /*****************************************************************
+     * Get the termFormat entry for a given term and language
+     */
+    public String getTermFormat(String lang, String term) {
+
+        HashMap<String, String> langFormatMap = getFormatMap(lang);
+        return langFormatMap.get(term);
     }
 
     /*****************************************************************
