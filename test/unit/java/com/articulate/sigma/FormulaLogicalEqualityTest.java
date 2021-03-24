@@ -82,13 +82,14 @@ public class FormulaLogicalEqualityTest extends UnitTestBase {
     @Test
     public void test() {
 
+        //Formula.debug = true;
         Formula f1 = new Formula();
         f1.read(f1Text);
         Formula f2 = new Formula();
         f2.read(f2Text);
 
         long start = System.nanoTime();
-      boolean comparisonResult = f1.logicallyEquals(f2);
+        boolean comparisonResult = f1.logicallyEquals(f2);
         //boolean comparisonResult = f1.unifyWith(f2);
         long stop = System.nanoTime();
         totalExecutionTime += (stop - start);
