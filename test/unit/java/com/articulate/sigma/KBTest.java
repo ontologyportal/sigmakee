@@ -36,7 +36,7 @@ public class KBTest extends UnitTestBase {
     @Test
     public void testAskWithTwoRestrictionsIndirect1() {
 
-        ArrayList<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Process");
+        ArrayList<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Driving", 2, "Guiding");
         if (actual != null && actual.size() != 0)
             System.out.println("KBtest.testAskWithTwoRestrictionsIndirect1(): " + actual);
         assertEquals(1, actual.size());
