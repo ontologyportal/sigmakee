@@ -6,8 +6,8 @@ import java.util.*;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
-// Copyright 2019 Infosys
-// adam.pease@infosys.com
+// Copyright 2019 Infosys, 2020- Articulate Software
+// apease@articulatesoftware.com
 
 public class RowVars {
 
@@ -67,6 +67,7 @@ public class RowVars {
                 //System.out.println("INFO in RowVars.getRowVarMaxArities(): pred: " + pred);
                 if (kb.kbCache.valences.get(pred) != null) {
                     int arity = kb.kbCache.valences.get(pred).intValue();
+                    if (DEBUG) System.out.println("INFO in RowVars.getRowVarMaxArities(): pred: " + pred + " arity: " + arity);
                     if (arities.containsKey(pred)) {
                         if (arity < arities.get(rowvar).intValue())
                             arities.put(rowvar, Integer.valueOf(arity));
@@ -89,11 +90,10 @@ public class RowVars {
      */
     public static HashMap<String,Integer> getRowVarMaxAritiesWithOtherArgs(HashMap<String,HashSet<String>> ar, KB kb, Formula f) {
 
+        if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() predicates: " + ar);
         HashMap<String,Integer> arities = new HashMap<String,Integer>();
-        Iterator<String> it = ar.keySet().iterator();
         for (String rowvar : ar.keySet()) {
             HashSet<String> preds = ar.get(rowvar);
-            Iterator<String> it2 = preds.iterator();
             for (String pred : preds) {
                 // If row variables in an argument list with other arguments,
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
@@ -101,8 +101,7 @@ public class RowVars {
                 int start = f.getFormula().indexOf("(" + pred);
                 int end = f.getFormula().indexOf(")", start);
                 String simpleFS = f.getFormula().substring(start, end+1);
-                if (DEBUG)
-                    System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
+                if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
                 Formula simpleF = new Formula();
                 simpleF.read(simpleFS);
                 for (int i = 0; i < simpleF.listLength(); i++) {
@@ -110,8 +109,7 @@ public class RowVars {
                         nonRowVar++;
                 }
 
-                if (DEBUG)
-                    System.out.println("getRowVarMaxAritiesWithOtherArgs() non row var count " + nonRowVar);
+                if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() non row var count " + nonRowVar);
                 if (kb.kbCache!= null && kb.kbCache.valences != null &&
                         kb.kbCache.valences.get(pred) != null) {
                     int arity = kb.kbCache.valences.get(pred).intValue();
@@ -143,16 +141,13 @@ public class RowVars {
      */
     public static HashMap<String,Integer> getRowVarMinAritiesWithOtherArgs(HashMap<String,HashSet<String>> ar, KB kb, Formula f) {
 
-        if (DEBUG)
-            System.out.println("getRowVarMinAritiesWithOtherArgs(): f: " + f);
-        if (DEBUG)
-            System.out.println("getRowVarMinAritiesWithOtherArgs(): ar: " + ar);
+        if (DEBUG) System.out.println("getRowVarMinAritiesWithOtherArgs(): f: " + f);
+        if (DEBUG) System.out.println("getRowVarMinAritiesWithOtherArgs(): ar: " + ar);
         HashMap<String,Integer> arities = new HashMap<String,Integer>();
         for (String rowvar : ar.keySet()) {
             HashSet<String> preds = ar.get(rowvar);
             for (String pred : preds) {
-                if (DEBUG)
-                    System.out.println("getRowVarMinAritiesWithOtherArgs() pred " + pred);
+                if (DEBUG) System.out.println("getRowVarMinAritiesWithOtherArgs() pred " + pred);
                 // If row variables in an argument list with other arguments,
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int startIndex = 0;
@@ -240,7 +235,7 @@ public class RowVars {
      */
     private static HashMap<String,HashSet<String>> getRowVarRelLogOps(Formula f, String pred) {
     
-        //System.out.println("Info in RowVars.getRowVarRelLogOps(): pred: " + pred + " F: " + f);
+        if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): pred: " + pred + " f: " + f);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         if (Formula.isQuantifier(pred)) {
             Formula arg2 = new Formula(f.getArgument(2));
@@ -264,7 +259,8 @@ public class RowVars {
         }
         else {  // AND or OR
             ArrayList<String> args = f.complexArgumentsToArrayListString(1);
-            for (int i = 1; i < args.size(); i++) {
+            if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): args: " + args);
+            for (int i = 0; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
                 result = mergeValueSets(result,getRowVarRelations(f2));
             }
@@ -285,6 +281,7 @@ public class RowVars {
         if (!f.getFormula().contains("@") || f.empty() || f.atom())
             return result;
         String pred = f.getStringArgument(0);
+        if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): pred: " + pred);
         if (!f.getFormula().substring(1).contains("(")) {  // no higher order or functions
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): simple clause f: " + f);
             HashSet<String> rowvars = findRowVars(f);
@@ -353,11 +350,13 @@ public class RowVars {
             formresult.add(f);
             return formresult;
         }
-        if (DEBUG)
-            System.out.println("Info in RowVars.expandRowVars(): f: " +f);
-        HashMap<String,HashSet<String>> rels = getRowVarRelations(f);   
+        if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): f: " + f);
+        HashMap<String,HashSet<String>> rels = getRowVarRelations(f);
+        if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): getRowVarRelations " + rels);
         HashMap<String,Integer> rowVarMaxArities = getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
+        if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): rowVarMaxArities: " + rowVarMaxArities);
         HashMap<String,Integer> rowVarMinArities = getRowVarMinAritiesWithOtherArgs(rels, kb, f);
+        if (DEBUG) System.out.println("Info in RowVars.expandRowVars(): rowVarMinArities: " + rowVarMinArities);
         result.add(f.getFormula());
         HashSet<String> rowvars = findRowVars(f);
         for (String var : rowvars) {
