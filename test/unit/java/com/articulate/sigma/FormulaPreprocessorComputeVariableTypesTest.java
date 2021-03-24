@@ -30,6 +30,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesNames()     {
         String stmt = "(names \"John\" ?H)";
@@ -46,6 +48,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesInstance()     {
         String stmt =   "(exists (?D ?H)\n" +
@@ -68,7 +72,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
-    /**
+    /** ***************************************************************
      * Result shows that the method does not implicitly ID the agent of a Driving as a human or an entity.
      */
     @Test
@@ -92,7 +96,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
-
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesInstanceAgentInstrument()     {
         String stmt = "(exists (?D ?H ?Car)\n" +
@@ -117,6 +122,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesElementSet()     {
         String stmt =   "(=> " +
@@ -142,7 +149,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
-
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesSubclass()     {
         String stmt =   "(subclass ?Cougar Feline)";
@@ -153,12 +161,14 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("SetOrClass");
+        HashSet<String> set1 = Sets.newHashSet("Class");
         expected.put("?Cougar", set1);
 
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesMonthFn()     {
         String stmt =   "(exists (?M) " +
@@ -177,6 +187,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesGovFn()     {
         String stmt =   "(=> " +
@@ -196,6 +208,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesSubclassIf()     {
         String stmt =   "(=> " +
@@ -208,12 +222,14 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("SetOrClass");
+        HashSet<String> set1 = Sets.newHashSet("Class");
         expected.put("?Cougar", set1);
 
         assertEquals(expected, actual);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesLowTerrain() {
         Map<String, HashSet<String>> expected = ImmutableMap.of("?ZONE", Sets.newHashSet("Object"),
@@ -230,6 +246,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
 
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesIfAndOnlyIfTransitiveRelation() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
@@ -249,6 +267,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actualMap);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesForAllElementSet() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
@@ -269,6 +289,8 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         assertEquals(expected, actualMap);
     }
 
+    /** ***************************************************************
+     */
     @Test
     public void testComputeVariableTypesAwake() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
