@@ -1344,6 +1344,7 @@ public class KBcache implements Serializable {
             int maxIndex = 0;
             domainArray[0] = "";
             ArrayList<Formula> forms = kb.askWithRestriction(0,"domain",1,rel);
+            if (debug) System.out.println("INFO in KBcache.collectDomains(): forms " + forms);
             if (forms != null) {
                 for (int i = 0; i < forms.size(); i++) {
                     Formula form = forms.get(i);
