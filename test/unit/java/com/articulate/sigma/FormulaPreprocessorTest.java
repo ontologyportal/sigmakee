@@ -175,7 +175,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
                 "    (=>\n" +
                 "      (and\n" +
                 "        (instance ?NUMBER PositiveInteger)\n" +
-                "        (instance ?CLASS SetOrClass))\n" +
+                "        (instance ?CLASS Class))\n" +
                 "      (=>\n" +
                 "        (equal ?ELEMENT\n" +
                 "          (ListOrderFn\n" +
@@ -368,6 +368,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         //RowVars.DEBUG = true;
         System.out.println("testMinValuePreprocess: greaterThanOrEqualTo valence: " +
                 kb.kbCache.valences.get("greaterThanOrEqualTo"));
+        assertTrue(2 == kb.kbCache.valences.get("greaterThanOrEqualTo"));
         Set<Formula> actual = fp.preProcess(f, false, kb);
         System.out.println("testMinValuePreprocess(): actual: " + actual);
         Set<Formula> expected = Sets.newHashSet();
@@ -378,6 +379,44 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         else
             System.out.println("testMinValuePreprocess(): fail");
         assertTrue(actual.size() > expectedSize);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testArgNumsPreprocess() {
+
+        System.out.println("\n============= testArgNumsPreprocess ==================");
+        String stmt = "(=>\n" +
+                "    (and\n" +
+                "        (exactCardinality patient ?ARG 1)\n" +
+                "        (instance patient Predicate))\n" +
+                "    (exists (?X @ARGS)\n" +
+                "        (and\n" +
+                "            (patient @ARGS)\n" +
+                "            (equal ?X\n" +
+                "                (ListOrderFn\n" +
+                "                    (ListFn @ARGS) ?ARG))\n" +
+                "            (not\n" +
+                "                (exists (?Y)\n" +
+                "                    (and\n" +
+                "                        (equal ?Y\n" +
+                "                            (ListOrderFn\n" +
+                "                                (ListFn @ARGS) ?ARG))\n" +
+                "                        (not\n" +
+                "                            (equal ?X ?Y))))))))";
+        Formula f = new Formula();
+        f.read(stmt);
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        //PredVarInst.debug = true;
+        //FormulaPreprocessor.debug = true;
+        // RowVars.DEBUG = true;
+        System.out.println("testArgNumsPreprocess: patient valence: " +
+                kb.kbCache.valences.get("patient"));
+
+        ArrayList<Formula> forms = RowVars.expandRowVars(kb,f);
+        System.out.println("testArgNumsPreprocess: forms: " + forms);
     }
 
     /** ***************************************************************
