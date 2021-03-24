@@ -89,7 +89,8 @@ public class FormulaPreprocessor {
         if (kb.kbCache != null && kb.kbCache.signatures != null)
             sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
-            if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred))
+            if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred) &&
+                !pred.equals("equal"))
                 System.out.println("Error in FormulaPreprocessor.findType(): " +
                         "no type information for predicate " + pred);
             return null;
@@ -718,7 +719,8 @@ public class FormulaPreprocessor {
                         String cl = findType(argnum, pred, kb);
                         if (debug) System.out.println("cl: " + cl);
                         if (StringUtil.emptyString(cl)) {
-                            if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation"))
+                            if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
+                                !pred.equals("equal"))
                                 System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                         "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                         }
@@ -870,7 +872,7 @@ public class FormulaPreprocessor {
         accumulator.add(startF);
         ArrayList<Formula> working = new ArrayList<Formula>();
         int prevAccumulatorSize = 0;
-        Formula f = null;
+
         while (accumulator.size() != prevAccumulatorSize) {
             if (debug) System.out.println("replacePredVarsAndRowVars: prevAccumulatorSize: " + prevAccumulatorSize);
             if (debug) System.out.println("replacePredVarsAndRowVars: accumulatorSize: " + accumulator.size());
@@ -880,9 +882,7 @@ public class FormulaPreprocessor {
                 working.clear();
                 working.addAll(accumulator);
                 accumulator.clear();
-                Iterator<Formula> it = working.iterator();
-                while (it.hasNext()) {
-                    f = (Formula) it.next();
+                for (Formula f : working) {
                     Set<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
                     if (debug) System.out.println("FormulaPreprocessor.preProcess(): pred vars repl: " + f + "\n" + instantiations);
                     form.errors.addAll(f.getErrors());
@@ -910,9 +910,7 @@ public class FormulaPreprocessor {
                 working.clear();
                 working.addAll(accumulator);
                 accumulator.clear();
-                Iterator<Formula> it2 = working.iterator();
-                while (it2.hasNext()) {
-                    f = (Formula) it2.next();
+                for (Formula f : working) {
                     RowVars rv = new RowVars();
                     accumulator.addAll(RowVars.expandRowVars(kb,f));
                     if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
@@ -1039,7 +1037,7 @@ public class FormulaPreprocessor {
      * Pre-process a formula before sending it to the theorem prover.
      * This includes ignoring meta-knowledge like documentation strings,
      * translating mathematical operators, quoting higher-order formulas,
-     * expanding row variables and prepending the 'holds__' predicate.
+     * expanding row variables and instantiating predicate variables
      *
      * @param isQuery If true the Formula is a query and should be
      *                existentially quantified, else the Formula is a
