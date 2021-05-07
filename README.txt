@@ -279,8 +279,7 @@ from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
 Vampire
 ==================
-If you want to use Vampire instead of or in addition to E (and can do so consistent with its
-license (https://github.com/vprover/vampire/blob/master/LICENCE), follow these instructions.
+If you want to use Vampire instead of or in addition to E, follow these instructions.
 You may need to install the Zlib library if you don't have it already installed
 
  sudo apt-get install libz-dev
