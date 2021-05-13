@@ -261,7 +261,7 @@ public class SUMOKBtoTPTPKB {
                         if (lang.equals("fof")) {
                             SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula(lang);
                             result = stptp.tptpParseSUOKIFString(f3.getFormula(), false);
-                            //pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
+                            pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null)
                                 f.theTptpFormulas.add(result);
                         }
@@ -279,8 +279,12 @@ public class SUMOKBtoTPTPKB {
                                 if (!StringUtil.emptyString(SUMOtoTFAform.filterMessage))
                                     pr.println("% " + SUMOtoTFAform.filterMessage);
                         }
+                        else
+                            pr.println("% unhandled language option " + lang);
                     }
                 }
+                else
+                    pr.println("% empty result from preprocess");
                 for (String sort : f.tffSorts) {
                     if (!StringUtil.emptyString(sort) &&
                             !alreadyWrittenTPTPs.contains(sort)) {
