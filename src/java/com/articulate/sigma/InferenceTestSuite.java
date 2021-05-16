@@ -378,7 +378,7 @@ public class InferenceTestSuite {
                 for (Formula processed : theQueries) {
                     long start = System.currentTimeMillis();
                     System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
-                    proof = kb.ask(processed.getFormula(), itd.timeout, maxAnswers) + " ";
+                    proof = kb.askEProver(processed.getFormula(), itd.timeout, maxAnswers) + " ";
 
                     duration = System.currentTimeMillis() - start;
                     System.out.print("INFO in InferenceTestSuite.test(): Duration: ");

@@ -1661,9 +1661,10 @@ public class KB implements Serializable {
      * @param maxAnswers    The maximum number of answers (binding sets) the inference
      *                      engine should return.
      * @return A list of answers.
-     */
+
     public ArrayList<String> ask(String suoKifFormula, int timeout, int maxAnswers) {
 
+        System.out.println("KB.ask(): Deprecated!");
         String result = "";
         // Start by assuming that the ask is futile.
         result = ("<queryResponse>" + System.getProperty("line.separator")
@@ -1699,7 +1700,7 @@ public class KB implements Serializable {
         }
         return null;
     }
-
+*/
     /***************************************************************
      * Submits a
      * query to the inference engine. Returns an XML formatted String that
@@ -1716,8 +1717,8 @@ public class KB implements Serializable {
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
         try {
-            if (this.eprover == null)
-                this.eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
+            if (eprover == null)
+                eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
                         System.getenv("SIGMA_HOME") + "/KBs/" + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
         }
         catch (Exception e) {
@@ -1730,11 +1731,6 @@ public class KB implements Serializable {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                String strQuery = processedStmts.iterator().next().getFormula();
-                this.eprover.submitQuery(strQuery, this);
-            }
-
-            if (!processedStmts.isEmpty() && this.eprover != null) {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     eprover.addBatchConfig(null, timeout);
@@ -1744,10 +1740,10 @@ public class KB implements Serializable {
                     e.printStackTrace();
                 }
                 String strQuery = processedStmts.iterator().next().getFormula();
-                this.eprover.submitQuery(strQuery, this);
+                eprover.submitQuery(strQuery, this);
             }
         }
-        return this.eprover;
+        return eprover;
     }
 
     /***************************************************************
@@ -1867,14 +1863,14 @@ public class KB implements Serializable {
                     e.printStackTrace();
                 }
                 String strQuery = processedStmts.iterator().next().getFormula();
-                String EResult = this.eprover.submitQuery(strQuery, this);
-                if (EResult == null || EResult.isEmpty())
+                eprover.submitQuery(strQuery, this);
+                if (eprover.output == null || eprover.output.size() == 0)
                     System.out.println("No response from EProver!");
                 else
                     System.out.println("Get response from EProver, start for parsing ...");
                 // System.out.println("Results returned from E = \n" + EResult);
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                answers = tpp.parseAnswerTuples(EResult, this, fp);
+                answers = tpp.parseAnswerTuples(eprover.output, strQuery, this, fp);
                 return answers;
             }
         }
