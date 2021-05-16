@@ -44,6 +44,11 @@ public class TPTP3ProofProcessor {
 	private int idCounter = 0;
 
 	/** ***************************************************************
+	 */
+	public TPTP3ProofProcessor() {
+	}
+
+	/** ***************************************************************
 	 * Convert bindings in list to string
 	 */
 	public String toString () {
@@ -321,8 +326,8 @@ public class TPTP3ProofProcessor {
 		//String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
 		String formulaType = args.get(2);
 		ps.formulaType = formulaType;
-		if (formulaType.equals("negated_conjecture")) {
-			if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): found negated_conjecture, setting inconsistency to false");
+		if (formulaType.trim().equals("negated_conjecture") || formulaType.trim().equals("conjecture")) {
+			if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): found conjecture or negated_conjecture, setting inconsistency to false");
 			inconsistency = false;
 		}
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): type     : " + formulaType);
@@ -374,7 +379,7 @@ public class TPTP3ProofProcessor {
 	/** ***************************************************************
 	 * Return bindings from TPTP3 answer tuples
 	 */
-	public void processAnswers (String line) {
+	public void processAnswers(String line) {
 
 		if (debug) System.out.println("INFO in processAnswers(): line: " + line);
 		//String trimmed = trimBrackets(line);
@@ -484,7 +489,7 @@ public class TPTP3ProofProcessor {
 			}
 		}
 		if (answers == null || vars.size() != answers.size()) {
-			if (debug) System.out.println("Error in processAnswersFromProof(): null result");
+			if (debug) System.out.println("Error in processAnswersFromProof(): null answers");
 			return;
 		}
 		for (int i = 0; i < vars.size(); i++) {
@@ -615,7 +620,7 @@ public class TPTP3ProofProcessor {
 			while ((line = lnr.readLine()) != null) {
 				if (line.indexOf("SZS output start") != -1) {
 					inconsistency = true; // if negated_conjecture found in the proof then it's not inconsistent
-					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): found proof, seeing inconsistency to true");
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): found proof, setting inconsistency to true");
 					inProof = true;
 					line = lnr.readLine();
 				}
@@ -663,15 +668,15 @@ public class TPTP3ProofProcessor {
      */
     public void parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb) {
 
-		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): before reverse: " +
+		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " +
 		//		lines);
     	//lines = joinNreverseInputLines(lines);
-		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): after reverse: " +
+		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): after reverse: " +
 		//		lines);
 		if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
 			lines = joinNreverseInputLines(lines);
-		if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-			lines = joinLines(lines);
+		//if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
+		//	lines = joinLines(lines);
         try {
             boolean inProof = false;
             boolean finishAnswersTuple = false;
@@ -679,24 +684,25 @@ public class TPTP3ProofProcessor {
             Iterator<String> it = lines.iterator();
             while (it.hasNext()) {
                 line = it.next();
-				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): looking at line: " +
+				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): looking at line: " +
 						line);
-				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): in proof: " +
+				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): in proof: " +
 						inProof);
-				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): finishAnswersTuple: " +
+				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): finishAnswersTuple: " +
 						finishAnswersTuple);
                 if (line.indexOf("SZS output start") != -1) {
-					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): found proof, seeing inconsistency to true");
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found proof, setting inconsistency to true");
 					inconsistency = true; // if negated_conjecture found in the proof then it's not inconsistent
                     inProof = true;
                     line = it.next();
                 }
                 if (line.indexOf("SZS status") != -1) {
                     status = line.substring(13);
-					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(): tpp.status: " +
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): tpp.status: " +
 							status);
                 }
                 if (line.indexOf("SZS answers") != -1) {
+					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found answer line: " + line);
                     if (!finishAnswersTuple) {
                     	int end = line.lastIndexOf("]");
                     	if (end == -1 || (line.length() < end + 1))
@@ -714,7 +720,7 @@ public class TPTP3ProofProcessor {
                         ProofStep ps = parseProofStep(line);
                         if (ps != null) {
                             proof.add(ps);
-							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(2): adding line: " +
+							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): adding line: " +
 									line + "\nas " + ps);
                         }
                     }
@@ -722,21 +728,22 @@ public class TPTP3ProofProcessor {
             }
 			if (inconsistency) {
 				System.out.println("*****************************************");
-				System.out.println("TPTP3ProofProcessor.parseProofOutput(): Danger! possible inconsistency!");
+				System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): Danger! possible inconsistency!");
 				System.out.println("*****************************************");
 			}
         }
         catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): before pruning: " + this);
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): before pruning: " + this);
         // remove unnecessary steps, eg: conjectures, duplicate trues
         proof = ProofStep.removeUnnecessary(proof);
         proof = ProofStep.removeDuplicates(proof);
-        processAnswersFromProof(kifQuery);
+        if (bindings == null || bindings.size() == 0)
+        	processAnswersFromProof(kifQuery);
         // find types for skolem terms
         findTypesForSkolemTerms(kb);
-		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(2): result: " + this);
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): result: " + this);
     }
     
 	/** ***************************************************************
@@ -751,10 +758,10 @@ public class TPTP3ProofProcessor {
 	 * Output = [An instance of Human] (Human is the most specific type
 	 * for esk3_0 in the given proof)
 	 */
-	public ArrayList<String> parseAnswerTuples(String st, KB kb, FormulaPreprocessor fp) {
+	public ArrayList<String> parseAnswerTuples(ArrayList<String> st, String strQuery, KB kb, FormulaPreprocessor fp) {
 
 		ArrayList<String> answers = new ArrayList<>();
-		parseProofOutput(st, kb);
+		parseProofOutput(st, strQuery, kb);
 		if (bindings == null || bindings.isEmpty()) {
 			if (proof != null && !proof.isEmpty()) {
 				answers.add("Proof Found");		// for boolean queries
