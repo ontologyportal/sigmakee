@@ -3125,16 +3125,16 @@ TptpParserOutput.UnaryConnective connective
 		return str;
 	}
 	
-	public final String  theory_name(
+	public final String theory_name(
 		TptpParserOutput out
 	) throws RecognitionException, TokenStreamException {
-		String str;
+		String str = null;
 		
 		Token  lw = null;
 		
 		lw = LT(1);
 		match(LOWER_WORD);
-		{
+
 		if (((LA(1)==RPR||LA(1)==COMMA))&&(lw.getText().equals("equality"))) {
 			str = new String("equality");
 		}
@@ -3145,15 +3145,12 @@ TptpParserOutput.UnaryConnective connective
 			str = new String("answers");
 		}
 		else if ((LA(1)==RPR||LA(1)==COMMA)) {
-			throw new antlr.RecognitionException("unknown theory name: '"
-			+ lw.getText() + "'",
-			getFilename(), lw.getLine(), lw.getColumn());
-			
+			throw new antlr.RecognitionException("Error in TptpParser.theory_name(): unknown theory name: '"
+				+ lw.getText() + "' in line " + lw.getLine(),
+				getFilename(), lw.getLine(), lw.getColumn());
 		}
 		else {
 			throw new NoViableAltException(LT(1), getFilename());
-		}
-		
 		}
 		return str;
 	}
