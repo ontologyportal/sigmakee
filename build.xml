@@ -74,6 +74,10 @@
 	<copy todir="${deploy.lib}">
           <fileset dir="${basedir}/lib" />
     </copy>
+
+    <delete includeemptydirs="true" failonerror="false">
+        <fileset dir="${build.classes}"/> <!-- avoid problems with package name changes by deleting everything -->
+    </delete>
 </target>
 
 <target name="dist" depends="web_deploy" description="Create the *.war file and place in ${build.home}.">
