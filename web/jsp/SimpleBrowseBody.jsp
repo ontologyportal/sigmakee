@@ -69,9 +69,8 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 
     String ontology = KBmanager.getMgr().getPref("sumokbname");
     String formatToken = kb.name;
-    String defaultNS = gen.getDefaultNamespace();
-    if (StringUtil.emptyString(defaultNS))
-        defaultNS = language;
+    String defaultNS = language;
+    DocGen gen = DocGen.getInstance();
     TreeMap alphaList = gen.getAlphaList(kb); // tfm
     show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
