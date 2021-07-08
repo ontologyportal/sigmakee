@@ -1726,6 +1726,7 @@ public class KB implements Serializable {
             e.printStackTrace();
         }
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            loadEProver();
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -1762,6 +1763,7 @@ public class KB implements Serializable {
     public Vampire askVampire(String suoKifFormula, int timeout, int maxAnswers) {
 
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            loadVampire();
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -3354,7 +3356,7 @@ public class KB implements Serializable {
             return;
         }
         String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-        if (!(new File(tptpFilename).exists())) {
+        if (!(new File(tptpFilename).exists()) ||  KBmanager.getMgr().tptpOld()) {
             try {
                 if (!formulaMap.isEmpty()) {
                     HashSet<String> formulaStrings = new HashSet<String>();
@@ -3395,7 +3397,7 @@ public class KB implements Serializable {
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-                if (!(new File(tptpFilename).exists())) {
+                if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().tptpOld()) {
                     System.out.println("INFO in KB.loadEProver(): generating TPTP file");
                     skb.writeFile(tptpFilename,null);
                 }

@@ -126,6 +126,26 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
+     *  Check whether config file is newer than TPTP file
+     */
+    public boolean tptpOld() {
+
+        System.out.println("KBmanager.tptpOld(config): ");
+        String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+        File configFile = new File(kbDir + File.separator + "config.xml");
+        Date configDate = new Date(configFile.lastModified());
+        for (String kbname : kbs.keySet()) { // iterate through the kbs
+            File file = new File(kbDir + File.separator + kbname + ".tptp");
+            Date fileDate = new Date(file.lastModified());
+            if (fileDate.compareTo(configDate) < 0) {
+                return true;
+            }
+        }
+        System.out.println("KBmanager.tptpOld(config): returning false (not old)");
+        return false;
+    }
+
+    /** ***************************************************************
      *  Load the most recently save serialized version.
      */
     public static boolean loadSerialized() {
@@ -142,6 +162,11 @@ public class KBmanager implements Serializable {
             file.close();
             System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
             initialized = true;
+        }
+        catch (java.io.InvalidClassException ex) {
+            System.out.println("Error in KBmanager.loadSerialized(): InvalidClassException is caught");
+            ex.printStackTrace();
+            return false;
         }
         catch (Exception ex) {
             System.out.println("Error in KBmanager.loadSerialized(): IOException is caught");
