@@ -35,7 +35,7 @@
  String type = request.getParameter("type");
  Map theMap = null;     // Map of natural language format strings.
 
- HTMLformatter.kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp" + "?lang=" + language + "?flang=" + flang + "&kb=" + kbName;
+ HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp" + "?lang=" + language + "?flang=" + flang + "&kb=" + kbName;
 
  if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
