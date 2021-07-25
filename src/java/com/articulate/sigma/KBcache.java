@@ -718,6 +718,8 @@ public class KBcache implements Serializable {
     public void correctValences() {
 
         HashSet<String> hs = instances.get("VariableArityRelation");
+        if (hs == null)
+            return;
         for (String s : hs) {
             valences.put(s,-1);
         }
