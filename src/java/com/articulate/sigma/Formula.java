@@ -22,12 +22,12 @@ about individual SUO-KIF formulas.
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.Serializable;
+import java.io.*;
 import java.util.*;
 
 /** ************************************************************
@@ -2478,6 +2478,24 @@ public class Formula implements Comparable, Serializable {
                     || obj.equals(OR)));
     }
 
+    /** *****************************************************************
+     * @return a String with the type(s) of the formula
+     */
+    public String findType(KB kb) {
+
+        StringBuffer sb = new StringBuffer();
+        if (this.isBinary()) sb.append ("binary, ");
+        if (this.isExistentiallyQuantified()) sb.append ("existential, ");
+        if (this.isFunctionalTerm()) sb.append ("functional, ");
+        if (this.isHorn(kb)) sb.append ("horn, ");
+        if (this.isRule()) sb.append ("rule, ");
+        if (this.isSimpleClause(kb)) sb.append ("simple clause, ");
+        if (this.isSimpleNegatedClause(kb)) sb.append ("simple negated clause, ");
+        if (this.isUniversallyQuantified()) sb.append ("universal, ");
+        if (this.isVariable()) sb.append ("variable, ");
+        if (this.isHigherOrder(kb)) sb.append ("hol, ");
+        return sb.toString();
+    }
     /** ***************************************************************
      * Returns the dual logical operator of op, or null if op is not
      * an operator or has no dual.
@@ -3189,13 +3207,37 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * A test method.
      */
-    public static void main(String[] args) {
+    public static void showHelp() {
 
-        // testIsSimpleClause();
-        //testReplaceVar();
-        //testBigArgs();
+        System.out.println("KB class");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  h - show this help screen");
+        System.out.println("  t \"<formula\" - formula type");
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) throws IOException {
+
+        System.out.println("INFO in Formula.main()");
+        if (args == null)
+            System.out.println("no command given");
+        else
+            System.out.println(args.length + " : " + Arrays.toString(args));
+        if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
+            KBmanager.getMgr().initializeOnce();
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            KB kb = KBmanager.getMgr().getKB(kbName);
+            if (args != null && args.length > 1 && args[0].contains("t")) {
+                Formula f = new Formula(args[1]);
+                System.out.println("Formula.main() formula type of " + args[1] + " : " + f.findType(kb));
+            }
+            else
+                showHelp();
+        }
     }
 }
 
