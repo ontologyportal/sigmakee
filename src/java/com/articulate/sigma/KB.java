@@ -3641,7 +3641,7 @@ public class KB implements Serializable {
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(vamp.output, args[1], kb);
                 }
-                System.out.println("KB.main(): bindings: " + tpp.bindings);
+                System.out.println("KB.main(): binding map: " + tpp.bindingMap);
                 System.out.println("KB.main(): proof: " + tpp.proof);
             }
         }
