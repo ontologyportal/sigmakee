@@ -55,8 +55,15 @@ public class TPTP3ProofProcessor {
 
 		StringBuilder sb = new StringBuilder();
 		sb.append("Answers:");
-		for (String s : bindings)
-			sb.append(s + " ");
+		if (bindingMap != null && bindingMap.keySet().size() > 0) {
+			for (String s : bindingMap.keySet()) {
+				sb.append(s + " = " + bindingMap.get(s) + " ");
+			}
+		}
+		else {
+			for (String s : bindings)
+				sb.append(s + " ");
+		}
 		sb.append("\n");
 		for (ProofStep ps : proof)
 			sb.append(ps + "\n");
@@ -358,6 +365,7 @@ public class TPTP3ProofProcessor {
 				String tptpid = it.next();
 				TPTPFormula tptpF = tptpP.ftable.get(tptpid);
 				stmnt = TPTP2SUMO.convertType(tptpF,0,0,true).toString();
+				stmnt = TPTP2SUMO.collapseConnectives(new Formula(stmnt)).toString();
 			}
 		}
 		catch (Exception e) {
@@ -495,6 +503,7 @@ public class TPTP3ProofProcessor {
 		for (int i = 0; i < vars.size(); i++) {
 			bindingMap.put(vars.get(i),answers.get(i));
 		}
+		if (debug) System.out.println("processAnswersFromProof(): bindingMap: " + bindingMap);
 	}
 
 	/** ***************************************************************
@@ -517,7 +526,8 @@ public class TPTP3ProofProcessor {
 		if (debug) System.out.println("findTypesForSkolemTerms(): bindings: " + bindings);
 		if (debug) System.out.println("findTypesForSkolemTerms(): bindings map: " + bindingMap);
 		FormulaPreprocessor fp = new FormulaPreprocessor();
-		for (String binding : bindingMap.values()) {
+		for (String var : bindingMap.keySet()) {
+			String binding = bindingMap.get(var);
 			if (binding.startsWith("esk") || binding.startsWith("(sK")) {
 				ArrayList<String> skolemStmts = ProofProcessor.returnSkolemStmt(binding, proof);
 				if (debug) System.out.println("findTypesForSkolemTerms(): skolem stmts: " + skolemStmts);
@@ -533,7 +543,7 @@ public class TPTP3ProofProcessor {
 				if (kb.kbCache.checkDisjoint(kb, types) == true) {
 					// check if there are contradiction among the types returned
 					//bindings.remove(binding);
-					result = "Get type contradiction for " + binding + " in " + types;
+					result = "Type contradiction for " + binding + " in " + types;
 					//bindings.add(binding);
 				}
 				else {
@@ -557,12 +567,14 @@ public class TPTP3ProofProcessor {
 						}
 					}
 				}
+				bindingMap.put(var,result);
 			}
 			else {
 				result = TPTP2SUMO.transformTerm(binding);
 			}
 		}
 		if (debug) System.out.println("findTypesForSkolemTerms(): result: " + result);
+		if (debug) System.out.println("findTypesForSkolemTerms(): bindingMap: " + bindingMap);
 		return result;
 	}
 
@@ -737,9 +749,12 @@ public class TPTP3ProofProcessor {
         }
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): before pruning: " + this);
         // remove unnecessary steps, eg: conjectures, duplicate trues
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): here: ");
         proof = ProofStep.removeUnnecessary(proof);
         proof = ProofStep.removeDuplicates(proof);
-        if (bindings == null || bindings.size() == 0)
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): bindings: " + bindings);
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): query: " + kifQuery);
+        //if (bindings == null || bindings.size() == 0)
         	processAnswersFromProof(kifQuery);
         // find types for skolem terms
         findTypesForSkolemTerms(kb);
