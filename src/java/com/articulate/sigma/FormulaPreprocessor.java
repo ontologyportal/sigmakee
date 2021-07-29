@@ -1076,11 +1076,8 @@ public class FormulaPreprocessor {
             // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
             // passing each to preProcessRecurse for further processing.
             if (!accumulator.isEmpty()) {
-                Formula fnew = null;
                 String theNewFormula = null;
-                Iterator<Formula> it = accumulator.iterator();
-                while (it.hasNext()) {
-                    fnew = (Formula) it.next();
+                for (Formula fnew : accumulator) {
                     FormulaPreprocessor fp = new FormulaPreprocessor();
                     theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
                     fnew.read(theNewFormula);
@@ -1100,9 +1097,7 @@ public class FormulaPreprocessor {
         boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): type prefix: " + typePrefix);
         if (typePrefix && !isQuery) {
-            Iterator<Formula> it = results.iterator();
-            while (it.hasNext()) {
-                Formula f = it.next();
+            for (Formula f : results) {
                 if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + f);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 Formula fnew = f;
