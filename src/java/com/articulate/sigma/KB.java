@@ -1703,9 +1703,7 @@ public class KB implements Serializable {
 */
     /***************************************************************
      * Submits a
-     * query to the inference engine. Returns an XML formatted String that
-     * contains the response of the inference engine. It should be in the form
-     * "<queryResponse>...</queryResponse>".
+     * query to the inference engine.
      *
      * @param suoKifFormula The String representation of the SUO-KIF query.
      * @param timeout       The number of seconds after which the inference engine should
@@ -1749,9 +1747,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Submits a
-     * query to the inference engine. Returns an XML formatted String that
-     * contains the response of the inference engine. It should be in the form
-     * "<queryResponse>...</queryResponse>".
+     * query to the inference engine.
      *
      * @param suoKifFormula The String representation of the SUO-KIF query.
      * @param timeout       The number of seconds after which the inference engine should
@@ -1806,6 +1802,7 @@ public class KB implements Serializable {
                         System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                         Vampire vampire = new Vampire();
                         vampire.run(this, s, timeout, tptpquery);
+                        vampire.qlist = stptp.qlist;
                         return vampire;
                     }
                     catch (Exception e) {
@@ -1829,7 +1826,7 @@ public class KB implements Serializable {
         Vampire.mode = Vampire.ModeType.CASC;
         Vampire vampire = askVampire(suoKifFormula,30,1);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        tpp.parseProofOutput(vampire.output, suoKifFormula, this);
+        tpp.parseProofOutput(vampire.output, suoKifFormula, this, vampire.qlist);
         String result = tpp.proof.toString().trim();
         sb.append(result + "\n");
         result = tpp.bindings.toString();
@@ -1872,7 +1869,7 @@ public class KB implements Serializable {
                     System.out.println("Get response from EProver, start for parsing ...");
                 // System.out.println("Results returned from E = \n" + EResult);
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                answers = tpp.parseAnswerTuples(eprover.output, strQuery, this, fp);
+                answers = tpp.parseAnswerTuples(eprover.output, strQuery, this, fp,eprover.qlist);
                 return answers;
             }
         }
@@ -3521,7 +3518,7 @@ public class KB implements Serializable {
             Vampire vamp = kb.askVampire(contents,30,1);
             //System.out.println("KB.test(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp.parseProofOutput(vamp.output,contents,kb);
+            tpp.parseProofOutput(vamp.output,contents,kb,vamp.qlist);
             System.out.println("queryExp(): bindings: " + tpp.bindings);
             System.out.println("queryExp(): proof: " + tpp.proof);
             ArrayList<String> proofStepsStr = new ArrayList<>();
@@ -3632,14 +3629,14 @@ public class KB implements Serializable {
                     EProver eprover = kb.askEProver(args[1], timeout, 1);
                     System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     tpp = new TPTP3ProofProcessor();
-                    tpp.parseProofOutput(eprover.output, args[1], kb);
+                    tpp.parseProofOutput(eprover.output, args[1], kb, eprover.qlist);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                     kb.loadVampire();
                     Vampire vamp = kb.askVampire(args[1], timeout, 1);
                     System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                     tpp = new TPTP3ProofProcessor();
-                    tpp.parseProofOutput(vamp.output, args[1], kb);
+                    tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 }
                 System.out.println("KB.main(): binding map: " + tpp.bindingMap);
                 System.out.println("KB.main(): proof: " + tpp.proof);
