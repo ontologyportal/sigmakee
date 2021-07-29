@@ -28,7 +28,7 @@ public class PythonAPI {
         Vampire vamp = kb.askVampire(q, timeout, 1);
         System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
         tpp = new TPTP3ProofProcessor();
-        tpp.parseProofOutput(vamp.output, q, kb);
+        tpp.parseProofOutput(vamp.output, q, kb,vamp.qlist);
         return tpp.bindings + "\n\n" + tpp.proof;
     }
 
