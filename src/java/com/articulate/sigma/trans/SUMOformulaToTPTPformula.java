@@ -15,6 +15,7 @@ public class SUMOformulaToTPTPformula {
     public static boolean debug = false;
     public static boolean hideNumbers = true;
     public static String lang = "fof"; // or "tff"
+    public static StringBuffer qlist;
 
     /** ***************************************************************
      */
@@ -508,13 +509,14 @@ public class SUMOformulaToTPTPformula {
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): unquant: " + UqVars);
             String result = processRecurse(f);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
-            StringBuffer qlist = new StringBuffer();
+            qlist = new StringBuffer();
             for (String s : UqVars) {
                 if (debug) System.out.println("process(): s: " + s);
                 String t = "";
                 String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
                 qlist.append(oneVar + ",");
             }
+            if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + qlist);
             if (qlist.length() > 1) {
                 qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
                 String quantification = "! [";
@@ -728,6 +730,7 @@ public class SUMOformulaToTPTPformula {
                                 quantification = "? [";
                             else
                                 quantification = "! [";
+                            if (debug) System.out.println("SUMOformulaToTPTPformulas.tptpParseSUOKIFStringOld(): vars: " + allVariables);
                             for (index = 0; index < allVariables.size(); index++) {
                                 if (index > 0)
                                     quantification += ",";

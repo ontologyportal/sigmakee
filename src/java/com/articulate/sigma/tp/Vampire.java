@@ -35,6 +35,7 @@ import java.util.*;
 
 public class Vampire {
 
+    public StringBuffer qlist = null; // quantifier list in order for answer extraction
     public ArrayList<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC}; // Avatar is faster but doesn't provide answer variables
@@ -328,7 +329,7 @@ public class Vampire {
                 System.out.println(l);
             String queryStr = "(subclass ?X ?Y)";
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp.parseProofOutput(vampire.output,queryStr,kb);
+            tpp.parseProofOutput(vampire.output,queryStr,kb,vampire.qlist);
             System.out.println("Vampire.main(): bindings: " + tpp.bindings);
             System.out.println("Vampire.main(): proof: " + tpp.proof);
             System.out.println("-----------------\n");

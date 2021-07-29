@@ -475,13 +475,23 @@ public class TPTP3ProofProcessor {
 	/** ***************************************************************
 	 * Put bindings from TPTP3 proof answer variables into bindingMap
 	 */
-	public void processAnswersFromProof(String query) {
+	public void processAnswersFromProof(StringBuffer qlist, String query) {
 
 		Formula qform = new Formula(query);
 		ArrayList<String> answers = null;
 		ArrayList<String> vars = qform.collectAllVariablesOrdered();
 		vars = removeDupInArray(vars);
+		ArrayList<String> qvars = new ArrayList<>();
 		if (debug) System.out.println("processAnswersFromProof(): vars: " + vars);
+		if (debug) System.out.println("processAnswersFromProof(): qlist: " + qlist);
+		if (qlist != null && qlist.length() > 0) {
+			List<String> qvarslist = Arrays.asList(qlist.toString().split(","));
+			for (String s : qvarslist) {
+				String news = s.replace("V__","?");
+				qvars.add(news);
+			}
+		}
+
 		if (debug) System.out.println("processAnswersFromProof(): proof: " + proof);
 		for (ProofStep ps : proof) {
 			if (debug) System.out.println("processAnswersFromProof(): ps: " + ps);
@@ -500,8 +510,8 @@ public class TPTP3ProofProcessor {
 			if (debug) System.out.println("Error in processAnswersFromProof(): null answers");
 			return;
 		}
-		for (int i = 0; i < vars.size(); i++) {
-			bindingMap.put(vars.get(i),answers.get(i));
+		for (int i = 0; i < qvars.size(); i++) {
+			bindingMap.put(qvars.get(i),answers.get(i));
 		}
 		if (debug) System.out.println("processAnswersFromProof(): bindingMap: " + bindingMap);
 	}
@@ -677,8 +687,11 @@ public class TPTP3ProofProcessor {
 
     /** ***************************************************************
 	 * Compute binding and proof from the theorem prover's response
+	 * @param qlist is the list of quantifiers in order of the original query,
+	 *              which is the order Vampire and Eprover will follow when
+	 *              reporting answers
      */
-    public void parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb) {
+    public void parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb, StringBuffer qlist) {
 
 		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " +
 		//		lines);
@@ -755,7 +768,7 @@ public class TPTP3ProofProcessor {
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): bindings: " + bindings);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): query: " + kifQuery);
         //if (bindings == null || bindings.size() == 0)
-        	processAnswersFromProof(kifQuery);
+        processAnswersFromProof(qlist,kifQuery);
         // find types for skolem terms
         findTypesForSkolemTerms(kb);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): result: " + this);
@@ -773,10 +786,10 @@ public class TPTP3ProofProcessor {
 	 * Output = [An instance of Human] (Human is the most specific type
 	 * for esk3_0 in the given proof)
 	 */
-	public ArrayList<String> parseAnswerTuples(ArrayList<String> st, String strQuery, KB kb, FormulaPreprocessor fp) {
+	public ArrayList<String> parseAnswerTuples(ArrayList<String> st, String strQuery, KB kb, FormulaPreprocessor fp, StringBuffer qlist) {
 
 		ArrayList<String> answers = new ArrayList<>();
-		parseProofOutput(st, strQuery, kb);
+		parseProofOutput(st, strQuery, kb, qlist);
 		if (bindings == null || bindings.isEmpty()) {
 			if (proof != null && !proof.isEmpty()) {
 				answers.add("Proof Found");		// for boolean queries
