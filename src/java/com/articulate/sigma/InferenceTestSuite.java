@@ -489,12 +489,12 @@ public class InferenceTestSuite {
             if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                 Vampire vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
                 System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
-                tpp.parseProofOutput(vampire.output, processedStmt, kb);
+                tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
             }
             else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                 com.articulate.sigma.tp.EProver eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
                 System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
-                tpp.parseProofOutput(eprover.output, processedStmt, kb);
+                tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.qlist);
             }
             else {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);

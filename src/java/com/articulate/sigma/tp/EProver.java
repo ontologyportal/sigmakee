@@ -31,6 +31,7 @@ public class EProver {
     private static String kbdir;
     private static int axiomIndex = 0;
     public ArrayList<String> output = new ArrayList<>();
+    public StringBuffer qlist = null;
 
     /** *************************************************************
      */
@@ -416,6 +417,7 @@ public class EProver {
         String result = "";
         try {
             String query = SUMOformulaToTPTPformula.tptpParseSUOKIFString(formula,true);
+            this.qlist = SUMOformulaToTPTPformula.qlist;
             String conjecture = "fof(conj1,conjecture, " + query + ").";
             System.out.println("\nINFO in EProver.submitQuery() write: " + conjecture + "\n");
             _writer.write(conjecture + "\n");
