@@ -13,6 +13,9 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+import com.articulate.sigma.utils.FileUtil;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -195,7 +198,16 @@ public class ProofStep {
     public String toString() {
 
         StringBuffer sb = new StringBuffer();
-        sb.append(number + ". " + new Formula(axiom).format("","  ","\n") + " " + premises + " "  + inferenceType + "\n");
+        sb.append(number + ". " + new Formula(axiom).format("","  ","\n") + " " + premises + " ");
+        if (inferenceType.startsWith("kb_")) {
+            Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
+            if (originalF != null)
+                sb.append(originalF.startLine + ":" + FileUtil.noPath(originalF.getSourceFile()) + "\n");
+            else
+                sb.append(inferenceType + "\n");
+        }
+        else
+            sb.append(inferenceType + "\n");
         return sb.toString();
     }
 }
