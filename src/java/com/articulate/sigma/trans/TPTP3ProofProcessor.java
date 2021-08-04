@@ -872,6 +872,28 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Print proof removing some steps based on proof level
+	 * 1 = full proof
+	 * 2 = remove steps with single support
+	 * 3 = show only axioms from the KB
+	 */
+	public void printProof(int level) {
+
+		for (ProofStep ps : proof) {
+			switch (level) {
+				case 1 :
+					System.out.println(ps); break;
+				case 2 :
+					if (ps.premises.size() != 1)
+						System.out.println(ps); break;
+				case 3 :
+					if (ps.premises.size() == 0 && !ps.inferenceType.startsWith("introduced"))
+						System.out.println(ps); break;
+			}
+		}
+	}
+
+	/** ***************************************************************
 	 */
 	private void testPrologParser () {
 
