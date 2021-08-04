@@ -404,7 +404,9 @@ public class KIF {
             } while (st.ttype != StreamTokenizer.TT_EOF);
 
             if (!keySet.isEmpty() || expression.length() > 0) {
-                errStr = (errStart + ": Missed closing parenthesis near line: " + f.startLine);
+                errStr = (errStart + ": Missed closing parenthesis near line: " + f.startLine +
+                        " for token " + st.sval + " and form " + f.getFormula() +
+                        " and expression " + expression + " and keySet " + keySet);
                 errorSet.add(errStr);
                 throw new ParseException(errStr, f.startLine);
             }
