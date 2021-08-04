@@ -14,9 +14,11 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
  */
 
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.trans.TPTPutil;
+import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 
@@ -225,11 +227,16 @@ public class HTMLformatter {
                     else
                         result.append("[" + step.inferenceType + "]");
                 }
-
                 else if (f.getFormula().contains("ans0"))
                     result.append("answer literal introduction");
-                else
-                    result.append("[KB]");
+                else {
+                    result.append("[KB -" );
+                    String key = step.inferenceType;
+                    Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(key);
+                    if (originalF != null)
+                        result.append(originalF.startLine + ":" + FileUtil.noPath(originalF.getSourceFile()));
+                    result.append("]");
+                }
             }
             else if (!StringUtil.emptyString(step.inferenceType))
                 result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
