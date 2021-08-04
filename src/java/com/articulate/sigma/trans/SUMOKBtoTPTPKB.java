@@ -20,6 +20,9 @@ public class SUMOKBtoTPTPKB {
 
     public ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
 
+    // maps TPTP axiom IDs to SUMO formulas
+    public static HashMap<String,Formula> axiomKey = new HashMap<>();
+
     /** *************************************************************
      */
     public SUMOKBtoTPTPKB() {
@@ -200,7 +203,6 @@ public class SUMOKBtoTPTPKB {
                             boolean isQuestion, PrintWriter pw) {
 
         long millis = System.currentTimeMillis();
-        System.out.println("KBcache.buildCaches(): buildInsts seconds: " + (System.currentTimeMillis() - millis) / 1000);
         if (!KBmanager.initialized) {
             System.out.println("Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed");
             return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
@@ -261,7 +263,7 @@ public class SUMOKBtoTPTPKB {
                         if (lang.equals("fof")) {
                             SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula(lang);
                             result = stptp.tptpParseSUOKIFString(f3.getFormula(), false);
-                            pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
+                            //pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null)
                                 f.theTptpFormulas.add(result);
                         }
@@ -288,7 +290,9 @@ public class SUMOKBtoTPTPKB {
                 for (String sort : f.tffSorts) {
                     if (!StringUtil.emptyString(sort) &&
                             !alreadyWrittenTPTPs.contains(sort)) {
-                        pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                        String name = "kb_" + sanitizedKBName + "_" + axiomIndex++;
+                        axiomKey.put(name,f);
+                        pr.print(lang + "(" + name);
                         pr.println(",axiom,(" + sort + ")).");
                         alreadyWrittenTPTPs.add(sort);
                     }
@@ -297,7 +301,9 @@ public class SUMOKBtoTPTPKB {
                     if (!StringUtil.emptyString(theTPTPFormula) &&
                             !filterAxiom(f,theTPTPFormula,pr) &&
                             !alreadyWrittenTPTPs.contains(theTPTPFormula)) {
-                        pr.print(lang + "(kb_" + sanitizedKBName + "_" + axiomIndex++);
+                        String name = "kb_" + sanitizedKBName + "_" + axiomIndex++;
+                        axiomKey.put(name,f);
+                        pr.print(lang + "(" + name);
                         pr.println(",axiom,(" + theTPTPFormula + ")).");
                         alreadyWrittenTPTPs.add(theTPTPFormula);
                     }
@@ -330,6 +336,7 @@ public class SUMOKBtoTPTPKB {
                 ioe.printStackTrace();
             }
         }
+        System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
         System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
         return result;
     }
