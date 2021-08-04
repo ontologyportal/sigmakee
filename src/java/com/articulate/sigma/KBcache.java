@@ -1465,7 +1465,9 @@ public class KBcache implements Serializable {
     /** *************************************************************
      * Delete and writes the cache .kif file then call addConstituent() so
      * that the file can be processed and loaded by the inference engine.
+     * This is not needed since we have storeCacheAsFormulas()
      */
+    @Deprecated
     public void writeCacheFile() {
 
         long millis = System.currentTimeMillis();
@@ -1532,6 +1534,8 @@ public class KBcache implements Serializable {
      */
     public void storeCacheAsFormulas() {
 
+        StringBuffer sb = new StringBuffer();
+        System.out.println("KBcache.storeCacheAsFormulas()");
         long cacheCount = 0;
         KIF kif = new KIF();
         kif.filename = kb.name + _cacheFileSuffix;
@@ -1543,23 +1547,26 @@ public class KBcache implements Serializable {
                 for (String parent : prents) {
                     String tuple = "(" + rel + " " + child + " " + parent + ")";
                     if (!kb.formulaMap.containsKey(tuple)) {
-                        kif.parse(new StringReader(tuple));
+                        sb.append(tuple);
                         cacheCount++;
                     }
                 }
             }
         }
-
+        System.out.println("KBcache.storeCacheAsFormulas(): finished relations, starting instances");
         for (String inst : instanceOf.keySet()) {
             HashSet<String> valSet = instanceOf.get(inst);
             for (String parent : valSet) {
                 String tuple = "(instance " + inst + " " + parent + ")";
                 if (!kb.formulaMap.containsKey(tuple)) {
-                    kif.parse(new StringReader(tuple));
+                    sb.append(tuple);
                     cacheCount++;
                 }
             }
         }
+        kif.parse(new StringReader(sb.toString()));
+        if (KBmanager.getMgr().getPref("cache").equals("yes"))
+            kb.addConstituentInfo(kif);
 
         System.out.println("KBcache.storeCacheAsFormulas(): done creating cache formulas, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
