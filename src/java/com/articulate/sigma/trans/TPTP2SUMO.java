@@ -431,6 +431,8 @@ public class TPTP2SUMO {
 
       term = term.replaceFirst(Formula.termSymbolPrefix, "");
       term = term.replace(Formula.termMentionSuffix, "");
+      if (term.matches(".*__\\d"))
+          term = term.substring(0,term.length()-3);
       return term;
   }
 
