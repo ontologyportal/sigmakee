@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class FileUtil {
@@ -33,9 +34,47 @@ public class FileUtil {
         }
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Unable to read line in file. Last line successfully read was: " + line);
+            System.out.println("FileUtil.readLines(): " +
+                    "Unable to read line in file. Last line successfully read was: " + line);
         }
         return documents;
+    }
+
+    /****************************************************************
+     */
+    public static void delete(String filename) {
+
+        try {
+            File f = new File(filename);
+            f.delete();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("FileUtil.delete(): Unable to delete: " + filename);
+        }
+    }
+
+    /****************************************************************
+     */
+    public static void writeLines(String filename, Collection<String> lines) {
+
+        System.out.println("FileUtil.writeLines(): filename: " + filename);
+        System.out.println("FileUtil.writeLines(): " + lines.size());
+        File f = new File(filename);
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(f);
+            for (String line : lines) {
+                pw.println(line);
+                //System.out.println("FileUtil.writeLines(): line: " + line);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("FileUtil.writeLines(): Unable to write line in file " + filename);
+        }
+        pw.flush();
+        pw.close();
     }
 
     /****************************************************************
