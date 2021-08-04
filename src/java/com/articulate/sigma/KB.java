@@ -1717,7 +1717,7 @@ public class KB implements Serializable {
         try {
             if (eprover == null)
                 eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                        System.getenv("SIGMA_HOME") + "/KBs/" + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
+                        System.getenv("SIGMA_HOME") + "/KBs/" + name + ".tptp");
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -1768,7 +1768,7 @@ public class KB implements Serializable {
             if (!processedStmts.isEmpty()) {
                 int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-                String kbName = KBmanager.getMgr().getPref("sumokbname");
+                String kbName = name;
                 File s = new File(dir + kbName + ".tptp");
                 if (!s.exists()) {
                     System.out.println("Vampire.askVampire(): no such file: " + s + ". Creating it.");
@@ -2643,6 +2643,7 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * A a formula or formulas into the KB
      */
     public void addConstituentInfo(KIF file) {
 
@@ -2655,8 +2656,8 @@ public class KB implements Serializable {
             }
         }
 
-        int count = 0;
-        System.out.println("INFO in KB.addConstituent(): add keys");
+        int count = 2;
+        //System.out.println("INFO in KB.addConstituent(): add keys");
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
                 System.out.print(".");
@@ -2670,9 +2671,9 @@ public class KB implements Serializable {
             formulas.put(key, newlist);
         }
 
-        count = 0;
+        count = 2;
         Iterator<Formula> it2 = file.formulaMap.values().iterator();
-        System.out.println("INFO in KB.addConstituent(): add values");
+        //System.out.println("INFO in KB.addConstituent(): add values");
         while (it2.hasNext()) { // Iterate through values
             Formula f = (Formula) it2.next();
             String internedFormula = f.getFormula().intern();
@@ -2684,7 +2685,7 @@ public class KB implements Serializable {
                 formulaMap.put(internedFormula, f);
         }
         this.getTerms().addAll(file.terms);
-        if (!constituents.contains(file.filename))
+        if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix)) // don't add auto-generated cache file
             constituents.add(file.filename);
     }
 
@@ -3497,6 +3498,128 @@ public class KB implements Serializable {
         return termFrequencies;
     }
 
+    /*****************************************************************
+     */
+    public TPTP3ProofProcessor runProver(String[] args, int timeout) {
+
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+            loadEProver();
+            EProver eprover = askEProver(args[1], timeout, 1);
+            System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
+            tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(eprover.output, args[1], this, eprover.qlist);
+        }
+        else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+            loadVampire();
+            Vampire vamp = askVampire(args[1], timeout, 1);
+            System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+            tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(vamp.output, args[1], this, vamp.qlist);
+        }
+        return tpp;
+    }
+
+    /*****************************************************************
+     * Keep a count of axioms
+     */
+    public static void addToAxiomCount(HashMap<String,Integer> currentCount,
+            Set<String> newAxioms) {
+
+        for (String s : newAxioms) {
+            Integer i = 0;
+            if (currentCount.keySet().contains(s))
+                i = currentCount.get(s);
+            currentCount.put(s,i+1);
+        }
+    }
+
+    /*****************************************************************
+     * Attempt to provide guidance on the likely cause of a contradiction
+     * by removing the axioms involved in a contradiction one-by-one and trying
+     * again.
+     */
+    public static HashMap<String,Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
+
+        HashMap<String,Formula> sourceAxioms = new HashMap<>();
+        for (ProofStep ps : tpp.proof) {
+            if (ps.inferenceType.startsWith("kb_")) {
+                Formula f = SUMOKBtoTPTPKB.axiomKey.get(ps.inferenceType);
+                if (f.sourceFile != null && !f.sourceFile.endsWith(_cacheFileSuffix))
+                    sourceAxioms.put(f.getFormula(),f);
+            }
+        }
+        return sourceAxioms;
+    }
+
+    /*****************************************************************
+     */
+    private static void deletedOldInfFiles(String filename, String prefix) {
+
+        FileUtil.delete(filename);
+        FileUtil.delete(prefix + "test.tptp");
+        FileUtil.delete(prefix + "temp-comb.tptp");
+        FileUtil.delete(prefix + "tempt-stmt.tptp");
+    }
+
+    /*****************************************************************
+     * Attempt to provide guidance on the likely cause of a contradiction
+     * by removing the axioms involved in a contradiction one-by-one and trying
+     * again.
+     */
+    public static void contradictionHelp(KB kb, String[] args, int timeout) {
+
+        HashSet<String> commonAxioms = new HashSet<>(); // axioms found in all contradictions
+        HashMap<String,Integer> axiomCount= new HashMap<>(); // count axioms found in contradictions
+        HashSet<String> removalSuccess = new HashSet<>(); // removing this axiom results in no contradiction
+        TPTP3ProofProcessor tpp = kb.runProver(args,timeout);
+        tpp.printProof(3);
+        System.out.println();
+        KBmanager.getMgr().removeKB(kb.name);
+        String prefix = KBmanager.getMgr().getPref("kbDir") + File.separator;
+        String filename = prefix + "SUMO_contra.kif";
+        System.out.println("KB.contradictionHelp(): prefix: " + prefix);
+
+        HashMap<String,Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
+        System.out.println("KB.contradictionHelp(): source axioms: " + sourceAxioms.keySet());
+        commonAxioms.addAll(sourceAxioms.keySet());
+        addToAxiomCount(axiomCount,sourceAxioms.keySet());
+        for (String s : sourceAxioms.keySet()) {
+            HashSet<String> minusAxioms = new HashSet<>();
+            minusAxioms.addAll(kb.getFormulas());
+            minusAxioms.remove(s);
+            System.out.println("KB.contradictionHelp(): removed axiom: " + s);
+            ArrayList<String> display = new ArrayList<>();
+            display.addAll(minusAxioms);
+            ArrayList<String> display2 = new ArrayList<>();
+            display2.addAll(display.subList(0,10));
+            System.out.println("KB.contradictionHelp(): minusAxioms: " +
+                    StringUtil.arrayListToCRLFString(display2) + "...");
+            deletedOldInfFiles(filename,prefix);
+            FileUtil.writeLines(filename, minusAxioms);
+            ArrayList<String> constituents = new ArrayList<>();
+            constituents.add(filename);
+            KBmanager.getMgr().loadKB("test",constituents);
+            KB kb2 = KBmanager.getMgr().getKB("test");
+            TPTP3ProofProcessor tpp2 = kb2.runProver(args,timeout);
+            System.out.println("KB.contradictionHelp(): proof: ");
+            tpp2.printProof(3);
+            if (tpp2.status.contains("GaveUp"))
+                removalSuccess.add(s);
+            System.out.println();
+            HashMap<String,Formula> sourceAxioms2 = collectSourceAxioms(kb2,tpp2);
+            addToAxiomCount(axiomCount,sourceAxioms2.keySet());
+            commonAxioms.retainAll(sourceAxioms2.keySet());
+        }
+        System.out.println("KB.contradictionHelp(): common axioms: " + commonAxioms);
+        sourceAxioms.keySet().removeAll(commonAxioms);
+        System.out.println("KB.contradictionHelp(): axiomCount: " + axiomCount);
+        System.out.println("KB.contradictionHelp(): axioms not causing the contradiction: " +
+                sourceAxioms.keySet());
+        System.out.println("KB.contradictionHelp(): axioms that when removed does not have a contradiction: " +
+                removalSuccess);
+    }
+
     /***************************************************************
      */
     public static void test() {
@@ -3573,6 +3696,10 @@ public class KB implements Serializable {
         System.out.println("  l - load KB files");
         System.out.println("  v - ask query of Vampire");
         System.out.println("  e - ask query of EProver");
+        System.out.println("  1 - show full proof");
+        System.out.println("  2 - remove single premise proof steps");
+        System.out.println("  3 - show only KB axioms in proof");
+        System.out.println("  x - contradiction help");
         System.out.println("  o <seconds> - set the query timeout");
         System.out.println("  -c <term1> <term2> - compare term depth");
     }
@@ -3624,22 +3751,36 @@ public class KB implements Serializable {
             }
             if (args != null && args.length > 1 && args[0].contains("a")) {
                 TPTP3ProofProcessor tpp = null;
-                if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+                if (args[0].contains("x")) {
+                    contradictionHelp(kb,args,timeout);
+                }
+                else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                     kb.loadEProver();
                     EProver eprover = kb.askEProver(args[1], timeout, 1);
-                    System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
+                    System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(eprover.output, args[1], kb, eprover.qlist);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                     kb.loadVampire();
                     Vampire vamp = kb.askVampire(args[1], timeout, 1);
-                    System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+                    System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 }
-                System.out.println("KB.main(): binding map: " + tpp.bindingMap);
-                System.out.println("KB.main(): proof: " + tpp.proof);
+                if (!args[0].contains("x")) {
+                    System.out.println("KB.main(): binding map: " + tpp.bindingMap);
+                    int level = 1;
+                    if (args[0].contains("2") || args[0].contains("3") ) {
+                        if (args[0].contains("2"))
+                            level = 2;
+                        if (args[0].contains("3"))
+                            level = 3;
+                    }
+                    System.out.println("KB.main(): proof with level " + level);
+                    System.out.println("KB.main(): axiom key size " + SUMOKBtoTPTPKB.axiomKey.size());
+                    tpp.printProof(level);
+                }
             }
         }
     }
