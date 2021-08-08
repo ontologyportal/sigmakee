@@ -26,6 +26,7 @@ import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
+import com.sun.org.apache.xpath.internal.objects.XNull;
 
 import java.io.*;
 import java.util.*;
@@ -140,6 +141,9 @@ public class Formula implements Comparable, Serializable {
     /** The formula in textual forms. */
     private String theFormula;
 
+    // if not a directly authored form, document how it was derived
+    public Derivation derivation = new Derivation();
+
     public static final String termMentionSuffix  = "__m";
     public static final String classSymbolSuffix  = "__t";  // for the case when a class is used as an instance
     public static final String termSymbolPrefix   = "s__";
@@ -221,6 +225,7 @@ public class Formula implements Comparable, Serializable {
 		this.comment = f.comment;
 		if (f.higherOrder)
 		    this.higherOrder = true;
+		this.derivation = f.derivation;
         this.allVarsPairCache.addAll(f.allVarsPairCache);
         this.quantVarsCache.addAll(f.quantVarsCache);
         this.unquantVarsCache.addAll(f.unquantVarsCache);
