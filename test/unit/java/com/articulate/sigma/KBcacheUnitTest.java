@@ -161,7 +161,7 @@ public class KBcacheUnitTest {
     public void testSignatures() {
 
         System.out.println("Test signatures");
-        ArrayList<String> expected = new ArrayList<>(Arrays.asList("", "Object", "Oject"));
+        ArrayList<String> expected = new ArrayList<>(Arrays.asList("", "Object", "Object"));
         ArrayList<String> actual = kb.kbCache.signatures.get("rel");
         assertEquals(expected.subList(1,2), actual.subList(1,2));
     }
