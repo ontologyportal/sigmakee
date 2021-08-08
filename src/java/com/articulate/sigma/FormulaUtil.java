@@ -1,6 +1,7 @@
 package com.articulate.sigma;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiPredicate;
@@ -55,12 +56,18 @@ public class FormulaUtil {
         sb.append(")");
         return sb.toString();
     }
+    /** ***************************************************************
+     */
+    public static String formatCollection(Collection<Formula> c) {
+
+        StringBuffer sb = new StringBuffer();
+        for (Formula f : c)
+            sb.append(f.toString() + "\n\n");
+        return sb.toString();
+    }
 
     /*******************************************************************************************
      * Generates all permutations of the given size which are valid according to the given callback function.
-     * @param size
-     * @param validateFn
-     * @return
      */
     public static List<int[]> getPermutations(int size, BiPredicate<Integer, Integer> validateFn) {
 
@@ -74,10 +81,6 @@ public class FormulaUtil {
     }
 
     /** ***************************************************************************************
-     * @param prefix
-     * @param array
-     * @param permutations
-     * @param validateFn
      */
     private static void permutation(int[] prefix, int[] array, List<int[]> permutations,
                                     BiPredicate<Integer, Integer> validateFn) {
@@ -107,9 +110,6 @@ public class FormulaUtil {
 
     /** ********************************************************************************************
      * Factory method for the memo map
-     * @param s1
-     * @param s2
-     * @return
      */
     public static FormulaMatchMemoMapKey createFormulaMatchMemoMapKey(String s1, String s2) {
 
@@ -128,9 +128,6 @@ public class FormulaUtil {
         }
 
         /*******************************************************************************
-         *
-         * @param o
-         * @return
          */
         @Override
         public boolean equals(Object o) {
@@ -147,8 +144,6 @@ public class FormulaUtil {
         }
 
         /** ******************************************************************************************
-         *
-         * @return
          */
         @Override
         public int hashCode() {
@@ -159,8 +154,6 @@ public class FormulaUtil {
         }
 
         /***********************************************************************************************
-         *
-         * @return
          */
         @Override
         public String toString() {
