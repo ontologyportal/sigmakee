@@ -27,7 +27,10 @@ public class ProofStep {
 	public static final String QUERY = "[Query]";
 	public static final String NEGATED_QUERY = "[Negated Query]";
 	public static final String INSTANTIATED_QUERY = "[Instantiated Query]";
-   
+
+	// the TPTP3 input
+	public String input = null;
+
      /** A String of the type clause or formula */
     public String formulaType = null;
 
@@ -43,7 +46,7 @@ public class ProofStep {
 
      /** The number assigned to this proof step, initially by EProver and
       *  then normalized by ProofStep.normalizeProofStepNumbers() */
-    public Integer number = Integer.valueOf(0);
+    public Integer number = 0;
 
      /** An ArrayList of Integer(s), which reference prior proof steps from
       *  which this axiom is derived. Note that the numbering is what
@@ -114,12 +117,12 @@ public class ProofStep {
         
         int counter = 1;
         for (int i = 0; i < proofSteps.size(); i++) {
-            ProofStep ps = (ProofStep) proofSteps.get(i);
-            Integer index = Integer.valueOf(ps.number);
+            ProofStep ps = proofSteps.get(i);
+            Integer index = ps.number;
             reverseFormulaMap.put(index,ps);
             String s = Clausifier.normalizeVariables(ps.axiom);
             if (formulaMap.keySet().contains(s) && ps.premises.size() == 1) {   // If the step is a duplicate, relate the current step number
-            	Integer fNum = (Integer) formulaMap.get(s);                   // to the existing number of the formula
+            	Integer fNum = formulaMap.get(s);                   // to the existing number of the formula
             	numberingMap.put(index,fNum);
             }
             else {
@@ -130,10 +133,10 @@ public class ProofStep {
             }
         }
         for (int i = 0; i < dedupedProofSteps.size(); i++) { 
-            ProofStep ps = (ProofStep) dedupedProofSteps.get(i);            
+            ProofStep ps = dedupedProofSteps.get(i);
         	Integer newIndex = Integer.valueOf(ps.number);
         	if (numberingMap.keySet().contains(newIndex))
-        		newIndex = (Integer) numberingMap.get(newIndex);
+        		newIndex = numberingMap.get(newIndex);
         	ProofStep psNew = new ProofStep();
         	psNew.formulaRole = ps.formulaRole;
         	psNew.formulaType = ps.formulaType;
@@ -141,6 +144,7 @@ public class ProofStep {
             String s = Clausifier.normalizeVariables(ps.axiom);
         	psNew.axiom = s;
         	psNew.number = newIndex;
+        	psNew.input = ps.input;
         	ArrayList<Integer> newPremises = new ArrayList();        	   
         	for (int j = 0; j < ps.premises.size(); j++) {
         		Integer premiseNum = ps.premises.get(j);
@@ -201,10 +205,16 @@ public class ProofStep {
         sb.append(number + ". " + new Formula(axiom).format("","  ","\n") + " " + premises + " ");
         if (inferenceType.startsWith("kb_")) {
             Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
-            if (originalF != null)
-                sb.append(originalF.startLine + ":" + FileUtil.noPath(originalF.getSourceFile()) + "\n");
+            if (originalF != null) {
+                sb.append(inferenceType + ":" + originalF.startLine + ":" + FileUtil.noPath(originalF.getSourceFile()) + "\n");
+                if (originalF.derivation != null &&
+                        originalF.derivation.operator != null &&
+                        !originalF.derivation.operator.equals("input"))
+                    sb.append(originalF.derivation.toString());
+            }
             else
                 sb.append(inferenceType + "\n");
+
         }
         else
             sb.append(inferenceType + "\n");
