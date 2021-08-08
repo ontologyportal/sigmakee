@@ -16,6 +16,7 @@ package com.articulate.sigma.trans;
 import TPTPWorld.TPTPFormula;
 import TPTPWorld.TPTPParser;
 import com.articulate.sigma.*;
+import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.igormaznitsa.prologparser.DefaultParserContext;
 import com.igormaznitsa.prologparser.GenericPrologParser;
@@ -24,6 +25,8 @@ import com.igormaznitsa.prologparser.PrologParser;
 import com.igormaznitsa.prologparser.terms.*;
 import com.igormaznitsa.prologparser.tokenizer.Op;
 
+import javax.imageio.ImageIO;
+import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
 
@@ -38,6 +41,7 @@ public class TPTP3ProofProcessor {
 	public HashMap<String,String> bindingMap = new HashMap<>();
 	public HashMap<String,String> skolemTypes = new HashMap<>();
 	public ArrayList<ProofStep> proof = new ArrayList<>();
+	public static boolean tptpProof = false;
 
 	// a map of original ID keys and renumbered key values
 	public HashMap<String,Integer> idTable = new HashMap<>();
@@ -242,10 +246,10 @@ public class TPTP3ProofProcessor {
 				return getSupports(supportId + ".");
 			String[] supportSet = supportId.split(",");
 			for (int i = 0; i < supportSet.length; i++) {
-				//System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet[i]);
+				if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet[i]);
 				if (supportSet[i].indexOf("(") == -1) {
 					if (!supportSet[i].trim().startsWith("[symmetry]")) {
-						Integer stepnum = idTable.get(supportSet[i].trim());
+						Integer stepnum = getNumFromIDtable(supportSet[i].trim());
 						if (stepnum == null)
 							System.out.println("Error in TPTP3ProofProcessor.parseSupports() no id: " + stepnum +
 									" for premises at step " + supportSet[i]);
@@ -265,7 +269,7 @@ public class TPTP3ProofProcessor {
 			return prems;
 		}
 		else {
-			Integer stepnum = idTable.get(supportId);
+			Integer stepnum = getNumFromIDtable(supportId);
 			if (stepnum == null) {
 				return prems;
 			}
@@ -288,7 +292,8 @@ public class TPTP3ProofProcessor {
 	 */
 	public ProofStep parseProofStep (String line) {
 
-		//System.out.println("parseProofStep() last char: " + line.charAt(line.length()-1));
+		//System.out.println("-----------------------");
+		//System.out.println("parseProofStep() line: " + line);
 		//System.out.println("parseProofStep() second to last char: " + line.charAt(line.length()-2));
 		if (StringUtil.emptyString(line))
 			return null;
@@ -325,9 +330,9 @@ public class TPTP3ProofProcessor {
 		//String id = withoutWrapper.substring(0,comma1).trim();
 		String id = args.get(1);
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): ID       : " + id);
-		Integer intID = Integer.valueOf(idCounter++);
-		idTable.put(id,intID);
-		ps.number = intID;
+		idTable.put(id,getNumFromIDtable(id));
+		ps.number = getNumFromIDtable(id);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): number       : " + ps.number);
 
 		//int comma2 = withoutWrapper.indexOf(",",comma1 +1 );
 		//String formulaType = withoutWrapper.substring(comma1 + 1,comma2).trim();
@@ -377,10 +382,12 @@ public class TPTP3ProofProcessor {
 		ps.axiom = stmnt;
 		//String supportId = rest.substring(statementEnd+2,rest.length()).trim();
 		String supportId = args.get(4);
-		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): supportID: " + supportId);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): supportID: " + supportId.trim());
 		// add an inference type
 		ps.inferenceType = getInferenceType(supportId.trim());
 		ps.premises.addAll(parseSupports(supportId.trim()));
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): premises: " + ps.premises);
+		ps.input = line;
 		return ps;
 	}
 
@@ -635,54 +642,16 @@ public class TPTP3ProofProcessor {
 	 */
 	public void parseProofOutput (LineNumberReader lnr, KB kb) {
 
+		ArrayList<String> lines = null;
 		try {
-			boolean inProof = false;
-			boolean finishAnswersTuple = false;
 			String line;
-			while ((line = lnr.readLine()) != null) {
-				if (line.indexOf("SZS output start") != -1) {
-					inconsistency = true; // if negated_conjecture found in the proof then it's not inconsistent
-					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): found proof, setting inconsistency to true");
-					inProof = true;
-					line = lnr.readLine();
-				}
-				if (line.indexOf("SZS status") != -1) {
-					status = line.substring(13);
-				}
-				if (line.indexOf("SZS answers") != -1) {
-					if (!finishAnswersTuple) {
-						processAnswers(line.substring(20,line.lastIndexOf(']')+1).trim());
-						finishAnswersTuple = true;
-					}
-				}
-				if (inProof) {
-					if (line.indexOf("SZS output end") != -1) {
-						inProof = false;
-					}
-					else {
-						ProofStep ps = parseProofStep(line);
-						if (ps != null) {
-							proof.add(ps);
-							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): adding line: " +
-									line + "\nas " + ps);
-						}
-					}
-				}
-			}
-			if (inconsistency) {
-				System.out.println("*****************************************");
-				System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): Danger! possible inconsistency!");
-				System.out.println("*****************************************");
-			}
+			while ((line = lnr.readLine()) != null)
+				lines.add(line);
 		}
 		catch (Exception ex) {
 			System.out.println(ex.getMessage());
 		}
-		// remove unnecessary steps, eg: conjectures, duplicate trues
-		proof = ProofStep.removeUnnecessary(proof);
-		proof = ProofStep.removeDuplicates(proof);
-		// find types for skolem terms
-		findTypesForSkolemTerms(kb);
+		parseProofOutput(lines,"",kb,new StringBuffer());
 	}
 
     /** ***************************************************************
@@ -763,8 +732,8 @@ public class TPTP3ProofProcessor {
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): before pruning: " + this);
         // remove unnecessary steps, eg: conjectures, duplicate trues
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): here: ");
-        proof = ProofStep.removeUnnecessary(proof);
-        proof = ProofStep.removeDuplicates(proof);
+        //proof = ProofStep.removeUnnecessary(proof);
+        //proof = ProofStep.removeDuplicates(proof);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): bindings: " + bindings);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): query: " + kifQuery);
         //if (bindings == null || bindings.size() == 0)
@@ -772,6 +741,11 @@ public class TPTP3ProofProcessor {
         // find types for skolem terms
         findTypesForSkolemTerms(kb);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): result: " + this);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): idTable: " + idTable);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): proof ids: ");
+		if (debug)
+			for (ProofStep ps : proof)
+				System.out.println(ps.number);
     }
     
 	/** ***************************************************************
@@ -833,14 +807,27 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * @return an int from the idTable or add a new id to the table and
+	 * give it a new number
+	 */
+	public int getNumFromIDtable(String id) {
+
+		if (debug) System.out.println("getNumFromIDtable(): " + id);
+		if (!idTable.containsKey(id))
+			idTable.put(id,idCounter++);
+		if (debug) System.out.println("getNumFromIDtable(): id,counter: " + id + "," + idCounter);
+		return idTable.get(id);
+	}
+
+	/** ***************************************************************
 	 */
 	private ArrayList<Integer> getSupports (PrologTerm pt) {
 
 		if (debug) System.out.println("TPTP3ProofProcess.getSupports(PrologTerm): " + pt);
-		if (debug) System.out.println("getSupports(): " + pt.toString() + "\t" + pt.getType());
+		if (debug) System.out.println("getSupports(): string,type: " + pt.toString() + "\t" + pt.getType());
 		ArrayList<Integer> supports = new ArrayList<>();
 		if (pt.getType() == ATOM)
-			supports.add(idTable.get(pt.toString()));
+			supports.add(getNumFromIDtable(pt.toString()));
 		else if (pt.getType() == LIST) {
 			for (PrologTerm pit : (PrologList) pt)
 				supports.addAll(getSupports(pit));
@@ -869,6 +856,116 @@ public class TPTP3ProofProcessor {
 		for (PrologTerm pt : parser)
 			supports.addAll(getSupports(pt));
 		return supports;
+	}
+
+	/** *************************************************************
+	 */
+	private ArrayList<String> createProofDotGraphBody() {
+
+		ArrayList<String> lines = new ArrayList<>();
+		for (ProofStep ps : proof) {
+			//String line = "n" + ps.number + " [label=\"n" + ps.number + "\"]";
+			if (tptpProof) {
+				if (StringUtil.emptyString(ps.input))
+					continue;
+				//System.out.println("createProofDotGraphBody()" + ps.input);
+				//System.out.println("createProofDotGraphBody()" + ps);
+				String line = StringUtil.wordWrap(ps.input,40);
+				String[] split = line.split(System.getProperty("line.separator"));
+				StringBuffer sb = new StringBuffer();
+				for (String s : split)
+					sb.append(s + " <br align=\"left\"/> ");
+				String formatted = sb.toString();
+				formatted = formatted.replaceAll("&", "&amp;"); // the 'and' character in TPTP
+				formatted = formatted.replaceAll("<=>", "&lt;=&gt;");
+				formatted = formatted.replaceAll("=>", "=&gt;");
+				String newline = "n" + ps.number + " [shape=\"box\" label = < " + formatted + " <br align=\"left\"/> > ]";
+				lines.add(newline);
+			}
+			else {
+				Formula f = new Formula(ps.axiom);
+				String formatted = f.format("", "&nbsp;&nbsp;", " <br align=\"left\"/> ");
+				//formatted = formatted.replaceAll("&", "&amp;"); // shouldn't see this char in KIF
+				formatted = formatted.replaceAll("<=>", "&lt;=&gt;");
+				formatted = formatted.replaceAll("=>", "=&gt;");
+				String line = "n" + ps.number + " [shape=\"box\" label = < " + formatted + " <br align=\"left\"/> > ]";
+				lines.add(line);
+			}
+		}
+		for (ProofStep ps : proof) {
+			if (ps.premises != null && ps.premises.size() > 0) {
+				for (int p : ps.premises) {
+					String line = "n" + p + " -> n" + ps.number + " [ label=\"" + ps.inferenceType + "\" ]; ";
+					lines.add(line);
+				}
+			}
+		}
+		return lines;
+	}
+
+	/** *************************************************************
+	 */
+	private void createProofDotGraphImage(String filename) throws IOException {
+
+		try {
+			String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+			String command = graphVizDir + File.separator + "dot " + filename + ".dot -Tgif";
+			Process proc = Runtime.getRuntime().exec(command);
+			System.out.println("Graph.createDotGraph(): exec command: " + command);
+			BufferedInputStream img = new BufferedInputStream(proc.getInputStream());
+			RenderedImage image = ImageIO.read(img);
+			File file = new File(filename + ".gif");
+			ImageIO.write(image, "gif", file);
+			System.out.println("Graph.createDotGraph(): write image file: " + file);
+		}
+		catch (java.io.IOException e) {
+			String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
+			throw new IOException(err);
+		}
+	}
+
+	/** *************************************************************
+	 * Create a proof
+	 * in a format suitable for GraphViz' input format
+	 * http://www.graphviz.org/
+	 * Generate a GIF from the .dot output with a command like
+	 *  dot SUMO-graph.dot -Tgif > graph.gif
+	 */
+	public void createProofDotGraph() throws IOException {
+
+		FileWriter fw = null;
+		PrintWriter pw = null;
+		String sep = File.separator;
+		String dir = System.getenv("CATALINA_HOME") + sep + "webapps" +
+				sep + "sigma" + sep + "graph";
+		String filename = dir + sep + "proof";
+
+		try {
+			File dirfile = new File(dir);
+			if (!dirfile.exists())
+				dirfile.mkdir();
+			fw = new FileWriter(filename + ".dot");
+			System.out.println("Graph.createGraphBody(): creating file at " + filename + ".dot");
+			pw = new PrintWriter(fw);
+			HashSet<String> result = new HashSet<String>();
+			result.addAll(createProofDotGraphBody());
+			pw.println("digraph G {");
+			pw.println("  rankdir=LR");
+			for (String s : result)
+				pw.println(s);
+			pw.println("}");
+			pw.close();
+			fw.close();
+			createProofDotGraphImage(filename);
+		}
+		catch (java.io.IOException e) {
+			String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
+			throw new IOException(err);
+		}
+		finally {
+			if (pw != null) pw.close();
+			if (fw != null) fw.close();
+		}
 	}
 
 	/** ***************************************************************
@@ -919,11 +1016,47 @@ public class TPTP3ProofProcessor {
 			System.out.println(getSupports(pt));
 	}
 
+
 	/** ***************************************************************
 	 */
-	public static void main (String[] args) {
+	public static void showHelp() {
 
-		TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-		tpp.testPrologParser();
+		System.out.println("KB class");
+		System.out.println("  options (with a leading '-'):");
+		System.out.println("  p <file> - parse a TPTP3 proof file");
+		System.out.println("  t - run test");
+	}
+
+	/** ***************************************************************
+	 */
+	public static void main(String[] args) throws IOException {
+
+		System.out.println("INFO in Formula.main()");
+		if (args == null)
+			System.out.println("no command given");
+		else
+			System.out.println(args.length + " : " + Arrays.toString(args));
+		if (args != null && args.length > 0 && args[0].equals("-h"))
+			showHelp();
+		else {
+			TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+			KBmanager.getMgr().initializeOnce();
+			String kbName = KBmanager.getMgr().getPref("sumokbname");
+			KB kb = KBmanager.getMgr().getKB(kbName);
+			if (args != null && args.length > 1 && args[0].contains("p")) {
+				try {
+					List<String> lines = joinLines((ArrayList<String>) FileUtil.readLines(args[1],false));
+					String query = "(and (instance ?G TournamentSport) (instance ?G Golf) (located ?G UnitedKingdom) (plays ?G ?A))";
+					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,new StringBuffer("?G ?A"));
+					tpp.createProofDotGraph();
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			} else if (args != null && args.length > 0 && args[0].contains("t"))
+				tpp.testPrologParser();
+			else
+				showHelp();
+		}
 	}
 }
