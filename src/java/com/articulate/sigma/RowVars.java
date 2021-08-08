@@ -403,6 +403,8 @@ public class RowVars {
         
         for (int i = 0; i < result.size(); i++) {
             Formula newf = new Formula(result.get(i));
+            newf.derivation.operator = "rowvar";
+            newf.derivation.parents.add(f);
             formresult.add(newf);
         }
         if (DEBUG)
