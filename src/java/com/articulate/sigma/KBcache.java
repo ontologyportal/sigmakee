@@ -66,9 +66,9 @@ public class KBcache implements Serializable {
     public HashSet<String> instTransRels = new HashSet<String>();
 
     // all the transitive relations that are known to be appropriate to use at the time
-    // this code was created - used to provide warnings
+    // this code was created
     public static final List<String> intendedTransRels =
-            Arrays.asList("subclass", "subrelation", "subAttribute", "located", "geographicSubregion");
+            Arrays.asList("subclass", "subrelation", "subAttribute"); //, "located", "geographicSubregion");
 
     /** All the cached "parent" relations of all transitive relations
      * meaning the relations between all first arguments and the
@@ -652,7 +652,6 @@ public class KBcache implements Serializable {
      */
     public void buildTransInstOf() {
 
-        //System.out.println("buildTransInstOf(): contains Anger: " + insts.contains("Anger"));
         // Iterate through the temporary list of instances built during creation of the @see children map
         for (String child : insts) {
             ArrayList<Formula> forms = kb.ask("arg",1,child);
@@ -660,11 +659,8 @@ public class KBcache implements Serializable {
             for (Formula f : forms) {
                 String rel = f.getStringArgument(0);
                 if (debug) System.out.println("buildTransInstOf(): rel: " + rel);
-                if (instTransRels.contains(rel) && !rel.equals("subclass") && !rel.equals("relatedInternalConcept")) {
-                    if (!intendedTransRels.contains(rel)) {
-                        System.out.println("WARNING in buildTransInstOf(): using non-standard transitive relation " +
-                                rel + " with child " + child + " .  May need to add to KBcache.intendedTransRels");
-                    }
+                if (instTransRels.contains(rel) && intendedTransRels.contains(rel) &&
+                        !rel.equals("subclass") && !rel.equals("relatedInternalConcept")) {
                     HashMap<String,HashSet<String>> prentList = parents.get(rel);
                     if (debug) System.out.println("buildTransInstOf(): prentList: " + prentList);
                     if (prentList != null) {
@@ -707,7 +703,6 @@ public class KBcache implements Serializable {
                 }
             }            
         }
-        debug = false;
         buildDirectInstances();
     }
 
