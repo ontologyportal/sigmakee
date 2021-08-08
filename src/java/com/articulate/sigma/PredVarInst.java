@@ -97,10 +97,11 @@ public class PredVarInst {
      */
     private static Set<Formula> handleDouble1(KB kb) {
 
+        String origForm = "(=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate) (disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (?REL1 @ROW2)) (not (?REL2 @ROW2)))";
         Set<Formula> result = new HashSet<Formula>();
         for (String s : kb.kbCache.disjointRelations) {
             String arg1 = s.substring(0,s.indexOf("\t"));
-            String arg2 = s.substring(s.indexOf("\t")+1,s.length());
+            String arg2 = s.substring(s.indexOf("\t")+1);
             int arity1 = kb.kbCache.getArity(arg1);
             int arity2 = kb.kbCache.getArity(arg2);
             if (arity1 != arity2)
@@ -108,7 +109,15 @@ public class PredVarInst {
             StringBuffer vars = new StringBuffer();
             for (int i = 1; i <= arity1; i++)
                 vars.append(" ?ROW" + i);
-            result.add(new Formula("(=> (" + arg1 + vars + ") (not (" + arg2 + vars + ")))"));
+            Formula newf = new Formula("(=> (\" + arg1 + vars + \") (not (\" + arg2 + vars + \")))");
+            newf.sourceFile = "Merge.kif";
+            Formula orig = kb.formulaMap.get(origForm);
+            if (orig != null) {
+                newf.startLine = orig.startLine;
+                newf.derivation.operator = "predvar";
+                newf.derivation.parents.add(orig);
+            }
+            result.add(newf);
         }
         return result;
     }
@@ -124,6 +133,7 @@ public class PredVarInst {
      */
     private static Set<Formula> handleDouble2(KB kb) {
 
+        String origForm = "(=> (and (subrelation ?REL1 ?REL2) (instance ?REL1 Predicate) (instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
         Set<Formula> result = new HashSet<Formula>();
         for (String r1 : kb.kbCache.relations) {
             //System.out.println("handleDouble2(): relation: " + r1);
@@ -141,7 +151,15 @@ public class PredVarInst {
                     StringBuffer vars = new StringBuffer();
                     for (int i = 1; i <= arity1; i++)
                         vars.append(" ?ROW" + i);
-                    result.add(new Formula("(=> (" + r1 + vars + ") (" + r2 + vars + "))"));
+                    Formula newf = new Formula("(=> (" + r2 + vars + ") (" + r1 + vars + "))");
+                    newf.sourceFile = "Merge.kif";
+                    Formula orig = kb.formulaMap.get(origForm);
+                    if (orig != null) {
+                        newf.startLine = orig.startLine;
+                        newf.derivation.operator = "predvar";
+                        newf.derivation.parents.add(orig);
+                    }
+                    result.add(newf);
                 }
             }
         }
@@ -259,6 +277,8 @@ public class PredVarInst {
                         if (debug) System.out.println("instantiatePredVars(): replaced: " + f);
                         Formula f2 = input.deepCopy();
                         f2.read(f.getFormula());
+                        f.derivation.operator = "predvar";
+                        f.derivation.parents.add(input);
                         result.add(f);
                     }
                 }
