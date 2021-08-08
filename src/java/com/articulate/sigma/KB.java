@@ -3543,9 +3543,10 @@ public class KB implements Serializable {
 
         HashMap<String,Formula> sourceAxioms = new HashMap<>();
         for (ProofStep ps : tpp.proof) {
-            if (ps.inferenceType.startsWith("kb_")) {
+            System.out.println("KB.collectSourceAxioms(): " + ps.inferenceType);
+            if (ps.inferenceType.startsWith("kb_") || ps.inferenceType.contains("conjecture")) {
                 Formula f = SUMOKBtoTPTPKB.axiomKey.get(ps.inferenceType);
-                if (f.sourceFile != null && !f.sourceFile.endsWith(_cacheFileSuffix))
+                if (f != null && f.sourceFile != null && !f.sourceFile.endsWith(_cacheFileSuffix))
                     sourceAxioms.put(f.getFormula(),f);
             }
         }
@@ -3571,7 +3572,7 @@ public class KB implements Serializable {
 
         HashSet<String> commonAxioms = new HashSet<>(); // axioms found in all contradictions
         HashMap<String,Integer> axiomCount= new HashMap<>(); // count axioms found in contradictions
-        HashSet<String> removalSuccess = new HashSet<>(); // removing this axiom results in no contradiction
+        HashSet<Formula> removalSuccess = new HashSet<>(); // removing this axiom results in no contradiction
         TPTP3ProofProcessor tpp = kb.runProver(args,timeout);
         tpp.printProof(3);
         System.out.println();
@@ -3602,22 +3603,25 @@ public class KB implements Serializable {
             KBmanager.getMgr().loadKB("test",constituents);
             KB kb2 = KBmanager.getMgr().getKB("test");
             TPTP3ProofProcessor tpp2 = kb2.runProver(args,timeout);
-            System.out.println("KB.contradictionHelp(): proof: ");
-            tpp2.printProof(3);
-            if (tpp2.status.contains("GaveUp"))
-                removalSuccess.add(s);
-            System.out.println();
-            HashMap<String,Formula> sourceAxioms2 = collectSourceAxioms(kb2,tpp2);
-            addToAxiomCount(axiomCount,sourceAxioms2.keySet());
-            commonAxioms.retainAll(sourceAxioms2.keySet());
+            if (!tpp2.inconsistency || tpp2.status.contains("GaveUp"))
+                removalSuccess.add(kb.formulaMap.get(s));
+            else {
+                //System.out.println("KB.contradictionHelp(): axiomKey: " + SUMOKBtoTPTPKB.axiomKey);
+                System.out.println("KB.contradictionHelp(): proof: ");
+                tpp2.printProof(3);
+                System.out.println();
+                HashMap<String, Formula> sourceAxioms2 = collectSourceAxioms(kb2, tpp2);
+                addToAxiomCount(axiomCount, sourceAxioms2.keySet());
+                commonAxioms.retainAll(sourceAxioms2.keySet());
+            }
         }
         System.out.println("KB.contradictionHelp(): common axioms: " + commonAxioms);
         sourceAxioms.keySet().removeAll(commonAxioms);
         System.out.println("KB.contradictionHelp(): axiomCount: " + axiomCount);
         System.out.println("KB.contradictionHelp(): axioms not causing the contradiction: " +
                 sourceAxioms.keySet());
-        System.out.println("KB.contradictionHelp(): axioms that when removed does not have a contradiction: " +
-                removalSuccess);
+        System.out.println("KB.contradictionHelp(): axioms that when any one is removed results in no contradiction: " +
+                FormulaUtil.formatCollection(removalSuccess));
     }
 
     /***************************************************************
@@ -3768,6 +3772,7 @@ public class KB implements Serializable {
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 }
+                tpp.createProofDotGraph();
                 if (!args[0].contains("x")) {
                     System.out.println("KB.main(): binding map: " + tpp.bindingMap);
                     int level = 1;
@@ -3780,6 +3785,7 @@ public class KB implements Serializable {
                     System.out.println("KB.main(): proof with level " + level);
                     System.out.println("KB.main(): axiom key size " + SUMOKBtoTPTPKB.axiomKey.size());
                     tpp.printProof(level);
+                    tpp.createProofDotGraph();
                 }
             }
         }
