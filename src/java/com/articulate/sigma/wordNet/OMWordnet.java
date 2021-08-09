@@ -269,6 +269,8 @@ August 9, Acapulco, Mexico.
      */
     public static void loadSerialized() {
 
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+            return;
         omw = null;
         try {
             // Reading the object from a file
@@ -322,6 +324,8 @@ August 9, Acapulco, Mexico.
      */
     public static void readOMWfiles() {
 
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+            disable = true;
         if (disable)
             return;
         loadSerialized();
