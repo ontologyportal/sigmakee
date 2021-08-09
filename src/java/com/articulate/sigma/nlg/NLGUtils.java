@@ -23,6 +23,8 @@ public class NLGUtils implements Serializable {
      */
     public static void init(String kbDir) {
 
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+            return;
         System.out.println("NLGUtils.init(): initializing with " + kbDir);
         nlg = new NLGUtils();
         nlg.readKeywordMap(kbDir);
