@@ -1836,6 +1836,8 @@ public class WordNet implements Serializable {
      */
     public static void initOnce() {
 
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+            disable = true;
         System.out.println("WordNet.initOnce(): 'disable' is: " + disable);
         if (disable) return;
         try {

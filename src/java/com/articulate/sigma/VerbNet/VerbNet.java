@@ -46,6 +46,8 @@ public class VerbNet {
      */
     public static void initOnce() {
 
+        if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
+            disable = true;
         if (disable) return;
         ArrayList<String> keys = new ArrayList<String>(Arrays.asList("Actor","involvedInEvent",
             "Agent","agent", "Asset","objectTransferred", "Attribute","attribute",
