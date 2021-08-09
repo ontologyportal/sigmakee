@@ -39,6 +39,8 @@ public class KBmanager implements Serializable {
     private static KBmanager manager = new KBmanager();
     protected static final String CONFIG_FILE = "config.xml";
 
+    // preferences set before initialization that override values in config.xml
+    public static HashMap<String,String> prefOverride = new HashMap<String,String>();
     private HashMap<String,String> preferences = new HashMap<String,String>();
     public HashMap<String,KB> kbs = new HashMap<String,KB>();
     public static boolean initialized = false;
@@ -116,6 +118,7 @@ public class KBmanager implements Serializable {
             for (String f : thekb) { // iterate through the constituents
                 File file = new File(f);
                 Date fileDate = new Date(file.lastModified());
+                System.out.println("serializedOld(): file " + f + " was saved on " + fileDate);
                 if (saveDate.compareTo(fileDate) < 0) {
                     return true;
                 }
@@ -126,7 +129,8 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     *  Check whether config file is newer than TPTP file
+     *  Check whether config file or any .kif constituent is newer than its
+     *  corresponding TPTP file
      */
     public boolean tptpOld() {
 
@@ -135,10 +139,20 @@ public class KBmanager implements Serializable {
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
         for (String kbname : kbs.keySet()) { // iterate through the kbs
+            KB kb = getKB(kbname);
             File file = new File(kbDir + File.separator + kbname + ".tptp");
             Date fileDate = new Date(file.lastModified());
+            System.out.println("KBmanager.tptpOld(): file " + kbname + ".tptp was saved on " + fileDate);
             if (fileDate.compareTo(configDate) < 0) {
                 return true;
+            }
+            for (String f : kb.constituents) { // iterate through the constituents
+                File sfile = new File(f);
+                Date sfileDate = new Date(sfile.lastModified());
+                System.out.println("KBmanager.tptpOld(): file " + f + " was saved on " + sfileDate);
+                if (fileDate.compareTo(sfileDate) < 0) {
+                    return true;
+                }
             }
         }
         System.out.println("KBmanager.tptpOld(config): returning false (not old)");
@@ -146,7 +160,7 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     *  Load the most recently save serialized version.
+     *  Load the most recently saved serialized version.
      */
     public static boolean loadSerialized() {
 
@@ -173,6 +187,7 @@ public class KBmanager implements Serializable {
             ex.printStackTrace();
             return false;
         }
+        manager.preferences.putAll(prefOverride);
         return true;
     }
 
@@ -518,6 +533,7 @@ public class KBmanager implements Serializable {
                     	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
                 }
             }
+            preferences.putAll(prefOverride);
         }
     }
 
@@ -719,7 +735,7 @@ public class KBmanager implements Serializable {
                 f3.delete();
                 File f4 = new File(kbDir + sep + kbName + KB._userAssertionsTPTP);
                 f4.delete();
-                if (KBmanager.getMgr().getPref("termFormats").equals("yes")) {
+                if (KBmanager.getMgr().getPref("termFormats").equals("yes") && !prefEquals("loadLexicons","false")) {
                     WordNet.wn.termFormatsToSynsets(KBmanager.getMgr().getKB(kbName));
                     WordNet.wn.serialize(); // have to serialize it again if there are new synsets
                 }
