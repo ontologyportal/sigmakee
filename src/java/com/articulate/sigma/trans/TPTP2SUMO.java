@@ -31,6 +31,8 @@ import java.util.*;
 
 public class TPTP2SUMO {
 
+    public static boolean debug = false;
+
   /** ***************************************************************
    * Convenience routine that calls the main convert() method below
    */
@@ -75,8 +77,8 @@ public class TPTP2SUMO {
       TPTPParser parser = TPTPParser.parse(reader);
       Hashtable<String,TPTPFormula> ftable = parser.ftable;
       Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
-//      System.out.println("# of formulas: " + ftable.size());
-//      System.out.println("# of Items: " + Items.size());
+      if (debug) System.out.println("# of formulas: " + ftable.size());
+      if (debug) System.out.println("# of Items: " + Items.size());
   
       //----Start SUMO output
       result.append("<queryResponse>\n");
@@ -199,7 +201,7 @@ public class TPTP2SUMO {
         StringBuffer result = new StringBuffer();
         int indent = 12;
         int indented = 0;
-
+        if (debug) System.out.println("convertBareTPTPFormula(): " + formula);
         SimpleTptpParserOutput.Annotations annotations = null;
         SimpleTptpParserOutput.Source source = null;
         String sourceInfo = "";
@@ -212,6 +214,7 @@ public class TPTP2SUMO {
         //result.append(convertBareType(formula, indent, indented,true));
         result.append(convertBareType(formula, 0, indented,true));
         result.append("\n\n");
+        if (debug) System.out.println("convertBareTPTPFormula(): result: " + result);
         return result;
     }
 
@@ -224,6 +227,7 @@ public class TPTP2SUMO {
 
       if (!form.isBalancedList())
           return form;
+      if (debug) System.out.println("collapseConnectives(): input: " + form);
       ArrayList<Formula> args = form.complexArgumentsToArrayList(1);
       if (args == null)
           return form;
@@ -231,17 +235,25 @@ public class TPTP2SUMO {
       String pred = form.car();
       sb.append("(" + pred + " ");
       ArrayList<Formula> newargs = new ArrayList<>();
+      if (debug) System.out.println("collapseConnectives(): args: " + args);
       for (Formula f : args)
           newargs.add(collapseConnectives(f));
+      if (debug) System.out.println("collapseConnectives(): newargs: " + newargs);
       if (pred.equals("or") || pred.equals("and")) {
           for (Formula f : newargs) {
               if (f.car().equals(pred)) {
+                  if (debug) System.out.println("collapseConnectives(): matching connectives in " + f);
                   ArrayList<Formula> subargs = f.complexArgumentsToArrayList(1);
+                  if (debug) System.out.println("collapseConnectives(): subargs " + subargs);
                   for (Formula f2 : subargs)
                       sb.append(f2.toString() + " ");
+                  if (debug) System.out.println("collapseConnectives(): after adding to " + f + " result is " + sb);
               }
-              else
+              else {
+                  if (debug) System.out.println("collapseConnectives(): not matching connective in " + f);
+                  if (debug) System.out.println("collapseConnectives(): adding to " + sb);
                   sb.append(f.toString() + " ");
+              }
           }
       }
       else {
@@ -251,6 +263,7 @@ public class TPTP2SUMO {
       sb.deleteCharAt(sb.length()-1);
       sb.append(")");
       Formula newForm = new Formula(sb.toString());
+      if (debug) System.out.println("collapseConnectives(): result: " + newForm);
       return newForm;
   }
 
