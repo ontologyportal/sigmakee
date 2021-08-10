@@ -3704,6 +3704,7 @@ public class KB implements Serializable {
         System.out.println("  2 - remove single premise proof steps");
         System.out.println("  3 - show only KB axioms in proof");
         System.out.println("  x - contradiction help");
+        System.out.println("  p - display TPTP proof");
         System.out.println("  o <seconds> - set the query timeout");
         System.out.println("  -c <term1> <term2> - compare term depth");
     }
@@ -3757,6 +3758,8 @@ public class KB implements Serializable {
             }
             if (args != null && args.length > 1 && args[0].contains("a")) {
                 TPTP3ProofProcessor tpp = null;
+                if (args[0].contains("p"))
+                    TPTP3ProofProcessor.tptpProof = true;
                 if (args[0].contains("x")) {
                     contradictionHelp(kb,args,timeout);
                 }
