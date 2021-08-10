@@ -292,11 +292,12 @@ public class TPTP3ProofProcessor {
 	 */
 	public ProofStep parseProofStep (String line) {
 
-		//System.out.println("-----------------------");
-		//System.out.println("parseProofStep() line: " + line);
-		//System.out.println("parseProofStep() second to last char: " + line.charAt(line.length()-2));
+		if (debug) System.out.println("-----------------------");
+		if (debug) System.out.println("parseProofStep() line: " + line);
+
 		if (StringUtil.emptyString(line))
 			return null;
+		if (debug) System.out.println("parseProofStep() second to last char: " + line.charAt(line.length()-2));
 		if (line.contains(System.lineSeparator()))
 			System.out.println("warning in TPTP3ProofProcessor.parseProofStep() carriage return in: " + line);
 		line = line.replaceAll(System.lineSeparator(),"");
@@ -864,12 +865,11 @@ public class TPTP3ProofProcessor {
 
 		ArrayList<String> lines = new ArrayList<>();
 		for (ProofStep ps : proof) {
-			//String line = "n" + ps.number + " [label=\"n" + ps.number + "\"]";
 			if (tptpProof) {
 				if (StringUtil.emptyString(ps.input))
 					continue;
-				//System.out.println("createProofDotGraphBody()" + ps.input);
-				//System.out.println("createProofDotGraphBody()" + ps);
+				System.out.println("createProofDotGraphBody()" + ps.input);
+				System.out.println("createProofDotGraphBody()" + ps);
 				String line = StringUtil.wordWrap(ps.input,40);
 				String[] split = line.split(System.getProperty("line.separator"));
 				StringBuffer sb = new StringBuffer();
