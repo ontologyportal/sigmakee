@@ -27,6 +27,7 @@ import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 import com.sun.org.apache.xpath.internal.objects.XNull;
+import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
 import java.util.*;
@@ -1413,14 +1414,15 @@ public class Formula implements Comparable, Serializable {
         f2 = new Formula(normalized2);
 
         if (debug)
-            System.out.println("deepEquals(): normalized this: \n" + f1.theFormula + "\n arg: \n" + f2.theFormula);
+            System.out.println("deepEquals(): normalized this: \n" + f1.format("","  ","\n") + "\n arg: \n" + f2.format("","  ","\n"));
 
         normalized1 = Clausifier.normalizeVariables(f1.theFormula,true); // renumber skolems too
         normalized2 = Clausifier.normalizeVariables(f2.theFormula,true);
 
         if (debug)
-            System.out.println("deepEquals(): normalized this: \n" + normalized1 + "\n arg: \n" + normalized2);
-
+            System.out.println("deepEquals(2): normalized this: \n" + f1.format("","  ","\n") + "\n arg: \n" + f2.format("","  ","\n"));
+        if (debug)
+            System.out.println("difference: \n" + StringUtils.difference(f1.getFormula(),f2.getFormula()));
         return normalized1.equals(normalized2);
     }
 
