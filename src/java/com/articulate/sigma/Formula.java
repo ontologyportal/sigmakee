@@ -1654,7 +1654,7 @@ public class Formula implements Comparable, Serializable {
         int index = start;
         ArrayList<Formula> result = new ArrayList<>();
         Formula arg = getArgument(index);
-        while (arg != null && !arg.empty() && index < 7) {
+        while (arg != null && !arg.empty() && index < 20) {
             result.add(arg);
             index++;
             arg = getArgument(index);
