@@ -380,13 +380,14 @@ if (!role.equalsIgnoreCase("admin")) {
         out.println(status.toString());
     }
     if (inferenceEngine.equals("EProver")) {
+        KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         if ((eProver != null) && (eProver.output.contains("Syntax error detected")))
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
         else if (eProver != null) {
         	System.out.println("in AskTell.jsp: parsing EProver results--------------");
         	System.out.println("output size: " + eProver.output.size());
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
-        	tpp.parseProofOutput(eProver.output, stmt, kb);
+        	tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
         	System.out.println("in AskTell.jsp: HTML format results --------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
             System.out.println("in AskTell.jsp: EProver status: " + tpp.status);
@@ -396,6 +397,7 @@ if (!role.equalsIgnoreCase("admin")) {
         }
     }
     if (inferenceEngine.equals("Vampire")) {
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (vampireMode.equals("CASC"))
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
         if (vampireMode.equals("Avatar"))
@@ -407,8 +409,8 @@ if (!role.equalsIgnoreCase("admin")) {
         else if (vampire.output != null) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
-            tpp.parseProofOutput(vampire.output, stmt, kb);
-            tpp.processAnswersFromProof(stmt);
+            tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
+            tpp.processAnswersFromProof(vampire.qlist,stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
