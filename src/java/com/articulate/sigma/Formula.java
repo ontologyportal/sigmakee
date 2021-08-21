@@ -2769,6 +2769,8 @@ public class Formula implements Comparable, Serializable {
      */
     public static String postProcess(String s) {
 
+        if (StringUtil.emptyString(s))
+            return s;
         s = s.replaceAll("holds_\\d+__ ","");
         s = s.replaceAll("apply_\\d+__ ","");
         return s;
