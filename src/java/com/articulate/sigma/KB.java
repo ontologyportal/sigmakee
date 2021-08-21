@@ -157,6 +157,9 @@ public class KB implements Serializable {
 
     public KBcache kbCache = null;
 
+    // maps TPTP axiom IDs to SUMO formulas
+    public static HashMap<String,Formula> axiomKey = new HashMap<>();
+
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 
     public static boolean debug = false;
@@ -1092,8 +1095,7 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Returns an
-     * ArrayList containing the Formulas that match the request.
+     * Returns an ArrayList containing the Formulas that match the request.
      *
      * @param kind   May be one of "ant", "cons", "stmt", or "arg"
      * @param term   The term that appears in the statements being requested.
