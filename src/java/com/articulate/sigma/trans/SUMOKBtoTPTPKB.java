@@ -336,6 +336,8 @@ public class SUMOKBtoTPTPKB {
                 ioe.printStackTrace();
             }
         }
+        kb.axiomKey = axiomKey;
+        KBmanager.getMgr().serialize();
         System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
         System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
         return result;
