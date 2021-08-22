@@ -388,6 +388,8 @@ if (!role.equalsIgnoreCase("admin")) {
         	System.out.println("output size: " + eProver.output.size());
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
         	tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
+        	String link = tpp.createProofDotGraph();
+        	out.println("<a href=\"" + link + "\">graphical proof</a><P>");
         	System.out.println("in AskTell.jsp: HTML format results --------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
             System.out.println("in AskTell.jsp: EProver status: " + tpp.status);
@@ -410,6 +412,8 @@ if (!role.equalsIgnoreCase("admin")) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
+            String link = tpp.createProofDotGraph();
+            out.println("<a href=\"" + link + "\">graphical proof</a><P>");
             tpp.processAnswersFromProof(vampire.qlist,stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));

@@ -931,11 +931,12 @@ public class TPTP3ProofProcessor {
 	 * Generate a GIF from the .dot output with a command like
 	 *  dot SUMO-graph.dot -Tgif > graph.gif
 	 */
-	public void createProofDotGraph() throws IOException {
+	public String createProofDotGraph() throws IOException {
 
 		FileWriter fw = null;
 		PrintWriter pw = null;
 		String sep = File.separator;
+		String link = "graph" + sep + "proof.gif";
 		String dir = System.getenv("CATALINA_HOME") + sep + "webapps" +
 				sep + "sigma" + sep + "graph";
 		String filename = dir + sep + "proof";
@@ -966,6 +967,7 @@ public class TPTP3ProofProcessor {
 			if (pw != null) pw.close();
 			if (fw != null) fw.close();
 		}
+		return link;
 	}
 
 	/** ***************************************************************
@@ -1049,7 +1051,7 @@ public class TPTP3ProofProcessor {
 					List<String> lines = joinLines((ArrayList<String>) FileUtil.readLines(args[1],false));
 					String query = "(and (instance ?G TournamentSport) (instance ?G Golf) (located ?G UnitedKingdom) (plays ?G ?A))";
 					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,new StringBuffer("?G ?A"));
-					tpp.createProofDotGraph();
+					String link = tpp.createProofDotGraph();
 				}
 				catch (Exception e) {
 					e.printStackTrace();

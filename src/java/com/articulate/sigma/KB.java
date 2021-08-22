@@ -3779,7 +3779,7 @@ public class KB implements Serializable {
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 }
-                tpp.createProofDotGraph();
+                String link = tpp.createProofDotGraph();
                 if (!args[0].contains("x")) {
                     System.out.println("KB.main(): binding map: " + tpp.bindingMap);
                     int level = 1;
@@ -3792,7 +3792,6 @@ public class KB implements Serializable {
                     System.out.println("KB.main(): proof with level " + level);
                     System.out.println("KB.main(): axiom key size " + SUMOKBtoTPTPKB.axiomKey.size());
                     tpp.printProof(level);
-                    tpp.createProofDotGraph();
                 }
             }
         }
