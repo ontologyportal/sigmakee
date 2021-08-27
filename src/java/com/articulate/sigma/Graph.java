@@ -386,7 +386,7 @@ public class Graph {
 
         if (StringUtil.emptyString(s))
             return true;
-        if (Formula.isLogicalOperator(s) || Formula.isMathFunction(s) ||
+        if (Formula.isLogicalOperator(s) || Formula.isMathFunction(s) || Formula.isVariable(s) ||
                 Formula.isComparisonOperator(s) || Formula.DOC_PREDICATES.contains(s) ||
                 StringUtil.isNumeric(s) || Formula.DEFN_PREDICATES.contains(s) ||
                 StringUtil.isQuotedString(s))
