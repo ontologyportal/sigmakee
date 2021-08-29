@@ -22,6 +22,7 @@ import java.util.*;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 
@@ -674,6 +675,8 @@ public class WSD {
         for (ArrayList<String> line : far) {
             String fullsent = line.get(0);
             for (int i = 1; i < line.size(); i++) {
+                if (WordNet.wn.stopwords.contains(line.get(i)))
+                    continue;
                 String synset = findWordSenseInContext(line.get(i), line);
                 if (synset == "")
                     synset = WSD.getBestDefaultSense(line.get(i));
@@ -690,15 +693,19 @@ public class WSD {
                 }
             }
         }
-        Iterator<String> it = result.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
-            String SUMO = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(key));
-            ArrayList<String> words = WordNet.wn.synsetsToWords.get(key);
-            String wordstr = "";
-            if (words != null)
-                wordstr = words.toString();
-            System.out.println(key + "\t" + result.get(key) + "\t" + SUMO + "\t" + wordstr);
+        TreeMap<String,HashSet<String>> reversed = new TreeMap<>();
+        for (String key : result.keySet())
+            MapUtils.addToMap(reversed,StringUtil.integerToPaddedString(result.get(key)),key);
+        for (String key : reversed.keySet()) {
+            HashSet<String> values = reversed.get(key);
+            for (String synset : values) {
+                String SUMO = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
+                ArrayList<String> words = WordNet.wn.synsetsToWords.get(synset);
+                String wordstr = "";
+                if (words != null)
+                    wordstr = words.toString();
+                System.out.println(key + "\t" + result.get(synset) + "\t" + SUMO + "\t" + wordstr);
+            }
         }
         return result;
     }
