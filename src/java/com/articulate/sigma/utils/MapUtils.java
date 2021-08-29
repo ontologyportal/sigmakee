@@ -5,6 +5,7 @@ import com.google.common.collect.Sets;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 public class MapUtils {
@@ -28,7 +29,7 @@ public class MapUtils {
      * utility method to add a String element to a HashMap of String
      * keys and a value of an HashSet of Strings
      */
-    public static void addToMap(HashMap<String, HashSet<String>> map, String key, String element) {
+    public static void addToMap(Map<String, HashSet<String>> map, String key, String element) {
 
         HashSet<String> al = map.get(key);
         if (al == null)
