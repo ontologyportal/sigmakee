@@ -161,6 +161,24 @@ public class FileUtil {
         return s.substring(0,s.lastIndexOf("."));
     }
 
+    /****************************************************************
+     * Recursively get all file paths in a directory and subdirectories
+     */
+    public static Collection<String> walk(String path) {
+
+        File root = new File(path);
+        File[] list = root.listFiles();
+        ArrayList<String> result = new ArrayList<>();
+        if (list == null) return result;
+        for (File f : list) {
+            if (f.isDirectory())
+                result.addAll(walk(f.getAbsolutePath()));
+            else
+                result.add(f.getAbsolutePath());
+        }
+        return result;
+    }
+
     /** ***************************************************************
      * A test method.
      */
