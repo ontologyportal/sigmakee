@@ -2361,7 +2361,7 @@ public class WordNet implements Serializable {
      */
     public boolean containsWord(String word, int pos) {
 
-        System.out.println("INFO in WordNet.containsWord: Checking word : " + word);
+        if (debug) System.out.println("INFO in WordNet.containsWord: Checking word : " + word);
         if (pos == NOUN && nounSynsetHash.containsKey(word))
             return true;
         if (pos == VERB && verbSynsetHash.containsKey(word))
