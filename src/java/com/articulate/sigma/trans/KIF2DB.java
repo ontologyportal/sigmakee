@@ -92,7 +92,7 @@ public class KIF2DB {
                 continue;
             }
             String rel = f.getStringArgument(0);
-            if (f.argumentsToArrayList(0).size() > 1) {
+            if (f.complexArgumentsToArrayList(0).size() > 1) {
                 String arg = f.getStringArgument(2);
                 if (!inst) {
                     HashMap<String,HashMap<String,HashSet<String>>> table = null;

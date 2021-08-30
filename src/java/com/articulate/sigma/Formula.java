@@ -1638,6 +1638,7 @@ public class Formula implements Comparable, Serializable {
      * argument is greater than the number of arguments, also return
      * null.
      */
+    @Deprecated
     public ArrayList<Formula> argumentsToArrayList(int start) {
 
         ArrayList<Formula> result = new ArrayList<>();
@@ -2619,7 +2620,7 @@ public class Formula implements Comparable, Serializable {
         ArrayList<String> l = argumentsToArrayListString(0);
         if (l == null)
             return false;
-        return argumentsToArrayList(0).size() == 3;
+        return complexArgumentsToArrayList(0).size() == 3;
     }
 
     /** ***************************************************************
@@ -3204,7 +3205,7 @@ public class Formula implements Comparable, Serializable {
         System.out.println("testArg2ArrayList(): ");
         String f = "(termFormat EnglishLanguage experimentalControlProcess \"experimental control (process)\")";
         Formula form = new Formula(f);
-        System.out.println(form.argumentsToArrayList(0));
+        System.out.println(form.complexArgumentsToArrayList(0));
     }
 
     /** ***************************************************************

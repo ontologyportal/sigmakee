@@ -76,7 +76,7 @@ public class KButilities {
         Formula form = forms.get(0);
         if (form == null)
             return null;
-        if (form.argumentsToArrayList(0).size() < 3)
+        if (form.complexArgumentsToArrayList(0).size() < 3)
             return null;
         return form.getStringArgument(3);
     }
@@ -740,7 +740,7 @@ public class KButilities {
                         StringBuilder sb = new StringBuilder();
                         String displayText = String.copyValueOf(value.toCharArray());                        
                         Formula f = predInstances.get(j);
-                        ArrayList arguments = f.argumentsToArrayList(0);      
+                        ArrayList arguments = f.complexArgumentsToArrayList(0);
                         sb.append(key);
                         sb.append(",");           
                         // check if each of the arguments for the statements is to be replaced in its
