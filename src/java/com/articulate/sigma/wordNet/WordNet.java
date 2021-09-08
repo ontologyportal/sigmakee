@@ -19,6 +19,7 @@ package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -60,6 +61,9 @@ public class WordNet implements Serializable {
     public HashMap<String,HashSet<String>> verbSynsetHash = new HashMap<>();   // String values are 8-digit synset lists.
     public HashMap<String,HashSet<String>> adjectiveSynsetHash = new HashMap<>();
     public HashMap<String,HashSet<String>> adverbSynsetHash = new HashMap<>();
+
+    // @see caseMap
+    public HashMap<String,HashSet<String>> ignoreCaseSynsetHash = new HashMap<>(); // uppercase keys to synsets covering all POS
 
     public Hashtable<String,String> verbDocumentationHash = new Hashtable<String,String>();       // Keys are synset Strings, values
     public Hashtable<String,String> adjectiveDocumentationHash = new Hashtable<String,String>();  // are documentation strings.
@@ -382,7 +386,6 @@ public class WordNet implements Serializable {
     /** ***************************************************************
      * Add a synset and its corresponding word to the synsetsToWords
      * variable.  Prefix the synset with its part of speech before adding.
-     * Also add a wordsToSynsets entry
      */
     private void addToSynsetsToWords(String word, String synsetStr, String POS) {
 
@@ -398,42 +401,19 @@ public class WordNet implements Serializable {
         HashSet<String> synsets = null;
         switch (POS.charAt(0)) {
         case '1':
-            synsets = nounSynsetHash.get(word);
-            if (synsets == null)
-                synsets = new HashSet<String>();
-            if (!synsets.contains(synsetStr)) {
-                synsets.add(synsetStr);
-                nounSynsetHash.put(word,synsets);
-            }
+            MapUtils.addToMap(nounSynsetHash,word,synsetStr);
             break;
         case '2':
-            synsets = verbSynsetHash.get(word);
-            if (synsets == null)
-                synsets = new HashSet<String>();
-            if (!synsets.contains(synsetStr)) {
-                synsets.add(synsetStr);
-                verbSynsetHash.put(word,synsets);
-            }
+            MapUtils.addToMap(verbSynsetHash,word,synsetStr);
             break;
         case '3':
-            synsets = adjectiveSynsetHash.get(word);
-            if (synsets == null)
-                synsets = new HashSet<String>();
-            if (!synsets.contains(synsetStr)) {
-                synsets.add(synsetStr);
-                adjectiveSynsetHash.put(word,synsets);
-            }
+            MapUtils.addToMap(adjectiveSynsetHash,word,synsetStr);
             break;
         case '4':
-            synsets = adverbSynsetHash.get(word);
-            if (synsets == null)
-                synsets = new HashSet<String>();
-            if (!synsets.contains(synsetStr)) {
-                synsets.add(synsetStr);
-                adverbSynsetHash.put(word,synsets);
-            }
+            MapUtils.addToMap(adverbSynsetHash,word,synsetStr);
             break;
         }
+        MapUtils.addToMap(ignoreCaseSynsetHash,word.toUpperCase(),synsetStr);
     }
 
     /** ***************************************************************
@@ -2385,6 +2365,15 @@ public class WordNet implements Serializable {
             if (containsWord(word,i))
                 return true;
         }
+        return false;
+    }
+    /** ***************************************************************
+     * Does WordNet contain the given word, ignoring case.
+     */
+    public boolean containsWordIgnoreCase(String word) {
+
+        if (ignoreCaseSynsetHash.containsKey(word.toUpperCase()))
+            return true;
         return false;
     }
 
