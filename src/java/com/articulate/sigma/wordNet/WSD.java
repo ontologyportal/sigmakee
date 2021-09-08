@@ -274,32 +274,31 @@ public class WSD {
      */
     private static List<String> termFormatBypass(String word) {
 
-        //System.out.println("INFO in WSD.termFormatBypass(): word: " + word +
-        //        " : " + WordNet.wn.caseMap.get(word.toUpperCase())
-        //);
+        if (debug) System.out.println("INFO in WSD.termFormatBypass(): word: " + word +
+                " : " + WordNet.wn.caseMap.get(word.toUpperCase()));
         ArrayList<String> result = new ArrayList<String>();
         TreeSet<AVPair> senselist = WordNet.wn.wordFrequencies.get(word);
         if (senselist == null) {
             if (WordNet.wn.caseMap.keySet().contains(word.toUpperCase())) {
                 word = WordNet.wn.caseMap.get(word.toUpperCase());
-                //System.out.println("INFO in WSD.termFormatBypass(): word: " + word);
+                System.out.println("INFO in WSD.termFormatBypass(): word: " + word);
                 senselist = WordNet.wn.wordFrequencies.get(word);
-                //System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
+                if (debug) System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
                 if (senselist == null)
                     return null;
             }
             else
                 return null;
         }
-        //System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
+        if (debug) System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
         for (AVPair avp : senselist) {
             if (avp.attribute.equals("99999")) {
                 String synset = avp.value;
                 result.add(synset);
                 result.add("99999");
                 String SUMO = WordNet.wn.getSUMOMapping(synset);
-                //System.out.println("INFO in WSD.termFormatBypass(): word, avp, synset, sumo: " +
-                //        word + ", " + avp + ", " + synset + ", " + SUMO);
+                if (debug) System.out.println("INFO in WSD.termFormatBypass(): word, avp, synset, sumo: " +
+                       word + ", " + avp + ", " + synset + ", " + SUMO);
                 return result;
             }
         }
@@ -324,6 +323,7 @@ public class WSD {
             score.attribute = "000" + termFormatBypass.get(1);
             score.value = termFormatBypass.get(0);
             result.add(score);
+            if (debug) System.out.println("Info in WSD.findWordSensePOS(1): returning: " + result);
             return result;
         }
         if (senseKeys == null) {
@@ -334,11 +334,11 @@ public class WSD {
                 score.attribute = "000" + termFormatBypass.get(1);
                 score.value = termFormatBypass.get(0);
                 result.add(score);
+                if (debug) System.out.println("Info in WSD.findWordSensePOS(2): returning: " + result);
                 return result;
             }
             if (senseKeys == null) {
-                if (debug)
-                    System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word +
+                if (debug) System.out.println("Info in WSD.findWordSensePOS(): Word: '" + word +
                         "' not in lexicon as part of speech " + POS);
                 return result;
             }
