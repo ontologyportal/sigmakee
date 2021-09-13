@@ -3,10 +3,7 @@ package com.articulate.sigma.utils;
 import com.articulate.sigma.KB;
 import com.google.common.collect.Sets;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class MapUtils {
 
@@ -36,6 +33,65 @@ public class MapUtils {
             al = new HashSet<String>();
         al.add(element);
         map.put(key, al);
+    }
+
+    /** ***************************************************************
+     * utility method to add frequency counts of keys
+     */
+    public static void addToFreqMap(Map<String, Integer> map, String key, int count) {
+
+        int val = 0;
+        if (map.containsKey(key))
+            val = map.get(key);
+        val = val + count;
+        map.put(key, val);
+    }
+
+    /** ***************************************************************
+     * utility method to merge frequency counts of keys
+     */
+    public static Map<String, Integer> mergeToFreqMap(Map<String, Integer> mapOld, Map<String, Integer> mapNew) {
+
+        Map<String, Integer> result = new HashMap<>();
+        result.putAll(mapOld);
+        for (String key : mapNew.keySet())
+            addToFreqMap(result,key,mapNew.get(key));
+        return result;
+    }
+
+    /** ***************************************************************
+     * utility method to add frequency counts of keys
+     */
+    public static void addToSortedFreqMap(Map<Integer, HashSet<String>> map, String key, int count) {
+
+        HashSet<String> al = map.get(count);
+        if (al == null)
+            al = new HashSet<String>();
+        al.add(key);
+        map.put(count, al);
+    }
+
+    /** ***************************************************************
+     * utility method to merge frequency counts of keys
+     */
+    public static Map<Integer, HashSet<String>> toSortedFreqMap(Map<String, Integer> map) {
+
+        TreeMap<Integer, HashSet<String>> result = new TreeMap<>();
+        for (String s : map.keySet()) {
+            int val = map.get(s);
+            addToSortedFreqMap(result,s,val);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     */
+    public static String sortedFreqMapToString(Map<Integer, HashSet<String>> map) {
+
+        StringBuffer sb = new StringBuffer();
+        for (int i : map.keySet())
+            sb.append(i + "=" + map.get(i) + "\n");
+        return sb.toString();
     }
 
     /** ***************************************************************

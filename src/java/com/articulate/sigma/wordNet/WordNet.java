@@ -413,6 +413,7 @@ public class WordNet implements Serializable {
             MapUtils.addToMap(adverbSynsetHash,word,synsetStr);
             break;
         }
+        //System.out.println("WordNet.addToSynsetsToWords(): " + word.toUpperCase()  + "," + synsetStr);
         MapUtils.addToMap(ignoreCaseSynsetHash,word.toUpperCase(),synsetStr);
     }
 
@@ -1781,6 +1782,21 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
+     *  create a map of upper case versions of all words
+     */
+    private void createIgnoreCaseMap() {
+
+        for (String s : wn.nounSynsetHash.keySet())
+            ignoreCaseSynsetHash.put(s.toUpperCase(),wn.nounSynsetHash.get(s));
+        for (String s : wn.verbSynsetHash.keySet())
+            ignoreCaseSynsetHash.put(s.toUpperCase(),wn.verbSynsetHash.get(s));
+        for (String s : wn.adjectiveSynsetHash.keySet())
+            ignoreCaseSynsetHash.put(s.toUpperCase(),wn.adjectiveSynsetHash.get(s));
+        for (String s : wn.adverbSynsetHash.keySet())
+            ignoreCaseSynsetHash.put(s.toUpperCase(),wn.adverbSynsetHash.get(s));
+    }
+
+    /** ***************************************************************
      *  Read the WordNet files only on initialization of the class.
      */
     private static void loadFresh() {
@@ -1796,6 +1812,7 @@ public class WordNet implements Serializable {
             wn.readVerbs();
             wn.readAdjectives();
             wn.readAdverbs();
+            wn.createIgnoreCaseMap();
             wn.origMaxNounSynsetID = wn.maxNounSynsetID;
             wn.origMaxVerbSynsetID = wn.maxVerbSynsetID;
             wn.readWordCoFrequencies();
@@ -2367,11 +2384,14 @@ public class WordNet implements Serializable {
         }
         return false;
     }
+
     /** ***************************************************************
      * Does WordNet contain the given word, ignoring case.
      */
     public boolean containsWordIgnoreCase(String word) {
 
+        //System.out.println("containsWordIgnoreCase(): " + word);
+        //System.out.println("containsWordIgnoreCase(): " + word.toUpperCase());
         if (ignoreCaseSynsetHash.containsKey(word.toUpperCase()))
             return true;
         return false;
@@ -3319,7 +3339,9 @@ public class WordNet implements Serializable {
             pos = "1";
             synsetID = "1" + nounSynsetFromTermFormat(tf,SUMOterm,kb);
         }
-        
+        MapUtils.addToMap(ignoreCaseSynsetHash,tf.toUpperCase(),synsetID);
+        //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf.toUpperCase() + "," + synsetID);
+
         ArrayList<String> al = SUMOHash.get(SUMOterm);
         if (al == null)
             al = new ArrayList<String>();

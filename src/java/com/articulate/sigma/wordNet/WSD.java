@@ -281,7 +281,7 @@ public class WSD {
         if (senselist == null) {
             if (WordNet.wn.caseMap.keySet().contains(word.toUpperCase())) {
                 word = WordNet.wn.caseMap.get(word.toUpperCase());
-                System.out.println("INFO in WSD.termFormatBypass(): word: " + word);
+                if (debug) System.out.println("INFO in WSD.termFormatBypass(): word: " + word);
                 senselist = WordNet.wn.wordFrequencies.get(word);
                 if (debug) System.out.println("INFO in WSD.termFormatBypass(): senselist: " + senselist);
                 if (senselist == null)
@@ -740,26 +740,23 @@ public class WSD {
             if (synset == "")
                 synset = WSD.getBestDefaultSense(line.get(i));
             if (synset != null && synset != "") {
+                String SUMO = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(synset));
+                if (SUMO == null)
+                    continue;
                 if (!result.containsKey(synset)) {
-                    result.put(synset, 1);
-                    System.out.println("new synset: " + synset);
+                    result.put(SUMO, 1);
+                    if (debug) System.out.println("new SUMO: " + SUMO);
                 }
                 else {
-                    Integer val = result.get(synset);
-                    //System.out.println("adding to synset: " + synset + " : " + (val + 1));
-                    result.put(synset, val.intValue() + 1);
+                    Integer val = result.get(SUMO);
+                    result.put(SUMO, val.intValue() + 1);
                 }
+                ArrayList<String> words = WordNet.wn.synsetsToWords.get(synset);
+                String wordstr = "";
+                if (words != null)
+                    wordstr = words.toString();
+                if (debug) System.out.println(synset + "\t" + result.get(SUMO) + "\t" + SUMO + "\t" + wordstr);
             }
-        }
-        Iterator<String> it = result.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
-            String SUMO = WordNetUtilities.getBareSUMOTerm(WordNet.wn.getSUMOMapping(key));
-            ArrayList<String> words = WordNet.wn.synsetsToWords.get(key);
-            String wordstr = "";
-            if (words != null)
-                wordstr = words.toString();
-            System.out.println(key + "\t" + result.get(key) + "\t" + SUMO + "\t" + wordstr);
         }
         return result;
     }
@@ -869,6 +866,7 @@ public class WSD {
         //testSentenceWSD();
         //testSentenceWSD2();
         //collectSUMOFromSICK();
+        System.out.println("Word Sense Disambiguation");
         if (args != null && args.length > 0 && (args[0].equals("-f"))) {
             KBmanager.getMgr().initializeOnce();
             collectSUMOFromFile(args[1]);
@@ -879,7 +877,7 @@ public class WSD {
         }
         else if (args != null && args.length > 0 && (args[0].equals("-p"))) {
             KBmanager.getMgr().initializeOnce();
-            collectSUMOFromString(StringUtil.removeEnclosingQuotes(args[1]));
+            System.out.println(collectSUMOFromString(StringUtil.removeEnclosingQuotes(args[1])));
         }
         else if (args != null && args.length > 0 && (args[0].equals("-i"))) {
             KBmanager.getMgr().initializeOnce();
