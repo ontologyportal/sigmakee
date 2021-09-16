@@ -620,6 +620,30 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * Return the plural form of the noun.  Handle multi-word phrases
+     * to modify only the last word.
+     */
+    public static String nounPlural(String noun) {
+
+        String word = noun;
+        if (WordNet.wn.exceptionNounPluralHash.containsKey(word))
+            word = (String) WordNet.wn.exceptionNounPluralHash.get(word);
+        if (word.matches(".*y$") && !isVowel(word.charAt(word.length()-2)))
+            word = WordNetUtilities.subst(word,"y$","ies");
+        else {
+            if (word.matches(".*s$") || word.matches(".*x$") || word.matches(".*ch$") ||
+                    word.matches(".*sh$") || word.matches(".*z$") || word.equals("go"))
+                word = word + "es";
+            else
+            if (word.equals("be"))
+                word = "are";
+            else
+                word = word + "s";
+        }
+        return word;
+    }
+
+    /** ***************************************************************
      * HTML format a TreeMap of word senses and their associated synset
      */
     public static String formatWords(TreeMap<String,String> words, String kbName) {
