@@ -99,7 +99,7 @@ public class WordNet implements Serializable {
     public Hashtable<String,String> exceptionVerbHash = new Hashtable<String,String>();
 
     // The reverse index of the above
-    private Hashtable<String,String> exceptionNounPluralHash = new Hashtable<String,String>();
+    public Hashtable<String,String> exceptionNounPluralHash = new Hashtable<String,String>();
     private Hashtable<String,String> exceptionVerbPastHash = new Hashtable<String,String>();
 
     /** Keys are POS-prefixed synsets, values are ArrayList(s) of AVPair(s)
