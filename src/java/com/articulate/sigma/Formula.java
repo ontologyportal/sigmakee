@@ -1015,13 +1015,14 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Not yet implemented!  Test whether the Formula has variables that are not properly
+     * TODO: Not yet implemented!  Test whether the Formula has variables that are not properly
      * quantified.  The case tested for is whether a quantified variable
      * in the antecedent appears in the consequent or vice versa.
      *
      *  @return an empty String if there are no problems or an error message
      *  if there are.
      */
+    @Deprecated
     public String badQuantification() {
         return "";
     }
