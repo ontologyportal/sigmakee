@@ -23,6 +23,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.articulate.sigma.dataProc.Infrastructure;
+import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 import org.json.simple.JSONAware;
@@ -673,6 +675,20 @@ public class KButilities {
     }
 
     /** *************************************************************
+     * Generate line pairs of formula and NL paraphrase of formula
+     */
+    public static String generateAllNL(KB kb) {
+
+        StringBuffer result = new StringBuffer();
+        for (String f : kb.formulaMap.keySet()) {
+            if (!f.startsWith("(documentation") && !f.startsWith("(format") && !f.startsWith("(termFormat"))
+                result.append(f + "\n" + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", f,
+                    kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")) + "\n");
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
      *  Find all cases of where (instance A B) (instance B C) as
      *  well as all cases of where (instance A B) (instance B C)
      *  (instance C D).  Report true if any such cases are found,
@@ -894,6 +910,7 @@ public class KButilities {
      *  Find all formulas in which the SUMO term is involved.  
      */
     public static Set<Formula> getAllFormulasOfTerm(KB kb, String term) {
+
 		HashSet<Formula> result = new HashSet<>();
 		Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");		
 		for (String f : kb.formulaMap.keySet()){
@@ -918,6 +935,7 @@ public class KButilities {
         System.out.println("  -j - generate semantic network as JSON");
         System.out.println("  -o - generate semantic network as another JSON format");
         System.out.println("  -q - generate semantic network as SQL");
+        System.out.println("  -n - generate NL for every formula");
     }
 
     /** *************************************************************
@@ -963,6 +981,9 @@ public class KButilities {
             else if (args != null && args.length > 0 && args[0].equals("-d")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 System.out.println(semnetAsDot(tuples));
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-n")) {
+                System.out.println(generateAllNL(kb));
             }
             else
                 showHelp();
