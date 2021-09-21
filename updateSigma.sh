@@ -11,7 +11,8 @@ echo "waiting 10 seconds"
 sleep 10
 rm $CATALINA_HOME/logs/*.*
 rm $CATALINA_HOME/webapps/sigma/graph/*.*
-rm -r $SIGMA_HOME/KBs/*.ser
+rm $SIGMA_HOME/KBs/*.ser
+rm $SIGMA_HOME/KBs/WordNetMappings/*.ser
 ant
 $CATALINA_HOME/bin/startup.sh
 echo "waiting 30 seconds"
