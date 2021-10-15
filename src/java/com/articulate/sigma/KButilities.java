@@ -25,6 +25,7 @@ import java.util.regex.Pattern;
 import com.articulate.sigma.dataProc.Infrastructure;
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 import org.json.simple.JSONAware;
@@ -55,7 +56,33 @@ public class KButilities {
     public static boolean isAttribute(KB kb, String term) {
         return kb.isInstanceOf(term,"Attribute");
     }
-    
+
+    /** *************************************************************
+     */
+    public static boolean isValidFormula(KB kb, String form) {
+
+        KIF kif = new KIF();
+        String result = kif.parseStatement(form);
+        if (!StringUtil.emptyString(result)) {
+            System.out.println(result);
+            return false;
+        }
+        Formula f = new Formula(form);
+        String term = PredVarInst.hasCorrectArity(f, kb);
+        if (!StringUtil.emptyString(term)) {
+            System.out.println("Formula rejected due to arity error of predicate " + term
+                    + " in formula: \n" + f.getFormula());
+            return false;
+        }
+        SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
+        if (SUMOtoTFAform.typeConflict(f)) {
+            System.out.println("Type conflict");
+            return false;
+        }
+        return true;
+    }
+
     /** *************************************************************
      */
     public static boolean isClass(KB kb, String term) {
@@ -922,8 +949,44 @@ public class KButilities {
 		return result;
 	}
 
-    /** ***************************************************************
+    /** *************************************************************
+     *  Find all formulas in which the SUMO term is involved.
      */
+    public static String generateFormulasAndDoc(KB kb) {
+
+        StringBuffer sb = new StringBuffer();
+        for (String t : kb.terms) {
+            String doc = getDocumentation(kb,t);
+            if (!StringUtil.emptyString(doc)) {
+                Set<Formula> allForms = getAllFormulasOfTerm(kb,t);
+                sb.append("!!doc " + doc + "\n");
+                for (Formula f : allForms) {
+                    if (!FormulaUtil.isDoc(f))
+                        sb.append(f.toString() + "\n");
+                }
+            }
+        }
+        return sb.toString();
+    }
+
+    /** *************************************************************
+     * List all the terms and their termFormat expressions.
+     */
+    public static String termFormatIndex(KB kb) {
+
+        StringBuffer sb = new StringBuffer();
+        ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
+        for (Formula f : forms) {
+            String term = f.getStringArgument(2);
+            String str = f.getStringArgument(3);
+            if (!StringUtil.emptyString(term) && ! StringUtil.emptyString((str)))
+                sb.append(term + "\t" + str + "\n");
+        }
+        return sb.toString();
+    }
+
+    /** ***************************************************************
+    */
     public static void showHelp() {
 
         System.out.println("KButilities class");
@@ -936,6 +999,9 @@ public class KButilities {
         System.out.println("  -o - generate semantic network as another JSON format");
         System.out.println("  -q - generate semantic network as SQL");
         System.out.println("  -n - generate NL for every formula");
+        System.out.println("  -f - list formulas for every documentation string term");
+        System.out.println("  -v - is formula valid");
+        System.out.println("  -t - generate a table of termFormat(s)");
     }
 
     /** *************************************************************
@@ -984,6 +1050,16 @@ public class KButilities {
             }
             else if (args != null && args.length > 0 && args[0].equals("-n")) {
                 System.out.println(generateAllNL(kb));
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-f")) {
+                System.out.println(generateFormulasAndDoc(kb));
+            }
+            else if (args != null && args.length > 1 && args[0].equals("-v")) {
+                SUMOtoTFAform.initOnce();
+                System.out.println(isValidFormula(kb,args[1]));
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-t")) {
+                System.out.println(termFormatIndex(kb));
             }
             else
                 showHelp();
