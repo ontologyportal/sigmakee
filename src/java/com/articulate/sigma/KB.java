@@ -3205,6 +3205,20 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Hyperlink "[from Wikipedia]" if it occurs
+     */
+    public String formatWikipedia(String documentation) {
+
+        if (!documentation.contains("[from Wikipedia]"))
+            return documentation;
+        int space1 = documentation.indexOf(" ");
+        int space2 = documentation.indexOf(" ",space1);
+        String term = documentation.substring(space1+1,space2);
+        return documentation.replace("[from Wikipedia]","[<a href=\"https://en.wikipedia.org/wiki/" + term +
+                "\">from Wikipedia]</a>");
+    }
+
+    /***************************************************************
      * Hyperlink terms identified with '&%' to the URL that brings up that term in the
      * browser. Handle (and ignore) suffixes on the term. For example
      * "&%Processes" would get properly linked to the term "Process", if present
@@ -3256,6 +3270,7 @@ public class KB implements Serializable {
                 }
             }
             formatted = sb.toString();
+            //formatWikipedia(formatted);
         }
         return formatted;
     }
