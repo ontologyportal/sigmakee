@@ -480,7 +480,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "            (=>\n" +
                 "              (and\n" +
                 "                (greaterThan ?NUMBER 0)\n" +
-                "                (instance ?CLASS SetOrClass))\n" +
+                "                (instance ?CLASS Class))\n" +
                 "              (=>\n" +
                 "                (and\n" +
                 "                  (lessThan ?NUMBER ?VALENCE)\n" +
@@ -501,7 +501,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(($greater(V__VALENCE ,0) & (s__instance(s__greaterThan__1Ra2Ra__m, s__Relation) & " +
                 "s__valence__2In(s__greaterThan__1Ra2Ra__m, V__VALENCE) & " +
                 "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : " +
-                "(($greater(V__NUMBER ,0) & s__instance(V__CLASS, s__SetOrClass)) => " +
+                "(($greater(V__NUMBER ,0) & s__instance(V__CLASS, s__Class)) => " +
                 "($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__greaterThan__1Ra2Ra__m, V__NUMBER, V__CLASS) & " +
                 "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
                 "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$rat] : ($greater(V__ROW1 ,V__ITEM)))))))) & " +
@@ -509,7 +509,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(s__instance(s__greaterThan__1Ra2Ra__m, s__Relation) & " +
                 "s__valence__2In(s__greaterThan__1Ra2Ra__m, V__VALENCE) & " +
                 "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : " +
-                "(($greater(V__NUMBER ,0) & s__instance(V__CLASS, s__SetOrClass)) => " +
+                "(($greater(V__NUMBER ,0) & s__instance(V__CLASS, s__Class)) => " +
                 "($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__greaterThan__1Ra2Ra__m, V__NUMBER, V__CLASS) & " +
                 "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
                 "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$rat] : ($greater(V__ROW1 ,V__ITEM))))))) => " +
@@ -752,7 +752,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     @Test
     public void testTypeConflict4() {
 
-        // tff(kb_SUMO_283,axiom,(! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : ((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__SetOrClass)) => (s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & s__instance(s__intelligenceQuotient__m, s__Predicate) & s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS)))).
+        // tff(kb_SUMO_283,axiom,(! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : ((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__Class)) => (s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & s__instance(s__intelligenceQuotient__m, s__Predicate) & s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS)))).
 
         SUMOtoTFAform.debug = true;
         SUMOtoTFAform stfa = new SUMOtoTFAform();

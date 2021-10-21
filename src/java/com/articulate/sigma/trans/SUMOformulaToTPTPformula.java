@@ -537,15 +537,15 @@ public class SUMOformulaToTPTPformula {
 
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): input: " + suoString);
         if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): input: " + suoString);
-        Formula tempF = new Formula();      // Special case to rename Foo for (instance Foo SetOrClass)
+        Formula tempF = new Formula();      // Special case to rename Foo for (instance Foo Class)
         tempF.read(suoString);              // so a symbol can't be both a class and an instance. However,
                                             // this may not be needed and we might just not allow a class 
                                             // to be an instance of itself
         if (tempF.getArgument(0).equals("instance") &&
-            tempF.getArgument(2).equals("SetOrClass")) {
+            tempF.getArgument(2).equals("Class")) {
             String arg1 = tempF.getStringArgument(1);
-            // suoString = "(instance " + arg1 + Formula.classSymbolSuffix + " SetOrClass)";
-            suoString = "(instance " + arg1 + " SetOrClass)";
+            // suoString = "(instance " + arg1 + Formula.classSymbolSuffix + " Class)";
+            suoString = "(instance " + arg1 + " Class)";
         }
         if (tempF.getArgument(0).equals("instance") &&
                 tempF.getArgument(2).equals(tempF.getArgument(1))) {

@@ -84,7 +84,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         System.out.println("\n======================== SUMOtoTFAKBTest.testMissingSort(): ");
         SUMOtoTFAform stfa = new SUMOtoTFAform();
         String f = "! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : " +
-                "((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__SetOrClass)) => " +
+                "((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__Class)) => " +
                 "(s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & " +
                 "s__instance(s__intelligenceQuotient__m, s__Predicate) & " +
                 "s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => " +

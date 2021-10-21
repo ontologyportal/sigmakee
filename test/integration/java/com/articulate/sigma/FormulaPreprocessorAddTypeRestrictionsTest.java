@@ -295,7 +295,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "    (instance ?NOTPARTPROB RealNumber)\n" +
                 "    (instance ?PARTPROB RealNumber)\n" +
                 "    (subclass ?PART Object)\n" +
-                "    (instance ?PART SetOrClass))\n" +
+                "    (instance ?PART Class))\n" +
                 "  (=>\n" +
                 "    (and\n" +
                 "      (typicalPart ?PART ?WHOLE)\n" +
@@ -424,7 +424,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "    (instance ?S Meat)\n" +
                 "    (subclass ?ANIMAL Animal)\n" +
                 "    (subclass ?C Meat)\n" +
-                "    (instance ?ANIMAL SetOrClass))\n" +
+                "    (instance ?ANIMAL Class))\n" +
                 "  (=>\n" +
                 "  (and\n" +
                 "    (instance ?S ?C)\n" +

@@ -56,6 +56,7 @@ public class FormulaUtil {
         sb.append(")");
         return sb.toString();
     }
+
     /** ***************************************************************
      */
     public static String formatCollection(Collection<Formula> c) {
@@ -64,6 +65,24 @@ public class FormulaUtil {
         for (Formula f : c)
             sb.append(f.toString() + "\n\n");
         return sb.toString();
+    }
+
+    /** ***************************************************************
+     * Test whether a forumula is suitable for theorem proving or if
+     * it's just a documentation statement
+     */
+    public static boolean isDoc(Formula f) {
+
+        if (f.isRule())
+            return false;
+        if (!f.isGround())
+            return false;
+        String pred = f.getStringArgument(0);
+        if (pred.equals("documentation") || pred.equals("format") ||
+            pred.equals("termFormat") || pred.equals("externalImage"))
+            return true;
+        else
+            return false;
     }
 
     /*******************************************************************************************

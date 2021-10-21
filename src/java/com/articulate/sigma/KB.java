@@ -23,7 +23,7 @@ being present in the ontology in order to function as intended.  They are:
   inverse
   Predicate
   Relation
-  SetOrClass
+  Class
   subclass
   subrelation
   termFormat
@@ -441,7 +441,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Returns the
-     * type (SUO-KIF SetOrClass name) for any argument in argPos position of an
+     * type (SUO-KIF Class name) for any argument in argPos position of an
      * assertion formed with the SUO-KIF Relation reln. If no argument type
      * value is directly stated for reln, this method tries to find a value
      * inherited from one of reln's super-relations.
@@ -449,7 +449,7 @@ public class KB implements Serializable {
      * @param reln   A String denoting a SUO-KIF Relation
      * @param argPos An int denoting an argument position, where 0 is the position
      *               of reln itself
-     * @return A String denoting a SUO-KIF SetOrClass, or null if no value can
+     * @return A String denoting a SUO-KIF Class, or null if no value can
      * be obtained
      */
     public String getArgType(String reln, int argPos) {
@@ -458,7 +458,7 @@ public class KB implements Serializable {
         String argType = FormulaPreprocessor.findType(argPos, reln, this);
         if (StringUtil.isNonEmptyString(argType)) {
             if (argType.endsWith("+"))
-                argType = "SetOrClass";
+                argType = "Class";
             className = argType;
         }
         return className;
@@ -466,7 +466,7 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Returns the
-     * type (SUO-KIF SetOrClass name) for any argument in argPos position of an
+     * type (SUO-KIF Class name) for any argument in argPos position of an
      * assertion formed with the SUO-KIF Relation reln. If no argument type
      * value is directly stated for reln, this method tries to find a value
      * inherited from one of reln's super-relations.
@@ -474,7 +474,7 @@ public class KB implements Serializable {
      * @param reln   A String denoting a SUO-KIF Relation
      * @param argPos An int denoting an argument position, where 0 is the position
      *               of reln itself
-     * @return A String denoting a SUO-KIF SetOrClass, or null if no value can
+     * @return A String denoting a SUO-KIF Class, or null if no value can
      * be obtained. A '+' is appended to the class name if the argument
      * is a subclass of the class, rather than an instance
      */
@@ -682,8 +682,8 @@ public class KB implements Serializable {
      * of c2, else returns false.  Note that classes are also subclasses of
      * themselves
      *
-     * @param c1 A String, the name of a SetOrClass.
-     * @param parent A String, the name of a SetOrClass.
+     * @param c1 A String, the name of a Class.
+     * @param parent A String, the name of a Class.
      * @return boolean
      */
     public boolean isSubclass(String c1, String parent) {

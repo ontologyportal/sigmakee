@@ -33,7 +33,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("SetOrClass", "Object+");
+        HashSet<String> set1 = Sets.newHashSet("Class", "Object+");
         expected.put("?Y", set1);
         expected.put("?X", Sets.newHashSet("Object+"));
 
@@ -47,7 +47,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?NOTPARTPROB", Sets.newHashSet("RealNumber"));
-        expected.put("?PART", Sets.newHashSet("SetOrClass", "Object+"));
+        expected.put("?PART", Sets.newHashSet("Class", "Object+"));
         expected.put("?PARTPROB", Sets.newHashSet("RealNumber"));
         expected.put("?X", Sets.newHashSet("Entity"));
         expected.put("?WHOLE", Sets.newHashSet("Object+"));
@@ -82,7 +82,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
         Formula expected = new Formula();
-        String expectedString = "(=> (and (instance ?PART SetOrClass) (subclass ?PART Object) (instance ?PARTPROB Entity) (instance ?X Object) (instance ?WHOLE SetOrClass) (subclass ?WHOLE Object) (instance ?Y Object)) " +
+        String expectedString = "(=> (and (instance ?PART Class) (subclass ?PART Object) (instance ?PARTPROB Entity) (instance ?X Object) (instance ?WHOLE Class) (subclass ?WHOLE Object) (instance ?Y Object)) " +
                 "(=> (and (typicalPart ?PART ?WHOLE) (instance ?X ?PART) " +
                 "(equal ?PARTPROB (ProbabilityFn (exists (?Y) (and (instance ?Y ?WHOLE) (part ?X ?Y)))))" +
                 "(equal (?NOTPARTPROB (ProbabilityFn (not (exists (?Z) (and (instance ?Z ?WHOLE) (part ?X ?Z))))))) " +

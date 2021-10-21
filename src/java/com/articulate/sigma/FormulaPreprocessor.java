@@ -15,7 +15,7 @@
  VariableArityRelation
  subclass
  instance
- SetOrClass
+ Class
 
  */
 package com.articulate.sigma;
@@ -963,7 +963,7 @@ public class FormulaPreprocessor {
     }
 
     /** ***************************************************************
-     * Adds statements of the form (instance <Entity> <SetOrClass>) if
+     * Adds statements of the form (instance <Entity> <Class>) if
      * they are not already in the KB.
      *
      * @param kb The KB to be used for processing the input Formulae
@@ -974,7 +974,7 @@ public class FormulaPreprocessor {
      *
      * @param variableReplacements A List of Formulae in which
      * predicate variables and row variables have already been
-     * replaced, and to which (instance <Entity> <SetOrClass>)
+     * replaced, and to which (instance <Entity> <Class>)
      * Formulae might be added
      *
      * @return an ArrayList of Formula(s), which could be larger than
@@ -994,7 +994,7 @@ public class FormulaPreprocessor {
                 for (Iterator<Formula> it = variableReplacements.iterator(); it.hasNext();) {
                     f = it.next();
                     formulae.add(f);
-                    if (f.listP() && !f.empty()) {  // Make sure every SetOrClass is stated to be such
+                    if (f.listP() && !f.empty()) {  // Make sure every Class is stated to be such
                         arg0 = f.car();
                         int start = -1;
                         if (arg0.equals("subclass")) start = 0;
@@ -1009,12 +1009,12 @@ public class FormulaPreprocessor {
                             String arg = null;
                             for (int i = start; i < argslen; i++) {
                                 arg = args.get(i);
-                                if (!Formula.isVariable(arg) && !arg.equals("SetOrClass") && Formula.atom(arg)) {
+                                if (!Formula.isVariable(arg) && !arg.equals("Class") && Formula.atom(arg)) {
                                     StringBuilder sb = new StringBuilder();
                                     sb.setLength(0);
                                     sb.append("(instance ");
                                     sb.append(arg);
-                                    sb.append(" SetOrClass)");
+                                    sb.append(" Class)");
                                     ioF = new Formula();
                                     ioStr = sb.toString().intern();
                                     ioF.read(ioStr);

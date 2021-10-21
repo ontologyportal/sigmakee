@@ -164,7 +164,7 @@ public class BasicXMLparser {
      */
     public static void main(String[] args) {
 
-        //String xml = "<queryResponse>\n<answer result='yes' number='1'>\n<bindingSet type='definite'>\n<binding>\n<var name='?X' value='<=>'/>\n</binding>\n</bindingSet>\n<proof>\n<proofStep>\n<premises>\n</premises>\n<conclusion>\n<formula number='1531'>\n(<=> (holds subclass ?X108 ?X14) (and (holds instance ?X108 SetOrClass) (holds instance ?X14 SetOrClass) (forall ( ?X15) (=> (holds instance ?X15 ?X108) (holds instance ?X15 ?X14)))))\n</formula>\n</conclusion>\n</proofStep>\n</proof>\n</answer>\n</queryResponse>\n";
+        //String xml = "<queryResponse>\n<answer result='yes' number='1'>\n<bindingSet type='definite'>\n<binding>\n<var name='?X' value='<=>'/>\n</binding>\n</bindingSet>\n<proof>\n<proofStep>\n<premises>\n</premises>\n<conclusion>\n<formula number='1531'>\n(<=> (holds subclass ?X108 ?X14) (and (holds instance ?X108 Class) (holds instance ?X14 Class) (forall ( ?X15) (=> (holds instance ?X15 ?X108) (holds instance ?X15 ?X14)))))\n</formula>\n</conclusion>\n</proofStep>\n</proof>\n</answer>\n</queryResponse>\n";
         // String xml = "<queryResponse>\n<answer result='yes' number='1'>\n</answer>\n</queryResponse>\n";
         String xml = "<preference key='showcached' value='yes'/>\n" +
             "<preference key='eprover' value='/home/user/Programs/E/bin/eprover'/>\n" +

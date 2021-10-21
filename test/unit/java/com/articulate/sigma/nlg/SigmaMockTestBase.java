@@ -72,7 +72,7 @@ public class SigmaMockTestBase {
     private static final ArrayList<String> INSTANCE_SIGNATURES = Lists.newArrayList(
             "",
             "Entity",
-            "SetOrClass");
+            "Class");
 
     private static final ArrayList<String> AGENT_SIGNATURES = Lists.newArrayList(
             "",

@@ -521,6 +521,7 @@ public class KBcache implements Serializable {
         explicitDisjointFormulae.addAll(kb.ask("arg", 0, "partition"));
         explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjoint"));
         explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjointDecomposition"));
+        System.out.println("buildExplicitDisjointMap(): all explicit: " + explicitDisjointFormulae);
         for (Formula f : explicitDisjointFormulae) {
             if (debug) System.out.println("buildExplicitDisjointMap(): check formula: " + f.getFormula());
             ArrayList<String> arguments = null;
@@ -528,6 +529,7 @@ public class KBcache implements Serializable {
                 arguments = f.argumentsToArrayListString(1);
             else
                 arguments = f.argumentsToArrayListString(2);
+            System.out.println("buildExplicitDisjointMap(): arguments: " + arguments);
             for (String key : arguments) {
                 for (String val : arguments) {
                     if (key.equals(val))
@@ -536,11 +538,13 @@ public class KBcache implements Serializable {
                         HashSet<String> vals = new HashSet<>();
                         vals.add(val);
                         explicitDisjoint.put(key, vals);
+                        System.out.println("buildExplicitDisjointMap(): " + key + ", " + vals);
                     }
                     else {
                         HashSet<String> vals = explicitDisjoint.get(key);
                         vals.add(val);
                         explicitDisjoint.put(key, vals);
+                        System.out.println("buildExplicitDisjointMap(): " + key + ", " + vals);
                     }
                 }
             }
@@ -566,8 +570,10 @@ public class KBcache implements Serializable {
                 children2.add(p2);
                 for (String c1 : children1) {
                     for (String c2 : children2) {
-                        if (!c1.equals(c2))
+                        if (!c1.equals(c2)) {
                             disjoint.add(c1 + "\t" + c2);
+                            System.out.println("buildDisjointMap(): " + c1 + "\t" + c2);
+                        }
                     }
                 }
             }
@@ -587,7 +593,7 @@ public class KBcache implements Serializable {
             String c1 = typeList.get(i);
             for (int j = i+1; j < size; j++) {
                 String c2 = typeList.get(j);
-                if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1))
+                if (checkDisjoint(kb,c1,c2))
                     return true;
             }
         }
@@ -600,8 +606,18 @@ public class KBcache implements Serializable {
      */
     public boolean checkDisjoint(KB kb, String c1, String c2) {
 
-        if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1))
+        if (c1.endsWith("+") && !c2.equals("Class")) {
+            System.out.println("checkDisjoint(): mixing class and instance: " + c1 + ", " + c2);
             return true;
+        }
+        if (c2.endsWith("+") && !c1.equals("Class")) {
+            System.out.println("checkDisjoint(): mixing class and instance: " + c1 + ", " + c2);
+            return true;
+        }
+        if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1)) {
+            System.out.println("checkDisjoint(): disjoint terms: " + c1 + ", " + c2);
+            return true;
+        }
         else
             return false;
         /**
@@ -1602,7 +1618,7 @@ public class KBcache implements Serializable {
                 for (int i = 0; i < sig.size(); i++) {
                     String signatureElement = sig.get(i);
                     //System.out.println("KBcache.buildInstTransRels(): " + signatureElement);
-                    if (signatureElement.endsWith("+") || signatureElement.equals("SetOrClass")) {
+                    if (signatureElement.endsWith("+") || signatureElement.equals("Class")) {
                         //System.out.println("KBcache.buildInstTransRels(): " + rel + " is between classes");
                         instrel = false;
                         break;
@@ -1656,6 +1672,7 @@ public class KBcache implements Serializable {
         buildExplicitDisjointMap(); // find relations under partition definition
         System.out.println("KBcache.buildCaches(): buildExplicitDisjointMap seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
+        buildExplicitDisjointMap();
         buildDisjointMap();
         System.out.println("KBcache.buildCaches(): buildDisjointMap seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();

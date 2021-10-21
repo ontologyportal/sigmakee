@@ -291,7 +291,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(($greater(V__VALENCE ,0) & (s__instance(s__greaterThan__m, s__Relation) & " +
                 "s__valence__2In(s__greaterThan__m, V__VALENCE) & " +
                 "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($greater(V__NUMBER ,0) & " +
-                "s__instance(V__CLASS, s__SetOrClass)) => ($less(V__NUMBER ,V__VALENCE) & " +
+                "s__instance(V__CLASS, s__Class)) => ($less(V__NUMBER ,V__VALENCE) & " +
                 "s__domain__2In(s__greaterThan__m, V__NUMBER, V__CLASS) & " +
                 "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
                 "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$i] : " +
@@ -300,7 +300,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(s__instance(s__greaterThan__m, s__Relation) & " +
                 "s__valence__2In(s__greaterThan__m, V__VALENCE) & " +
                 "( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($greater(V__NUMBER ,0) & " +
-                "s__instance(V__CLASS, s__SetOrClass)) => ($less(V__NUMBER ,V__VALENCE) & " +
+                "s__instance(V__CLASS, s__Class)) => ($less(V__NUMBER ,V__VALENCE) & " +
                 "s__domain__2In(s__greaterThan__m, V__NUMBER, V__CLASS) & " +
                 "equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn_1(V__ROW1), V__NUMBER))) => " +
                 "s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$i] : " +

@@ -26,6 +26,7 @@ import com.articulate.sigma.dataProc.Infrastructure;
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
+import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
 import org.json.simple.JSONAware;
@@ -75,7 +76,14 @@ public class KButilities {
             return false;
         }
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
-        System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
+        //System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
+        HashMap<String, HashSet<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
+        //System.out.println("isValidFormula() explicit: " + explicit);
+        MapUtils.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+        if (SUMOtoTFAform.inconsistentVarTypes()) {
+            System.out.println("inconsistent types in " + SUMOtoTFAform.varmap);
+            return false;
+        }
         if (SUMOtoTFAform.typeConflict(f)) {
             System.out.println("Type conflict");
             return false;

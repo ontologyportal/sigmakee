@@ -1422,14 +1422,14 @@ public class SUMOtoTFAform {
                 for (String c2 : types) {
                     if (!c1.equals(c2)) {
                         if (kb.kbCache.checkDisjoint(kb, c1, c2)) {
-                            String msg = "SUMOtoTFAform.process(): rejected inconsistent variables types: " +
+                            String msg = "SUMOtoTFAform.inconsistentVarTypes(): rejected inconsistent variable types: " +
                                     c1 + ", " + c2 + " for var " + s;
                             System.out.println(msg);
                             errors.add(msg);
                             return true;
                         }
-                        //System.out.println("SUMOtoTFAform.process(): " +
-                        //        c1 + ", " + c2 + " ok for var " + s);
+                        System.out.println("SUMOtoTFAform.inconsistentVarTypes(): " +
+                                c1 + ", " + c2 + " ok for var " + s);
                     }
                 }
             }
@@ -1452,8 +1452,10 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.typeConflict(): formula: " + f);
         if (debug) System.out.println("SUMOtoTFAform.typeConflict(): sig: " + sig);
         if (debug) System.out.println("SUMOtoTFAform.typeConflict(): rangeType: " + rangeType);
-        if (kb.kbCache.checkDisjoint(kb,type,rangeType))
+        if (kb.kbCache.checkDisjoint(kb,type,rangeType)) {
+            if (debug) System.out.println("SUMOtoTFAform.typeConflict(): rangeType: " + rangeType);
             return true;
+        }
         return false;
     }
 

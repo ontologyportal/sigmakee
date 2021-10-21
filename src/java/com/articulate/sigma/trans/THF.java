@@ -618,7 +618,7 @@ public class THF {
         convertTypeInfo.put("PhysicalQuantity",indTp);
         /* sets (if we enable this, then we run into problems) */ 
         //String setTpPattern = "(" + unknownTp + typeDelimiter + boolTp + ")";
-        //convertTypeInfo.put("SetOrClass", setTpPattern);
+        //convertTypeInfo.put("Class", setTpPattern);
         //convertTypeInfo.put("Collection", setTpPattern);
         //convertTypeInfo.put("FamilyGroup", setTpPattern);
         //convertTypeInfo.put("TimeInterval", setTpPattern);
