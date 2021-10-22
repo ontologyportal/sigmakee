@@ -260,7 +260,7 @@ Follow the steps in section "Account Management" below to set up accounts
 To test run
 
   java  -Xmx7g -classpath /home/theuser/workspace/sigmakee/build/classes:/home/theuser/workspace/sigmakee/build/lib/*
-    com.articulate.sigma.KB
+    com.articulate.sigma.KB -t
 
 
 Start Tomcat with
