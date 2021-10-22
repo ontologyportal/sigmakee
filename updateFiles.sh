@@ -7,4 +7,5 @@ cp -R development $SIGMA_HOME/KBs
 rm $CATALINA_HOME/logs/*.*
 rm $CATALINA_HOME/webapps/sigma/graph/*.*
 rm $SIGMA_HOME/KBs/*.ser
+rm $SIGMA_HOME/KBs/*.tptp
 rm $SIGMA_HOME/KBs/WordNetMappings/*.ser
