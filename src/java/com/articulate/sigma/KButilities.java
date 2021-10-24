@@ -39,6 +39,12 @@ public class KButilities {
 
     public static boolean debug = false;
 
+    /** Errors found during processing formulas */
+    public static TreeSet<String> errors = new TreeSet<String>();
+
+    /** Warnings found during processing formulas */
+    public static TreeSet<String> warnings = new TreeSet<String>();
+
     /** *************************************************************
      */
     public static boolean isRelation(KB kb, String term) {
@@ -60,8 +66,15 @@ public class KButilities {
 
     /** *************************************************************
      */
+    public static void clearErrors() {
+        errors = new TreeSet<>();
+    }
+
+    /** *************************************************************
+     */
     public static boolean isValidFormula(KB kb, String form) {
 
+        SUMOtoTFAform.initOnce();
         KIF kif = new KIF();
         String result = kif.parseStatement(form);
         if (!StringUtil.emptyString(result)) {
@@ -71,8 +84,10 @@ public class KButilities {
         Formula f = new Formula(form);
         String term = PredVarInst.hasCorrectArity(f, kb);
         if (!StringUtil.emptyString(term)) {
-            System.out.println("Formula rejected due to arity error of predicate " + term
-                    + " in formula: \n" + f.getFormula());
+            String error = "Formula rejected due to arity error of predicate " + term
+                    + " in formula: \n" + f.getFormula();
+            errors.add(error);
+            System.out.println(error);
             return false;
         }
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
@@ -81,11 +96,15 @@ public class KButilities {
         //System.out.println("isValidFormula() explicit: " + explicit);
         MapUtils.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         if (SUMOtoTFAform.inconsistentVarTypes()) {
-            System.out.println("inconsistent types in " + SUMOtoTFAform.varmap);
+            String error = "inconsistent types in " + SUMOtoTFAform.varmap;
+            System.out.println(error);
+            errors.add(error);
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
-            System.out.println("Type conflict");
+            String error = "Type conflict";
+            System.out.println(error);
+            errors.add(error);
             return false;
         }
         return true;
