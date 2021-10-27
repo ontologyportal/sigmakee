@@ -101,9 +101,7 @@ public class WNdiagnostics {
 
         ArrayList<String> result = new ArrayList<String>();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        Iterator<String> it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
+        for (String term : kb.terms) {
             if (!hasWordNetSynsetID(term) && !kb.isFunction(term) &&
                     Character.isUpperCase(term.charAt(0)))
                 result.add(term);            
