@@ -112,6 +112,9 @@ public class KB implements Serializable {
     /* A synchronized SortedSet of Strings, which are all the terms in the KB.     */
     public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
 
+    // A Map from all uppercase terms to their possibly mixed case original versions
+    public HashMap<String,String> capterms = new HashMap<>();
+
     /** The String constant that is the suffix for files of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
 
@@ -201,26 +204,20 @@ public class KB implements Serializable {
      * @throws IOException
      */
     public KB(KB kbIn) throws IOException {
+
         this.isVisible = kbIn.isVisible;
-
-        if (kbIn.eprover != null) {
+        if (kbIn.eprover != null)
             this.eprover = kbIn.eprover;
-        }
-
         this.name = kbIn.name;
-
-        if (kbIn.constituents != null) {
+        if (kbIn.constituents != null)
             this.constituents = Lists.newArrayList(kbIn.constituents);
-        }
-
         this.language = kbIn.language;
-
         this.kbDir = kbIn.kbDir;
 
-        if (kbIn.terms != null) {
+        if (kbIn.terms != null)
             this.terms = Collections.synchronizedSortedSet(new TreeSet<String>(kbIn.terms));
-        }
-
+        if (kbIn.capterms != null)
+            this.capterms.putAll(kbIn.capterms);
         if (kbIn.formulaMap != null) {
             for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet()) {
                 String key = pair.getKey();
@@ -237,28 +234,22 @@ public class KB implements Serializable {
             }
         }
 
-        if (kbIn.formatMap != null) {
+        if (kbIn.formatMap != null)
             this.formatMap = Maps.newHashMap(kbIn.formatMap);
-        }
-
-        if (kbIn.termFormatMap != null) {
+        if (kbIn.termFormatMap != null)
             this.termFormatMap = Maps.newHashMap(kbIn.termFormatMap);
-        }
-
-        if (kbIn.errors != null) {
+        if (kbIn.errors != null)
             this.errors = Sets.newTreeSet(kbIn.errors);
-        }
-
         this.modifiedContents = kbIn.modifiedContents;
-
         this.kbCache = new KBcache(kbIn.kbCache, this);
 
         // Must be done after kb manager set.
-        if (kbIn.celt != null) {
+        if (kbIn.celt != null)
             this.celt = new CELT();
-        }
     }
 
+    /***************************************************************
+     */
     public boolean isVisible() {
         return isVisible;
     }
@@ -362,6 +353,9 @@ public class KB implements Serializable {
 
         getTerms().clear();
         this.terms = Collections.synchronizedSortedSet(newTerms);
+        capterms.clear();
+        for (String t : terms)
+            capterms.put(t.toUpperCase(),t);
         return;
     }
 
@@ -1415,6 +1409,8 @@ public class KB implements Serializable {
         ArrayList<Formula> formulasPresent = new ArrayList<Formula>();
         // Add all the terms from the new formula into the KB's current list
         getTerms().addAll(kif.terms);
+        for (String t : kif.terms)
+            capterms.put(t.toUpperCase(),t);
         Set<String> keys = kif.formulas.keySet();
         Iterator<String> it = keys.iterator();
         while (it.hasNext()) {
@@ -1515,8 +1511,7 @@ public class KB implements Serializable {
     }
 
     /* *************************************************************
-    Writes all
-     * the terms in the knowledge base to a file
+     * Writes all the terms in the knowledge base to a file
      */
     public void writeTerms() throws IOException {
 
@@ -2687,6 +2682,8 @@ public class KB implements Serializable {
                 formulaMap.put(internedFormula, f);
         }
         this.getTerms().addAll(file.terms);
+        for (String t : file.terms)
+            capterms.put(t.toUpperCase(),t);
         if (!constituents.contains(file.filename) && !file.filename.endsWith(_cacheFileSuffix)) // don't add auto-generated cache file
             constituents.add(file.filename);
     }
@@ -2727,6 +2724,7 @@ public class KB implements Serializable {
             formulas.clear();
             formulaMap.clear();
             terms.clear();
+            capterms.clear();
             clearFormatMaps();
             errors.clear();
             Iterator<String> nci = newConstituents.iterator();
