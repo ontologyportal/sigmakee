@@ -395,6 +395,7 @@ public class KBcache implements Serializable {
         if (kb.terms.contains(newTerm))
             System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
         kb.terms.add(newTerm);
+        kb.capterms.put(newTerm.toUpperCase(),newTerm);
         HashSet<String> iset = instanceOf.get(term);
         instanceOf.put(newTerm,iset);
         //if (newTerm.endsWith("Fn"))
