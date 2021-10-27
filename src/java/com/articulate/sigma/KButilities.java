@@ -751,9 +751,7 @@ public class KButilities {
     public static boolean instanceOfInstanceP(KB kb) {
 
         boolean result = false;
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
+        for (String term : kb.terms) {
             ArrayList<Formula> al = kb.askWithRestriction(0,"instance",1,term);
             for (int i = 0; i < al.size(); i++) {
                 Formula f = (Formula) al.get(i);
@@ -863,9 +861,7 @@ public class KButilities {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
-            Iterator<String> it = kb.terms.iterator();
-            while (it.hasNext()) {
-                String term = it.next();
+            for (String term : kb.terms) {
                 if (Character.isLowerCase(term.charAt(0)) && kb.kbCache.valences.get(term) <= 2) {
                     /*
                     ArrayList<Formula> forms = kb.askWithRestriction(0,"domain",1,term);
@@ -903,9 +899,7 @@ public class KButilities {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("INFO in KB.generateRelationList(): printing predicates");
-            Iterator<String> it = kb.terms.iterator();
-            while (it.hasNext()) {
-                String term = it.next();
+            for (String term : kb.terms) {
                 if (Character.isLowerCase(term.charAt(0)))
                     System.out.println(term);
             }
