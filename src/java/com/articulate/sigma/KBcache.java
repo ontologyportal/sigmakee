@@ -1673,8 +1673,10 @@ public class KBcache implements Serializable {
         buildExplicitDisjointMap(); // find relations under partition definition
         System.out.println("KBcache.buildCaches(): buildExplicitDisjointMap seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
-        buildExplicitDisjointMap();
-        buildDisjointMap();
+        if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            buildExplicitDisjointMap();
+            buildDisjointMap();
+        }
         System.out.println("KBcache.buildCaches(): buildDisjointMap seconds: " + (System.currentTimeMillis() - millis) / 1000);
         millis = System.currentTimeMillis();
         buildFunctionsSet();
