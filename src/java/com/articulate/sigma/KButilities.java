@@ -72,6 +72,31 @@ public class KButilities {
 
     /** *************************************************************
      */
+    public static boolean hasCorrectTypes(KB kb, Formula f) {
+
+        SUMOtoTFAform.initOnce();
+        SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        //System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
+        HashMap<String, HashSet<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
+        //System.out.println("isValidFormula() explicit: " + explicit);
+        MapUtils.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+        if (SUMOtoTFAform.inconsistentVarTypes()) {
+            String error = "inconsistent types in " + SUMOtoTFAform.varmap;
+            System.out.println(error);
+            errors.add(error);
+            return false;
+        }
+        if (SUMOtoTFAform.typeConflict(f)) {
+            String error = "Type conflict";
+            System.out.println(error);
+            errors.add(error);
+            return false;
+        }
+        return true;
+    }
+
+    /** *************************************************************
+     */
     public static boolean isValidFormula(KB kb, String form) {
 
         SUMOtoTFAform.initOnce();
@@ -90,23 +115,8 @@ public class KButilities {
             System.out.println(error);
             return false;
         }
-        SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
-        //System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
-        HashMap<String, HashSet<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
-        //System.out.println("isValidFormula() explicit: " + explicit);
-        MapUtils.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
-        if (SUMOtoTFAform.inconsistentVarTypes()) {
-            String error = "inconsistent types in " + SUMOtoTFAform.varmap;
-            System.out.println(error);
-            errors.add(error);
+        if (!hasCorrectTypes(kb,f))
             return false;
-        }
-        if (SUMOtoTFAform.typeConflict(f)) {
-            String error = "Type conflict";
-            System.out.println(error);
-            errors.add(error);
-            return false;
-        }
         return true;
     }
 
