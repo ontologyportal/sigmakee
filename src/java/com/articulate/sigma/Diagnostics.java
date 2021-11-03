@@ -370,6 +370,46 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * @return a list of variables only in the consequent that are
+     * unquantified
+     */
+    public static HashSet<String> unquantInConsequent(Formula f) {
+
+        HashSet<String> result = new HashSet<String>();
+        if (!f.isRule())
+            return result;
+        Formula ante = new Formula(FormulaUtil.antecedent(f));
+        Formula conseq = new Formula(FormulaUtil.consequent(f));
+
+        Set<String> anteVars = ante.collectUnquantifiedVariables();
+        Set<String> consVars = conseq.collectUnquantifiedVariables();
+        if (consVars.isEmpty())
+            return result;
+        consVars.removeAll(anteVars);
+        result.addAll(consVars);
+        return result;
+    }
+
+    /** *****************************************************************
+     */
+    public static ArrayList<Formula> unquantsInConseq(KB kb) {
+
+        ArrayList<Formula> result = new ArrayList<Formula>();
+        Iterator<Formula> it = kb.formulaMap.values().iterator();
+        while (it.hasNext()) {
+            Formula form = (Formula) it.next();
+            if ((form.getFormula().indexOf("forall") != -1)
+                    || (form.getFormula().indexOf("exists") != -1)) {
+                if (!unquantInConsequent(form).isEmpty())
+                    result.add(form);
+            }
+            if (resultLimit > 0 && result.size() > resultLimit)
+                return result;
+        }
+        return result;
+    }
+
+    /** *****************************************************************
      * @return true if a quantifiers in a quantifier list is not found
      * in the body of the statement.
      */
