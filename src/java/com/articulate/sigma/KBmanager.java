@@ -58,7 +58,7 @@ public class KBmanager implements Serializable {
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
                     "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire",
                     "reportDup", "reportFnError", "verbnet", "jedit", "editdir", "termFormats",
-                    "loadLexicons");
+                    "loadLexicons", "cacheDisjoint");
 
     public static final List<String> fileKeys =
             Arrays.asList("testOutputDir", "eprover", "inferenceTestDir", "baseDir",
