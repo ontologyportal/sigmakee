@@ -52,6 +52,20 @@ if (!role.equals("admin") && !role.equals("user")) {
   out.println("<br>" + HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
   out.println(HTMLformatter.termList(disjoint,kbHref));
 
+  out.println("<br>" + HTMLformatter.htmlDivider("Error: Formulae with type conflicts"));
+  KButilities.clearErrors();
+  kb.kbCache.errors.clear();
+  SUMOtoTFAform.errors.clear();
+  for (Formula f : kb.formulaMap.values()) {
+      if (!KButilities.hasCorrectTypes(kb,f)) {
+	      out.println(f.htmlFormat(kbHref) + "<br>");
+	      out.println(KButilities.errors + "<P>");
+	  }
+	  KButilities.clearErrors();
+      kb.kbCache.errors.clear();
+      SUMOtoTFAform.errors.clear();
+  }
+
   // relations without format
   ArrayList<String> termsWithoutFormat = Diagnostics.relationsWithoutFormat(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Relations without format"));
@@ -87,21 +101,6 @@ if (!role.equals("admin") && !role.equals("user")) {
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with unquantified variable appearing only in consequent"));
   for (Formula f : noquantconseq)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
-
-  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with type conflicts"));
-  KButilities.clearErrors();
-  kb.kbCache.errors.clear();
-  SUMOtoTFAform.errors.clear();
-  for (Formula f : kb.formulaMap.values()) {
-      if (!KButilities.hasCorrectTypes(kb,f)) {
-	      out.println(f.htmlFormat(kbHref) + "<br>");
-	      out.println(KButilities.errors + "<P>");
-	  }
-	  KButilities.clearErrors();
-      kb.kbCache.errors.clear();
-      SUMOtoTFAform.errors.clear();
-  }
-
 
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Files with mutual dependencies"));
   out.println(Diagnostics.printTermDependency(kb,kbHref));
