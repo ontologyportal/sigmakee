@@ -90,12 +90,16 @@ if (!role.equals("admin") && !role.equals("user")) {
 
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with type conflicts"));
   KButilities.clearErrors();
+  kb.kbCache.errors.clear();
+  SUMOtoTFAform.errors.clear();
   for (Formula f : kb.formulaMap.values()) {
       if (!KButilities.hasCorrectTypes(kb,f)) {
 	      out.println(f.htmlFormat(kbHref) + "<br>");
 	      out.println(KButilities.errors + "<P>");
-	      KButilities.clearErrors();
 	  }
+	  KButilities.clearErrors();
+      kb.kbCache.errors.clear();
+      SUMOtoTFAform.errors.clear();
   }
 
 

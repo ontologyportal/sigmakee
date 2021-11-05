@@ -372,6 +372,9 @@ public class Diagnostics {
     /** *****************************************************************
      * @return a list of variables only in the consequent that are
      * unquantified
+     * TODO: if there's an implication in the consequent, test if
+     * the interior consequent has a variable not found in the interior
+     * antecedent
      */
     public static HashSet<String> unquantInConsequent(Formula f) {
 

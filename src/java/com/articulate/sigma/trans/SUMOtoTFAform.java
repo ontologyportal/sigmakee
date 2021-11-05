@@ -2,8 +2,8 @@ package com.articulate.sigma.trans;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
-// Copyright 2019 Infosys
-// adam.pease@infosys.com
+// Copyright 2019-2020 Infosys, 2020- Articulate Software
+// apease@articulatesoftware.com
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
@@ -1449,11 +1449,12 @@ public class SUMOtoTFAform {
             return false;
         ArrayList<String> sig = kb.kbCache.getSignature(f.car());
         String rangeType = sig.get(0);
-        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): formula: " + f);
-        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): sig: " + sig);
-        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): rangeType: " + rangeType);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(1): formula: " + f);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(1): sig: " + sig);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(1): rangeType: " + rangeType);
         if (kb.kbCache.checkDisjoint(kb,type,rangeType)) {
-            if (debug) System.out.println("SUMOtoTFAform.typeConflict(): rangeType: " + rangeType);
+            if (debug) System.out.println("SUMOtoTFAform.typeConflict(2): found type conflict between " + type + " and " + rangeType);
+            errors.addAll(kb.kbCache.errors);
             return true;
         }
         return false;
@@ -1467,9 +1468,13 @@ public class SUMOtoTFAform {
             System.out.println("Error in SUMOtoTFAform.typeConflict(types,type): null types");
             return false;
         }
-        for (String s : types)
-            if (kb.kbCache.checkDisjoint(kb,s,type))
+        for (String s : types) {
+            if (kb.kbCache.checkDisjoint(kb, s, type)) {
+                if (debug) System.out.println("SUMOtoTFAform.typeConflict(2): found type conflict between " + s + " and " + type);
+                errors.addAll(kb.kbCache.errors);
                 return true;
+            }
+        }
         return false;
     }
 
@@ -1479,13 +1484,13 @@ public class SUMOtoTFAform {
      */
     public static boolean typeConflict(Formula f) {
 
-        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): formula: " + f);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): formula: " + f);
         if (f == null)
             return false;
         if (f.atom())
             return false;
         String op = f.car();
-        if (debug) System.out.println("SUMOtoTFAform.typeConflict(): op: " + op);
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): op: " + op);
         if (Formula.isQuantifier(op)) {
             ArrayList<String> args = f.complexArgumentsToArrayListString(1);
             for (String s : args) {
@@ -1497,31 +1502,37 @@ public class SUMOtoTFAform {
         else {
             ArrayList<String> sig = kb.kbCache.getSignature(op);
             ArrayList<String> args = f.complexArgumentsToArrayListString(0);
-            if (debug) System.out.println("SUMOtoTFAform.typeConflict(): args: " + args);
-            if (debug) System.out.println("SUMOtoTFAform.typeConflict(): sig: " + sig);
+            if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): args: " + args);
+            if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): sig: " + sig);
             for (int i = 1; i < args.size(); i++) {
                 String s = args.get(i);
                 String sigType = "";
                 if (sig != null && i < sig.size())
                     sigType = sig.get(i);
-                if (debug) System.out.println("SUMOtoTFAform.typeConflict(): check arg: " + s + " with type: " + sigType);
                 Formula farg = new Formula(s);
+                if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): check arg: " + s + " with type: " +
+                        sigType + " against " + farg);
                 if (farg.listP() && kb.isFunctional(farg)) {
-                    if (typeConflict(farg, sigType))
+                    if (typeConflict(farg, sigType)) {
+                        errors.add("error between " + farg + " and argument " + i + " of " + op);
                         return true;
+                    }
                     if (typeConflict(farg))
                         return true;
                 }
                 else if (farg.listP() && typeConflict(farg))
                     return true;
                 else if (farg.isVariable()) {
-                    if (debug) System.out.println("SUMOtoTFAform.typeConflict(): check types of: " + farg);
+                    if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): check types of: " + farg);
                     HashSet<String> vars = varmap.get(farg.getFormula());
-                    if (typeConflict(vars, sigType))
+                    if (typeConflict(vars, sigType)) {
+                        errors.add("error between " + farg + " and argument " + i + " of " + op);
                         return true;
+                    }
                 }
             }
         }
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): no conflict in : " + f);
         return false;
     }
 

@@ -81,15 +81,15 @@ public class KButilities {
         //System.out.println("isValidFormula() explicit: " + explicit);
         MapUtils.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         if (SUMOtoTFAform.inconsistentVarTypes()) {
-            String error = "inconsistent types in " + SUMOtoTFAform.varmap;
-            System.out.println(error);
-            errors.add(error);
+            //String error = "inconsistent types in " + SUMOtoTFAform.varmap;
+            System.out.println(SUMOtoTFAform.errors);
+            errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
-            String error = "Type conflict";
-            System.out.println(error);
-            errors.add(error);
+            //String error = "Type conflict: " + SUMOtoTFAform.errors;
+            System.out.println(SUMOtoTFAform.errors);
+            errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
         return true;
