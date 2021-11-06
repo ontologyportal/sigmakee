@@ -1514,7 +1514,7 @@ public class SUMOtoTFAform {
                         sigType + " against " + farg);
                 if (farg.listP() && kb.isFunctional(farg)) {
                     if (typeConflict(farg, sigType)) {
-                        errors.add("error between " + farg + " and argument " + i + " of " + op);
+                        errors.add("error between " + farg + " and argument " + i + " of " + op + " with type " + sigType);
                         return true;
                     }
                     if (typeConflict(farg))
@@ -1526,7 +1526,7 @@ public class SUMOtoTFAform {
                     if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): check types of: " + farg);
                     HashSet<String> vars = varmap.get(farg.getFormula());
                     if (typeConflict(vars, sigType)) {
-                        errors.add("error between " + farg + " and argument " + i + " of " + op);
+                        errors.add("error between " + farg + " and argument " + i + " of " + op + " with type " + sigType);
                         return true;
                     }
                 }
