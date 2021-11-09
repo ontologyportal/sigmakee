@@ -395,8 +395,10 @@ public class KBcache implements Serializable {
         //if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
         //    sep = "_";
         String newTerm = term + sep + suffix;
-        if (kb.terms.contains(newTerm))
+        if (kb.terms.contains(newTerm)) {
             System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
+            System.out.println("Warning in KBcache.extendInstance(): sig " + signatures.get(newTerm));
+        }
         kb.terms.add(newTerm);
         kb.capterms.put(newTerm.toUpperCase(),newTerm);
         HashSet<String> iset = instanceOf.get(term);
@@ -435,6 +437,11 @@ public class KBcache implements Serializable {
          **/
         ArrayList<String> sig = signatures.get(term);
 
+        if (sig == null && term != null && term.equals("equal")) {
+            sig = new ArrayList<>();
+            sig.add("Entity");
+            sig.add("Entity");
+        }
         if (sig == null)
             System.out.println("Error in KBcache.extendInstance(): no sig for term " + term);
         ArrayList<String> newsig = SUMOtoTFAform.relationExtractSig(newTerm);
@@ -449,6 +456,8 @@ public class KBcache implements Serializable {
 
         // The number of arguments to each relation.  Variable arity is -1
         valences.put(newTerm,valences.get(term));
+        if (term.endsWith("Fn"))
+            functions.add(newTerm);
     }
 
     /** ***************************************************************
@@ -1721,6 +1730,7 @@ public class KBcache implements Serializable {
      */
     public void copyNewPredFromVariableArity(String pred, String oldPred, int arity) {
 
+        if (debug) System.out.println("copyNewPredFromVariableArity(): pred,oldPred: " + pred + ", " + oldPred);
         ArrayList<String> oldSig = signatures.get(oldPred);
         ArrayList<String> newSig = new ArrayList(oldSig);
         if (signatures.keySet().contains(oldPred))
@@ -1732,6 +1742,8 @@ public class KBcache implements Serializable {
         if (instanceOf.keySet().contains(oldPred))
             instanceOf.put(pred, instanceOf.get(oldPred));
         valences.put(pred,arity);
+        if (kb.isFunction(oldPred))
+            kb.kbCache.functions.add(pred);
     }
 
     /** ***************************************************************
