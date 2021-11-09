@@ -22,7 +22,7 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     // a Set of types for each variable key
     public static HashMap<String,HashSet<String>> varmap = null;
@@ -179,7 +179,7 @@ public class SUMOtoTFAform {
             return new ArrayList<String>();
         if (debug) System.out.println("SUMOtoTFAform.relationExtractSig(): " + rel);
         ArrayList<String> sig = new ArrayList();
-        String patternString = "(\\d)(In|Re|Ra)";
+        String patternString = "(\\d)(In|Re|Ra|En)";
 
         int under = rel.indexOf("__");
         if (under == -1)
@@ -199,6 +199,8 @@ public class SUMOtoTFAform {
                 type = "RealNumber";
             else if (type.equals("Ra"))
                 type = "RationalNumber";
+            else if (type.equals("En"))
+                type = "Entity";
             else {
                 System.out.println("Error in SUMOtoTFAform.relationExtractSig(): unknown type " +
                         type + " in rel " + rel);
@@ -443,6 +445,9 @@ public class SUMOtoTFAform {
                         String type = mostSpecificTerm(varmap.get(v));
                         oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(kb,type);
                     }
+                    else
+                        System.out.println("Error in SUMOtoTFAform.processQuant(): var type not found for " + v +
+                                " in formula " + f);
                     varStr.append(oneVar + ", ");
                 }
                 //if (debug) System.out.println("SUMOtoTFAform.processQuant(): valid vars: " + varStr);
@@ -581,6 +586,54 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * Specify the TFF types in the name of a predicate, as given by
+     * the SUMO types listed in @param argTypeMap
+     */
+    private static String makePredFromArgTypes(Formula car, ArrayList<String> argTypeMap) {
+
+        StringBuffer result = new StringBuffer();
+        String pred = car.getFormula();
+        result.append(car.getFormula() + "__");
+        for (int i = 0; i < argTypeMap.size(); i++) {
+            String type = argTypeMap.get(i);
+            String twoType = "En";
+            if (type.equals("Integer"))
+                twoType = "In";
+            if (type.equals("RealNumber"))
+                twoType = "Re";
+            if (type.equals("RationalNumber"))
+                twoType = "Ra";
+            result.append(Integer.toString(i+1) + twoType);
+        }
+        return result.toString();
+    }
+
+    /** *************************************************************
+     * Generate the TFF function corresponding to an appearance of
+     * SUMO's ListFn, naming the type-specific ListFn using
+     * makePredFromArgTypes()
+     */
+    private static String processListFn(Formula f, Formula car,
+                                        ArrayList<String> args) {
+
+        if (debug) System.out.println("SUMOtoTFAform.processListFn(): f: " + f);
+        ArrayList<String> argTypeMap = collectArgTypes(args);
+        String pred = makePredFromArgTypes(car,argTypeMap);
+        ArrayList<String> processedArgs = new ArrayList<>();
+        for (int i = 0; i < args.size(); i++)
+            processedArgs.add(processRecurse(new Formula(args.get(i))));
+        if (debug) System.out.println("SUMOtoTFAform.processListFn(): processedArgs: " + processedArgs);
+        StringBuffer result = new StringBuffer();
+        result.append("s__" + pred + "(");
+        for (String arg : processedArgs)
+            result.append(arg + ",");
+        result.deleteCharAt(result.length()-1);
+        result.append(")");
+        if (debug) System.out.println("SUMOtoTFAform.processListFn(): result: " + result);
+        return result.toString();
+    }
+
+    /** *************************************************************
      * equal is a special case since it needs translation to '='
      * regardless of argument types since it's polymorphic on $i also.
      */
@@ -697,6 +750,8 @@ public class SUMOtoTFAform {
             return processCompOp(f,car,args);
         else if (isMathFunction(car.getFormula()))
             return processMathOp(f,car,args);
+        else if (car.getFormula().startsWith("ListFn"))
+            return processListFn(f,car,args);
         else {
             if (debug) System.out.println("SUMOtoTFAform.processRecurse(): not math or comparison op: " + car);
             StringBuffer argStr = new StringBuffer();
@@ -1042,6 +1097,9 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * Given two lists of types, return the bigger list, or create a
+     * new list from two of equal size that has the most specific type
+     * at each index.
      */
     private static ArrayList<String> mostSpecificArgType(ArrayList<String> args1, ArrayList<String> args2) {
 
@@ -1108,12 +1166,14 @@ public class SUMOtoTFAform {
             for (int i = 1; i < args.size(); i++) {
                 String arg = args.get(i);
                 if (debug) System.out.println("SUMOtoTFAform.constrainOp(): arg: " + arg);
+                String type = "Entity"; //default
                 if (i >= sig.size()) {
-                    System.out.println("Error in SUMOtoTFAform.constrainOp(): missing signature element for " +
+                    if (!op.equals("equal")) System.out.println("Error in SUMOtoTFAform.constrainOp(): missing signature element for " +
                             op + "  in form " + f);
                     continue;
                 }
-                String type = sig.get(i);
+                else
+                    type = sig.get(i);
                 if (Formula.listP(arg)) {
                     args.set(i, constrainFunctVarsRecurse(new Formula(arg)));
                     arg = args.get(i);
@@ -1495,6 +1555,7 @@ public class SUMOtoTFAform {
             ArrayList<String> args = f.complexArgumentsToArrayListString(1);
             for (String s : args) {
                 Formula farg = new Formula(s);
+                farg.sourceFile = f.sourceFile;
                 if (farg.listP() && typeConflict(farg))
                     return true;
             }
@@ -1510,11 +1571,13 @@ public class SUMOtoTFAform {
                 if (sig != null && i < sig.size())
                     sigType = sig.get(i);
                 Formula farg = new Formula(s);
+                farg.sourceFile = f.sourceFile;
                 if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): check arg: " + s + " with type: " +
                         sigType + " against " + farg);
                 if (farg.listP() && kb.isFunctional(farg)) {
                     if (typeConflict(farg, sigType)) {
-                        errors.add("error between " + farg + " and argument " + i + " of " + op + " with type " + sigType);
+                        errors.add("error between " + farg + " and argument " + i + " of " + op +
+                                " with type " + sigType + " in file " + f.sourceFile);
                         return true;
                     }
                     if (typeConflict(farg))
@@ -1526,7 +1589,8 @@ public class SUMOtoTFAform {
                     if (debug) System.out.println("SUMOtoTFAform.typeConflict(3): check types of: " + farg);
                     HashSet<String> vars = varmap.get(farg.getFormula());
                     if (typeConflict(vars, sigType)) {
-                        errors.add("error between " + farg + " and argument " + i + " of " + op + " with type " + sigType);
+                        errors.add("error between " + farg + " and argument " + i + " of " + op +
+                                " with type " + sigType + " in file " + f.sourceFile);
                         return true;
                     }
                 }
@@ -2082,6 +2146,7 @@ public class SUMOtoTFAform {
         debug = true;
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
+        if (debug) System.out.println("main(): contains ListFn__1Fn: " + kb.terms.contains("ListFn__1Fn"));
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         PrintWriter pw = null;

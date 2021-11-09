@@ -270,7 +270,7 @@ public class SUMOKBtoTPTPKB {
                         else if (lang.equals("tff")) {
                             SUMOtoTFAform stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
-                            //pr.println("% tff input: " + f3.format("",""," "));
+                            pr.println("% tff input: " + f3.format("",""," "));
                             stfa.sorts = stfa.missingSorts(f3);
                             if (stfa.sorts != null && stfa.sorts.size() > 0)
                                 f3.tffSorts.addAll(stfa.sorts);
