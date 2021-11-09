@@ -334,11 +334,14 @@ public class KBmanager implements Serializable {
                 if (element.getTagName().equals("preference")) {
                     String name = (String) element.getAttribute("name");
                     String value = (String) element.getAttribute("value");
-                    System.out.println("Error in KBmanager.preferencesFromXML(): Adding: " + name + " " + value);
+                    //System.out.println("KBmanager.preferencesFromXML(): Adding: " + name + " " + value);
+                    if (name != null && value != null && name.equals("holdsPrefix") && value.equals("yes"))
+                        System.out.println("Warning: KBmanager.preferencesFromXML(): holds prefixing is deprecated.");
                     preferences.put(name,value);
                 }
                 else
-                    System.out.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + element.getTagName());
+                    if (!element.getTagName().equals("kb"))
+                        System.out.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + element.getTagName());
             }
         }
         if (debug) System.out.println("KBmanager.preferencesFromXML(): number of preferences: " +
