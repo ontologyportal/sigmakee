@@ -762,7 +762,7 @@ public class FormulaPreprocessor {
                                      KB kb) {
 
 
-        //if (debug) System.out.println("preProcessRecurse: " + f);
+        if (debug) System.out.println("preProcessRecurse: " + f);
         StringBuilder result = new StringBuilder();
         if (f.listP() && !f.empty()) {
             String prefix = "";
