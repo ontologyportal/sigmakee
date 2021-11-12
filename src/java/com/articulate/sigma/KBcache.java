@@ -395,10 +395,10 @@ public class KBcache implements Serializable {
         //if (suffix.matches("\\d__.*"))  // variable arity has appended single underscore before arity
         //    sep = "_";
         String newTerm = term + sep + suffix;
-        if (kb.terms.contains(newTerm)) {
-            System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
-            System.out.println("Warning in KBcache.extendInstance(): sig " + signatures.get(newTerm));
-        }
+        //if (kb.terms.contains(newTerm)) {
+        //    System.out.println("Warning in KBcache.extendInstance(): term already exists: " + newTerm);
+        //    System.out.println("Warning in KBcache.extendInstance(): sig " + signatures.get(newTerm));
+        //}
         kb.terms.add(newTerm);
         kb.capterms.put(newTerm.toUpperCase(),newTerm);
         HashSet<String> iset = instanceOf.get(term);
@@ -1744,6 +1744,7 @@ public class KBcache implements Serializable {
         valences.put(pred,arity);
         if (kb.isFunction(oldPred))
             kb.kbCache.functions.add(pred);
+        kb.terms.add(pred);
     }
 
     /** ***************************************************************
