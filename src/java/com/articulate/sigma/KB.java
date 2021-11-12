@@ -2173,6 +2173,8 @@ public class KB implements Serializable {
             if (debug) System.out.println("mostSpecificTerm(): compareTermDepth(t,result): " + compareTermDepth(t,result));
             if (StringUtil.emptyString(t))
                 continue;
+            if (t.endsWith("+"))
+                t = t.substring(0,t.length()-1);
             if (!containsTerm(t)) {
                 System.out.println("Error in KB.mostSpecificTerm(): no such term: " + t);
                 continue;
