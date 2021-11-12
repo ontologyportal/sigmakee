@@ -58,6 +58,7 @@ public class SUMOtoTFAform {
     public static HashSet<String> errors = new HashSet<>();
 
     /** *************************************************************
+     * comparison ops are EQUAL, GT, GTET, LT, LTET
      */
     public static boolean isComparisonOperator(String s) {
 
@@ -70,6 +71,7 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * math ops are PLUSFN, MINUSFN, TIMESFN, DIVIDEFN, FLOORFN
      */
     public static boolean isMathFunction(String s) {
 
@@ -492,8 +494,8 @@ public class SUMOtoTFAform {
     private static String processLogOp(Formula f, Formula car,
                                         ArrayList<String> args) {
         String op = car.getFormula();
-        //System.out.println("processRecurse(): op: " + op);
-        //System.out.println("processRecurse(): args: " + args);
+        if (debug) System.out.println("processLogOp(): op: " + op);
+        if (debug) System.out.println("processLogOp(): args: " + args);
         if (op.equals("and"))
             return processConjDisj(f,car,args);
         if (op.equals("=>")) {
@@ -593,6 +595,8 @@ public class SUMOtoTFAform {
 
         StringBuffer result = new StringBuffer();
         String pred = car.getFormula();
+        if (SUMOKBtoTFAKB.alreadyExtended(pred))
+            return pred;
         result.append(car.getFormula() + "__");
         for (int i = 0; i < argTypeMap.size(); i++) {
             String type = argTypeMap.get(i);
@@ -641,6 +645,7 @@ public class SUMOtoTFAform {
                                        ArrayList<String> args) {
 
         String op = car.getFormula();
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): op: " + op);
         if (args.size() != 2) {
             System.out.println("Error in SUMOtoTFAform.processCompOp(): wrong number of arguments to " + op + " in " + f);
             return "";
@@ -649,12 +654,12 @@ public class SUMOtoTFAform {
             int ttype = f.getFormula().charAt(0);
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
-            return op + "(" + processRecurse(new Formula(args.get(0))) + " ," +
+            return "(" + processRecurse(new Formula(args.get(0))) + " = " +
                     processRecurse(new Formula(args.get(1))) + ")";
         }
-        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): op: " + op);
+
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
-        if (op.startsWith("equal")) {
+        if (op.equals("equal")) {
             return processRecurse(new Formula(args.get(0))) + " = " +
                     processRecurse(new Formula(args.get(1)));
         }
@@ -738,15 +743,20 @@ public class SUMOtoTFAform {
         }
         Formula car = f.carAsFormula();
         //System.out.println("SUMOtoTFAform.processRecurse(): car: " + car);
-        //System.out.println("SUMOtoTFAform.processRecurse(): car: " + car.theFormula);
+        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): car: " + car.getFormula());
         ArrayList<String> args = f.complexArgumentsToArrayListString(1);
+        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): args: " + args);
         if (car.listP()) {
             System.out.println("Error in SUMOtoTFAform.processRecurse(): formula " + f);
             return "";
         }
-        if (Formula.isLogicalOperator(car.getFormula()))
+        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): logop: " + Formula.isLogicalOperator(car.getFormula()));
+        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): compop: " + Formula.isComparisonOperator(car.getFormula()));
+        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): math: " + Formula.isMathFunction(car.getFormula()));
+        if (debug) System.out.println("SUMOtoTFAform.processRecurse(): ListN: " + car.getFormula().startsWith("ListFn"));
+        if (Formula.isLogicalOperator(car.getFormula())) // UQUANT, EQUANT, AND, OR, NOT, IF, IFF
             return processLogOp(f,car,args);
-        else if (isComparisonOperator(car.getFormula()))
+        else if (isComparisonOperator(car.getFormula())) //EQUAL, GT, GTET, LT, LTET
             return processCompOp(f,car,args);
         else if (isMathFunction(car.getFormula()))
             return processMathOp(f,car,args);
@@ -841,11 +851,13 @@ public class SUMOtoTFAform {
         if (kb.isSubclass(t, sigType) && kb.isSubclass(t, "Number")) {
             if (kb.isSubclass(t, "Integer") || t.equals("Integer"))
                 suffix = "In";
-            if (kb.isSubclass(t, "RealNumber") || t.equals("RealNumber"))
+            else if (kb.isSubclass(t, "RealNumber") || t.equals("RealNumber"))
                 suffix = "Re";
-            if (kb.isSubclass(t, "RationalNumber") || t.equals("RationalNumber"))
-                suffix = "In";
+            else if (kb.isSubclass(t, "RationalNumber") || t.equals("RationalNumber"))
+                suffix = "Ra";
         }
+        else
+            suffix = "En";
         if (debug) System.out.println("numberSuffix(): suffix: " +
                 suffix);
         if (suffix.equals(""))
@@ -988,22 +1000,17 @@ public class SUMOtoTFAform {
      */
     protected static String composeSuffix(String op, String suffix) {
 
-        //System.out.println("SUMOtoTFAform.composeSuffix(): op,suffix: " + op + ", " + suffix);
-        if (StringUtil.emptyString(op))
+        if (debug) System.out.println("SUMOtoTFAform.composeSuffix(): op,suffix: " + op + ", " + suffix);
+        if (StringUtil.emptyString(op) || StringUtil.emptyString(suffix) || SUMOKBtoTFAKB.alreadyExtended(op))
             return op;
-        if (StringUtil.emptyString(suffix))
-            return op;
-        String patternString = "(\\d)(In|Re|Ra)";
 
         int under = op.indexOf("__");
-        if (under == -1)
+        if (under == -1 || SUMOKBtoTFAKB.alreadyExtended(op))
             return op + suffix;
         ArrayList<String> newTypes = relationExtractSig("dummy" + suffix);
-        String lowestNew = kb.mostSpecificTerm(newTypes);
         ArrayList<String> oldTypes = relationExtractSig(op);
-        String lowestOld = kb.mostSpecificTerm(oldTypes);
-        //System.out.println("SUMOtoTFAform.composeSuffix(): newTypes: " + newTypes);
-        //System.out.println("SUMOtoTFAform.composeSuffix(): oldTypes: " + oldTypes);
+        if (debug) System.out.println("SUMOtoTFAform.composeSuffix(): newTypes: " + newTypes);
+        if (debug) System.out.println("SUMOtoTFAform.composeSuffix(): oldTypes: " + oldTypes);
         int maxArg = oldTypes.size();
         if (newTypes.size() < oldTypes.size())
             maxArg = newTypes.size();
@@ -1017,18 +1024,18 @@ public class SUMOtoTFAform {
             for (int i = newTypes.size(); i < oldTypes.size(); i++)
                 safeSet(newTypes, i, oldTypes.get(i));
         StringBuffer result = new StringBuffer();
-        result.append(op.substring(0,under));
+        result.append(op);
         result.append("__");
         for (int i = 0; i < newTypes.size(); i++) {
             if (!StringUtil.emptyString(newTypes.get(i))) {
                 String twoChar = newTypes.get(i).substring(0, 2);
-                if (twoChar.equals("In") || twoChar.equals("Ra") || twoChar.equals("Re"))
+                if (twoChar.equals("In") || twoChar.equals("Ra") || twoChar.equals("Re") || twoChar.equals("En"))
                     result.append(Integer.toString(i) + newTypes.get(i).substring(0, 2));
             }
         }
         if (op.endsWith("Fn"))
             result.append("Fn");
-        //System.out.println("SUMOtoTFAform.composeSuffix(): result: " + result);
+        if (debug) System.out.println("SUMOtoTFAform.composeSuffix(): result: " + result);
         return result.toString();
     }
 
@@ -1086,8 +1093,11 @@ public class SUMOtoTFAform {
             return "Entity";
         Formula f = new Formula(arg);
         String op = f.car();
-        if (!kb.containsTerm(op))
+        if (!kb.containsTerm(op)) {
             System.out.println("Error in SUMOtoTFAform.getOpReturnType(): no term: " + op);
+            Thread.dumpStack();
+            System.exit(0);
+        }
         if (kb.isFunctional(f)) {
             String range = kb.kbCache.getRange(op);
             if (range != null)
@@ -1140,7 +1150,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): args: " + args);
         String suffix = "";
         ArrayList<String> sig = kb.kbCache.getSignature(op);
-        ArrayList<String> typeFromName = relationExtractSig(op);
+        ArrayList<String> typeFromName = relationExtractSig(op); // extract type signature from the operator name
         sig = mostSpecificArgType(sig,typeFromName);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): cache contains op: " + kb.kbCache.signatures.containsKey(op));
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): sig: " + sig);
@@ -1202,6 +1212,7 @@ public class SUMOtoTFAform {
                 }
                 else {
                     if (Formula.isVariable(arg)) {
+                        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): variable argument: " + arg);
                         String t = mostSpecificTerm(varmap.get(arg));
                         if (StringUtil.emptyString(t))
                             System.out.println("Error in SUMOtoTFAform.constrainOp(): empty variable type for " + arg);
@@ -1230,20 +1241,23 @@ public class SUMOtoTFAform {
                 }
             }
         }
-        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): suffix: " + suffix);
+        if (debug) System.out.println("SUMOtoTFAform.constrainOp(2): suffix: " + suffix);
         if (isComparisonOperator(op) || isMathFunction(op))
             suffix = leastNumericType(op,suffix);
-        if (kb.isFunction(op) && !StringUtil.emptyString(suffix)) {
-            String range = numberSuffix("",0,op,kb.kbCache.getRange(op),kb.kbCache.getRange(op));
-            if (debug) System.out.println("SUMOtoTFAform.constrainOp(): range: " + range);
-            suffix = range + suffix + "Fn";
+        // if (kb.isFunction(op) && !StringUtil.emptyString(suffix)) {
+        if ((op.startsWith("ListFn")  || isMathFunction(op)) && !StringUtil.emptyString(suffix)) {
+                String range = numberSuffix("",0,op,kb.kbCache.getRange(op),kb.kbCache.getRange(op));
+                if (debug) System.out.println("SUMOtoTFAform.constrainOp(): range: " + range);
+                suffix = range + suffix + "Fn";
         }
         if (!StringUtil.emptyString(suffix))
             suffix = "__" + suffix;
         ArrayList<String> newargs = new ArrayList<>();
         newargs.addAll(args);
         newargs.remove(0);
-        String composed = composeSuffix(op, suffix);
+        String composed = op;
+        if (isComparisonOperator(op) || op.startsWith("ListFn")  || isMathFunction(op))
+            composed = composeSuffix(op, suffix);
         String result = "(" + composed + " " + StringUtil.arrayListToSpacedString(newargs) + ")";
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): result: " + result);
         return result;
@@ -1488,8 +1502,8 @@ public class SUMOtoTFAform {
                             errors.add(msg);
                             return true;
                         }
-                        System.out.println("SUMOtoTFAform.inconsistentVarTypes(): " +
-                                c1 + ", " + c2 + " ok for var " + s);
+                        //System.out.println("SUMOtoTFAform.inconsistentVarTypes(): " +
+                        //        c1 + ", " + c2 + " ok for var " + s);
                     }
                 }
             }

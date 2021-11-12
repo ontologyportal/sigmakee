@@ -20,7 +20,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean initialized = false;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     public static HashSet<String> qChildren = new HashSet<String>();
     public static HashSet<String> iChildren = new HashSet<String>();
@@ -275,9 +275,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     /** *************************************************************
      */
-    private static boolean alreadyExtended(String t) {
+    public static boolean alreadyExtended(String t) {
 
-        String patternString = "__(\\d)(In|Re|Ra)+";
+        String patternString = "__(\\d)(In|Re|Ra|En)+";
         Pattern pattern = Pattern.compile(patternString);
         Matcher matcher = pattern.matcher(t);
         if (matcher.find())
@@ -435,6 +435,40 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     *  ListFn is a special special case.  Lists can hold any type and
+     *  ListFn is a VariableArityPredicate, so we need to provide all
+     *  permutations of TFF types in a list as signatures.
+     */
+    private static void handleListFn(HashMap<String,HashSet<String>> toExtend) {
+
+        ArrayList<String> types = new ArrayList<>();
+        types.add("In");
+        types.add("Re");
+        types.add("Ra");
+        types.add("En");
+        ArrayList<String> suffixes = new ArrayList<>();
+        ArrayList<String> finalsuffixes = new ArrayList<>();
+        for (String t : types) {
+            String ext = 1 + "Fn__0En" + 1 + t;
+            suffixes.add(ext);
+        }
+        finalsuffixes.addAll(suffixes);
+        for (int i = 2; i <= RowVars.MAX_ARITY+1; i++) {
+            ArrayList<String> newsuffixes = new ArrayList<>();
+            for (String suffix : suffixes) {
+                for (String t : types) {
+                    String ext = i + "Fn__" + suffix.substring(5) + i + t;
+                    newsuffixes.add(ext);
+                }
+            }
+            suffixes = newsuffixes;
+            finalsuffixes.addAll(suffixes);
+        }
+        for (String suffix : finalsuffixes)
+            MapUtils.addToMap(toExtend, "ListFn", suffix);
+    }
+
+    /** *************************************************************
      * VariableArityRelations are special cases since the different
      * versions only get expanded when axioms are processed but
      * we need to create the different sorts up front.  The current
@@ -445,11 +479,14 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     private void handleVariableArity(HashMap<String,HashSet<String>> toExtend) {
 
+        debug = true;
         if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity():");
         if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(1): toExtend: " + toExtend);
         HashSet<String> rels = kb.kbCache.getInstancesForType("VariableArityRelation");
 
         for (String r : rels) {
+            if (r.equals("ListFn"))
+                continue;
             ArrayList<String> sig = kb.kbCache.getSignature(r);
             int size = sig.size();
             if (size > 1)
@@ -457,13 +494,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             StringBuffer inStr = new StringBuffer();
             StringBuffer reStr = new StringBuffer();
             StringBuffer raStr = new StringBuffer();
-            StringBuffer iStr = new StringBuffer();
-            if (expandableArg(r,0,sig) && !r.equals("ListFn")) {
+            StringBuffer enStr = new StringBuffer();
+            if (expandableArg(r,0,sig)) {
                 inStr.append("0In");
                 reStr.append("0Re");
                 raStr.append("0Ra");
-                if (sig.get(0) != null && sig.get(0).equals("Entity"))
-                    iStr.append("0En");
+                enStr.append("0En");
             }
             String fnSuffix = "";
             if (kb.isFunction(r))
@@ -472,27 +508,23 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (hasNumericArg(r) || listOperator(r)) {
                 if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(): numeric or list r: " + r);
                 if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(): numeric or list r: " + r);
-                for (int i = size; i < 7; i++) {
-                    if (expandableArg(r,i,sig)) {
+                for (int i = size; i <= 7; i++) {
+                    //if (expandableArg(r,i,sig)) {
                         inStr.append(Integer.toString(i) + "In");
                         reStr.append(Integer.toString(i) + "Re");
                         raStr.append(Integer.toString(i) + "Ra");
-                        if (kb.kbCache.variableArityType(r).equals("Entity"))
-                            iStr.append(Integer.toString(i) + "En");
-                    }
+                        enStr.append(Integer.toString(i) + "En");
+                    //}
                     String newInStr = Integer.toString(i) + fnSuffix + "__" + inStr.toString();
                     String newReStr = Integer.toString(i) + fnSuffix + "__" + reStr.toString();
                     String newRaStr = Integer.toString(i) + fnSuffix + "__" + raStr.toString();
-                    String newNoStr = "";
-                    if (iStr.length() != 0)
-                        newNoStr = Integer.toString(i)+ fnSuffix + "__" + iStr.toString();
+                    String newEnStr = Integer.toString(i) + fnSuffix + "__" + enStr.toString();
                     if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(): adding terms: " + newInStr +
-                            ", " + newReStr + ", " + newRaStr);
+                            ", " + newReStr + ", " + newRaStr + ", " + newEnStr);
                     MapUtils.addToMap(toExtend, r, newInStr);
                     MapUtils.addToMap(toExtend, r, newReStr);
                     MapUtils.addToMap(toExtend, r, newRaStr);
-                    if (newNoStr != "")
-                        MapUtils.addToMap(toExtend, r, newNoStr);
+                    MapUtils.addToMap(toExtend, r, newEnStr);
                 }
             }
             else {
@@ -504,6 +536,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             }
         }
         if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(2): toExtend: " + toExtend);
+        debug = false;
     }
 
     /** *************************************************************
@@ -517,6 +550,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         HashMap<String,HashSet<String>> toExtend = new HashMap<>();
         handleMathAndComp(toExtend);
         handleVariableArity(toExtend); // special case
+        handleListFn(toExtend);
         for (String t : kb.getTerms()) {
             pw.println("% SUMOKBtoTFAKB.writeSorts(): " + t);
             if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): t: " + t);
@@ -525,7 +559,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 fnSuffix = "Fn";
             if (Formula.isLogicalOperator(t) || t.equals("equal"))
                 continue;
-            if (kb.isRelation(t) && !alreadyExtended(t) &&
+            if (kb.isRelation(t) && !alreadyExtended(t) && !t.equals("ListFn") &&
                 !(Formula.isComparisonOperator(t) || Formula.isMathFunction(t))) {
                 if (hasNumericArg(t) || listOperator(t)) {
                     writeRelationSort(t,pw,sanitizedKBName);
@@ -560,7 +594,14 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
+        //HashMap<String,HashSet<String>> toExtend = new HashMap<>();
+        //handleListFn(toExtend);
+        //System.out.println(toExtend);
+
         //debug = true;
+
+        //System.out.println("main(): " + alreadyExtended("ListFn__3Fn__0En1En2In3EnFn"));
+
         SUMOformulaToTPTPformula.lang = "tff";
         SUMOKBtoTPTPKB.lang = "tff";
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();

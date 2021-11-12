@@ -12,6 +12,7 @@ import java.util.*;
 public class RowVars {
 
     public static boolean DEBUG = false;
+    public static final int MAX_ARITY = 5;
 
     /** ***************************************************************
      * @return a HashSet, possibly empty, containing row variable
@@ -203,9 +204,7 @@ public class RowVars {
         
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         result.putAll(ar1);
-        Iterator<String> it = ar2.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
+        for (String key  : ar2.keySet()) {
             HashSet<String> values = ar2.get(key);
             HashSet<String> arg1values = ar1.get(key);
             if (arg1values == null)
@@ -365,7 +364,7 @@ public class RowVars {
             String replaceVar = var.replace('@', '?');
             ArrayList<String> newresult = new ArrayList<String>();
             StringBuffer replaceString = new StringBuffer();
-            int maxArity = 7;
+            int maxArity = MAX_ARITY;
             int minArity = 1;
             if (rowVarMaxArities.containsKey(var) && maxArity > rowVarMaxArities.get(var).intValue())
                 maxArity = rowVarMaxArities.get(var).intValue();
