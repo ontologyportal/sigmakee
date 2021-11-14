@@ -178,6 +178,7 @@ then you can add the last one
 
   source .bashrc
 
+I've only tested on Oracle JDK 1.8. If you want to use OpenJDK or a version of Java other than 1.8 do so at your own risk.
 You may need to download Java and set your
 JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .  First,
 
@@ -191,8 +192,21 @@ wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-secureback
   gunzip jdk-14.0.1_linux-x64_bin.tar.gz
 
 but you also may need to go to the web site, accept the license, then copy the download link
-into this command
+into this command.  Then you need two commands to install the new Java (check that the paths conform
+to the java version you downloaded) -
 
+  sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk1.8.0_version/bin/java" 1
+  sudo update-alternatives --set java /home/theuser/Programs/jdk1.8.0_version/bin/java
+
+Verify that it's installed correct with
+
+  java -version
+
+You should see something like -
+
+java version "1.8.0_241"
+Java(TM) SE Runtime Environment (build 1.8.0_241-b07)
+Java HotSpot(TM) 64-Bit Server VM (build 25.241-b07, mixed mode)
 On AWS it helps to be reminded of which server you're on.  I use machine size as a reminder with
 
 export HOST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
