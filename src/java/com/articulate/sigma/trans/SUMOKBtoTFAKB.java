@@ -20,7 +20,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean initialized = false;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public static HashSet<String> qChildren = new HashSet<String>();
     public static HashSet<String> iChildren = new HashSet<String>();
@@ -157,7 +157,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static String translateSort(KB kb, String s) {
 
-        if (debug) System.out.println("translateSort(): s: '" + s + "'");
+        //if (debug) System.out.println("translateSort(): s: '" + s + "'");
         if (StringUtil.emptyString(s))
             return "$i";
         if (s.equals("$i") || s.equals("$tType"))
@@ -199,9 +199,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             System.out.println("ERROR in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         if (debug) System.out.println("writeRelationSort(): t: " + t);
         if (debug) System.out.println("writeRelationSort(): is function: " + kb.isFunction(t));
-        if (Formula.isLogicalOperator(t))
-            return;
-        if (Formula.isMathFunction(t))
+        if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t))
             return;
         ArrayList<String> sig = kb.kbCache.signatures.get(t);
         if (debug) System.out.println("SUMOKBtoTFAKB.writeRelationSort(): sig: " + sig);
@@ -392,6 +390,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      * Create polymorphic comparison and math relations.
      * The result is a side effect on toExtend
      */
+    @Deprecated   // should not be needed since math and comp are built into TF0
     private void handleMathAndComp(HashMap<String,HashSet<String>> toExtend) {
 
         if (debug) System.out.println("SUMOKBtoTFAKB.handleMathAndComp():");
@@ -479,7 +478,6 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     private void handleVariableArity(HashMap<String,HashSet<String>> toExtend) {
 
-        debug = true;
         if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity():");
         if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(1): toExtend: " + toExtend);
         HashSet<String> rels = kb.kbCache.getInstancesForType("VariableArityRelation");
@@ -536,7 +534,6 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             }
         }
         if (debug) System.out.println("SUMOKBtoTFAKB.handleVariableArity(2): toExtend: " + toExtend);
-        debug = false;
     }
 
     /** *************************************************************
@@ -546,9 +543,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeSorts(PrintWriter pw, String sanitizedKBName) {
 
-        SUMOtoTFAform.setNumericFunctionInfo();
+        //SUMOtoTFAform.setNumericFunctionInfo();
         HashMap<String,HashSet<String>> toExtend = new HashMap<>();
-        handleMathAndComp(toExtend);
+        //handleMathAndComp(toExtend);
         handleVariableArity(toExtend); // special case
         handleListFn(toExtend);
         for (String t : kb.getTerms()) {
@@ -560,7 +557,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (Formula.isLogicalOperator(t) || t.equals("equal"))
                 continue;
             if (kb.isRelation(t) && !alreadyExtended(t) && !t.equals("ListFn") &&
-                !(Formula.isComparisonOperator(t) || Formula.isMathFunction(t))) {
+                !Formula.isComparisonOperator(t) && !Formula.isMathFunction(t)) {
                 if (hasNumericArg(t) || listOperator(t)) {
                     writeRelationSort(t,pw,sanitizedKBName);
                     processRelationSort(toExtend, t);
@@ -576,6 +573,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (kb.isFunction(k) || k.endsWith("Fn"))  // variable arity relations with numerical suffixes not in kb yet
                 fnSuffix = "Fn";
             for (String e : vals) {
+                if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): extending instance: " + k +
+                        " as " + e + fnSuffix);
                 kb.kbCache.extendInstance(k, e + fnSuffix);
                 String sep = "__";
                 //if (e.matches("\\d__.*"))  // variable arity has appended single underscore before arity
@@ -602,10 +601,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         //System.out.println("main(): " + alreadyExtended("ListFn__3Fn__0En1En2In3EnFn"));
 
-        SUMOformulaToTPTPformula.lang = "tff";
-        SUMOKBtoTPTPKB.lang = "tff";
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
+        SUMOformulaToTPTPformula.lang = "tff"; // this setting has to be *after* initialization, otherwise init
+        // tried to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
+        // havent been set
+        SUMOKBtoTPTPKB.lang = "tff";
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
         PrintWriter pw = null;

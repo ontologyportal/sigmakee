@@ -237,6 +237,7 @@ public class SUMOKBtoTPTPKB {
             int counter = 0;
             int formCount = 0;
             for (Formula f : orderedFormulae) {
+                f.theTptpFormulas.clear();
                 if (!f.getFormula().startsWith("(documentation")) {
                     pr.println("% f: " + f.format("", "", " "));
                     pr.println("% " + formCount++ + " of " + orderedFormulae.size() +
