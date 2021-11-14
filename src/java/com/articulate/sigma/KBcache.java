@@ -776,9 +776,7 @@ public class KBcache implements Serializable {
 
         HashMap<String,HashSet<String>> subclasses = children.get("subclass");
         TreeSet<AVPair> countIndex = new TreeSet<AVPair>();
-        Iterator<String> it = p1.iterator();
-        while (it.hasNext()) {
-            String cl = it.next();
+        for (String cl : p1) {
             HashSet<String> classes = subclasses.get(cl);
             if (classes == null)
                 System.out.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
