@@ -2160,6 +2160,48 @@ public class KB implements Serializable {
     /*****************************************************************
      * Find the most specific term in a collection using compareTermDepth()
      */
+    public String mostGeneralType(Collection<String> terms) {
+
+        if (terms == null || terms.size() < 1)
+            return null;
+        String result = "";
+        for (String t : terms) {
+            if (StringUtil.emptyString(t))
+                continue;
+            if (!containsTerm(t)) {
+                System.out.println("Error in KB.mostSpecificType(): no such term: " + t);
+                continue;
+            }
+            if (result == "" || compareTermDepth(t,result) < 0)
+                result = t;
+        }
+        return result;
+    }
+
+    /*****************************************************************
+     * Find the most specific term in a collection using compareTermDepth()
+     */
+    public String mostSpecificType(Collection<String> terms) {
+
+        if (terms == null || terms.size() < 1)
+            return null;
+        String result = "";
+        for (String t : terms) {
+            if (StringUtil.emptyString(t))
+                continue;
+            if (!containsTerm(t)) {
+                System.out.println("Error in KB.mostSpecificType(): no such term: " + t);
+                continue;
+            }
+            if (result == "" || compareTermDepth(t,result) > 0)
+                result = t;
+        }
+        return result;
+    }
+
+    /*****************************************************************
+     * Find the most specific term in a collection using compareTermDepth()
+     */
     public String mostSpecificTerm(Collection<String> terms) {
 
         if (terms == null || terms.size() < 1)
