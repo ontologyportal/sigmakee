@@ -67,7 +67,7 @@ public class KBmanager implements Serializable {
 
     public enum Prover { NONE, EPROVER, VAMPIRE };
 
-    public Prover prover = Prover.EPROVER;
+    public Prover prover = Prover.VAMPIRE;
 
     /** ***************************************************************
      */
