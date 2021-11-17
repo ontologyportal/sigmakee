@@ -3403,6 +3403,7 @@ public class KB implements Serializable {
         System.out.println("INFO in KB.loadVampire()");
         KBmanager mgr = KBmanager.getMgr();
         String vampex = KBmanager.getMgr().getPref("vampire");
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
             System.out.println("Error in Vampire: no executable string in preferences");
             return;
@@ -3442,6 +3443,7 @@ public class KB implements Serializable {
 
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
+        KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         try {
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
