@@ -269,12 +269,10 @@ sudo apt-get update
 sudo apt-get install ant
 ant
 
-Follow the steps in section "Account Management" below to set up accounts
-
 To test run
 
   java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/*
-    com.articulate.sigma.KB -t
+    com.articulate.sigma.KB -c Object Transaction
 
 Start Tomcat with
   $CATALINA_HOME/bin/startup.sh
