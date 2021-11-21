@@ -40,7 +40,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new FileWriter(filename));
-            skbtfakb.writeSorts(pw,filename);
+            skbtfakb.writeSorts(pw);
             pw.flush();
             pw.close();
         }
@@ -56,7 +56,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testExtractSig(): ");
-        ArrayList<String> sorts = SUMOtoTFAform.relationExtractSig("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
+        ArrayList<String> sorts = SUMOtoTFAform.relationExtractSigFromName("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
         System.out.println(sorts);
         String expectedRes = "[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]";
         String result = sorts.toString();
@@ -76,7 +76,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testExtractUpdateSig(): ");
-        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSig("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
+        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSigFromName("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
         System.out.println(sorts);
         String expectedRes = "[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]";
         String result = sorts.toString();
@@ -96,7 +96,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testExtractUpdateSig2(): ");
-        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSig("partition__5");
+        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSigFromName("partition__5");
         System.out.println(sorts);
         String expectedRes = "[, Class, Class, Class, Class, Class]";
         System.out.println("testExtractUpdateSig2(): expected: " + expectedRes);
