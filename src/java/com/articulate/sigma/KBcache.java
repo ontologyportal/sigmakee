@@ -444,7 +444,7 @@ public class KBcache implements Serializable {
         }
         if (sig == null)
             System.out.println("Error in KBcache.extendInstance(): no sig for term " + term);
-        ArrayList<String> newsig = SUMOtoTFAform.relationExtractSig(newTerm);
+        ArrayList<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
         if (sig != null) {
             for (int i = 0; i < sig.size(); i++) {
                 String orig = sig.get(i);
