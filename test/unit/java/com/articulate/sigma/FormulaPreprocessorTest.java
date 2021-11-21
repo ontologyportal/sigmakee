@@ -433,7 +433,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new FileWriter(filename));
-            skbtfakb.writeSorts(pw,filename);
+            skbtfakb.writeSorts(pw);
             //skbtfakb.writeFile(filename, null, false, "", false, pw);
             pw.flush();
             pw.close();
