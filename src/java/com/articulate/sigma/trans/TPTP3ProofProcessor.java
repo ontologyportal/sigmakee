@@ -1018,7 +1018,6 @@ public class TPTP3ProofProcessor {
 			System.out.println(getSupports(pt));
 	}
 
-
 	/** ***************************************************************
 	 */
 	public static void showHelp() {
