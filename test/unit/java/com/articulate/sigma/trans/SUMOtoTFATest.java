@@ -35,7 +35,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new FileWriter(filename));
-            skbtfakb.writeSorts(pw,filename);
+            skbtfakb.writeSorts(pw);
             pw.flush();
             pw.close();
         }
