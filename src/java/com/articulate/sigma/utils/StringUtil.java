@@ -1202,6 +1202,7 @@ public class StringUtil {
     }
 
     /****************************************************************
+     * @return whether the input is a literal number
      */
     public static boolean isNumeric(String input) {
 
@@ -1214,6 +1215,13 @@ public class StringUtil {
         }
         try {
             Double.parseDouble(input);
+            return true;
+        }
+        catch (NumberFormatException e) {
+            // s is not numeric
+        }
+        try {
+            Float.parseFloat(input);
             return true;
         }
         catch (NumberFormatException e) {

@@ -23,7 +23,7 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     // a Set of types for each variable key
     public static HashMap<String,HashSet<String>> varmap = null;
@@ -663,12 +663,19 @@ public class SUMOtoTFAform {
         newArgTypes.addAll(argTypes);
         if (kb.isFunctional(f) && argTypes != null)
             newArgTypes.set(0,bestOfPair(parentType,argTypes.get(0)));
+        ArrayList<String> predTypes = kb.kbCache.getSignature(car.getFormula());
+        newArgTypes = bestSignature(predTypes,newArgTypes);
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
         String pred = makePredFromArgTypes(car,newArgTypes);
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): pred: " + pred);
         ArrayList<String> processedArgs = new ArrayList<>();
         for (int i = 1; i < args.size(); i++) {
-            processedArgs.add(processRecurse(new Formula(args.get(i)), newArgTypes.get(i)));
+            String argType = "Entity";
+            if (i < newArgTypes.size())
+                argType = newArgTypes.get(i);
+            else
+                System.out.println("Error in SUMOtoTFAform.processNumericSuperArgs(): type list and arg list different size for " + f);
+            processedArgs.add(processRecurse(new Formula(args.get(i)), argType));
         }
         StringBuffer result = new StringBuffer();
         result.append("s__" + pred + "(");
@@ -684,6 +691,10 @@ public class SUMOtoTFAform {
      * Generate the TFF function corresponding to an appearance of
      * SUMO's ListFn, naming the type-specific ListFn using
      * makePredFromArgTypes()
+     * @param parentType the type that applies to this formula from any
+     *                   enclosing formula content
+     * @param args are all the arguments including ListFn, the arg 0
+     * @param argTypes types of all arguments including arg 0
      */
     private static String processListFn(Formula f, Formula car,
                                         String parentType,
@@ -693,7 +704,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processListFn(): f: " + f);
         String pred = makePredFromArgTypes(car,argTypes);
         ArrayList<String> processedArgs = new ArrayList<>();
-        for (int i = 0; i < args.size(); i++)
+        for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
             processedArgs.add(processRecurse(new Formula(args.get(i)),parentType));
         StringBuffer result = new StringBuffer();
         result.append("s__" + pred + "(");
@@ -722,7 +733,9 @@ public class SUMOtoTFAform {
         }
         Formula lhs = new Formula(args.get(1));
         Formula rhs = new Formula(args.get(2));
-        String best = bestOfPair(argTypes.get(1),argTypes.get(2));
+        String best = "Entity";
+        if (argTypes != null && argTypes.size() > 2)
+            best = bestOfPair(argTypes.get(1),argTypes.get(2));
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): best of argtypes: " + best);
         if (lhs.isVariable()) {
             if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhs: " + lhs);
@@ -825,9 +838,9 @@ public class SUMOtoTFAform {
             return "";
         }
         Formula arg1 = new Formula(args.get(1));
-        Formula arg2 = new Formula(args.get(2));
         if (op.startsWith("FloorFn"))
             return "$to_int(" + processRecurse(arg1,parentType) + ")";
+        Formula arg2 = new Formula(args.get(2));
         if (op.startsWith("AdditionFn"))
             return "$sum(" + processRecurse(arg1,parentType) + " ," +
                     processRecurse(arg2,parentType) + ")";
@@ -904,6 +917,57 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * @return the TF0-relevant type of the term whether it's a literal
+     * number, variable with a numeric type or function
+     */
+    public static String findType(Formula f) {
+
+        if (f == null)
+            return "Entity";
+        String form = f.getFormula();
+        if (StringUtil.emptyString(form))
+            return "Entity";
+        if (StringUtil.isInteger(form))
+            return "Integer";
+        if (StringUtil.isNumeric(form)) // number but not an int
+            return "RealNumber";
+        if (f.isVariable()) {
+            Set<String> vartypes = varmap.get(f.getFormula());
+            return bestSpecificTerm(vartypes);
+        }
+        if (kb.isFunction(f.getFormula())) {
+            String type = kb.kbCache.getRange(f.getFormula());
+            return type;
+        }
+        if (kb.isFunctional(f)) {
+            String type = kb.kbCache.getRange(f.carAsFormula().getFormula());
+            return type;
+        }
+        return "Entity";
+    }
+
+    /** *************************************************************
+     * a number, a variable with a numeric type or a function symbol
+     * or function with a numeric type
+     */
+    public static boolean isNumeric(Formula f) {
+
+        String type = findType(f);
+        if (!StringUtil.emptyString(type) && (kb.isSubclass(type, "RealNumber") || type.equals("RealNumber")))
+            return true;
+        return false;
+    }
+
+    /** *************************************************************
+     */
+    public static boolean isNumericType(String s) {
+
+        if (!StringUtil.emptyString(s) && (kb.isSubclass(s, "RealNumber") || s.equals("RealNumber")))
+            return true;
+        return false;
+    }
+    /** *************************************************************
+     * Check if at least one of the types in the list is a numeric type
      */
     public static boolean hasNumeric(ArrayList<String> argTypes) {
 
@@ -911,6 +975,30 @@ public class SUMOtoTFAform {
             if (kb.isSubclass(s,"RealNumber") || s.equals("RealNumber"))
                 return true;
         return false;
+    }
+
+    /** *************************************************************
+     * if the formula is a numeric atom or variable or a function with
+     * a number range and that type is more specific that the parentType,
+     * promote it with $to_real or &to_rat
+     * @return promotion function call with learning paren, or null otherwise
+     */
+    public static String numTypePromotion (Formula f, String parentType) {
+
+        if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): f: " + f);
+        if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): parentType: " + parentType);
+        if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): isNumeric(f): " + isNumeric(f));
+        if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): isNumericType(parentType): " + isNumericType(parentType));
+        if ( findType(f) != null)
+            if (debug) System.out.println("SUMOtoTFAform.numTypePromotion(): kb.compareTermDepth(findType(f),parentType): " + kb.compareTermDepth(findType(f),parentType));
+        if (isNumeric(f) && isNumericType(parentType) && findType(f) != null &&
+                kb.compareTermDepth(findType(f),parentType) > 0) {
+            if (parentType.equals("RealNumber"))
+                return "$to_real(";
+            if (parentType.equals("RationalNumber"))
+                return "$to_rat(";
+        }
+        return null;
     }
 
     /** *************************************************************
@@ -929,7 +1017,11 @@ public class SUMOtoTFAform {
             int ttype = f.getFormula().charAt(0);
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
-            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+            String promotion = numTypePromotion(f,parentType);
+            if (promotion != null)
+                return promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
+            else
+                return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
         }
         Formula car = f.carAsFormula();
         String op = car.getFormula();
@@ -1261,10 +1353,10 @@ public class SUMOtoTFAform {
             return t2;
         if (StringUtil.emptyString(t2) || !kb.containsTerm(t2))
             return t1;
-        if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): t1: " + t1);
-        if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): t2: " + t2);
-        if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): depth of t1: " + kb.termDepth(t1));
-        if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): depth of t2: " + kb.termDepth(t2));
+        //if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): t1: " + t1);
+        //if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): t2: " + t2);
+        //if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): depth of t1: " + kb.termDepth(t1));
+        //if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): depth of t2: " + kb.termDepth(t2));
         if (builtInOrSubNumericType(t1) && builtInOrSubNumericType(t2)) {
             if (kb.compareTermDepth(t1, t2) < 0)
                 return t1;
@@ -1272,7 +1364,7 @@ public class SUMOtoTFAform {
                 return t2;
         }
         else {
-            if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): not both numeric");
+            //if (debug) System.out.println("SUMOtoTFAform.bestOfPair(): not both numeric");
             if (kb.compareTermDepth(t1, t2) > 0)
                 return t1;
             else
@@ -1288,7 +1380,7 @@ public class SUMOtoTFAform {
 
         if (debug) System.out.println("SUMOtoTFAform.bestSignature(): args1 args2: " + args1 + " " + args2);
         if (args1 == null || args2 == null || args1.size() != args2.size()) {
-            System.out.println("Error in bestSignature(): bad arguments: " + args1 + " " + args2);
+            if (debug) System.out.println("Error in bestSignature(): bad arguments: " + args1 + " " + args2);
             if (args1 == null)
                 return args2;
             if (args2 == null)
