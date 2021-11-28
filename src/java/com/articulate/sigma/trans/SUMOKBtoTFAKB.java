@@ -20,7 +20,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean initialized = false;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     public static HashSet<String> qChildren = new HashSet<String>();
     public static HashSet<String> iChildren = new HashSet<String>();

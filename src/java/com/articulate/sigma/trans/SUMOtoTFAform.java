@@ -778,36 +778,42 @@ public class SUMOtoTFAform {
             String bestVar = bestSpecificTerm(varmap.get(rhs.getFormula()));
             best = bestOfPair(bestVar,best);
         }
-        if (!allBuiltInNumericTypes(args) && !op.startsWith("equal__")) {
+        /*if (!allBuiltInNumericTypes(args) && !op.startsWith("equal__")) {
             int ttype = f.getFormula().charAt(0);
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
-
             return "(" + processRecurse(lhs,best) + " = " +
                     processRecurse(rhs,best) + ")";
         }
-
+         */
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): final best: " + best);
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
+        if (!op.startsWith("lessThan") && !op.startsWith("greaterThan") && !op.startsWith("equal")) {
+            System.out.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
+            return "";
+        }
+        String lhsResult = processRecurse(lhs,best);
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhsResult: " + lhsResult);
+        String rhsResult = processRecurse(rhs,best);
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhsResult: " + rhsResult);
+        String comparator = "";
+        String result = "";
         if (op.startsWith("equal")) {
-            return processRecurse(lhs,best) + " = " +
-                    processRecurse(new Formula(args.get(2)),best);
+            result = lhsResult + " = " + rhsResult;
+            if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
+            return result;
         }
         if (op.startsWith("greaterThanOrEqualTo"))
-            return "$greatereq(" + processRecurse(lhs,best) + " ," +
-                    processRecurse(rhs,best) + ")";
-        if (op.startsWith("greaterThan"))
-            return "$greater(" + processRecurse(lhs,best) + " ," +
-                    processRecurse(rhs,best) + ")";
-        if (op.startsWith("lessThanOrEqualTo"))
-            return "$lesseq(" + processRecurse(lhs,best) + " ," +
-                    processRecurse(rhs,best) + ")";
-        if (op.startsWith("lessThan"))
-            return "$less(" + processRecurse(lhs,best) + " ," +
-                    processRecurse(rhs,best) + ")";
-
-        System.out.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
-        return "";
+            comparator = "$greatereq(" ;
+        else if (op.startsWith("greaterThan"))
+            comparator = "$greater(" ;
+        else if (op.startsWith("lessThanOrEqualTo"))
+            comparator = "$lesseq(";
+        else if (op.startsWith("lessThan"))
+            comparator = "$less(";
+        result = comparator + lhsResult + "," + rhsResult + ")";
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
+        return result;
     }
 
     /** *************************************************************
