@@ -123,13 +123,22 @@ public class KButilities {
     /** *************************************************************
      */
     public static boolean isClass(KB kb, String term) {
+
         return kb.isInstanceOf(term,"Class");
     }
     
     /** *************************************************************
      */
     public static boolean isInstance(KB kb, String term) {
+
         return !kb.isInstanceOf(term,"Class");
+    }
+
+    /** *************************************************************
+     */
+    public static boolean isVariableArity(KB kb, String term) {
+
+        return kb.isInstanceOf(term,"VariableArityRelation");
     }
 
     /** *************************************************************
