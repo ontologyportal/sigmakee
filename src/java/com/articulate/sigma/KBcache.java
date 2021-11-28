@@ -445,15 +445,7 @@ public class KBcache implements Serializable {
         if (sig == null)
             System.out.println("Error in KBcache.extendInstance(): no sig for term " + term);
         ArrayList<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
-        if (sig != null) {
-            for (int i = 0; i < sig.size(); i++) {
-                String orig = sig.get(i);
-                if (i > newsig.size() - 1 || kb.isSubclass(orig, newsig.get(i)))
-                    SUMOtoTFAform.safeSet(newsig, i, orig);
-            }
-        }
         signatures.put(newTerm,newsig);
-
         // The number of arguments to each relation.  Variable arity is -1
         valences.put(newTerm,valences.get(term));
         if (term.endsWith("Fn"))
