@@ -1,10 +1,7 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.FormulaPreprocessor;
-import com.articulate.sigma.trans.*;
 import com.articulate.sigma.*;
 import org.junit.Test;
-import org.junit.Before;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -453,7 +450,7 @@ public class SUMOtoTFATest extends UnitTestBase {
     public void testMostSpecific() {
 
         System.out.println("\n========= test testMostSpecific ==========\n");
-        assertEquals("RealNumber",SUMOtoTFAform.mostSpecificTerm(Arrays.asList("RealNumber", "LengthMeasure")));
+        assertEquals("RealNumber",SUMOtoTFAform.mostSpecificType(Arrays.asList("RealNumber", "LengthMeasure")));
     }
 
     /** ***************************************************************

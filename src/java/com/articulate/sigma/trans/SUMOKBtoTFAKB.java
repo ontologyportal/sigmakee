@@ -20,7 +20,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean initialized = false;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public static HashSet<String> qChildren = new HashSet<String>();
     public static HashSet<String> iChildren = new HashSet<String>();
@@ -34,6 +34,11 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static final String REAL_SUFFIX = "Re";
     public static final String RAT_SUFFIX = "Ra";
     public static final String ENTITY_SUFFIX = "En";
+
+    public static final String TFF_INT = "$int";
+    public static final String TFF_REAL = "$real";
+    public static final String TFF_RAT = "$rat";
+    public static final String TFF_ENTITY = "$i";
 
     /** *************************************************************
      */
@@ -83,6 +88,21 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         boolean result = false;
         for (String s : sig) {
             if (kb.isSubclass(s,"Quantity"))
+                return true;
+        }
+        return result;
+    }
+
+    /** *************************************************************
+     * Test whether the given relation has an argument that could be
+     * a number
+     */
+    public boolean hasNumericSuperArg(String t) {
+
+        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        boolean result = false;
+        for (String s : sig) {
+            if (kb.isSubclass("RealNumber",s))
                 return true;
         }
         return result;
@@ -155,6 +175,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Translate SUMO class names to their appropriate TFF sort
      */
     public static String translateSort(KB kb, String s) {
 
@@ -226,43 +247,14 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             relname = relname.substring(0,relname.length()-3);
         if (kb.isFunction(t)) {
             String range = sig.get(0);
-            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname + " : ( " + sigStr + " ) > " + translateSort(kb,range) + " ).";
+            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname +
+                    " : ( " + sigStr + " ) > " + translateSort(kb,range) + " ).";
             pw.println(output);
         }
         else {
-            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname + " : ( " + sigStr + " ) > $o ).";
+            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname +
+                    " : ( " + sigStr + " ) > $o ).";
             pw.println(output);
-        }
-    }
-
-    /** *************************************************************
-     */
-    private void writeTermSort(PrintWriter pw, String t) {
-
-        HashSet<String> parents = kb.immediateParents(t);
-        if (parents == null || parents.size() == 0) {
-            parents = new HashSet<>();
-            if (!kb.isInstance(t))
-                parents.add("$tType");
-            else
-                parents.add("$i");
-        }
-        for (String c : parents) {
-            if (!kb.isInstance(t)) {
-                pw.println("tff(" + StringUtil.initialLowerCase(t) + "_type,type," +
-                        translateSort(kb,t) + ": $tType ).");
-//                        translateSort(kb,t) + ": " + translateSort(c) + " ).");
-                String cl = translateSort(kb,c);
-                if (!c.equals("$tType"))
-                    cl = translateSort(kb,c) + "_c";
-                pw.println("tff(" + StringUtil.initialLowerCase(t) + "_type,type," +
-                        translateSort(kb,t) + "_c : $tType ).");
-                        //translateSort(t) + "_c : " + cl + " ).");
-            }
-            else
-                pw.println("tff(" + StringUtil.initialLowerCase(t) + "_type,type," +
-                        translateSort(kb,t) + ": $tType ).");
-                        //translateSort(t) + ": " + translateSort(c) + " ).");
         }
     }
 
@@ -275,26 +267,22 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         Matcher matcher = pattern.matcher(t);
         if (matcher.find())
             return true;
-        if (t.endsWith("__Integer") || t.endsWith("__RationalNumber") || t.endsWith("__RealNumber") ||
-            t.endsWith("__IntegerFn") || t.endsWith("__RationalNumberFn") || t.endsWith("__RealNumberFn"))
-            return true;
         return false;
     }
 
     /** *************************************************************
      * Create all possible combinations of argument types for Integer
      * RationalNumber and RealNumber for argument types that are
-     * Quantity(s)
+     * Entity(s) (which is everything)
      * @param toExtend is a map of string relation names to the set
      *                 of suffixes that are its argument type variations
      * @param t is the relation name
      */
     private void processRelationSort(HashMap<String,HashSet<String>> toExtend, String t) {
 
-        String suffix = "";
+        if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): t: " + t);
         int index = 1;
         if (kb.isFunction(t)) {
-            suffix = "Fn";
             index = 0;
         }
         ArrayList<String> sig = kb.kbCache.signatures.get(t);
@@ -302,17 +290,17 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         for (int i = index; i < sig.size(); i++) {
             String s = sig.get(i);
             String strnum = Integer.toString(i);
-            if ((kb.isSubclass("Integer",s) && kb.isSubclass(s,"Quantity")) ||
+            if ((kb.isSubclass("Integer",s) && kb.isSubclass(s,"Entity")) ||
                     s.equals("Integer") || kb.isSubclass(s,"Integer"))
                 MapUtils.addToMap(modsig,strnum,strnum + INT_SUFFIX);
-            if ((kb.isSubclass("RationalNumber",s) && kb.isSubclass(s,"Quantity")) ||
+            if ((kb.isSubclass("RationalNumber",s) && kb.isSubclass(s,"Entity")) ||
                     s.equals("RationalNumber") || kb.isSubclass(s,"RationalNumber"))
                 MapUtils.addToMap(modsig,strnum,strnum + RAT_SUFFIX);
-            if ((kb.isSubclass("RealNumber",s) && kb.isSubclass(s,"Quantity")) ||
+            if ((kb.isSubclass("RealNumber",s) && kb.isSubclass(s,"Entity")) ||
                     s.equals("RealNumber") || kb.isSubclass(s,"RealNumber"))
                 MapUtils.addToMap(modsig,strnum,strnum + REAL_SUFFIX);
             //if (!kb.isSubclass(s,"Quantity") && !s.equals("RealNumber"))
-                MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX); // Entity (for $i) suffix
+            MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX); // Entity (for $i) suffix
             if (listOperator(t) && s.equals("Entity")) {
                 MapUtils.addToMap(modsig, strnum, strnum + INT_SUFFIX);
                 MapUtils.addToMap(modsig, strnum, strnum + RAT_SUFFIX);
@@ -338,6 +326,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             allsig.addAll(toExtend.get(t));
         }
         toExtend.put(t,allsig);
+        if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): allsig: " + allsig);
     }
 
     /** *************************************************************
@@ -532,7 +521,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 continue;
             if (kb.isRelation(t) && !alreadyExtended(t) && !t.equals("ListFn") &&
                 !Formula.isComparisonOperator(t) && !Formula.isMathFunction(t)) {
-                if (hasNumericArg(t) || listOperator(t)) {
+                if (hasNumericSuperArg(t) || listOperator(t)) {
                     writeRelationSort(t,pw);
                     processRelationSort(toExtend, t);
                 }
@@ -562,6 +551,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
+        System.out.println("SUMOKBtoTFAKB.main():");
         //HashMap<String,HashSet<String>> toExtend = new HashMap<>();
         //handleListFn(toExtend);
         //System.out.println(toExtend);
@@ -572,6 +562,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
+        System.out.println("SUMOKBtoTFAKB.main(): completed init");
         SUMOformulaToTPTPformula.lang = "tff"; // this setting has to be *after* initialization, otherwise init
         // tried to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
         // havent been set
