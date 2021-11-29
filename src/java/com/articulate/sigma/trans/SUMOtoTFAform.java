@@ -24,7 +24,7 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     // a Set of types for each variable key
     public static HashMap<String,HashSet<String>> varmap = null;
