@@ -1048,18 +1048,16 @@ public class KBcache implements Serializable {
      * tracing back through subclasses as well.
      */
     public void buildRelationsSet() {
-        
-        HashSet<String> rels = new HashSet<String>();  
+
+        HashSet<String> rels = new HashSet<String>();
         rels.add("Relation");
         while (!rels.isEmpty()) {
-            //System.out.println("INFO in KBcache.buildRelationsSet(): rels: " + rels);
+            if (debug) System.out.println("INFO in KBcache.buildRelationsSet(): rels: " + rels);
             HashSet<String> relSubs = new HashSet<String>();
-            Iterator<String> it = rels.iterator();
-            while (it.hasNext()) {
-                String rel = it.next();
-                //System.out.println("INFO in KBcache.buildRelationsSet(): rel: " + rel);
+            for (String rel : rels) {
+                if (debug) System.out.println("INFO in KBcache.buildRelationsSet(): rel: " + rel);
                 ArrayList<Formula> forms = kb.askWithRestriction(0,"subclass",2,rel);
-                //System.out.println("INFO in KBcache.buildRelationsSet(): forms1: " + forms);
+                if (debug) System.out.println("INFO in KBcache.buildRelationsSet(): forms1: " + forms);
                 if (forms != null) 
                     relSubs.addAll(collectArgFromFormulas(1,forms));
                 forms = kb.askWithRestriction(0,"instance",2,rel);
@@ -1075,7 +1073,7 @@ public class KBcache implements Serializable {
                     relSubs.addAll(collectArgFromFormulas(1,forms));
                 }
             }
-            //System.out.println("INFO in KBcache.buildRelationsSet(): relSubs: " + relSubs);
+            if (debug) System.out.println("INFO in KBcache.buildRelationsSet(): relSubs: " + relSubs);
             rels = new HashSet<String>();
             rels.addAll(relSubs);
         }
@@ -1372,10 +1370,9 @@ public class KBcache implements Serializable {
      *      new HashMap<String,ArrayList<String>>();
      */
     public void collectDomains() {
-        
-        Iterator<String> it = relations.iterator();
-        while (it.hasNext()) {
-            String rel = it.next();
+
+        if (debug) System.out.println("INFO in KBcache.collectDomains(): relations " + relations);
+        for (String rel : relations) {
             String[] domainArray = new String[Formula.MAX_PREDICATE_ARITY];
             int maxIndex = 0;
             domainArray[0] = "";
