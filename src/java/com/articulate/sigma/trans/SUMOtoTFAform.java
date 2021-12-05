@@ -24,7 +24,7 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     // a Set of types for each variable key
     public static HashMap<String,HashSet<String>> varmap = null;
@@ -64,6 +64,8 @@ public class SUMOtoTFAform {
      */
     public static boolean isComparisonOperator(String s) {
 
+        if (StringUtil.emptyString(s))
+            return false;
         int under = s.lastIndexOf("__");
         if (under == -1)
             return Formula.isComparisonOperator(s);
@@ -90,6 +92,8 @@ public class SUMOtoTFAform {
      */
     public static boolean isEqualTypeOp(String s) {
 
+        if (StringUtil.emptyString(s))
+            return false;
         return (isComparisonOperator(s) || isMathFunction(s)) && !s.equals(Formula.FLOORFN);
     }
 
@@ -1830,103 +1834,7 @@ public class SUMOtoTFAform {
                 type = newsig.get(i);
             args.set(i, constrainOp(argForm, argForm.car(), type, argForm.complexArgumentsToArrayListString(0)));
         }
-        /*
-        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): best newsig: " + newsig);
-        if ((StringUtil.emptyString(opType) || kb.isSubclass(best,opType))  &&
-                (isComparisonOperator(op) || isMathFunction(op)) || op.equals("equal)")) {
-            constrainVars(newsig,args); // side effect on varmap
-        }
-        if (newsig == null) {
-            System.out.println("Error in SUMOtoTFAform.constrainOp(): null signature for " + op);
-        }
-        else {
-            for (int i = 1; i < args.size(); i++) {
-                String arg = args.get(i);
-                String type = "Entity"; //default
-                if (i >= newsig.size()) {
-                    if (!op.startsWith("equal")) {
-                        System.out.println("Error in SUMOtoTFAform.constrainOp(): missing signature element for " +
-                                op + "  in form " + f);
-                        continue;
-                    }
-                }
-                else {
-                    type = newsig.get(i);
-                    if (op.startsWith("equal"))
-                        type = best;
-                }
-                if (debug) System.out.println("SUMOtoTFAform.constrainOp(): type of arg: " + type);
-                if (Formula.listP(arg)) {
-                    arg = args.get(i);
-                    args.set(i, constrainFunctVarsRecurse(new Formula(arg),type));
-                    Formula argForm = new Formula(arg);
-                    String argType = getOpReturnType(arg);
-                    if (kb.compareTermDepth(type,argType) < 0 && kb.isSubclass(type,"Number"))
-                        suffix = "0" + typeToSuffix(type);
-                    if ((StringUtil.emptyString(argType) || kb.isSubclass(argType,best))  &&
-                            (isComparisonOperator(op) || isMathFunction(op)) || op.equals("equal)"))
-                        newsig = constrainArgs(argType,newsig);
-                    Formula justArg = new Formula(arg).carAsFormula();
-                    if (kb.isFunction(justArg.getFormula())) { // ||
-                            // (justArg.indexOf('_') != -1 && kb.isFunction(justArg.substring(0, justArg.indexOf('_'))))) {
-                        String t = kb.kbCache.getRange(justArg.getFormula());
-                        ArrayList<String> subArgs = argForm.complexArgumentsToArrayListString(0);
-                        //args.set(i,processOtherRelation(argForm,justArg,bestOfPair(t,type),subArgs,kb.kbCache.getSignature(justArg.getFormula())));
-                        if (StringUtil.emptyString(t))
-                            System.out.println("Error in SUMOtoTFAform.constrainOp(): empty function range for " + justArg);
-                        suffix = numberSuffix(suffix, i,op, t, type);
-                    }
-                    if (Formula.isVariable(justArg.getFormula())) {
-                        String t = mostSpecificTerm(varmap.get(justArg));
-                        if (StringUtil.emptyString(t))
-                            System.out.println("Error in SUMOtoTFAform.constrainOp(): empty variable type for " + justArg);
-                        suffix = numberSuffix(suffix, i,op, t, type);
-                    }
-                }
-                else {
-                    if (Formula.isVariable(arg)) {
-                        String t = mostSpecificTerm(varmap.get(arg));
-                        if (StringUtil.emptyString(t))
-                            System.out.println("Error in SUMOtoTFAform.constrainOp(): empty variable type for " + arg);
-                        suffix = numberSuffix(suffix, i,op, t, type);
-                    }
-                    if (StringUtil.isNumeric(arg)) { // even without a decimal, we can't be sure it's Integer
-                        String t = "RealNumber";
-                        int otherTypeIndex = (i % 2) + 1;
-                        String otherType = "";
-                        if (args.size() == 2)
-                            newsig.get(otherTypeIndex);
-                        if (StringUtil.isInteger(arg)) {
-                            if (kb.isSubclass(type, "Integer") || type.equals("Integer") ||
-                                    (isComparisonOperator(op) && (otherType.equals("Integer") ||
-                                            kb.isSubclass(otherType,"Integer"))) ||
-                                    (isComparisonOperator(op) &&
-                                            (best.equals("Integer") || kb.isSubclass(best, "Integer"))))
-                                t = "Integer";
-                            else {
-                                if (debug)
-                                    System.out.println("SUMOtoTFAform.constrainOp(): converting number to real " + arg);
-                                arg = arg + ".0";
-                                args.set(i, arg);
-                                t = "RealNumber";
-                            }
-                        }
-                        suffix = numberSuffix(suffix, i,op, t, type);
-                    }
-                }
-            }
-        }
-        if (isComparisonOperator(op) || isMathFunction(op))
-            suffix = leastNumericType(op,suffix);
-        // if (kb.isFunction(op) && !StringUtil.emptyString(suffix)) {
-        if ((op.startsWith("ListFn")  || isMathFunction(op)) && !StringUtil.emptyString(suffix)) {
-                String range = numberSuffix("",0,op,kb.kbCache.getRange(op),kb.kbCache.getRange(op));
-                suffix = range + suffix + "Fn";
-        }
-        if (!StringUtil.emptyString(suffix))
-            suffix = "__" + suffix;
 
-         */
         ArrayList<String> newargs = new ArrayList<>();
         newargs.addAll(args);
         newargs.remove(0);
@@ -2343,9 +2251,11 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.process(): f: " + f);
         f = instantiateNumericConstants(f);
         f = new Formula(modifyPrecond(f));
-        //if (debug) System.out.println("SUMOtoTFAform.process(): f after modify precond: " + f);
+        if (f == null || StringUtil.emptyString(f.getFormula()))
+            return "";
+        if (debug) System.out.println("SUMOtoTFAform.process(): f after modify precond: " + f);
         f = new Formula(modifyTypesToConstraints(f));
-        //if (debug) System.out.println("SUMOtoTFAform.process(): f after modify types: " + f);
+        if (debug) System.out.println("SUMOtoTFAform.process(): f after modify types: " + f);
         String oldf = null;
         int counter = 0;
         do {
@@ -2389,7 +2299,7 @@ public class SUMOtoTFAform {
             if (debug) System.out.println("SUMOtoTFAform.process(): result 2: " + result);
             return result;
         }
-        return ("");
+        return "";
     }
 
     /** *************************************************************
@@ -2503,7 +2413,7 @@ public class SUMOtoTFAform {
      */
     protected static String modifyPrecond(Formula f) {
 
-        if (f == null)
+        if (f == null || StringUtil.emptyString(f.getFormula()))
             return f.getFormula();
         String type = "Integer";
         Pattern p = Pattern.compile("\\(instance \\?(\\w+) " + type + "\\)");
@@ -2576,6 +2486,8 @@ public class SUMOtoTFAform {
     private static void buildNumericConstraints() {
 
         HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
+        if (intChildren == null)
+            return;
         HashSet<String> realChildren = new HashSet<String>();
         if (kb.kbCache.getChildClasses("RealNumber") != null)
             realChildren.addAll(kb.kbCache.getChildClasses("RealNumber"));
@@ -2596,6 +2508,8 @@ public class SUMOtoTFAform {
                 }
             }
         }
+        if (realChildren == null)
+            return;
         for (String t : realChildren) {
             ArrayList<Formula> realFormsTemp = kb.ask("ant", 0, t);
             if (realFormsTemp != null) {
