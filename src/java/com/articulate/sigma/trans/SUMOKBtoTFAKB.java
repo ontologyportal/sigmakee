@@ -20,7 +20,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean initialized = false;
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     public static HashSet<String> qChildren = new HashSet<String>();
     public static HashSet<String> iChildren = new HashSet<String>();
@@ -217,6 +217,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeRelationSort(String t, PrintWriter pw) {
 
+        if (debug) System.out.println("SUMOKBtoTFAKB.writeRelationSort(): " + t);
         if (t.endsWith("Fn") != kb.isFunction(t))
             System.out.println("ERROR in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t))
@@ -290,16 +291,20 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         for (int i = index; i < sig.size(); i++) {
             String s = sig.get(i);
             String strnum = Integer.toString(i);
-            if ((kb.isSubclass("Integer",s) && kb.isSubclass(s,"Entity")) ||
+            if ((kb.isSubclass("RealNumber",s) && kb.isSubclass(s,"Entity")) ||
+                    s.equals("RealNumber") || kb.isSubclass(s,"RealNumber")) {
+                MapUtils.addToMap(modsig, strnum, strnum + REAL_SUFFIX);
+                MapUtils.addToMap(modsig, strnum, strnum + INT_SUFFIX);
+                MapUtils.addToMap(modsig, strnum, strnum + RAT_SUFFIX);
+            }
+            else if ((kb.isSubclass("RationalNumber",s) && kb.isSubclass(s,"Entity")) ||
+                    s.equals("RationalNumber") || kb.isSubclass(s,"RationalNumber")) {
+                MapUtils.addToMap(modsig, strnum, strnum + RAT_SUFFIX);
+                MapUtils.addToMap(modsig, strnum, strnum + INT_SUFFIX);
+            }
+            else if ((kb.isSubclass("Integer",s) && kb.isSubclass(s,"Entity")) ||
                     s.equals("Integer") || kb.isSubclass(s,"Integer"))
                 MapUtils.addToMap(modsig,strnum,strnum + INT_SUFFIX);
-            if ((kb.isSubclass("RationalNumber",s) && kb.isSubclass(s,"Entity")) ||
-                    s.equals("RationalNumber") || kb.isSubclass(s,"RationalNumber"))
-                MapUtils.addToMap(modsig,strnum,strnum + RAT_SUFFIX);
-            if ((kb.isSubclass("RealNumber",s) && kb.isSubclass(s,"Entity")) ||
-                    s.equals("RealNumber") || kb.isSubclass(s,"RealNumber"))
-                MapUtils.addToMap(modsig,strnum,strnum + REAL_SUFFIX);
-            //if (!kb.isSubclass(s,"Quantity") && !s.equals("RealNumber"))
             MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX); // Entity (for $i) suffix
             if (listOperator(t) && s.equals("Entity")) {
                 MapUtils.addToMap(modsig, strnum, strnum + INT_SUFFIX);
