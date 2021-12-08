@@ -34,7 +34,7 @@ import static com.igormaznitsa.prologparser.terms.TermType.*;
 
 public class TPTP3ProofProcessor {
 
-	public static boolean debug = false;
+	public static boolean debug = true;
 	public String status;
 	public boolean inconsistency = false;
 	public ArrayList<String> bindings = new ArrayList<>();
@@ -366,18 +366,21 @@ public class TPTP3ProofProcessor {
 		try {
 			TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
 			// System.out.println(tptpP.Items.get(0));
-			Iterator<String> it = tptpP.ftable.keySet().iterator();
-			while (it.hasNext()) {
-				String tptpid = it.next();
-				TPTPFormula tptpF = tptpP.ftable.get(tptpid);
-				stmnt = TPTP2SUMO.convertType(tptpF,0,0,true).toString();
-				stmnt = TPTP2SUMO.collapseConnectives(new Formula(stmnt)).toString();
+			if (tptpP != null) {
+				for (String tptpid : tptpP.ftable.keySet()) {
+					TPTPFormula tptpF = tptpP.ftable.get(tptpid);
+					stmnt = TPTP2SUMO.convertType(tptpF, 0, 0, true).toString();
+					stmnt = TPTP2SUMO.collapseConnectives(new Formula(stmnt)).toString();
+				}
 			}
+			else
+				stmnt = line;
 		}
 		catch (Exception e) {
 			System.out.println("Error in TPTP3ProofProcessor.parseProofStep(): " + e.getMessage());
 			e.printStackTrace();
 			System.out.println("TPTP3ProofProcessor.parseProofStep(): with input: " + line);
+			stmnt = line;
 		}
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): KIF stmnt : " + stmnt);
 		ps.axiom = stmnt;
@@ -643,15 +646,17 @@ public class TPTP3ProofProcessor {
 	 */
 	public void parseProofOutput (LineNumberReader lnr, KB kb) {
 
-		ArrayList<String> lines = null;
+		ArrayList<String> lines = new ArrayList<>();
 		try {
 			String line;
 			while ((line = lnr.readLine()) != null)
 				lines.add(line);
 		}
 		catch (Exception ex) {
-			System.out.println(ex.getMessage());
+			ex.printStackTrace();
 		}
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): " +
+				lines);
 		parseProofOutput(lines,"",kb,new StringBuffer());
 	}
 
@@ -663,8 +668,8 @@ public class TPTP3ProofProcessor {
      */
     public void parseProofOutput (ArrayList<String> lines, String kifQuery, KB kb, StringBuffer qlist) {
 
-		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " +
-		//		lines);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " +
+				lines);
     	//lines = joinNreverseInputLines(lines);
 		//if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): after reverse: " +
 		//		lines);
@@ -785,6 +790,24 @@ public class TPTP3ProofProcessor {
 
 	/** ***************************************************************
 	 */
+	public void parseProofFromFile (String filename, KB kb) {
+
+		try {
+			File f = new File(filename);
+			if (!f.exists()) {
+				System.out.println("Error in parseProofFromFile() no such file " + filename);
+			}
+			FileReader fr = new FileReader(filename);
+			LineNumberReader lnr = new LineNumberReader(fr);
+			parseProofOutput(lnr, kb);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/** ***************************************************************
+	 */
 	private static void printPrologTerm (PrologTerm pt, String indent) {
 
 		System.out.println(indent + pt.toString() + "\t" + pt.getType());
@@ -883,11 +906,19 @@ public class TPTP3ProofProcessor {
 				lines.add(newline);
 			}
 			else {
+				if (ps.axiom.contains("[") || ps.axiom.contains("]") || ps.axiom.contains("$") || ps.axiom.contains("&")) // must be a TPTP formula
+					ps.axiom = ps.axiom.replaceAll("&", "&amp;"); // shouldn't see this char in KIF but is in TPTP
 				Formula f = new Formula(ps.axiom);
 				String formatted = f.format("", "&nbsp;&nbsp;", " <br align=\"left\"/> ");
-				//formatted = formatted.replaceAll("&", "&amp;"); // shouldn't see this char in KIF
+				if (StringUtil.emptyString(ps.axiom))
+					formatted = ps.input;
+				System.out.println("createProofDotGraphBody(): ps.axiom: " + ps.axiom);
+				System.out.println("createProofDotGraphBody(): formatted: " + formatted);
 				formatted = formatted.replaceAll("<=>", "&lt;=&gt;");
 				formatted = formatted.replaceAll("=>", "=&gt;");
+				formatted = formatted.replace("[", " &#91;");
+				formatted = formatted.replace("]", " &#93;");
+				System.out.println("createProofDotGraphBody(): replaced: " + formatted);
 				String line = "n" + ps.number + " [shape=\"box\" label = < " + formatted + " <br align=\"left\"/> > ]";
 				lines.add(line);
 			}
@@ -1048,14 +1079,17 @@ public class TPTP3ProofProcessor {
 			if (args != null && args.length > 1 && args[0].contains("p")) {
 				try {
 					List<String> lines = joinLines((ArrayList<String>) FileUtil.readLines(args[1],false));
-					String query = "(and (instance ?G TournamentSport) (instance ?G Golf) (located ?G UnitedKingdom) (plays ?G ?A))";
-					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,new StringBuffer("?G ?A"));
+					String query = "";
+					StringBuffer answerVars = new StringBuffer("");
+					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
 					String link = tpp.createProofDotGraph();
+					System.out.println("Dot graph at: " + link);
 				}
 				catch (Exception e) {
 					e.printStackTrace();
 				}
-			} else if (args != null && args.length > 0 && args[0].contains("t"))
+			}
+			else if (args != null && args.length > 0 && args[0].contains("t"))
 				tpp.testPrologParser();
 			else
 				showHelp();
