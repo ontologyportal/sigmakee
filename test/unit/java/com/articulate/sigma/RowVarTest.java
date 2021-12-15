@@ -154,10 +154,10 @@ public class RowVarTest extends UnitTestBase  {
         System.out.println("testRowVarExp(): results: " + results);
         System.out.println("testRowVarExp(): results size: " + results.size());
         System.out.println("testRowVarExp(): expected: " + 7);
-        if (results.size() == 7)
+        if (results.size() == RowVars.MAX_ARITY)
             System.out.println("testLinks(): success!");
         else
             System.out.println("testLinks(): failure");
-        assertTrue(results.size() == 7);
+        assertTrue(results.size() == RowVars.MAX_ARITY);
     }
 }
