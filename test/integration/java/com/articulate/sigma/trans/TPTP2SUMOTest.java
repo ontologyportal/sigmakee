@@ -34,9 +34,8 @@ public class TPTP2SUMOTest {
                 "~s__instance(s__JohnsGolfGame,s__Golf) | " +
                 "~ans0(s__BobTheGolfer,s__JohnsGolfGame,s__BobsGolfGame,s__JohnTheGolfer))).";
         try {
-            StringReader reader = new StringReader(input);
             // kif = TPTP2SUMO.convert(reader, false);
-            TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
+            TPTPParser tptpP = TPTPParser.parse(input);
             System.out.println(tptpP.Items.get(0));
             for (String id : tptpP.ftable.keySet()) {
                 TPTPFormula tptpF = tptpP.ftable.get(id);
