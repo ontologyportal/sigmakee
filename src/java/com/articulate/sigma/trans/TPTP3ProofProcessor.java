@@ -360,12 +360,8 @@ public class TPTP3ProofProcessor {
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): stmnt    : " + stmnt);
 		line = line.replaceAll("\\$answer\\(","answer(");
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
-		StringReader reader = new StringReader(line);
-		//StringReader reader = new StringReader(stmnt);
-		// kif = TPTP2SUMO.convert(reader, false);
 		try {
-			TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
-			// System.out.println(tptpP.Items.get(0));
+			TPTPParser tptpP = TPTPParser.parse(line);
 			if (tptpP != null) {
 				for (String tptpid : tptpP.ftable.keySet()) {
 					TPTPFormula tptpF = tptpP.ftable.get(tptpid);
@@ -495,6 +491,9 @@ public class TPTP3ProofProcessor {
 		ArrayList<String> qvars = new ArrayList<>();
 		if (debug) System.out.println("processAnswersFromProof(): vars: " + vars);
 		if (debug) System.out.println("processAnswersFromProof(): qlist: " + qlist);
+		if (debug) System.out.println("processAnswersFromProof(): query: " + query);
+		if (debug) System.out.println("processAnswersFromProof(): bindingMap: " + bindingMap);
+		bindingMap = new HashMap<>();
 		if (qlist != null && qlist.length() > 0) {
 			List<String> qvarslist = Arrays.asList(qlist.toString().split(","));
 			for (String s : qvarslist) {
@@ -502,6 +501,7 @@ public class TPTP3ProofProcessor {
 				qvars.add(news);
 			}
 		}
+		if (debug) System.out.println("processAnswersFromProof(): qvars: " + qvars);
 
 		if (debug) System.out.println("processAnswersFromProof(): proof: " + proof);
 		for (ProofStep ps : proof) {
