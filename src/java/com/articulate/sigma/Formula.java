@@ -1298,7 +1298,7 @@ public class Formula implements Comparable, Serializable {
                 return result;
             }
             else {
-                if(f1.theFormula.equals(f2.theFormula)) {
+                if (f1.theFormula.equals(f2.theFormula)) {
                     ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
                     result.add(new HashSet<VariableMapping>());
                     return result;
@@ -2482,7 +2482,7 @@ public class Formula implements Comparable, Serializable {
     public static boolean isCommutative(String obj) {
 
         return (!StringUtil.emptyString(obj)
-                && (obj.equals(AND)
+                && (obj.equals(AND) || obj.equals(EQUAL)
                     || obj.equals(OR)));
     }
 
