@@ -45,9 +45,9 @@ public class ProofSummary {
   }
 
   public static void main (String args[]) throws Exception {
+
     TPTPParser.checkArguments(args);
-    BufferedReader reader = TPTPParser.createReader(args[0]);
-    TPTPParser parser = TPTPParser.parse(reader);   
+    TPTPParser parser = TPTPParser.parse(args[0]);
     TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);
     if (conjecture == null) {
       System.out.println("% ERROR: No fof conjecture in proof -> no lemmas -> proof summary failed");
