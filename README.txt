@@ -271,7 +271,7 @@ ant
 
 To test run
 
-  java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/*
+  java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
     com.articulate.sigma.KB -c Object Transaction
 
 Start Tomcat with
@@ -342,15 +342,15 @@ program, you'll need to set a path in config.xml, for example
 jUnit testing on the command line
 =================================
 
-java  -Xmx4g -classpath
-  ~/workspace/sigmakee/build/classes:~/workspace/sigmakee/build/lib/*
+java  -Xmx8g -classpath \
+  /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
   org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
 one test method at a time can be run with help from the SingleJUnitTestRunner class,
 for example
 
-java -Xmx4g -classpath /home/apease/workspace/sigmakee/build/classes:
-  /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner
+java -Xmx4g -classpath /home/apease/workspace/sigmakee/build/classes: \
+  /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner \
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 
 You will have to edit the resources files that correspond to config.xml to conform to your
