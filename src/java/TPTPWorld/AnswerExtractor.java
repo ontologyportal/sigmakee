@@ -269,12 +269,11 @@ public class AnswerExtractor {
 
   // given a proof, extract answers (if any exist)
   public static void main (String[] args) throws Exception {
+
     TPTPParser.checkArguments(args);
     // assumption: filename is args[0] or "--" for stdin
-    BufferedReader reader = TPTPParser.createReader(args[0]);
-
     // call AnswerExtractor
-    TPTPParser parser = TPTPParser.parse(reader);
+    TPTPParser parser = TPTPParser.parse(args[0]);
     if (!AnswerExtractor.extractAnswers(parser)) {
       System.out.println("% No answers found in AnswerExtractor");
     }

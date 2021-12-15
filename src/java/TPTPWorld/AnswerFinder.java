@@ -11,6 +11,7 @@ import java.util.logging.Logger;
 public class AnswerFinder {
   
     public static String findProof (String problem, String systemsDir) throws Exception {
+
 		Logger logger = Logger.getLogger("");
 
         // find proof with one-answer system (default: Metis)
@@ -34,6 +35,7 @@ public class AnswerFinder {
     }
 
     public static String findProof (String problem, String system, String systemsDir) throws Exception {
+
         // create tempfile
         String filename = "AnswerFinder.findProof";
         File outputFile = File.createTempFile(filename, ".p", null);
@@ -61,13 +63,12 @@ public class AnswerFinder {
     // given a list of TPTPFormulas, extract conjecture and lemma vine
     // send to one-answer system (Metis)
     public static String findProofWithAnswers (String tptp, String systemsDir) {
-		Logger logger = Logger.getLogger("");
 
+		Logger logger = Logger.getLogger("");
     	if (logger.isLoggable(Level.FINER)) {
 			String[] params = { "tptp = " + tptp, "systemsDir = " + systemsDir };
 			logger.entering("AnswerFinder", "findProofWithAnswers", params);
 		}
-
         String result = "";
         try {
             if ((tptp instanceof String) && !tptp.equals("")) {
@@ -80,7 +81,7 @@ public class AnswerFinder {
                     }
                 }
             }
-            result = findProofWithAnswers(new BufferedReader(new StringReader(tptp)), systemsDir);
+            result = findProofWithAnswersBody(tptp, systemsDir);
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -92,29 +93,25 @@ public class AnswerFinder {
     } 
 
 
-    public static String findProofWithAnswers (BufferedReader reader, String systemsDir) {
-		Logger logger = Logger.getLogger("");
+    public static String findProofWithAnswersBody (String in, String systemsDir) {
 
+		Logger logger = Logger.getLogger("");
 		if (logger.isLoggable(Level.FINER)) {
-			String[] params = { "reader =" + reader,
+			String[] params = { "reader =" + in,
 					"systemsDir = " + systemsDir };
 			logger.entering("AnswerFinder", "findProofWithAnswers", params);
 		}
-
 		String ans = "";
         try {
             String problem = "";
-            TPTPParser parser = TPTPParser.parse(reader);    
-            TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);    
-
+            TPTPParser parser = TPTPParser.parse(in);
+            TPTPFormula conjecture = AnswerExtractor.extractVine(parser.ftable);
             // no conjecture = no answers
             if (conjecture == null) {    
                 String errorMsg = "% WARNING: No fof conjecture in proof -> no lemmas -> cannot call one-answer system -> find answers failed";
 				logger.warning(errorMsg);
                 return errorMsg;
             }
-            
-           
             ArrayList<TPTPFormula> lemmas = ProofSummary.getLemmaVine(conjecture);
             // gather problem, to be sent to one-answer system
             problem += conjecture.fofify() + "\n\n";
@@ -128,34 +125,27 @@ public class AnswerFinder {
             //ex.printStackTrace();
 			logger.severe(ex.getMessage());
         }
-
 		logger.exiting("AnswerFinder", "findProofWithAnswers", ans);
         return ans;
     } 
 
-      
     // given a proof, find answers using one-answer system
     public static void main (String args[]) throws Exception {
+
         TPTPParser.checkArguments(args);
         // assumption: filename is args[0] or "--" for stdin
-        BufferedReader reader = TPTPParser.createReader(args[0]);
-    
         // locate $TPTP_HOME
         String tptpHome = System.getenv("TPTP_HOME");
         if (tptpHome == null || tptpHome.equals("")) {
             System.out.println("% ERROR: Please specify your $TPTP_HOME environment variable");
             //System.exit(0);
         }
-
         // set Systems directory
         String systemsDirectory = tptpHome + "/" + "Systems";
-
         // find proof with answers (by calling one-answer system)
-        String proofWithAnswers = findProofWithAnswers(reader, systemsDirectory);
-
+        String proofWithAnswers = findProofWithAnswers(args[0], systemsDirectory);
         // call AnswerExtractor
-        StringReader sr = new StringReader(proofWithAnswers);
-        TPTPParser parser = TPTPParser.parse(new BufferedReader(sr));
+        TPTPParser parser = TPTPParser.parse(proofWithAnswers);
         if (!AnswerExtractor.extractAnswers(parser)) {
             System.out.println("% No answers found in AnswerFinder");
         }

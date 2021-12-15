@@ -476,8 +476,8 @@ public class SystemOnTPTP {
     }
 
     public static int getTPTPFormulaSize (String tptp) throws Exception {
-        BufferedReader reader = new BufferedReader(new StringReader(tptp));
-        TPTPParser parser = TPTPParser.parse(reader);
+
+        TPTPParser parser = TPTPParser.parse(tptp);
         return parser.Items.size();
     }
 
@@ -510,7 +510,8 @@ public class SystemOnTPTP {
     }
 
     public static boolean proofExists (String tptp) throws Exception {
-        TPTPParser parser = new TPTPParser(new BufferedReader(new StringReader(tptp)));
+
+        TPTPParser parser = new TPTPParser(tptp);
         boolean exists = parser.Items.size() > 0;
         return exists;
     }
@@ -567,9 +568,9 @@ public class SystemOnTPTP {
 
     //  public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp, JspWriter out) throws Exception {
     public static ArrayList<Binding> getSZSBindings (String conjecture, String tptp) throws Exception {
+
         ArrayList<Binding> bind = new ArrayList();
-        BufferedReader reader = new BufferedReader(new StringReader(conjecture));
-        TPTPParser parser = TPTPParser.parse(reader);
+        TPTPParser parser = TPTPParser.parse(conjecture);
         // should only have conjecture in there, not dealing with anything else
         if (parser.Items.size() != 1) {
             return bind;
@@ -580,9 +581,9 @@ public class SystemOnTPTP {
     }
 
     public static ArrayList<Binding> getSZSBindings (String conjecture, ArrayList<Binding> answers) throws Exception {
+
         ArrayList<Binding> bind = new ArrayList();
-        BufferedReader reader = new BufferedReader(new StringReader(conjecture));
-        TPTPParser parser = TPTPParser.parse(reader);
+        TPTPParser parser = TPTPParser.parse(conjecture);
         // should only have conjecture in there, not dealing with anything else
         if (parser.Items.size() != 1) {
             return bind;

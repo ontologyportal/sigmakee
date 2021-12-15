@@ -192,9 +192,10 @@ public class LooksDifferent {
 	}
 	
 	public static String filterLooksDifferent (String tptp) throws Exception {
+
 		// keep only TPTPFormula which are "axioms" and has no ld predicates
 		String axioms = "";
-		TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(tptp)));
+		TPTPParser parser = TPTPParser.parse(tptp);
 		Hashtable<String,TPTPFormula> ftable = parser.ftable;
 		Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
 		for (SimpleTptpParserOutput.TopLevelItem item : Items) {
@@ -215,11 +216,10 @@ public class LooksDifferent {
 	}
 	
   public static void main (String args[]) throws Exception {
+
     TPTPParser.checkArguments(args);
     // assumption: filename is args[0] or "--" for stdin
-    BufferedReader reader = TPTPParser.createReader(args[0]);
-    TPTPParser parser = TPTPParser.parse(reader);
-
+    TPTPParser parser = TPTPParser.parse(args[0]);
     // get symbols from proof
     TreeSet<TPTPParser.Symbol> symbolList = TPTPParser.getSymbolList(args[0]);
     Iterator it = symbolList.iterator();

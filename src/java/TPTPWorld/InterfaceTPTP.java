@@ -667,7 +667,7 @@ public class InterfaceTPTP {
 				//----Procedure if not SNARK (call one answer system: Metis)
 				try {
 					logger.finest("Parsing the following result from Metis = " + result);
-					TPTPParser parser = TPTPParser.parse(new BufferedReader(new StringReader(result)));
+					TPTPParser parser = TPTPParser.parse(result);
 					lastAnswer = AnswerExtractor.extractAnswers(parser.ftable);
 					//----Get original variable names
 					lastAnswer = SystemOnTPTP.getSZSBindings(conjectureTPTPFormula, lastAnswer);
