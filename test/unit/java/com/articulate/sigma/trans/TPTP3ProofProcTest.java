@@ -239,7 +239,7 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         tpp.parseProofOutput(input,query,kb,sb);
         tpp.processAnswersFromProof(new StringBuffer("X"),query);
         String actual = tpp.bindingMap.toString();
-        String expected = "{X0=TransitFn}";
+        String expected = "{X=TransitFn}";
         System.out.println("Actual: " + actual);
         System.out.println("Expected: " + expected);
         if (!StringUtil.emptyString(actual) && actual.equals(expected))
