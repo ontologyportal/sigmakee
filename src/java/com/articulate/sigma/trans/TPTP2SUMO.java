@@ -36,45 +36,37 @@ public class TPTP2SUMO {
   /** ***************************************************************
    * Convenience routine that calls the main convert() method below
    */
-  public static String convert (String tptp, boolean instantiated) throws Exception { 
+  public static String convert(String tptp, boolean instantiated) throws Exception {
 
-      return convert(new BufferedReader(new StringReader(tptp)), null, instantiated);
+      return convert(tptp, null, instantiated);
   }
 
   /** ***************************************************************
    * Convenience routine that calls the main convert() method below
-   */
+
   public static String convert (Reader in, boolean instantiated) throws Exception {
 
       return convert(new BufferedReader(in), null, instantiated);
   }
+*/
 
   /** ***************************************************************
    * Convenience routine that calls the main convert() method below
-   */
-  public static String convert (String tptp, ArrayList<Binding> answer, 
-                                boolean instantiated) throws Exception {
 
-      return convert(new BufferedReader(new StringReader(tptp)), answer, instantiated);
-  }
-
-  /** ***************************************************************
-   * Convenience routine that calls the main convert() method below
-   */
   public static String convert (Reader in, ArrayList<Binding> answer, 
                                 boolean instantiated) throws Exception {
 
       return convert(new BufferedReader(in), answer, instantiated);
   }
-
+*/
   /** ***************************************************************
    * Convert a TPTP proof to a SUMO XML-wrapped proof
    */
-  public static String convert(BufferedReader reader, ArrayList<Binding> answer,
+  public static String convert(String tptp, ArrayList<Binding> answer,
                                boolean instantiated) throws Exception {
 
       StringBuffer result = new StringBuffer();
-      TPTPParser parser = TPTPParser.parse(reader);
+      TPTPParser parser = TPTPParser.parse(tptp);
       Hashtable<String,TPTPFormula> ftable = parser.ftable;
       Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
       if (debug) System.out.println("# of formulas: " + ftable.size());
@@ -130,11 +122,9 @@ public class TPTP2SUMO {
   /** ***************************************************************
   * Convert a TPTP file to SUMO
   */
-  public static String convertBare(Reader in, boolean instantiated) throws Exception {
+  public static String convertBare(String in, boolean instantiated) throws Exception {
 
-      BufferedReader reader = new BufferedReader(in);
-      ArrayList<Binding> answer = null;
-      TPTPParser parser = TPTPParser.parse(reader);
+      TPTPParser parser = TPTPParser.parse(in);
       Hashtable<String,TPTPFormula> ftable = parser.ftable;
       Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
        //----Start output
@@ -202,16 +192,9 @@ public class TPTP2SUMO {
         int indent = 12;
         int indented = 0;
         if (debug) System.out.println("convertBareTPTPFormula(): " + formula);
-        SimpleTptpParserOutput.Annotations annotations = null;
-        SimpleTptpParserOutput.Source source = null;
-        String sourceInfo = "";
-
         //----Add parents info as "premises"
-        for (TPTPFormula parent : formula.parent) {
-            //result.append(convertBareType(parent, indent+2, indented,true));
+        for (TPTPFormula parent : formula.parent)
             result.append(convertBareType(parent, 0, indented,true));
-        }
-        //result.append(convertBareType(formula, indent, indented,true));
         result.append(convertBareType(formula, 0, indented,true));
         result.append("\n\n");
         if (debug) System.out.println("convertBareTPTPFormula(): result: " + result);
@@ -628,13 +611,12 @@ public class TPTP2SUMO {
               if (args.length > 1 && args[0].equals("-c")) {
                   inFile = args[1];
                   file = new FileReader(inFile);
-                  kif = TPTP2SUMO.convertBare(file, false);
+                  kif = TPTP2SUMO.convert(inFile, false);
                   System.out.println(kif);
               }
               if (args.length > 0 && args[0].equals("-t")) {
-                  StringReader reader = new StringReader(clause);
                   // kif = TPTP2SUMO.convert(reader, false);
-                  TPTPParser tptpP = TPTPParser.parse(new BufferedReader(reader));
+                  TPTPParser tptpP = TPTPParser.parse(clause);
                   System.out.println(tptpP.Items.get(0));
                   for (String id : tptpP.ftable.keySet()) {
                       TPTPFormula tptpF = tptpP.ftable.get(id);
