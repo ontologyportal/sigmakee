@@ -1,5 +1,7 @@
 package TPTPWorld;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.io.*;
 import tptp_parser.*;
@@ -38,10 +40,10 @@ public class TPTPParser {
 
     /** ***************************************************************
      */
-    public TPTPParser (BufferedReader reader) throws Exception {
+    public TPTPParser (String tptp) throws Exception {
 
         StringBuffer result = new StringBuffer();
-        TptpLexer lexer = new TptpLexer(reader);
+        TptpLexer lexer = new TptpLexer(new BufferedReader(new StringReader(tptp)));
         TptpParser parser = new TptpParser(lexer);
         SimpleTptpParserOutput outputManager = new SimpleTptpParserOutput();		
         this.ftable = new Hashtable();
@@ -120,8 +122,8 @@ public class TPTPParser {
 
     /** ***************************************************************
      */
-    public static TPTPParser parse (BufferedReader reader) throws Exception {
-        return new TPTPParser(reader);
+    public static TPTPParser parse (String tptp) throws Exception {
+        return new TPTPParser(tptp);
     }
 
     /** ***************************************************************
@@ -400,39 +402,19 @@ public class TPTPParser {
 
     /** ***************************************************************
      */
-    public static TreeSet<Symbol> getSymbolList (BufferedReader reader) throws Exception {
-
-        TreeSet<Symbol> set = new TreeSet(new TPTPParser.SymbolComparator());
-        TPTPParser parser = TPTPParser.parse(reader);
-        for (int i = 0; i < parser.Items.size(); i++) {
-            SimpleTptpParserOutput.TopLevelItem item = parser.Items.get(i);
-            if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
-                SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
-                set = getSymbolList(AF.getFormula(),set);
-            } else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
-                SimpleTptpParserOutput.AnnotatedClause AC = ((SimpleTptpParserOutput.AnnotatedClause)item);
-                set = getSymbolList(AC.getClause(),set);
-            }
-        }
-        return set;
-    }
-
-    /** ***************************************************************
-     */
-    public static TreeSet<Symbol> getSymbolList (String filename) throws Exception {
+    public static TreeSet<Symbol> getSymbolListFromFile (String filename) throws Exception {
 
         TreeSet<Symbol> result = null;
         try {
-            BufferedReader reader = TPTPParser.createReader(filename);
-            result = TPTPParser.getSymbolList(reader);
+            String input = new String(Files.readAllBytes(Paths.get(filename)));
+            return getSymbolList(input);
         }
         catch (Exception ex) {
-            System.out.println("ERROR reading " + filename);
+            System.out.println("ERROR in getSymbolListFromFile() reading " + filename);
             System.out.println(ex.getMessage());
             ex.printStackTrace();
             throw ex;
         }
-        return result;
     }
 
     /** ***************************************************************
@@ -445,8 +427,27 @@ public class TPTPParser {
         for (Binding bind : bindings) {
             temp += "fof(dummy__formula_" + count + ", axiom, dummy_predicate(" + bind.binding +  ")).\n"; 
         }
-        BufferedReader reader = new BufferedReader(new StringReader(temp));
-        return getSymbolList(reader);
+        return getSymbolList(temp);
+    }
+
+    /** ***************************************************************
+     */
+    public static TreeSet<Symbol> getSymbolList (String input) throws Exception {
+
+        TreeSet<Symbol> set = new TreeSet(new TPTPParser.SymbolComparator());
+        TPTPParser parser = TPTPParser.parse(input);
+        for (int i = 0; i < parser.Items.size(); i++) {
+            SimpleTptpParserOutput.TopLevelItem item = parser.Items.get(i);
+            if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
+                SimpleTptpParserOutput.AnnotatedFormula AF = ((SimpleTptpParserOutput.AnnotatedFormula)item);
+                set = getSymbolList(AF.getFormula(),set);
+            }
+            else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
+                SimpleTptpParserOutput.AnnotatedClause AC = ((SimpleTptpParserOutput.AnnotatedClause)item);
+                set = getSymbolList(AC.getClause(),set);
+            }
+        }
+        return set;
     }
 
     /** ***************************************************************
@@ -455,10 +456,8 @@ public class TPTPParser {
 
          TPTPParser.checkArguments(args);
         // assumption: filename is args[0] or "--" for stdin
-       
-        BufferedReader reader = TPTPParser.createReader(args[0]);
 
-        TreeSet<Symbol> set = TPTPParser.getSymbolList(reader);
+        TreeSet<Symbol> set = TPTPParser.getSymbolListFromFile(args[0]);
         Iterator it = set.iterator();
         int count = 0;
         while (it.hasNext()) {
