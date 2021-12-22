@@ -12,7 +12,6 @@ package com.articulate.sigma;
  August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
  */
 
-import TPTPWorld.InterfaceTPTP;
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
@@ -461,11 +460,11 @@ public class CCheck implements Runnable {
                 result = empty.askLEO(query, timeOut, 1, "LeoGlobal");
             }        
             else if (inferenceEngine.equals("SoTPTP")) {
-                result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
-                        ieSettings.get("systemChosen"),
-                        ieSettings.get("location"),
-                        ieSettings.get("quietFlag"), empty.name,
-                        ieSettings.get("language"));
+                //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
+                //        ieSettings.get("systemChosen"),
+                //        ieSettings.get("location"),
+                //        ieSettings.get("quietFlag"), empty.name,
+                //        ieSettings.get("language"));
             }                        
             else throw new Exception("No inference engine.");
         }
