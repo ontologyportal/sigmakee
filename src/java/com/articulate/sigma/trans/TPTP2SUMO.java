@@ -15,191 +15,14 @@ http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 package com.articulate.sigma.trans;
 
-import TPTPWorld.AnswerExtractor;
-import TPTPWorld.Binding;
-import TPTPWorld.TPTPFormula;
-import TPTPWorld.TPTPParser;
 import com.articulate.sigma.Formula;
-import com.articulate.sigma.ProofStep;
-import tptp_parser.SimpleTptpParserOutput;
-
-import java.io.BufferedReader;
+import tptp_parser.*;
 import java.io.FileReader;
-import java.io.Reader;
-import java.io.StringReader;
 import java.util.*;
 
 public class TPTP2SUMO {
 
     public static boolean debug = false;
-
-  /** ***************************************************************
-   * Convenience routine that calls the main convert() method below
-   */
-  public static String convert(String tptp, boolean instantiated) throws Exception {
-
-      return convert(tptp, null, instantiated);
-  }
-
-  /** ***************************************************************
-   * Convenience routine that calls the main convert() method below
-
-  public static String convert (Reader in, boolean instantiated) throws Exception {
-
-      return convert(new BufferedReader(in), null, instantiated);
-  }
-*/
-
-  /** ***************************************************************
-   * Convenience routine that calls the main convert() method below
-
-  public static String convert (Reader in, ArrayList<Binding> answer, 
-                                boolean instantiated) throws Exception {
-
-      return convert(new BufferedReader(in), answer, instantiated);
-  }
-*/
-  /** ***************************************************************
-   * Convert a TPTP proof to a SUMO XML-wrapped proof
-   */
-  public static String convert(String tptp, ArrayList<Binding> answer,
-                               boolean instantiated) throws Exception {
-
-      StringBuffer result = new StringBuffer();
-      TPTPParser parser = TPTPParser.parse(tptp);
-      Hashtable<String,TPTPFormula> ftable = parser.ftable;
-      Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
-      if (debug) System.out.println("# of formulas: " + ftable.size());
-      if (debug) System.out.println("# of Items: " + Items.size());
-  
-      //----Start SUMO output
-      result.append("<queryResponse>\n");
-      result.append("  <answer result='yes' number='1'>\n");
-  
-      //----Start proof output
-      StringBuffer proof = new StringBuffer();
-      proof.append("    <proof>\n");
-      for (SimpleTptpParserOutput.TopLevelItem item : Items) {
-          String name = TPTPParser.getName(item);
-          TPTPFormula formula = ftable.get(name);
-          proof.append(convertTPTPFormula(formula, ftable, instantiated));
-      }
-      //----End proof output
-      proof.append("    </proof>\n");
-  
-      // print out answer (if exists)
-      // (CURRENTLY: only metis proof prints variable bindings)
-      StringBuffer binding = new StringBuffer();
-      ArrayList<Binding> binds;
-      if (answer != null && !answer.isEmpty()) 
-          binds = answer;
-      else 
-          binds = AnswerExtractor.extractAnswers(ftable);      
-      if (!binds.isEmpty()) {
-          binding.append("  <bindingSet type='definite'>\n");
-          binding.append("    <binding>\n");
-          for (Binding bind : binds) {
-              assert bind.binding != null;
-              binding.append("      <var name='?" + transformVariable(bind.variable) + 
-                             "' value='" + transformTerm(bind.binding) + "'/>\n");
-          }
-          binding.append("    </binding>\n");
-          binding.append("  </bindingSet>\n");
-      }
-  
-      //----Append proof after bindings (xml order matters)
-      result.append(binding);
-      result.append(proof);
-  
-      //----End SUMO output
-      result.append("  </answer>\n");
-      result.append("  <summary proofs='1'/>\n");
-      result.append("</queryResponse>\n");
-  
-      return result.toString();
-  }
-
-  /** ***************************************************************
-  * Convert a TPTP file to SUMO
-  */
-  public static String convertBare(String in, boolean instantiated) throws Exception {
-
-      TPTPParser parser = TPTPParser.parse(in);
-      Hashtable<String,TPTPFormula> ftable = parser.ftable;
-      Vector<SimpleTptpParserOutput.TopLevelItem> Items = parser.Items;
-       //----Start output
-      StringBuffer result = new StringBuffer();
-      for (SimpleTptpParserOutput.TopLevelItem item : Items) {
-          String name = TPTPParser.getName(item);
-          TPTPFormula formula = ftable.get(name);
-          String sumo = convertBareTPTPFormula(formula, ftable, instantiated).toString();
-          Formula sumoFormula = new Formula(sumo);
-          result.append(sumoFormula.textFormat(sumo) + "\n\n");
-      }
-      result.append(result);
-      return result.toString();
-  }
-
-  /** ***************************************************************
-   * Convert a TPTP proof step to a SUMO XML-wrapped proof step
-   */
-  private static StringBuffer convertTPTPFormula (TPTPFormula formula, 
-                                                  Hashtable<String,TPTPFormula> ftable, 
-                                                  boolean instantiated) {
-
-      StringBuffer result = new StringBuffer();
-      int indent = 12;
-      int indented = 0;
-      
-      result.append("      <proofStep>\n");
-      result.append("        <premises>\n");
-      SimpleTptpParserOutput.Annotations annotations = null;    
-      SimpleTptpParserOutput.Source source = null;
-      String sourceInfo = "";
-  
-      //----Add parents info as "premises"
-      for (TPTPFormula parent : formula.parent) {
-          result.append("          <premise>\n");
-          result.append(convertType(parent, indent+2, indented));
-          result.append("          </premise>\n");
-      }
-      result.append("        </premises>\n");
-      result.append("        <conclusion>\n");
-      result.append(convertType(formula, indent, indented));
-      if (formula.parent.isEmpty()) {
-          if (formula.type.equals("conjecture")) {
-        	  if (!instantiated) 
-                  result.append("          <query type='" + ProofStep.QUERY + "'/>\n");
-        	  else 
-                  result.append("          <query type='" + ProofStep.INSTANTIATED_QUERY + "'/>\n");              
-          } 
-          else if (formula.type.equals("negated_conjecture")) 
-              result.append("          <query type='" + ProofStep.NEGATED_QUERY + "'/>\n");          
-      }
-      result.append("        </conclusion>\n");
-      result.append("      </proofStep>\n");
-      return result;
-  }
-
-    /** ***************************************************************
-     * Convert a TPTP statement to SUMO
-     */
-    private static StringBuffer convertBareTPTPFormula (TPTPFormula formula,
-                                                    Hashtable<String,TPTPFormula> ftable,
-                                                    boolean instantiated) {
-
-        StringBuffer result = new StringBuffer();
-        int indent = 12;
-        int indented = 0;
-        if (debug) System.out.println("convertBareTPTPFormula(): " + formula);
-        //----Add parents info as "premises"
-        for (TPTPFormula parent : formula.parent)
-            result.append(convertBareType(parent, 0, indented,true));
-        result.append(convertBareType(formula, 0, indented,true));
-        result.append("\n\n");
-        if (debug) System.out.println("convertBareTPTPFormula(): result: " + result);
-        return result;
-    }
 
   /** ***************************************************************
    * Remove binary cascading or's and and's and consolidate as single
@@ -251,144 +74,6 @@ public class TPTP2SUMO {
   }
 
   /** ***************************************************************
-   * Convert a single annotated TPTP clause to a single XML-wrapped SUMO formula.
-   * This is the main entry point for this class.
-   */
-  public static StringBuffer convertType (TPTPFormula formula, int indent, int indented) {
-
-      return convertType(formula,indent,indented,false);
-  }
-  
-  /** ***************************************************************
-   * Convert a single annotated TPTP clause to a single SUMO formula, possibly XML-wrapped.
-   * This is the main entry point for this class.
-   */
-  public static StringBuffer convertType (TPTPFormula formula, int indent, int indented, boolean noXML) {
-
-      StringBuffer result = new StringBuffer();
-      String type = "";
-      int id = formula.id;
-      SimpleTptpParserOutput.TopLevelItem item = formula.item;
-      if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
-          SimpleTptpParserOutput.AnnotatedFormula AF = (SimpleTptpParserOutput.AnnotatedFormula) item;
-          type = "formula";
-          if (!noXML)
-              result.append(addIndent(indent-2,indented) + "<" + type + " number='" + id + "'>\n");
-          String form = convertFormula(AF.getFormula(),indent,indented).toString();
-          form = collapseConnectives(new Formula(form)).toString();
-          result.append(form);
-          if (!noXML)
-        	  result.append("\n" + addIndent(indent-2,indented) + "</" + type + ">\n");
-      } 
-      else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
-          SimpleTptpParserOutput.AnnotatedClause AC = (SimpleTptpParserOutput.AnnotatedClause) item;
-          type = "clause";
-          if (!noXML)
-              result.append(addIndent(indent-2,indented) + "<" + type + " number='" + id + "'>\n");
-          String form = convertClause(AC.getClause(),indent,indented).toString();
-          form = collapseConnectives(new Formula(form)).toString();
-          result.append(form);
-          if (!noXML)
-        	  result.append("\n" + addIndent(indent-2,indented) + "</" + type + ">\n");
-      } 
-      else 
-          result.append("Error: TPTP Formula syntax unknown for converting");      
-      return result;
-  }
-
-    /** ***************************************************************
-     * Convert a single annotated TPTP clause to a single SUMO formula, possibly XML-wrapped.
-     * This is the main entry point for this class.
-     */
-    public static StringBuffer convertBareType (TPTPFormula formula, int indent, int indented, boolean noXML) {
-
-        StringBuffer result = new StringBuffer();
-        String type = "";
-        int id = formula.id;
-        SimpleTptpParserOutput.TopLevelItem item = formula.item;
-        if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Formula) {
-            SimpleTptpParserOutput.AnnotatedFormula AF = (SimpleTptpParserOutput.AnnotatedFormula) item;
-            type = "formula";
-            result.append(convertFormula(AF.getFormula(),indent,indented));
-        }
-        else if (item.getKind() == SimpleTptpParserOutput.TopLevelItem.Kind.Clause) {
-            SimpleTptpParserOutput.AnnotatedClause AC = (SimpleTptpParserOutput.AnnotatedClause) item;
-            type = "clause";
-            result.append(convertClause(AC.getClause(),indent,indented));
-        }
-        else
-            result.append("Error: TPTP Formula syntax unknown for converting");
-        return result;
-    }
-
-  /** ***************************************************************
-   */
-  private static StringBuffer convertConnective (SimpleTptpParserOutput.BinaryConnective connective) {
-
-      StringBuffer result = new StringBuffer();
-      switch (connective) {
-      case And:
-          result.append("and");
-          break;
-      case Or:
-          result.append("or");
-          break;
-//      case Equal:
-//         result.append("equal");
-//          break;
-      case Equivalence: 
-          result.append("<=>");
-          break;
-      case Implication:
-          result.append("=>");
-          break;
-      case ReverseImplication:
-          result.append("<=");
-          break;
-      case Disequivalence:
-          result.append("not <=>");
-          break;
-      case NotOr:
-          result.append("not or");
-          break;
-      case NotAnd:
-          result.append("not and");
-          break;
-      default:
-          result.append("Not a connective");
-          break;
-      }
-      return result;
-  }
-
-  /** ***************************************************************
-   */
-  private static String convertQuantifier (SimpleTptpParserOutput.Quantifier quantifier) {
-  
-      switch (quantifier) {
-      case ForAll:
-          return "forall";
-      case Exists:
-          return "exists";
-      default:
-          return "Not a quantifier";
-      }
-  }
-
-  /** ***************************************************************
-   */
-  private static boolean kifAssociative (SimpleTptpParserOutput.BinaryConnective connective) {
-
-      switch (connective) {
-      case And:
-      case Or:
-          return true;
-      default:
-          return false;
-      }
-  }
-
-  /** ***************************************************************
    */
   private static String addIndent (int indent, int indented) {
 
@@ -432,153 +117,6 @@ public class TPTP2SUMO {
       return term;
   }
 
-  /** ***************************************************************
-   * A term is a variable or function symbol with term arguments.
-   * Variables are symbols with a question mark in SUO-KIF or capitalized symbols
-   * in TPTP.  Constants are functions with arity 0.
-   */
-  private static String convertTerm (SimpleTptpParserOutput.Formula.Atomic atom) {
-
-	//  System.out.println("INFO in TPTP2SUMO.convertTerm(): " + atom);
-      String res = "";
-      LinkedList<SimpleTptpParserOutput.Term> arguments = (LinkedList)atom.getArguments();
-      if (arguments != null) 
-          res += "(";
-      // "esk" comes up in the function SigGetNewSkolemCode in E's source code, with the form esk<count>_<ar>, standing for Skolemization
-      if (!atom.getPredicate().startsWith("esk"))
-          res += transformTerm(removeDollarSign(atom.getPredicate()));
-      if (arguments != null) {
-          for (int n = 0; n < arguments.size();  n++) {
-              if (((SimpleTptpParserOutput.Term)arguments.get(n)).getTopSymbol().isVariable()) 
-                  res += " " + "?" + transformVariable(arguments.get(n).toString());
-              else if (arguments.get(n).toString().indexOf("(") != -1)
-            	  res += " " + convertTerm(arguments.get(n).toAtom());
-              else
-                  res += " " + transformTerm(removeDollarSign(arguments.get(n).toString()));              
-          }
-      }
-      if (arguments != null) 
-          res += ")";      
-      return res;
-  }
-
-  /** ***************************************************************
-   * A formula is a literal or compound formula.
-   * A compound formula consists of  (logical operator formula [formula]*)
-   * (but conforming to arity of logical operators).
-   */
-  private static StringBuffer convertFormula (SimpleTptpParserOutput.Formula formula, int indent, int indented) {
-
-	//  System.out.println("INFO in TPTP2SUMO.convertFormula(): " + formula);
-      StringBuffer result = new StringBuffer();
-      switch(formula.getKind()) {
-      case Atomic:
-          result.append(addIndent(indent,indented));
-          result.append(convertTerm((SimpleTptpParserOutput.Formula.Atomic)formula));
-          break;
-      case Negation:
-          result.append(addIndent(indent,indented));
-          result.append("(" + "not" + " ");
-          result.append(convertFormula(((SimpleTptpParserOutput.Formula.Negation)formula).getArgument(),indent+4,indent+4));
-          result.append(")");
-          break;
-      case Binary:
-          result.append(addIndent(indent,indented));
-          result.append("(");
-          result.append(convertConnective(((SimpleTptpParserOutput.Formula.Binary)formula).getConnective()));
-          result.append(" ");
-          result.append(convertFormula(((SimpleTptpParserOutput.Formula.Binary)formula).getLhs(),indent+4,indent+4));
-          result.append("\n");
-          while (kifAssociative(((SimpleTptpParserOutput.Formula.Binary)formula).getConnective()) &&
-                 ((SimpleTptpParserOutput.Formula.Binary)formula).getRhs().getKind() == SimpleTptpParserOutput.Formula.Kind.Binary &&
-                 ((SimpleTptpParserOutput.Formula.Binary)formula).getConnective() == 
-                   ((SimpleTptpParserOutput.Formula.Binary)((SimpleTptpParserOutput.Formula.Binary)formula).getRhs()).getConnective()) {
-              formula = ((SimpleTptpParserOutput.Formula.Binary)formula).getRhs();
-              result.append(convertFormula(((SimpleTptpParserOutput.Formula.Binary)formula).getLhs(),indent+4,0));
-              result.append("\n");
-          }
-          result.append(convertFormula(((SimpleTptpParserOutput.Formula.Binary)formula).getRhs(),indent+4,0));
-          result.append(")");
-          break;
-      case Quantified:
-          result.append(addIndent(indent,indented));
-          result.append("(");
-          result.append(convertQuantifier(((SimpleTptpParserOutput.Formula.Quantified)formula).getQuantifier()));
-          result.append(" (");
-          result.append("?" + transformVariable(((SimpleTptpParserOutput.Formula.Quantified)formula).getVariable()));
-          while (((SimpleTptpParserOutput.Formula.Quantified)formula).getKind() == SimpleTptpParserOutput.Formula.Kind.Quantified &&
-                 ((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix().getKind() == SimpleTptpParserOutput.Formula.Kind.Quantified &&
-                 ((SimpleTptpParserOutput.Formula.Quantified)formula).getQuantifier() == 
-                   ((SimpleTptpParserOutput.Formula.Quantified)((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix()).getQuantifier()) {
-              formula = ((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix();
-              result.append(" ?" + transformVariable(((SimpleTptpParserOutput.Formula.Quantified)formula).getVariable()));
-          }
-          result.append(") ");
-          if (((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix().getKind() == SimpleTptpParserOutput.Formula.Kind.Negation ||
-              ((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix().getKind() == SimpleTptpParserOutput.Formula.Kind.Atomic) {
-              result.append(convertFormula(((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix(),indent,indent));
-          } 
-          else {
-              result.append("\n");
-              result.append(convertFormula(((SimpleTptpParserOutput.Formula.Quantified)formula).getMatrix(),indent + 4,0));
-          }
-          result.append(")");
-          break;
-      default:
-          result.append("Error in TPTP2SUMO.convertFormula(): TPTP Formula syntax unkown for converting");
-          break;
-      }
-      return result;
-  }
-
-  /** ***************************************************************
-   */
-  private static StringBuffer convertClause (SimpleTptpParserOutput.Clause clause, int indent, int indented) {
-
-	//  System.out.println("INFO in TPTP2SUMO.convertClause(): " + clause);
-      StringBuffer result = new StringBuffer();
-      LinkedList<SimpleTptpParserOutput.Literal> literals = (LinkedList) clause.getLiterals();
-      result.append(addIndent(indent,indented));
-      if (literals == null) {
-          result.append("false\n");
-          return result;
-      }   
-      assert !literals.isEmpty();
-      if (literals.size() == 1)
-          result.append(convertLiteral(literals.get(0),indent,indent));
-      else {
-          result.append("(");
-          result.append(convertConnective(SimpleTptpParserOutput.BinaryConnective.Or));
-          result.append(" ");
-          result.append(convertLiteral(literals.get(0),indent,indent));
-          for (int i = 1; i < literals.size(); i++) {
-              result.append("\n");
-              result.append(convertLiteral(literals.get(i),indent+4,0));
-          }
-          result.append(")");
-      }
-      return result;
-  }
-
-  /** ***************************************************************
-   * An atom is a predicate symbol with term arguments.
-   * A literal is an atom or negated atom.
-   */
-  private static StringBuffer convertLiteral (SimpleTptpParserOutput.Literal literal, int indent, int indented) {
-  
-	//  System.out.println("INFO in TPTP2SUMO.convertLiteral(): " + literal);
-      StringBuffer result = new StringBuffer();
-      result.append(addIndent(indent,indented));
-      if (literal.isPositive()) 
-          result.append(convertTerm((SimpleTptpParserOutput.Formula.Atomic)literal.getAtom()));
-      else {
-          result.append("(not ");
-          result.append(convertTerm((SimpleTptpParserOutput.Formula.Atomic)literal.getAtom()));
-          result.append(")");
-      }
-      return result;
-  }
-
     /** ***************************************************************
      */
     public static void showHelp() {
@@ -586,15 +124,15 @@ public class TPTP2SUMO {
         System.out.println("KB class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -t - run test");
-        System.out.println("  -c <fname> - convert file to SUO-KIF");
+        System.out.println("  -c - parse test clause");
+        System.out.println("  -f <fname> - convert file to SUO-KIF");
     }
 
   /** ***************************************************************
    */
   public static void main (String args[]) {
 
-      System.out.println("INFO in TPTP2SUMO.main()");
+      System.out.println("INFO in TPTP2SUMO.main() with args: " + Arrays.toString(args));
       if (args != null && args.length > 0 && args[0].equals("-h"))
           showHelp();
       else {
@@ -604,23 +142,25 @@ public class TPTP2SUMO {
           //String formula = "fof(ax1,axiom,(! [X0] : (~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ! [X1] : (~s__instance(X0,s__Class) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))))).";
           //String clause  = "cnf(ax1,axiom,(~s__irreflexiveOn(s__relatedInternalConcept__m,X0) | ~s__instance(X0,s__Class) | ~s__instance(X1,X0) | ~s__relatedInternalConcept(X1,X1))).";
           String clause = "cnf(c_0_10,negated_conjecture,($answer(esk1_1(X1))|~s__subclass(X1,s__Object)), c_0_8).";
-          String inFile;
-          FileReader file;
-          String kif = "";
           try {
-              if (args.length > 1 && args[0].equals("-c")) {
-                  inFile = args[1];
-                  file = new FileReader(inFile);
-                  kif = TPTP2SUMO.convert(inFile, false);
-                  System.out.println(kif);
+              if (args.length > 0 && args[0].equals("-c")) {
+                  System.out.println("main parse " + clause);
+                  TPTPVisitor sv = new TPTPVisitor();
+                  sv.parseString(clause);
+                  HashMap<String, TPTPFormula> hm = TPTPVisitor.result;
+                  for (String s : hm.keySet()) {
+                      System.out.println(hm.get(s));
+                      System.out.println("\t" + hm.get(s).sumo + "\n");
+                  }
               }
-              if (args.length > 0 && args[0].equals("-t")) {
-                  // kif = TPTP2SUMO.convert(reader, false);
-                  TPTPParser tptpP = TPTPParser.parse(clause);
-                  System.out.println(tptpP.Items.get(0));
-                  for (String id : tptpP.ftable.keySet()) {
-                      TPTPFormula tptpF = tptpP.ftable.get(id);
-                      System.out.println(convertType(tptpF, 0, 0));
+              if (args.length > 1 && args[0].equals("-f")) {
+                  tptp_parser.TPTPVisitor sv = new TPTPVisitor();
+                  System.out.println("main parse file " + args[1]);
+                  sv.parseFile(args[1]);
+                  HashMap<String, TPTPFormula> hm = TPTPVisitor.result;
+                  for (String s : hm.keySet()) {
+                      System.out.println(hm.get(s));
+                      System.out.println("\t" + hm.get(s).sumo + "\n");
                   }
               }
           }

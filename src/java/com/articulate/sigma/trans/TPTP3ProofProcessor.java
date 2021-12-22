@@ -13,8 +13,6 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma.trans;
 
-import TPTPWorld.TPTPFormula;
-import TPTPWorld.TPTPParser;
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
@@ -29,6 +27,8 @@ import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
+
+import tptp_parser.*;
 
 import static com.igormaznitsa.prologparser.terms.TermType.*;
 
@@ -361,11 +361,13 @@ public class TPTP3ProofProcessor {
 		line = line.replaceAll("\\$answer\\(","answer(");
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
 		try {
-			TPTPParser tptpP = TPTPParser.parse(line);
-			if (tptpP != null) {
-				for (String tptpid : tptpP.ftable.keySet()) {
-					TPTPFormula tptpF = tptpP.ftable.get(tptpid);
-					stmnt = TPTP2SUMO.convertType(tptpF, 0, 0, true).toString();
+			tptp_parser.TPTPVisitor sv = new tptp_parser.TPTPVisitor();
+			sv.parseString(line);
+			HashMap<String, tptp_parser.TPTPFormula> hm = tptp_parser.TPTPVisitor.result;
+			if (hm != null) {
+				for (String tptpid : hm.keySet()) {
+					tptp_parser.TPTPFormula tptpF = hm.get(tptpid);
+					stmnt = tptpF.sumo;
 					stmnt = TPTP2SUMO.collapseConnectives(new Formula(stmnt)).toString();
 				}
 			}

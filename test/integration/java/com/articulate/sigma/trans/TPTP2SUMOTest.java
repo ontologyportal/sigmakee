@@ -1,7 +1,5 @@
 package com.articulate.sigma.trans;
 
-import TPTPWorld.TPTPFormula;
-import TPTPWorld.TPTPParser;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -10,6 +8,7 @@ import static org.junit.Assert.*;
 
 import java.io.BufferedReader;
 import java.io.StringReader;
+import java.util.HashMap;
 
 public class TPTP2SUMOTest {
 
@@ -35,12 +34,13 @@ public class TPTP2SUMOTest {
                 "~ans0(s__BobTheGolfer,s__JohnsGolfGame,s__BobsGolfGame,s__JohnTheGolfer))).";
         try {
             // kif = TPTP2SUMO.convert(reader, false);
-            TPTPParser tptpP = TPTPParser.parse(input);
-            System.out.println(tptpP.Items.get(0));
-            for (String id : tptpP.ftable.keySet()) {
-                TPTPFormula tptpF = tptpP.ftable.get(id);
-                String kif = TPTP2SUMO.convertType(tptpF, 0, 0, true).toString();
-                System.out.println(TPTP2SUMO.collapseConnectives(new Formula(kif)));
+            tptp_parser.TPTPVisitor sv = new tptp_parser.TPTPVisitor();
+            sv.parseString(input);
+            HashMap<String, tptp_parser.TPTPFormula> hm = tptp_parser.TPTPVisitor.result;
+            for (String s : hm.keySet()) {
+                System.out.println(hm.get(s));
+                System.out.println("\t" + hm.get(s).sumo + "\n");
+                System.out.println(TPTP2SUMO.collapseConnectives(new Formula(hm.get(s).sumo)));
             }
         }
         catch (Exception e) {
