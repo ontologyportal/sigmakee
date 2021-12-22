@@ -7,9 +7,13 @@
   <property name="build.lib" value="${build.home}/lib"/>
   <property environment="env"/>
   <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+  <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
+  <property name="sigma.src" value="${git.home}/sigmakee"/>
+  <property name="basedir" value="${sigma.src}"/>
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
-  <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
-  <property name="kbs.home" value="${sigma.home}/KBs" />
+  <property name="tptp.home" value="${git.home}/TPTP-ANTLR4-Grammar"/>
+  <property name="sigma.install.downloads" value="${env.SIGMA_HOME}/downloads"/>
+  <property name="kbs.home" value="${env.SIGMA_HOME}/KBs" />
   <property name="dist.home" value="${tomcat.home}/webapps"/>
   <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
   <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
@@ -20,13 +24,26 @@
 
   <echo message="CATALINA_HOME is set to = ${env.CATALINA_HOME}"/>
   <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
-    <echo message="SIGMA_SRC is set to = ${env.SIGMA_SRC}"/>
+  <echo message="SIGMA_SRC is set to = ${sigma.src}"/>
   <echo message="KBs_HOME is set to = ${kbs.home}" />
   <echo>Java Version via Ant: ${ant.java.version}</echo>
-  <echo>Java Version System Prop: ${java.version}</echo> 
+  <echo>Java Version System Prop: ${java.version}</echo>
+  <echo>Git dir: ${env.ONTOLOGYPORTAL_GIT}</echo>
+    <echo>classpath: $CLASSPATH</echo>
+    <echo>basedir: ${basedir}</echo>
+    <delete includeemptydirs="true" failonerror="false">
+        <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
+    </delete>
 </target>
 
-<target name="compile" depends="init" description="Compile the project and place in ${build.classes}.">
+<target name="TPTP" depends="init">
+    <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
+    <echo message="TPTP is set to = ${tptp.home}"/>
+    <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all" />
+    <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar" />
+</target>
+
+<target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes}.">
     <mkdir dir="${build.classes}"/>
     <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" includeantruntime="false" classpathref="compile.classpath">
         <src refid="core.sourcepath"/>
@@ -74,10 +91,6 @@
 	<copy todir="${deploy.lib}">
           <fileset dir="${basedir}/lib" />
     </copy>
-
-    <delete includeemptydirs="true" failonerror="false">
-        <fileset dir="${build.classes}"/> <!-- avoid problems with package name changes by deleting everything -->
-    </delete>
 </target>
 
 <target name="dist" depends="web_deploy" description="Create the *.war file and place in ${build.home}.">
@@ -144,13 +157,12 @@
 	<pathelement path="test/corpus/java/com/articulate/sigma"/>
 	<pathelement path="test/unit/java/com/articulate/sigma"/>
 	<pathelement path="test/integration/java/com/articulate/sigma"/>
-    <pathelement path="src/java/TPTPWorld"/>
-    <pathelement path="src/java/tptp_parser"/>
 </path>
 
 <path id="compile.classpath">
     <fileset dir="${basedir}/lib">
         <include name="*.jar"/>
+        <include name="tptp.jar"/>
     </fileset>
 </path>
 
