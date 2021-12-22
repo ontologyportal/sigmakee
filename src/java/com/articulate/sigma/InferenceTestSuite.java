@@ -1,11 +1,6 @@
 package com.articulate.sigma;
 
-import TPTPWorld.InterfaceTPTP;
-import TPTPWorld.SystemOnTPTP;
 import com.articulate.sigma.tp.Vampire;
-import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
-import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
-import com.articulate.sigma.trans.TPTP2SUMO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.File;
