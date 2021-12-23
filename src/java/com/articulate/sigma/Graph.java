@@ -40,7 +40,9 @@ public class Graph {
     public static String indent = "&nbsp;&nbsp;&nbsp;&nbsp;";
 
     public TreeSet<String> errors = new TreeSet<>();
-    
+
+    public static boolean debug = false;
+
     /** *************************************************************
      */
     public Graph() {
@@ -334,7 +336,7 @@ public class Graph {
             if (!dirfile.exists())
                 dirfile.mkdir();
             fw = new FileWriter(filename + ".dot");
-            System.out.println("Graph.createGraphBody(): creating file at " + filename);
+            if (debug) System.out.println("Graph.createGraphBody(): creating file at " + filename);
             pw = new PrintWriter(fw);
             HashSet<String> result = new HashSet<String>();
             HashSet<String> start = new HashSet<String>();

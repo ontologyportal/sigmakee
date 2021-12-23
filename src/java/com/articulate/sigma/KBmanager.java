@@ -20,6 +20,7 @@ package com.articulate.sigma;
 import com.articulate.sigma.CCheckManager.CCheckStatus;
 import com.articulate.sigma.VerbNet.VerbNet;
 import com.articulate.sigma.nlg.NLGUtils;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.utils.PythonAPI;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
@@ -130,19 +131,22 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      *  Check whether config file or any .kif constituent is newer than its
-     *  corresponding TPTP file
+     *  corresponding TPTP/TFF file
      */
-    public boolean tptpOld() {
+    public boolean infFileOld() {
 
         System.out.println("KBmanager.tptpOld(config): ");
         String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
         for (String kbname : kbs.keySet()) { // iterate through the kbs
             KB kb = getKB(kbname);
-            File file = new File(kbDir + File.separator + kbname + ".tptp");
+            File file = new File(kbDir + File.separator + kbname + "." + lang);
             Date fileDate = new Date(file.lastModified());
-            System.out.println("KBmanager.tptpOld(): file " + kbname + ".tptp was saved on " + fileDate);
+            System.out.println("KBmanager.tptpOld(): file " + kbname + "." + lang + " was saved on " + fileDate);
             if (fileDate.compareTo(configDate) < 0) {
                 return true;
             }
@@ -155,7 +159,7 @@ public class KBmanager implements Serializable {
                 }
             }
         }
-        System.out.println("KBmanager.tptpOld(config): returning false (not old)");
+        System.out.println("KBmanager.infFileOld(config): returning false (not old)");
         return false;
     }
 

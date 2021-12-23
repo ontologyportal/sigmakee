@@ -31,6 +31,8 @@ public class TPTP2SUMO {
    */
   public static Formula collapseConnectives(Formula form) {
 
+      if (form.getFormula().indexOf("(and ") ==  -1 && form.getFormula().indexOf("(or ") ==  -1)
+          return form;
       if (!form.isBalancedList())
           return form;
       if (debug) System.out.println("collapseConnectives(): input: " + form);
@@ -47,7 +49,7 @@ public class TPTP2SUMO {
       if (debug) System.out.println("collapseConnectives(): newargs: " + newargs);
       if (pred.equals("or") || pred.equals("and")) {
           for (Formula f : newargs) {
-              if (f.car().equals(pred)) {
+              if (f.car() != null && f.car().equals(pred)) {
                   if (debug) System.out.println("collapseConnectives(): matching connectives in " + f);
                   ArrayList<Formula> subargs = f.complexArgumentsToArrayList(1);
                   if (debug) System.out.println("collapseConnectives(): subargs " + subargs);

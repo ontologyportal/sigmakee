@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 package com.articulate.sigma.tp;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
@@ -262,10 +263,12 @@ public class Vampire {
      */
     public void run(KB kb, File kbFile, int timeout, HashSet<String> stmts) throws Exception {
 
-        String type = "tptp";
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-        String outfile = dir + "temp-comb." + type;
-        String stmtFile = dir + "temp-stmt." + type;
+        String outfile = dir + "temp-comb." + lang;
+        String stmtFile = dir + "temp-stmt." + lang;
         File fout = new File(outfile);
         if (fout.exists())
             fout.delete();
@@ -279,7 +282,7 @@ public class Vampire {
             System.out.println("Error in Vampire.run(): null query or user assertions set");
             return;
         }
-        writeStatements(stmts, type);
+        writeStatements(stmts, lang);
         catFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);
@@ -304,8 +307,11 @@ public class Vampire {
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         KB kb = KBmanager.getMgr().getKB(kbName);
         String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
-        String outfile = dir + "temp-comb.tptp";
-        String stmtFile = dir + "temp-stmt.tptp";
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
+        String outfile = dir + "temp-comb." + lang;
+        String stmtFile = dir + "temp-stmt." + lang;
         File f1 = new File(outfile);
         f1.delete();
         File f2 = new File(stmtFile);
@@ -314,7 +320,7 @@ public class Vampire {
         f3.delete();
         File f4 = new File(dir + kbName + KB._userAssertionsTPTP);
         f4.delete();
-        File s = new File(dir + kbName + ".tptp");
+        File s = new File(dir + kbName + "." + lang);
         if (!s.exists())
             System.out.println("Vampire.main(): no such file: " + s);
         else {

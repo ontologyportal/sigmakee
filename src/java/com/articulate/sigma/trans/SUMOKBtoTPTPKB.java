@@ -275,7 +275,7 @@ public class SUMOKBtoTPTPKB {
                             stfa.sorts = stfa.missingSorts(f3);
                             if (stfa.sorts != null && stfa.sorts.size() > 0)
                                 f3.tffSorts.addAll(stfa.sorts);
-                            result = stfa.process(f3.getFormula());
+                            result = stfa.process(f3.getFormula(),false);
                             if (!StringUtil.emptyString(result))
                                 f.theTptpFormulas.add(result);
                             else

@@ -489,6 +489,8 @@ public class SUMOformulaToTPTPformula {
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
+        if (SUMOKBtoTPTPKB.lang.equals("tff"))
+            return "( " + SUMOtoTFAform.process(suoString,query) + " )";
         return "( " + process(new Formula(suoString),query) + " )";
     }
 

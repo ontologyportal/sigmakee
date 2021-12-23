@@ -34,7 +34,7 @@ import static com.igormaznitsa.prologparser.terms.TermType.*;
 
 public class TPTP3ProofProcessor {
 
-	public static boolean debug = true;
+	public static boolean debug = false;
 	public String status;
 	public boolean inconsistency = false;
 	public ArrayList<String> bindings = new ArrayList<>();
@@ -361,12 +361,12 @@ public class TPTP3ProofProcessor {
 		line = line.replaceAll("\\$answer\\(","answer(");
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
 		try {
-			tptp_parser.TPTPVisitor sv = new tptp_parser.TPTPVisitor();
+			tptp_parser.TPTPVisitor sv = new TPTPVisitor();
 			sv.parseString(line);
-			HashMap<String, tptp_parser.TPTPFormula> hm = tptp_parser.TPTPVisitor.result;
+			HashMap<String, TPTPFormula> hm = TPTPVisitor.result;
 			if (hm != null) {
 				for (String tptpid : hm.keySet()) {
-					tptp_parser.TPTPFormula tptpF = hm.get(tptpid);
+					TPTPFormula tptpF = hm.get(tptpid);
 					stmnt = tptpF.sumo;
 					stmnt = TPTP2SUMO.collapseConnectives(new Formula(stmnt)).toString();
 				}
@@ -893,8 +893,8 @@ public class TPTP3ProofProcessor {
 			if (tptpProof) {
 				if (StringUtil.emptyString(ps.input))
 					continue;
-				System.out.println("createProofDotGraphBody()" + ps.input);
-				System.out.println("createProofDotGraphBody()" + ps);
+				if (debug) System.out.println("createProofDotGraphBody()" + ps.input);
+				if (debug) System.out.println("createProofDotGraphBody()" + ps);
 				String line = StringUtil.wordWrap(ps.input,40);
 				String[] split = line.split(System.getProperty("line.separator"));
 				StringBuffer sb = new StringBuffer();
@@ -914,13 +914,13 @@ public class TPTP3ProofProcessor {
 				String formatted = f.format("", "&nbsp;&nbsp;", " <br align=\"left\"/> ");
 				if (StringUtil.emptyString(ps.axiom))
 					formatted = ps.input;
-				System.out.println("createProofDotGraphBody(): ps.axiom: " + ps.axiom);
-				System.out.println("createProofDotGraphBody(): formatted: " + formatted);
+				if (debug) System.out.println("createProofDotGraphBody(): ps.axiom: " + ps.axiom);
+				if (debug) System.out.println("createProofDotGraphBody(): formatted: " + formatted);
 				formatted = formatted.replaceAll("<=>", "&lt;=&gt;");
 				formatted = formatted.replaceAll("=>", "=&gt;");
 				formatted = formatted.replace("[", " &#91;");
 				formatted = formatted.replace("]", " &#93;");
-				System.out.println("createProofDotGraphBody(): replaced: " + formatted);
+				if (debug) System.out.println("createProofDotGraphBody(): replaced: " + formatted);
 				String line = "n" + ps.number + " [shape=\"box\" label = < " + formatted + " <br align=\"left\"/> > ]";
 				lines.add(line);
 			}

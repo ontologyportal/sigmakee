@@ -1712,9 +1712,13 @@ public class KB implements Serializable {
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
         try {
-            if (eprover == null)
+            if (eprover == null) {
+                String lang = "tff";
+                if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                    lang = "tptp";
                 eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                        System.getenv("SIGMA_HOME") + "/KBs/" + name + ".tptp");
+                        System.getenv("SIGMA_HOME") + "/KBs/" + name + "." + lang);
+            }
         }
         catch (Exception e) {
             System.out.println(e.getMessage());
@@ -1766,7 +1770,13 @@ public class KB implements Serializable {
                 int axiomIndex = 0;
                 String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
                 String kbName = name;
-                File s = new File(dir + kbName + ".tptp");
+                String lang = "tff";
+                if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                    lang = "tptp";
+                else
+                    SUMOtoTFAform.initOnce();
+                System.out.println("KB.askVampire(): lang: " + lang);
+                File s = new File(dir + kbName + "." + lang);
                 if (!s.exists()) {
                     System.out.println("Vampire.askVampire(): no such file: " + s + ". Creating it.");
                     KB kb = KBmanager.getMgr().getKB(kbName);
@@ -1782,14 +1792,14 @@ public class KB implements Serializable {
                             combined.append(p.getFormula() + " ");
                         }
                         combined.append(")");
-                        String theTPTPstatement = "fof(query" + "_" + axiomIndex++ +
+                        String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
                                 ",conjecture,(" +
                                 stptp.tptpParseSUOKIFString(combined.toString(), true) // true - it's a query
                                 + ")).";
                         tptpquery.add(theTPTPstatement);
                     }
                     else {
-                        String theTPTPstatement = "fof(query" + "_" + axiomIndex++ +
+                        String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
                                 ",conjecture,(" +
                                 stptp.tptpParseSUOKIFString(processedStmts.iterator().next().getFormula(), true) // true - it's a query
                                 + ")).";
@@ -3413,18 +3423,34 @@ public class KB implements Serializable {
             System.out.println("Error in Vampire: no executable " + vampex);
             return;
         }
-        String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-        if (!(new File(tptpFilename).exists()) ||  KBmanager.getMgr().tptpOld()) {
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
+        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
+        System.out.println("INFO in KB.loadVampire(): generating " + lang + "file " + infFilename);
+        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
             try {
                 if (!formulaMap.isEmpty()) {
                     HashSet<String> formulaStrings = new HashSet<String>();
                     formulaStrings.addAll(formulaMap.keySet());
-                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                    skb.kb = this;
-                    System.out.println("INFO in KB.loadVampire(): generating TPTP file");
                     long millis = System.currentTimeMillis();
-                    skb.writeFile(tptpFilename,null);
-                    System.out.println("KB.loadVampire(): write TPTP, in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                    if (lang.equals("tptp")) {
+                        SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                        skb.kb = this;
+                        skb.writeFile(infFilename, null);
+                    }
+                    else {
+                        SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
+                        stff.kb = this;
+                        SUMOtoTFAform.initOnce();
+                        PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
+                        stff.writeSorts(pw);
+                        stff.writeFile(infFilename,null,false,pw);
+                        pw.flush();
+                        pw.close();
+                    }
+
+                    System.out.println("KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
                 }
             }
             catch (Exception e) {
@@ -3456,7 +3482,7 @@ public class KB implements Serializable {
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
-                if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().tptpOld()) {
+                if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().infFileOld()) {
                     System.out.println("INFO in KB.loadEProver(): generating TPTP file");
                     skb.writeFile(tptpFilename,null);
                 }
@@ -3618,6 +3644,7 @@ public class KB implements Serializable {
      */
     private static void deletedOldInfFiles(String filename, String prefix) {
 
+        System.out.println("KB.deletedOldInfFiles(): deleting old inference files");
         FileUtil.delete(filename);
         FileUtil.delete(prefix + "test.tptp");
         FileUtil.delete(prefix + "temp-comb.tptp");
@@ -3766,6 +3793,8 @@ public class KB implements Serializable {
         System.out.println("  3 - show only KB axioms in proof");
         System.out.println("  x - contradiction help");
         System.out.println("  p - display TPTP proof");
+        System.out.println("  f - use TFF language");
+        System.out.println("  r - use (regular) FOF language");
         System.out.println("  o <seconds> - set the query timeout");
         System.out.println("  -c <term1> <term2> - compare term depth");
     }
@@ -3795,19 +3824,27 @@ public class KB implements Serializable {
                 System.out.println("KB.main() eqrel " + eqrel);
                 System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
             }
-            else if (args != null && args.length > 0 && args[0].contains("t"))
+            if (args != null && args.length > 0 && args[0].contains("t"))
                 test();
-            else if (args != null && args.length > 1 && args[0].contains("v")) {
+            if (args != null && args.length > 1 && args[0].contains("v")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
             }
-            else if (args != null && args.length > 1 && args[0].contains("e")) {
+            if (args != null && args.length > 1 && args[0].contains("e")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
             }
-            else if (args != null && args.length > 0 && args[0].contains("l")) {
+            if (args != null && args.length > 0 && args[0].contains("l")) {
                 System.out.println("KB.main(): Normal completion");
             }
-            else
-                showHelp();
+            if (args != null && args.length > 0 && args[0].contains("f")) {
+                System.out.println("KB.main(): set to TFF language");
+                SUMOformulaToTPTPformula.lang = "tff";
+                SUMOKBtoTPTPKB.lang = "tff";
+            }
+            if (args != null && args.length > 0 && args[0].contains("r")) {
+                System.out.println("KB.main(): set to FOF language");
+                SUMOformulaToTPTPformula.lang = "fof";
+                SUMOKBtoTPTPKB.lang = "fof";
+            }
             int timeout = 30;
             if (args != null && args.length > 2 && args[0].contains("o")) {
                 try {

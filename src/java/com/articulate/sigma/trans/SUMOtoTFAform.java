@@ -24,7 +24,7 @@ public class SUMOtoTFAform {
 
     public static KB kb;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     // a Set of types for each variable key
     public static HashMap<String,HashSet<String>> varmap = null;
@@ -170,6 +170,8 @@ public class SUMOtoTFAform {
      */
     protected static ArrayList<String> relationExtractNonNumericSig(String rel) {
 
+        if (debug) System.out.println("relationExtractNonNumericSig(): rel " + rel);
+        if (debug) System.out.println("relationExtractNonNumericSig(): sig " + kb.kbCache.signatures);
         String bareRel = rel.substring(0,rel.length() - 3);
         ArrayList<String> sig = new ArrayList();
         int size = Integer.parseInt(rel.substring(rel.length()-1,rel.length()));
@@ -2237,7 +2239,7 @@ public class SUMOtoTFAform {
      * This is the primary method of the class.  It takes a SUO-KIF
      * formula and returns a TFF formula.
      */
-    public static String process(Formula f) {
+    public static String process(Formula f, boolean query) {
 
         if (kb == null) {
             System.out.println("Error in SUMOtoTFAform.process(): null kb");
@@ -2294,7 +2296,10 @@ public class SUMOtoTFAform {
             }
             if (qlist.length() > 1) {
                 qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
-                result = "! [" + qlist + "] : (" + result + ")";
+                String quant = "!";
+                if (query)
+                    quant = "?";
+                result = quant + " [" + qlist + "] : (" + result + ")";
             }
             if (debug) System.out.println("SUMOtoTFAform.process(): result 2: " + result);
             return result;
@@ -2304,7 +2309,7 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      */
-    public static String process(String s) {
+    public static String process(String s, boolean query) {
 
         filterMessage = "";
         if (s.contains("ListFn"))
@@ -2312,7 +2317,7 @@ public class SUMOtoTFAform {
         if (StringUtil.emptyString(s) || numConstAxioms.contains(s)) // || s.contains("ListFn"))
             return "";
         Formula f = new Formula(s);
-        return process(f);
+        return process(f,query);
     }
 
     /** *************************************************************
@@ -2321,7 +2326,7 @@ public class SUMOtoTFAform {
 
         ArrayList<String> result = new ArrayList<>();
         for (Formula f : l)
-            result.add(process(f));
+            result.add(process(f,false));
         return result;
     }
 
@@ -2562,7 +2567,7 @@ public class SUMOtoTFAform {
                 "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test2(): " + process(f));
+        System.out.println("SUMOtoTFAform.test2(): " + process(f,false));
     }
 
     /** *************************************************************
@@ -2571,7 +2576,7 @@ public class SUMOtoTFAform {
 
         Formula f = new Formula("(<=> (equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
                 "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
-        System.out.println("SUMOtoTFAform.test3(): " + process(f));
+        System.out.println("SUMOtoTFAform.test3(): " + process(f,false));
     }
 
     /** *************************************************************
@@ -2579,7 +2584,7 @@ public class SUMOtoTFAform {
     public static void test4() {
 
         Formula f = new Formula("(<=> (greaterThanOrEqualTo ?NUMBER1 ?NUMBER2) (or (equal ?NUMBER1 ?NUMBER2) (greaterThan ?NUMBER1 ?NUMBER2)))");
-        System.out.println("SUMOtoTFAform.test4(): " + process(f));
+        System.out.println("SUMOtoTFAform.test4(): " + process(f,false));
     }
 
     /** *************************************************************
@@ -2600,7 +2605,7 @@ public class SUMOtoTFAform {
         Formula f = new Formula("(<=> " +
                 "(equal (RemainderFn ?NUMBER1 ?NUMBER2) ?NUMBER) " +
                 "(equal (AdditionFn (MultiplicationFn (FloorFn (DivisionFn ?NUMBER1 ?NUMBER2)) ?NUMBER2) ?NUMBER) ?NUMBER1))");
-        System.out.println("SUMOtoTFAform.test6(): " + process(f));
+        System.out.println("SUMOtoTFAform.test6(): " + process(f,false));
         System.out.println("expect: ");
         System.out.println("tff(kb_SUMO_73,axiom,(! [V__NUMBER1 : $int,V__NUMBER2 : $int,V__NUMBER : $int] : " +
                 "((s__RemainderFn(V__NUMBER1, V__NUMBER2) = V__NUMBER " +
@@ -2618,7 +2623,7 @@ public class SUMOtoTFAform {
                 "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test7(): " + process(f));
+        System.out.println("SUMOtoTFAform.test7(): " + process(f,false));
         System.out.println("test7() expected: ! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
                 "((s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => s__SignumFn__0In1ReFn(V__NUMBER1) = 1 |" +
                 " s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
@@ -2635,7 +2640,7 @@ public class SUMOtoTFAform {
         Formula f = new Formula("(<=> (equal (LastFn ?LIST) ?ITEM) (exists (?NUMBER) " +
                 "(and (equal (ListLengthFn ?LIST) ?NUMBER) " +
                 "(equal (ListOrderFn ?LIST ?NUMBER) ?ITEM))))");
-        System.out.println("SUMOtoTFAform.test8(): " + process(f));
+        System.out.println("SUMOtoTFAform.test8(): " + process(f,false));
         System.out.println("test8() expected: tff(kb_SUMO_138,axiom,(! [V__LIST : $i,V__ITEM : $i] : " +
                 "((s__LastFn(V__LIST) = V__ITEM =>  ? [V__NUMBER:$int] : " +
                 "(s__ListLengthFn(V__LIST) = V__NUMBER & s__ListOrderFn(V__LIST, V__NUMBER) = V__ITEM)) & " +
@@ -2652,7 +2657,7 @@ public class SUMOtoTFAform {
                 "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test9(): " + process(f));
+        System.out.println("SUMOtoTFAform.test9(): " + process(f,false));
         System.out.println("test9() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
                 "((s__AbsoluteValueFn(V__NUMBER1) = V__NUMBER2 => " +
                 "s__SignumFn(V__NUMBER1) = 1 | s__SignumFn(V__NUMBER1) = 0 & " +
@@ -2671,7 +2676,7 @@ public class SUMOtoTFAform {
                 "(instance ?NUMBER1 RealNumber) (instance ?NUMBER2 RealNumber)) " +
                 "(or (and (instance ?NUMBER1 NonnegativeRealNumber) (equal ?NUMBER1 ?NUMBER2)) " +
                 "(and (instance ?NUMBER1 NegativeRealNumber) (equal ?NUMBER2 (SubtractionFn 0 ?NUMBER1)))))");
-        System.out.println("SUMOtoTFAform.test10(): " + process(f));
+        System.out.println("SUMOtoTFAform.test10(): " + process(f,false));
         System.out.println("test10() expected: tff(kb_SUMO_1,axiom,(! [V__NUMBER1 : $real,V__NUMBER2 : $real] : " +
                 "((s__AbsoluteValueFn__0Re1ReFn(V__NUMBER1) = V__NUMBER2 => s__SignumFn__0In1ReFn(V__NUMBER1) = 1 | " +
                 "s__SignumFn__0In1ReFn(V__NUMBER1) = 0 & V__NUMBER1 = V__NUMBER2 | " +
