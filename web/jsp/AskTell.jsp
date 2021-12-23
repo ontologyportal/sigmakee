@@ -19,71 +19,10 @@ if (!role.equalsIgnoreCase("admin")) {
 }
 
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
-
-//----Check if SystemOnTPTP exists in a local copy of TPTPWorld
-  String BuiltInDir = KBmanager.getMgr().getPref("systemsDir");
-  String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
-  InterfaceTPTP.init();
-  ArrayList<String> systemListBuiltIn = InterfaceTPTP.systemListBuiltIn;
-  ArrayList<String> systemListLocal = InterfaceTPTP.systemListLocal;
-  ArrayList<String> systemListRemote = InterfaceTPTP.systemListRemote;
-  String defaultSystemBuiltIn = InterfaceTPTP.defaultSystemBuiltIn;
-  String defaultSystemLocal = InterfaceTPTP.defaultSystemLocal;
-  String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
-  boolean tptpWorldExists = InterfaceTPTP.tptpWorldExists;
-  boolean builtInExists = InterfaceTPTP.builtInExists;
-
-//----Determine Location
-  String location = request.getParameter("systemOnTPTP");  
-  if (location == null) {
-      if (tptpWorldExists)
-          location = "local";
-      else if (builtInExists)
-          location = "local";
-      else 
-          location = "remote";      
-  }
 %>
-
 <HTML>
 <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - Ask/Tell</TITLE>
-
-<%
-// SystemOnTPTP: script for SystemList toggling
-%>
-  <script type="text/javascript">//<![CDATA[
-    var tstp_dump;
-    function openSoTSTP (dump) {
-      var tstp_url = 'http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTSTP';
-      var tstp_browser = window.open(tstp_url, '_blank');
-      tstp_dump = dump;
-    }
-    function getTSTPDump () {
-      return tstp_dump;
-    }
-<% if (tptpWorldExists && location.equals("local")) { %>
-       var current_location = "Local";
-<% } else if (builtInExists && location.equals("local")) { %>
-       var current_location = "BuiltIn";
-<% } else { %>
-       var current_location = "Remote";
-<% } %>
-//----Toggle to either the local/builtin/remote list by showing new and hiding current
-    function toggleList (location) {
-        
-        if (current_location == location) 
-            return;      
-        var obj;
-        obj = window.document.getElementById("systemList" + current_location);
-        if (obj) 
-            obj.setAttribute("style","display:none");      
-        current_location = location;
-        obj = window.document.getElementById("systemList" + location);
-        if (obj) 
-            obj.setAttribute("style","display:inline");      
-    }
-  //]]></script>
 
 </HEAD>
 <%
@@ -97,8 +36,20 @@ if (!role.equalsIgnoreCase("admin")) {
     String vampireMode = request.getParameter("vampireMode");
     if (StringUtil.emptyString(vampireMode))
         vampireMode = "CASC";
+    String TPTPlang = request.getParameter("TPTPlang");
+    if (StringUtil.emptyString(TPTPlang) || TPTPlang.equals("fof")) {
+        TPTPlang = "fof";
+        SUMOformulaToTPTPformula.lang = "fof";
+        SUMOKBtoTPTPKB.lang = "fof";
+    }
+    if (TPTPlang.equals("tff")) {
+        TPTPlang = "tff";
+        SUMOformulaToTPTPformula.lang = "tff";
+        SUMOKBtoTPTPKB.lang = "tff";
+    }
     System.out.println("INFO in AskTell.jsp: inferenceEngine: " + inferenceEngine);
     System.out.println("INFO in AskTell.jsp: vampireMode: " + vampireMode);
+        System.out.println("INFO in AskTell.jsp: TPTPlang: " + TPTPlang);
     boolean syntaxError = false;
     boolean english = false;
     String englishStatement = null;
@@ -166,45 +117,8 @@ if (!role.equalsIgnoreCase("admin")) {
         stmt = englishStatement;
     }
 
-//----SystemOnTPTP parameters
-    String systemChosenLocal = request.getParameter("systemChosenLocal");
-    String systemChosenRemote = request.getParameter("systemChosenRemote");
-    String systemChosenBuiltIn = request.getParameter("systemChosenBuiltIn");
-    if (systemChosenLocal == null) 
-        systemChosenLocal = defaultSystemLocal;
-    if (systemChosenRemote == null) 
-        systemChosenRemote = defaultSystemRemote;
-    if (systemChosenBuiltIn == null) 
-        systemChosenBuiltIn = defaultSystemBuiltIn;
-
-    String quietFlag = request.getParameter("quietFlag");
-    String tstpFormat = request.getParameter("tstpFormat");
-    String systemChosen;
-
-    if (quietFlag == null) 
-        quietFlag = "hyperlinkedKIF";
-    if (systemChosenLocal == null) 
-        systemChosenLocal = defaultSystemLocal;
-    if (systemChosenRemote == null) 
-        systemChosenRemote = defaultSystemRemote;
-    if (systemChosenBuiltIn == null)
-        systemChosenBuiltIn = defaultSystemBuiltIn;
-
-    if (location.equals("local")) {
-        if (tptpWorldExists) 
-            systemChosen = systemChosenLocal;
-        else 
-            systemChosen = systemChosenBuiltIn;
-    } 
-    else
-        systemChosen = systemChosenRemote;
-
-    if (tstpFormat == null) 
-        tstpFormat = "";
-
     com.articulate.sigma.tp.EProver eProver = null;
     com.articulate.sigma.tp.Vampire vampire = null;
-    String resultSoTPTP = null;           
     String resultLeo = null;    
 
     String lineHtml =
@@ -242,12 +156,6 @@ if (!role.equalsIgnoreCase("admin")) {
             }
             if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoGlobal")) {
                 resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoGlobal");
-            }	
-            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("SoTPTP")) {
-                systemChosen = systemChosen.replace("%2E", ".");
-                resultSoTPTP = InterfaceTPTP.queryTPTP(stmt, timeout, maxAnswers, lineHtml,
-                                                        systemChosen, location, quietFlag, 
-                                                        kbName, language);
             }
         }
         catch (IOException ioe) {
@@ -269,6 +177,13 @@ if (!role.equalsIgnoreCase("admin")) {
     <br>
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"><BR>
+    [
+          <input type="radio" id="TPTPlang" name="TPTPlang" value="tptp"
+              <% if (SUMOformulaToTPTPformula.lang.equals("fof")) { out.print(" CHECKED"); } %> >
+              <label>tptp mode</label>
+          <input type="radio" id="TPTPlang" name="TPTPlang" value="tff"
+              <% if (SUMOformulaToTPTPformula.lang.equals("tff")){ out.print(" CHECKED"); } %> >
+              <label>tff mode</label> ]<BR>
     Choose an inference engine:<BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (inferenceEngine.equals("EProver")) {%>CHECKED<%}%>
@@ -286,84 +201,6 @@ if (!role.equalsIgnoreCase("admin")) {
       <input type="radio" id="Avatar" name="vampireMode" value="Avatar"
           <% if (vampireMode.equals("Avatar")) { out.print(" CHECKED"); } %> >
           <label>Avatar mode</label> ]<BR>
-
-<!--
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoSine" <% if (inferenceEngine.equals("LeoSine")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    LEO-II with SInE (experimental)<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoLocal" <% if (inferenceEngine.equals("LeoLocal")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    LEO-II local (experimental)<BR>
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LeoGlobal" <% if (inferenceEngine.equals("LeoGlobal")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'">
-    LEO-II global (experimental)<BR>	
-    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="SoTPTP" <% if (inferenceEngine.equals("SoTPTP")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='inline'">
-    System on TPTP<BR>
-    -->
-
-<%
-//----System selection
-%>
-<!--
-  <DIV ID="SoTPTPControl" <% if (!inferenceEngine.equals("SoTPTP")) {%>style="display:none;"<%}%>>
-    <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
-    <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="local"
-<% if (!tptpWorldExists && !builtInExists) { out.print(" DISABLED"); } %>
-<% if (location.equals("local")) { out.print(" CHECKED"); } %>
-<% if (tptpWorldExists) 
-       out.println("onClick=\"javascript:toggleList('Local');\"");
-   else 
-       out.println("onClick=\"javascript:toggleList('BuiltIn');\"");     
-   
-%>
-  >Local 
-    <INPUT TYPE=RADIO NAME="systemOnTPTP" VALUE="remote"
-<% if (location.equals("remote")) { out.print(" CHECKED"); } %>
-  onClick="javascript:toggleList('Remote');">Remote&nbsp;System:
-<%
-  String params;
-  //----Create atp drop down list for local
-  if (tptpWorldExists) {
-      if (location.equals("local"))
-          params = "ID=systemListLocal style='display:inline'";
-      else 
-          params = "ID=systemListLocal style='display:none'";     
-      out.println(HTMLformatter.createMenu("systemChosenLocal",systemChosenLocal,
-                                         systemListLocal, params)); 
-  }
-  //----Create atp drop down list for builtin
-  if (builtInExists && !tptpWorldExists) {
-      if (location.equals("local"))
-          params = "ID=systemListBuiltIn style='display:inline'";
-      else
-          params = "ID=systemListBuiltIn style='display:none'";     
-      out.println(HTMLformatter.createMenu("systemChosenBuiltIn", systemChosenBuiltIn,
-                                         systemListBuiltIn, params));
-  }
-  //----Create atp drop down list for remote
-  if ((!tptpWorldExists && !builtInExists) || location.equals("remote")) 
-      params = "ID=systemListRemote style='display:inline'";
-  else
-      params = "ID=systemListRemote style='display:none'";
-  out.println(HTMLformatter.createMenu("systemChosenRemote",systemChosenRemote,
-                                       systemListRemote, params));
-%>
-    <br>
-    <IMG SRC='pixmaps/1pixel.gif' width=30 height=1 border=0>
-    <INPUT TYPE="hidden" NAME="tstpFormat" VALUE="-S">
-    <INPUT TYPE=RADIO NAME="quietFlag" VALUE="-q4"
-<% if (quietFlag.equals("-q4")) { out.print(" CHECKED"); } %>
-    >TPTP Proof
-    <INPUT TYPE=RADIO NAME="quietFlag" VALUE="IDV"
-<% if (quietFlag.equals("IDV")) { out.print(" CHECKED"); } %>
-    >IDV-Proof tree
-    <INPUT TYPE=RADIO NAME="quietFlag" ID="hyperlinkedKIF" VALUE="hyperlinkedKIF"
-<% if (quietFlag.equals("hyperlinkedKIF")) { out.print(" CHECKED"); } %>
-    >Hyperlinked KIF
-    <br>
-  </DIV>
--->
 
     <INPUT type="submit" name="request" value="Ask">
 
@@ -419,8 +256,6 @@ if (!role.equalsIgnoreCase("admin")) {
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
     }
-    if ((inferenceEngine.equals("SoTPTP")) && (resultSoTPTP != null))
-        out.print(resultSoTPTP);
     if (inferenceEngine.equals("LeoSine") || inferenceEngine.equals("LeoLocal") || inferenceEngine.equals("LeoGlobal")) {
         if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
