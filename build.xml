@@ -12,8 +12,8 @@
   <property name="basedir" value="${sigma.src}"/>
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
   <property name="tptp.home" value="${git.home}/TPTP-ANTLR4-Grammar"/>
-  <property name="sigma.install.downloads" value="${env.SIGMA_HOME}/downloads"/>
-  <property name="kbs.home" value="${env.SIGMA_HOME}/KBs" />
+  <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
+  <property name="kbs.home" value="${sigma.home}/KBs" />
   <property name="dist.home" value="${tomcat.home}/webapps"/>
   <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
   <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
@@ -22,8 +22,8 @@
   <property name="javadoc.home" value="doc/api"/>
   <property name="build.javadoc" value="${build.home}/${javadoc.home}"/>
 
-  <echo message="CATALINA_HOME is set to = ${env.CATALINA_HOME}"/>
-  <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
+  <echo message="CATALINA_HOME is set to = ${tomcat.home}"/>
+  <echo message="SIGMA_HOME is set to = ${sigma.home}"/>
   <echo message="SIGMA_SRC is set to = ${sigma.src}"/>
   <echo message="KBs_HOME is set to = ${kbs.home}" />
   <echo>Java Version via Ant: ${ant.java.version}</echo>
@@ -37,10 +37,12 @@
 </target>
 
 <target name="TPTP" depends="init">
-    <echo message="SIGMA_HOME is set to = ${env.SIGMA_HOME}"/>
+    <echo message="SIGMA_HOME is set to = ${sigma.home}"/>
     <echo message="TPTP is set to = ${tptp.home}"/>
     <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all" />
+    <ant antfile="../SigmaUtils/build.xml" inheritAll="false" target="all" />
     <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar" />
+    <copy todir="${basedir}/lib" file="../SigmaUtils/sigmaUtils.jar" />
 </target>
 
 <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes}.">
