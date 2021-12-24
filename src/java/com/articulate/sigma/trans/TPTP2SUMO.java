@@ -149,7 +149,7 @@ public class TPTP2SUMO {
                   System.out.println("main parse " + clause);
                   TPTPVisitor sv = new TPTPVisitor();
                   sv.parseString(clause);
-                  HashMap<String, TPTPFormula> hm = TPTPVisitor.result;
+                  HashMap<String, TPTPFormula> hm = sv.result;
                   for (String s : hm.keySet()) {
                       System.out.println(hm.get(s));
                       System.out.println("\t" + hm.get(s).sumo + "\n");
@@ -159,7 +159,7 @@ public class TPTP2SUMO {
                   tptp_parser.TPTPVisitor sv = new TPTPVisitor();
                   System.out.println("main parse file " + args[1]);
                   sv.parseFile(args[1]);
-                  HashMap<String, TPTPFormula> hm = TPTPVisitor.result;
+                  HashMap<String, TPTPFormula> hm = sv.result;
                   for (String s : hm.keySet()) {
                       System.out.println(hm.get(s));
                       System.out.println("\t" + hm.get(s).sumo + "\n");

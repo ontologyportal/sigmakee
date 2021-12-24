@@ -69,6 +69,7 @@ import com.articulate.sigma.utils.StringUtil;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
+import tptp_parser.TPTPFormula;
 
 import java.io.*;
 import java.text.ParseException;
@@ -3629,10 +3630,10 @@ public class KB implements Serializable {
     public static HashMap<String,Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
 
         HashMap<String,Formula> sourceAxioms = new HashMap<>();
-        for (ProofStep ps : tpp.proof) {
-            System.out.println("KB.collectSourceAxioms(): " + ps.inferenceType);
-            if (ps.inferenceType.startsWith("kb_") || ps.inferenceType.contains("conjecture")) {
-                Formula f = SUMOKBtoTPTPKB.axiomKey.get(ps.inferenceType);
+        for (TPTPFormula ps : tpp.proof) {
+            System.out.println("KB.collectSourceAxioms(): " + ps.infRule);
+            if (ps.infRule.startsWith("kb_") || ps.infRule.contains("conjecture")) {
+                Formula f = SUMOKBtoTPTPKB.axiomKey.get(ps.infRule);
                 if (f != null && f.sourceFile != null && !f.sourceFile.endsWith(_cacheFileSuffix))
                     sourceAxioms.put(f.getFormula(),f);
             }
@@ -3737,7 +3738,7 @@ public class KB implements Serializable {
             System.out.println("queryExp(): bindings: " + tpp.bindings);
             System.out.println("queryExp(): proof: " + tpp.proof);
             ArrayList<String> proofStepsStr = new ArrayList<>();
-            for (ProofStep ps : tpp.proof)
+            for (TPTPFormula ps : tpp.proof)
                 proofStepsStr.add(ps.toString());
             //kb.writeTerms();
             // System.out.println("KB.main(): " + kb.isChildOf("Africa",

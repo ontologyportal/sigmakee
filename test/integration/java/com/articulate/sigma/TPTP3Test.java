@@ -134,13 +134,13 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println("Result: " + result);
             if (!StringUtil.emptyString(result) &&
                     (tpp.proof.size() == 7) &&
-                    (tpp.proof.get(7).axiom.equals("false")))
+                    (tpp.proof.get(7).sumo.equals("false")))
                 System.out.println("Success");
             else
                 System.out.println("FAIL");
             assertEquals(10,tpp.proof.size());
             System.out.println("answers: " + result);
-            assertEquals("false",tpp.proof.get(7).axiom);
+            assertEquals("false",tpp.proof.get(7).sumo);
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
             if (!StringUtil.emptyString(result) && result.equals(expected))

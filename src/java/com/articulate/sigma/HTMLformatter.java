@@ -28,6 +28,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import tptp_parser.*;
+
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
 
@@ -46,7 +48,9 @@ public class HTMLformatter {
 
     public static ArrayList<String> availableFormalLanguages =
         new ArrayList<String>(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
-    
+
+    public static boolean debug = false;
+
     /** *************************************************************
      *  Create the HTML for the labeled divider between the sections
      *  of the term display.  Each section displays a sorted list of
@@ -186,13 +190,13 @@ public class HTMLformatter {
     /** *************************************************************
      *  Create the HTML for a single step in a proof.
      */
-    public static String proofTableFormat(String query, ProofStep step, String kbName, String language) {
+    public static String proofTableFormat(String query, TPTPFormula step, String kbName, String language) {
 
-        // System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
+        if (debug)  System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
         StringBuilder result = new StringBuilder();
         Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        f.read(step.axiom);
+        f.read(step.sumo);
         f.read(Formula.postProcess(f.getFormula()));
         f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
         String kbHref = HTMLformatter.createKBHref(kbName,language);
@@ -205,41 +209,41 @@ public class HTMLformatter {
             result.append("<td valign=\"top\" width=\"50%\">" + f.htmlFormat(kbHref) + "</td>");
         result.append("<td valign=\"top\" width=\"10%\">");
 
-        // System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.premises);
-        if (step.inferenceType != null && step.inferenceType.equals("assume_negation")) {
+        if (debug) System.out.println("Info in HTMLformatter.proofTableFormat(): premises : " + step.supports);
+        if (step.infRule != null && step.infRule.equals("assume_negation")) {
             result.append("[Negated Query]");
         }
         else {
-            for (int i = 0; i < step.premises.size(); i++) {
-                Integer stepNum = (Integer) step.premises.get(i);
-                result.append(stepNum.toString() + " ");
+            for (int i = 0; i < step.supports.size(); i++) {
+                String stepName = step.supports.get(i);
+                result.append(stepName + " ");
             }
-            if (step.premises.size() == 0) {
-                if (step.formulaType != null && step.formulaType.equals("conjecture"))
+            if (step.supports.size() == 0) {
+                if (step.type != null && step.type.equals("conjecture"))
                     result.append("[Query]");
-                else if (step.formulaRole != null)
-                    result.append(step.formulaRole);
-                else if (!StringUtil.emptyString(step.inferenceType) &&
-                        !step.inferenceType.equals("input") &&
-                        !step.inferenceType.startsWith("kb_")) {
+                else if (step.role != null)
+                    result.append(step.role);
+                else if (!StringUtil.emptyString(step.infRule) &&
+                        !step.infRule.equals("input") &&
+                        !step.infRule.startsWith("kb_")) {
                     if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
-                        result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
+                        result.append("[<a href=\"VampProofSteps.html\">" + step.infRule + "</a>]");
                     else
-                        result.append("[" + step.inferenceType + "]");
+                        result.append("[" + step.infRule + "]");
                 }
                 else if (f.getFormula().contains("ans0"))
                     result.append("answer literal introduction");
                 else {
                     result.append("[KB -" );
-                    String key = step.inferenceType;
+                    String key = step.infRule;
                     Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(key);
                     if (originalF != null)
                         result.append(originalF.startLine + ":" + FileUtil.noPath(originalF.getSourceFile()));
                     result.append("]");
                 }
             }
-            else if (!StringUtil.emptyString(step.inferenceType))
-                result.append("[<a href=\"VampProofSteps.html\">" + step.inferenceType + "</a>]");
+            else if (!StringUtil.emptyString(step.infRule))
+                result.append("[<a href=\"VampProofSteps.html\">" + step.infRule + "</a>]");
         }
         result.append("</td><td width=\"40%\" valign=\"top\">");
         if (StringUtil.isNonEmptyString(language)) {
@@ -1001,13 +1005,17 @@ public class HTMLformatter {
         }
     	html.append("<p><table width=\"95%\">" + "\n");
     	for (int l = 0; l < tpp.proof.size(); l++) {
+    	    TPTPFormula ps = tpp.proof.get(l);
+    	    //System.out.println("HTMLformatter.formatTPTP3ProofResult(): role: " + ps.role);
+    	    if (ps.role.equals("type"))
+    	        continue; // ignore type definitions in tff proof output
     		if (l % 2 == 1)
     			html.append("<tr bgcolor=#EEEEEE>" + "\n");
     		else
     			html.append("<tr>" + "\n");
     		html.append("<td valign=\"top\">" + "\n");
-    		html.append(l+1);
-    		html.append(". </td>" + "\n");
+    		html.append(ps.name);
+    		html.append("</td>" + "\n");
     		html.append(HTMLformatter.proofTableFormat(stmt,tpp.proof.get(l), kbName, language) + "\n");
     		html.append("</tr>\n" + "\n");
     	}
@@ -1023,10 +1031,10 @@ public class HTMLformatter {
     	StringBuilder html = new StringBuilder();
     	ProofProcessor pp = new ProofProcessor(proof);           
     	for (int i = 0; i < pp.numAnswers(); i++) {
-    		ArrayList<ProofStep> proofSteps = null;
+    		ArrayList<TPTPFormula> proofSteps = null;
     		// proofSteps = pp.getProofSteps(i);
-    		proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
-    		proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
+    		//proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
+    		//proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
 
     		if (i != 0)
     			html = html.append(lineHtml + "\n");
@@ -1049,7 +1057,7 @@ public class HTMLformatter {
     					html = html.append("<td valign=\"top\">" + "\n");
     					html = html.append(l+1);
     					html = html.append(". </td>" + "\n");
-    					html = html.append(HTMLformatter.proofTableFormat(stmt,(ProofStep) proofSteps.get(l), kbName, language) + "\n");
+    					html = html.append(HTMLformatter.proofTableFormat(stmt,proofSteps.get(l), kbName, language) + "\n");
     					html = html.append("</tr>\n" + "\n");
     				}
     				html = html.append("</table>" + "\n");

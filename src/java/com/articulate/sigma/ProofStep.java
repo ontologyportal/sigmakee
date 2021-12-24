@@ -31,7 +31,7 @@ public class ProofStep {
 	// the TPTP3 input
 	public String input = null;
 
-     /** A String of the type clause or formula */
+     /** A String giving the type of the clause or formula, such as 'conjecture', 'plain' or 'axiom' */
     public String formulaType = null;
 
      /** A String of the role of the formula */

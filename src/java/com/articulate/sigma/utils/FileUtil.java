@@ -12,6 +12,13 @@ public class FileUtil {
     public static boolean includeBlanks = false;
 
     /****************************************************************
+     */
+    public static List<String> readLines(String filename) {
+
+        return readLines(filename,false);
+    }
+
+    /****************************************************************
      * This method reads in a text file, breaking it into single line documents
      * Currently, sentences are not separated if they occur on the same line.
      *

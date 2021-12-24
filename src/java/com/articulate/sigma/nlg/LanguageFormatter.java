@@ -272,7 +272,8 @@ public class LanguageFormatter {
         }
         else {
             if (!f.listP()) {
-                System.out.println("Error in LanguageFormatter.paraphraseStatement(): "
+                if (!StringUtil.emptyString(stmt))
+                    System.out.println("Error in LanguageFormatter.paraphraseStatement(): "
                         + " Statement is not an atom or a list: "
                         + stmt);
                 return "";
