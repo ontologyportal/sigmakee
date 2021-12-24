@@ -319,7 +319,11 @@ public class ProofProcessor {
     		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     		  String stmt = "(subclass ?X Entity)";
     		  String result = kb.askEProver(stmt, 30, 3) + " ";
-    		  result = HTMLformatter.formatProofResult(result,stmt,stmt,"<hr>\n",
+			  TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+			  StringBuffer qlist = new StringBuffer();
+			  qlist.append("?X");
+			  tpp.parseProofOutput(result,kb);
+    		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
 					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");
     		  System.out.println(result);
     	  } 

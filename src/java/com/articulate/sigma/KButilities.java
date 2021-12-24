@@ -29,6 +29,7 @@ import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
+import com.google.common.collect.Sets;
 import org.json.simple.JSONAware;
 import org.json.simple.JSONValue;
 
@@ -79,7 +80,7 @@ public class KButilities {
         //System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
         HashMap<String, HashSet<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         //System.out.println("isValidFormula() explicit: " + explicit);
-        MapUtils.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+        KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         if (SUMOtoTFAform.inconsistentVarTypes()) {
             //String error = "inconsistent types in " + SUMOtoTFAform.varmap;
             System.out.println(SUMOtoTFAform.errors);
@@ -1023,6 +1024,28 @@ public class KButilities {
                 sb.append(term + "\t" + str + "\n");
         }
         return sb.toString();
+    }
+
+    /** ***************************************************************
+     * utility method to merge two HashMaps of String keys and a values
+     * of an HashSet of Strings.  Note that parent classes in the set of
+     * classes will be removed
+     */
+    public static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
+                                                              HashMap<String, HashSet<String>> map2, KB kb) {
+
+        HashMap<String, HashSet<String>> result = new HashMap<String,HashSet<String>>(map1);
+
+        for (String key : map2.keySet()) {
+            Set<String> value = new HashSet<String>();
+            if (result.containsKey(key)) {
+                value = result.get(key);
+            }
+            value.addAll(map2.get(key));
+            value = kb.removeSuperClasses(value);
+            result.put(key, Sets.newHashSet(value));
+        }
+        return result;
     }
 
     /** ***************************************************************

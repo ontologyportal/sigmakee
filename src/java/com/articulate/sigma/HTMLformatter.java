@@ -215,14 +215,12 @@ public class HTMLformatter {
         }
         else {
             for (int i = 0; i < step.supports.size(); i++) {
-                String stepName = step.supports.get(i);
-                result.append(stepName + " ");
+                //String stepName = step.supports.get(i);
+                result.append(step.intsupports.get(i) + " ");
             }
-            if (step.supports.size() == 0) {
+            if (step.intsupports.size() == 0) {
                 if (step.type != null && step.type.equals("conjecture"))
                     result.append("[Query]");
-                else if (step.role != null)
-                    result.append(step.role);
                 else if (!StringUtil.emptyString(step.infRule) &&
                         !step.infRule.equals("input") &&
                         !step.infRule.startsWith("kb_")) {
@@ -951,14 +949,14 @@ public class HTMLformatter {
 
     /** *************************************************************
      *  Create an HTML formatted result of a query.
-     */
+
     public static String formatProofResult(String result, String stmt, String processedStmt,
             String lineHtml, String kbName, String language) {
         return formatProofResult(result, stmt, processedStmt, lineHtml, kbName, language, 1);
     }
 
     /** *************************************************************
-     */
+
     public static String formatProofResult(String result, String stmt, String processedStmt,
             String lineHtml, String kbName, String language, int answerOffset) {
 
@@ -971,7 +969,7 @@ public class HTMLformatter {
         }        
         return null;
     }
- 
+ */
     /** *************************************************************
      * Create HTML formatted output for a TPTP3 proof
      */    
@@ -1014,7 +1012,7 @@ public class HTMLformatter {
     		else
     			html.append("<tr>" + "\n");
     		html.append("<td valign=\"top\">" + "\n");
-    		html.append(ps.name);
+    		html.append(ps.id + ".");
     		html.append("</td>" + "\n");
     		html.append(HTMLformatter.proofTableFormat(stmt,tpp.proof.get(l), kbName, language) + "\n");
     		html.append("</tr>\n" + "\n");
@@ -1024,7 +1022,7 @@ public class HTMLformatter {
     }
     
     /** *************************************************************
-     */    
+
     public static String formatProofResult(ArrayList<BasicXMLelement> proof, String stmt, String processedStmt,
     		String lineHtml, String kbName, String language, int answerOffset) {
 
@@ -1066,7 +1064,7 @@ public class HTMLformatter {
     	}
     	return html.toString();
     }
-    
+    */
     /** *************************************************************
      */    
     public static String formatConsistencyCheck(String msg, String ccheckResult, 
@@ -1139,15 +1137,16 @@ public class HTMLformatter {
 	    							else if (entryItem.tagname.equals("sourceFile"))
 	    								sourceFile = entryItem.contents;
 	    							else if (entryItem.tagname.equals("proof")) {
-	    								if (type.indexOf("Error") == -1)
-	    									if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("EProver"))
-	    										proof = formatProofResult(entryItem.subelements, query, processedQ, lineHtml, kbName, language, 0);
-										else {
-											proof = entryItem.contents;
-											proof = proof.replaceAll("%3C","<");
-											proof = proof.replaceAll("%3E",">");
-										}
-	    								else proof = entryItem.contents;
+                                        if (type.indexOf("Error") == -1)
+                                            //if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("EProver"))
+                                            // TODO update to TPTP3 ANTLR	proof = formatTPTP3ProofResult(entryItem.subelements, query, kbName, language, 0);
+                                            ;
+                                        else {
+                                            proof = entryItem.contents;
+                                            proof = proof.replaceAll("%3C", "<");
+                                            proof = proof.replaceAll("%3E", ">");
+                                        }
+                                        // else proof = entryItem.contents;
 	    							}
 	    						}
     							html.append("<br/>Query:  " + query + "<br />");

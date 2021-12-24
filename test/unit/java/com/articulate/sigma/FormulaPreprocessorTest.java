@@ -143,7 +143,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         expectedMap.put("?Hum", Sets.newHashSet("Man", "Woman"));
         expectedMap.put("?Time", Sets.newHashSet("Month"));
 
-        HashMap<String, HashSet<String>> actualMap = MapUtils.mergeToMap(map1, map2, SigmaTestBase.kb);
+        HashMap<String, HashSet<String>> actualMap = KButilities.mergeToMap(map1, map2, SigmaTestBase.kb);
 
         System.out.println("testMergeToMap1(): actual: " + actualMap);
         System.out.println("testMergeToMap1(): expected: " + expectedMap);

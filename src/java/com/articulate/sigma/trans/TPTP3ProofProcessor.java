@@ -697,6 +697,7 @@ public class TPTP3ProofProcessor {
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): query: " + kifQuery);
         processAnswersFromProof(qlist,kifQuery);
         findTypesForSkolemTerms(kb);
+        proof = TPTPFormula.normalizeProofStepNumbers(proof);
 		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): result: " + this);
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): idTable: " + idTable);
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): proof ids: ");

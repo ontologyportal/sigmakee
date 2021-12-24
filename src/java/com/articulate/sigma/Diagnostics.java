@@ -12,6 +12,7 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -825,8 +826,9 @@ public class Diagnostics {
         if (proof.indexOf("Syntax error detected") != -1) {
             html = html.append("Syntax error in formula : <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
-            result = HTMLformatter.formatProofResult(proof,query.getFormula(),
-                                                     pQuery,lineHtml,kbName,language);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(result, kb);
+            result = HTMLformatter.formatTPTP3ProofResult(tpp,query.getFormula(), lineHtml,kbName,language);
             html = html.append(result);
             return html.toString();
         }
@@ -838,8 +840,9 @@ public class Diagnostics {
         if (!ansstr.equalsIgnoreCase("no")) {
             html = html.append(testType + ": <br><br>");
             html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
-            result = HTMLformatter.formatProofResult(proof,query.getFormula(),
-                                                     pQuery,lineHtml,kbName,language);
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(result, kb);
+            result = HTMLformatter.formatTPTP3ProofResult(tpp,query.getFormula(), lineHtml,kbName,language);
             html = html.append(result);
             return html.toString();
         }

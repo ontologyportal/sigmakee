@@ -1,9 +1,20 @@
-package com.articulate.sigma.utils;
+package com.articulate.sigma;
+
+/* This code is copyrighted by Articulate Software (c) 2003.
+It is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+Users of this code also consent, by use of this code, to credit Articulate Software in any
+writings, briefings, publications, presentations, or other representations of any
+software which incorporates, builds on, or uses this code.
+
+Authors:
+Adam Pease apease@articulatesoftware.com
+*/
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.wordNet.*;
+import com.articulate.sigma.utils.*;
 
 public class PythonAPI {
 

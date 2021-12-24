@@ -1,10 +1,8 @@
 package com.articulate.sigma;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.BiPredicate;
+import com.articulate.sigma.utils.*;
 
 /**
  * Created by sserban on 2/17/15.
@@ -125,6 +123,77 @@ public class FormulaUtil {
                 }
             }
         }
+    }
+
+    /****************************************************************
+     * Returns a new ArrayList formed by extracting in order the
+     * top-level members of kifListAsString, which is assumed to be
+     * the String representation of a SUO-KIF (LISP) list.
+     *
+     * @param kifListAsString A SUO-KIF list represented as a String
+     * @return ArrayList
+     */
+    public static ArrayList kifListToArrayList(String kifListAsString) {
+
+        ArrayList ans = new ArrayList();
+        try {
+            if (!StringUtil.emptyString(kifListAsString)) {
+                Formula f = new Formula();
+                f.read(kifListAsString);
+                ans = f.literalToArrayList();
+            }
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return ans;
+    }
+
+    /****************************************************************
+     * Performs a depth-first search of tree, replacing all terms
+     * matching oldPattern with newTerm.
+     *
+     * @param oldPattern A regular expression pattern to be matched
+     *                   against terms in tree
+     * @param newTerm    A String to replace terms matching oldPattern
+     * @param tree       A String representing a SUO-KIF Formula (list)
+     * @return A new tree (String), with all occurrences of terms
+     * matching oldPattern replaced by newTerm
+     */
+    public static String treeReplace(String oldPattern, String newTerm, String tree) {
+
+        String result = tree;
+        try {
+            StringBuilder sb = new StringBuilder();
+            if (tree.matches(oldPattern))
+                sb.append(newTerm);
+            else if (Formula.listP(tree)) {
+                if (Formula.empty(tree)) {
+                    sb.append(tree);
+                }
+                else {
+                    Formula f = new Formula();
+                    f.read(tree);
+                    List tuple = f.literalToArrayList();
+                    sb.append("(");
+                    int i = 0;
+                    for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
+                        if (i > 0) sb.append(" ");
+                        sb.append(treeReplace(oldPattern,
+                                newTerm,
+                                (String) it.next()));
+                    }
+                    sb.append(")");
+                }
+            } else {
+                sb.append(tree);
+            }
+            result = sb.toString();
+        }
+        catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return result;
     }
 
     /** ********************************************************************************************

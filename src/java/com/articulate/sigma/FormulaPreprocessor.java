@@ -693,7 +693,7 @@ public class FormulaPreprocessor {
             for (int i = start; i <= f.listLength(); i++) {
                 Formula farg = f.getArgument(i);
                 if (farg != null)
-                    result = MapUtils.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
+                    result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
             }
         }
         else { //if (f.isSimpleClause(kb)) { // simple clauses include functions
@@ -729,7 +729,7 @@ public class FormulaPreprocessor {
                     }
                     else if (arg.listP() && kb.isFunctional(arg)) { // If formula is function then recurse.
                         if (debug) System.out.println("arg is a function: " + arg);
-                        result = MapUtils.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
+                        result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
                     }
                     argnum++;
                 }
