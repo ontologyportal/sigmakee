@@ -990,8 +990,8 @@ public class HTMLformatter {
         }
     	else {
             for (int i = 0; i < tpp.bindings.size(); i++) {
-                if (i != 0)
-                    html.append(lineHtml + "\n");
+                //if (i != 0)
+                //    html.append(lineHtml + "\n");
                 html.append("Answer " + "\n");
                 html.append(i+1);
                 html.append(". ");

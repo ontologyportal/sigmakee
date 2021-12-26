@@ -484,6 +484,22 @@ public class SUMOformulaToTPTPformula {
         }
     }
 
+    /** *************************************************************
+     * This is the primary method of the class.  It takes a SUO-KIF
+     * formula and returns a TPTP formula.
+     */
+    public static void generateQList(Formula f) {
+
+        HashSet<String> UqVars = f.collectUnquantifiedVariables();
+        qlist = new StringBuffer();
+        for (String s : UqVars) {
+            String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
+            qlist.append(oneVar + ",");
+        }
+        if (qlist.length() > 1)
+            qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
+    }
+
     /** ***************************************************************
      * Parse a single formula into TPTP format
      */
@@ -507,20 +523,11 @@ public class SUMOformulaToTPTPformula {
         if (f.atom())
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(),f.getFormula().charAt(0),false);
         if (f != null && f.listP()) {
-            HashSet<String> UqVars = f.collectUnquantifiedVariables();
-            if (debug) System.out.println("SUMOformulaToTPTPformula.process(): unquant: " + UqVars);
             String result = processRecurse(f);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
-            qlist = new StringBuffer();
-            for (String s : UqVars) {
-                if (debug) System.out.println("process(): s: " + s);
-                String t = "";
-                String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-                qlist.append(oneVar + ",");
-            }
+            generateQList(f);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): qlist: " + qlist);
             if (qlist.length() > 1) {
-                qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
                 String quantification = "! [";
                 if (query)
                     quantification = "? [";

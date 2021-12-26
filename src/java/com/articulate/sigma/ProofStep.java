@@ -63,8 +63,8 @@ public class ProofStep {
 
         // old number, new number
         HashMap<Integer,Integer> numberingMap = new HashMap<>();
-
-        if (debug) System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): before: " + proofSteps);
+        System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): begin with " + proofSteps.size() + " steps ");
+        //if (debug) System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): before: " + proofSteps);
         int newIndex = 1;
         for (int i = 0; i < proofSteps.size(); i++) {
             //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): numberingMap: " + numberingMap);
@@ -92,7 +92,7 @@ public class ProofStep {
                 ps.premises.set(j,newNumber);
             }
         }
-        if (debug) System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): after: " + proofSteps);
+        //if (debug) System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): after: " + proofSteps);
         return proofSteps;
     }
 

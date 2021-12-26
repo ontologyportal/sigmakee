@@ -2251,6 +2251,7 @@ public class SUMOtoTFAform {
         }
         if (debug) System.out.println("\nSUMOtoTFAform.process(): =======================");
         if (debug) System.out.println("SUMOtoTFAform.process(): f: " + f);
+        SUMOformulaToTPTPformula.generateQList(f);
         f = instantiateNumericConstants(f);
         f = new Formula(modifyPrecond(f));
         if (f == null || StringUtil.emptyString(f.getFormula()))

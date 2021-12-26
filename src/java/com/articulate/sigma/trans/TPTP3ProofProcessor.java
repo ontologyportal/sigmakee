@@ -36,6 +36,7 @@ public class TPTP3ProofProcessor {
 
 	public static boolean debug = false;
 	public String status;
+	public boolean noConjecture = false;
 	public boolean inconsistency = false;
 	public ArrayList<String> bindings = new ArrayList<>();
 	public HashMap<String,String> bindingMap = new HashMap<>();
@@ -344,7 +345,7 @@ public class TPTP3ProofProcessor {
 		}
 		if (ps.formulaRole.trim().equals("negated_conjecture") || ps.formulaRole.trim().equals("conjecture")) {
 			if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): found conjecture or negated_conjecture, setting inconsistency to false");
-			inconsistency = false;
+			noConjecture = false;
 		}
 		return ps;
 	}
@@ -640,7 +641,7 @@ public class TPTP3ProofProcessor {
 				if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): finishAnswersTuple: " + finishAnswersTuple);
                 if (line.indexOf("SZS output start") != -1) {
 					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found proof, setting inconsistency to true");
-					inconsistency = true; // if negated_conjecture found in the proof then it's not inconsistent
+					noConjecture = true; // if conjecture or negated_conjecture found in the proof then it's not inconsistent
                     inProof = true;
                     continue;
                 }
@@ -672,6 +673,8 @@ public class TPTP3ProofProcessor {
                         	if (sv.result.values().size() > 1)
                         		System.out.println("Error in TPTP3ProofProcessor.parseProofOutput(ar,2): more than one line in " + line);
                         	TPTPFormula step = sv.result.values().iterator().next();
+                        	if (step.role.equals("negated_conjecture") || step.role.equals("conjecture"))
+                        		noConjecture = false;
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step: " + step);
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step type: " + step.role);
                         	if (!step.role.equals("type"))
@@ -682,7 +685,8 @@ public class TPTP3ProofProcessor {
                     }
                 }
             }
-			if (inconsistency) {
+			if ((status.equals("Refutation") || status.equals("CounterSatisfiable")) && noConjecture) {
+				inconsistency = true;
 				System.out.println("*****************************************");
 				System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): Danger! possible inconsistency!");
 				System.out.println("*****************************************");

@@ -1808,6 +1808,7 @@ public class KB implements Serializable {
                     }
                     try {
                         System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
+                        System.out.println("KB.askVampire(): qlist: " + stptp.qlist);
                         Vampire vampire = new Vampire();
                         vampire.run(this, s, timeout, tptpquery);
                         vampire.qlist = stptp.qlist;
@@ -3692,7 +3693,7 @@ public class KB implements Serializable {
             KBmanager.getMgr().loadKB("test",constituents);
             KB kb2 = KBmanager.getMgr().getKB("test");
             TPTP3ProofProcessor tpp2 = kb2.runProver(args,timeout);
-            if (!tpp2.inconsistency || tpp2.status.contains("GaveUp"))
+            if (!tpp2.noConjecture || tpp2.status.contains("GaveUp"))
                 removalSuccess.add(kb.formulaMap.get(s));
             else {
                 //System.out.println("KB.contradictionHelp(): axiomKey: " + SUMOKBtoTPTPKB.axiomKey);
