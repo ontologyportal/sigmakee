@@ -976,8 +976,11 @@ public class HTMLformatter {
     public static String formatTPTP3ProofResult(TPTP3ProofProcessor tpp, String stmt,
                                                 String lineHtml, String kbName, String language) {
 
+        StringBuffer html = new StringBuffer();
     	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number steps" + tpp.proof.size());
-    	StringBuffer html = new StringBuffer();
+    	if (tpp.proof == null || tpp.proof.size() == 0) {
+    	    html.append("Fail with status: " + tpp.status + "<br>\n");
+        }
     	if (tpp.bindingMap != null && tpp.bindingMap.keySet().size() > 0) { // if an answer predicate appears in the proof, use it
             for (String s : tpp.bindingMap.keySet()) {
                 html.append("Answer " + "\n");

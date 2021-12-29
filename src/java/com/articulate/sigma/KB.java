@@ -116,11 +116,14 @@ public class KB implements Serializable {
     // A Map from all uppercase terms to their possibly mixed case original versions
     public HashMap<String,String> capterms = new HashMap<>();
 
-    /** The String constant that is the suffix for files of user assertions. */
+    /** The String constant that is the suffix for file of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
 
-    /** The String constant that is the suffix for TPTP files of user assertions. */
+    /** The String constant that is the suffix for TPTP file of user assertions. */
     public static final String _userAssertionsTPTP = "_UserAssertions.tptp";
+
+    /** The String constant that is the suffix for TFF file of user assertions. */
+    public static final String _userAssertionsTFF = "_UserAssertions.tff";
 
     /* The String constant that is the suffix for files of cached assertions.     */
     public static final String _cacheFileSuffix = "_Cache.kif";
@@ -578,11 +581,11 @@ public class KB implements Serializable {
     public boolean isFunctional(Formula form) {
 
         if (form == null || form.empty()) {
-            System.out.println("Warning - KB.isFunctional(): empty");
+            if (debug) System.out.println("Warning - KB.isFunctional(): empty");
             return false;
         }
         if (!form.listP()) {
-            System.out.println("Warning - KB.isFunctional(): not a list: " + form);
+            if (debug) System.out.println("Warning - KB.isFunctional(): not a list: " + form);
             //Thread.dumpStack();
             return false;
         }
@@ -1566,12 +1569,14 @@ public class KB implements Serializable {
         try { // Make the pathname of the user assertions file.
             String userAssertionKIF = this.name + _userAssertionsString;
             String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
-
+            String userAssertionTFF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tff";
             File dir = new File(this.kbDir);
-            File kiffile = new File(dir, (userAssertionKIF)); // create
-            // kb.name_UserAssertions.kif
-            File tptpfile = new File(dir, (userAssertionTPTP)); // create
-            // kb.name_UserAssertions.tptp
+            File kiffile = new File(dir, (userAssertionKIF)); // create kb.name_UserAssertions.kif
+            File tptpfile = null;  // kb.name_UserAssertions.tptp
+            if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                tptpfile = new File(dir, (userAssertionTPTP));
+            if (SUMOKBtoTPTPKB.lang.equals("tff"))
+                tptpfile = new File(dir, (userAssertionTFF));
             String filename = kiffile.getCanonicalPath();
             ArrayList<Formula> formulasAlreadyPresent = merge(kif, filename);
             // only check formulasAlreadyPresent when filterSimpleOnly = false;
@@ -1580,16 +1585,13 @@ public class KB implements Serializable {
             // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
             // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
             if (SUMOKBtoTPTPKB.filterSimpleOnly == false && !formulasAlreadyPresent.isEmpty()) {
-                String sf = ((Formula) formulasAlreadyPresent.get(0)).sourceFile;
+                String sf = formulasAlreadyPresent.get(0).sourceFile;
                 result = "The formula was already added from " + sf;
             }
             else {
-                ArrayList<Formula> parsedFormulas = new ArrayList<Formula>();
-                Iterator<Formula> it = kif.formulaMap.values().iterator();
-                while (it.hasNext()) { // 2. Confirm that the input has been
-                    // converted into at least one Formula object and
-                    // stored in this.formulaMap.
-                    Formula parsedF = it.next();
+                ArrayList<Formula> parsedFormulas = new ArrayList();
+                for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
+                    // converted into at least one Formula object and stored in this.formulaMap.
                     System.out.println("KB.tell(): " + parsedF.toString());
                     String term = PredVarInst.hasCorrectArity(parsedF, this);
                     if (!StringUtil.emptyString(term)) {
@@ -1607,26 +1609,20 @@ public class KB implements Serializable {
                         if (tptpfile.exists())
                             tptpfile.delete();
                         constituents.add(filename);
-                        // mgr.writeConfiguration();
                     }
-                    Iterator<Formula> pfit = parsedFormulas.iterator();
-                    while (pfit.hasNext()) {
-                        Formula parsedF = pfit.next();
-                        // 4. Write the formula to the user assertions file.
+                    for (Formula parsedF : parsedFormulas) { // 4. Write the formula to the user assertions file.
                         parsedF.endFilePosition = writeUserAssertion(parsedF.getFormula(), filename);
                         parsedF.sourceFile = filename;
                     }
                     result = "The formula has been added for browsing";
-                    // 5. Write the formula to the kb.name_UserAssertions.tptp
+                    // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
                     boolean allAdded = false;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
                         System.out.println("KB.tell: using eprover: " + eprover);
                         eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
-                        // 6. Add the new tptp file into EBatching.txt
-                        eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60);
-                        // 7. Reload eprover
-                        eprover = new EProver(mgr.getPref("eprover"));
+                        eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
+                        eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                         System.out.println("KB.tell: using vampire");

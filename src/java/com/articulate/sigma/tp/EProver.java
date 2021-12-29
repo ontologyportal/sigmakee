@@ -260,8 +260,9 @@ public class EProver {
         //ArrayList<String> commands = new ArrayList<>(Arrays.asList(
         //        executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
        //        eproverPath));
+        String batchPath = kbdir + File.separator + "EBatchConfig.txt";
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
+                executable, "--interactive", batchPath,
                 eproverPath));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
@@ -276,7 +277,7 @@ public class EProver {
      * Add an assertion for inference.
      *
      * @param formula asserted formula in the KIF syntax
-     * @return answer to the assertion (in the XML syntax)
+     * @return answer to the assertion
      * @throws IOException should not normally be thrown
      */
     public String assertFormula(String formula) {

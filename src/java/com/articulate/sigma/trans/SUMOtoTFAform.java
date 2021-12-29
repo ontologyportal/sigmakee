@@ -1586,7 +1586,7 @@ public class SUMOtoTFAform {
         if (isNumericType(t2) && !isBuiltInNumericType(t2))
             t2 = promoteToBuiltIn(t2);
         if (kb.compareTermDepth(t1, t2) > 0) {
-            System.out.println("Error SUMOtoTFAform.constrainTerm(): second type more general than first: " +
+            if (debug) System.out.println("Error SUMOtoTFAform.constrainTerm(): second type more general than first: " +
                     t1 + ", " + t2);
             return t1;
         }
@@ -2243,6 +2243,7 @@ public class SUMOtoTFAform {
 
         if (kb == null) {
             System.out.println("Error in SUMOtoTFAform.process(): null kb");
+            Thread.dumpStack();
             return "";
         }
         if (f.getFormula().startsWith("(instance equal")) { // || f.theFormula.contains("ListFn"))

@@ -38,6 +38,7 @@ public class TPTP3ProofProcessor {
 	public String status;
 	public boolean noConjecture = false;
 	public boolean inconsistency = false;
+	public boolean containsFalse = false;
 	public ArrayList<String> bindings = new ArrayList<>();
 	public HashMap<String,String> bindingMap = new HashMap<>();
 	public HashMap<String,String> skolemTypes = new HashMap<>();
@@ -675,10 +676,12 @@ public class TPTP3ProofProcessor {
                         	TPTPFormula step = sv.result.values().iterator().next();
                         	if (step.role.equals("negated_conjecture") || step.role.equals("conjecture"))
                         		noConjecture = false;
-							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step: " + step);
+							System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step.sumo: " + step.sumo);
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step type: " + step.role);
                         	if (!step.role.equals("type"))
                             	proof.add(step);
+                        	if (step.sumo.equals("false"))
+                        		containsFalse = true;
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): adding line: " +
 									line + "\nas " + sv.result);
                         }

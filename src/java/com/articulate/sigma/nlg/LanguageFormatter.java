@@ -488,7 +488,7 @@ public class LanguageFormatter {
 
         try {
             if (NLGUtils.getKeywordMap() == null) {
-                System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
+                if (debug) System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
             ArrayList<String> args = new ArrayList<>();

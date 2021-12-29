@@ -18,6 +18,7 @@ public class NLGUtils implements Serializable {
     private HashMap<String,HashMap<String,String>> keywordMap;
     // a list of format parameters or words and the sentence words they match with
     public static HashMap<String,CoreLabel> outputMap = new HashMap<>();
+    public static boolean debug = false;
 
     /** *************************************************************
      */
@@ -481,7 +482,7 @@ public class NLGUtils implements Serializable {
 
         String ans = "";
         if (getKeywordMap() == null) {
-            System.out.println("Error in NLGUtils.getKeyword(): keyword map is null");
+            if (debug) System.out.println("Error in NLGUtils.getKeyword(): keyword map is null");
             return ans;
         }
         HashMap<String,String> hm = getKeywordMap().get(englishWord);

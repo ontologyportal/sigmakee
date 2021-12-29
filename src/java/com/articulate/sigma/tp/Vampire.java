@@ -87,7 +87,7 @@ public class Vampire {
     /** *************************************************************
      * Add an assertion for inference.
      *
-     * @param userAssertionTPTP asserted formula in the TPTP syntax
+     * @param userAssertionTPTP asserted formula in the TPTP/TFF syntax
      * @param kb Knowledge base
      * @param parsedFormulas a lit of parsed formulas in KIF syntax
      * @param tptp convert formula to TPTP if tptp = true
@@ -104,27 +104,31 @@ public class Vampire {
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
-            HashSet<Formula> processedFormulas = new HashSet<Formula>();
+            HashSet<Formula> processedFormulas = new HashSet();
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
-                else {   // 2. Translate to TPTP.
+                else {   // 2. Translate to TPTP/TFF.
                     Set<String> tptpFormulas = new HashSet<>();
                     if (tptp) {
                         SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
                         for (Formula p : processedFormulas) {
-                            if (!p.isHigherOrder(kb))
-                                tptpFormulas.add(stptp.tptpParseSUOKIFString(p.getFormula(), false));
+                            if (!p.isHigherOrder(kb)) {
+                                String tptpStr = stptp.tptpParseSUOKIFString(p.getFormula(), false);
+                                System.out.println("INFO in Vampire.assertFormula(2): formula " + tptpStr);
+                                tptpFormulas.add(tptpStr);
+                            }
                         }
                     }
                     // 3. Write to new tptp file
                     for (String theTPTPFormula : tptpFormulas) {
-                        pw.print("fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
+                        pw.print(SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        String tptpstring = "fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
+                        String tptpstring = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
+                                "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
                         System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpstring);
                     }
                     pw.flush();
@@ -181,6 +185,7 @@ public class Vampire {
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
             System.out.println("Vampire.run(): Abnormal process termination");
+            System.out.println(output);
         }
         System.out.println("Vampire.run() done executing");
     }
@@ -247,6 +252,8 @@ public class Vampire {
     public List<String> getUserAssertions(KB kb) {
 
         String userAssertionTPTP = kb.name + KB._userAssertionsTPTP;
+        if (SUMOKBtoTPTPKB.lang.equals("tff"))
+            userAssertionTPTP = kb.name + KB._userAssertionsTFF;
         File dir = new File(KBmanager.getMgr().getPref("kbDir"));
         String fname = dir + File.separator + userAssertionTPTP;
         File ufile = new File(fname);
