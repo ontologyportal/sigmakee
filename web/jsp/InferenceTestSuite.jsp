@@ -75,9 +75,9 @@ if (!role.equalsIgnoreCase("admin")) {
     %>
     <%@include file="CommonHeader.jsp" %>
     
-    Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>"> override test timeout
+    Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>">
     <input type="checkbox" id="overrideTimeout" name="overrideTimeout" value="yes">
-    <label for="overrideTimeout">Override timeout</label><br>
+    <label for="overrideTimeout">Override individual timeouts</label><br>
 
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     Choose an inference engine for testing:<BR>

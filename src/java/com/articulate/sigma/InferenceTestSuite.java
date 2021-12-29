@@ -1,13 +1,19 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.trans.SUMOKBtoTFAKB;
+import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
+
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -90,7 +96,7 @@ public class InferenceTestSuite {
             return true;         // return true if no answers are found in the inference engine
         if (answerList != null && !answerList.isEmpty()) {
             if (answerList.get(0).equals("yes"))
-                return tpp.proof.size() > 0;   // return true if "yes" is expected, and we do find a contradiction (answer)
+                return tpp.proof.size() > 0 && tpp.containsFalse;   // return true if "yes" is expected, and we do find a contradiction (answer)
             else {
                 for (int i = 0; i < tpp.bindings.size(); i++) {
                     String actualRes = tpp.bindings.get(i);
@@ -115,7 +121,43 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
-     *  Note that files is modified as a side effect.
+     */
+    private static void clearOutputDir(File outputDir) throws IOException {
+
+        if (outputDir == null) {
+            System.out.println("Error in InferenceTestSuite.clearOutputDir(): null file input");
+            return;
+        }
+        final File[] files = outputDir.listFiles();
+        if (files != null)
+            for (File f : files)
+                f.delete();
+    }
+
+    /** ***************************************************************
+     *  Copy test files to the output directory so that they are visible
+     *  to Sigma as a Tomcat application.
+     */
+    private static void copyTestFiles(ArrayList<File> files, File outputDir) throws IOException  {
+
+        if ((outputDir == null) || !outputDir.isDirectory()) {
+            System.out.println("Error in InferenceTestSuite.copyTestFiles(): Could not find  " + outputDir);
+            return;
+        }
+        for (File f : files) {
+            String target = outputDir.getAbsolutePath() + File.separator + f.getName();
+            File fout = new File(target);
+            if (!fout.exists()) {
+                Files.copy(f.toPath(), fout.toPath());
+                System.out.println("InferenceTestSuite.copyTestFiles(): copied file to: " + fout.getAbsolutePath());
+            }
+            else
+                System.out.println("InferenceTestSuite.copyTestFiles(): already exists: " + fout.getAbsolutePath());
+        }
+    }
+
+    /** ***************************************************************
+     *  Note that 'files' variable is modified as a side effect.
      *  @return error messages, or null if none
      */
     private static String getTestFiles(ArrayList<File> files, File outputDir) throws IOException  {
@@ -143,19 +185,19 @@ public class InferenceTestSuite {
         if ((outputDir == null) || !outputDir.isDirectory()) 
             return("Error in InferenceTestSuite.getTestFiles(): Could not find or create " + outputDir);        
 
-        // At this point, inferenceTestDir and outputDir shouild be
+        // At this point, inferenceTestDir and outputDir should be
         // set to viable values.
         File[] newfiles = inferenceTestDir.listFiles();
         System.out.println("INFO in InferenceTestSuite.getTestFiles(): number of files: " + newfiles.length); 
         if (newfiles == null || newfiles.length == 0) {
-            System.out.println("INFO in InferenceTestSuite.getTestFiles(): No test files found in " +
+            System.out.println("Error in InferenceTestSuite.getTestFiles(): No test files found in " +
                     inferenceTestDir.getCanonicalPath());
             return("No test files found in " + inferenceTestDir.getCanonicalPath());
         }
         Arrays.sort(newfiles);
-        for (int i = 0; i < newfiles.length; i++) {
-            if (newfiles[i].getName().endsWith(".tq")) 
-                files.add(newfiles[i]);            
+        for (File f : newfiles) {
+            if (f.getName().endsWith(".tq"))
+                files.add(f);
         }
         if (files.size() < 1) {
             System.out.println("INFO in InferenceTestSuite.getTestFiles(): No test files found in " +
@@ -353,7 +395,6 @@ public class InferenceTestSuite {
         int pass = 0;
         PrintWriter pw = null;
         String proof = null;
-        String processedStmt = null;
 
         String language = "EnglishLanguage";
         int maxAnswers = 1;
@@ -363,14 +404,13 @@ public class InferenceTestSuite {
         result = result.append("<table><tr><td>name</td><td>test file</td><td>result</td><td>Time (ms)</td></tr>");
 
         File outputDir = setOutputDir();
+        clearOutputDir(outputDir);
         ArrayList<File> files = new ArrayList();
         String error = getTestFiles(files,outputDir);
+        copyTestFiles(files,outputDir);
         if (error != null) 
             return error;
 
-        File allResultsFile = new File(outputDir, "TestSuiteResults");
-        FileWriter afw = new FileWriter(allResultsFile);
-        PrintWriter apw = new PrintWriter(afw);
         ArrayList<InfTestData> tests = readTestFiles(files);
         System.out.println("INFO in InferenceTestSuite.test(): number of files: " + files.size());
         int counter = 0;
@@ -384,8 +424,10 @@ public class InferenceTestSuite {
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
                 Formula theQuery = new Formula(itd.query);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
+                SUMOKBtoTFAKB stfa = new SUMOKBtoTFAKB();
+                stfa.initOnce();
+                SUMOtoTFAform.initOnce();
                 Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
-                Iterator q = theQueries.iterator();
                 for (Formula processed : theQueries) {
                     long start = System.currentTimeMillis();
                     System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
@@ -413,7 +455,11 @@ public class InferenceTestSuite {
                 fw = new FileWriter(resultsFile);
                 pw = new PrintWriter(fw);
                 tpp.parseProofOutput(proof, kb);
-                pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
+                System.out.println("InferenceTestSuite.test() proof status: " + tpp.status);
+                if (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem"))
+                    pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
+                else
+                    pw.println(tpp.status);
                 itd.actualAnswers = tpp.bindings;
             }
             catch (java.io.IOException e) {
@@ -443,12 +489,12 @@ public class InferenceTestSuite {
                 resultString = "succeed";
                 pass++;
             }
-            result.append("<tr><td>" + itd.note + "</td><td><a href=\"" + outputDir.getName() +
-                                   "/" + itd.note + "\">" + itd.filename + "</a></td>");
+            result.append("<tr><td>" + itd.note + "</td><td><a href=\"tests/" + itd.filename +
+                                    "\">" + itd.filename + "</a></td>");
             result.append("<td><a href=\"" + outputDir.getName() + "/" + resultsFile.getName() +
                                    "\">" + resultString + "</a></td>");
             result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
-            System.out.println("FINISHED TEST #" + counter + " of " + files.size() + " : " + itd.filename);
+            System.out.println("Finished test #" + (counter+1) + " of " + files.size() + " : " + itd.filename);
             counter++;
         }
 

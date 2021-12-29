@@ -250,7 +250,8 @@ if (!role.equalsIgnoreCase("admin")) {
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
             String link = tpp.createProofDotGraph();
-            out.println("<a href=\"" + link + "\">graphical proof</a><P>");
+            if (tpp.proof.size() > 0)
+                out.println("<a href=\"" + link + "\">graphical proof</a><P>");
             tpp.processAnswersFromProof(vampire.qlist,stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
