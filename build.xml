@@ -11,7 +11,7 @@
   <property name="sigma.src" value="${git.home}/sigmakee"/>
   <property name="basedir" value="${sigma.src}"/>
   <property name="sigma.home" value="${env.SIGMA_HOME}"/>
-  <property name="tptp.home" value="${git.home}/TPTP-ANTLR4-Grammar"/>
+  <property name="tptp.home" value="${git.home}/TPTP-ANTLR"/>
   <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
   <property name="kbs.home" value="${sigma.home}/KBs" />
   <property name="dist.home" value="${tomcat.home}/webapps"/>
