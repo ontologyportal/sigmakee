@@ -237,6 +237,8 @@ cd ~/workspace/
 sudo apt-get install git
 git clone https://github.com/ontologyportal/sigmakee
 git clone https://github.com/ontologyportal/sumo
+git clone https://github.com/ontologyportal/TPTP-ANTLR
+git clone https://github.com/ontologyportal/SigmaUtils
 cd ~
 mkdir .sigmakee
 cd .sigmakee
