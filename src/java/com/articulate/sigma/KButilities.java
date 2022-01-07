@@ -1064,6 +1064,7 @@ public class KButilities {
         System.out.println("  -n - generate NL for every formula");
         System.out.println("  -f - list formulas for every documentation string term");
         System.out.println("  -v - is formula valid");
+        System.out.println("  -a \"<formula>\" - show all attributes of a SUO-KIF formula");
         System.out.println("  -t - generate a table of termFormat(s)");
     }
 
@@ -1120,6 +1121,18 @@ public class KButilities {
             else if (args != null && args.length > 1 && args[0].equals("-v")) {
                 SUMOtoTFAform.initOnce();
                 System.out.println(isValidFormula(kb,args[1]));
+            }
+            else if (args != null && args.length > 1 && args[0].equals("-a")) {
+                SUMOtoTFAform.initOnce();
+                Formula f = new Formula(StringUtil.removeEnclosingQuotes(args[1]));
+                f.debug = true;
+                System.out.println("higherOrder : " + f.isHigherOrder(kb));
+                f.debug = false;
+                System.out.println("isFunctional : " + f.isFunctional);
+                System.out.println("isGround : " + f.isGround);
+                System.out.println("termCache : " + f.termCache);
+                System.out.println("predVarCache : " + f.predVarCache);
+                System.out.println("quantVarsCache : " + f.quantVarsCache);
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 System.out.println(termFormatIndex(kb));
