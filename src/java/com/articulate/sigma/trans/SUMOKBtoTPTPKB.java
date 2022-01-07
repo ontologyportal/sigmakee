@@ -139,6 +139,28 @@ public class SUMOKBtoTPTPKB {
             }
         }
     }
+    /** ***************************************************************
+     * Print the sorts of any numeric constants encountered during processing.
+     * They are stored in SUMOtoTFAform.numericConstantTypes
+     */
+    public void printTFFNumericConstants(PrintWriter pr) {
+
+        int size = SUMOtoTFAform.numericConstantTypes.keySet().size();
+        if (size == SUMOtoTFAform.numericConstantCount)
+            return;
+        for (String t : SUMOtoTFAform.numericConstantTypes.keySet()) {
+            if (SUMOtoTFAform.numericConstantValues.keySet().contains(t))
+                continue;
+            String type = SUMOtoTFAform.numericConstantTypes.get(t);
+            pr.println("tff(" + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
+                    "_sig,type," + SUMOformulaToTPTPformula.translateWord(t, StreamTokenizer.TT_WORD,false)  +
+                    ":" + SUMOKBtoTFAKB.translateSort(kb,type) + ").");
+        }
+        for (String t : SUMOtoTFAform.numericConstantTypes.keySet()) {
+            if (SUMOtoTFAform.numericConstantValues.keySet().contains(t))
+                continue;
+        }
+    }
 
     /** *************************************************************
      *  Sets isQuestion and calls writeTPTPFile() below
@@ -276,6 +298,8 @@ public class SUMOKBtoTPTPKB {
                             if (stfa.sorts != null && stfa.sorts.size() > 0)
                                 f3.tffSorts.addAll(stfa.sorts);
                             result = stfa.process(f3.getFormula(),false);
+                            printTFFNumericConstants(pw);
+                            SUMOtoTFAform.initNumericConstantTypes();
                             if (!StringUtil.emptyString(result))
                                 f.theTptpFormulas.add(result);
                             else
@@ -313,6 +337,7 @@ public class SUMOKBtoTPTPKB {
             }
             System.out.println();
             printVariableArityRelationContent(pr,relationMap,sanitizedKBName,axiomIndex);
+            printTFFNumericConstants(pr);
             if (conjecture != null) {  //----Print conjecture if one has been supplied
                 // conjecture.getTheTptpFormulas() should return a
                 // List containing only one String, so the iteration
