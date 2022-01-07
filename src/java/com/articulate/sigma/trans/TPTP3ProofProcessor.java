@@ -378,13 +378,14 @@ public class TPTP3ProofProcessor {
 				String[] esks = answer.split(",");
 				for (String esk : esks) {
 					if (debug) System.out.println("INFO in processAnswers(): esk: " + esk);
-					answer = removeEsk(esk);
+					//answer = removeEsk(esk);
 					answer = removePrefix(answer);
 					if (debug) System.out.println("INFO in processAnswers(): binding: " + answer);
 					bindings.add(answer);
 				}
 			}
 		}
+		if (debug) System.out.println("INFO in processAnswers(): returning bindings: " + bindings);
 	}
 
 	/** ***************************************************************
@@ -560,6 +561,17 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Input: s__Arc13_1
+	 * Output: Arc13_1
+	 */
+	public static boolean isSkolemRelation(String s) {
+		if (s.startsWith("esk") || s.startsWith("sK"))
+			return true;
+		else
+			return false;
+	}
+
+	/** ***************************************************************
 	 * remove skolem symbol with arity n
 	 *
 	 * For example,
@@ -568,7 +580,7 @@ public class TPTP3ProofProcessor {
 	 */
 	private String removeEsk(String line) {
 
-		if (line.startsWith("esk") || line.startsWith("sK")) {
+		if (isSkolemRelation(line)) {
 			int leftParen = line.indexOf("(");
 			int rightParen = line.indexOf(")");
 			if (leftParen != -1 && rightParen != -1)
@@ -676,7 +688,7 @@ public class TPTP3ProofProcessor {
                         	TPTPFormula step = sv.result.values().iterator().next();
                         	if (step.role.equals("negated_conjecture") || step.role.equals("conjecture"))
                         		noConjecture = false;
-							System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step.sumo: " + step.sumo);
+							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step.sumo: " + step.sumo);
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step type: " + step.role);
                         	if (!step.role.equals("type"))
                             	proof.add(step);
@@ -711,6 +723,7 @@ public class TPTP3ProofProcessor {
 		if (debug)
 			for (TPTPFormula ps : proof)
 				System.out.println(ps.name);
+		if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): returning bindings: " + bindings);
     }
     
 	/** ***************************************************************
