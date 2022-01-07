@@ -136,9 +136,10 @@ public class PredVarInst {
         String origForm = "(=> (and (subrelation ?REL1 ?REL2) (instance ?REL1 Predicate) (instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
         Set<Formula> result = new HashSet<Formula>();
         for (String r1 : kb.kbCache.relations) {
-            //System.out.println("handleDouble2(): relation: " + r1);
-            //System.out.println("handleDouble2(): in function set " + kb.kbCache.functions.contains(r1));
-            //System.out.println("handleDouble2(): is function " + kb.isFunction(r1));
+            if (debug) System.out.println("handleDouble2(): relation: " + r1);
+            if (debug) System.out.println("handleDouble2(): subrelation children: " + kb.kbCache.children.get("subrelation"));
+            if (debug) System.out.println("handleDouble2(): in function set " + kb.kbCache.functions.contains(r1));
+            if (debug) System.out.println("handleDouble2(): is function " + kb.isFunction(r1));
             if (kb.kbCache.functions.contains(r1)) // || kb.isFunction(r1))
                 continue;
             HashSet<String> children = kb.kbCache.children.get("subrelation").get(r1);
