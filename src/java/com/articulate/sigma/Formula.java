@@ -2553,7 +2553,7 @@ public class Formula implements Comparable, Serializable {
         if (!StringUtil.emptyString(term) && !listP(term) &&
                 Character.isJavaIdentifierStart(term.charAt(0))) {
             for (int i = 0; i < term.length(); i++) {
-                if (!Character.isJavaIdentifierPart(term.charAt(i)))
+                if (!Character.isJavaIdentifierPart(term.charAt(i)) && term.charAt(i) != '-')
                     return false;
             }
             return true;
