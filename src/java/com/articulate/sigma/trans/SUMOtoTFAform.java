@@ -50,6 +50,7 @@ public class SUMOtoTFAform {
     // types like E and Pi
     public static HashMap<String,String> numericConstantTypes = new HashMap<>();
     public static HashMap<String,String> numericConstantValues = new HashMap<>();
+    public static int numericConstantCount = 0; // to compare with if another constant is found after initialization
 
     // storage for a message why the formula wasn't translated
     public static String filterMessage = "";
@@ -784,14 +785,21 @@ public class SUMOtoTFAform {
             String bestVar = bestSpecificTerm(varmap.get(rhs.getFormula()));
             best = bestOfPair(bestVar,best);
         }
-        /*if (!allBuiltInNumericTypes(args) && !op.startsWith("equal__")) {
-            int ttype = f.getFormula().charAt(0);
-            if (Character.isDigit(ttype))
-                ttype = StreamTokenizer_s.TT_NUMBER;
-            return "(" + processRecurse(lhs,best) + " = " +
-                    processRecurse(rhs,best) + ")";
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): builtInNumericType(best): " + builtInNumericType(best));
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhs is term: " + rhs + " : " + Formula.isTerm(rhs.getFormula()));
+        if (Formula.isTerm(rhs.getFormula())) {
+            if (builtInNumericType(best)) {
+                if (debug) System.out.println("SUMOtoTFAform.processCompOp(): found constant: " + rhs + " with type " + best);
+                numericConstantTypes.put(rhs.getFormula(), best);
+            }
         }
-         */
+        if (debug) System.out.println("SUMOtoTFAform.processCompOp(): lhs is term: " + lhs + " : " + Formula.isTerm(lhs.getFormula()));
+        if (Formula.isTerm(lhs.getFormula())) {
+            if (builtInNumericType(best)) {
+                if (debug) System.out.println("SUMOtoTFAform.processCompOp(): found constant: " + lhs + " with type " + best);
+                numericConstantTypes.put(lhs.getFormula(), best);
+            }
+        }
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): final best: " + best);
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
         if (!op.startsWith("lessThan") && !op.startsWith("greaterThan") && !op.startsWith("equal")) {
@@ -2316,7 +2324,8 @@ public class SUMOtoTFAform {
         filterMessage = "";
         if (s.contains("ListFn"))
             filterMessage = "SUMOtoTFAform.process(): Formula contains a list operator";
-        if (StringUtil.emptyString(s) || numConstAxioms.contains(s)) // || s.contains("ListFn"))
+        //if (StringUtil.emptyString(s) || numConstAxioms.contains(s))
+        if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
             return "";
         Formula f = new Formula(s);
         return process(f,query);
@@ -2534,6 +2543,16 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      */
+    public static void initNumericConstantTypes() {
+
+        numericConstantTypes.clear();
+        numericConstantTypes.put("NumberE","RealNumber");
+        numericConstantValues.put("NumberE","2.718282");
+        numericConstantTypes.put("Pi","RealNumber");
+        numericConstantValues.put("Pi","3.141592653589793");
+    }
+    /** *************************************************************
+     */
     public static void initOnce() {
 
         if (initialized)
@@ -2544,10 +2563,8 @@ public class SUMOtoTFAform {
         fp = new FormulaPreprocessor();
         fp.addOnlyNonNumericTypes = true;
         buildNumericConstraints();
-        numericConstantTypes.put("NumberE","RealNumber");
-        numericConstantValues.put("NumberE","2.718282");
-        numericConstantTypes.put("Pi","RealNumber");
-        numericConstantValues.put("Pi","3.141592653589793");
+        initNumericConstantTypes();
+        numericConstantCount = numericConstantTypes.keySet().size();
         initialized = true;
     }
 
