@@ -977,7 +977,7 @@ public class HTMLformatter {
                                                 String lineHtml, String kbName, String language) {
 
         StringBuffer html = new StringBuffer();
-    	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number steps" + tpp.proof.size());
+    	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number of steps: " + tpp.proof.size());
     	if (tpp.proof == null || tpp.proof.size() == 0) {
     	    html.append("Fail with status: " + tpp.status + "<br>\n");
         }
