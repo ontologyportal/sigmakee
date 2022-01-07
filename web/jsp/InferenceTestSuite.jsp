@@ -57,7 +57,7 @@ if (!role.equalsIgnoreCase("admin")) {
     if (request.getParameter("maxAnswers") != null) 
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
     if (request.getParameter("timeout") != null)
-        timeout= Integer.parseInt(request.getParameter("timeout"));
+        timeout = Integer.parseInt(request.getParameter("timeout"));
     if ((kbName == null) || kbName.equals("")) {
         System.out.println("Error: No knowledge base specified");
         return;
