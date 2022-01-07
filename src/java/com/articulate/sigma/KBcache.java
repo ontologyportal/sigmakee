@@ -1450,7 +1450,8 @@ public class KBcache implements Serializable {
         String rel = "subrelation";
         HashMap<String,HashSet<String>> relParents = parents.get("subrelation");
         if (relParents == null) {
-            System.out.println("Error in KBcache.breadthFirstInheritDomains(): no relation subrelation");
+            System.out.println("Error in KBcache.breadthFirstInheritDomains(): no parents using relation subrelation");
+            System.out.println(parents);
             return;
         }
         ArrayDeque<String> Q = new ArrayDeque<String>();
