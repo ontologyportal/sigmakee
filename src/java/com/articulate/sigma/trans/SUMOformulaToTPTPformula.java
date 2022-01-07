@@ -47,7 +47,6 @@ public class SUMOformulaToTPTPformula {
         if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): lang: " + lang);
         if (debug) System.out.println("translateWordNew(): " + SUMOtoTFAform.numericConstantValues);
         int translateIndex;
-        String result = null;
         List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT,
                 Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF,
                 Formula.EQUAL);
@@ -56,8 +55,6 @@ public class SUMOformulaToTPTPformula {
         List<String> kifPredicates =
                 Arrays.asList("<=","<",">",">=",
                         "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
-        List<String> tptpPredicates = Arrays.asList("lesseq","less","greater","greatereq",
-                "lesseq","less","greater","greatereq");
 
         List<String> kifConstants =
                 Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE);
@@ -478,7 +475,7 @@ public class SUMOformulaToTPTPformula {
                 else
                     argStr.append(processRecurse(new Formula(s)) + ",");
             }
-            String result = "s__" + car.getFormula() + "(" + argStr.substring(0,argStr.length()-1) + ")";
+            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,false) + "(" + argStr.substring(0,argStr.length()-1) + ")";
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): result: " + result);
             return result;
         }
@@ -541,7 +538,7 @@ public class SUMOformulaToTPTPformula {
 
     /** ***************************************************************
      * Parse a single formula into TPTP format
-     */
+
     public static String tptpParseSUOKIFStringOld(String suoString, boolean query) {
 
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): input: " + suoString);
@@ -786,7 +783,7 @@ public class SUMOformulaToTPTPformula {
             translatedFormula = translatedFormula.replaceAll("  "," ");
         return translatedFormula;
     }
-
+*/
     /** ***************************************************************
      * Parse formulae into TPTP format
      * Result is returned in _f.theTptpFormulas
