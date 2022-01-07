@@ -1,19 +1,15 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.tp.Vampire;
-import com.articulate.sigma.trans.SUMOKBtoTFAKB;
-import com.articulate.sigma.trans.SUMOtoTFAform;
-import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.trans.*;
+import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
-
-import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
@@ -60,7 +56,7 @@ public class InferenceTestSuite {
 
     public KB kb = null;
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -89,9 +85,9 @@ public class InferenceTestSuite {
      */
     private static boolean sameAnswers(TPTP3ProofProcessor tpp, ArrayList answerList) {
 
-        if (debug) System.out.println("InferenceTestSuite.compareAnswers(): expected answers: " + answerList);
-        if (debug) System.out.println("InferenceTestSuite.compareAnswers(): tpp proof size: " + tpp.proof.size());
-        if (debug) System.out.println("InferenceTestSuite.compareAnswers(): bindings: " + tpp.bindings);
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(): expected answers: " + answerList);
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(): tpp proof size: " + tpp.proof.size());
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(): bindings: " + tpp.bindings);
         if ((tpp == null || tpp.proof.size() == 0) && (answerList == null || answerList.contains("no")))
             return true;         // return true if no answers are found in the inference engine
         if (answerList != null && !answerList.isEmpty()) {
@@ -100,6 +96,7 @@ public class InferenceTestSuite {
             else {
                 for (int i = 0; i < tpp.bindings.size(); i++) {
                     String actualRes = tpp.bindings.get(i);
+                    if (TPTP3ProofProcessor.isSkolemRelation(actualRes))
                     if (!answerList.get(i).equals(actualRes))
                         return false;    // return false if any pair of answers is different
                 }
@@ -304,8 +301,17 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     * skolem terms in a string are converted to 'sK1'
+     */
+    public static String normalizeSkolem(String s) {
+
+        return s.replaceAll("sK\\d+","sK1").replaceAll("esk\\d+","esk1");
+    }
+
+    /** ***************************************************************
      * Read in a .tq inference test files and return an InfTestData
      * object or null if error
+     * Note that if the expected answer is a skolem term, the function is converted to 'sK1'
      */
     public InfTestData readTestFile(File f) {
 
@@ -332,12 +338,13 @@ public class InferenceTestSuite {
                             ifd.expectedAnswers.add(answerstring);
                         }
                         else {
-                            if (answerstring.startsWith("(and"))
-                                answerstring = answerstring.substring(4, answerstring.length() - 1).trim();
-                            String[] answers = answerstring.split("\\)");
-                            for (String a : answers) {
-                                ifd.expectedAnswers.add(a.substring(a.indexOf("(") + 1, a.length()));
-                            }
+                            answerstring = normalizeSkolem(answerstring);
+                            answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
+                            ifd.expectedAnswers.add(answerstring);
+                            String[] answers = answerstring.split(",");
+                            //for (String a : answers) {
+                            //    ifd.expectedAnswers.add(a.substring(a.indexOf("(") + 1, a.length()));
+                            //}
                         }
                     }
                     else if (formula.startsWith("(time"))
@@ -421,6 +428,7 @@ public class InferenceTestSuite {
             compareFiles(itd);
             maxAnswers = itd.expectedAnswers.size();
             try {
+                System.out.println("====================================");
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
                 Formula theQuery = new Formula(itd.query);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -429,12 +437,20 @@ public class InferenceTestSuite {
                 SUMOtoTFAform.initOnce();
                 Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
                 for (Formula processed : theQueries) {
+                    if (processed.isHigherOrder(kb)) {
+                        System.out.println("Error in InferenceTestSuite.test(): skipping higher order query: " +
+                                processed + " in test " + itd.note);
+                        continue;
+                    }
                     long start = System.currentTimeMillis();
-                    System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
+                    System.out.println("INFO in InferenceTestSuite.test(): Query " + processed + " is posed to " + KBmanager.getMgr().prover);
+                    int actualTimeout = itd.timeout;
+                    if (overrideTimeout)
+                        actualTimeout = defaultTimeout;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                        proof = kb.askEProver(processed.getFormula(), itd.timeout, maxAnswers) + " ";
+                        proof = kb.askEProver(processed.getFormula(), actualTimeout, maxAnswers) + " ";
                     if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
-                        proof = kb.askVampire(processed.getFormula(), itd.timeout, maxAnswers) + " ";
+                        proof = kb.askVampire(processed.getFormula(), actualTimeout, maxAnswers) + " ";
                     duration = System.currentTimeMillis() - start;
                     System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                     System.out.println(duration);
@@ -455,11 +471,12 @@ public class InferenceTestSuite {
                 fw = new FileWriter(resultsFile);
                 pw = new PrintWriter(fw);
                 tpp.parseProofOutput(proof, kb);
-                System.out.println("InferenceTestSuite.test() proof status: " + tpp.status);
-                if (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem"))
+                System.out.println("InferenceTestSuite.test() proof status: " + tpp.status + " for " + itd.note);
+                if (tpp != null && tpp.status != null && (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem")))
                     pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
                 else
-                    pw.println(tpp.status);
+                    if (tpp != null)
+                        pw.println(tpp.status);
                 itd.actualAnswers = tpp.bindings;
             }
             catch (java.io.IOException e) {
@@ -495,6 +512,8 @@ public class InferenceTestSuite {
                                    "\">" + resultString + "</a></td>");
             result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
             System.out.println("Finished test #" + (counter+1) + " of " + files.size() + " : " + itd.filename);
+            System.out.println(resultString);
+            System.out.println();
             counter++;
         }
 
@@ -544,6 +563,11 @@ public class InferenceTestSuite {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         for (Formula f : theQueries) {
             String processedStmt = f.getFormula();
+            if (f.isHigherOrder(kb)) {
+                System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +
+                        processedStmt + " in test " + itd.note);
+                continue;
+            }
             System.out.println("\n============================");
             System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
             System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
@@ -575,8 +599,8 @@ public class InferenceTestSuite {
 
             itd.actualAnswers.addAll(tpp.bindings);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): answers: " + itd.actualAnswers);
-            if (itd.actualAnswers != null)
-                itd.actualAnswers.addAll(itd.actualAnswers);
+            //if (itd.actualAnswers != null)
+            //    itd.actualAnswers.addAll(itd.actualAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): tpp status: " + tpp.status);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): actual answers: " + itd.actualAnswers);
             if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.size() == 0)
@@ -677,6 +701,7 @@ public class InferenceTestSuite {
         System.out.println("  -a <mode> - run all test files in the given mode in config.xml inferenceTestDir");
         System.out.println("     e - run with eprover (add letter to options above)");
         System.out.println("     v - run with vampire (add letter to options above)");
+        System.out.println("     f - run with TF0 language");
         System.out.println("     o - override test timeout with global timeout of " + _DEFAULT_TIMEOUT + " sec");
     }
 
@@ -685,8 +710,8 @@ public class InferenceTestSuite {
      */
     public static void main(String[] args) {
 
-        System.out.println("============== InferenceTestSuite class =============");
-        if (args != null && args.length > 1) {
+        System.out.println("args: " + Arrays.toString(args));
+        if (args != null && args.length > 0) {
             if (args[0].equals("-h"))
                 showHelp();
             else {
@@ -703,17 +728,32 @@ public class InferenceTestSuite {
                     KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
                     kb.loadEProver();
                 }
+                if (args[0].indexOf('f') != -1) {
+                    SUMOformulaToTPTPformula.lang = "tff";
+                    SUMOKBtoTPTPKB.lang = "tff";
+                    SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
+                    skbtfakb.initOnce();
+                    SUMOtoTFAform.initOnce();
+                }
                 if (args[0].indexOf('v') != -1)
                     KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
                 if (args[0].indexOf('0') != -1)
                     overrideTimeout = true;
                 System.out.println("in InferenceTestSuite.main(): using prover: " + KBmanager.getMgr().prover);
 
-                if (args != null && args.length > 1 && args[0].contains("t")) {
+                if (args != null && args.length > 1 && args[0].indexOf("t") != -1) {
                     its.cmdLineTest(args[1]);
                 }
-                else if (args != null && args.length > 1 && args[0].contains("i")) {
+                else if (args != null && args.length > 1 && args[0].indexOf("i") != -1) {
                     its.runPassing();
+                }
+                else if (args != null && args.length > 0 && args[0].indexOf("a") != -1) {
+                    try {
+                        its.test(kb);
+                    }
+                    catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
