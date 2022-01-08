@@ -965,6 +965,12 @@ public class SUMOtoTFAform {
             if (i < newArgTypes.size())
                 type = newArgTypes.get(i);
             if (car.getFormula().equals("instance")) {
+                if (Formula.isTerm(s) && i == 1) {
+                    if (args.size() > 1 && builtInOrSubNumericType(args.get(2))) {
+                        if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): found constant: " + s + " with type " + args.get(2));
+                        numericConstantTypes.put(s, convertToTFFType(args.get(2)));
+                    }
+                }
                 int ttype = f.getFormula().charAt(0);
                 if (Character.isDigit(ttype))
                     ttype = StreamTokenizer_s.TT_NUMBER;
@@ -1208,6 +1214,22 @@ public class SUMOtoTFAform {
         if (sigType.equals("RationalNumber") && kb.isSubclass(t,"RationalNumber"))
             return true;
         return false;
+    }
+
+    /** *************************************************************
+     * check if t is one of the fundamental types of $int, $rat, $real
+     * or SUMO types that are subtypes of Integer, RationalNumber or
+     * RealNumber and return the TFF type
+     */
+    private static String convertToTFFType(String t) {
+
+        if (t.equals("Integer") && kb.isSubclass(t,"Integer"))
+            return "$int";
+        if (t.equals("RealNumber") && kb.isSubclass(t,"RealNumber"))
+            return "$real";
+        if (t.equals("RationalNumber") && kb.isSubclass(t,"RationalNumber"))
+            return "$rat";
+        return "$i";
     }
 
     /** *************************************************************
