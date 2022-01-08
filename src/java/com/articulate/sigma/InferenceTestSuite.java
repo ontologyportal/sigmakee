@@ -75,6 +75,7 @@ public class InferenceTestSuite {
         return false;
     }
 */
+
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
      * true if no answers are found or if any pair of answers
@@ -83,25 +84,50 @@ public class InferenceTestSuite {
      * TODO: If both answersList and tpp.bindings are a lit of entities,
      *       we enforce that all entity pair should be exactly the same;
      */
-    private static boolean sameAnswers(TPTP3ProofProcessor tpp, ArrayList answerList) {
+    private static boolean sameAnswers(ArrayList<String> actualAnswerList, ArrayList<String> expectedAnswerList) {
 
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(): expected answers: " + answerList);
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(): tpp proof size: " + tpp.proof.size());
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(): bindings: " + tpp.bindings);
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
+        for (int i = 0; i < actualAnswerList.size(); i++) {
+            String actualRes = actualAnswerList.get(i);
+            if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
+                if (!normalizeSkolem(expectedAnswerList.get(i)).equals(normalizeSkolem(actualRes))) {
+                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: " +
+                            actualRes + " and " + expectedAnswerList.get(i));
+                    return false;    // return false if any pair of answers is different
+                }
+            }
+            else
+                if (!expectedAnswerList.get(i).equals(actualRes)) {
+                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different answers: " +
+                            actualRes + " and " + expectedAnswerList.get(i));
+                    return false;    // return false if any pair of answers is different
+                }
+        }
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): returning true");
+        return true;
+    }
+
+    /** ***************************************************************
+     * Compare the expected answers to the returned answers.  Return
+     * true if no answers are found or if any pair of answers
+     * is different.  Return false otherwise.
+     *
+     * TODO: If both answersList and tpp.bindings are a lit of entities,
+     *       we enforce that all entity pair should be exactly the same;
+     */
+    private static boolean sameAnswers(TPTP3ProofProcessor tpp, ArrayList<String> answerList) {
+
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): expected answers: " + answerList);
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): tpp proof size: " + tpp.proof.size());
+        if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): bindings: " + tpp.bindings);
         if ((tpp == null || tpp.proof.size() == 0) && (answerList == null || answerList.contains("no")))
             return true;         // return true if no answers are found in the inference engine
         if (answerList != null && !answerList.isEmpty()) {
             if (answerList.get(0).equals("yes"))
                 return tpp.proof.size() > 0 && tpp.containsFalse;   // return true if "yes" is expected, and we do find a contradiction (answer)
-            else {
-                for (int i = 0; i < tpp.bindings.size(); i++) {
-                    String actualRes = tpp.bindings.get(i);
-                    if (TPTP3ProofProcessor.isSkolemRelation(actualRes))
-                    if (!answerList.get(i).equals(actualRes))
-                        return false;    // return false if any pair of answers is different
-                }
-                return true;
-            }
+            else
+                return sameAnswers(tpp.bindings, answerList);
         }
         return false;
     }
@@ -205,42 +231,6 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
-
-    private static String askSoTPTP(String processedStmt, int timeout, int maxAnswers,
-                                    String systemChosen, KB kb, String TPTPlocation) throws Exception {
-
-        System.out.println("INFO in InferenceTestSuite.askSoTPTP()"); 
-        String tptpresult = "";
-        Formula conjectureFormula;
-        conjectureFormula = new Formula();
-        conjectureFormula.read(processedStmt);
-        conjectureFormula.read(conjectureFormula.makeQuantifiersExplicit(true));
-        SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
-    	stptp._f = conjectureFormula;
-    	stptp.tptpParse(conjectureFormula,true,kb);
-    	SUMOKBtoTPTPKB stptpkb = new SUMOKBtoTPTPKB();
-    	stptpkb.kb = kb;
-        String kbFileName = stptpkb.writeFile(null,conjectureFormula,true);
-        InterfaceTPTP.init();
-        String res = InterfaceTPTP.callTPTP(TPTPlocation, systemChosen, kbFileName,
-                                            timeout, "-q3", "-S");
-        StringTokenizer st = new StringTokenizer(res,"\n");
-        String temp = "";
-        while (st.hasMoreTokens()) {
-            String next = st.nextToken();
-            if (!next.equals("") && !next.substring(0,1).equals("%")) 
-                temp += next + "\n";                                
-        }
-        tptpresult = res;
-        res = temp;
-        if (SystemOnTPTP.isTheorem(tptpresult)) 
-            return TPTP2SUMO.convert(res,false);
-        else 
-            return "<queryResponse>\n<answer result=\"no\" number=\"0\">\n</answer>\n" +
-                   "<summary proofs=\"0\"/>\n</queryResponse>\n";                            
-    }
-*/
-    /** ***************************************************************
      * Convenience method that sets default parameters
     */
     public String test(KB kb) throws IOException  {
@@ -305,7 +295,10 @@ public class InferenceTestSuite {
      */
     public static String normalizeSkolem(String s) {
 
-        return s.replaceAll("sK\\d+","sK1").replaceAll("esk\\d+","esk1");
+        System.out.println("INFO in InferenceTestSuite.normalizeSkolem(): input: " + s);
+        s = s.replaceAll("sK[0-9 ]+","sK1").replaceAll("esk\\d+","esk1");
+        System.out.println("INFO in InferenceTestSuite.normalizeSkolem(): result: " + s);
+        return s;
     }
 
     /** ***************************************************************
@@ -611,6 +604,14 @@ public class InferenceTestSuite {
             }
             System.out.println("InferenceTestSuite.inferenceUnitTest(): actual answers(2): " + itd.actualAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): expected answers(2): " + itd.expectedAnswers);
+            boolean different = true;
+            if (tpp.proof != null)
+                different = !sameAnswers(tpp,itd.expectedAnswers);
+            String resultString = "";
+            if (different || tpp.noConjecture)
+                resultString = "fail";
+            else
+                resultString = "succeed";
         }
 
         System.out.println("\n============================");
@@ -645,7 +646,7 @@ public class InferenceTestSuite {
                 System.out.println("proof with no negated conjecture in " + itd.filename);
                 System.out.println("*****************************************");
             }
-            if (itd.actualAnswers.equals(itd.expectedAnswers) && !itd.inconsistent) {
+            if (sameAnswers(itd.actualAnswers,itd.expectedAnswers) && !itd.inconsistent) {
                 System.out.println("InferenceTestSuite.cmdLineTest() : Success on " + filename);
                 return true;
             }
