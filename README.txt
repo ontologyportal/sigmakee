@@ -198,7 +198,7 @@ to the java version you downloaded) -
   sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk1.8.0_version/bin/java" 1
   sudo update-alternatives --set java /home/theuser/Programs/jdk1.8.0_version/bin/java
 
-Verify that it's installed correct with
+Verify that it's installed correctly with
 
   java -version
 
