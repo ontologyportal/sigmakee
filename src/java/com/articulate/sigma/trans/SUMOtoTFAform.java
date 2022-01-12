@@ -2231,7 +2231,7 @@ public class SUMOtoTFAform {
         }
         String sigStr = sigBuf.toString().substring(0,sigBuf.length()-1);
         String relname = SUMOKBtoTFAKB.translateName(rel);
-        if (relname.endsWith("__m"))
+        if (relname.endsWith(Formula.termMentionSuffix))
             relname = relname.substring(0,relname.length()-3);
         String axname = rel;
         if (axname.startsWith("s__"))
