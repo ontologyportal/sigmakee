@@ -244,7 +244,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         String sigStr = sigBuf.toString().substring(0,sigBuf.length()-1);
         String relname = translateName(t);
-        if (relname.endsWith("__m"))
+        if (relname.endsWith(Formula.termMentionSuffix))
             relname = relname.substring(0,relname.length()-3);
         if (kb.isFunction(t)) {
             String range = sig.get(0);
