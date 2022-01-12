@@ -37,7 +37,7 @@ public class SUMOformulaToTPTPformula {
      *
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
-     */
+
     public static String translateWordNew(String st, int type, boolean hasArguments) {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): input: '" + st + "'");
@@ -112,7 +112,7 @@ public class SUMOformulaToTPTPformula {
         else
             return(Formula.termSymbolPrefix + term.replace('-','_'));
     }
-
+*/
     /** ***************************************************************
      * Encapsulates translateWord_1, which translates the logical
      * operators and inequalities in SUO-KIF to their TPTP
@@ -138,7 +138,7 @@ public class SUMOformulaToTPTPformula {
            // }
             result = translateWord_1(st,type,hasArguments);
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
-            if (result.equals("$true__m") || result.equals("$false__m")) 
+            if (result.equals("$true" + Formula.termMentionSuffix) || result.equals("$false" + Formula.termMentionSuffix))
                 result = "'" + result + "'";
             if (StringUtil.isNumeric(result) && hideNumbers && !lang.equals("tff")) {
                 if (result.indexOf(".") > -1)
@@ -146,6 +146,12 @@ public class SUMOformulaToTPTPformula {
                 if (result.indexOf("-") > -1)
                     result = result.replace('-','_');
                 result = "n__" + result;
+            }
+            if (!StringUtil.isNumeric(result)) {
+                if (result.indexOf(".") > -1)
+                    result = result.replace('.','_');
+                if (result.indexOf("-") > -1)
+                    result = result.replace('-','_');
             }
         }
         catch (Exception ex) {
@@ -257,9 +263,9 @@ public class SUMOformulaToTPTPformula {
             }
         }
         if (kifOps.contains(term))
-            return(term.replace('-','_'));  // shouldn't be needed, no kifOps contain '-'
+            return(term);
         else
-            return(Formula.termSymbolPrefix + term.replace('-','_'));
+            return(Formula.termSymbolPrefix + term);
     }
 
     /** ***************************************************************
@@ -475,7 +481,7 @@ public class SUMOformulaToTPTPformula {
                 else
                     argStr.append(processRecurse(new Formula(s)) + ",");
             }
-            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,false) + "(" + argStr.substring(0,argStr.length()-1) + ")";
+            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true) + "(" + argStr.substring(0,argStr.length()-1) + ")";
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): result: " + result);
             return result;
         }
