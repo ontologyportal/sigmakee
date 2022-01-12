@@ -266,6 +266,7 @@ public class InferenceTestSuite {
         public ArrayList<String> files = new ArrayList<>();
         public ArrayList<String> statements = new ArrayList<>();
         public boolean inconsistent = false;
+        public boolean success = false;
     }
 
     /** ***************************************************************
@@ -488,7 +489,7 @@ public class InferenceTestSuite {
                 result.append("<h1>InferenceTestSuite.inferenceUnitTest(): Danger! possible inconsistency!</h1>");
             }
             boolean different = true;
-            if (proof != null)
+            if (proof != null && !tpp.status.startsWith("Timeout"))
                 different = !sameAnswers(tpp,itd.expectedAnswers);
             String resultString = "";
             if (different || tpp.noConjecture) {
@@ -604,14 +605,14 @@ public class InferenceTestSuite {
             }
             System.out.println("InferenceTestSuite.inferenceUnitTest(): actual answers(2): " + itd.actualAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): expected answers(2): " + itd.expectedAnswers);
+            System.out.println("InferenceTestSuite.inferenceUnitTest(): status: " + tpp.status);
             boolean different = true;
-            if (tpp.proof != null)
+            if (tpp.proof != null  && !tpp.status.startsWith("Timeout"))
                 different = !sameAnswers(tpp,itd.expectedAnswers);
-            String resultString = "";
             if (different || tpp.noConjecture)
-                resultString = "fail";
+                itd.success = false;
             else
-                resultString = "succeed";
+                itd.success = true;
         }
 
         System.out.println("\n============================");
@@ -646,7 +647,7 @@ public class InferenceTestSuite {
                 System.out.println("proof with no negated conjecture in " + itd.filename);
                 System.out.println("*****************************************");
             }
-            if (sameAnswers(itd.actualAnswers,itd.expectedAnswers) && !itd.inconsistent) {
+            if (itd.success) {
                 System.out.println("InferenceTestSuite.cmdLineTest() : Success on " + filename);
                 return true;
             }
