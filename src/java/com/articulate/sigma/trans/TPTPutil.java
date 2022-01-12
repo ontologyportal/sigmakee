@@ -33,8 +33,8 @@ public class TPTPutil {
      */
     private static String removeTPTPSuffix(String t) {
 
-        if (t.endsWith("__m") || t.endsWith("__t"))         
-            return t.substring(0,t.length()-3);
+        if (t.endsWith(Formula.termMentionSuffix) || t.endsWith(Formula.termMentionSuffix))
+            return t.substring(0,t.length()-Formula.termMentionSuffix.length());
         else
             return t;
     }
