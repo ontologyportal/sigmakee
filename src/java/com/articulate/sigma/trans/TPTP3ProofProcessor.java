@@ -379,7 +379,7 @@ public class TPTP3ProofProcessor {
 				for (String esk : esks) {
 					if (debug) System.out.println("INFO in processAnswers(): esk: " + esk);
 					//answer = removeEsk(esk);
-					answer = removePrefix(answer);
+					answer = removePrefix(esk);
 					if (debug) System.out.println("INFO in processAnswers(): binding: " + answer);
 					bindings.add(answer);
 				}
@@ -595,7 +595,7 @@ public class TPTP3ProofProcessor {
 	 */
 	private String removePrefix(String st) {
 
-		System.out.println("removePrefix(): " + st);
+		System.out.println("TPTP3ProofProcessor.removePrefix(): " + st);
 		String tsp = Formula.termSymbolPrefix;
 		if (st.startsWith(tsp))
 			return st.substring(tsp.length(),st.length());
@@ -738,7 +738,7 @@ public class TPTP3ProofProcessor {
 	 * Output = [An instance of Human] (Human is the most specific type
 	 * for esk3_0 in the given proof)
 	 */
-	public ArrayList<String> parseAnswerTuples(ArrayList<String> st, String strQuery, KB kb, FormulaPreprocessor fp, StringBuffer qlist) {
+	public ArrayList<String> parseAnswerTuples(ArrayList<String> st, String strQuery, KB kb, StringBuffer qlist) {
 
 		ArrayList<String> answers = new ArrayList<>();
 		parseProofOutput(st, strQuery, kb, qlist);
