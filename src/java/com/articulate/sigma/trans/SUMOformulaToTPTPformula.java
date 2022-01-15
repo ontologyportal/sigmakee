@@ -257,7 +257,7 @@ public class SUMOformulaToTPTPformula {
 
         if (!hasArguments) {
             if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
-                     || term.endsWith("Fn")
+                   || term.endsWith("Fn")
                      || KB.isRelationInAnyKB(term)) {
                 term += mentionSuffix;
             }
