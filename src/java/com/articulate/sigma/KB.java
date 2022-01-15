@@ -1874,7 +1874,7 @@ public class KB implements Serializable {
                     System.out.println("Get response from EProver, start for parsing ...");
                 // System.out.println("Results returned from E = \n" + EResult);
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                answers = tpp.parseAnswerTuples(eprover.output, strQuery, this, fp,eprover.qlist);
+                answers = tpp.parseAnswerTuples(eprover.output, strQuery, this,eprover.qlist);
                 return answers;
             }
         }
