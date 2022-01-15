@@ -332,19 +332,23 @@ public class InferenceTestSuite {
                             ifd.expectedAnswers.add(answerstring);
                         }
                         else {
+                            String[] answers = answerstring.split(" ");
                             answerstring = normalizeSkolem(answerstring);
-                            answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
-                            ifd.expectedAnswers.add(answerstring);
-                            String[] answers = answerstring.split(",");
-                            //for (String a : answers) {
-                            //    ifd.expectedAnswers.add(a.substring(a.indexOf("(") + 1, a.length()));
-                            //}
+                            //answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
+                            for (String a : answers) {
+                                if (TPTP3ProofProcessor.isSkolemRelation(a))
+                                    a = normalizeSkolem(a);
+                                ifd.expectedAnswers.add(a);
+                            }
                         }
                     }
                     else if (formula.startsWith("(time"))
                         ifd.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
-                    else if (formula.startsWith("(file"))
-                        ifd.kbFiles.add(formula.substring(6, formula.length() - 1));
+                    else if (formula.startsWith("(file")) {
+                        String filename = formula.substring(6, formula.length() - 1);
+                        if (!ifd.kbFiles.contains(filename))
+                            ifd.kbFiles.add(filename);
+                    }
                     else
                         ifd.statements.add(formula);
                 }
