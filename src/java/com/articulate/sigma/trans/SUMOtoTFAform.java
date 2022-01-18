@@ -964,11 +964,11 @@ public class SUMOtoTFAform {
             String type = "Entity";
             if (i < newArgTypes.size())
                 type = newArgTypes.get(i);
-            if (car.getFormula().equals("instance")) {
+            if (car.getFormula().startsWith("instance")) {
                 if (Formula.isTerm(s) && i == 1) {
                     if (args.size() > 1 && builtInOrSubNumericType(args.get(2))) {
                         if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): found constant: " + s + " with type " + args.get(2));
-                        numericConstantTypes.put(s, convertToTFFType(args.get(2)));
+                        numericConstantTypes.put(s, args.get(2));
                     }
                 }
                 int ttype = f.getFormula().charAt(0);
