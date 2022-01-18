@@ -29,13 +29,22 @@ public class PredVarInst {
     private static HashMap<String,HashSet<String>> candidatePredicates = new HashMap<String,HashSet<String>>();
 
     //The list of logical terms that not related to arity check, will skip these predicates
-    private static List<String> logicalTerms=Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
+    private static List<String> logicalTerms = Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
 
     public static boolean debug = false;
 
     // a debugging option to reject formulas with more than one predicate variable, to save time
     public static boolean rejectDoubles = false;
     public static boolean doublesHandled = false;
+
+    /** ***************************************************************
+     */
+    public static void init() {
+
+        doublesHandled = false;
+        candidatePredicates = new HashMap<>();
+        predVarArity = new HashMap<>();
+    }
 
     /** ***************************************************************
      * There are two type conditions:
@@ -98,6 +107,7 @@ public class PredVarInst {
     private static Set<Formula> handleDouble1(KB kb) {
 
         String origForm = "(=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate) (disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (?REL1 @ROW2)) (not (?REL2 @ROW2)))";
+        if (debug) System.out.println("PredVarInst.handleDouble1(): " + origForm);
         Set<Formula> result = new HashSet<Formula>();
         for (String s : kb.kbCache.disjointRelations) {
             String arg1 = s.substring(0,s.indexOf("\t"));
@@ -119,6 +129,7 @@ public class PredVarInst {
             }
             result.add(newf);
         }
+        if (debug) System.out.println("PredVarInst.handleDouble1(): # results: " + result.size());
         return result;
     }
 
@@ -134,6 +145,7 @@ public class PredVarInst {
     private static Set<Formula> handleDouble2(KB kb) {
 
         String origForm = "(=> (and (subrelation ?REL1 ?REL2) (instance ?REL1 Predicate) (instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
+        if (debug) System.out.println("PredVarInst.handleDouble2(): " + origForm);
         Set<Formula> result = new HashSet<Formula>();
         for (String r1 : kb.kbCache.relations) {
             if (debug) System.out.println("handleDouble2(): relation: " + r1);
@@ -164,6 +176,7 @@ public class PredVarInst {
                 }
             }
         }
+        if (debug) System.out.println("PredVarInst.handleDouble2(): results: " + result);
         return result;
     }
 
@@ -180,7 +193,9 @@ public class PredVarInst {
         Set<Formula> result2 = handleDouble2(kb);
         if (result2 != null)
             result.addAll(result2);
-        doublesHandled = true;
+        if (result1 != null && result2 != null)
+            doublesHandled = true;
+        if (debug) System.out.println("PredVarInst.handleDoubles(): handled with result: " + result);
         return result;
     }
 
@@ -201,18 +216,18 @@ public class PredVarInst {
         if (predVars.size() > 1) {
             if (rejectDoubles) {
                 SUMOtoTFAform.filterMessage = "reject axioms with more than one predicate variable";
-                System.out.println("instantiatePredVars(): reject axioms with more than one predicate variable: \n" + input);
+                if (debug) System.out.println("instantiatePredVars(): reject axioms with more than one predicate variable: \n" + input);
                 return null;
             }
             else {
                 if (!doublesHandled) {
                     SUMOtoTFAform.filterMessage = "axiom with more than one predicate variable";
-                    System.out.println("instantiatePredVars(): should handle: \n" + input);
+                    if (debug) System.out.println("instantiatePredVars(): should handle: \n" + input);
                     return handleDoubles(kb);
                 }
                 else {
                     SUMOtoTFAform.filterMessage = "axiom with more than one predicate variable";
-                    System.out.println("instantiatePredVars(): should have already handled: \n" + input);
+                    if (debug) System.out.println("instantiatePredVars(): should have already handled: \n" + input);
                     return null;
                 }
             }
