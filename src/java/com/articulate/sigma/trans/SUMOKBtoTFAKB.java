@@ -179,7 +179,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public static String translateSort(KB kb, String s) {
 
-        //if (debug) System.out.println("translateSort(): s: '" + s + "'");
+        if (debug) System.out.println("translateSort(): s: '" + s + "'");
         if (StringUtil.emptyString(s))
             return "$i";
         if (s.equals("$i") || s.equals("$tType"))
@@ -574,7 +574,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         // havent been set
         SUMOKBtoTPTPKB.lang = "tff";
         String kbName = KBmanager.getMgr().getPref("sumokbname");
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + SUMOKBtoTPTPKB.lang;
         PrintWriter pw = null;
         System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
         try {
