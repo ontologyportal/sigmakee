@@ -865,17 +865,18 @@ public class FormulaPreprocessor {
     protected ArrayList<Formula> replacePredVarsAndRowVars(Formula form, KB kb, boolean addHoldsPrefix) {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
-        if (debug) System.out.println("replacePredVarsAndRowVars: " + form);
+        if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): " + form);
         Formula startF = new Formula();
         startF.read(form.getFormula());
+        HashSet<String> predVars = PredVarInst.gatherPredVars(kb,startF);
         LinkedHashSet<Formula> accumulator = new LinkedHashSet<Formula>();
         accumulator.add(startF);
         ArrayList<Formula> working = new ArrayList<Formula>();
         int prevAccumulatorSize = 0;
 
         while (accumulator.size() != prevAccumulatorSize) {
-            if (debug) System.out.println("replacePredVarsAndRowVars: prevAccumulatorSize: " + prevAccumulatorSize);
-            if (debug) System.out.println("replacePredVarsAndRowVars: accumulatorSize: " + accumulator.size());
+            if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): prevAccumulatorSize: " + prevAccumulatorSize);
+            if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): accumulatorSize: " + accumulator.size());
             prevAccumulatorSize = accumulator.size();
             // Initialize predicate variables if we are not adding holds prefixes.
             if (!addHoldsPrefix) {
@@ -884,7 +885,11 @@ public class FormulaPreprocessor {
                 accumulator.clear();
                 for (Formula f : working) {
                     Set<Formula> instantiations = PredVarInst.instantiatePredVars(f,kb);
-                    if (debug) System.out.println("FormulaPreprocessor.preProcess(): pred vars repl: " + f + "\n" + instantiations);
+                    if (predVars.size() > 1) {
+                        if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): returning doubles: " + instantiations);
+                        if (debug) System.out.println(SUMOtoTFAform.filterMessage);
+                    }
+                    if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): pred vars repl: " + f + "\n" + instantiations);
                     form.errors.addAll(f.getErrors());
 
                     // If the accumulator is null -- the formula can't be instantiated at all and has been marked "reject",
@@ -902,7 +907,9 @@ public class FormulaPreprocessor {
                 }
             }
 
-            if (debug) System.out.println("replacePredVarsAndRowVars: starting on row var replacement: ");
+            if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): accumulator: " + accumulator);
+            if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): accumulator size: " + accumulator.size());
+            if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): starting on row var replacement: ");
             // Row var expansion. Iterate over the instantiated predicate formulas,
             // doing row var expansion on each.  If no predicate instantiations can be generated, the accumulator
             // will contain just the original input formula.
@@ -911,17 +918,20 @@ public class FormulaPreprocessor {
                 working.addAll(accumulator);
                 accumulator.clear();
                 for (Formula f : working) {
-                    RowVars rv = new RowVars();
-                    accumulator.addAll(RowVars.expandRowVars(kb,f));
+                    ArrayList<Formula> ar = RowVars.expandRowVars(kb,f);
+                    if (ar == null || ar.size() == 0)
+                        accumulator.add(f);
+                    else
+                        accumulator.addAll(ar);
                     if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
-                        System.out.println("Error in replacePredVarsAndRowVars(): AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
+                        System.out.println("Error in FormulaPreprocessor.replacePredVarsAndRowVars(): AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
                         break;
                     }
                 }
             }
         }
         result.addAll(accumulator);
-        if (debug) System.out.println("replacePredVarsAndRowVars: result: " + result);
+        if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): result: " + result);
         return result;
     }
 
@@ -1070,9 +1080,12 @@ public class FormulaPreprocessor {
 
             boolean addHoldsPrefix = mgr.getPref("holdsPrefix").equalsIgnoreCase("yes");
             ArrayList<Formula> variableReplacements = replacePredVarsAndRowVars(form,kb, addHoldsPrefix);
+            if (debug) System.out.println("FormulaPreprocessor.preProcess(): just after replacePredVarsAndRowVars() ");
             form.errors.addAll(f.getErrors());
 
+            if (debug) System.out.println("FormulaPreprocessor.preProcess(): variableReplacements: " + variableReplacements);
             ArrayList<Formula> accumulator = addInstancesOfSetOrClass(form,kb, isQuery, variableReplacements);
+            if (debug) System.out.println("FormulaPreprocessor.preProcess(): accumulator: " + accumulator);
             // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
             // passing each to preProcessRecurse for further processing.
             if (!accumulator.isEmpty()) {
@@ -1086,7 +1099,7 @@ public class FormulaPreprocessor {
                     fnew.sourceFile = form.sourceFile;
                     if (!StringUtil.emptyString(theNewFormula))
                         results.add(fnew);
-                    if (debug) System.out.println("preProcess: results: " + results);
+                    if (debug) System.out.println("FormulaPreprocessor.preProcess(): results: " + results);
                 }
             }
         }
