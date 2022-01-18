@@ -54,9 +54,6 @@ along with this program ; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston,
 MA  02111-1307 USA
 
-Authors:
-Adam Pease
-Infosys LTD.
 */
 
 import com.articulate.sigma.tp.EProver;
@@ -3409,7 +3406,6 @@ public class KB implements Serializable {
     public void loadVampire() {
 
         System.out.println("INFO in KB.loadVampire()");
-        KBmanager mgr = KBmanager.getMgr();
         String vampex = KBmanager.getMgr().getPref("vampire");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
@@ -3434,8 +3430,9 @@ public class KB implements Serializable {
                     long millis = System.currentTimeMillis();
                     if (lang.equals("tptp")) {
                         SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                        PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
                         skb.kb = this;
-                        skb.writeFile(infFilename, null);
+                        skb.writeFile(infFilename, null, false, pw);
                     }
                     else {
                         SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
@@ -3444,6 +3441,7 @@ public class KB implements Serializable {
                         PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
                         stff.writeSorts(pw);
                         stff.writeFile(infFilename,null,false,pw);
+                        stff.printTFFNumericConstants(pw);
                         pw.flush();
                         pw.close();
                     }
@@ -3468,7 +3466,12 @@ public class KB implements Serializable {
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
+        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         try {
+            PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
             if (!formulaMap.isEmpty()) {
                 HashSet<String> formulaStrings = new HashSet<String>();
                 formulaStrings.addAll(formulaMap.keySet());
@@ -3482,7 +3485,7 @@ public class KB implements Serializable {
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
                 if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().infFileOld()) {
                     System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                    skb.writeFile(tptpFilename,null);
+                    skb.writeFile(tptpFilename,null, false,pw);
                 }
                 if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
                     eprover = new EProver(mgr.getPref("eprover"), tptpFilename);
