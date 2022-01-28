@@ -60,10 +60,29 @@ public class SUMOKBtoTPTPKB {
 
     /** *************************************************************
      */
+    public static String langToExtension(String l) {
+
+        if (l.equals("fof"))
+            return "tptp";
+        return l;
+    }
+
+    /** *************************************************************
+     */
+    public static String extensionToLang(String l) {
+
+        if (l.equals("tptp"))
+            return "fof";
+        return l;
+    }
+
+    /** *************************************************************
+     */
     public String getInfFilename() {
 
         String sanitizedKBName = getSanitizedKBname();
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + sanitizedKBName + ".tff";
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator +
+                sanitizedKBName + "." + langToExtension(lang);
         return filename;
     }
 
