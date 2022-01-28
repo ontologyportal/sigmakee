@@ -66,6 +66,26 @@ public class FormulaUtil {
     }
 
     /** ***************************************************************
+     * @return a string consisting of a literal with the given predicate
+     * that also contains a row variable, or null otherwise
+     */
+    public static String getLiteralWithPredAndRowVar(String pred, Formula f) {
+
+        //System.out.println("getLiteralWithPredAndRowVar(): pred,f: " + pred + ", " + f);
+        if (f == null || !f.listP())
+            return null;
+        if (f.car().equals(pred) && f.getFormula().indexOf("@") != -1)
+            return f.getFormula();
+        ArrayList<Formula> lits = f.complexArgumentsToArrayList(0);
+        for (Formula form : lits) {
+            String result = getLiteralWithPredAndRowVar(pred,form);
+            if (result != null)
+                return result;
+        }
+        return null;
+    }
+
+    /** ***************************************************************
      * Test whether a forumula is suitable for theorem proving or if
      * it's just a documentation statement
      */
