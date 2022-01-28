@@ -72,7 +72,8 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
                 tptpfcp = tptpf.getCanonicalPath();
                 com.articulate.sigma.trans.SUMOKBtoTPTPKB skbtptpkb = new com.articulate.sigma.trans.SUMOKBtoTPTPKB();
         		skbtptpkb.kb = kb;
-                tptpFile = skbtptpkb.writeFile(tptpfcp, null);
+        		PrintWriter pw = new PrintWriter(new FileWriter(tptpfcp));
+                tptpFile = skbtptpkb.writeFile(tptpfcp, null, false, pw);
             }
             catch (Exception tptpfe) {
                 tptpfe.printStackTrace();
