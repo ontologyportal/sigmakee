@@ -17,7 +17,11 @@
  */
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -232,6 +236,9 @@ public class KIF {
             do {
                 lastVal = st.ttype;
                 st.nextToken();
+                //System.out.println("KIF.parse(): sval: " + st.sval);
+                //System.out.println("KIF.parse(): parenLevel: " + parenLevel);
+                //System.out.println("KIF.parse(): argumentNum: " + argumentNum);
                 // check the situation when multiple KIF statements read as one
                 // This relies on extra blank line to separate KIF statements
                 if (st.ttype == StreamTokenizer.TT_EOL) {
@@ -444,8 +451,12 @@ public class KIF {
      * @param parenLevel      - if the paren level is > 1 then the term appears nested in a
      *            statement and the argument number is ignored.
      */
-    public static String createKey(String sval, boolean inAntecedent, boolean inConsequent, int argumentNum, int parenLevel) {
+    public static String createKey(String sval, boolean inAntecedent, boolean inConsequent,
+                                   int argumentNum, int parenLevel) {
 
+        //System.out.println("KIF.createKey(): sval: " + sval);
+        //System.out.println("KIF.createKey(): argumentNum: " + argumentNum);
+        //System.out.println("KIF.createKey(): parenLevel: " + parenLevel);
         if (sval == null) {
             sval = "null";
         }
@@ -637,7 +648,7 @@ public class KIF {
     /*****************************************************************
      * Test method for this class.
      */
-    public static void main(String[] args) throws IOException {
+    public static void test() {
 
         // tptpOutputTest(args[0]);
         String exp = "(documentation foo \"(written by John Smith).\")";
@@ -654,5 +665,36 @@ public class KIF {
         f.read(f.cdr());
         System.out.println(f);
         System.out.println(f.car());
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("KIF class");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  h - show this help screen");
+        System.out.println("  p \"<statement>\" - parse and show keys");
+        System.out.println("  t - run a test");
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) throws IOException {
+
+        System.out.println("INFO in KB.main()");
+        if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
+            if (args != null && args.length > 1 && args[0].contains("p")) {
+                KIF kif = new KIF();
+                Reader r = new StringReader(args[1]);
+                kif.parse(r);
+                System.out.println("formulaMap: " + kif.formulaMap);
+                System.out.println("formulas: " + kif.formulas);
+            }
+            else if (args != null && args.length > 0 && args[0].contains("t"))
+                test();
+        }
     }
 }
