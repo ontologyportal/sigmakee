@@ -92,6 +92,7 @@ public class RowVars {
     public static HashMap<String,Integer> getRowVarMaxAritiesWithOtherArgs(HashMap<String,HashSet<String>> ar, KB kb, Formula f) {
 
         if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() predicates: " + ar);
+        if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() formula: " + f);
         HashMap<String,Integer> arities = new HashMap<String,Integer>();
         for (String rowvar : ar.keySet()) {
             HashSet<String> preds = ar.get(rowvar);
@@ -99,9 +100,12 @@ public class RowVars {
                 // If row variables in an argument list with other arguments,
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int nonRowVar = 0;
+                boolean done = false;
                 int start = f.getFormula().indexOf("(" + pred);
                 int end = f.getFormula().indexOf(")", start);
-                String simpleFS = f.getFormula().substring(start, end+1);
+                String simpleFS = FormulaUtil.getLiteralWithPredAndRowVar(pred,f);
+                if (simpleFS == null)
+                    continue;
                 if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() looking at " + simpleFS);
                 Formula simpleF = new Formula();
                 simpleF.read(simpleFS);
@@ -130,6 +134,7 @@ public class RowVars {
                 }
             }
         }
+        if (DEBUG) System.out.println("getRowVarMaxAritiesWithOtherArgs() arities " + arities);
         return arities;
     }
 
@@ -161,6 +166,8 @@ public class RowVars {
                     int end = f.getFormula().indexOf(")", start);
                     startIndex = end + 1;
                     String simpleFS = f.getFormula().substring(start, end + 1);
+                    if (simpleFS.indexOf("@") == -1)
+                        continue;
                     int nonRowVar = 0;
                     if (DEBUG)
                         System.out.println("getRowVarMinAritiesWithOtherArgs() looking at " + simpleFS);
@@ -193,6 +200,7 @@ public class RowVars {
                 }
             }
         }
+        if (DEBUG) System.out.println("getRowVarMinAritiesWithOtherArgs() arities " + arities);
         return arities;
     }
 
