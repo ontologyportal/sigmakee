@@ -2078,7 +2078,7 @@ public class KB implements Serializable {
         if (term.endsWith("+"))
             term = term.substring(0,term.length()-1);
         if (term.startsWith("(UnionFn")) {
-            System.out.println("KB.termDepth(): warning - composite term: " + term);
+            //System.out.println("KB.termDepth(): warning - composite term: " + term);
             Formula f = new Formula(term);
             String arg1 = f.getStringArgument(1);
             String arg2 = f.getStringArgument(2);
@@ -2119,9 +2119,9 @@ public class KB implements Serializable {
         forms.addAll(askWithRestriction(0,"instance",1,term));
         forms.addAll(askWithRestriction(0,"subrelation",1,term));
         forms.addAll(askWithRestriction(0,"subAttribute",1,term));
-        Iterator<Formula> it = forms.iterator();
-        while (it.hasNext()) {
-            Formula f = it.next();
+        //System.out.println("KB.immediateParents(): forms: " + forms);
+        for (Formula f : forms) {
+            //System.out.println("KB.immediateParents(): f: " + f);
             if (!f.isCached())
                 result.add(f.getStringArgument(2));
         }
