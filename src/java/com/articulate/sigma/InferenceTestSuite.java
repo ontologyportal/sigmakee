@@ -611,7 +611,7 @@ public class InferenceTestSuite {
             System.out.println("InferenceTestSuite.inferenceUnitTest(): expected answers(2): " + itd.expectedAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): status: " + tpp.status);
             boolean different = true;
-            if (tpp.proof != null  && !tpp.status.startsWith("Timeout"))
+            if (tpp != null && tpp.proof != null  && !tpp.status.startsWith("Timeout"))
                 different = !sameAnswers(tpp,itd.expectedAnswers);
             if (different || tpp.noConjecture)
                 itd.success = false;
