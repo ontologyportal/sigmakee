@@ -144,7 +144,8 @@ public class PredVarInst {
      */
     private static Set<Formula> handleDouble2(KB kb) {
 
-        String origForm = "(=> (and (subrelation ?REL1 ?REL2) (instance ?REL1 Predicate) (instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
+        String origForm = "(=> (and (subrelation ?REL1 ?REL2) (instance ?REL1 Predicate) " +
+                "(instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
         if (debug) System.out.println("PredVarInst.handleDouble2(): " + origForm);
         Set<Formula> result = new HashSet<Formula>();
         for (String r1 : kb.kbCache.relations) {
