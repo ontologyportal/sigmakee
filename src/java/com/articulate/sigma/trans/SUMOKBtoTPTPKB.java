@@ -283,6 +283,10 @@ public class SUMOKBtoTPTPKB {
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
                 if (!f.getFormula().startsWith("(documentation")) {
                     pw.println("% f: " + f.format("", "", " "));
+                    if (f.derivation.parents.size() > 0) {
+                        for (Formula derivF : f.derivation.parents)
+                            pw.println("% original f: " + derivF.format("", "", " "));
+                    }
                     pw.println("% " + formCount++ + " of " + orderedFormulae.size() +
                             " from file " + f.sourceFile + " at line " + f.startLine);
                 }
