@@ -1057,6 +1057,7 @@ public class TPTP3ProofProcessor {
 					StringBuffer answerVars = new StringBuffer("?X ?Y ?Z");
 					System.out.println("input: " + lines + "\n");
 					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
+					tpp.createProofDotGraph();
 					System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
 					for (TPTPFormula step : tpp.proof) {
 						System.out.println(step);
