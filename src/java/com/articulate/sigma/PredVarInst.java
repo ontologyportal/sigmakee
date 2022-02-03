@@ -394,7 +394,7 @@ public class PredVarInst {
         try {
             res = hasCorrectArityRecurse(f,kb);
         }
-        catch(IllegalArgumentException e){
+        catch (IllegalArgumentException e){
             System.out.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
             return e.getMessage();
         }
