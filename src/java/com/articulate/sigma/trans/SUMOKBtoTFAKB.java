@@ -558,23 +558,15 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static void main(String[] args) {
 
         System.out.println("SUMOKBtoTFAKB.main():");
-        //HashMap<String,HashSet<String>> toExtend = new HashMap<>();
-        //handleListFn(toExtend);
-        //System.out.println(toExtend);
-
-        //debug = true;
-
-        //System.out.println("main(): " + alreadyExtended("ListFn__3Fn__0En1En2In3EnFn"));
-
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         System.out.println("SUMOKBtoTFAKB.main(): completed init");
         SUMOformulaToTPTPformula.lang = "tff"; // this setting has to be *after* initialization, otherwise init
-        // tried to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
-        // havent been set
+        // tries to write a TPTP file and then sees that tff is set and tries to write tff, but then sorts etc
+        // haven't been set
         SUMOKBtoTPTPKB.lang = "tff";
         String kbName = KBmanager.getMgr().getPref("sumokbname");
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + SUMOKBtoTPTPKB.lang;
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
         PrintWriter pw = null;
         System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
         try {
