@@ -2077,8 +2077,8 @@ public class KB implements Serializable {
         //System.out.println("KB.termDepth(): " + term);
         if (term.endsWith("+"))
             term = term.substring(0,term.length()-1);
-        if (term.startsWith("(UnionFn")) {
-            //System.out.println("KB.termDepth(): warning - composite term: " + term);
+        if (term.startsWith("(")) {
+            System.out.println("KB.termDepth(): warning - composite term: " + term);
             Formula f = new Formula(term);
             String arg1 = f.getStringArgument(1);
             String arg2 = f.getStringArgument(2);
