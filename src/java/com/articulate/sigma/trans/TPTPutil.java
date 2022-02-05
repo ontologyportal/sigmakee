@@ -14,9 +14,17 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.Formula;
+import com.articulate.sigma.KB;
+import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import tptp_parser.TPTPFormula;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 
 public class TPTPutil {
 
@@ -185,16 +193,85 @@ public class TPTPutil {
         }
         return result.toString();
     }
-    
+
+    /** ***************************************************************
+     * Is the axiom in a proof a source authored axiom from SUMO,
+     * rather than one automatically derived or introduced by a
+     * theorem prover
+     */
+    public static boolean sourceAxiom(TPTPFormula ps) {
+
+        return ps.supports.size() == 0 && !ps.infRule.startsWith("introduced");
+    }
+
     /** ***************************************************************
      */
-	public static void main(String[] args) {
+    public static void test() {
+
         Formula f = new Formula();
         f.theTptpFormulas = new HashSet();
         //f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
         f.theTptpFormulas.add("(! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => " +
-        		"s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");
+                "s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");
         System.out.println(TPTPutil.htmlTPTPFormat(f,"http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term=",false));
-	}
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("TPTPutil class");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  f <file> - parse a TPTP3 proof file and output source axioms in SUO-KIF");
+        System.out.println("  t - run test");
+        System.out.println("  h - show this help");
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) throws IOException {
+
+        System.out.println("INFO in TPTPutil.main()");
+        if (args == null)
+            System.out.println("no command given");
+        else
+            System.out.println(args.length + " : " + Arrays.toString(args));
+        if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            KBmanager.prefOverride.put("loadLexicons","false");
+            KBmanager.getMgr().initializeOnce();
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            KB kb = KBmanager.getMgr().getKB(kbName);
+            if (args != null && args.length > 1 && args[0].contains("f")) {
+                try {
+                    List<String> lines = FileUtil.readLines(args[1],false);
+                    String query = "(";
+                    StringBuffer answerVars = new StringBuffer("");
+                    System.out.println("input: " + lines + "\n");
+                    tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
+                    System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
+                    System.out.println("TPTPutil.main(): showing only source axioms ");
+                    for (TPTPFormula step : tpp.proof) {
+                        //System.out.println(step);
+                        if (TPTPutil.sourceAxiom(step)) {
+                            Formula f = new Formula(step.sumo);
+                            System.out.println(f.format("","  ","\n"));
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else if (args != null && args.length > 0 && args[0].contains("t"))
+                test();
+            else
+                showHelp();
+        }
+    }
+
+
 
 }
