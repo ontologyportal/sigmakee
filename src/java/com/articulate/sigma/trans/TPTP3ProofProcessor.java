@@ -991,7 +991,7 @@ public class TPTP3ProofProcessor {
 					if (ps.supports.size() != 1)
 						System.out.println(ps); break;
 				case 3 :
-					if (ps.supports.size() == 0 && !ps.infRule.startsWith("introduced"))
+					if (TPTPutil.sourceAxiom(ps))
 						System.out.println(ps); break;
 			}
 		}
@@ -1027,10 +1027,11 @@ public class TPTP3ProofProcessor {
 	 */
 	public static void showHelp() {
 
-		System.out.println("KB class");
+		System.out.println("TPTP3ProofProcessor class");
 		System.out.println("  options (with a leading '-'):");
 		System.out.println("  f <file> - parse a TPTP3 proof file");
 		System.out.println("  t - run test");
+		System.out.println("  h - show this help");
 	}
 
 	/** ***************************************************************
@@ -1061,7 +1062,8 @@ public class TPTP3ProofProcessor {
 					System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
 					for (TPTPFormula step : tpp.proof) {
 						System.out.println(step);
-						System.out.println(step.sumo);
+						Formula f = new Formula(step.sumo);
+						System.out.println(f.format("","  ","\n"));
 					}
 					System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
 					System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
