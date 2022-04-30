@@ -1720,7 +1720,9 @@ public class KBcache implements Serializable {
 
         if (debug) System.out.println("copyNewPredFromVariableArity(): pred,oldPred: " + pred + ", " + oldPred);
         ArrayList<String> oldSig = signatures.get(oldPred);
-        ArrayList<String> newSig = new ArrayList(oldSig);
+        ArrayList<String> newSig = new ArrayList<>();
+        if (oldSig != null)
+            newSig = new ArrayList(oldSig);
         if (signatures.keySet().contains(oldPred))
             signatures.put(pred,newSig);
         String lastType = oldSig.get(oldSig.size()-1);
