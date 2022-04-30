@@ -3625,7 +3625,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Attempt to provide guidance on the likely cause of a contradiction
      * by removing the axioms involved in a contradiction one-by-one and trying
-     * again.
+     * again. @see contradictionHelp()
      */
     public static HashMap<String,Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
 
