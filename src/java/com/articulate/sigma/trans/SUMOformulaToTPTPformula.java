@@ -822,9 +822,7 @@ public class SUMOformulaToTPTPformula {
             if (processed != null) {
                 _f.theTptpFormulas = new HashSet<String>();
                 //----Performs function on each current processed axiom
-                Iterator<Formula> g = processed.iterator();
-                while (g.hasNext()) {
-                    Formula f = (Formula) g.next();
+                for (Formula f : processed) {
                     if (!f.getFormula().contains("@") && !f.higherOrder) {
                         String tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
                         if (StringUtil.isNonEmptyString(tptpStr)) 
