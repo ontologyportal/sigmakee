@@ -12,6 +12,10 @@ public class SUMOKBtoTPTPKB {
 
     public KB kb;
 
+    // flags to support including numbers and HOL in pseudo-FOL for flexible provers
+    public static boolean removeHOL = true; // remove higher order expressions
+    public static boolean removeNum = true; // remove numbers
+
     public static boolean debug = false;
 
     public static String lang = "fof"; // or thf
@@ -292,11 +296,13 @@ public class SUMOKBtoTPTPKB {
                 }
                 if (f.isHigherOrder(kb)) {
                     pw.println("% is higher order");
-                    continue;
+                    if (removeHOL)
+                        continue;
                 }
+                else
+                    pw.println("% not higher order");
                 if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
                     continue;
-                pw.println("% not higher order");
                 if (counter++ == 100) System.out.print(".");
                 if ((counter % 4000) == 1)
                     System.out.println("\nSUMOKBtoTPTPKB.writeFile() : still working");
@@ -428,7 +434,10 @@ public class SUMOKBtoTPTPKB {
         if (tptp.matches(".*'[a-z][a-zA-Z0-9_]*\\(.*") &&
                 this.getClass().equals(SUMOKBtoTPTPKB.class)) { // only filter numbers in TPTP, not TFF
             pw.println("% number: " + tptp);
-            return true;
+            if (removeNum)
+                return true;
+            else
+                return false;
         }
         if (tptp.indexOf("'") > -1 || tptp.indexOf('"') >= 0) {
             pw.println("% f: " + form.format("", "", " "));
@@ -437,7 +446,8 @@ public class SUMOKBtoTPTPKB {
         }
 
         if (form.isHigherOrder(kb))
-            return true;
+            if (removeHOL)
+                return true;
         if (filterExcludePredicates(form) == false) {
             if (!alreadyWrittenTPTPs.contains(tptp)) {
                 //pw.println("% not already written: " + tptp);
