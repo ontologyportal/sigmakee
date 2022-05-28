@@ -272,7 +272,12 @@ public class Graph {
             String port = KBmanager.getMgr().getPref("port");
             if (port == null)
                 port = "8080";
-            String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
+            String https = KBmanager.getMgr().getPref("https");
+            if (https == null || !https.equals("true"))
+                https = "http";
+            else
+                https = "https";
+            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
             if (show) {
                 graphsize++;
                 if (graphsize < 100)                 

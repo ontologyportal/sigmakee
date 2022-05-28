@@ -52,8 +52,13 @@
  if (StringUtil.isNonEmptyString(down)) 
      TaxoModel.collapseParentNodes(down);
 
- String kbHref = "http://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName + 
- "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
+ String https = KBmanager.getMgr().getPref("https");
+ if (https == null || !https.equals("true"))
+     https = "http";
+ else
+     https = "https";
+ String kbHref = https + "://" + hostname + ":" + port + "/sigma/TreeView.jsp?kb=" + kbName +
+                 "&simple=" + simple + "&lang=" + language + "&flang=" + flang + "&term=";
 
  TaxoModel.displayTerm(term);
 %>
