@@ -2,6 +2,7 @@
  */
 package com.articulate.sigma.trans;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -812,7 +813,9 @@ public class THF {
         // we similarly work of the remaining arguments and distinguish between the prefix
         // and the infix case
         if (preferPrefix) {
-            resTerm.append("(" + op_thf + " @ " + arg1);
+            if (!op_thf.equals("~"))
+                resTerm.append(" @ ");
+            resTerm.append(arg1);
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
@@ -867,7 +870,10 @@ public class THF {
         String arg1 = toTHF2(f1);
         // we work off the remaining arguments and distinguish thereby between the prefix and infix case
         if (preferPrefix) {
-            resTerm.append("(" + op_thf + " @ " + arg1);
+            resTerm.append("(" + op_thf);
+            if (!op_thf.equals("~"))
+                resTerm.append(" @ ");
+            resTerm.append(arg1);
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
@@ -1374,7 +1380,16 @@ public class THF {
         else {
             String h = f.getStringArgument(0);
             /* documentation formulas and some others are not translated */
-            if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") || h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
+            if (h.equals("documentation") || h.equals("document")  || h.equals("synonymousExternalConcept") ||
+                    h.equals("termFormat") || h.equals("names") || h.equals("abbreviation") ||
+                    h.equals("format") || h.equals("comment") || h.equals("conventionalShortName") ||
+                    h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") ||
+                    h.equals("formerName") || h.equals("conventionalLongName") ||
+                    h.equals("conventionalShortName") || h.equals("relatedExternalConcept") ||
+                    h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") ||
+                    h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") ||
+                    h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") ||
+                    h.equals("acronym") || f.getFormula().equals("(contraryAttribute False True)")) {
                 result.append(notTranslatedStr + f.getFormula().trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
@@ -1526,7 +1541,9 @@ public class THF {
                     Formula argiF = new Formula();
                     argiF.read(argi);
                     String argiFTHF = toTHF1(argiF,argiTp,relTpInfo);
-                    resTerm.append(" @ " + argiFTHF);
+                    if (!resTerm.toString().endsWith("~"))
+                        resTerm.append(" @ ");
+                    resTerm.append(argiFTHF);
                     if (!argiTp.equals(unknownTp)) {
                         resType.append(argiTp + typeDelimiter);
                         terms.put(argiFTHF,argiTp);
@@ -1719,7 +1736,17 @@ public class THF {
             String arith_pred_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + boolTp + ")";
             String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
             /* documentation formulas are not translated */
-            if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") || h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  || h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName") || h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") || h.equals("formerName") || h.equals("conventionalLongName") || h.equals("conventionalShortName") || h.equals("relatedExternalConcept") || h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") || h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") || h.equals("acronym")) {
+            if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") ||
+                    h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  ||
+                    h.equals("format") || h.equals("comment")  || h.equals("conventionalShortName") ||
+                    h.equals("externalImage") || h.equals("canonicalPlaceName") || h.equals("government") ||
+                    h.equals("formerName") || h.equals("conventionalLongName") ||
+                    h.equals("conventionalShortName") || h.equals("relatedExternalConcept") ||
+                    h.equals("localLongName") || h.equals("localShortName") || h.equals("codeName") || h
+                    .equals("givenName") || h.equals("lexicon") || h.equals("abbrev") ||
+                    h.equals("carCode") || h.equals("governmentType") || h.equals("established") ||
+                    h.equals("codeMapping") || h.equals("acronym") ||
+                    f.getFormula().equals("(contraryAttribute False True)")) {
                 result.append(notTranslatedStr + f.getFormula().trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
@@ -1841,7 +1868,9 @@ public class THF {
                     //else {
                     String argiFTHF = toTHF2(argiF);
                     //}
-                    resTerm.append(" @ " + argiFTHF);
+                    if (!resTerm.toString().endsWith("~"))
+                        resTerm.append(" @ ");
+                    resTerm.append(argiFTHF);
                     resType.append(terms.get(argiFTHF) + typeDelimiter);
                 }
                 String goalTp = groundType("NOT_APPLICABLE",toTHFTp(typeInfo.get(0)));    
@@ -2048,6 +2077,8 @@ public class THF {
         KBmanager kbmgr = KBmanager.getMgr();
         kbmgr.initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String sep = File.separator;
         THFdebug = false;  /* set this to true for lots of debug output */
         //THFdebug = true;  /* set this to true for lots of debug output */	
         List<Formula> testFormulas = new ArrayList<Formula>();
@@ -2058,12 +2089,13 @@ public class THF {
     	    System.out.println("\n\nTest on all KB kb content:");
     	    Collection coll = Collections.EMPTY_LIST;
     	    String kbAll2 = "";
-    	    kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb); 
-    	    FileWriter fstream = new FileWriter("/tmp/kbAll2.p");
+    	    kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+    	    String filename = kbDir + sep + kb.name + ".thf";
+    	    FileWriter fstream = new FileWriter(filename);
     	    BufferedWriter out = new BufferedWriter(fstream);
     	    out.write(kbAll2);
     	    out.close();
-    	    System.out.println("\n\nResult written to file " + "/tmp/kbAll2.p");            
+    	    System.out.println("\n\nResult written to file " + filename);
 	    /*
             System.out.println("\n\nTest on all KB kb content with SInE:");
             String kbFileName = args[0];
