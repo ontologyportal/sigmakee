@@ -819,6 +819,7 @@ public class FormulaPreprocessor {
                     //if (debug) System.out.println("preProcessRecurse: restF: " + restF);
                     //if (debug) System.out.println("preProcessRecurse: result: " + result);
                 }
+                /*
                 if (KBmanager.getMgr().getPref("holdsPrefix").equals("yes")) {
                     if (!Formula.isLogicalOperator(pred) && !Formula.isQuantifierList(pred,previousPred))
                         prefix = "holds_";
@@ -840,6 +841,7 @@ public class FormulaPreprocessor {
                             prefix = "";
                     }
                 }
+                */
             }
             result.insert(0, pred);
             result.insert(0, prefix);
