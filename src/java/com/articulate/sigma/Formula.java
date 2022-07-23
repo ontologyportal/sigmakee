@@ -89,6 +89,12 @@ public class Formula implements Comparable, Serializable {
                                                                            LT,
                                                                            LTET);
 
+    /** SUO-KIF mathematical comparison predicates. */
+    public static final List<String> INEQUALITIES = Arrays.asList(GT,
+            GTET,
+            LT,
+            LTET);
+
     /** The SUO-KIF mathematical functions are implemented in Vampire, but not yet EProver. */
     public static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN,
                                                                      MINUSFN,
