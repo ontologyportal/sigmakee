@@ -20,10 +20,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.Formula;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.RowVars;
+import com.articulate.sigma.*;
 
 /** ************************************************************
  * This class handles the conversion of problems (= axioms + queries)
@@ -149,6 +146,10 @@ public class THF {
     private String problemTp = "probTp"; // the 'problem' help type, for real type clashes
 
     /** ***************************************************************
+     */
+    private List<String> numericOps = new ArrayList<String>();
+
+    /** ***************************************************************
      * A function that checks whether a given term-to-type mapping
      * such as 'terms' or 'localsig' above contain some type information
      * involving the 'unkownTp'.
@@ -157,16 +158,14 @@ public class THF {
      */
     private boolean containsUnknownTp(HashMap map) {
         
-        Collection entries = map.values();
-        THFdebugOut("\n   Enter containsUnknownTp with entries = " + entries.toString());
+        Collection<String> entries = map.values();
+        if (THFdebug) System.out.println("\n  THF.containsUnknownTp()  Enter containsUnknownTp with entries = " + entries.toString());
         boolean found = false;
-        Iterator<String> it = entries.iterator();
-        while (it.hasNext()) {
-            String entry = it.next();
+        for (String entry : entries) {
             if (entry.contains(unknownTp)) 
                 found = true;            
         }
-        THFdebugOut("\n   Exit containsUnknownTp with found = " + found);
+        if (THFdebug) System.out.println("\n  THF.containsUnknownTp() Exit containsUnknownTp with found = " + found);
         return found;   
     }
 
@@ -194,6 +193,36 @@ public class THF {
         str = str.replaceAll(key1,keysubst1);
         str = str.replaceAll(key2,keysubst2);
         return str;
+    }
+
+    /** ***************************************************************
+     */
+    private boolean hasMathOp(Formula f, KB kb) {
+
+        for (String s : numericOps) {
+            if (f.getFormula().contains(s + " ")) {
+                if (THFdebug) System.out.println("THF.hasMathOp(): " + f);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     */
+    private LinkedHashSet<Formula> expandAxioms(Collection<Formula> col, boolean isQuery, KB kb) {
+
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        LinkedHashSet<Formula> result = new LinkedHashSet<Formula>();
+        for (Formula ax : col) {
+            //RowVars rv = new RowVars();
+            //result.addAll(rv.expandRowVars(kb,ax));
+            Collection<Formula> forms = fp.preProcess(ax,isQuery,kb);
+            for (Formula form : forms)
+                if (!hasMathOp(form,kb))
+                    result.add(form);
+        }
+        return result;
     }
 
     /** ***************************************************************
@@ -354,20 +383,11 @@ public class THF {
     public String KIF2THF(Collection<Formula> axiomsC,
             Collection<Formula> conjecturesC, KB kb) {
 
-        LinkedHashSet<Formula> axioms = new LinkedHashSet<Formula>();
-        LinkedHashSet<Formula> conjectures = new LinkedHashSet<Formula>();
-        Iterator<Formula> iter = axiomsC.iterator();
-        while (iter.hasNext()) {
-            Formula ax = iter.next();
-            RowVars rv = new RowVars();
-            axioms.addAll(rv.expandRowVars(kb,ax));
-        }
-        Iterator<Formula> iter2 = conjecturesC.iterator();
-        while (iter2.hasNext()) {
-            Formula con = iter2.next();
-            RowVars rv = new RowVars();
-            conjectures.addAll(rv.expandRowVars(kb,con));
-        }
+        numericOps.addAll(Formula.INEQUALITIES);
+        numericOps.addAll(Formula.MATH_FUNCTIONS);
+        LinkedHashSet<Formula> axioms = expandAxioms(axiomsC,false,kb);
+        LinkedHashSet<Formula> conjectures = expandAxioms(conjecturesC,true,kb);
+        if (THFdebug) System.out.println("INFO in THF.KIF2THF() finished pre-processing");
         // not sort the formulas
         // Collection axioms = axiomsC;
         // Collection conjectures = conjecturesC;
@@ -385,16 +405,10 @@ public class THF {
         String axTag = "ax";
         String conTag = "con";
         HashMap taggedFormulas = new HashMap();
-        Iterator<Formula> iter3 = axioms.iterator();
-        while (iter3.hasNext()) {
-            Formula ax = iter3.next();
+        for (Formula ax : axioms)
             taggedFormulas.put(ax, axTag);
-        }
-        Iterator<Formula> iter4 = conjectures.iterator();
-        while (iter4.hasNext()) {
-            Formula con = iter4.next();
+        for (Formula con : conjectures)
             taggedFormulas.put(con, conTag);
-        }
         // the main loop; we proceed formula by formula and work with side effects
         // to variables introduced above (I know that this is terrible programming style!)
         int axcounter = 1;
@@ -410,7 +424,7 @@ public class THF {
                 f.read(form.makeQuantifiersExplicit(false));
             else if (taggedFormulas.get(form).equals(conTag))
                 f.read(form.makeQuantifiersExplicit(true));
-            System.out.println("\nKIF2THF -- translating KIF formula: " + f.getFormula().trim());
+            if (THFdebug) System.out.println("\nKIF2THF -- translating KIF formula: " + f.getFormula().trim());
             // we request some semantic type-relevant information on the
             // function and
             // relation symbols involved; this information is used with priority
@@ -420,25 +434,25 @@ public class THF {
             // translation
             terms = (HashMap) overallsig.clone();
             String res = toTHF1(f, boolTp, relTypeInfo);
-            // toTHF1 may return a THF translation that still contains many occurences
+            // toTHF1 may return a THF translation that still contains many occurrences
             // of the (kind of) polymorphic 'unkownTp' and in this case we apply further
-            // translation attempts employing the incrementially refined term-to-type
+            // translation attempts employing the incrementally refined term-to-type
             // information. This is done via repetitive calls to toTHF2. This loop
             // terminates when the signature localsig, which is storing the
-            // latest constant-to-symbols mapping, is free of occurences of the 'unknownTp'.
+            // latest constant-to-symbols mapping, is free of occurrences of the 'unknownTp'.
             // toTHF2 always starts a fresh translation attempt for the KIF formula stored in
             // variable kifFormula, which may itself be modified by renamings of symbols.
             // It is thus important in the code to maintain a correspondence between the symbols in
             // this kifFormula, the terms-to-type mappings, and the incrementially refined THF
             // translation; the handling of e.g. the different upper and lower case conventions
             // between KIF and TPTP THF further complicates matters. This issue makes the code
-            // particularly fragile, also since it exploits string processing way to much.
+            // particularly fragile, also since it exploits string processing way too much.
             HashMap oldsig = new HashMap();
             // localsig = new HashMap();
             kifFormula = new StringBuilder();
             while (containsUnknownTp(localsig)) {
                 if (!oldsig.equals(localsig)) {
-                    THFdebugOut("\n Debug: Enter new regular topmost call to THF2");
+                    if (THFdebug) System.out.println("\n THF.KIF2THF(): Enter new regular topmost call to THF2");
                     oldsig = (HashMap) localsig.clone();
                     res = toTHF2(f);
                     f = new Formula();
@@ -447,24 +461,24 @@ public class THF {
                     localsig = clearMapFor(localsig, f.getFormula().trim());
                     subst = clearMapFor(subst, f.getFormula().trim());
                 } else {
-                    THFdebugOut("\n Debug: Enter new topmost call to THF2 with constant symbol substitution");
+                    if (THFdebug) System.out.println("\n THF.KIF2THF() Enter new topmost call to THF2 with constant symbol substitution");
                     oldsig = (HashMap) localsig.clone();
-                    Set keyset = subst.keySet();
-                    THFdebugOut("   Debug: f before is " + f.toString());
-                    THFdebugOut("   Debug: subst is " + subst.toString());
+                    Set<String> keyset = subst.keySet();
+                    if (THFdebug) System.out.println("  THF.KIF2THF() f before is " + f.toString());
+                    if (THFdebug) System.out.println("  THF.KIF2THF() subst is " + subst.toString());
                     String fsubst = f.toString();
-                    for (Iterator<String> it = keyset.iterator(); it.hasNext();) {
-                        String key = (String) it.next();
+                    if (THFdebug) System.out.println("  THF.KIF2THF() key set size " + keyset.size());
+                    for (String key : keyset) {
                         String keysubst = (String) subst.get(key);
-                        THFdebugOut("\n    Debug: fsubst before is " + fsubst);
-                        THFdebugOut("    Debug: key is " + key
+                        if (THFdebug) System.out.println("\n  THF.KIF2THF()   fsubst before is " + fsubst);
+                        if (THFdebug) System.out.println("  THF.KIF2THF()   key is " + key
                                 + " and keysubst is " + keysubst);
                         fsubst = applySubstTo(key, keysubst, fsubst);
-                        THFdebugOut("    Debug: fsubst after is " + fsubst);
+                        if (THFdebug) System.out.println("  THF.KIF2THF()   fsubst after is " + fsubst);
                     }
                     f = new Formula();
                     f.read(fsubst);
-                    THFdebugOut("\n   Debug: f after is " + f.toString());
+                    THFdebugOut("\n  THF.KIF2THF()  Debug: f after is " + f.toString());
                     res = toTHF2(f);
                     f = new Formula();
                     f.read(kifFormula.toString());
@@ -493,7 +507,7 @@ public class THF {
                             + ")).";
                     axcounter++;
                 }
-                System.out.println("KIF2THF -- result: " + resAx);
+                if (THFdebug) System.out.println("KIF2THF -- result: " + resAx);
                 axiomsResult.append(resAx);
             } else if (taggedFormulas.get(form).equals(conTag)) {
                 String resCon = "";
@@ -506,7 +520,7 @@ public class THF {
                             + res + ")).";
                     concounter++;
                 }
-                System.out.println("KIF2THF -- result: " + resCon);
+                if (THFdebug) System.out.println("KIF2THF -- result: " + resCon);
                 conjecturesResult.append(resCon);
             } else {
                 axiomsResult.append("\n something went wrong for " + form
@@ -2038,7 +2052,7 @@ public class THF {
      */
     private SortedSet sortFormulas2 (Collection formulas) {
 
-        System.out.println("\n   Enter sortFormulas with " + formulas.toString());
+        if (THFdebug) System.out.println("\n   Enter sortFormulas with " + formulas.toString());
         THFdebugOut("\n   Enter sortFormulas with " + formulas.toString());
         SortedSet orderedFormulas = new TreeSet(new Comparator() {
             public int compare(Object o1, Object o2){
@@ -2063,7 +2077,7 @@ public class THF {
         });
         orderedFormulas.addAll(formulas);
         SortedSet resL = orderedFormulas;
-        System.out.println("\n   exit sortFormulas with " + resL.toString());
+        if (THFdebug) System.out.println("\n   exit sortFormulas with " + resL.toString());
         THFdebugOut("\n   exit sortFormulas with " + resL.toString());
         return resL;
     }
@@ -2079,7 +2093,7 @@ public class THF {
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
-        THFdebug = false;  /* set this to true for lots of debug output */
+        //THFdebug = false;  /* set this to true for lots of debug output */
         //THFdebug = true;  /* set this to true for lots of debug output */	
         List<Formula> testFormulas = new ArrayList<Formula>();
         List<Formula> emptyL = Collections.emptyList(); 
