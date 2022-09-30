@@ -44,7 +44,7 @@ public class CELTTestSuite {
         result = result.append("<td><b>Expected</b></td><td><b>Actual</b></td><td><b>ok</b></td></tr>");
         String celtTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
         if (celtTestDir == null)
-            celtTestDir = "C:\\Program Files\\Apache Tomcat 4.0\\tests\\";
+            celtTestDir = "~/Programs/apache-tomcat-8.5.57";
         String celtTestFile = celtTestDir + File.separator + "celtTest.txt";
         KIF test = new KIF();
         try {
