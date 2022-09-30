@@ -1042,6 +1042,21 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Find all terms that differ only in capitalization
+     */
+    public static ArrayList<String> termCapDiff(KB kb) {
+
+        ArrayList<String> result = new ArrayList<>();
+        for (String t1 : kb.terms) {
+            for (String t2 : kb.terms) {
+                if (t1 != t2 && t1.equalsIgnoreCase(t2))
+                    result.add(t1 + " " + t2);
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      * diff the terms in two KBs (small first, then big) and print
      * all the remainder with their filename and termFormats
      */
