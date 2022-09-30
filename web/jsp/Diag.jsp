@@ -81,6 +81,11 @@ if (!role.equals("admin") && !role.equals("user")) {
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms with multiple documentation"));
   out.println(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
 
+  // Terms differing only in capitalization
+  ArrayList<String> termCapDiff = Diagnostics.termCapDiff(kb);
+  out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms differing only in capitalization"));
+  out.println(HTMLformatter.termList(termCapDiff,kbHref));
+
   // Members (instances) of a parent class that are not also members
   // of one of the subclasses that constitute the exhaustive
   // decomposition of the parent class.
