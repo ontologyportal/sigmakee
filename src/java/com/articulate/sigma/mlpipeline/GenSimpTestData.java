@@ -18,7 +18,7 @@ public class GenSimpTestData {
     public static Random rand = new Random();
     public static boolean skip = false;
     public static HashSet<String> skipTypes = new HashSet<>();
-    public static final int instLimit = 10;
+    public static final int instLimit = 1000;
 
     /** ***************************************************************
      * handle the case where the argument type is a subclass
@@ -101,7 +101,7 @@ public class GenSimpTestData {
 
         TreeSet<String> instances = kb.getAllInstances(t);
         if (instances.size() < 1) {
-            System.out.println("handleQuantity(): no instances for " + t);
+            if (debug) System.out.println("handleQuantity(): no instances for " + t);
             return;
         }
         ArrayList<String> arInsts = new ArrayList<>();
@@ -126,7 +126,7 @@ public class GenSimpTestData {
      */
     public static void handleNonClass(String t, HashMap<String, ArrayList<String>> instMap) {
 
-        System.out.println("handleNonClass(): t: " + t);
+        if (debug) System.out.println("handleNonClass(): t: " + t);
         HashSet<String> hinsts = kb.kbCache.getInstancesForType(t);
         if (hinsts.contains("statementPeriod"))
             System.out.println("handleNonClass(): hinsts: " + hinsts);
