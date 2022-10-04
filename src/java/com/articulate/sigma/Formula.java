@@ -3230,6 +3230,7 @@ public class Formula implements Comparable, Serializable {
         System.out.println("  options (with a leading '-'):");
         System.out.println("  h - show this help screen");
         System.out.println("  t \"<formula\" - formula type");
+        System.out.println("  x \"<formula\" - format a formula");
     }
 
     /** ***************************************************************
@@ -3250,6 +3251,9 @@ public class Formula implements Comparable, Serializable {
             if (args != null && args.length > 1 && args[0].contains("t")) {
                 Formula f = new Formula(args[1]);
                 System.out.println("Formula.main() formula type of " + args[1] + " : " + f.findType(kb));
+            }
+            else if (args != null && args.length > 1 && args[0].contains("x")) {
+                System.out.println(Formula.textFormat(args[1]));
             }
             else
                 showHelp();
