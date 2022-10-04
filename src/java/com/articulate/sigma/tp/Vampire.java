@@ -41,6 +41,7 @@ public class Vampire {
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC}; // Avatar is faster but doesn't provide answer variables
     public static ModeType mode = ModeType.CASC;
+    public static boolean debug = false;
 
     /** *************************************************************
      */
@@ -99,7 +100,7 @@ public class Vampire {
     public static boolean assertFormula(String userAssertionTPTP, KB kb,
                                  ArrayList<Formula> parsedFormulas, boolean tptp) {
 
-        System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
+        if (debug) System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
         PrintWriter pw = null;
         try {
@@ -118,7 +119,7 @@ public class Vampire {
                         for (Formula p : processedFormulas) {
                             if (!p.isHigherOrder(kb)) {
                                 String tptpStr = stptp.tptpParseSUOKIFString(p.getFormula(), false);
-                                System.out.println("INFO in Vampire.assertFormula(2): formula " + tptpStr);
+                                if (debug) System.out.println("INFO in Vampire.assertFormula(2): formula " + tptpStr);
                                 tptpFormulas.add(tptpStr);
                             }
                         }
@@ -129,7 +130,7 @@ public class Vampire {
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
                         String tptpstring = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
                                 "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                        System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpstring);
+                        if (debug) System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpstring);
                     }
                     pw.flush();
                 }
