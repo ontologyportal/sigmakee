@@ -696,7 +696,7 @@ public class TPTP3ProofProcessor {
                         		containsFalse = true;
 							if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): adding line: " +
 									line + "\nas " + sv.result);
-                        }
+						}
                     }
                 }
             }
