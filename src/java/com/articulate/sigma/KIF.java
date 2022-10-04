@@ -93,14 +93,15 @@ public class KIF {
     /*****************************************************************
      * Pre-allocate space for hashes, based on file size
      */
-    public KIF(String filename) {
+    public KIF(String fname) {
 
-        long size = getKIFFileSize(filename);
+        long size = getKIFFileSize(fname);
         if (size != 0) {
             termFrequency = new HashMap<String, Integer>((int) size/25, (float) 0.75);
             formulas = new HashMap<String, ArrayList<String>>((int) size/3, (float) 0.75);
             formulaMap = new HashMap<String, Formula>((int) size/3, (float) 0.75);
         }
+        filename = fname;
     }
 
     /*****************************************************************
@@ -404,7 +405,7 @@ public class KIF {
                 else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow '`' in relaxed parse mode
                     expression.append(" `");
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    errStr = (errStart + ": Illegal character near line: " + f.startLine);
+                    errStr = (errStart + ": Illegal character '" + st.sval + "' near line: " + f.startLine);
                     errorSet.add(errStr);
                     throw new ParseException(errStr, f.startLine);
                 }
@@ -675,6 +676,7 @@ public class KIF {
         System.out.println("  options (with a leading '-'):");
         System.out.println("  h - show this help screen");
         System.out.println("  p \"<statement>\" - parse and show keys");
+        System.out.println("  f <filename> - parse and show keys");
         System.out.println("  t - run a test");
     }
 
@@ -682,7 +684,7 @@ public class KIF {
      */
     public static void main(String[] args) throws IOException {
 
-        System.out.println("INFO in KB.main()");
+        System.out.println("INFO in KIF.main()");
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
@@ -692,6 +694,17 @@ public class KIF {
                 kif.parse(r);
                 System.out.println("formulaMap: " + kif.formulaMap);
                 System.out.println("formulas: " + kif.formulas);
+            }
+            else if (args != null && args.length > 1 && args[0].contains("f")) {
+                try {
+                    KIF kif = new KIF();
+                    kif.readFile(args[1]);
+                    System.out.println("formulaMap: " + kif.formulaMap);
+                    System.out.println("formulas: " + kif.formulas);
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             else if (args != null && args.length > 0 && args[0].contains("t"))
                 test();
