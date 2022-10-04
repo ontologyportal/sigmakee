@@ -1077,6 +1077,7 @@ public class FormulaPreprocessor {
             boolean translateMath = true;
             Formula f = new Formula();
             f.read(form.getFormula());
+            f.startLine = form.startLine;
             if (StringUtil.containsNonAsciiChars(f.getFormula()))
                 f.read(StringUtil.replaceNonAsciiChars(f.getFormula()));
 
