@@ -1464,21 +1464,23 @@ public class KBcache implements Serializable {
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
             if (forms != null) {
                 HashSet<String> relSubs = collectArgFromFormulas(1,forms);
-                Iterator<String> it = relSubs.iterator();
-                while (it.hasNext()) {
-                    String newTerm = it.next();                    
+                for (String newTerm : relSubs) {
                     ArrayList<String> newDomains = signatures.get(newTerm);
+                    if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); newDomains: " + newDomains);
                     if (valences.get(t) == null) {
                         System.out.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
                         continue;
                     }
                     else if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
                         fillArrayList("Entity",newDomains,valences.get(newTerm)+1,valences.get(t)+1);
+                        if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); valences: " + valences.get(t));
                         valences.put(newTerm, valences.get(t));
                     }
-                    for (int i = 1; i < valences.get(t); i++) {
+                    for (int i = 1; i <= valences.get(t); i++) {
                         String childArgType = newDomains.get(i);
                         String parentArgType = tdomains.get(i);
+                        if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); childArgType: " + childArgType);
+                        if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); parentArgType: " + parentArgType);
                         // If child-relation does not have definition of argument-type, we use parent-relation's argument-type
                         // TODO: if parent-relation does not have definition of argument-type, we continue to find its parent until we find the definition of argument-type
                         if (kb.askWithTwoRestrictions(0, "domain", 1, newTerm, 3, childArgType).isEmpty()) {
