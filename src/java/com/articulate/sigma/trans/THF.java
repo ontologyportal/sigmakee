@@ -215,6 +215,7 @@ public class THF {
         FormulaPreprocessor fp = new FormulaPreprocessor();
         LinkedHashSet<Formula> result = new LinkedHashSet<Formula>();
         for (Formula ax : col) {
+            System.out.println("### " + ax.getFormula() + " " + ax.sourceFile + " line: " + ax.startLine);
             //RowVars rv = new RowVars();
             //result.addAll(rv.expandRowVars(kb,ax));
             Collection<Formula> forms = fp.preProcess(ax,isQuery,kb);
@@ -385,8 +386,13 @@ public class THF {
 
         numericOps.addAll(Formula.INEQUALITIES);
         numericOps.addAll(Formula.MATH_FUNCTIONS);
+        for (Formula form : axiomsC)
+            System.out.println("\n\n%%% pre: " + form.getFormula() + " " + form.sourceFile + " line: " + form.startLine);
         LinkedHashSet<Formula> axioms = expandAxioms(axiomsC,false,kb);
         LinkedHashSet<Formula> conjectures = expandAxioms(conjecturesC,true,kb);
+        for (Formula form : axioms)
+            System.out.println("\n\n%%% post: " + form.getFormula() + " " + form.sourceFile + " line: " + form.startLine);
+
         if (THFdebug) System.out.println("INFO in THF.KIF2THF() finished pre-processing");
         // not sort the formulas
         // Collection axioms = axiomsC;
@@ -404,7 +410,7 @@ public class THF {
         // tags and a map to distinguish axioms from conjectures
         String axTag = "ax";
         String conTag = "con";
-        HashMap taggedFormulas = new HashMap();
+        HashMap<Formula,String> taggedFormulas = new HashMap();
         for (Formula ax : axioms)
             taggedFormulas.put(ax, axTag);
         for (Formula con : conjectures)
@@ -413,9 +419,8 @@ public class THF {
         // to variables introduced above (I know that this is terrible programming style!)
         int axcounter = 1;
         int concounter = 1;
-        Iterator<Formula> iter5 = sortFormulas2(taggedFormulas.keySet()).iterator();
-        while (iter5.hasNext()) {
-            Formula form = iter5.next();
+        for (Formula form : sortFormulas2(taggedFormulas.keySet())) {
+            axiomsResult.append("\n\n%%% " + form.getFormula() + " " + form.sourceFile + " line: " + form.startLine);
             // formula f contains the explicitly quantified formula under
             // consideration, the quantifier (universal/existential) is
             // determined correctly for axioms and conjectures
@@ -2050,7 +2055,7 @@ public class THF {
 
     /** ***************************************************************
      */
-    private SortedSet sortFormulas2 (Collection formulas) {
+    private SortedSet<Formula> sortFormulas2 (Collection formulas) {
 
         if (THFdebug) System.out.println("\n   Enter sortFormulas with " + formulas.toString());
         THFdebugOut("\n   Enter sortFormulas with " + formulas.toString());
@@ -2092,6 +2097,8 @@ public class THF {
         kbmgr.initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String kbDir = KBmanager.getMgr().getPref("kbDir");
+        if (kb.errors.size() > 0)
+            System.out.println("Errors: " + kb.errors);
         String sep = File.separator;
         //THFdebug = false;  /* set this to true for lots of debug output */
         //THFdebug = true;  /* set this to true for lots of debug output */	
