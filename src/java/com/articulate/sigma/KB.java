@@ -1589,7 +1589,7 @@ public class KB implements Serializable {
                 ArrayList<Formula> parsedFormulas = new ArrayList();
                 for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
                     // converted into at least one Formula object and stored in this.formulaMap.
-                    System.out.println("KB.tell(): " + parsedF.toString());
+                    if (debug) System.out.println("KB.tell(): " + parsedF.toString());
                     String term = PredVarInst.hasCorrectArity(parsedF, this);
                     if (!StringUtil.emptyString(term)) {
                         result = result + "Formula in " + parsedF.sourceFile
@@ -1615,14 +1615,14 @@ public class KB implements Serializable {
                     // 5. Write the formula to the kb.name_UserAssertions.tptp/tff
                     boolean allAdded = false;
                     if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                        System.out.println("KB.tell: using eprover: " + eprover);
+                        if (debug) System.out.println("KB.tell: using eprover: " + eprover);
                         eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
                         eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                        System.out.println("KB.tell: using vampire");
+                        if (debug) System.out.println("KB.tell: using vampire");
                         Vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // nothing much to do since Vampire has to load it all at query time
@@ -3620,6 +3620,22 @@ public class KB implements Serializable {
                 i = currentCount.get(s);
             currentCount.put(s,i+1);
         }
+    }
+
+    /*****************************************************************
+     * add to term format map
+     * HashMap<String, HashMap<String, String>>();
+     */
+    public void addTermFormat(String lang, String term, String format) {
+
+        HashMap<String, String> forLang = null;
+        if (termFormatMap.containsKey(lang))
+            forLang = termFormatMap.get(lang);
+        else {
+            forLang = new HashMap<>();
+            termFormatMap.put(lang, forLang);
+        }
+        forLang.put(term,format);
     }
 
     /*****************************************************************
