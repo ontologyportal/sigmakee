@@ -18,7 +18,7 @@ public class GenSimpTestData {
     public static Random rand = new Random();
     public static boolean skip = false;
     public static HashSet<String> skipTypes = new HashSet<>();
-    public static final int instLimit = 1000;
+    public static final int instLimit = 500;
 
     /** ***************************************************************
      * handle the case where the argument type is a subclass
@@ -129,7 +129,7 @@ public class GenSimpTestData {
         if (debug) System.out.println("handleNonClass(): t: " + t);
         HashSet<String> hinsts = kb.kbCache.getInstancesForType(t);
         if (hinsts.contains("statementPeriod"))
-            System.out.println("handleNonClass(): hinsts: " + hinsts);
+            if (debug) System.out.println("handleNonClass(): hinsts: " + hinsts);
         ArrayList<String> insts = new ArrayList<>();
         insts.addAll(hinsts);
         if (debug) System.out.println("handleNonClass(): insts: " + insts);
@@ -289,6 +289,38 @@ public class GenSimpTestData {
     }
 
     /** ***************************************************************
+     * print all SUMO axioms in the current knowledge base along with
+     * their natural language paraphrases
+     */
+    public static void allAxioms() {
+
+        System.out.println("GenSimpTestData.allAxioms()");
+        KBmanager.getMgr().initializeOnce();
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        for (Formula f : kb.formulaMap.values()) {
+            String form = f.getFormula();
+            if (!StringUtil.emptyString(form) && !form.contains("\"") &&
+                    !Formula.DOC_PREDICATES.contains(f.car())) {
+                System.out.println(form.replace("\n", "").replace("\r", ""));
+                String actual = toEnglish(form);
+                System.out.println(StringUtil.filterHtml(actual));
+            }
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public static void testNLG() {
+
+        System.out.println("GenSimpTestData.allAxioms()");
+        KBmanager.getMgr().initializeOnce();
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        String s = "(=> (and (valence ?REL ?NUMBER) (instance ?REL Predicate)) (forall (@ROW) (=> (?REL @ROW) (equal (ListLengthFn (ListFn @ROW)) ?NUMBER))))";
+        String actual = toEnglish(s);
+        System.out.println(actual);
+    }
+
+    /** ***************************************************************
      */
     public static void testTypes() {
 
@@ -308,7 +340,9 @@ public class GenSimpTestData {
     public static void main(String args[]) {
 
         //testTypes();
-        generate();
+        //generate();
+        allAxioms();
+        //testNLG();
         //genTermFormatFromNames("/home/apease/workspace/sumo/WorldAirports.kif");
         //genHumans();
     }
