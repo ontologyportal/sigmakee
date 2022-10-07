@@ -720,9 +720,12 @@ public class FormulaPreprocessor {
                         if (debug) System.out.println("cl: " + cl);
                         if (StringUtil.emptyString(cl)) {
                             if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
-                                !pred.equals("equal"))
+                                !pred.equals("equal")) {
                                 System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                         "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
+                                System.out.println("sig: " + kb.kbCache.getSignature(pred));
+                                System.out.println("sig count: " + kb.kbCache.signatures.keySet().size());
+                            }
                         }
                         else
                             MapUtils.addToMap(result, arg.getFormula(), cl);
