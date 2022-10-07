@@ -1,14 +1,10 @@
 package com.articulate.sigma.mlpipeline;
 
 import com.articulate.sigma.*;
-import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.utils.StringUtil;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.util.*;
 
 public class GenSimpTestData {
@@ -19,6 +15,7 @@ public class GenSimpTestData {
     public static boolean skip = false;
     public static HashSet<String> skipTypes = new HashSet<>();
     public static final int instLimit = 500;
+    public static PrintWriter pw = null;
 
     /** ***************************************************************
      * handle the case where the argument type is a subclass
@@ -249,9 +246,9 @@ public class GenSimpTestData {
                     for (Formula f : forms) {
                         String form = f.getFormula();
                         if (!StringUtil.emptyString(form)) {
-                            System.out.println(form);
+                            pw.println(form);
                             String actual = toEnglish(form);
-                            System.out.println(StringUtil.filterHtml(actual));
+                            pw.println(StringUtil.filterHtml(actual));
                         }
                     }
                 }
@@ -301,9 +298,9 @@ public class GenSimpTestData {
             String form = f.getFormula();
             if (!StringUtil.emptyString(form) && !form.contains("\"") &&
                     !Formula.DOC_PREDICATES.contains(f.car())) {
-                System.out.println(form.replace("\n", "").replace("\r", ""));
+                pw.println(form.replace("\n", "").replace("\r", ""));
                 String actual = toEnglish(form);
-                System.out.println(StringUtil.filterHtml(actual));
+                pw.println(StringUtil.filterHtml(actual));
             }
         }
     }
@@ -339,6 +336,13 @@ public class GenSimpTestData {
      */
     public static void main(String args[]) {
 
+        try {
+            FileWriter fw = new FileWriter("out.txt");
+            pw = new PrintWriter(fw);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
         //testTypes();
         //generate();
         allAxioms();
