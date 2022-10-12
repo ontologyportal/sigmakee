@@ -4,6 +4,8 @@ cp *.kif $SIGMA_HOME/KBs
 cp -R Translations $SIGMA_HOME/KBs
 cp -R WordNetMappings $SIGMA_HOME/KBs
 cp -R development $SIGMA_HOME/KBs
+cd $ONTOLOGYPORTAL_GIT/SigmaUtils
+git pull
 cd $ONTOLOGYPORTAL_GIT/sigmakee
 git pull
 $CATALINA_HOME/bin/shutdown.sh
