@@ -332,6 +332,13 @@ public class GenSimpTestData {
     }
 
     /** ***************************************************************
+     */
+    public static void genActions() {
+
+
+    }
+
+    /** ***************************************************************
      * init and call main routine.
      */
     public static void main(String args[]) {
