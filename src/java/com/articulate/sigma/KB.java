@@ -2608,7 +2608,7 @@ public class KB implements Serializable {
      */
     public String getTermFormat(String lang, String term) {
 
-        HashMap<String, String> langFormatMap = getFormatMap(lang);
+        HashMap<String, String> langFormatMap = getTermFormatMap(lang);
         return langFormatMap.get(term);
     }
 
