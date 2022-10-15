@@ -3140,12 +3140,8 @@ public class KB implements Serializable {
 
         TreeSet<String> ans = new TreeSet<String>();
         if ((classNames instanceof TreeSet) && !classNames.isEmpty()) {
-            String name = null;
-            Iterator<String> it = classNames.iterator();
-            while (it.hasNext()) {
-                name = it.next();
+            for (String name : classNames)
                 ans.addAll(kbCache.getParentClassesOfInstance(name));
-            }
         }
         return ans;
     }
