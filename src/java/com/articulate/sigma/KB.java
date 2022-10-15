@@ -3131,11 +3131,12 @@ public class KB implements Serializable {
 
     /*****************************************************************
      * This method retrieves all instances of the classes named in the input set.
-     *
+     * TODO: Deprecated since it seems to do the opposite of what it should.
      * @param classNames
      *            A Set of String, containing SUO-KIF class names
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
+    @Deprecated
     protected TreeSet<String> getAllInstances(TreeSet<String> classNames) {
 
         TreeSet<String> ans = new TreeSet<String>();
