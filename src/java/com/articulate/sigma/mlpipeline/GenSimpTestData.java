@@ -18,7 +18,7 @@ public class GenSimpTestData {
     public static HashSet<String> skipTypes = new HashSet<>();
     public static final int instLimit = 500;
     public static PrintWriter pw = null;
-    public static final int loopMax = 2;
+    public static final int loopMax = 300;
 
     /** ***************************************************************
      * handle the case where the argument type is a subclass
@@ -400,18 +400,19 @@ public class GenSimpTestData {
      * can be left out.  Actions will eventually be past and future tense or
      * wrapped in modals.
      */
-    public void initActions() {
+    public void initActions(PrintWriter pw) {
 
         System.out.println("GenSimpTestData.initActions(): start");
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("GenSimpTestData.initActions(): finished loading KBs");
         //artifact, organic object
-        TreeSet<String> socRole = kb.getAllInstances("SocialRole");
-        TreeSet<String> artInst = kb.getAllInstances("Artifact");
+        HashSet<String> socRole = kb.kbCache.getInstancesForType("SocialRole");
+        //System.out.println("initActions(): roles: " + socRole);
+        HashSet<String> artInst = kb.kbCache.getInstancesForType("Artifact");
         HashSet<String> artClass = kb.kbCache.getChildClasses("Artifact");
         HashSet<String> intProc = kb.kbCache.getChildClasses("DualObjectProcess");
-        TreeSet<String> orgInst = kb.getAllInstances("OrganicObject");
+        HashSet<String> orgInst = kb.kbCache.getInstancesForType("OrganicObject");
         HashSet<String> orgClass = kb.kbCache.getChildClasses("OrganicObject");
         HashSet<Preposition> objects = new HashSet<>();
         addArguments(artInst, false, false, objects);
@@ -442,7 +443,8 @@ public class GenSimpTestData {
         }
         System.out.println("GenSimpTestData.initActions() finished collecting terms");
         Collection<AVPair> humans = readHumans();
-        genActions(humans,socRole,intProc,objects,indirect);
+        genWithHumans(pw,humans,intProc,objects,indirect);
+        genWithRoles(pw,socRole,intProc,objects,indirect);
     }
 
     /** ***************************************************************
@@ -497,59 +499,101 @@ public class GenSimpTestData {
      * can be left out.  Actions will eventually be past and future tense or
      * wrapped in modals.
      */
-    public void genActions(Collection<AVPair> humans,
-                           Collection<String> roles,
-                           Collection<String> intProc,
-                           Collection<Preposition> direct,
-                           Collection<Preposition> indirect) {
+    public void genProc(PrintWriter pw,
+                        AVPair subj,
+                        Collection<String> intProc,
+                        Collection<Preposition> direct,
+                        Collection<Preposition> indirect) {
+
+        int procCount = 0;
+        for (String proc : intProc) {
+            if (compoundVerb(proc)) { continue; } // too hard grammatically for now to have compound verbs
+            if (debug) System.out.println("genProc(): proc: " + proc);
+            if (procCount++ > loopMax) break;
+            int directCount = 0;
+            for (Preposition dprep : direct) {
+                if (directCount++ > loopMax) break;
+                if (debug) System.out.println("genProc(): proc: " + proc + " direct: " + dprep.noun);
+                int indCount = 0;
+                boolean onceWithoutInd = false;
+                for (Preposition indprep : indirect) {
+                    if (indCount++ > loopMax) break;
+                    if (debug) System.out.println("genProc(): proc: " + proc + " direct: " + dprep.noun + " indirect: " + indprep.noun);
+                    StringBuffer english = new StringBuffer();
+                    StringBuffer prop = new StringBuffer();
+                    prop.append("(exists (?H ?P ?DO ?IO) (and ");
+                    if (kb.isInstanceOf(subj.attribute,"SocialRole")) { // a plumber... etc
+                        english.append(nounForm(subj.attribute) + " ");
+                        prop.append("(attribute ?H " + subj.attribute + ")");
+                    }
+                    else {                                              // John... etc
+                        english.append(subj.attribute + " ");
+                        prop.append("(instance ?H Human) ");
+                        prop.append("(names \"" + subj.attribute + "\" ?H) ");
+                    }
+                    english.append(verbForm(proc) + " ");
+                    prop.append("(instance ?P " + proc + ") (agent ?P ?H) ");
+                    english.append(nounForm(dprep.noun) + " ");
+                    prop.append("(instance ?DO " + dprep.noun + ") (patient ?P ?DO) ");
+                    if (kb.isSubclass(proc,indprep.procType)) {
+                        english.append("with " + nounForm(indprep.noun));
+                        prop.append("(instance ?IO " + indprep.noun + ") (instrument ?P ?IO)))");
+                        onceWithoutInd = false;
+                        pw.println(english.toString());
+                        pw.println(prop.toString() + "\n");
+                    }
+                    else {
+                        prop.append("))");
+                        indCount = 0;
+                        if (!onceWithoutInd) {
+                            pw.println(english.toString());
+                            pw.println(prop.toString() + "\n");
+                            onceWithoutInd = true;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
+     * Create action sentences from a subject, preposition, direct object,
+     * preposition and indirect object.  Indirect object and its preposition
+     * can be left out.  Actions will eventually be past and future tense or
+     * wrapped in modals.
+     */
+    public void genWithHumans(PrintWriter pw,
+                              Collection<AVPair> humans,
+                              Collection<String> intProc,
+                              Collection<Preposition> direct,
+                              Collection<Preposition> indirect) {
 
         System.out.println("GenSimpTestData.genActions()");
         int humCount = 0;
         for (AVPair avp : humans) {
             if (humCount++ > loopMax) break;
-            int procCount = 0;
-            for (String proc : intProc) {
-                if (compoundVerb(proc)) { continue; } // too hard grammatically for now to have compound verbs
-                if (procCount++ > loopMax) break;
-                int directCount = 0;
-                for (Preposition dprep : direct) {
-                    if (directCount++ > loopMax) break;
-                    int indCount = 0;
-                    boolean onceWithoutInd = false;
-                    for (Preposition indprep : indirect) {
-                        if (indCount++ > loopMax) break;
-                        StringBuffer english = new StringBuffer();
-                        StringBuffer prop = new StringBuffer();
-                        english.append(avp.attribute + " ");
-                        prop.append("(exists (?H ?P ?DO ?IO) (and ");
-                        prop.append("(instance ?H Human) ");
-                        prop.append("(names \"" + avp.attribute + "\" ?H) ");
-                        english.append(verbForm(proc) + " ");
-                        prop.append("(instance ?P " + proc + ") (agent ?P ?H) ");
-                        english.append(nounForm(dprep.noun) + " ");
-                        prop.append("(instance ?DO " + dprep.noun + ") (patient ?P ?DO) ");
-                        if (kb.isSubclass(proc,indprep.procType)) {
-                            english.append("with " + nounForm(indprep.noun));
-                            prop.append("(instance ?IO " + indprep.noun + ") (instrument ?P ?IO)))");
-                            onceWithoutInd = false;
-                        }
-                        else {
-                            prop.append("))");
-                            indCount = 0;
-                            onceWithoutInd = true;
-                            if (!onceWithoutInd) {
-                                System.out.println(english.toString());
-                                System.out.println(prop.toString() + "\n");
-                                onceWithoutInd = true;
-                            }
-                        }
-                        if (!onceWithoutInd) {
-                            System.out.println(english.toString());
-                            System.out.println(prop.toString() + "\n");
-                        }
-                    }
-                }
-            }
+            genProc(pw,avp,intProc,direct,indirect);
+        }
+    }
+
+    /** ***************************************************************
+     * Create action sentences from a subject, preposition, direct object,
+     * preposition and indirect object.  Indirect object and its preposition
+     * can be left out.  Actions will eventually be past and future tense or
+     * wrapped in modals.
+     */
+    public void genWithRoles(PrintWriter pw,
+                             Collection<String> roles,
+                              Collection<String> intProc,
+                              Collection<Preposition> direct,
+                              Collection<Preposition> indirect) {
+
+        System.out.println("GenSimpTestData.genActions()");
+        int humCount = 0;
+        for (String s : roles) {
+            if (humCount++ > loopMax) break;
+            AVPair avp = new AVPair(s,null);
+            genProc(pw,avp,intProc,direct,indirect);
         }
     }
 
@@ -561,6 +605,9 @@ public class GenSimpTestData {
         try {
             FileWriter fw = new FileWriter("out.txt");
             pw = new PrintWriter(fw);
+            GenSimpTestData gstd = new GenSimpTestData();
+            gstd.initActions(pw);
+            pw.close();
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -568,8 +615,7 @@ public class GenSimpTestData {
         //testTypes();
         //generate();
         //allAxioms();
-        GenSimpTestData gstd = new GenSimpTestData();
-        gstd.initActions();
+
         //genMissingTermFormats();
         //testNLG();
         //genTermFormatFromNames("/home/apease/workspace/sumo/WorldAirports.kif");
