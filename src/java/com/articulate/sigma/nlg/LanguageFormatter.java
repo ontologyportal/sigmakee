@@ -934,7 +934,7 @@ public class LanguageFormatter {
     /** ***************************************************************
      * Return the NL format of an individual word.
      */
-    private static String translateWord(Map<String,String> termMap, String word) {
+    public static String translateWord(Map<String,String> termMap, String word) {
 
         String ans = word;
         try {
