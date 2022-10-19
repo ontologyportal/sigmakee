@@ -2192,6 +2192,23 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * get all synsets corresponding to a SUMO term that are equivalence links
+     */
+    public static ArrayList<String> getEquivalentSynsetsFromSUMO(String sumo) {
+
+        ArrayList<String> result = new ArrayList<>();
+        ArrayList<String> synlist = WordNet.wn.SUMOHash.get(sumo);
+        if (synlist == null) return result;
+        for (String s : synlist) {
+            String SUMO = WordNet.wn.getSUMOMapping(s);
+            char suffix = WordNetUtilities.getSUMOMappingSuffix(SUMO);
+            if (suffix == '=')
+                result.add(s);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
      * get all synsets corresponding to a list of SUMO terms
      */
     public static HashSet<String> getSynsetsFromSUMOList(Collection<String> sumo) {
