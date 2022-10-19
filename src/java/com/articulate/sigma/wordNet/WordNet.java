@@ -2687,7 +2687,7 @@ public class WordNet implements Serializable {
      *   transitive - everything else
      *   ditransitive - 15,16,17,18,19
      */
-    private String getTransitivity(String synset, String word) {
+    public String getTransitivity(String synset, String word) {
 
         //System.out.println("INFO in WordNet.getTransitivity: synset, word: " + synset + " " + word);
         int[] intrans = {1,2,3,4,7,23,35};
