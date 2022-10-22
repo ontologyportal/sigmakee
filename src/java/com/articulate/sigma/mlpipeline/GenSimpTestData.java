@@ -33,12 +33,15 @@ public class GenSimpTestData {
 
     public static boolean debug = false;
     public static KB kb;
-    public static Random rand = new Random();
     public static boolean skip = false;
     public static HashSet<String> skipTypes = new HashSet<>();
     public static final int instLimit = 500;
     public static PrintWriter pw = null;
-    public static final int loopMax = 3;
+
+    public static final int loopMax = 3; // how many features at each level of linguistic composition
+    public static final boolean randomize = true; // whether to go through features in order or randomize
+    public static final Random rand = new Random();
+
     public static final int NOTIME = -1;
     public static final int PAST = 0;
     public static final int PRESENT = 1;
@@ -496,6 +499,7 @@ public class GenSimpTestData {
         public String root = null;
         public String present = null;
         public String part = null;
+        public String trans = null; // transitivity string
 
         public Word(String t, String r, String pr, String pa) {
             term = t; root = r; present = pr; part = pa;
@@ -519,6 +523,9 @@ public class GenSimpTestData {
         public Preposition dirPrep = null;
         public Collection<Preposition> indirect = null;
         public Preposition indPrep = null;
+        public String word = null;
+        public int plevel = 0; //paren level 0 is no open parens
+
         public LFeatures() {
 
             //  get capabilities from axioms like
@@ -645,7 +652,7 @@ public class GenSimpTestData {
         }
         if (subst)
             return "some " + word;
-        if (word.matches("^[aeiouAEIOU].*"))
+        if (word.matches("^[aeiouAEIO].*")) // pronouncing "U" alone is like a consonant
             return "an " + word;
         return "a " + word;
     }
@@ -685,13 +692,22 @@ public class GenSimpTestData {
     /** ***************************************************************
      */
     public void generateDirectObject(StringBuffer english, StringBuffer prop,
+                             ProcInfo proc,
                              Preposition dprep) {
 
-        english.append(nounForm(dprep.noun) + " ");
-        prop.append("(instance ?DO " + dprep.noun + ") (patient ?P ?DO) ");
+        if (kb.isSubclass(proc.term,"Translocation") &&
+                (kb.isSubclass(dprep.noun,"Region") || kb.isSubclass(dprep.noun,"StationaryObject"))) {
+            english.append("to " + nounForm(dprep.noun) + " ");
+            prop.append("(instance ?DO " + dprep.noun + ") (destination ?P ?DO) ");
+        }
+        else {
+            english.append(nounForm(dprep.noun) + " ");
+            prop.append("(instance ?DO " + dprep.noun + ") (patient ?P ?DO) ");
+        }
     }
 
     /** ***************************************************************
+     * Get equivalent synsets and transitivity flags for a SUMO term
      */
     public ProcInfo findProcInfo(String proc) {
 
@@ -717,10 +733,11 @@ public class GenSimpTestData {
     private String closeParens(LFeatures lfeat) {
 
         StringBuffer result = new StringBuffer();
-        result.append("))");
+        if (!lfeat.attitude.equals("None")) {
+            result.append(")))");
+            if (lfeat.attNeg) result.append(")");
+        }
         if (!lfeat.modal.attribute.equals("None")) result.append(")");
-        if (!lfeat.attitude.equals("None")) result.append(")");
-        if (lfeat.attNeg) result.append(")");
         if (lfeat.negated) result.append(")");
         return result.toString();
     }
@@ -728,25 +745,30 @@ public class GenSimpTestData {
     /** ***************************************************************
      */
     public boolean generateIndirectObject(PrintWriter pw, int indCount,
-                                       StringBuffer english, StringBuffer prop,
-                                       LFeatures lfeat,
-                                       boolean onceWithoutInd) {
+                                          StringBuffer english, StringBuffer prop,
+                                          ProcInfo proc,
+                                          LFeatures lfeat,
+                                          boolean onceWithoutInd) {
 
         if (debug) System.out.println("generateIndirectObject(): proc, procType: " +
                 lfeat.indPrep.noun + ", " + lfeat.indPrep.procType);
-        if (kb.isSubclass(lfeat.indPrep.noun,lfeat.indPrep.procType)) {
+        if (kb.isSubclass(lfeat.indPrep.noun,lfeat.indPrep.procType) && proc.words.get(lfeat.word).contains(DITRANS)) {
             english.append("with " + nounForm(lfeat.indPrep.noun));
-            prop.append("(instance ?IO " + lfeat.indPrep.noun + ") (" + lfeat.indPrep.prep + " ?P ?IO)))");
+            prop.append("(instance ?IO " + lfeat.indPrep.noun + ") (" + lfeat.indPrep.prep + " ?P ?IO)");
             if (!lfeat.modal.attribute.equals("None"))
-                prop.append(" " + lfeat.modal.attribute);
+                prop.append(lfeat.modal.attribute + "))");
+            else
+                prop.append("))");
             prop.append(closeParens(lfeat));
             onceWithoutInd = false;
             pw.println(english);
             pw.println(prop+ "\n");
         }
-        else {
+        else {  // close off the formula without an indirect object
             if (!lfeat.modal.attribute.equals("None"))
-                prop.append(" " + lfeat.modal.attribute + ")");
+                prop.append(lfeat.modal.attribute + "))");
+            else
+                prop.append("))");
             prop.append(closeParens(lfeat));
             indCount = 0;
             if (!onceWithoutInd) {
@@ -785,7 +807,14 @@ public class GenSimpTestData {
                         LFeatures lfeat) {
 
         int procCount = 0;
-        for (String proc : lfeat.intProc) {
+        ArrayList<String> processTypes = new ArrayList<>();
+        processTypes.addAll(lfeat.intProc);
+        while (procCount++ < loopMax) {
+            String proc = null;
+            if (randomize)
+                proc = processTypes.get(rand.nextInt(processTypes.size()));
+            else
+                proc = processTypes.get(procCount);
             ProcInfo pi = findProcInfo(proc);
             if (pi == null) {
                 pi = new ProcInfo();
@@ -796,6 +825,7 @@ public class GenSimpTestData {
             for (String word : pi.words.keySet()) {
                 if (debug) System.out.println("genProc(): proc: " + proc);
                 if (procCount++ > loopMax) break;
+                lfeat.word = word;
                 for (int time = -1; time < 3; time++) { // -1 = no time spec, 0=past, 1=present, 2=future
                     int directCount = 0;
                     for (Preposition dprep : lfeat.direct) {
@@ -816,8 +846,9 @@ public class GenSimpTestData {
                             prop1.append("(exists (?H ?P ?DO ?IO) (and ");
                             generateSubject(english1, prop1, lfeat.subj);
                             generateVerb(lfeat.negated,english1, prop1, proc, word, time);
-                            generateDirectObject(english1, prop1, dprep);
-                            onceWithoutInd = generateIndirectObject(pw, indCount, english1, prop1, lfeat, onceWithoutInd);
+                            if (pi.words.get(word).contains(TRANS))
+                                generateDirectObject(english1, prop1, pi, dprep);
+                            onceWithoutInd = generateIndirectObject(pw, indCount, english1, prop1, pi, lfeat, onceWithoutInd);
                         }
                     }
                 }
@@ -869,6 +900,7 @@ public class GenSimpTestData {
                     english2.append(human.attribute + " " + attWord.present + " that ");
                     prop2.append("(exists (?HA) (and (instance ?HA Human) ");
                     prop2.append("(names \"" + human.attribute + "\" ?HA) (" + attWord.term + " ?HA ");
+                    lfeat.plevel = 3;
                 }
                 genWithModals(pw, english2,prop2,lfeat);
 
@@ -879,6 +911,7 @@ public class GenSimpTestData {
                     english3.append(human.attribute + " doesn't " + attWord.root + " that ");
                     prop3.append("(not (exists (?HA) (and (instance ?HA Human) ");
                     prop3.append("(names \"" + human.attribute + "\" ?HA) (" + attWord.term + " ?HA ");
+                    lfeat.plevel = 4;
                 }
                 genWithModals(pw, english3,prop3,lfeat);
             }
@@ -943,7 +976,7 @@ public class GenSimpTestData {
             StringBuffer englishNew = new StringBuffer(english);
             StringBuffer propNew = new StringBuffer(prop);
             System.out.println("genWithModals(): " + modal);
-            if (!modal.attribute.equals("None")) {
+            if (!lfeat.modal.attribute.equals("None")) {
                 propNew.append("(modalAttribute ");
                 englishNew.append(negatedModal(modal.value,lfeat.negated));
                 lfeat.negated = false;
@@ -951,8 +984,8 @@ public class GenSimpTestData {
             StringBuffer english1 = new StringBuffer(englishNew);
             StringBuffer prop1 = new StringBuffer(propNew);
             genWithHumans(pw,english1,prop1,lfeat);
-            StringBuffer english2 = new StringBuffer(english);
-            StringBuffer prop2 = new StringBuffer(prop);
+            StringBuffer english2 = new StringBuffer(englishNew);
+            StringBuffer prop2 = new StringBuffer(propNew);
             genWithRoles(pw,english2,prop2,lfeat);
         }
     }
@@ -1016,7 +1049,7 @@ public class GenSimpTestData {
                     e.printStackTrace();
                 }
             }
-            if (args != null && args.length > 0 && args[0].equals("-s"))
+            if (args != null && args.length > 0 && args[0].equals("-g"))
                 generate();
             if (args != null && args.length > 0 && args[0].equals("-a"))
                 allAxioms();
