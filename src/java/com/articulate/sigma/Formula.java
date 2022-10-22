@@ -1606,8 +1606,8 @@ public class Formula implements Comparable, Serializable {
         if (args != null && args.size() > 0) {
             if (start == 0)
                 return stringArgs;
-            if (start > stringArgs.size() && getArgument(start) == null) {
-                System.out.println("Error in Formula.argumentsToArrayListString() start " +
+            if (start > stringArgs.size()) {
+                System.out.println("Error in Formula.argumentsToArrayList() start " +
                         start + " greater than end : " + stringArgs.size() + " in formula " + getFormula());
                 return result;
             }
