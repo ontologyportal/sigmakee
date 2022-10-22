@@ -1534,7 +1534,7 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Return the numbered argument of the given formula.  The first
      * element of a formula (i.e. the predicate position) is number 0.
-     * Returns the empty string if there is no such argument position.
+     * Returns the null if there is no such argument position.
      */
     public Formula getArgument(int argnum) {
 
@@ -1600,14 +1600,14 @@ public class Formula implements Comparable, Serializable {
 
         //if (start > 1)
         //    System.out.println("Error in Formula.argumentsToArrayList() start greater than 1 : " + start);
-        if (debug) System.out.println("Formula.argumentsToArrayList(): formula: " + getFormula());
-        if (debug) System.out.println("Formula.argumentsToArrayList(): stringArgs: " + stringArgs);
+        if (debug) System.out.println("Formula.argumentsToArrayListString(): formula: " + getFormula());
+        if (debug) System.out.println("Formula.argumentsToArrayListString(): stringArgs: " + stringArgs);
         ArrayList<String> result = new ArrayList<>();
         if (args != null && args.size() > 0) {
             if (start == 0)
                 return stringArgs;
-            if (start > stringArgs.size()) {
-                System.out.println("Error in Formula.argumentsToArrayList() start " +
+            if (start > stringArgs.size() && getArgument(start) == null) {
+                System.out.println("Error in Formula.argumentsToArrayListString() start " +
                         start + " greater than end : " + stringArgs.size() + " in formula " + getFormula());
                 return result;
             }
@@ -1618,7 +1618,7 @@ public class Formula implements Comparable, Serializable {
             ArrayList<String> erList = complexArgumentsToArrayListString(0);
             for (String s : erList) {
                 if (s.indexOf('(') != -1 && !StringUtil.quoted(s)) {
-                    //String err = "Error in Formula.argumentsToArrayList() complex formula: " + this.toString();
+                    //String err = "Error in Formula.argumentsToArrayListString() complex formula: " + this.toString();
                     //errors.add(err);
                     //System.out.println(err);
                     return null;
