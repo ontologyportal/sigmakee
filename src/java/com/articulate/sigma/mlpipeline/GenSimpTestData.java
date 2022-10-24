@@ -39,6 +39,8 @@ public class GenSimpTestData {
     public static PrintWriter pw = null;
 
     public static final int loopMax = 3; // how many features at each level of linguistic composition
+    public static final int humanMax = 3; // separate constant to limit number of human names
+
     public static final boolean randomize = true; // whether to go through features in order or randomize
     public static final Random rand = new Random();
 
@@ -51,8 +53,14 @@ public class GenSimpTestData {
     public static final String TRANS = "transitive";
     public static final String DITRANS = "ditransitive";
     public static final HashSet<String> verbEx = new HashSet<>(
-            Arrays.asList("Acidification","Vending","OrganizationalProcess","NaturalProcess"));
+            Arrays.asList("Acidification","Vending","OrganizationalProcess","NaturalProcess","Corkage"));
     public static final HashSet<Word> attitudes = new HashSet<>();
+
+    public static final HashMap<String,Capability> capabilities = new HashMap<>();
+
+    public static PrintWriter englishFile = null; //generated English sentences
+    public static PrintWriter logicFile = null;   //generated logic sentences, one per line,
+                                                  // NL/logic should be on same line in the different files
 
     /** ***************************************************************
      * handle the case where the argument type is a subclass
@@ -505,6 +513,22 @@ public class GenSimpTestData {
             term = t; root = r; present = pr; part = pa;
         }
     }
+
+    /** ***************************************************************
+     */
+    public class Capability {
+
+        public boolean negated = false; // not a capability
+        public String proc = null; // the process or verb
+        public String object = null; // SUMO term for direct or indirect object type
+        public String caserole = null; // the CaseRole
+        public String prep = null; // the preposition to use
+        public String mustTrans = null; // must have the following transitivity
+        public String mustNotTrans = null; // must not have the following transitivity
+        public String canTrans = null; // can have the following transitivity
+        public String fromParent = null; // which parent Process is the info inherited from, if any
+    }
+
     /** ***************************************************************
      */
     public class LFeatures {
@@ -537,7 +561,7 @@ public class GenSimpTestData {
 
             HashSet<String> artInst = kb.kbCache.getInstancesForType("Artifact");
             HashSet<String> artClass = kb.kbCache.getChildClasses("Artifact");
-            intProc = kb.kbCache.getChildClasses("DualObjectProcess");
+            intProc = kb.kbCache.getChildClasses("Process");
             HashSet<String> orgInst = kb.kbCache.getInstancesForType("OrganicObject");
             HashSet<String> orgClass = kb.kbCache.getChildClasses("OrganicObject");
             direct = new HashSet<>();
@@ -554,7 +578,7 @@ public class GenSimpTestData {
      * can be left out.  Actions will eventually be past and future tense or
      * wrapped in modals.
      */
-    public void initActions(PrintWriter pw) {
+    public void initActions() {
 
         System.out.println("GenSimpTestData.initActions(): start");
         KBmanager.getMgr().initializeOnce();
@@ -565,7 +589,7 @@ public class GenSimpTestData {
         LFeatures lfeat = new LFeatures();
         StringBuffer english = new StringBuffer();
         StringBuffer prop = new StringBuffer();
-        genAttitudes(pw,english,prop,lfeat);
+        genAttitudes(english,prop,lfeat);
     }
 
     /** ***************************************************************
@@ -582,10 +606,17 @@ public class GenSimpTestData {
     }
 
     /** ***************************************************************
+     * handle the auxilliary construction of "play X" when X is a Game
      */
     public String verbForm(String term, boolean negated, int time, String word) {
 
-        //String word = kb.getTermFormat("EnglishLanguage",term);
+        String nounForm = "";
+        if (kb.isSubclass(term,"Game")) {
+            nounForm = " " + word;
+            word = "play";
+        }
+        if (term.equals("Detaching"))
+            System.out.println("verbForm(): " + term + "," + word);
         if (word == null) {
             System.out.println("verbForm(): null input or no term format for " + term);
             return null;
@@ -595,43 +626,48 @@ public class GenSimpTestData {
             neg = "not ";
         if (word.endsWith("ing")) {
             if (time == PAST)
-                return "was " + neg + word;
+                return "was " + neg + word + nounForm;
             if (time == PRESENT)
-                return "is " + neg + word;
+                return "is " + neg + word + nounForm;
             if (time == FUTURE)
-                return "will " + neg + "be " + word;
+                return "will " + neg + "be " + word + nounForm;
             if (time == NOTIME)
-                return "is " + neg + word; // for time = -1
+                return "is " + neg + word + nounForm; // for time = -1
         }
-        String root =  WordNet.wn.verbRootForm(word,word.toLowerCase());
+        String root = "";
+        if (nounForm == "") // only modify if we don't use an auxilliary
+            root = WordNet.wn.verbRootForm(word,word.toLowerCase());
+        String es = "s";
+        if (root.endsWith("ch") || root.endsWith("sh"))
+            es = "es";
         if (root == null)
             root = word;
         if (time == PAST) {
             if (root.endsWith("e"))
                 return "was " + neg + root.substring(0,root.length()-1) + "ing";
             else
-                return "was " + neg + root + "ing";
+                return "was " + neg + root + "ing" + nounForm;
         }
         if (time == PRESENT) {
             if (negated) {
-                return "doesn't " + root;
+                return "doesn't " + root + nounForm;
             }
             else {
                 if (root.endsWith("y"))
                     return root.substring(0, root.length() - 1) + "ies";
-                return root + "s";
+                return root + es + nounForm;
             }
         }
         if (time == FUTURE)
-            return "will " + neg + root;
-        if (root.endsWith("y") && !negated)
+            return "will " + neg + root + nounForm;
+        if (root.endsWith("y") && !negated && nounForm == "")
             return root.substring(0,root.length()-1) + "ies";
         if (time != NOTIME)
             System.out.println("Error in verbForm(): time is unallowed value: " + time);
         if (negated)
-            return "doesn't " + root;
+            return "doesn't " + root + nounForm;
         else
-            return root + "s";
+            return root + es + nounForm;
     }
 
     /** ***************************************************************
@@ -652,7 +688,7 @@ public class GenSimpTestData {
         }
         if (subst)
             return "some " + word;
-        if (word.matches("^[aeiouAEIO].*")) // pronouncing "U" alone is like a consonant
+        if (word.matches("^[aeiouAEIOH].*")) // pronouncing "U" alone is like a consonant
             return "an " + word;
         return "a " + word;
     }
@@ -744,7 +780,7 @@ public class GenSimpTestData {
 
     /** ***************************************************************
      */
-    public boolean generateIndirectObject(PrintWriter pw, int indCount,
+    public boolean generateIndirectObject(int indCount,
                                           StringBuffer english, StringBuffer prop,
                                           ProcInfo proc,
                                           LFeatures lfeat,
@@ -761,8 +797,8 @@ public class GenSimpTestData {
                 prop.append("))");
             prop.append(closeParens(lfeat));
             onceWithoutInd = false;
-            pw.println(english);
-            pw.println(prop+ "\n");
+            englishFile.println(english);
+            logicFile.println(prop);
         }
         else {  // close off the formula without an indirect object
             if (!lfeat.modal.attribute.equals("None"))
@@ -772,8 +808,8 @@ public class GenSimpTestData {
             prop.append(closeParens(lfeat));
             indCount = 0;
             if (!onceWithoutInd) {
-                pw.println(english);
-                pw.println(prop + "\n");
+                englishFile.println(english);
+                logicFile.println(prop);
             }
             onceWithoutInd = true;
         }
@@ -801,8 +837,7 @@ public class GenSimpTestData {
      * can be left out.  Actions will eventually be past and future tense or
      * wrapped in modals.
      */
-    public void genProc(PrintWriter pw,
-                        StringBuffer english,
+    public void genProc(StringBuffer english,
                         StringBuffer prop,
                         LFeatures lfeat) {
 
@@ -834,6 +869,7 @@ public class GenSimpTestData {
                         if (debug) System.out.println("genProc(): proc: " + proc + " direct: " + dprep.noun);
                         int indCount = 0;
                         boolean onceWithoutInd = false;
+                        boolean onceIntrans = false;
                         for (Preposition indprep : lfeat.indirect) {
                             lfeat.indPrep = indprep;
                             if (indCount++ > loopMax) break;
@@ -846,9 +882,11 @@ public class GenSimpTestData {
                             prop1.append("(exists (?H ?P ?DO ?IO) (and ");
                             generateSubject(english1, prop1, lfeat.subj);
                             generateVerb(lfeat.negated,english1, prop1, proc, word, time);
-                            if (pi.words.get(word).contains(TRANS))
+                            //if (pi.words.get(word).contains(TRANS) && !onceIntrans)
                                 generateDirectObject(english1, prop1, pi, dprep);
-                            onceWithoutInd = generateIndirectObject(pw, indCount, english1, prop1, pi, lfeat, onceWithoutInd);
+                            //else
+                            //    onceIntrans = true;
+                            onceWithoutInd = generateIndirectObject(indCount, english1, prop1, pi, lfeat, onceWithoutInd);
                         }
                     }
                 }
@@ -858,28 +896,27 @@ public class GenSimpTestData {
 
     /** ***************************************************************
      */
-    public void genWithHumans(PrintWriter pw,
-                              StringBuffer english,
+    public void genWithHumans(StringBuffer english,
                               StringBuffer prop,
                               LFeatures lfeat) {
+
 
         System.out.println("GenSimpTestData.genActions()");
         int humCount = 0;
         for (AVPair human : lfeat.humans) {
             lfeat.subj = human;
             if (lfeat.subj.attribute.equals(lfeat.attSubj)) continue;
-            if (humCount++ > loopMax) break;
+            if (humCount++ > humanMax) break;
             StringBuffer english1 = new StringBuffer(english);
             StringBuffer prop1 = new StringBuffer(prop);
-            genProc(pw,english1,prop1,lfeat);
+            genProc(english1,prop1,lfeat);
         }
     }
 
     /** ***************************************************************
      * use None, knows, believes, says, desires for attitudes
      */
-    public void genAttitudes(PrintWriter pw,
-                             StringBuffer english,
+    public void genAttitudes(StringBuffer english,
                              StringBuffer prop,
                              LFeatures lfeat) {
 
@@ -902,7 +939,7 @@ public class GenSimpTestData {
                     prop2.append("(names \"" + human.attribute + "\" ?HA) (" + attWord.term + " ?HA ");
                     lfeat.plevel = 3;
                 }
-                genWithModals(pw, english2,prop2,lfeat);
+                genWithModals(english2,prop2,lfeat);
 
                 StringBuffer english3 = new StringBuffer(english1);
                 StringBuffer prop3 = new StringBuffer(prop1);
@@ -913,7 +950,7 @@ public class GenSimpTestData {
                     prop3.append("(names \"" + human.attribute + "\" ?HA) (" + attWord.term + " ?HA ");
                     lfeat.plevel = 4;
                 }
-                genWithModals(pw, english3,prop3,lfeat);
+                genWithModals(english3,prop3,lfeat);
             }
         }
 
@@ -932,7 +969,7 @@ public class GenSimpTestData {
                     prop2.append("(exists (?HA) (and (instance ?HA Human) ");
                     prop2.append("(attribute ?HA" + role + ") (" + attWord.term + " ?HA ");
                 }
-                genWithModals(pw, english2,prop2,lfeat);
+                genWithModals(english2,prop2,lfeat);
 
                 StringBuffer english3 = new StringBuffer(english1);
                 StringBuffer prop3 = new StringBuffer(prop1);
@@ -942,7 +979,7 @@ public class GenSimpTestData {
                     prop3.append("(not (exists (?HA) (and (instance ?HA Human) ");
                     prop3.append("(attribute ?HA" + role + ") (" + attWord.term + " ?HA ");
                 }
-                genWithModals(pw, english3,prop3,lfeat);
+                genWithModals(english3,prop3,lfeat);
             }
         }
     }
@@ -964,8 +1001,7 @@ public class GenSimpTestData {
      * can be left out.  Actions will eventually be past and future tense or
      * wrapped in modals.
      */
-    public void genWithModals(PrintWriter pw,
-                              StringBuffer english,
+    public void genWithModals(StringBuffer english,
                               StringBuffer prop,
                               LFeatures lfeat) {
 
@@ -983,10 +1019,10 @@ public class GenSimpTestData {
             }
             StringBuffer english1 = new StringBuffer(englishNew);
             StringBuffer prop1 = new StringBuffer(propNew);
-            genWithHumans(pw,english1,prop1,lfeat);
+            genWithHumans(english1,prop1,lfeat);
             StringBuffer english2 = new StringBuffer(englishNew);
             StringBuffer prop2 = new StringBuffer(propNew);
-            genWithRoles(pw,english2,prop2,lfeat);
+            genWithRoles(english2,prop2,lfeat);
         }
     }
 
@@ -996,8 +1032,7 @@ public class GenSimpTestData {
      * can be left out.  Actions will eventually be past and future tense or
      * wrapped in modals.
      */
-    public void genWithRoles(PrintWriter pw,
-                             StringBuffer english,
+    public void genWithRoles(StringBuffer english,
                              StringBuffer prop,
                              LFeatures lfeat) {
 
@@ -1010,7 +1045,24 @@ public class GenSimpTestData {
             lfeat.subj = role;
             StringBuffer english1 = new StringBuffer(english);
             StringBuffer prop1 = new StringBuffer(prop);
-            genProc(pw,english1,prop1,lfeat);
+            genProc(english1,prop1,lfeat);
+        }
+    }
+
+    /** ***************************************************************
+     * negated, proc, object, caserole, prep, mustTrans, mustNotTrans, canTrans
+     */
+    public static void genProcTable() {
+
+        System.out.println("GenSimpTestData.genProcTable(): start");
+        KBmanager.getMgr().initializeOnce();
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        GenSimpTestData gstd = new GenSimpTestData();
+        Collection<Preposition> caps = gstd.collectCapabilities();
+        HashMap<String,Preposition> indexProc = new HashMap<>();
+        for (Preposition p : caps) {
+            indexProc.put(p.procType, p);
+            HashSet<String> childClasses = kb.kbCache.getChildClasses(p.procType);
         }
     }
 
@@ -1026,8 +1078,9 @@ public class GenSimpTestData {
         System.out.println("  -t - run tests");
         System.out.println("  -a - generate logic/language pairs for all statements in KB");
         System.out.println("  -g - generate ground statement pairs for all relations");
-        System.out.println("  -s - generate NL/logic compositional sentences");
+        System.out.println("  -s <filename> - generate NL/logic compositional sentences to <filename> (no extension)");
         System.out.println("  -n - generate term formats from term names in a file");
+        System.out.println("  -u - other utility");
     }
 
     /** ***************************************************************
@@ -1038,19 +1091,24 @@ public class GenSimpTestData {
         if (args == null || args.length == 0 || args[0].equals("-h"))
             showHelp();
         else {
-            if (args != null && args.length > 0 && args[0].equals("-s")) {
+            if (args != null && args.length > 1 && args[0].equals("-s")) {
                 try {
-                    FileWriter fw = new FileWriter("out.txt");
-                    pw = new PrintWriter(fw);
+                    FileWriter fweng = new FileWriter(args[1] + "-eng.txt");
+                    englishFile = new PrintWriter(fweng);
+                    FileWriter fwlog = new FileWriter(args[1] + "-log.txt");
+                    logicFile = new PrintWriter(fwlog);
                     GenSimpTestData gstd = new GenSimpTestData();
-                    gstd.initActions(pw);
-                    pw.close();
+                    gstd.initActions();
+                    englishFile.close();
+                    logicFile.close();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
             if (args != null && args.length > 0 && args[0].equals("-g"))
                 generate();
+            if (args != null && args.length > 0 && args[0].equals("-u"))
+                genProcTable();
             if (args != null && args.length > 0 && args[0].equals("-a"))
                 allAxioms();
             if (args != null && args.length > 0 && args[0].equals("-tf"))
