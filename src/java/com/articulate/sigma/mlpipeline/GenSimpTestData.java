@@ -610,6 +610,7 @@ public class GenSimpTestData {
      */
     public String verbForm(String term, boolean negated, int time, String word) {
 
+        if (debug) System.out.println("verbForm()" + term + ", " + word);
         String nounForm = "";
         if (kb.isSubclass(term,"Game")) {
             nounForm = " " + word;
@@ -637,11 +638,11 @@ public class GenSimpTestData {
         String root = "";
         if (nounForm == "") // only modify if we don't use an auxilliary
             root = WordNet.wn.verbRootForm(word,word.toLowerCase());
+        if (root == null)
+            root = word;
         String es = "s";
         if (root.endsWith("ch") || root.endsWith("sh"))
             es = "es";
-        if (root == null)
-            root = word;
         if (time == PAST) {
             if (root.endsWith("e"))
                 return "was " + neg + root.substring(0,root.length()-1) + "ing";
