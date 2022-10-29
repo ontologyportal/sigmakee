@@ -210,7 +210,7 @@ public class GenSimpTestData {
     public static String toEnglish(String form) {
 
         return NLGUtils.htmlParaphrase("", form, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage") + "\n";
+                kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage");
     }
 
     /** ***************************************************************
@@ -326,9 +326,9 @@ public class GenSimpTestData {
                     for (Formula f : forms) {
                         String form = f.getFormula();
                         if (!StringUtil.emptyString(form)) {
-                            pw.println(form);
+                            logicFile.println(form);
                             String actual = toEnglish(form);
-                            pw.println(StringUtil.filterHtml(actual));
+                            englishFile.println(StringUtil.filterHtml(actual));
                         }
                     }
                 }
@@ -343,14 +343,18 @@ public class GenSimpTestData {
 
         HashSet<Formula> forms = new HashSet<>();
         forms.addAll(kb.formulaMap.values());
+        System.out.println("handleGroundStatements(): search through " + forms.size() + " statements");
         for (Formula f : forms) {
-            if (f.isGround() && formatMap.containsKey(f.relation) && !StringUtil.emptyString(f.toString()))
-                System.out.println(toEnglish(f.toString()));
+            if (f.isGround() && formatMap.containsKey(f.relation) && !StringUtil.emptyString(f.toString())) {
+                englishFile.print(toEnglish(f.toString()));
+                logicFile.println(f);
+            }
         }
     }
 
     /** ***************************************************************
-     * init and call main routine.
+     * Generate arguments for all relations and output their English
+     * paraphrase
      */
     public static void generate() {
 
@@ -361,7 +365,9 @@ public class GenSimpTestData {
         System.out.println("generate(): # relations: " + kb.kbCache.relations.size());
         HashMap<String, String> formatMap = kb.getFormatMap("EnglishLanguage");
         skipTypes.addAll(Arrays.asList("Formula") );
+        System.out.println("generate(): output existing ground statements ");
         handleGroundStatements(formatMap);
+        System.out.println("generate(): create ground statements ");
         genStatements(formatMap);
     }
 
@@ -378,9 +384,9 @@ public class GenSimpTestData {
             String form = f.getFormula();
             if (!StringUtil.emptyString(form) && !form.contains("\"") &&
                     !Formula.DOC_PREDICATES.contains(f.car())) {
-                pw.println(form.replace("\n", "").replace("\r", ""));
+                logicFile.println(form.replace("\n", "").replace("\r", ""));
                 String actual = toEnglish(form);
-                pw.println(StringUtil.filterHtml(actual));
+                englishFile.println(StringUtil.filterHtml(actual));
             }
         }
     }
@@ -1053,7 +1059,7 @@ public class GenSimpTestData {
     /** ***************************************************************
      * negated, proc, object, caserole, prep, mustTrans, mustNotTrans, canTrans
      */
-    public static void genProcTable() {
+    public void genProcTable() {
 
         System.out.println("GenSimpTestData.genProcTable(): start");
         KBmanager.getMgr().initializeOnce();
@@ -1062,6 +1068,8 @@ public class GenSimpTestData {
         Collection<Preposition> caps = gstd.collectCapabilities();
         HashMap<String,Preposition> indexProc = new HashMap<>();
         for (Preposition p : caps) {
+            Capability c = new Capability();
+            c.proc = p.procType;
             indexProc.put(p.procType, p);
             HashSet<String> childClasses = kb.kbCache.getChildClasses(p.procType);
         }
@@ -1089,40 +1097,48 @@ public class GenSimpTestData {
      */
     public static void main(String args[]) {
 
-        if (args == null || args.length == 0 || args[0].equals("-h"))
-            showHelp();
-        else {
-            if (args != null && args.length > 1 && args[0].equals("-s")) {
-                try {
-                    FileWriter fweng = new FileWriter(args[1] + "-eng.txt");
-                    englishFile = new PrintWriter(fweng);
-                    FileWriter fwlog = new FileWriter(args[1] + "-log.txt");
-                    logicFile = new PrintWriter(fwlog);
-                    GenSimpTestData gstd = new GenSimpTestData();
-                    gstd.initActions();
+        try {
+            if (args == null || args.length == 0 || args[0].equals("-h"))
+                showHelp();
+            else {
+                FileWriter fweng = new FileWriter(args[1] + "-eng.txt");
+                englishFile = new PrintWriter(fweng);
+                FileWriter fwlog = new FileWriter(args[1] + "-log.txt");
+                logicFile = new PrintWriter(fwlog);
+                if (args != null && args.length > 1 && args[0].equals("-s")) { // create NL/logic synthetically
+                        GenSimpTestData gstd = new GenSimpTestData();
+                        gstd.initActions();
+                        englishFile.close();
+                        logicFile.close();
+                }
+                if (args != null && args.length > 0 && args[0].equals("-g")) { // generate ground statements
+                    generate();
                     englishFile.close();
                     logicFile.close();
-                } catch (Exception e) {
-                    e.printStackTrace();
+                }
+                if (args != null && args.length > 0 && args[0].equals("-u")) {
+                    GenSimpTestData gstd = new GenSimpTestData();
+                    gstd.genProcTable();
+                }
+                if (args != null && args.length > 0 && args[0].equals("-a")) { // generate NL/logic for all existing axioms
+                    allAxioms();
+                    englishFile.close();
+                    logicFile.close();
+                }
+                if (args != null && args.length > 0 && args[0].equals("-tf"))
+                    genMissingTermFormats();
+                if (args != null && args.length > 0 && args[0].equals("-hu"))
+                    genHumans();
+                if (args != null && args.length > 0 && args[0].equals("-t")) {
+                    testTypes();
+                    testNLG();
+                }
+                if (args != null && args.length > 1 && args[0].equals("-n")) {
+                    genTermFormatFromNames(args[1]);
                 }
             }
-            if (args != null && args.length > 0 && args[0].equals("-g"))
-                generate();
-            if (args != null && args.length > 0 && args[0].equals("-u"))
-                genProcTable();
-            if (args != null && args.length > 0 && args[0].equals("-a"))
-                allAxioms();
-            if (args != null && args.length > 0 && args[0].equals("-tf"))
-                genMissingTermFormats();
-            if (args != null && args.length > 0 && args[0].equals("-hu"))
-                genHumans();
-            if (args != null && args.length > 0 && args[0].equals("-t")) {
-                testTypes();
-                testNLG();
-            }
-            if (args != null && args.length > 1 && args[0].equals("-n")) {
-                genTermFormatFromNames(args[1]);
-            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }
