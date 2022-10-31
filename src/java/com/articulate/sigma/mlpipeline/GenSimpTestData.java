@@ -35,7 +35,7 @@ public class GenSimpTestData {
     public static KB kb;
     public static boolean skip = false;
     public static HashSet<String> skipTypes = new HashSet<>();
-    public static final int instLimit = 500;
+    public static final int instLimit = 200;
     public static PrintWriter pw = null;
 
     public static final int loopMax = 30; // how many features at each level of linguistic composition
@@ -128,6 +128,8 @@ public class GenSimpTestData {
                 }
             }
             forms = newforms;
+            if (forms.size() % 1000 == 0)
+                System.out.println("genFormulas(): size so far: " + forms.size());
         }
 
         ArrayList<Formula> formsList = new ArrayList<>();
@@ -1124,8 +1126,8 @@ public class GenSimpTestData {
         System.out.println("  -tf - generate any missing termFormat statements");
         System.out.println("  -hu - generate SUOKIF from a list of gendered names");
         System.out.println("  -t - run tests");
-        System.out.println("  -a - generate logic/language pairs for all statements in KB");
-        System.out.println("  -g - generate ground statement pairs for all relations");
+        System.out.println("  -a <filename> - generate logic/language pairs for all statements in KB");
+        System.out.println("  -g <filename> - generate ground statement pairs for all relations");
         System.out.println("  -s <filename> - generate NL/logic compositional sentences to <filename> (no extension)");
         System.out.println("  -n - generate term formats from term names in a file");
         System.out.println("  -u - other utility");
@@ -1140,10 +1142,20 @@ public class GenSimpTestData {
             if (args == null || args.length == 0 || args[0].equals("-h"))
                 showHelp();
             else {
-                FileWriter fweng = new FileWriter(args[1] + "-eng.txt");
-                englishFile = new PrintWriter(fweng);
-                FileWriter fwlog = new FileWriter(args[1] + "-log.txt");
-                logicFile = new PrintWriter(fwlog);
+                FileWriter fweng = null;
+                FileWriter fwlog = null;
+                if (args.length > 1) {
+                    fweng = new FileWriter(args[1] + "-eng.txt");
+                    englishFile = new PrintWriter(fweng);
+                    fwlog = new FileWriter(args[1] + "-log.txt");
+                    logicFile = new PrintWriter(fwlog);
+                }
+                else {
+                    if (args[0].equals("-s") || args[0].equals("-a") ||args[0].equals("-g")) {
+                        System.out.println("Missing filename parameter for option");
+                        System.exit(1);
+                    }
+                }
                 if (args != null && args.length > 1 && args[0].equals("-s")) { // create NL/logic synthetically
                         GenSimpTestData gstd = new GenSimpTestData();
                         gstd.initActions();
