@@ -38,8 +38,10 @@ public class GenSimpTestData {
     public static final int instLimit = 500;
     public static PrintWriter pw = null;
 
-    public static final int loopMax = 3; // how many features at each level of linguistic composition
+    public static final int loopMax = 30; // how many features at each level of linguistic composition
     public static final int humanMax = 3; // separate constant to limit number of human names
+    public static final int freqLimit = 3; // SUMO terms used in a statement must have an equivalent
+                                           // synset with a frequency of at least freqLimit
 
     public static final boolean randomize = true; // whether to go through features in order or randomize
     public static final Random rand = new Random();
@@ -55,6 +57,8 @@ public class GenSimpTestData {
     public static final HashSet<String> verbEx = new HashSet<>(
             Arrays.asList("Acidification","Vending","OrganizationalProcess","NaturalProcess","Corkage"));
     public static final HashSet<Word> attitudes = new HashSet<>();
+    public static final HashSet<String> suppress = new HashSet<>( // forms to suppress, usually for testing
+            Arrays.asList("attitude","modal"));
 
     public static final HashMap<String,Capability> capabilities = new HashMap<>();
 
@@ -457,13 +461,15 @@ public class GenSimpTestData {
 
         ArrayList<AVPair> modals = new ArrayList<>();
         modals.add(new AVPair("None",""));
-        modals.add(new AVPair("Necessity","it is necessary that "));
-        modals.add(new AVPair("Possibility","it is possible that "));
-        modals.add(new AVPair("Obligation","it is obligatory that "));
-        modals.add(new AVPair("Permission","it is permitted that "));
-        modals.add(new AVPair("Prohibition","it is prohibited that "));
-        modals.add(new AVPair("Likely","it is likely that "));
-        modals.add(new AVPair("Unlikely","it is unlikely that "));
+        if (!suppress.contains("modal")) {
+            modals.add(new AVPair("Necessity", "it is necessary that "));
+            modals.add(new AVPair("Possibility", "it is possible that "));
+            modals.add(new AVPair("Obligation", "it is obligatory that "));
+            modals.add(new AVPair("Permission", "it is permitted that "));
+            modals.add(new AVPair("Prohibition", "it is prohibited that "));
+            modals.add(new AVPair("Likely", "it is likely that "));
+            modals.add(new AVPair("Unlikely", "it is unlikely that "));
+        }
         return modals;
     }
 
@@ -471,11 +477,14 @@ public class GenSimpTestData {
      * Initialize the grammatical forms of propositional attitudes
      */
     public void initAttitudes() {
+
         attitudes.add(new Word("None","","",""));
-        attitudes.add(new Word("knows","know","knows","knew"));
-        attitudes.add(new Word("believes","believe","believes","believed"));
-        attitudes.add(new Word("says","say","says","said"));
-        attitudes.add(new Word("desires","desire","desires","desired"));
+        if (!suppress.contains("attitude")) {
+            attitudes.add(new Word("knows", "know", "knows", "knew"));
+            attitudes.add(new Word("believes", "believe", "believes", "believed"));
+            attitudes.add(new Word("says", "say", "says", "said"));
+            attitudes.add(new Word("desires", "desire", "desires", "desired"));
+        }
     }
 
     /** ***************************************************************
@@ -504,6 +513,30 @@ public class GenSimpTestData {
             }
         }
         return indirect;
+    }
+
+    /** ***************************************************************
+     *
+     * @return modifications to the parameter as a side effect
+     */
+    public void constrainTerms(Collection<String> terms) {
+
+        System.out.println("constrainTerms(): ");
+        HashSet<String> newProcList = new HashSet<>(terms);
+        terms.clear();
+        for (String proc : newProcList) {
+            ArrayList<String> synsets = WordNetUtilities.getEquivalentSynsetsFromSUMO(proc);
+            int maxInt = 0;
+            for (String s : synsets) {
+                if (WordNet.wn.senseFrequencies.containsKey(s)) {
+                    int freq = WordNet.wn.senseFrequencies.get(s);
+                    if (freq > maxInt)
+                        maxInt = freq;
+                }
+            }
+            if (maxInt > freqLimit)
+                terms.add(proc);
+        }
     }
 
     /** ***************************************************************
@@ -568,13 +601,19 @@ public class GenSimpTestData {
             HashSet<String> artInst = kb.kbCache.getInstancesForType("Artifact");
             HashSet<String> artClass = kb.kbCache.getChildClasses("Artifact");
             intProc = kb.kbCache.getChildClasses("Process");
+            constrainTerms(intProc);
             HashSet<String> orgInst = kb.kbCache.getInstancesForType("OrganicObject");
             HashSet<String> orgClass = kb.kbCache.getChildClasses("OrganicObject");
             direct = new HashSet<>();
+            constrainTerms(artInst);
+            constrainTerms(artClass);
+            constrainTerms(orgInst);
+            constrainTerms(orgClass);
             addArguments(artInst, direct);
             addArguments(artClass, direct);
             addArguments(orgInst, direct);
             addArguments(orgClass, direct);
+            constrainTerms(artInst);
         }
     }
 
