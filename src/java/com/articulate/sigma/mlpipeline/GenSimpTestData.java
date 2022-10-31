@@ -116,8 +116,15 @@ public class GenSimpTestData {
             if (instMap.get(currT) == null || instMap.get(currT).size() < 1)
                 return new ArrayList<Formula>();
             int max = instMap.get(currT).size();
-            if (max > instLimit)
+            if (max > instLimit) {
                 max = instLimit;
+                if (sig.size() > 2)  // avoid combinatorial explosion in higher arities
+                    max = 100;
+                if (sig.size() > 3)
+                    max = 31;
+                if (sig.size() > 4)
+                    max = 15;
+            }
             for (int j = 0; j < max; j++) {
                 String arg = "";
                 arg = instMap.get(currT).get(j);
