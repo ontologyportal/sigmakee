@@ -3418,8 +3418,8 @@ public class KB implements Serializable {
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        System.out.println("INFO in KB.loadVampire(): generating " + lang + "file " + infFilename);
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+            System.out.println("INFO in KB.loadVampire(): generating " + lang + "file " + infFilename);
             try {
                 if (!formulaMap.isEmpty()) {
                     HashSet<String> formulaStrings = new HashSet<String>();
@@ -3442,7 +3442,6 @@ public class KB implements Serializable {
                         pw.flush();
                         pw.close();
                     }
-
                     System.out.println("KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
                 }
             }
@@ -3826,6 +3825,8 @@ public class KB implements Serializable {
             KBmanager.getMgr().initializeOnce();
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);
+            if (args != null)
+                System.out.println("KB.main(): args[0]: " + args[0]);
             if (args != null && args.length > 2 && args[0].contains("c")) {
                 if (!kb.containsTerm(args[1]))
                     System.out.println("Error in KB.main() no such term: " + args[1]);
@@ -3867,6 +3868,7 @@ public class KB implements Serializable {
                 catch(NumberFormatException nfe) {
                     timeout = Integer.parseInt(args[2]);
                 }
+                System.out.println("KB.main(): set timeout to: " + timeout);
             }
             if (args != null && args.length > 1 && args[0].contains("a")) {
                 TPTP3ProofProcessor tpp = null;
