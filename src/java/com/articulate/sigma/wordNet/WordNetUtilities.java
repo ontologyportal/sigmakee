@@ -2160,6 +2160,68 @@ public class WordNetUtilities {
      * @param synset is a 9-digit synset
      * Note! The verb frame key takes an 8-digit synset
      */
+    public static ArrayList<String> getVerbFramesForSynset(String synset) {
+
+        ArrayList<String> res = new ArrayList<>();
+        if (synset.length() == 8) {
+            System.out.println("Error in WordNetUtilities.getVerbFramesForSynset(): 8 digit synset");
+            return res;
+        }
+        return WordNet.wn.verbFrames.get(synset.substring(1));
+    }
+
+    /** ***************************************************************
+     * get all verb frames corresponding to a word in a synset.
+     * @param synset is a 9-digit synset
+     * Note! The verb frame key takes an 8-digit synset
+     */
+    public static ArrayList<String> getVerbFramesForWord(String synset, String word) {
+
+        ArrayList<String> res = new ArrayList<>();
+        if (synset.length() == 8) {
+            System.out.println("Error in WordNetUtilities.getVerbFramesForSynset(): 8 digit synset");
+            return res;
+        }
+        return WordNet.wn.verbFrames.get(synset.substring(1) + "-" + word);
+    }
+
+    /** ***************************************************************
+     * get all verb frames corresponding to a word in a synset.
+     * @param map is a set of word keys and the values are the verb frames
+     * @param words are all the words in a given synset
+     */
+    public static ArrayList<String> doVerbFrameSubstitution(HashMap<String,ArrayList<String>> map,
+                                                            ArrayList<String> words) {
+
+        ArrayList<String> result = new ArrayList<>();
+        for (String w : map.keySet()) {
+            if (w.equals("all")) {
+                for (String word : words) {
+                    for (String f : map.get(w)) {
+                        int index = Integer.parseInt(f);
+                        String frame = WordNet.wn.VerbFrames.get(index);
+                        frame = frame.replace("----",word);
+                        result.add(frame);
+                    }
+                }
+            }
+            else {
+                for (String f : map.get(w)) {
+                    int index = Integer.parseInt(f);
+                    String frame = WordNet.wn.VerbFrames.get(index);
+                    frame = frame.replace("----", w);
+                    result.add(frame);
+                }
+            }
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * get all verb frames corresponding to a synset.
+     * @param synset is a 9-digit synset
+     * Note! The verb frame key takes an 8-digit synset
+     */
     public static String showVerbFrames(String synset) {
 
         System.out.println("showVerbFrames(): synset: " + synset);
@@ -2167,38 +2229,21 @@ public class WordNetUtilities {
         ArrayList<String> words = WordNet.wn.getWordsFromSynset(synset);
         System.out.println("showVerbFrames(): words: " + words);
         HashMap<String,ArrayList<String>> res = new HashMap<>();
-        res.put("all",WordNet.wn.verbFrames.get(synset.substring(1)));
+        res.put("all",getVerbFramesForSynset(synset));
         System.out.println("showVerbFrames(1): res: " + res);
         if (res.get("all") == null)
             res.put("all",new ArrayList<>());
         for (String w : words) {
             if (WordNet.wn.verbFrames.containsKey(synset.substring(1) + "-" + w)) {
-                res.put(w,WordNet.wn.verbFrames.get(synset.substring(1) + "-" + w));
+                res.put(w,getVerbFramesForWord(synset,w));
                 System.out.println("showVerbFrames(2): res: " + res);
             }
         }
         if (res.size() > 0) {
             sb.append("<b>Verb Frames</b><P>\n");
-            for (String w : res.keySet()) {
-                if (w.equals("all")) {
-                    for (String word : words) {
-                        for (String f : res.get(w)) {
-                            int index = Integer.parseInt(f);
-                            String frame = WordNet.wn.VerbFrames.get(index) + "<br>\n";
-                            frame = frame.replace("----",word);
-                            sb.append(frame);
-                        }
-                    }
-                }
-                else {
-                    for (String f : res.get(w)) {
-                        int index = Integer.parseInt(f);
-                        String frame = WordNet.wn.VerbFrames.get(index) + "<br>\n";
-                        frame = frame.replace("----", w);
-                        sb.append(frame);
-                    }
-                }
-            }
+            ArrayList<String> stringList = doVerbFrameSubstitution(res,words);
+            for (String s : stringList)
+                sb.append(s + "<br>\n");
             sb.append("<P>\n");
         }
         return sb.toString();
