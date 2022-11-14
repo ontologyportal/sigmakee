@@ -11,6 +11,8 @@ import com.articulate.sigma.wordNet.WordNetUtilities;
 import java.io.*;
 import java.util.*;
 
+import static java.lang.Math.log;
+
 /** ***************************************************************
  * This code generates language-logic pairs designed for training
  * a machine learning system.  Several approaches are used
@@ -38,7 +40,9 @@ public class GenSimpTestData {
     public static final int instLimit = 200;
     public static PrintWriter pw = null;
 
-    public static final int loopMax = 30; // how many features at each level of linguistic composition
+    public static final int loopMax = 3; // how many features at each level of linguistic composition
+    public static final int attMax = 3;
+    public static final int modalMax = 3;
     public static final int humanMax = 3; // separate constant to limit number of human names
     public static final int freqLimit = 3; // SUMO terms used in a statement must have an equivalent
                                            // synset with a frequency of at least freqLimit
@@ -56,15 +60,37 @@ public class GenSimpTestData {
     public static final String DITRANS = "ditransitive";
     public static final HashSet<String> verbEx = new HashSet<>(
             Arrays.asList("Acidification","Vending","OrganizationalProcess","NaturalProcess","Corkage"));
-    public static final HashSet<Word> attitudes = new HashSet<>();
+    public static final ArrayList<Word> attitudes = new ArrayList<>();
     public static final HashSet<String> suppress = new HashSet<>( // forms to suppress, usually for testing
             Arrays.asList("attitude","modal"));
+
+    public static final boolean useWordNet = false; // use WordNet synonyms
 
     public static final HashMap<String,Capability> capabilities = new HashMap<>();
 
     public static PrintWriter englishFile = null; //generated English sentences
     public static PrintWriter logicFile = null;   //generated logic sentences, one per line,
                                                   // NL/logic should be on same line in the different files
+
+    public static long estSentCount = 1;
+    public static long sentCount = 0;
+
+    /** ***************************************************************
+     * estimate the number of sentences that will be produced
+     */
+    public static long estimateSentCount(LFeatures lfeat) {
+
+        long count = 2; // include negation
+        if (!suppress.contains("attitude"))
+            count = count * attMax;
+        if (!suppress.contains("modal"))
+            count = count * modalMax * 2; //include negation
+        count = count * (humanMax + lfeat.socRoles.size());
+        count = count * loopMax; // lfeat.intProc.size();
+        count = count * loopMax; // lfeat.direct.size();
+        count = count * loopMax; // lfeat.indirect.size();
+        return count;
+    }
 
     /** ***************************************************************
      * handle the case where the argument type is a subclass
@@ -469,7 +495,8 @@ public class GenSimpTestData {
     public ArrayList<AVPair> initModals() {
 
         ArrayList<AVPair> modals = new ArrayList<>();
-        modals.add(new AVPair("None",""));
+        for (int i = 0; i < 10; i++)
+            modals.add(new AVPair("None",""));
         if (!suppress.contains("modal")) {
             modals.add(new AVPair("Necessity", "it is necessary that "));
             modals.add(new AVPair("Possibility", "it is possible that "));
@@ -487,7 +514,8 @@ public class GenSimpTestData {
      */
     public void initAttitudes() {
 
-        attitudes.add(new Word("None","","",""));
+        for (int i = 0; i < 10; i++)
+            attitudes.add(new Word("None","","",""));
         if (!suppress.contains("attitude")) {
             attitudes.add(new Word("knows", "know", "knows", "knew"));
             attitudes.add(new Word("believes", "believe", "believes", "believed"));
@@ -585,13 +613,15 @@ public class GenSimpTestData {
         public String attSubj = null; // the agent holding the attitude
         public String attitude = null;
         public boolean negated = false;
-        public Collection<AVPair> modals = null;
+        public ArrayList<AVPair> modals = null;
         public AVPair modal= null;
         public Collection<AVPair> humans = null;
         public Collection<String> socRoles = null;
+        public ArrayList<String> socRoleSort = null;
         public AVPair subj= null;
         public Collection<String> intProc = null;
         public Collection<Preposition> direct = null;
+        public ArrayList<String> directSort = null;
         public Preposition dirPrep = null;
         public Collection<Preposition> indirect = null;
         public Preposition indPrep = null;
@@ -627,6 +657,47 @@ public class GenSimpTestData {
     }
 
     /** ***************************************************************
+     */
+    public void sortTerms(LFeatures lfeat) {
+
+        lfeat.directSort = new ArrayList<>();
+        TreeMap<Integer,Collection<String>> freqMap = new TreeMap<>();
+        for (Preposition prep : lfeat.direct) {
+            ArrayList<String> synsets = WordNetUtilities.getEquivalentSynsetsFromSUMO(prep.procType);
+            int count;
+            if (synsets == null || synsets.size() == 0)
+                count = 0;
+            else {
+                int freq = 0;
+                for (String s : synsets) {
+                    ArrayList<String> resultWords = WordNet.wn.getWordsFromSynset(s);
+                    int f = WordNet.wn.senseFrequencies.get(s);
+                    if (f > freq)
+                        freq = f;
+                }
+                count = (int) Math.round(Math.log(freq) + 1.0);
+            }
+            Collection<String> terms = null;
+            if (freqMap.containsKey(count))
+                terms = freqMap.get(count);
+            else
+                terms = new HashSet<>();
+            terms.add(prep.procType);
+            freqMap.put(count,terms);
+        }
+        List<Integer> nums = new ArrayList(freqMap.keySet());
+        Collections.reverse(nums);
+        for (int num : nums) {
+            Collection<String> terms = freqMap.get(num);
+            for (String t : terms) {
+                for (int i = 0; i < num; i++) {
+                    lfeat.directSort.add(t);
+                }
+            }
+        }
+    }
+
+    /** ***************************************************************
      * Create action sentences from a subject, preposition, direct object,
      * preposition and indirect object.  Indirect object and its preposition
      * can be left out.  Actions will eventually be past and future tense or
@@ -641,6 +712,8 @@ public class GenSimpTestData {
 
         initAttitudes();
         LFeatures lfeat = new LFeatures();
+        sortTerms(lfeat); // order concepts by frequency
+        estSentCount = estimateSentCount(lfeat);
         StringBuffer english = new StringBuffer();
         StringBuffer prop = new StringBuffer();
         genAttitudes(english,prop,lfeat);
@@ -743,7 +816,7 @@ public class GenSimpTestData {
         }
         if (subst)
             return "some " + word;
-        if (word.matches("^[aeiouAEIOH].*")) // pronouncing "U" alone is like a consonant
+        if (word.matches("^[aeiouAEIOH].*")) // pronouncing "U" alone is like a consonant, H like a vowel
             return "an " + word;
         return "a " + word;
     }
@@ -854,6 +927,7 @@ public class GenSimpTestData {
             onceWithoutInd = false;
             englishFile.println(english);
             logicFile.println(prop);
+            sentCount++;
         }
         else {  // close off the formula without an indirect object
             if (!lfeat.modal.attribute.equals("None"))
@@ -865,6 +939,7 @@ public class GenSimpTestData {
             if (!onceWithoutInd) {
                 englishFile.println(english);
                 logicFile.println(prop);
+                sentCount++;
             }
             onceWithoutInd = true;
         }
@@ -896,6 +971,8 @@ public class GenSimpTestData {
                         StringBuffer prop,
                         LFeatures lfeat) {
 
+        System.out.println(sentCount/estSentCount + "% complete. ");
+        System.out.println(sentCount + " of estimated " + estSentCount);
         int procCount = 0;
         ArrayList<String> processTypes = new ArrayList<>();
         processTypes.addAll(lfeat.intProc);
@@ -905,7 +982,9 @@ public class GenSimpTestData {
                 proc = processTypes.get(rand.nextInt(processTypes.size()));
             else
                 proc = processTypes.get(procCount);
-            ProcInfo pi = findProcInfo(proc);
+            ProcInfo pi = null;
+            if (useWordNet)
+                pi = findProcInfo(proc);
             if (pi == null) {
                 pi = new ProcInfo();
                 pi.term = proc;
@@ -983,29 +1062,38 @@ public class GenSimpTestData {
             lfeat.attSubj = human.attribute; // the subject of the propositional attitude
             StringBuffer english1 = new StringBuffer(english);
             StringBuffer prop1 = new StringBuffer(prop);
-            for (Word attWord : attitudes) {
+            for (int i = 0; i < attMax; i++) {
+                Word attWord = attitudes.get(rand.nextInt(attitudes.size()));
                 lfeat.attitude = attWord.term;
                 StringBuffer english2 = new StringBuffer(english1);
                 StringBuffer prop2 = new StringBuffer(prop1);
                 lfeat.attNeg = false;
-                if (!attWord.term.equals("None")) {
+                if (!attWord.term.equals("None") && !suppress.contains("attitude")) {
                     english2.append(human.attribute + " " + attWord.present + " that ");
+                    if (attWord.term.equals("says"))
+                        english2.append("\"");
                     prop2.append("(exists (?HA) (and (instance ?HA Human) ");
                     prop2.append("(names \"" + human.attribute + "\" ?HA) (" + attWord.term + " ?HA ");
                     lfeat.plevel = 3;
                 }
                 genWithModals(english2,prop2,lfeat);
+                if (attWord.term.equals("says"))
+                    english2.append("\"");
 
                 StringBuffer english3 = new StringBuffer(english1);
                 StringBuffer prop3 = new StringBuffer(prop1);
                 lfeat.attNeg = true;
                 if (!attWord.term.equals("None")) {
                     english3.append(human.attribute + " doesn't " + attWord.root + " that ");
+                    if (attWord.term.equals("says"))
+                        english3.append("\"");
                     prop3.append("(not (exists (?HA) (and (instance ?HA Human) ");
                     prop3.append("(names \"" + human.attribute + "\" ?HA) (" + attWord.term + " ?HA ");
                     lfeat.plevel = 4;
                 }
                 genWithModals(english3,prop3,lfeat);
+                if (attWord.term.equals("says"))
+                    english3.append("\"");
             }
         }
 
@@ -1021,20 +1109,28 @@ public class GenSimpTestData {
                 lfeat.attNeg = false;
                 if (!attWord.term.equals("None")) {
                     english2.append("a " + role + " " + attWord.present + " that ");
+                    if (attWord.term.equals("says"))
+                        english2.append("\"");
                     prop2.append("(exists (?HA) (and (instance ?HA Human) ");
                     prop2.append("(attribute ?HA" + role + ") (" + attWord.term + " ?HA ");
                 }
                 genWithModals(english2,prop2,lfeat);
+                if (attWord.term.equals("says"))
+                    english2.append("\"");
 
                 StringBuffer english3 = new StringBuffer(english1);
                 StringBuffer prop3 = new StringBuffer(prop1);
                 lfeat.attNeg = true;
                 if (!attWord.term.equals("None")) {
                     english3.append("a " + role + " doesn't " + attWord.root + " that ");
+                    if (attWord.term.equals("says"))
+                        english3.append("\"");
                     prop3.append("(not (exists (?HA) (and (instance ?HA Human) ");
                     prop3.append("(attribute ?HA" + role + ") (" + attWord.term + " ?HA ");
                 }
                 genWithModals(english3,prop3,lfeat);
+                if (attWord.term.equals("says"))
+                    english3.append("\"");
             }
         }
     }
@@ -1062,12 +1158,13 @@ public class GenSimpTestData {
 
         System.out.println("GenSimpTestData.genActions()");
         int humCount = 0;
-        for (AVPair modal : lfeat.modals) {
+        for (int i = 0; i < modalMax; i++) {
+            AVPair modal = lfeat.modals.get(rand.nextInt(lfeat.modals.size()));
             lfeat.modal = modal;
             StringBuffer englishNew = new StringBuffer(english);
             StringBuffer propNew = new StringBuffer(prop);
             System.out.println("genWithModals(): " + modal);
-            if (!lfeat.modal.attribute.equals("None")) {
+            if (!lfeat.modal.attribute.equals("None") && !suppress.contains("modal")) {
                 propNew.append("(modalAttribute ");
                 englishNew.append(negatedModal(modal.value,lfeat.negated));
                 lfeat.negated = false;
