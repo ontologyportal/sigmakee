@@ -19,8 +19,12 @@
   String synset = request.getParameter("synset");
   String POS = request.getParameter("POS");
   String key = request.getParameter("key");      
-  if (POS == null)
-      POS = "0";
+  if (POS == null) {
+      if (synset.length() == 9)
+          POS = synset.substring(0,1);
+      else
+          POS = "0";
+  }
 %>
 <head>
   <title>Sigma WordNet mapping browser</title>
@@ -72,11 +76,18 @@
           out.println(WordNet.wn.displaySynset(kbName,synset,params)); 
       else if (key != null) 
           out.println(WordNet.wn.displayByKey(kbName,key,params));  
-  if (synset != null && synset.length() < 9) {
-      String OMWsynset = synset + "-" + WordNetUtilities.posNumberToLetter(POS.charAt(0));
+  if (synset != null) {
+      String OMWsynset = synset.substring(1) + "-" + WordNetUtilities.posNumberToLetter(POS.charAt(0));
       out.println("\n<a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OMW.jsp?" +
-              "kb=" + kbName + "&synset=" + OMWsynset + "\">Show Open Multilingual Wordnet links</a><p>\n");         
-	  synset = POS + synset;
+              "kb=" + kbName + "&synset=" + OMWsynset + "\">Show Open Multilingual Wordnet links</a><p>\n");
+  }
+  if (synset != null && synset != "") {
+      System.out.println("WordNet.jsp: synset: " + synset);
+      System.out.println("WordNet.jsp: POS: " + POS);
+      if (synset.length() == 8 && POS.length() == 1)
+          out.println(WordNetUtilities.showVerbFrames(POS + synset));
+      else
+          out.println(WordNetUtilities.showVerbFrames(synset));
   }
   if (synset != null && synset != "")
   	  out.println("\n<small><a href=\"" + HTMLformatter.createHrefStart() + "/sigma/OWL.jsp?" +

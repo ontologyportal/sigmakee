@@ -1420,44 +1420,8 @@ public class WordNetUtilities {
      */
     private static void writeTPTPVerbFrames(PrintWriter pw) throws IOException {
 
-        ArrayList<String> VerbFrames = new ArrayList<String>(Arrays.asList("Something ----s",
-          "Somebody ----s",
-          "It is ----ing",
-          "Something is ----ing PP",
-          "Something ----s something Adjective/Noun",
-          "Something ----s Adjective/Noun",
-          "Somebody ----s Adjective",
-          "Somebody ----s something",
-          "Somebody ----s somebody",
-          "Something ----s somebody",
-          "Something ----s something",
-          "Something ----s to somebody",
-          "Somebody ----s on something",
-          "Somebody ----s somebody something",
-          "Somebody ----s something to somebody",
-          "Somebody ----s something from somebody",
-          "Somebody ----s somebody with something",
-          "Somebody ----s somebody of something",
-          "Somebody ----s something on somebody",
-          "Somebody ----s somebody PP",
-          "Somebody ----s something PP",
-          "Somebody ----s PP",
-          "Somebody's (body part) ----s",
-          "Somebody ----s somebody to INFINITIVE",
-          "Somebody ----s somebody INFINITIVE",
-          "Somebody ----s that CLAUSE",
-          "Somebody ----s to somebody",
-          "Somebody ----s to INFINITIVE",
-          "Somebody ----s whether INFINITIVE",
-          "Somebody ----s somebody into V-ing something",
-          "Somebody ----s something with something",
-          "Somebody ----s INFINITIVE",
-          "Somebody ----s VERB-ing",
-          "It ----s that CLAUSE",
-          "Something ----s INFINITIVE"));
-
-        for (int i = 0; i < VerbFrames.size(); i ++) {
-            String frame = VerbFrames.get(i);
+        for (int i = 0; i < WordNet.VerbFrames.size(); i ++) {
+            String frame = WordNet.VerbFrames.get(i);
             String numString = String.valueOf(i);
             if (numString.length() == 1)
                 numString = "0" + numString;
@@ -2192,11 +2156,68 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * get all verb frames corresponding to a synset.
+     * @param synset is a 9-digit synset
+     * Note! The verb frame key takes an 8-digit synset
+     */
+    public static String showVerbFrames(String synset) {
+
+        System.out.println("showVerbFrames(): synset: " + synset);
+        StringBuffer sb = new StringBuffer();
+        ArrayList<String> words = WordNet.wn.getWordsFromSynset(synset);
+        System.out.println("showVerbFrames(): words: " + words);
+        HashMap<String,ArrayList<String>> res = new HashMap<>();
+        res.put("all",WordNet.wn.verbFrames.get(synset.substring(1)));
+        System.out.println("showVerbFrames(1): res: " + res);
+        if (res.get("all") == null)
+            res.put("all",new ArrayList<>());
+        for (String w : words) {
+            if (WordNet.wn.verbFrames.containsKey(synset.substring(1) + "-" + w)) {
+                res.put(w,WordNet.wn.verbFrames.get(synset.substring(1) + "-" + w));
+                System.out.println("showVerbFrames(2): res: " + res);
+            }
+        }
+        if (res.size() > 0) {
+            sb.append("<b>Verb Frames</b><P>\n");
+            for (String w : res.keySet()) {
+                if (w.equals("all")) {
+                    for (String word : words) {
+                        for (String f : res.get(w)) {
+                            int index = Integer.parseInt(f);
+                            String frame = WordNet.wn.VerbFrames.get(index) + "<br>\n";
+                            frame = frame.replace("----",word);
+                            sb.append(frame);
+                        }
+                    }
+                }
+                else {
+                    for (String f : res.get(w)) {
+                        int index = Integer.parseInt(f);
+                        String frame = WordNet.wn.VerbFrames.get(index) + "<br>\n";
+                        frame = frame.replace("----", w);
+                        sb.append(frame);
+                    }
+                }
+            }
+            sb.append("<P>\n");
+        }
+        return sb.toString();
+    }
+
+    /** ***************************************************************
      * get all synsets corresponding to a SUMO term that are equivalence links
      */
     public static ArrayList<String> getEquivalentSynsetsFromSUMO(String sumo) {
 
         ArrayList<String> result = new ArrayList<>();
+        if (WordNet.wn == null || WordNet.wn.SUMOHash == null) {
+            System.out.println("Error in getEquivalentSynsetsFromSUMO(): WordNet not loaded");
+            return null;
+        }
+        if (sumo == null || sumo == "") {
+            System.out.println("Error in getEquivalentSynsetsFromSUMO(): null input");
+            return null;
+        }
         ArrayList<String> synlist = WordNet.wn.SUMOHash.get(sumo);
         if (synlist == null) return result;
         for (String s : synlist) {
