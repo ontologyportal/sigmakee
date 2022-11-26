@@ -2156,6 +2156,18 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * Convert verb frame indexes as Strings into actual vrb frame strings.
+     * For example "1" becomes "Something ----s"
+     */
+    public static ArrayList<String> convertVerbFrameNumbersToFrames(ArrayList<String> numbers) {
+
+        ArrayList<String> res = new ArrayList<>();
+        for (String s : numbers)
+            res.add(WordNet.VerbFrames.get(Integer.parseInt(s)));
+        return res;
+    }
+
+    /** ***************************************************************
      * get all verb frames corresponding to a synset.
      * @param synset is a 9-digit synset
      * Note! The verb frame key takes an 8-digit synset
@@ -2167,22 +2179,28 @@ public class WordNetUtilities {
             System.out.println("Error in WordNetUtilities.getVerbFramesForSynset(): 8 digit synset");
             return res;
         }
-        return WordNet.wn.verbFrames.get(synset.substring(1));
+        ArrayList<String> numbers = WordNet.wn.verbFrames.get(synset.substring(1));
+        return convertVerbFrameNumbersToFrames(numbers);
     }
 
     /** ***************************************************************
-     * get all verb frames corresponding to a word in a synset.
+     * get all verb frames corresponding to a word in a synset.  Include
+     * verb frames common to all words in the synset.
      * @param synset is a 9-digit synset
      * Note! The verb frame key takes an 8-digit synset
      */
     public static ArrayList<String> getVerbFramesForWord(String synset, String word) {
 
         ArrayList<String> res = new ArrayList<>();
-        if (synset.length() == 8) {
-            System.out.println("Error in WordNetUtilities.getVerbFramesForSynset(): 8 digit synset");
+        if (synset.length() < 9) {
+            System.out.println("Error in WordNetUtilities.getVerbFramesForWord(): 8 digit synset");
             return res;
         }
-        return WordNet.wn.verbFrames.get(synset.substring(1) + "-" + word);
+        if (WordNet.wn.verbFrames.containsKey(synset.substring(1)))
+            res.addAll(WordNet.wn.verbFrames.get(synset.substring(1)));
+        if (WordNet.wn.verbFrames.containsKey(synset.substring(1) + "-" + word))
+            res.addAll(WordNet.wn.verbFrames.get(synset.substring(1) + "-" + word));
+        return convertVerbFrameNumbersToFrames(res);
     }
 
     /** ***************************************************************
@@ -2222,6 +2240,28 @@ public class WordNetUtilities {
      * @param synset is a 9-digit synset
      * Note! The verb frame key takes an 8-digit synset
      */
+    public static HashMap<String,ArrayList<String>> getAllVerbFrames(String synset,
+                                                                     ArrayList<String> words) {
+
+        HashMap<String,ArrayList<String>> res = new HashMap<>();
+        res.put("all",getVerbFramesForSynset(synset));
+        System.out.println("showVerbFrames(1): res: " + res);
+        if (res.get("all") == null)
+            res.put("all",new ArrayList<>());
+        for (String w : words) {
+            if (WordNet.wn.verbFrames.containsKey(synset.substring(1) + "-" + w)) {
+                res.put(w,getVerbFramesForWord(synset,w));
+                System.out.println("showVerbFrames(2): res: " + res);
+            }
+        }
+        return res;
+    }
+
+    /** ***************************************************************
+     * get all verb frames corresponding to a synset.
+     * @param synset is a 9-digit synset
+     * Note! The verb frame key takes an 8-digit synset
+     */
     public static String showVerbFrames(String synset) {
 
         System.out.println("showVerbFrames(): synset: " + synset);
@@ -2247,6 +2287,61 @@ public class WordNetUtilities {
             sb.append("<P>\n");
         }
         return sb.toString();
+    }
+
+    /** ***************************************************************
+     * get all verb synsets corresponding to a SUMO term that are equivalence links
+     */
+    public static ArrayList<String> getEquivalentVerbSynsetsFromSUMO(String sumo) {
+
+        ArrayList<String> result = new ArrayList<>();
+        if (WordNet.wn == null || WordNet.wn.SUMOHash == null) {
+            System.out.println("Error in getEquivalentVerbSynsetsFromSUMO(): WordNet not loaded");
+            return null;
+        }
+        if (sumo == null || sumo == "") {
+            System.out.println("Error in getEquivalentVerbSynsetsFromSUMO(): null input");
+            return null;
+        }
+        ArrayList<String> synlist = WordNet.wn.SUMOHash.get(sumo);
+        if (synlist == null) return result;
+        //System.out.println("getEquivalentVerbSynsetsFromSUMO(): synlist: " + synlist);
+        for (String s : synlist) {
+            //System.out.println("getEquivalentVerbSynsetsFromSUMO(): synset: " + s);
+            if (s.charAt(0) != '2')  // get only verb mappings
+                continue;
+            String SUMO = WordNet.wn.getSUMOMapping(s);
+            //System.out.println("getEquivalentVerbSynsetsFromSUMO(): mapping: " + SUMO);
+            char suffix = WordNetUtilities.getSUMOMappingSuffix(SUMO);
+            if (suffix == '=')
+                result.add(s);
+        }
+        return result;
+    }
+
+    /** ***************************************************************
+     * get all verb synsets corresponding to a SUMO term
+     */
+    public static ArrayList<String> getVerbSynsetsFromSUMO(String sumo) {
+
+        ArrayList<String> result = new ArrayList<>();
+        if (WordNet.wn == null || WordNet.wn.SUMOHash == null) {
+            System.out.println("Error in getVerbSynsetsFromSUMO(): WordNet not loaded");
+            return null;
+        }
+        if (sumo == null || sumo == "") {
+            System.out.println("Error in getVerbSynsetsFromSUMO(): null input");
+            return null;
+        }
+        ArrayList<String> synlist = WordNet.wn.SUMOHash.get(sumo);
+        //System.out.println("getVerbSynsetsFromSUMO(): synlist: " + synlist);
+        if (synlist == null) return result;
+        for (String s : synlist) {
+            if (s.charAt(0) != '2')  // get only verb mappings
+                continue;
+            result.add(s);
+        }
+        return result;
     }
 
     /** ***************************************************************
