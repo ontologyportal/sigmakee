@@ -95,7 +95,7 @@ public class WordNet implements Serializable {
      *  plural, singular is the value. */
     public Hashtable<String,String> exceptionNounHash = new Hashtable<String,String>();
 
-    // key is past tense, value is infinitive (without "to")
+    // key is inflected form, value is root
     public Hashtable<String,String> exceptionVerbHash = new Hashtable<String,String>();
 
     // The reverse index of the above
@@ -150,7 +150,8 @@ public class WordNet implements Serializable {
     
     /** A HashMap where keys are 8 digit
      * WordNet synset byte offsets or synsets appended with a dash and a specific
-     * word such as "12345678-foo".  Values are ArrayList(s) of String
+     * word such as "12345678-foo" or in the case where the frame applies to the entire
+     * synset, it's just the synset number.  Values are ArrayList(s) of String
      * verb frame numbers. */
     public HashMap<String,ArrayList<String>> verbFrames = new HashMap<String,ArrayList<String>>();
 
@@ -262,41 +263,41 @@ public class WordNet implements Serializable {
     };
 
     public static ArrayList<String> VerbFrames = new ArrayList<String>(Arrays.asList("", // empty 0 index
-            "Something ----s",
+            "Something ----s",                                      // 1
             "Somebody ----s",
             "It is ----ing",
             "Something is ----ing PP",
-            "Something ----s something Adjective/Noun",
+            "Something ----s something Adjective/Noun",             // 5
             "Something ----s Adjective/Noun",
             "Somebody ----s Adjective",
             "Somebody ----s something",
             "Somebody ----s somebody",
-            "Something ----s somebody",
+            "Something ----s somebody",                             // 10
             "Something ----s something",
             "Something ----s to somebody",
             "Somebody ----s on something",
             "Somebody ----s somebody something",
-            "Somebody ----s something to somebody",
+            "Somebody ----s something to somebody",                 // 15
             "Somebody ----s something from somebody",
             "Somebody ----s somebody with something",
             "Somebody ----s somebody of something",
             "Somebody ----s something on somebody",
-            "Somebody ----s somebody PP",
+            "Somebody ----s somebody PP",                           // 20
             "Somebody ----s something PP",
             "Somebody ----s PP",
             "Somebody's (body part) ----s",
             "Somebody ----s somebody to INFINITIVE",
-            "Somebody ----s somebody INFINITIVE",
+            "Somebody ----s somebody INFINITIVE",                   // 25
             "Somebody ----s that CLAUSE",
             "Somebody ----s to somebody",
             "Somebody ----s to INFINITIVE",
             "Somebody ----s whether INFINITIVE",
-            "Somebody ----s somebody into V-ing something",
+            "Somebody ----s somebody into V-ing something",         // 30
             "Somebody ----s something with something",
             "Somebody ----s INFINITIVE",
             "Somebody ----s VERB-ing",
             "It ----s that CLAUSE",
-            "Something ----s INFINITIVE"));
+            "Something ----s INFINITIVE"));                         // 35
 
     public MultiWords getMultiWords() {
 
@@ -537,7 +538,7 @@ public class WordNet implements Serializable {
                 while (m.lookingAt()) {
                     String frameNum = m.group(1);
                     String wordNum = m.group(2);
-                    String key;
+                    String key = null;
                     if (wordNum.equals("00")) // frame num applies to all words in the synset
                         key = synset.substring(1);
                     else {
