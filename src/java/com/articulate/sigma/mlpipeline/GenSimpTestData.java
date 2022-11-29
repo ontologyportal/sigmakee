@@ -51,20 +51,23 @@ public class GenSimpTestData {
     public static final Random rand = new Random();
 
     public static final int NOTIME = -1;
-    public static final int PAST = 0;
-    public static final int PRESENT = 1;  // speaks
+    public static final int PAST = 0;         // was speaking
+    public static final int PRESENT = 1;      // speaks
     public static final int PROGRESSIVE = 2;  // is speaking
-    public static final int FUTURE = 2;
+    public static final int FUTURE = 3;       // will be speaking
+    public static final int IMPERATIVE = 4; // treat imperatives like a tense
 
     public static final String INTRANS = "intransitive";
     public static final String TRANS = "transitive";
     public static final String DITRANS = "ditransitive";
+
     public static final HashSet<String> verbEx = new HashSet<>(
-            Arrays.asList("Acidification","Vending","OrganizationalProcess","NaturalProcess","Corkage"));
+            Arrays.asList("Acidification","Vending","OrganizationalProcess",
+                    "NaturalProcess","Corkage","LinguisticCommunication"));
     public static final ArrayList<Word> attitudes = new ArrayList<>();
     public static final HashSet<String> suppress = new HashSet<>( // forms to suppress, usually for testing
-            Arrays.asList("attitude","modal"));
-
+            Arrays.asList());
+//            Arrays.asList("attitude","modal"));
     public static final boolean useWordNet = false; // use WordNet synonyms
 
     public static final HashMap<String,Capability> capabilities = new HashMap<>();
@@ -75,6 +78,24 @@ public class GenSimpTestData {
 
     public static long estSentCount = 1;
     public static long sentCount = 0;
+    public static long sentMax = 10000000;
+    public static boolean startOfSentence = true;
+
+    /** ***************************************************************
+     * estimate the number of sentences that will be produced
+     */
+    public static String printTense(int t) {
+
+        switch (t) {
+            case -1: return "NOTIME";
+            case 0:  return "PAST";
+            case 1:  return "PRESENT";
+            case 2:  return "PROGRESSIVE";
+            case 3:  return "FUTURE";
+            case 4:  return "IMPERATIVE";
+        }
+        return "";
+    }
 
     /** ***************************************************************
      * estimate the number of sentences that will be produced
@@ -296,7 +317,7 @@ public class GenSimpTestData {
     /** ***************************************************************
      * generate new SUMO termFormat and instance statements for names
      */
-    public static void genHumans() {
+    public static void generateAllHumans() {
 
         HashMap<String,String> hums = readHumans();
         for (String firstName : hums.keySet()) {
@@ -323,9 +344,9 @@ public class GenSimpTestData {
             String g = lfeat.genders.get(name);
             if (g.equalsIgnoreCase("F"))
                 gender = "Female";
-            System.out.println("(instance " + var + " Human)");
-            System.out.println("(attribute " + var + " " + gender + ")");
-            System.out.println("(names \"" + name + "\" " + var + ")");
+            sb.append("(instance " + var + " Human) ");
+            sb.append("(attribute " + var + " " + gender + ")");
+            sb.append("(names \"" + name + "\" " + var + ") ");
         }
         return sb.toString();
     }
@@ -464,25 +485,57 @@ public class GenSimpTestData {
 
     /** ***************************************************************
      */
-    public static void testVerb() {
+    public void testVerb() {
 
         System.out.println("GenSimpTestData.testVerb()");
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        LFeatures lfeat = new LFeatures();
         String t = "Trespassing";
         ArrayList<String> synsets = WordNetUtilities.getEquivalentVerbSynsetsFromSUMO(t);
         System.out.println("testVerb(): equiv synsets size: " + synsets.size() + " for term: " + t);
         synsets = WordNetUtilities.getVerbSynsetsFromSUMO(t);
         System.out.println("testVerb(): synsets size: " + synsets.size() + " for term: " + t);
         GenSimpTestData gstd = new GenSimpTestData();
-        String v = gstd.verbForm(t,false, PRESENT, "trespass", null);
+        String v = gstd.verbForm("Trespassing",false, PRESENT, "trespass", lfeat);
         System.out.println("testVerb(): verb form: " + v);
-        v = gstd.verbForm(t,false, PRESENT, "buy", null);
+        v = gstd.verbForm("Buying",false, PRESENT, "buy", lfeat);
         System.out.println("testVerb(): verb form: " + v);
-        v = gstd.verbForm(t,false, PAST, "buy", null);
+        v = gstd.verbForm("Buying",false, PAST, "buy", lfeat);
         System.out.println("testVerb(): verb form: " + v);
-        v = gstd.verbForm(t,false, PAST, "pad", null);
+        v = gstd.verbForm(t,false, PAST, "pad", lfeat);
         System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm(t,false, PRESENT, "ravish", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        lfeat.subj = "You";
+        v = gstd.verbForm(t,false, PRESENT, "process", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        lfeat.subj = "";
+        v = gstd.verbForm(t,false, PRESENT, "process", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm("Looking",false, PROGRESSIVE, "catch", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm("Soccer",false, PROGRESSIVE, "soccer", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm("Listening",false, PAST, "hear", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm("Apologizing",false, PROGRESSIVE, "apologize", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm("IntentionalProcess",false, PAST, "proceed", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+        v = gstd.verbForm("Seeing",false, PRESENT, "watch", lfeat);
+        System.out.println("testVerb(): verb form: " + v);
+    }
+
+    /** ***************************************************************
+     */
+    public void testLFeatures() {
+
+        System.out.println("GenSimpTestData.testLFeatures()");
+        KBmanager.getMgr().initializeOnce();
+        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        LFeatures lfeat = new LFeatures();
+        System.out.println("testGiving(): objects: " + lfeat.objects.terms);
     }
 
     /** ***************************************************************
@@ -551,6 +604,29 @@ public class GenSimpTestData {
 
     /** ***************************************************************
      */
+    public static void progressPrint() {
+
+        if (!debug) System.out.print("\r\33[2K");
+        double value = ((double) sentCount / (double) estSentCount);
+        System.out.print(String.format("%.2f", value));
+        System.out.print("% complete. ");
+        System.out.print(sentCount + " of total " + sentMax);
+        if (debug) System.out.println();
+    }
+
+    /** ***************************************************************
+     */
+    public static void testProgressPrint() {
+
+        estSentCount = 1000000;
+        do {
+            progressPrint();
+            sentCount++;
+        } while (true);
+    }
+
+    /** ***************************************************************
+     */
     public class Preposition {
         public String procType = null;
         public String prep = null;
@@ -588,7 +664,7 @@ public class GenSimpTestData {
     public ArrayList<AVPair> initModals() {
 
         ArrayList<AVPair> modals = new ArrayList<>();
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 50; i++)
             modals.add(new AVPair("None",""));
         if (!suppress.contains("modal")) {
             modals.add(new AVPair("Necessity", "it is necessary that "));
@@ -607,7 +683,7 @@ public class GenSimpTestData {
      */
     public void initAttitudes() {
 
-        for (int i = 0; i < 10; i++)
+        for (int i = 0; i < 50; i++)
             attitudes.add(new Word("None","","",""));
         if (!suppress.contains("attitude")) {
             attitudes.add(new Word("knows", "know", "knows", "knew"));
@@ -704,16 +780,18 @@ public class GenSimpTestData {
 
         public boolean attNeg = false; // for propositional attitudes
         public String attSubj = null; // the agent holding the attitude
-        public String attitude = null;
-        public boolean negated = false;
+        public String attitude = "None";
+        public boolean negatedModal = false;
+        public boolean negatedBody = false;
         public ArrayList<AVPair> modals = null;
-        public AVPair modal= null;
+        public AVPair modal = new AVPair("None","none");
         public HashMap<String,String> genders = null;
         public RandSet humans = null;
         public RandSet socRoles = null;
         public RandSet objects = null;
         public RandSet bodyParts = null;
         public String preposition = "";
+        public HashSet<String> prevHumans = new HashSet<>();
         public String subj = null;
         public RandSet processes = null;
         public ArrayList<String> frames = null;  // verb frames for the current process type
@@ -777,8 +855,12 @@ public class GenSimpTestData {
             HashSet<String> objs = new HashSet<>();
             objs.addAll(orgClass);
             objs.addAll(artClass);
+            HashSet<String> objs2 = new HashSet<>();
+            for (String s : objs)
+                if (!s.equals("Human") && !kb.isSubclass(s,"Human"))
+                    objs2.add(s);
             //if (debug) System.out.println("LFeatures(): OrganicObjects and Artifacts: " + objs);
-            Collection<AVPair> objFreqs = findWordFreq(objs);
+            Collection<AVPair> objFreqs = findWordFreq(objs2);
             System.out.println("LFeatures(): create objects");
             objects = RandSet.create(objFreqs);
             //System.out.println("LFeatures(): objects: " + objects.terms);
@@ -841,9 +923,7 @@ public class GenSimpTestData {
         //for (Preposition p : lfeat.direct)
         //    terms.add(p.procType);
         estSentCount = estimateSentCount(lfeat);
-        StringBuffer english = new StringBuffer();
-        StringBuffer prop = new StringBuffer();
-        genAttitudes(english,prop,lfeat);
+        genAttitudes(lfeat);
     }
 
     /** ***************************************************************
@@ -853,19 +933,24 @@ public class GenSimpTestData {
 
         String word = kb.getTermFormat("EnglishLanguage",term);
         if (word == null || word.contains(" ")) {
-            System.out.println("compoundVerb(): or null: " + word + " " + term);
+            if (debug) System.out.println("compoundVerb(): or null: " + word + " " + term);
             return true;
         }
         return false;
     }
 
     /** ***************************************************************
-     * handle the auxilliary construction of "play X" when X is a Game
+     * Handle the auxilliary construction of "play X" when X is a Game
      * @param term is a SUMO term
      */
     public String verbForm(String term, boolean negated, int time, String word, LFeatures lfeat) {
 
-        if (debug) System.out.println("verbForm()" + term + ", " + word);
+        if (debug) System.out.println("verbForm(): (term,word): " + term + ", " + word);
+        if (debug) System.out.println("verbForm(): tense: " + printTense(time));
+        if (!StringUtil.emptyString(lfeat.subj) && lfeat.subj.equals("You")) {
+            if (debug) System.out.println("verbForm(): using imperative tense for 'you'");
+            time = IMPERATIVE;
+        }
         String root = "";
         String nounForm = "";
         if (kb.isSubclass(term,"Game")) {
@@ -880,8 +965,19 @@ public class GenSimpTestData {
             return null;
         }
         String neg = "";
-        if (negated)
-            neg = "not ";
+        if (negated) {
+            if (lfeat.subj.equals("You")) {
+                if (rand.nextBoolean())
+                    neg = "don't ";
+                else
+                    neg = "do not ";
+            }
+            else
+                neg = "not ";
+        }
+        if (!StringUtil.emptyString(lfeat.subj) && lfeat.subj.equals("You"))
+            return capital(neg + word) + nounForm;
+        /*
         if (word.endsWith("ing")) {
             if (time == PAST)
                 return "was " + neg + word + nounForm;
@@ -892,6 +988,7 @@ public class GenSimpTestData {
             if (time == NOTIME)
                 return "is " + neg + word + nounForm; // for time = -1
         }
+         */
         if (nounForm == "") // only modify if we don't use an auxilliary
             root = WordNet.wn.verbRootForm(word,word.toLowerCase());
         if (root == null)
@@ -900,6 +997,10 @@ public class GenSimpTestData {
         //System.out.println("verbForm(): word: " + word);
         //System.out.println("verbForm(): root: " + root);
         //System.out.println("verbForm(): nounForm: " + nounForm);
+        if (time == PROGRESSIVE) {
+            word = root + "ing";
+            return "is " + neg + word + nounForm;
+        }
         if (root.endsWith("ch") || root.endsWith("sh") || root.endsWith("ss")) {
             if (time == PRESENT)
                 es = "es";
@@ -907,9 +1008,9 @@ public class GenSimpTestData {
                 es = "ed";
         }
         if (time == PAST) {
-            if (root.endsWith("e"))
+            if (root.endsWith("e") && !root.endsWith("ee"))
                 return "was " + neg + root.substring(0,root.length()-1) + "ing";
-            else if (root.matches(".*[aeiou][bcdfglmnprstz]$"))
+            else if (root.matches(".*[aeiou][bcdfglmnprstvz]$"))
                 return "was " + neg + root + root.substring(root.length()-1) + "ing" + nounForm;
             else
                 return "was " + neg + root + "ing" + nounForm;
@@ -920,23 +1021,28 @@ public class GenSimpTestData {
             }
             else {
                 if (root.endsWith("y") && !root.matches(".*[aeiou]y$"))
-                    return root.substring(0, root.length() - 1) + "ies";
-                return root + es + nounForm;
+                    return capital(root.substring(0, root.length() - 1) + "ies");
+                return capital(root )+ es + nounForm;
             }
         }
-        if (time == FUTURE)
+        if (time == FUTURE) {
+            if (neg.startsWith("do"))
+                neg = "not ";
+            if (rand.nextBoolean() && !StringUtil.emptyString(neg))
+                return "won't " + root + nounForm;
             return "will " + neg + root + nounForm;
+        }
         if (root.endsWith("y") && !root.matches(".*[aeiou]y$") && !negated && nounForm == "")
-            return root.substring(0,root.length()-1) + "ies";
+            return capital(root.substring(0,root.length()-1) + "ies");
         if (time != NOTIME)
             System.out.println("Error in verbForm(): time is unallowed value: " + time);
         if (negated)
             return "doesn't " + root + nounForm;
         else {
             if (nounForm == "")
-                return root + es;
+                return capital(root) + es;
             else
-                return root + nounForm + es;
+                return capital(root) + nounForm + es;
         }
 
     }
@@ -956,13 +1062,40 @@ public class GenSimpTestData {
             if (kb.kbCache.isInstanceOf(term,"Human"))
                 return word;
             else
-                return "the " + word;
+                return capital("the ") + word;
         }
         if (subst)
-            return "some " + word;
+            return capital("some ") + word;
         if (word.matches("^[aeiouAEIOH].*")) // pronouncing "U" alone is like a consonant, H like a vowel
-            return "an " + word;
-        return "a " + word;
+            return capital("an ") + word;
+        return capital("a ") + word;
+    }
+
+    /** ***************************************************************
+     * Generate a boolean true value randomly num out of max times.
+     * So biasedBoolean(8,10) generates a true most of the time
+     * (8 out of 10 times on average)
+     */
+    public static String capital(String s) {
+
+        if (debug) System.out.println("capital(): startOfSentence: " + startOfSentence);
+        if (debug) System.out.println("capital(): s: " + s);
+        if (StringUtil.emptyString(s))
+            return s;
+        if (!startOfSentence)
+            return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    /** ***************************************************************
+     * Generate a boolean true value randomly num out of max times.
+     * So biasedBoolean(8,10) generates a true most of the time
+     * (8 out of 10 times on average)
+     */
+    public static boolean biasedBoolean(int num, int max) {
+
+        int val = rand.nextInt(max);
+        return val < num;
     }
 
     /** ***************************************************************
@@ -971,13 +1104,16 @@ public class GenSimpTestData {
     public void generateSubject(StringBuffer english, StringBuffer prop,
                                   LFeatures lfeat) {
 
-        if (debug) System.out.println("generateSubject():");
+        if (debug) System.out.println("generateSubject(): english: " + english);
+        if (debug) System.out.println("generateSubject(): attitude: " + lfeat.attitude);
+        if (debug) System.out.println("generateSubject(): modal: " + lfeat.modal);
         if (lfeat.frame.startsWith("It") || lfeat.frame.startsWith("Something")) {
-            //System.out.println("non-human subject for (prop,synset,word): " +
-            //        prop + ", " + lfeat.synset + ", " + lfeat.word);
+            if (debug) System.out.println("non-human subject for (prop,synset,word): " +
+                    prop + ", " + lfeat.synset + ", " + lfeat.word);
             if (lfeat.frame.startsWith("Something")) {
                 String term = lfeat.objects.getNext();
-                english.append(nounFormFromTerm(term) + " ");
+                lfeat.subj = term;
+                english.append(capital(nounFormFromTerm(term)) + " ");
                 prop.append("(instance ?H " + term + ") ");
                 if (lfeat.frame.startsWith("Something is")) {
                     lfeat.frame = lfeat.frame.substring(13);
@@ -996,52 +1132,66 @@ public class GenSimpTestData {
                     lfeat.frame = lfeat.frame.substring(3);
                 }
             }
+            startOfSentence = false;
         }
-        else {
-            int choice = rand.nextInt(2);  // get 0 or 1
-            if (choice == 0) {
-                lfeat.subj = lfeat.humans.getNext();
-            }
-            else {
-                lfeat.subj = lfeat.socRoles.getNext();
+        else { // Somebody
+            if (debug) System.out.println("human subject for (prop,synset,word): " +
+                    prop + ", " + lfeat.synset + ", " + lfeat.word);
+            StringBuffer type = new StringBuffer();
+            StringBuffer name = new StringBuffer();
+            if ((lfeat.attitude.equals("None") || lfeat.attitude.equals("says")) && lfeat.modal.attribute.equals("None"))
+                generateHuman(english,prop,true,"?H",type,name,lfeat);
+            else
+                generateHuman(english,prop,false,"?H",type,name,lfeat);
+            lfeat.subj = type.toString();
+            if (!lfeat.subj.equals("You"))
+                startOfSentence = false;
+            if (lfeat.attitude.equals("says") && lfeat.subj.equals("You") && // remove "that" for says "You ..."
+                    english.toString().endsWith("that \"")) {
+                english.delete(english.length() - 7, english.length());
+                english.append(" \""); // restore space and quote
             }
             if (kb.isInstanceOf(lfeat.subj,"SocialRole")) { // a plumber... etc
                 if (lfeat.frame.startsWith("Somebody's (body part)")) {
-                    english.append(nounFormFromTerm(lfeat.subj) + "'s ");
+                    if (lfeat.subj.equals("You"))
+                        english.append(capital("your"));
+                    else {
+                        english.deleteCharAt(english.length()-1); // delete trailing space
+                        english.append("'s ");
+                    }
                     String bodyPart = lfeat.bodyParts.getNext();     // get a body part
                     english.append(nounFormFromTerm(bodyPart) + " ");
-                    prop.append("(attribute ?H " + lfeat.subj + ") ");
-                    prop.append("(instance ?O " + bodyPart + ") ");
                     prop.append("(possesses ?H ?O) ");
-                    lfeat.frame = lfeat.frame.substring(22);
+                    lfeat.frame = lfeat.frame.substring(13);
                 }
                 else {
-                    english.append(nounFormFromTerm(lfeat.subj) + " ");
-                    prop.append("(attribute ?H " + lfeat.subj + ") ");
-                    lfeat.frame = lfeat.frame.substring(9);
+                    // english.append(capital(nounFormFromTerm(lfeat.subj)) + " "); // already created in generateHuman
                 }
             }
             else {                                              // John... etc
                 if (lfeat.frame.startsWith("Somebody's (body part)")) {
-                    english.append(lfeat.subj + "'s ");
+                    // english.append(capital(lfeat.subj) + "'s ");
+                    english.append("'s ");
                     String bodyPart = lfeat.bodyParts.getNext();      // get a body part
                     english.append(nounFormFromTerm(bodyPart) + " ");
-                    prop.append("(instance ?H Human) ");
-                    prop.append("(names \"" + lfeat.subj + "\" ?H) ");
+                    //prop.append("(instance ?H Human) ");
+                    //prop.append("(names \"" + lfeat.subj + "\" ?H) ");
                     prop.append("(instance ?O " + bodyPart + ") ");
                     prop.append("(possesses ?H ?O) ");
-                    lfeat.frame = lfeat.frame.substring(22);
+                    lfeat.frame = lfeat.frame.substring(13);
                 }
                 else {
-                    english.append(lfeat.subj + " ");
-                    prop.append("(instance ?H Human) ");
-                    prop.append("(names \"" + lfeat.subj + "\" ?H) ");
-                    lfeat.frame = lfeat.frame.substring(9);
+                    if (!lfeat.subj.equals("You")) {  // if subj is you-understood, don't generate subject
+                        //english.append(capital(lfeat.subj) + " ");
+                        //prop.append("(instance ?H Human) ");
+                        //prop.append("(names \"" + lfeat.subj + "\" ?H) ");
+                    }
                 }
             }
         }
         if (debug) System.out.println("generateSubject(): english: " + english);
         if (debug) System.out.println("generateSubject(): lfeat.frame: " + lfeat.frame);
+        if (debug) System.out.println("generateSubject(): startOfSentence: " + startOfSentence);
     }
 
     /** ***************************************************************
@@ -1049,7 +1199,7 @@ public class GenSimpTestData {
     public void generateVerb(boolean negated,StringBuffer english, StringBuffer prop,
                                 String proc, String word, int time, LFeatures lfeat) {
 
-        //System.out.println("generateVerb(): word: " + word);
+        if (debug) System.out.println("generateVerb(): word: " + word);
         english.append(verbForm(proc,negated,time,word,lfeat) + " ");
         prop.append("(instance ?P " + proc + ") ");
         if (lfeat.frame.startsWith("It") ) {
@@ -1074,7 +1224,7 @@ public class GenSimpTestData {
                 lfeat.frame = lfeat.frame.substring(6);
         }
         else
-            System.out.println("Error in generateVerb(): bad format in frame: " + lfeat.frame);
+            if (debug) System.out.println("Error in generateVerb(): bad format in frame: " + lfeat.frame);
         //System.out.println("generateVerb(): english: " + english);
         //System.out.println("generateVerb(): lfeat.frame: " + lfeat.frame);
     }
@@ -1096,11 +1246,10 @@ public class GenSimpTestData {
      */
     public void getDirect(LFeatures lfeat) {
 
-        //System.out.println("getDirect(): lfeat.frame: " + lfeat.frame);
+        if (debug) System.out.println("getDirect(): lfeat.frame: " + lfeat.frame);
         lfeat.preposition = "";
         if (lfeat.frame.trim().startsWith("somebody") || lfeat.frame.trim().startsWith("to somebody") ) {
-            int choice = rand.nextInt(2);  // get 0 or 1
-            if (choice == 0) {
+            if (rand.nextBoolean()) {
                 lfeat.directName = lfeat.humans.getNext();
                 lfeat.directType = "Human";
             }
@@ -1126,6 +1275,7 @@ public class GenSimpTestData {
                 lfeat.frame = "";
         }
         if (debug) System.out.println("getDirect(2): lfeat.directType: " + lfeat.directType);
+        if (debug) System.out.println("getDirect(2): lfeat.directName: " + lfeat.directName);
         if (debug) System.out.println("getDirect(2): lfeat.frame: " + lfeat.frame);
     }
 
@@ -1195,7 +1345,8 @@ public class GenSimpTestData {
             if (lfeat.attNeg) result.append(")");
         }
         if (!lfeat.modal.attribute.equals("None")) result.append(")");
-        if (lfeat.negated) result.append(")");
+        if (lfeat.negatedModal) result.append(")");
+        if (lfeat.negatedBody) result.append(")");
         return result.toString();
     }
 
@@ -1238,14 +1389,14 @@ public class GenSimpTestData {
                                           LFeatures lfeat,
                                           boolean onceWithoutInd) {
 
-        if (lfeat.frame == "")
-            return true;
-        lfeat.preposition = getPrepFromFrame(lfeat.frame);
+        if (debug) System.out.println("====== generateIndirectObject(): sentCount: " + sentCount);
+        if (!StringUtil.emptyString(lfeat.frame))
+            lfeat.preposition = getPrepFromFrame(lfeat.frame);
         if (lfeat.preposition != "")
             lfeat.preposition = lfeat.preposition + " ";
         if (debug) System.out.println("====== generateIndirectObject(): frame: " + lfeat.frame);
         if (debug) System.out.println("====== generateIndirectObject(): prep: " + lfeat.preposition);
-        if (lfeat.frame.contains("somebody") || lfeat.frame.contains("something")) {
+        if (lfeat.frame != "" && lfeat.frame.contains("somebody") || lfeat.frame.contains("something")) {
             String prep = null;
             getIndirect(lfeat);
             if (!StringUtil.emptyString(lfeat.preposition))
@@ -1256,6 +1407,15 @@ public class GenSimpTestData {
                 english.append(lfeat.preposition + lfeat.indirectName);
             else
                 english.append(lfeat.preposition + nounFormFromTerm(lfeat.indirectType));
+            if (english.toString().endsWith(" "))
+                english.delete(english.length()-1,english.length());
+            if (lfeat.subj.equals("You") && rand.nextBoolean())
+                english.append("!");
+            else
+                english.append(".");
+            if (lfeat.attitude != null && lfeat.attitude.equals("says")) {
+                english.append("\"");
+            }
             prop.append("(" + prep + " ?P ?IO) ");
             if (lfeat.frame.contains("somebody"))
                 prop.append(genSUMOForHuman(lfeat,lfeat.indirectName,"?IO"));
@@ -1266,6 +1426,11 @@ public class GenSimpTestData {
             else
                 prop.append("))");
             prop.append(closeParens(lfeat));
+            if (lfeat.subj.equals("You")) {
+                String newProp = prop.toString().replace(" ?H "," You ");
+                prop.setLength(0);
+                prop.append(newProp);
+            }
             onceWithoutInd = false;
             if (debug) System.out.println("====== generateIndirectObject(): " + english);
             englishFile.println(english);
@@ -1278,6 +1443,15 @@ public class GenSimpTestData {
                 prop.append(lfeat.modal.attribute + "))");
             else
                 prop.append("))");
+            if (debug) System.out.println("generateIndirectObject(): attitude: " + lfeat.attitude);
+            if (english.toString().endsWith(" "))
+                english.delete(english.length()-1,english.length());
+            if (!StringUtil.emptyString(lfeat.subj) && lfeat.subj.equals("You") && rand.nextBoolean())
+                english.append("!");
+            else
+                english.append(".");
+            if (lfeat.attitude != null && lfeat.attitude.equals("says"))
+                english.append("\"");
             prop.append(closeParens(lfeat));
             indCount = 0;
             if (!onceWithoutInd) {
@@ -1296,6 +1470,7 @@ public class GenSimpTestData {
      */
     public boolean excludedVerb(String v) {
 
+        if (debug) System.out.println("excludedVerb(): " + v);
         if (compoundVerb(v))
             return true;
         if (verbEx.contains(v))
@@ -1336,8 +1511,7 @@ public class GenSimpTestData {
 
         if (debug) System.out.println("getIndirect(): frame: " + lfeat.frame);
         if (lfeat.frame.endsWith("somebody")) {
-            int choice = rand.nextInt(2);  // get 0 or 1
-            if (choice == 0) {
+            if (rand.nextBoolean()) {
                 lfeat.indirectName = lfeat.humans.getNext();
                 lfeat.indirectType = "Human";
             }
@@ -1372,64 +1546,52 @@ public class GenSimpTestData {
                         StringBuffer prop,
                         LFeatures lfeat) {
 
-        System.out.println(sentCount/estSentCount + "% complete. ");
-        System.out.println(sentCount + " of estimated " + estSentCount);;
+        progressPrint();
         ArrayList<String> processTypes = new ArrayList<>();
         lfeat.procCount = 0;
-        while (lfeat.procCount < loopMax) {
-            String proc = lfeat.processes.getNext();
-            if (excludedVerb(proc)) { continue; } // too hard grammatically for now to have compound verbs
-            ArrayList<String> synsets = WordNetUtilities.getEquivalentVerbSynsetsFromSUMO(proc);
-            if (debug) System.out.println("genProc(): synsets size: " + synsets.size() + " for term: " + proc);
-            for (String synset : synsets) {
-                lfeat.synset = synset;
-                Collection<String> words = WordNet.wn.getWordsFromSynset(synset);
-                // for (String word : pi.words.keySet()) {
-                for (String word : words) {
-                    if (word.contains("_"))
-                        continue;
-                    if (debug) System.out.println("genProc(): proc: " + proc);
-                    lfeat.word = word;
-                    for (int time = -1; time < 3; time++) { // -1 = no time spec, 0=past, 1=present, 2=progressive, 3=future
-                        lfeat.frames = WordNetUtilities.getVerbFramesForWord(synset, word);
-                        //lfeat.frames.add("none");
-                        if (debug) System.out.println("genProc() frames: " + lfeat.frames);
-                        if (debug) System.out.println("genProc() synset: " + synset);
-                        if (debug) System.out.println("genProc() word: " + word);
-                        for (String frame : lfeat.frames) {
-                            if (skipFrame(frame)) continue;
-                            lfeat.frame = frame;
-                            lfeat.preposition = getPrepFromFrame(frame);
-                            boolean noIndInFrame = false;
-                            boolean noDirInFrame = false;
-                            if (debug) System.out.println("======= genProc() frame: " + frame);
-                            int directCount = 0;
-                            while (directCount++ < loopMax && !noDirInFrame) {
-                                int indCount = 0;
-                                boolean onceWithoutInd = false;
-                                boolean onceIntrans = false;
-                                while (indCount++ < loopMax && !noIndInFrame) {
-                                    lfeat.indirectType = lfeat.objects.getNext();
-                                    StringBuffer english1 = new StringBuffer(english);
-                                    StringBuffer prop1 = new StringBuffer(prop);
-                                    if (lfeat.negated)
-                                        prop1.append("(not ");
-                                    prop1.append("(exists (?H ?P ?DO ?IO) (and ");
-                                    generateSubject(english1, prop1, lfeat);
-                                    generateVerb(lfeat.negated, english1, prop1, proc, word, time, lfeat);
-                                    if (StringUtil.emptyString(lfeat.frame)) {
-                                        noDirInFrame = true;
-                                        noIndInFrame = true;
-                                    }
-                                    generateDirectObject(english1, prop1, lfeat);
-                                    if (StringUtil.emptyString(lfeat.frame)) {
-                                        noIndInFrame = true;
-                                    }
-                                    onceWithoutInd = generateIndirectObject(indCount, english1, prop1, lfeat, onceWithoutInd);
-                                    lfeat.frame = frame;  // recreate frame destroyed during generation
-                                }
-                            }
-                        }
+        String proc = "";
+        do {
+            proc = lfeat.processes.getNext();
+        } while (excludedVerb(proc)); // too hard grammatically for now to have compound verbs
+        ArrayList<String> synsets = WordNetUtilities.getEquivalentVerbSynsetsFromSUMO(proc);
+        if (debug) System.out.println("genProc(): synsets size: " + synsets.size() + " for term: " + proc);
+        for (String synset : synsets) {
+            lfeat.synset = synset;
+            Collection<String> words = WordNet.wn.getWordsFromSynset(synset);
+            for (String word : words) {
+                if (word.contains("_"))
+                    continue;
+                if (debug) System.out.println("genProc(): proc: " + proc);
+                lfeat.word = word;
+                for (int time = NOTIME; time < IMPERATIVE; time++) { // -1 = no time spec, 0=past, 1=present, 2=progressive, 3=future, 4=imperative
+                    lfeat.frames = WordNetUtilities.getVerbFramesForWord(synset, word);
+                    if (debug) System.out.println("genProc() frames: " + lfeat.frames);
+                    if (debug) System.out.println("genProc() time: " + time);
+                    if (debug) System.out.println("genProc() synset: " + synset);
+                    if (debug) System.out.println("genProc() word: " + word);
+                    for (String frame : lfeat.frames) {
+                        if (skipFrame(frame)) continue;
+                        lfeat.frame = frame;
+                        lfeat.preposition = getPrepFromFrame(frame);
+                        if (debug) System.out.println("======= genProc() frame: " + frame);
+                        lfeat.negatedBody = biasedBoolean(2,10);  // make it negated one time out of 5
+                        if ((lfeat.attitude.equals("None") && lfeat.modal.attribute.equals("None")) ||
+                                lfeat.attitude.equals("says"))
+                            startOfSentence = true;
+                        int indCount = 0;
+                        boolean onceWithoutInd = false;
+                        lfeat.indirectType = lfeat.objects.getNext();
+                        StringBuffer english1 = new StringBuffer(english);
+                        StringBuffer prop1 = new StringBuffer(prop);
+                        if (lfeat.negatedBody)
+                            prop1.append("(not ");
+                        prop1.append("(exists (?H ?P ?DO ?IO) (and ");
+                        generateSubject(english1, prop1, lfeat);
+                        generateVerb(lfeat.negatedBody, english1, prop1, proc, word, time, lfeat);
+                        startOfSentence = false;
+                        generateDirectObject(english1, prop1, lfeat);
+                        generateIndirectObject(indCount, english1, prop1, lfeat, onceWithoutInd);
+                        lfeat.frame = frame;  // recreate frame destroyed during generation
                     }
                 }
             }
@@ -1437,13 +1599,99 @@ public class GenSimpTestData {
     }
 
     /** ***************************************************************
+     * Generate a person's name, or a SocialRole, or the diectic "You"
+     *
+     * @param english the English for the named human or role, as a
+     *                side effect.
+     * @param prop the SUMO for the named human or role, as a side
+     *             effect.
+     * @param allowYou is whether to allow returning the "You (understood)" form
+     * @param var the existentially quantified variable for the
+     *            human, an input.
+     * @param type the type of the human, whether "Human" or
+     *             "Attribute" or subAttribute, as a side effect.
+     * @param name the name of the named human, as a side effect.
+     *
+     * lfeat.prevHumans are names or roles from previous parts of the
+     *                 sentence that should not be repeated, modified
+     *                 as a side effect.
+     */
+    public void generateHuman(StringBuffer english,
+                              StringBuffer prop,
+                              boolean allowYou,
+                              String var,
+                              StringBuffer type,
+                              StringBuffer name,
+                              LFeatures lfeat) {
+
+        if (debug) System.out.println("GenSimpTestData.generateHuman(): allow You (understood): " + allowYou);
+        boolean found = false;
+        do {
+            int val = rand.nextInt(10);
+            if (allowYou && val < 2) { // "You" - no appended English or SUMO
+                type.append("You");
+                if (debug) System.out.println("GenSimpTestData.generateHuman(): generated a You (understood)");
+            }
+            else if (val < 6) { // a role
+                type.append(lfeat.socRoles.getNext());
+                prop.append("(attribute " + var + " " + type + ") ");
+                english.append(capital(nounFormFromTerm(type.toString())) + " ");
+                if (lfeat.prevHumans.contains(type))  // don't allow the same name or role twice in a sentence
+                    found = true;
+                else
+                    lfeat.prevHumans.add(type.toString());
+            }
+            else {  // a named human
+                name.append(lfeat.humans.getNext());
+                type.append("Human");
+                prop.append("(instance " + var + " Human) ");
+                prop.append("(names \"" + name + "\" " + var + ") ");
+                english.append(name + " ");
+                if (lfeat.prevHumans.contains(name)) // don't allow the same name or role twice in a sentence
+                    found = true;
+                else
+                    lfeat.prevHumans.add(name.toString());
+            }
+        } while (found);
+        if (!StringUtil.emptyString(lfeat.frame) && lfeat.frame.length() > 9 &&
+                lfeat.frame.toLowerCase().startsWith("somebody"))
+            lfeat.frame = lfeat.frame.substring(9);
+        if (debug) System.out.println("GenSimpTestData.generateHuman(): type: " + type);
+        if (debug) System.out.println("GenSimpTestData.generateHuman(): frame: " + lfeat.frame);
+        if (debug) System.out.println("GenSimpTestData.generateHuman(): name: " + name);
+        if (debug) System.out.println("GenSimpTestData.generateHuman(): english: " + english);
+    }
+
+    /** ***************************************************************
+     * Create action sentences from a subject, preposition, direct object,
+     * preposition and indirect object.  Indirect object and its preposition
+     * can be left out.  Actions can be past and future tense or
+     * wrapped in modals.
+     */
+    public void genWithRoles(StringBuffer english,
+                             StringBuffer prop,
+                             LFeatures lfeat) {
+
+        if (debug) System.out.println("GenSimpTestData.genWithRoles()");
+        int humCount = 0;
+        for (int i = 0; i < humanMax; i++) {
+            String role = lfeat.socRoles.getNext();
+            if (lfeat.subj.equals(role)) continue;
+            if (humCount++ > loopMax) break;
+            lfeat.subj = role;
+            StringBuffer english1 = new StringBuffer(english);
+            StringBuffer prop1 = new StringBuffer(prop);
+            genProc(english1,prop1,lfeat);
+        }
+    }
+    /** ***************************************************************
      */
     public void genWithHumans(StringBuffer english,
                               StringBuffer prop,
                               LFeatures lfeat) {
 
 
-        System.out.println("GenSimpTestData.genActions()");
+        if (debug) System.out.println("GenSimpTestData.genWithHumans()");
         int humCount = 0;
         lfeat.humans.clearReturns();
         for (int i = 0; i < humanMax; i++) {
@@ -1459,92 +1707,42 @@ public class GenSimpTestData {
     /** ***************************************************************
      * use None, knows, believes, says, desires for attitudes
      */
-    public void genAttitudes(StringBuffer english,
-                             StringBuffer prop,
-                             LFeatures lfeat) {
+    public void genAttitudes(LFeatures lfeat) {
 
-        System.out.println("GenSimpTestData.genAttitudes(): ");
-        System.out.println("GenSimpTestData.genAttitudes(): human list size: " + lfeat.humans.size());
+        if (debug) System.out.println("GenSimpTestData.genAttitudes(): ");
+        if (debug) System.out.println("GenSimpTestData.genAttitudes(): human list size: " + lfeat.humans.size());
+        String that = "that ";
         int humCount = 0;
-        for (int i = 0; i < humanMax; i++) {
-            String human = lfeat.humans.getNext();
-            System.out.println("GenSimpTestData.genAttitudes(): human: " + human);
-            if (humCount++ > loopMax) break;
-            lfeat.attSubj = human; // the subject of the propositional attitude
-            StringBuffer english1 = new StringBuffer(english);
-            StringBuffer prop1 = new StringBuffer(prop);
-            for (int j = 0; j < attMax; j++) {
-                Word attWord = attitudes.get(rand.nextInt(attitudes.size()));
-                lfeat.attitude = attWord.term;
-                System.out.println("GenSimpTestData.genAttitudes(): attWord.term: " + attWord.term);
-                StringBuffer english2 = new StringBuffer(english1);
-                StringBuffer prop2 = new StringBuffer(prop1);
-                lfeat.attNeg = false;
-                if (!attWord.term.equals("None") && !suppress.contains("attitude")) {
-                    english2.append(human + " " + attWord.present + " that ");
-                    if (attWord.term.equals("says"))
-                        english2.append("\"");
-                    prop2.append("(exists (?HA) (and (instance ?HA Human) ");
-                    prop2.append("(names \"" + human + "\" ?HA) (" + attWord.term + " ?HA ");
-                    lfeat.plevel = 3;
-                }
-                genWithModals(english2,prop2,lfeat);
+        HashSet<String> previous = new HashSet<>(); // humans appearing already in the sentence
+        while (sentCount < sentMax) {
+            StringBuffer english = new StringBuffer();
+            StringBuffer prop = new StringBuffer();
+            startOfSentence = true;
+            Word attWord = attitudes.get(rand.nextInt(attitudes.size()));
+            lfeat.attitude = attWord.term;
+            if (debug) System.out.println("GenSimpTestData.genAttitudes(): ========================= start ");
+            if (!attWord.term.equals("None") && !suppress.contains("attitude")) {
+                StringBuffer type = new StringBuffer();
+                StringBuffer name = new StringBuffer();
+                lfeat.attNeg = rand.nextBoolean();
+                if (lfeat.attNeg)
+                    prop.append("(not (exists (?HA) (and  ");
+                else
+                    prop.append("(exists (?HA) (and ");
+                generateHuman(english,prop,false,"HA",type,name,lfeat);
+                prop.append("(" + attWord.term + " ?HA ");
+                lfeat.attSubj = name.toString(); // the subject of the propositional attitude
+                startOfSentence = false;
+                if (rand.nextBoolean()) that = "that "; else that = "";
+                if (lfeat.attNeg)
+                    english.append("doesn't " + attWord.root + " " + that);
+                else
+                    english.append(attWord.present + " " + that);
                 if (attWord.term.equals("says"))
-                    english2.append("\"");
-
-                StringBuffer english3 = new StringBuffer(english1);
-                StringBuffer prop3 = new StringBuffer(prop1);
-                lfeat.attNeg = true;
-                if (!attWord.term.equals("None")) {
-                    english3.append(human + " doesn't " + attWord.root + " that ");
-                    if (attWord.term.equals("says"))
-                        english3.append("\"");
-                    prop3.append("(not (exists (?HA) (and (instance ?HA Human) ");
-                    prop3.append("(names \"" + human + "\" ?HA) (" + attWord.term + " ?HA ");
-                    lfeat.plevel = 4;
-                }
-                genWithModals(english3,prop3,lfeat);
-                if (attWord.term.equals("says"))
-                    english3.append("\"");
+                    english.append("\"");
             }
-        }
-
-        for (int i = 0; i < humanMax; i++) {
-            String role = lfeat.socRoles.getNext();
-            if (humCount++ > loopMax) break;
-            lfeat.attSubj = role; // the subject of the propositional attitude
-            StringBuffer english1 = new StringBuffer(english);
-            StringBuffer prop1 = new StringBuffer(prop);
-            for (Word attWord : attitudes) {
-                lfeat.attitude = attWord.term;
-                StringBuffer english2 = new StringBuffer(english1);
-                StringBuffer prop2 = new StringBuffer(prop1);
-                lfeat.attNeg = false;
-                if (!attWord.term.equals("None") && !suppress.contains("attitude")) {
-                    english2.append("a " + role + " " + attWord.present + " that ");
-                    if (attWord.term.equals("says"))
-                        english2.append("\"");
-                    prop2.append("(exists (?HA) (and (instance ?HA Human) ");
-                    prop2.append("(attribute ?HA" + role + ") (" + attWord.term + " ?HA ");
-                }
-                genWithModals(english2,prop2,lfeat);
-                if (attWord.term.equals("says"))
-                    english2.append("\"");
-
-                StringBuffer english3 = new StringBuffer(english1);
-                StringBuffer prop3 = new StringBuffer(prop1);
-                lfeat.attNeg = true;
-                if (!attWord.term.equals("None")) {
-                    english3.append("a " + role + " doesn't " + attWord.root + " that ");
-                    if (attWord.term.equals("says"))
-                        english3.append("\"");
-                    prop3.append("(not (exists (?HA) (and (instance ?HA Human) ");
-                    prop3.append("(attribute ?HA" + role + ") (" + attWord.term + " ?HA ");
-                }
-                genWithModals(english3,prop3,lfeat);
-                if (attWord.term.equals("says"))
-                    english3.append("\"");
-            }
+            if (debug) System.out.println("GenSimpTestData.genAttitudes(): english: " + english);
+            genWithModals(english,prop,lfeat);
         }
     }
 
@@ -1569,49 +1767,30 @@ public class GenSimpTestData {
                               StringBuffer prop,
                               LFeatures lfeat) {
 
-        System.out.println("GenSimpTestData.genWithModals()");
+        if (debug) System.out.println("GenSimpTestData.genWithModals()");
         int humCount = 0;
-        for (int i = 0; i < modalMax; i++) {
-            AVPair modal = lfeat.modals.get(rand.nextInt(lfeat.modals.size()));
-            lfeat.modal = modal;
-            StringBuffer englishNew = new StringBuffer(english);
-            StringBuffer propNew = new StringBuffer(prop);
-            System.out.println("genWithModals(): " + modal);
-            if (!lfeat.modal.attribute.equals("None") && !suppress.contains("modal")) {
+        AVPair modal = lfeat.modals.get(rand.nextInt(lfeat.modals.size()));
+        lfeat.modal = modal;
+        lfeat.negatedModal = biasedBoolean(2,10); // make it negated one time out of 5
+        StringBuffer englishNew = new StringBuffer(english);
+        StringBuffer propNew = new StringBuffer(prop);
+        if (debug) System.out.println("genWithModals(): " + modal);
+        if (!lfeat.modal.attribute.equals("None") && !suppress.contains("modal")) {
+            if (lfeat.negatedModal)
+                propNew.append("(not (modalAttribute ");
+            else
                 propNew.append("(modalAttribute ");
-                englishNew.append(negatedModal(modal.value,lfeat.negated));
-                lfeat.negated = false;
-            }
-            StringBuffer english1 = new StringBuffer(englishNew);
-            StringBuffer prop1 = new StringBuffer(propNew);
-            genWithHumans(english1,prop1,lfeat);
-            StringBuffer english2 = new StringBuffer(englishNew);
-            StringBuffer prop2 = new StringBuffer(propNew);
-            genWithRoles(english2,prop2,lfeat);
+            englishNew.append(negatedModal(modal.value,lfeat.negatedModal));
+            if (startOfSentence)
+                englishNew.replace(0,1,englishNew.substring(0,1).toUpperCase());
+            startOfSentence = false;
         }
-    }
-
-    /** ***************************************************************
-     * Create action sentences from a subject, preposition, direct object,
-     * preposition and indirect object.  Indirect object and its preposition
-     * can be left out.  Actions will eventually be past and future tense or
-     * wrapped in modals.
-     */
-    public void genWithRoles(StringBuffer english,
-                             StringBuffer prop,
-                             LFeatures lfeat) {
-
-        System.out.println("GenSimpTestData.genWithRoles()");
-        int humCount = 0;
-        for (int i = 0; i < humanMax; i++) {
-            String role = lfeat.socRoles.getNext();
-            if (lfeat.subj.equals(role)) continue;
-            if (humCount++ > loopMax) break;
-            lfeat.subj = role;
-            StringBuffer english1 = new StringBuffer(english);
-            StringBuffer prop1 = new StringBuffer(prop);
-            genProc(english1,prop1,lfeat);
-        }
+        StringBuffer english1 = new StringBuffer(englishNew);
+        StringBuffer prop1 = new StringBuffer(propNew);
+        StringBuffer type = new StringBuffer();
+        StringBuffer name = new StringBuffer();
+        if (debug) System.out.println("GenSimpTestData.genWithModals(): english: " + english);
+        genProc(english1,prop1,lfeat);
     }
 
     /** ***************************************************************
@@ -1696,14 +1875,18 @@ public class GenSimpTestData {
                 if (args != null && args.length > 0 && args[0].equals("-tf"))
                     genMissingTermFormats();
                 if (args != null && args.length > 0 && args[0].equals("-hu"))
-                    genHumans();
+                    generateAllHumans();
                 if (args != null && args.length > 0 && args[0].equals("-t")) {
                     //testTypes();
                     //testNLG();
                     //testGiving();
-                    testVerb();
+
                     //testPutting();
                     //testToy();
+                    //testProgressPrint();
+                    GenSimpTestData gstd = new GenSimpTestData();
+                    gstd.testVerb();
+                    //gstd.testLFeatures();
                 }
                 if (args != null && args.length > 1 && args[0].equals("-n")) {
                     genTermFormatFromNames(args[1]);
