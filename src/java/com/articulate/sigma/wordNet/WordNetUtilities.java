@@ -2162,6 +2162,8 @@ public class WordNetUtilities {
     public static ArrayList<String> convertVerbFrameNumbersToFrames(ArrayList<String> numbers) {
 
         ArrayList<String> res = new ArrayList<>();
+        if (numbers == null)
+            return res;
         for (String s : numbers)
             res.add(WordNet.VerbFrames.get(Integer.parseInt(s)));
         return res;
