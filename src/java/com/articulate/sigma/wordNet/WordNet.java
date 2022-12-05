@@ -91,16 +91,20 @@ public class WordNet implements Serializable {
      * that the order of words in the file is preserved. */
     public Hashtable<String,ArrayList<String>> synsetsToWords = new Hashtable<String,ArrayList<String>>();
 
+    // key is inflected form, value is root
+    public HashMap<String,String> exceptionVerbHash = new HashMap<>();
+    // key root, value is inflected (-en) form
+    public HashMap<String,String> exceptionVerbPastProgHash = new HashMap<>();
+    // key root, value  is inflected form
+    public HashMap<String,String> exceptionVerbPastHash = new HashMap<String,String>();
+    // key root, value  is inflected (-ing) form
+    public HashMap<String,String> exceptVerbProgHash = new HashMap<String,String>();
+
     /** list of irregular plural forms where the key is the
      *  plural, singular is the value. */
-    public Hashtable<String,String> exceptionNounHash = new Hashtable<String,String>();
-
-    // key is inflected form, value is root
-    public Hashtable<String,String> exceptionVerbHash = new Hashtable<String,String>();
-
+    public HashMap<String,String> exceptionNounHash = new HashMap<String,String>();
     // The reverse index of the above
-    public Hashtable<String,String> exceptionNounPluralHash = new Hashtable<String,String>();
-    private Hashtable<String,String> exceptionVerbPastHash = new Hashtable<String,String>();
+    public HashMap<String,String> exceptionNounPluralHash = new HashMap<String,String>();
 
     /** Keys are POS-prefixed synsets, values are ArrayList(s) of AVPair(s)
      * in which the attribute is a pointer type according to
@@ -822,10 +826,16 @@ public class WordNet implements Serializable {
             lr = new LineNumberReader(r);
             while ((line = lr.readLine()) != null) {
                 // 12: p = Pattern.compile("(\\S+)\\s+(\\S+).*");  
-                m = regexPatterns[12].matcher(line);  // TODO: Note we ignore more then one base form
+                m = regexPatterns[12].matcher(line);  // TODO: Note we ignore more then one base form for a given tense
                 if (m.matches()) {
-                    exceptionVerbHash.put(m.group(1),m.group(2));          // 1-past, 2-infinitive
-                    exceptionVerbPastHash.put(m.group(2),m.group(1));
+                    exceptionVerbHash.put(m.group(1),m.group(2));          // 1-past/progressive, 2-root
+                    if (m.group(1).endsWith("ing"))
+                        exceptVerbProgHash.put(m.group(2),m.group(1));
+                    else if ((m.group(1).endsWith("en") && !m.group(1).equals("been")) || m.group(1).endsWith("wn"))
+                        exceptionVerbPastProgHash.put(m.group(2), m.group(1));
+                    else
+                        exceptionVerbPastHash.put(m.group(2), m.group(1));
+
                 }
                 else
                     if (line != null && line.length() > 0 && line.charAt(0) != ';')
