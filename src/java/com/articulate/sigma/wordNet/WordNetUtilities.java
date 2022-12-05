@@ -2195,7 +2195,7 @@ public class WordNetUtilities {
 
         ArrayList<String> res = new ArrayList<>();
         if (synset.length() < 9) {
-            System.out.println("Error in WordNetUtilities.getVerbFramesForWord(): 8 digit synset");
+            System.out.println("Error in WordNetUtilities.getVerbFramesForWord(): 8 digit synset: " + synset);
             return res;
         }
         if (WordNet.wn.verbFrames.containsKey(synset.substring(1)))
