@@ -1,0 +1,119 @@
+package com.articulate.sigma.mlpipeline;
+
+import com.articulate.sigma.utils.AVPair;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+
+/**
+ * **************************************************************
+ */
+public class LFeatures {
+
+    private final GenSimpTestData genSimpTestData;
+    public boolean attNeg = false; // for propositional attitudes
+    public boolean attPlural = false;
+    public int attCount = 1;
+    public String attSubj = null; // the agent holding the attitude
+    public String attitude = "None";
+    public boolean negatedModal = false;
+    public boolean negatedBody = false;
+    public ArrayList<AVPair> modals = null;
+    public AVPair modal = new AVPair("None", "none");
+    public HashMap<String, String> genders = null;
+    public RandSet humans = null;
+    public RandSet socRoles = null;
+    public RandSet objects = null;
+    public RandSet bodyParts = null;
+    public String preposition = "";
+    public String secondVerb = ""; // the verb word that appears as INFINITIVE or VERB-ing or V-ing in the frame
+    public String secondVerbType = ""; // the SUMO type of the second verb
+    public HashSet<String> prevHumans = new HashSet<>();
+    public String subj = "";
+    public boolean subjectPlural = false;
+    public int subjectCount = 1;
+    public RandSet processes = null;
+    public ArrayList<String> frames = null;  // verb frames for the current process type
+    public String frame = null; // the particular verb frame under consideration.
+    // Note that the frame is destructively modified as we proceed through the sentence
+    public String synset = null;
+    public String word = null;
+    public String directName = null;  // the direct object
+    public String directType = null;  // the direct object
+    public boolean directPlural = false;
+    public int directCount = 1;
+    public String indirectName = null; // the indirect object
+    public String indirectType = null; // the indirect object
+    public boolean indirectPlural = false;
+    public int indirectCount = 1;
+    public int procCount = 0;
+    public boolean question = false;
+
+    public LFeatures(GenSimpTestData genSimpTestData) {
+        this.genSimpTestData = genSimpTestData;
+
+        //  get capabilities from axioms like
+        //  (=> (instance ?GUN Gun) (capability Shooting instrument ?GUN))
+        // indirect = collectCapabilities(); // TODO: need to restore and combine this filter with verb frames
+        System.out.println("LFeatures(): collect terms");
+        genders = GenSimpTestData.readHumans();
+        humans = RandSet.listToEqualPairs(genders.keySet());
+
+        modals = genSimpTestData.initModals();
+
+        HashSet<String> roles = GenSimpTestData.kb.kbCache.getInstancesForType("SocialRole");
+        //if (debug) System.out.println("LFeatures(): SocialRoles: " + roles);
+        Collection<AVPair> roleFreqs = genSimpTestData.findWordFreq(roles);
+        socRoles = RandSet.create(roleFreqs);
+
+        HashSet<String> parts = GenSimpTestData.kb.kbCache.getInstancesForType("BodyPart");
+        //if (debug) System.out.println("LFeatures(): BodyParts: " + parts);
+        Collection<AVPair> bodyFreqs = genSimpTestData.findWordFreq(parts);
+        bodyParts = RandSet.create(bodyFreqs);
+
+        HashSet<String> artInst = GenSimpTestData.kb.kbCache.getInstancesForType("Artifact");
+        HashSet<String> artClass = GenSimpTestData.kb.kbCache.getChildClasses("Artifact");
+
+        Collection<AVPair> procFreqs = genSimpTestData.findWordFreq(GenSimpTestData.kb.kbCache.getChildClasses("Process"));
+        processes = RandSet.create(procFreqs);
+
+        HashSet<String> orgInst = GenSimpTestData.kb.kbCache.getInstancesForType("OrganicObject");
+        HashSet<String> orgClass = GenSimpTestData.kb.kbCache.getChildClasses("OrganicObject");
+
+        HashSet<String> objs = new HashSet<>();
+        objs.addAll(orgClass);
+        objs.addAll(artClass);
+        HashSet<String> objs2 = new HashSet<>();
+        for (String s : objs)
+            if (!s.equals("Human") && !GenSimpTestData.kb.isSubclass(s, "Human"))
+                objs2.add(s);
+        //if (debug) System.out.println("LFeatures(): OrganicObjects and Artifacts: " + objs);
+        Collection<AVPair> objFreqs = genSimpTestData.findWordFreq(objs2);
+        System.out.println("LFeatures(): create objects");
+        objects = RandSet.create(objFreqs);
+        //System.out.println("LFeatures(): objects: " + objects.terms);
+    }
+
+    /**
+     * **************************************************************
+     * clear basic flags in the non-modal part of the sentence
+     */
+    public void clearSVO() {
+
+        subj = null;
+        subjectPlural = false;
+        subjectCount = 1;
+        directName = null;  // the direct object
+        directType = null;  // the direct object
+        directPlural = false;
+        directCount = 1;
+        indirectName = null; // the indirect object
+        indirectType = null; // the indirect object
+        indirectPlural = false;
+        indirectCount = 1;
+        secondVerb = "";
+        secondVerbType = "";
+    }
+}
