@@ -2,6 +2,7 @@ package com.articulate.sigma.mlpipeline;
 
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.nlg.LanguageFormatter;
+import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 
 import java.util.ArrayList;
@@ -50,6 +51,24 @@ public class GenSimpTestDataTest {
 
     /** ***************************************************************
      */
+    public void testNoun(String term, String word,
+                         boolean plural, String expected, LFeatures lfeat) {
+
+        System.out.println("======================= ");
+        GenSimpTestData gstd = new GenSimpTestData();
+        StringBuffer english = new StringBuffer();
+        AVPair avp = new AVPair();
+        String v = gstd.nounFormFromTerm(term,avp);
+        System.out.println("testVerb(): verb form: " + v);
+        if (!v.equalsIgnoreCase(expected)) {
+            if (!v.replace("won't","will not").equalsIgnoreCase(expected)) {
+                System.out.println("Error!: found " + v + " Expected: " + expected);
+                assertTrue(v.equalsIgnoreCase(expected));
+            }
+        }
+    }
+    /** ***************************************************************
+     */
     @Test
     public void testVerbs() {
 
@@ -64,6 +83,7 @@ public class GenSimpTestDataTest {
     /** ***************************************************************
      */
     @Test public void testTrespass() { testVerb("Trespassing", false, PRESENT, "trespass", false, "Trespasses", lfeat); }
+    @Test public void testTrespass2() { testVerb("Trespassing", false, PROGRESSIVE, "trespass", false, "is trespassing", lfeat); }
     @Test public void testBuying() {  testVerb("Buying",false, PRESENT, "buy", false, "Buys", lfeat);}
     @Test public void testBuying2() { testVerb("Buying",false, PAST, "buy", false, "Bought", lfeat);}
     @Test public void testWalking() { testVerb("Walking",false, PAST, "pad", false, "Padded", lfeat);}
@@ -90,12 +110,13 @@ public class GenSimpTestDataTest {
     @Test public void testFreezing() { testVerb("Freezing",false, PAST, "freeze", false, "Froze", lfeat);}
         // TODO: need exception to make this "John has frozen" rather than "John frozen"
 
-    @Test public void testDivide() { testVerb("Separating",false, NOTIME, "divide", true, "Divide", lfeat);}
+    @Test public void testDivide() { testVerb("Separating",false, NOTIME, "divide", true, "Divides", lfeat);}
     @Test public void testBeckon() { testVerb("Waving",true, FUTUREPROG, "beckon", true, "will not be beckoning", lfeat);}
     @Test public void testHear() { testVerb("Hearing",false, PASTPROG, "hear", true, "were hearing", lfeat);}
     @Test public void testMelt() { testVerb("Melting",false, PASTPROG, "melt", true, "were melting", lfeat);}
     @Test public void testTaking() { testVerb("Driving",false, FUTURE, "take", true, "will take", lfeat);}
     @Test public void testWind() { testVerb("Wind",true, FUTURE, "blow", false, "will not blow", lfeat);}
+    @Test public void testInterp() { testVerb("Interpreting",false, PROGRESSIVE, "rede", false, "is reding", lfeat);}
 
     /** ***************************************************************
      */
