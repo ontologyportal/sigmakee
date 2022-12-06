@@ -831,7 +831,8 @@ public class WordNet implements Serializable {
                     exceptionVerbHash.put(m.group(1),m.group(2));          // 1-past/progressive, 2-root
                     if (m.group(1).endsWith("ing"))
                         exceptVerbProgHash.put(m.group(2),m.group(1));
-                    else if ((m.group(1).endsWith("en") && !m.group(1).equals("been")) || m.group(1).endsWith("wn"))
+                    else if ((m.group(1).endsWith("en") && !m.group(1).equals("been")) || m.group(1).endsWith("wn")
+                            || m.group(1).endsWith("ne"))
                         exceptionVerbPastProgHash.put(m.group(2), m.group(1));
                     else
                         exceptionVerbPastHash.put(m.group(2), m.group(1));
