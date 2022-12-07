@@ -1789,7 +1789,7 @@ public class GenSimpTestData {
         LocalDate d = LocalDate.of(theYear,month,1);
         YearMonth ym = YearMonth.from(d);
         LocalDate endOfMonth = ym.atEndOfMonth();
-        int day = rand.nextInt(endOfMonth.getDayOfMonth()) + 1;
+        int day = rand.nextInt(endOfMonth.getDayOfMonth()-1) + 1;
         d = d.withDayOfMonth(day);
         int hour = rand.nextInt(24);
         LocalTime t = LocalTime.of(hour,0,0);
