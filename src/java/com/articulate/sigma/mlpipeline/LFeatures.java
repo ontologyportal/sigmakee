@@ -21,7 +21,7 @@ public class LFeatures {
     public boolean negatedModal = false;
     public boolean negatedBody = false;
     public ArrayList<AVPair> modals = null;
-    public AVPair modal = new AVPair("None", "none");
+    public AVPair modal = new AVPair("None", "none"); // attribute if SUMO ModalAttribute, value is English
     public HashMap<String, String> genders = null;
     public RandSet humans = null;
     public RandSet socRoles = null;
@@ -39,7 +39,6 @@ public class LFeatures {
     public String frame = null; // the particular verb frame under consideration.
     // Note that the frame is destructively modified as we proceed through the sentence
     public String synset = null;
-    public String word = null;
     public String directName = null;  // the direct object
     public String directType = null;  // the direct object
     public boolean directPlural = false;
@@ -48,8 +47,9 @@ public class LFeatures {
     public String indirectType = null; // the indirect object
     public boolean indirectPlural = false;
     public int indirectCount = 1;
-    public int procCount = 0;
     public boolean question = false;
+    public String verb = "";
+    public String verbType = ""; // the SUMO class of the verb
 
     public LFeatures(GenSimpTestData genSimpTestData) {
         this.genSimpTestData = genSimpTestData;
@@ -61,7 +61,7 @@ public class LFeatures {
         genders = GenSimpTestData.readHumans();
         humans = RandSet.listToEqualPairs(genders.keySet());
 
-        modals = genSimpTestData.initModals();
+        modals = initModals();
 
         HashSet<String> roles = GenSimpTestData.kb.kbCache.getInstancesForType("SocialRole");
         //if (debug) System.out.println("LFeatures(): SocialRoles: " + roles);
@@ -94,6 +94,26 @@ public class LFeatures {
         System.out.println("LFeatures(): create objects");
         objects = RandSet.create(objFreqs);
         //System.out.println("LFeatures(): objects: " + objects.terms);
+    }
+
+
+    /** ***************************************************************
+     */
+    public ArrayList<AVPair> initModals() {
+
+        ArrayList<AVPair> modals = new ArrayList<>();
+        for (int i = 0; i < 50; i++)
+            modals.add(new AVPair("None",""));
+        if (!GenSimpTestData.suppress.contains("modal")) {
+            modals.add(new AVPair("Necessity", "it is necessary that "));
+            modals.add(new AVPair("Possibility", "it is possible that "));
+            modals.add(new AVPair("Obligation", "it is obligatory that "));
+            modals.add(new AVPair("Permission", "it is permitted that "));
+            modals.add(new AVPair("Prohibition", "it is prohibited that "));
+            modals.add(new AVPair("Likely", "it is likely that "));
+            modals.add(new AVPair("Unlikely", "it is unlikely that "));
+        }
+        return modals;
     }
 
     /**
