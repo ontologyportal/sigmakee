@@ -325,7 +325,7 @@ public class GenSimpTestData {
     public static HashMap<String,String> readHumans() {
 
         HashMap<String,String> result = new HashMap<>();
-        ArrayList<ArrayList<String>> fn = DB.readSpreadsheet("/home/apease/workspace/sumo" +
+        ArrayList<ArrayList<String>> fn = DB.readSpreadsheet(kb.kbDir +
                 File.separator + "WordNetMappings/FirstNames.csv", null, false, ',');
         for (ArrayList<String> ar : fn) {
             String firstName = ar.get(0);
