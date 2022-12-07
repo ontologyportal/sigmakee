@@ -2125,6 +2125,7 @@ public class SUMOtoTFAform {
      */
     private static boolean typeConflict(Formula f, String type) {
 
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(f,type): " + f + ", " + type);
         if (f == null)
             return false;
         if (f.atom())
@@ -2142,11 +2143,15 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
+     * Check for a type conflict between the given type and each type in a set
+     * @param types the set of types to check
+     * @param type the type to check against the set
      */
     private static boolean typeConflict(HashSet<String> types, String type) {
 
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(types,type): " + types + ", " + type);
         if (types == null) {
-            System.out.println("Error in SUMOtoTFAform.typeConflict(types,type): null types");
+            System.out.println("Error in SUMOtoTFAform.typeConflict(types,type): null types with type: " + type);
             return false;
         }
         for (String s : types) {
@@ -2165,7 +2170,7 @@ public class SUMOtoTFAform {
      */
     public static boolean typeConflict(Formula f) {
 
-
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(f): " + f);
         if (f == null)
             return false;
         if (f.atom())
@@ -2203,7 +2208,7 @@ public class SUMOtoTFAform {
                     return true;
                 else if (farg.isVariable()) {
                     HashSet<String> vars = varmap.get(farg.getFormula());
-                    if (typeConflict(vars, sigType)) {
+                    if (vars != null && typeConflict(vars, sigType)) {
                         errors.add("error between " + farg + " and argument " + i + " of " + op +
                                 " with type " + sigType + " in file " + f.sourceFile);
                         return true;
@@ -2211,6 +2216,7 @@ public class SUMOtoTFAform {
                 }
             }
         }
+        if (debug) System.out.println("SUMOtoTFAform.typeConflict(f): no conflicts in " + f);
         return false;
     }
 
