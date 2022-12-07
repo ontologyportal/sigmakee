@@ -77,22 +77,23 @@ public class KButilities {
 
         SUMOtoTFAform.initOnce();
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
-        //System.out.println("isValidFormula() varmap: " + SUMOtoTFAform.varmap);
+        if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
         HashMap<String, HashSet<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
-        //System.out.println("isValidFormula() explicit: " + explicit);
+        if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
         KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         if (SUMOtoTFAform.inconsistentVarTypes()) {
-            //String error = "inconsistent types in " + SUMOtoTFAform.varmap;
-            System.out.println(SUMOtoTFAform.errors);
+            String error = "inconsistent types in " + SUMOtoTFAform.varmap;
+            System.out.println("hasCorrectTypes(): " + SUMOtoTFAform.errors);
             errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
-            //String error = "Type conflict: " + SUMOtoTFAform.errors;
-            System.out.println(SUMOtoTFAform.errors);
+            String error = "Type conflict: " + SUMOtoTFAform.errors;
+            System.out.println("hasCorrectTypes(): " + SUMOtoTFAform.errors);
             errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
+        if (debug) System.out.println("hasCorrectTypes() no conflicts in: " + f);
         return true;
     }
 
@@ -104,7 +105,7 @@ public class KButilities {
         KIF kif = new KIF();
         String result = kif.parseStatement(form);
         if (!StringUtil.emptyString(result)) {
-            System.out.println(result);
+            System.out.println("isValidFormula(): Error: " + result);
             return false;
         }
         Formula f = new Formula(form);
@@ -113,11 +114,12 @@ public class KButilities {
             String error = "Formula rejected due to arity error of predicate " + term
                     + " in formula: \n" + f.getFormula();
             errors.add(error);
-            System.out.println(error);
+            System.out.println("isValidFormula(): Error: " + error);
             return false;
         }
         if (!hasCorrectTypes(kb,f))
             return false;
+        if (debug) System.out.println("isValidFormula() valid formula: " + form);
         return true;
     }
 
