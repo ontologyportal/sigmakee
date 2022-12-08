@@ -489,14 +489,13 @@ public class GenSimpTestData {
         }
     }
 
-
     /** ***************************************************************
      */
     public static void progressPrint() {
 
         if ((sentCount % 100) != 0) return;
         if (!debug) System.out.print("\r\33[2K");
-        double value = ((double) sentCount / (double) estSentCount);
+        double value = ((double) sentCount / (double) sentMax);
         System.out.print(String.format("%.2f", value));
         System.out.print("% complete. ");
         System.out.print(sentCount + " of total " + sentMax);
@@ -1849,7 +1848,6 @@ public class GenSimpTestData {
                         LFeatures lfeat) {
 
         progressPrint();
-        ArrayList<String> processTypes = new ArrayList<>();
         AVPair avp = getVerb(lfeat);
         String proc = avp.attribute;
         String word = getWordPart(avp.value);
