@@ -12,6 +12,8 @@ import java.util.HashSet;
  */
 public class LFeatures {
 
+    private static final boolean debug = false;
+
     private final GenSimpTestData genSimpTestData;
     public boolean attNeg = false; // for propositional attitudes
     public boolean attPlural = false;
@@ -89,7 +91,7 @@ public class LFeatures {
         for (String s : objs)
             if (!s.equals("Human") && !GenSimpTestData.kb.isSubclass(s, "Human"))
                 objs2.add(s);
-        //if (debug) System.out.println("LFeatures(): OrganicObjects and Artifacts: " + objs);
+        if (debug) System.out.println("LFeatures(): OrganicObjects and Artifacts: " + objs);
         Collection<AVPair> objFreqs = genSimpTestData.findWordFreq(objs2);
         System.out.println("LFeatures(): create objects");
         objects = RandSet.create(objFreqs);
