@@ -81,6 +81,8 @@ public class GenSimpTestData {
     public static long sentMax = 10000000;
     public static boolean startOfSentence = true;
     public static ArrayList<String> numbers = new ArrayList<>();
+    public static ArrayList<String> requests = new ArrayList<>();
+    public static ArrayList<String> endings = new ArrayList<>();
 
     /** ***************************************************************
      * estimate the number of sentences that will be produced
@@ -98,6 +100,29 @@ public class GenSimpTestData {
         numbers.add("eight");
         numbers.add("nine");
         numbers.add("ten");
+    }
+
+    /** ***************************************************************
+     * Politeness wrappers for imperatives
+     */
+    public static void initRequests() {
+
+        requests.add("Could you please");
+        requests.add("Can you please");
+        requests.add("Would you please");
+        requests.add("Could you");
+        requests.add("Would you");
+        requests.add("Please");
+    }
+
+    /** ***************************************************************
+     *      * Politeness wrappers for imperatives
+     */
+    public static void initEndings() {
+
+        endings.add("please");
+        endings.add("for me please");
+        endings.add("for me");
     }
 
     /** ***************************************************************
@@ -2109,6 +2134,18 @@ public class GenSimpTestData {
             c.proc = p.procType;
             indexProc.put(p.procType, p);
             HashSet<String> childClasses = kb.kbCache.getChildClasses(p.procType);
+        }
+    }
+
+    /** ***************************************************************
+     * find attributes in SUMO that have equivalences to WordNet
+     */
+    public void showAttributes() {
+
+        HashSet<String> attribs = kb.kbCache.getInstancesForType("Attribute");
+        for (String s : attribs) {
+            ArrayList<String> synsets = WordNetUtilities.getEquivalentSynsetsFromSUMO(s);
+            System.out.println("term and synset: " + s + ", " + synsets);
         }
     }
 
