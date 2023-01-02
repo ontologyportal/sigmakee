@@ -543,9 +543,11 @@ public class KButilities {
                         if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
                             continue;  
                         //resultSet.add("(link " + term1 + " " + term2 + ")");
-                        if (!term1.equals(term2))
+                        if (!term1.equals(term2) && !StringUtil.isNumeric(term1) && !StringUtil.isNumeric(term2))
                             resultSet.add(term1 + " link " +  term2);
                     }
+                    if (!f.getFormula().contains("\"") && (!f.getFormula().contains("(")) &&
+                            (!f.getFormula().contains(")")))
                     resultSet.add(term1 + " inAxiom \"" + f.getFormula() + "\"");
                 }
             }
@@ -555,7 +557,10 @@ public class KButilities {
                 if (args != null && args.size() == 2) { // could have a function which would return null
                     String arg1 = f.getStringArgument(1);
                     String arg2 = f.getStringArgument(2);
-                    if (!Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
+                    if (arg1.contains("(") || arg1.contains(")") || arg2.contains("(") || arg2.contains(")"))
+                        System.out.println("error in generateSemanticNetwork(): for formula: " + f);
+                    else if (!Formula.isLogicalOperator(arg1) && !Formula.isLogicalOperator(arg2) &&
+                            !Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
                             (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2)))
                         resultSet.add(arg1 + " " + predicate + " " +  arg2);
                 }
