@@ -1,8 +1,8 @@
 <%@ include file="Prelude.jsp" %>
 
 <%
-/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
-    Infosys (c) 2017-present.
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017:-present,
+    Infosys (c) 2017-2019.
 
     This software is released under the GNU Public License
     <http://www.gnu.org/copyleft/gpl.html>.
