@@ -2,11 +2,8 @@ Introduction
 ============
 
 Sigma is an integrated development environment for logical theories that
-extend the Suggested Upper Merged Ontology.  There is a public installation
+extend the Suggested Upper Merged Ontology (SUMO).  There is a public installation
 with read-only functions enabled linked from http://www.ontologyportal.org
-
-The easiest install is with the Docker container system.  The next section below
-describes how to do this.
 
 Please read these notes thoroughly if you want to do a native install not
 with a container.  Most installation issues result from not
@@ -31,6 +28,8 @@ try opening permissions on your $SIGMA_HOME, $CATALINA_HOME and $SIGMA_SRC direc
 
 After installing, recommended reading is the Sigma manual
 https://github.com/ontologyportal/sigmakee/blob/master/doc/manual/SigmaManual.pdf
+There is a video on installing Sigma, as well as many others about related tools at
+https://www.youtube.com/playlist?list=PLpBQIgki3izeUmFD8c65INdmxRNjjxOzP
 
 Container-Based installation
 ==========================
@@ -91,6 +90,9 @@ Access from a browser with http://localhost:8888/sigma/login.html . Use admin fo
 
 Build a New Docker Image
 =========================
+
+Please note that the Docker container version of Sigma is several years out of date.  A native install of Sigma is
+recommended.
 
 To build a new docker container follow these steps where $SIGMA_SRC is your sigmakee git repo path.
 First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
