@@ -703,6 +703,53 @@ public class KButilities {
     /** *************************************************************
      * A basic use of the JSON Graph Format http://jsongraphformat.info/
      */
+    private static void semnetAsTriples(Set<String> triples, KB kb,String language) {
+
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String fileStr = kbDir + File.separator + "triples.txt";
+        if (StringUtil.emptyString(language))
+            language = "EnglishLanguage";
+        StringBuffer sb = new StringBuffer();
+        PrintWriter pw = null;
+        try {
+            pw = new PrintWriter(new FileWriter(fileStr, false));
+            for (String s : kb.getTerms()) {
+                if (Formula.isLogicalOperator(s))
+                    continue;
+                ArrayList<Formula> forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
+                String formStr = "";
+                if (forms != null && forms.size() > 0) {
+                    Formula form = forms.iterator().next().getArgument(3);
+                    if (form != null && form.atom())
+                        formStr = form.getFormula();
+                    if (!StringUtil.emptyString(formStr))
+                        formStr = StringUtil.removeEnclosingQuotes(formStr);
+                }
+                else
+                    formStr = s;
+                pw.println(s + "|" + formStr);
+                String doc = KButilities.getDocumentation(kb,s);
+                if (!StringUtil.emptyString(doc))
+                    pw.println(s + "|documentation|" + doc);
+            }
+            for (String s : triples) {
+                String[] tuple = s.split(" ");
+                pw.println(tuple[0] + "|" + tuple[1] + "|" + tuple[2]);
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+        }
+        finally {
+            if (pw != null)
+                pw.close();
+        }
+    }
+
+    /** *************************************************************
+     * A basic use of the JSON Graph Format http://jsongraphformat.info/
+     */
     private static void semnetAsSQLGraph(Set<String> triples, KB kb,String language) {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
@@ -1068,6 +1115,7 @@ public class KButilities {
         System.out.println("  -j - generate semantic network as JSON");
         System.out.println("  -o - generate semantic network as another JSON format");
         System.out.println("  -q - generate semantic network as SQL");
+        System.out.println("  -r - generate semantic network as |-delimited tripls");
         System.out.println("  -n - generate NL for every formula");
         System.out.println("  -f - list formulas for every documentation string term");
         System.out.println("  -v - is formula valid");
@@ -1110,6 +1158,10 @@ public class KButilities {
             else if (args != null && args.length > 0 && args[0].equals("-q")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);
                 semnetAsSQLGraph(tuples,kb,"EnglishLanguage");
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-r")) {
+                Set<String> tuples = generateSemanticNetwork(kb,false,false);
+                semnetAsTriples(tuples,kb,"EnglishLanguage");
             }
             else if (args != null && args.length > 0 && args[0].equals("-s")) {
                 countStringWords(kb);
