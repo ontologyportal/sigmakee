@@ -90,14 +90,17 @@ public class FormulaPreprocessor {
             sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
             if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred) &&
-                !pred.equals("equal"))
+                !pred.equals("equal")) {
                 System.out.println("Error in FormulaPreprocessor.findType(): " +
                         "no type information for predicate " + pred);
+                System.out.println("start of kbCache.signatures: " + StringUtil.shorten(kb.kbCache.signatures.toString(),100) + "...");
+                ArrayList<Formula> ar = kb.askWithRestriction(0,"domain",1,pred);
+                System.out.println("domains: " + ar);
+            }
             return null;
         }
         if (numarg >= sig.size())
             return null;
-
         return sig.get(numarg);
     }
 
