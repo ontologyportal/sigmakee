@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.*;
+import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
@@ -9,6 +10,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 /** This code is copyright Articulate Software (c) 2003.  Some portions
@@ -57,6 +61,9 @@ public class InferenceTestSuite {
     public KB kb = null;
 
     public static boolean debug = false;
+
+    // save TPTP translations of each problem as <probName>.p
+    public static boolean saveTPTP =  true;
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -267,6 +274,8 @@ public class InferenceTestSuite {
         public ArrayList<String> statements = new ArrayList<>();
         public boolean inconsistent = false;
         public boolean success = false;
+        public float execTime = 0;
+        public String SZSstatus = "";
     }
 
     /** ***************************************************************
@@ -379,6 +388,25 @@ public class InferenceTestSuite {
     }
 
     /** ***************************************************************
+     */
+    public void saveTPTP(InfTestData itd) {
+
+        String name = FileUtil.noExt(FileUtil.noPath(itd.filename));
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        String sep = File.separator;
+        try {
+            Files.copy(Paths.get(kbDir + sep + kbName + ".tptp"),
+                    Paths.get(kbDir + sep + "KB.ax"), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(Paths.get(kbDir + sep + "temp-stmt.tptp"),
+                    Paths.get(kbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
      * The main method that controls running a set of tests and returning
      * the result as an HTML page showing test results and links to proofs.
      * Note that this procedure deletes any prior user assertions.
@@ -452,7 +480,10 @@ public class InferenceTestSuite {
                     duration = System.currentTimeMillis() - start;
                     System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                     System.out.println(duration);
+                    itd.execTime = duration;
                     totalTime = totalTime + duration;
+                    if (saveTPTP)
+                        saveTPTP(itd);
                 }
             }
             catch (Exception ex) {
@@ -470,6 +501,7 @@ public class InferenceTestSuite {
                 pw = new PrintWriter(fw);
                 tpp.parseProofOutput(proof, kb);
                 System.out.println("InferenceTestSuite.test() proof status: " + tpp.status + " for " + itd.note);
+                itd.SZSstatus = tpp.status;
                 if (tpp != null && tpp.status != null && (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem")))
                     pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
                 else
@@ -518,7 +550,9 @@ public class InferenceTestSuite {
         System.out.println();
         System.out.println("ALL TEST QUERIES FINISHED");
         System.out.println();
-
+        for (InfTestData itd : tests) {
+            System.out.println(itd.filename + "\t" + itd.SZSstatus + "\t" + itd.execTime);
+        }
         result.append("</table><P>\n");
         result.append("Total time: ");
         result.append(String.valueOf(totalTime/1000));
