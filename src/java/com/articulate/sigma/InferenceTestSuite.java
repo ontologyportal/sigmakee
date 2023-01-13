@@ -396,9 +396,12 @@ public class InferenceTestSuite {
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
-            Files.copy(Paths.get(kbDir + sep + kbName + ".tptp"),
+            String langExt = SUMOKBtoTPTPKB.lang;
+            if (langExt.equals("fof"))
+                langExt = "tptp";
+            Files.copy(Paths.get(kbDir + sep + kbName + "." + langExt),
                     Paths.get(kbDir + sep + "KB.ax"), StandardCopyOption.REPLACE_EXISTING);
-            Files.copy(Paths.get(kbDir + sep + "temp-stmt.tptp"),
+            Files.copy(Paths.get(kbDir + sep + "temp-stmt." + langExt),
                     Paths.get(kbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
         }
         catch (Exception e) {
@@ -502,8 +505,10 @@ public class InferenceTestSuite {
                 tpp.parseProofOutput(proof, kb);
                 System.out.println("InferenceTestSuite.test() proof status: " + tpp.status + " for " + itd.note);
                 itd.SZSstatus = tpp.status;
-                if (tpp != null && tpp.status != null && (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem")))
+                if (tpp != null && tpp.status != null && (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem"))) {
                     pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
+                    System.out.println("InferenceTestSuite.test() wrote results of: " + itd.note + " to " + resultsFile);
+                }
                 else
                     if (tpp != null)
                         pw.println(tpp.status);
@@ -525,7 +530,7 @@ public class InferenceTestSuite {
                 result.append("<h1>InferenceTestSuite.inferenceUnitTest(): Danger! possible inconsistency!</h1>");
             }
             boolean different = true;
-            if (proof != null && !tpp.status.startsWith("Timeout"))
+            if (proof != null && tpp != null && tpp.status != null && !tpp.status.startsWith("Timeout"))
                 different = !sameAnswers(tpp,itd.expectedAnswers);
             String resultString = "";
             if (different || tpp.noConjecture) {
@@ -742,6 +747,7 @@ public class InferenceTestSuite {
         System.out.println("     e - run with eprover (add letter to options above)");
         System.out.println("     v - run with vampire (add letter to options above)");
         System.out.println("     f - run with TF0 language");
+        System.out.println("     0 - run with TH0 language");
         System.out.println("     o - override test timeout with global timeout of " + _DEFAULT_TIMEOUT + " sec");
     }
 
