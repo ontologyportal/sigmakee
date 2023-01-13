@@ -53,7 +53,7 @@ public class KBmanager implements Serializable {
                     "eprover", "inferenceTestDir", "baseDir", "hostname",
                     "logLevel", "systemsDir", "dbUser", "loadFresh", "userBrowserLimit",
                     "adminBrowserLimit", "https", "graphWidth", "overwrite", "typePrefix",
-                    "graphDir", "nlpTools","TPTP","cache","editorCommand","graphVizDir",
+                    "graphDir", "nlpTools","TPTP","TPTPlang","cache","editorCommand","graphVizDir",
                     "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
                     "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
                     "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire",
