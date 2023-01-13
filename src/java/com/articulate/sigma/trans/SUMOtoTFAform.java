@@ -699,7 +699,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): newArgTypes: " + newArgTypes);
         String pred = car.getFormula();
         ArrayList<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(newArgTypes,sig) || KButilities.isVariableArity(kb,pred))
+        if (!equalTFFsig(newArgTypes,sig,pred) || KButilities.isVariableArity(kb,pred))
             pred = makePredFromArgTypes(car,newArgTypes);
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): pred: " + pred);
         ArrayList<String> processedArgs = new ArrayList<>();
@@ -738,7 +738,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processListFn(): f: " + f);
         String pred = car.getFormula();
         ArrayList<String> sig = kb.kbCache.getSignature(pred);
-        if (!equalTFFsig(argTypes,sig) || KButilities.isVariableArity(kb,pred))
+        if (!equalTFFsig(argTypes,sig,pred) || KButilities.isVariableArity(kb,pred))
             pred = makePredFromArgTypes(car,argTypes);
         ArrayList<String> processedArgs = new ArrayList<>();
         for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
@@ -952,7 +952,7 @@ public class SUMOtoTFAform {
                 kb.isSubclass("RealNumber",argTypes.get(0))) {
             String best = bestOfPair(argTypes.get(0),parentType);
             newArgTypes.set(0,best);
-            if (!equalTFFsig(newArgTypes,sig) || KButilities.isVariableArity(kb,op)) // only add the suffix if arg types are different from the original sort of the predicate
+            if (!equalTFFsig(newArgTypes,sig,op) || KButilities.isVariableArity(kb,op)) // only add the suffix if arg types are different from the original sort of the predicate
                 op = makePredFromArgTypes(car,newArgTypes);
         }
         ArrayList<String> predTypes = kb.kbCache.getSignature(car.getFormula());
@@ -1089,15 +1089,17 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
-     * Check if type signatures of SUMO would be equivalent TFF signatures
+     * Check if type signatures of SUMO would be equivalent TFF signatures.
+     * @param pred is used just to give a meaningful error message
      */
     public static boolean equalTFFsig(ArrayList<String> argTypes1,
-                                      ArrayList<String> argTypes2) {
+                                      ArrayList<String> argTypes2, String pred) {
 
         if (argTypes1 == null || argTypes2 == null ||
             argTypes1.size() != argTypes2.size()) {
-            System.out.println("Error in equalTFFsig(): bad signatures " +
-                    argTypes1 + ", " + argTypes2);
+            if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith("equal"))
+                System.out.println("Error in equalTFFsig(): bad signatures " +
+                    argTypes1 + ", " + argTypes2 + " for " + pred);
             return false;
         }
         for (int i = 0; i < argTypes1.size(); i++) {
@@ -1461,7 +1463,7 @@ public class SUMOtoTFAform {
         ArrayList<String> oldTypes = relationExtractSigFromName(op);
         ArrayList<String> bestSig = bestSignature(newTypes,oldTypes);
         ArrayList<String> sig = kb.kbCache.getSignature(justOp);
-        if (!equalTFFsig(bestSig,sig) || KButilities.isVariableArity(kb,justOp))
+        if (!equalTFFsig(bestSig,sig,justOp) || KButilities.isVariableArity(kb,justOp))
             justOp = makePredFromArgTypes(new Formula(justOp),bestSig);
         String result = justOp;
         if (debug) System.out.println("SUMOtoTFAform.composeSuffix(): " + result);
@@ -1875,7 +1877,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): newsig: " + newsig);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): sig: " + sig);
         String makePred = op;
-        if (!equalTFFsig(newsig,sig) || KButilities.isVariableArity(kb,op))  // only add the suffix if arg types are different from the original sort of the predicate
+        if (!equalTFFsig(newsig,sig,op) || KButilities.isVariableArity(kb,op))  // only add the suffix if arg types are different from the original sort of the predicate
             makePred = makePredFromArgTypes(new Formula(withoutSuffix(op)),newsig);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): makePred: " + makePred);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): op: " + op);
