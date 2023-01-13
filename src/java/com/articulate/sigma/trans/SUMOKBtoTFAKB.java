@@ -72,7 +72,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             else
                 lChildren = new HashSet<String>();
             qNotL.add("RealNumber");
-
+            String lang = KBmanager.getMgr().getPref("TPTPlang");
+            if (!StringUtil.emptyString(lang))
+                this.lang = lang;
             SUMOtoTFAform.initOnce();
         }
         initialized = true;
