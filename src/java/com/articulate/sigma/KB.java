@@ -3801,6 +3801,7 @@ public class KB implements Serializable {
         System.out.println("  l - load KB files");
         System.out.println("  v - ask query of Vampire");
         System.out.println("  e - ask query of EProver");
+        System.out.println("  L - ask query of LEO-IIIr");
         System.out.println("  1 - show full proof");
         System.out.println("  2 - remove single premise proof steps");
         System.out.println("  3 - show only KB axioms in proof");
@@ -3847,6 +3848,9 @@ public class KB implements Serializable {
             if (args != null && args.length > 1 && args[0].contains("e")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
             }
+            if (args != null && args.length > 1 && args[0].contains("L")) {
+                KBmanager.getMgr().prover = KBmanager.Prover.LEO;
+            }
             if (args != null && args.length > 0 && args[0].contains("l")) {
                 System.out.println("KB.main(): Normal completion");
             }
@@ -3891,7 +3895,13 @@ public class KB implements Serializable {
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 }
-                String link = tpp.createProofDotGraph();
+                else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
+                    String res = kb.askLEO(args[1], timeout, 1, "LeoLocal");
+                    System.out.println("KB.main(): completed LEO query with result: " + res);
+                }
+                String link = null;
+                if (tpp != null)
+                    tpp.createProofDotGraph();
                 if (!args[0].contains("x")) {
                     System.out.println("KB.main(): binding map: " + tpp.bindingMap);
                     int level = 1;
