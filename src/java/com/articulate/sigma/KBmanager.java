@@ -65,7 +65,7 @@ public class KBmanager implements Serializable {
                     "systemsDir","graphVizDir", "kbDir", "celtdir", "tptpHomeDir", "logDir",
                     "englishPCFG");
 
-    public enum Prover { NONE, EPROVER, VAMPIRE };
+    public enum Prover { NONE, EPROVER, VAMPIRE, LEO };
 
     public Prover prover = Prover.VAMPIRE;
 
