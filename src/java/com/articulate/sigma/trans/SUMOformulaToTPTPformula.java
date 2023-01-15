@@ -508,8 +508,19 @@ public class SUMOformulaToTPTPformula {
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (SUMOKBtoTPTPKB.lang.equals("tff"))
             return "( " + SUMOtoTFAform.process(suoString,query) + " )";
+        if (SUMOKBtoTPTPKB.lang.equals("thf")) {
+            THF thf = new THF();
+            Collection<Formula> stmts = new ArrayList<Formula>();
+            Collection<Formula> queries = new ArrayList<Formula>();
+            if (query)
+                queries.add(new Formula(suoString));
+            else
+                stmts.add(new Formula(suoString));
+            return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
+        }
         return "( " + process(new Formula(suoString),query) + " )";
     }
 
