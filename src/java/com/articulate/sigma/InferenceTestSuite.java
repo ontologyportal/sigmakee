@@ -47,6 +47,11 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
  *  Note that since answers are provided in an ordered list, without reference
  *  to their respective variable names, that the inference engine is assumed to
  *  return bindings in the same order.
+ *
+ *  All test file statements must be valid SUO-KIF.  Allowable meta-predicates
+ *  are: note, time, query, answer.  All other predicates are assumed to be
+ *  SUO-KIF expressions.  'answer' may take multiple SUO-KIF statements where there
+ *  could be more than one valid answer.
  */
 public class InferenceTestSuite {
 
@@ -64,6 +69,9 @@ public class InferenceTestSuite {
 
     // save TPTP translations of each problem as <probName>.p
     public static boolean saveTPTP =  true;
+
+    public static HashSet<String> metaPred = new HashSet(
+            Arrays.asList("note", "time", "query", "answer"));
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -98,7 +106,9 @@ public class InferenceTestSuite {
         for (int i = 0; i < actualAnswerList.size(); i++) {
             String actualRes = actualAnswerList.get(i);
             if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
-                if (!normalizeSkolem(expectedAnswerList.get(i)).equals(normalizeSkolem(actualRes))) {
+                TPTP2SUMO tptp2sumo =  new TPTP2SUMO();
+                actualRes = normalizeSkolem(tptp2sumo.formToSUMO(actualRes));
+                if (!normalizeSkolem(expectedAnswerList.get(i)).equals(actualRes)) {
                     if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: " +
                             actualRes + " and " + expectedAnswerList.get(i));
                     return false;    // return false if any pair of answers is different
@@ -305,10 +315,36 @@ public class InferenceTestSuite {
      */
     public static String normalizeSkolem(String s) {
 
-        System.out.println("INFO in InferenceTestSuite.normalizeSkolem(): input: " + s);
+        //System.out.println("INFO in InferenceTestSuite.normalizeSkolem(): input: " + s);
         s = s.replaceAll("sK[0-9 ]+","sK1").replaceAll("esk\\d+","esk1");
-        System.out.println("INFO in InferenceTestSuite.normalizeSkolem(): result: " + s);
+        //System.out.println("INFO in InferenceTestSuite.normalizeSkolem(): result: " + s);
         return s;
+    }
+
+    /** ***************************************************************
+     * parse answers
+     */
+    public static void parseAnswers(String s, InfTestData itd) {
+
+        String answerstring = s;
+        if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answerString: " + answerstring);
+        if (answerstring.equals("yes") || answerstring.equals("no")) {
+            itd.expectedAnswers.add(answerstring);
+        }
+        else {
+            Formula ansForm = new Formula(answerstring);
+            if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answer form: " + ansForm);
+            ArrayList<String> answers = ansForm.complexArgumentsToArrayListString(1);
+            if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answers: " + answers);
+            //answerstring = normalizeSkolem(answerstring);
+            //answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
+            for (String a : answers) {
+                if (TPTP3ProofProcessor.isSkolemRelation(a))
+                    a = normalizeSkolem(a);
+                if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answers normalized: " + a);
+                itd.expectedAnswers.add(a);
+            }
+        }
     }
 
     /** ***************************************************************
@@ -336,20 +372,7 @@ public class InferenceTestSuite {
                     else if (formula.startsWith("(query"))
                         ifd.query = formula.substring(7, formula.length() - 1);
                     else if (formula.startsWith("(answer")) {
-                        String answerstring = formula.substring(8, formula.length() - 1);
-                        if (answerstring.equals("yes") || answerstring.equals("no")) {
-                            ifd.expectedAnswers.add(answerstring);
-                        }
-                        else {
-                            String[] answers = answerstring.split(" ");
-                            answerstring = normalizeSkolem(answerstring);
-                            //answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
-                            for (String a : answers) {
-                                if (TPTP3ProofProcessor.isSkolemRelation(a))
-                                    a = normalizeSkolem(a);
-                                ifd.expectedAnswers.add(a);
-                            }
-                        }
+                        parseAnswers(formula,ifd);
                     }
                     else if (formula.startsWith("(time"))
                         ifd.timeout = Integer.parseInt(formula.substring(6, formula.length() - 1));
@@ -406,6 +429,22 @@ public class InferenceTestSuite {
         }
         catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    /** ***************************************************************
+     */
+    public void printResults(Collection<InfTestData> tests) {
+
+        System.out.println();
+        System.out.println("ALL TEST QUERIES FINISHED");
+        System.out.println();
+        for (InfTestData itd : tests) {
+            System.out.print(itd.filename + "\t" + itd.SZSstatus + "\t" + itd.execTime);
+            if (itd.inconsistent)
+                System.out.println(" inconsistent!");
+            else
+                System.out.println();
         }
     }
 
@@ -528,6 +567,7 @@ public class InferenceTestSuite {
             }
             if (tpp.inconsistency) {
                 result.append("<h1>InferenceTestSuite.inferenceUnitTest(): Danger! possible inconsistency!</h1>");
+                itd.inconsistent = true;
             }
             boolean different = true;
             if (proof != null && tpp != null && tpp.status != null && !tpp.status.startsWith("Timeout"))
@@ -552,12 +592,7 @@ public class InferenceTestSuite {
             counter++;
         }
 
-        System.out.println();
-        System.out.println("ALL TEST QUERIES FINISHED");
-        System.out.println();
-        for (InfTestData itd : tests) {
-            System.out.println(itd.filename + "\t" + itd.SZSstatus + "\t" + itd.execTime);
-        }
+        printResults(tests);
         result.append("</table><P>\n");
         result.append("Total time: ");
         result.append(String.valueOf(totalTime/1000));
