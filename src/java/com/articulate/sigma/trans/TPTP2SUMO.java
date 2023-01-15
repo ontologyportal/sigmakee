@@ -16,6 +16,7 @@ http://sigmakee.sourceforge.net
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.Formula;
+import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.*;
 import java.io.FileReader;
 import java.util.*;
@@ -120,6 +121,50 @@ public class TPTP2SUMO {
   }
 
     /** ***************************************************************
+     * Convert a TPTP formula (without metadata) to SUMO, by wrapping
+     * it with dummy metadata
+     */
+    public static String formToSUMO (String clause) {
+
+        clause = "fof(test,axiom," + clause + ").";
+        if (debug) System.out.println("formToSUMO() " + clause);
+        TPTPVisitor sv = new TPTPVisitor();
+        sv.parseString(clause);
+        HashMap<String, TPTPFormula> hm = sv.result;
+        if (debug) {
+            for (String s : hm.keySet()) {
+                System.out.println(hm.get(s));
+                System.out.println("\t" + hm.get(s).sumo + "\n");
+            }
+        }
+        String result = null;
+        for (String s : hm.keySet())
+            result = hm.get(s).sumo;
+        return result;
+    }
+
+    /** ***************************************************************
+     * Convert a TPTP formula (with metadata) to SUMO
+     */
+    public static String toSUMO (String clause) {
+
+        if (debug) System.out.println("toSUMO() " + clause);
+        TPTPVisitor sv = new TPTPVisitor();
+        sv.parseString(clause);
+        HashMap<String, TPTPFormula> hm = sv.result;
+        if (debug) {
+            for (String s : hm.keySet()) {
+                System.out.println(hm.get(s));
+                System.out.println("\t" + hm.get(s).sumo + "\n");
+            }
+        }
+        String result = null;
+        for (String s : hm.keySet())
+            result = hm.get(s).sumo;
+        return result;
+    }
+
+    /** ***************************************************************
      */
     public static void showHelp() {
 
@@ -127,6 +172,7 @@ public class TPTP2SUMO {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -c - parse test clause");
+        System.out.println("  -t \"<form>\" - convert a formula");
         System.out.println("  -f <fname> - convert file to SUO-KIF");
     }
 
@@ -146,14 +192,15 @@ public class TPTP2SUMO {
           String clause = "cnf(c_0_10,negated_conjecture,($answer(esk1_1(X1))|~s__subclass(X1,s__Object)), c_0_8).";
           try {
               if (args.length > 0 && args[0].equals("-c")) {
+                  debug = true;
                   System.out.println("main parse " + clause);
-                  TPTPVisitor sv = new TPTPVisitor();
-                  sv.parseString(clause);
-                  HashMap<String, TPTPFormula> hm = sv.result;
-                  for (String s : hm.keySet()) {
-                      System.out.println(hm.get(s));
-                      System.out.println("\t" + hm.get(s).sumo + "\n");
-                  }
+                  toSUMO(clause);
+              }
+              if (args.length > 1 && args[0].equals("-t")) {
+                  debug = true;
+                  clause = StringUtil.removeEnclosingQuotes(args[1]);
+                  System.out.println("main parse " + clause);
+                  formToSUMO(clause);
               }
               if (args.length > 1 && args[0].equals("-f")) {
                   tptp_parser.TPTPVisitor sv = new TPTPVisitor();
