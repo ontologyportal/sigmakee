@@ -38,6 +38,8 @@ import java.util.*;
  */
 public class Formula implements Comparable, Serializable {
 
+    public static boolean debug = false;
+
     public static final String AND    = "and";
     public static final String OR     = "or";
     public static final String NOT    = "not";
@@ -175,8 +177,6 @@ public class Formula implements Comparable, Serializable {
 	public TreeSet<String> getErrors() {
 		return this.errors;
 	}
-
-	public static boolean debug = false;
 
     // caches of frequently computed sets of variables in the formula
     public HashSet<String> allVarsCache = new HashSet<>();
@@ -2281,25 +2281,21 @@ public class Formula implements Comparable, Serializable {
                     if (logop) {
                         if (f.isHigherOrder(kb)) {
                             higherOrder = true;
-                            if (debug) System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                             return true;
                         }
                     }
                     else {
                         higherOrder = true;
-                        if (debug) System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                         return true;
                     }
                 }
                 else
                     if (f.isHigherOrder(kb)) {
                         higherOrder = true;
-                        if (debug) System.out.println("Formula.isHigherOrder(): is HOL: " + this);
                         return true;
                     }
             }
         }
-        if (debug) System.out.println("Formula.isHigherOrder(): not HOL: " + this);
         return false;
     }
 
