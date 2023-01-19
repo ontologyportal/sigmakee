@@ -91,11 +91,11 @@ public class FormulaPreprocessor {
         if (sig == null) {
             if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred) &&
                 !pred.equals("equal")) {
-                System.out.println("Error in FormulaPreprocessor.findType(): " +
+                if (debug) System.out.println("Error in FormulaPreprocessor.findType(): " +
                         "no type information for predicate " + pred);
-                System.out.println("start of kbCache.signatures: " + StringUtil.shorten(kb.kbCache.signatures.toString(),100) + "...");
+                if (debug) System.out.println("start of FormulaPreprocessor.findType: " + StringUtil.shorten(kb.kbCache.signatures.toString(),100) + "...");
                 ArrayList<Formula> ar = kb.askWithRestriction(0,"domain",1,pred);
-                System.out.println("domains: " + ar);
+                if (debug) System.out.println("domains: " + ar);
             }
             return null;
         }
