@@ -13,6 +13,7 @@ package com.articulate.sigma;
  */
 
 import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
 import java.io.*;
@@ -140,21 +141,11 @@ public class CCheck implements Runnable {
                 inferenceEngine = "SInE";
                 return true;
             }
-            else if (chosenEngine.equals("LeoSine")) {
-                result = kb.askLEO("(instance instance BinaryPredicate)", 10, 1, "LeoSine");
-                inferenceEngine = "LeoSine";
-                return true;
-            }
             else if (chosenEngine.equals("LeoLocal")) {
-                result = kb.askLEO("(instance instance BinaryPredicate)", 10, 1, "LeoLocal");
+                LEO leo = kb.askLeo("(instance instance BinaryPredicate)", 10, 1);
                 inferenceEngine = "LeoLocal";
                 return true;
             }
-            else if (chosenEngine.equals("LeoGlobal")) {
-                result = kb.askLEO("(instance instance BinaryPredicate)", 10, 1, "LeoGlobal");
-                inferenceEngine = "LeoGlobal";
-                return true;
-            }        
             else 
                 return false;
         }
@@ -450,15 +441,9 @@ public class CCheck implements Runnable {
             else if (inferenceEngine.equals("SInE")) {
                 result = empty.askSInE(query, timeOut, 1);
             }
-            else if (inferenceEngine.equals("LeoSine")) {
-                result = empty.askLEO(query, timeOut, 1, "LeoSine");
-            }
             else if (inferenceEngine.equals("LeoLocal")) {
-                result = empty.askLEO(query, timeOut, 1, "LeoLocal");
+                LEO leo = empty.askLeo(query, timeOut, 1);
             }
-            else if (inferenceEngine.equals("LeoGlobal")) {
-                result = empty.askLEO(query, timeOut, 1, "LeoGlobal");
-            }        
             else if (inferenceEngine.equals("SoTPTP")) {
                 //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
                 //        ieSettings.get("systemChosen"),
