@@ -56,8 +56,9 @@ MA  02111-1307 USA
 
 */
 
-import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.Pair;
@@ -84,8 +85,11 @@ public class KB implements Serializable {
 
     private boolean isVisible = true;
 
-    /** The inference engine process for this KB. */
+    /** Eprover inference engine process for this KB. */
     public transient EProver eprover;
+
+    /** LEO-III inference engine process for this KB. */
+    public transient LEO leo;
 
     /** The name of the knowledge base. */
     public String name;
@@ -121,6 +125,9 @@ public class KB implements Serializable {
 
     /** The String constant that is the suffix for TFF file of user assertions. */
     public static final String _userAssertionsTFF = "_UserAssertions.tff";
+
+    /** The String constant that is the suffix for THF file of user assertions. */
+    public static final String _userAssertionsTHF = "_UserAssertions.thf";
 
     /* The String constant that is the suffix for files of cached assertions.     */
     public static final String _cacheFileSuffix = "_Cache.kif";
@@ -1642,58 +1649,6 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Submits a
-     * query to the inference engine. Returns an XML formatted String that
-     * contains the response of the inference engine. It should be in the form
-     * "<queryResponse>...</queryResponse>".
-     *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the inference engine should
-     *                      give up.
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
-     *                      engine should return.
-     * @return A list of answers.
-
-    public ArrayList<String> ask(String suoKifFormula, int timeout, int maxAnswers) {
-
-        System.out.println("KB.ask(): Deprecated!");
-        String result = "";
-        // Start by assuming that the ask is futile.
-        result = ("<queryResponse>" + System.getProperty("line.separator")
-                + "  <answer result=\"no\" number=\"0\"> </answer>" + System.getProperty("line.separator")
-                + "  <summary proofs=\"0\"/>" + System.getProperty("line.separator") + "</queryResponse>"
-                + System.getProperty("line.separator"));
-        if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            Formula query = new Formula();
-            query.read(suoKifFormula);
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processedStmts = fp.preProcess(query, true, this);
-
-            if (!processedStmts.isEmpty() && this.eprover != null) {
-                // set timeout in EBatchConfig file and reload eprover
-                try {
-                    eprover.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
-                String strQuery = processedStmts.iterator().next().getFormula();
-                result = this.eprover.submitQuery(strQuery, this);
-                if (result == null || result.isEmpty())
-                    System.out.println("KB.ask: No response from EProver!");
-                else
-                    System.out.println("KB.ask: Get response from EProver, start for parsing ...");
-                // System.out.println("Results returned from E = \n" + EResult);
-                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                ArrayList<String> answers = tpp.parseAnswerTuples(result, this, fp);
-                return answers;
-            }
-        }
-        return null;
-    }
-*/
-    /***************************************************************
-     * Submits a
      * query to the inference engine.
      *
      * @param suoKifFormula The String representation of the SUO-KIF query.
@@ -1738,6 +1693,83 @@ public class KB implements Serializable {
             }
         }
         return eprover;
+    }
+
+    /***************************************************************
+     * Submits a
+     * query to the inference engine.
+     *
+     * @param suoKifFormula The String representation of the SUO-KIF query.
+     * @param timeout       The number of seconds after which the inference engine should
+     *                      give up.
+     * @param maxAnswers    The maximum number of answers (binding sets) the inference
+     *                      engine should return.
+     * @return A String indicating the status of the ask operation.
+     */
+    public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers) {
+
+        try {
+            if (leo == null) {
+                leo = new LEO();
+            }
+        }
+        catch (Exception e) {
+            System.out.println(e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+        THF thf = new THF();
+        if (StringUtil.isNonEmptyString(suoKifFormula)) {
+            loadLeo();
+            Formula query = new Formula();
+            query.read(suoKifFormula);
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> processedQuery = fp.preProcess(query, true, this);
+            if (!processedQuery.isEmpty() && this.leo != null) {
+                int axiomIndex = 0;
+                String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
+                String kbName = name;
+                File s = new File(dir + kbName + ".thf");
+                if (!s.exists()) {
+                    System.out.println("KB.askLeo(): no such file: " + s + ". Creating it.");
+                    KB kb = KBmanager.getMgr().getKB(kbName);
+                    KBmanager.getMgr().loadKBforInference(kb);
+                }
+                HashSet<String> thfquery = new HashSet<>();
+                StringBuffer combined = new StringBuffer();
+                if (processedQuery.size() > 1) {
+                    combined.append("(or ");
+                    for (Formula p : processedQuery) {
+                        combined.append(p.getFormula() + " ");
+                    }
+                    combined.append(")");
+                    String theTHFstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            thf.oneKIF2THF(new Formula(combined.toString()), true, this) // true - it's a query
+                            + ")).";
+                    thfquery.add(theTHFstatement);
+                }
+                else {
+                    String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
+                            ",conjecture,(" +
+                            thf.oneKIF2THF(processedQuery.iterator().next(), true, this) // true - it's a query
+                            + ")).";
+                    thfquery.add(theTPTPstatement);
+                }
+                try {
+                    System.out.println("KB.askLeo(): calling with: " + s + ", " + timeout + ", " + thfquery);
+                    System.out.println("KB.askLeo(): qlist: " + leo.qlist);
+                    leo.run(this, s, timeout, thfquery);
+                    return leo;
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                String strQuery = processedQuery.iterator().next().getFormula();
+            }
+            else
+                System.out.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+        }
+        return leo;
     }
 
     /***************************************************************
@@ -1959,15 +1991,15 @@ public class KB implements Serializable {
      * contains the response of the inference engine. It should be in the form
      * "<queryResponse>...</queryResponse>".
      *
-     * @param suoKifFormula The String representation of the SUO-KIF query.
-     * @param timeout       The number of seconds after which the underlying inference
+     * suoKifFormula The String representation of the SUO-KIF query.
+     *  timeout       The number of seconds after which the underlying inference
      *                      engine should give up. (Time taken by axiom selection doesn't
      *                      count.)
-     * @param maxAnswers    The maximum number of answers (binding sets) the inference
+     *  maxAnswers    The maximum number of answers (binding sets) the inference
      *                      engine should return.
      * @return A String indicating the status of the ask operation.
-     */
-    public String askLEO(String suoKifFormula, int timeout, int maxAnswers, String flag) {
+
+    public String askLEOOld(String suoKifFormula, int timeout, int maxAnswers, String flag) {
 
         String result = "";
         try {
@@ -2008,12 +2040,12 @@ public class KB implements Serializable {
 
                 try {
                     String line = null;
-                    /*
+                    /
                      * readLine is a bit quirky : it returns the content of a
                      * line MINUS the newline. it returns null only for the END
                      * of the stream. it returns an empty String if two newlines
                      * appear in a row.
-                     */
+
                     while ((line = userAssertedInput.readLine()) != null)
                         selFs.add(line);
                 }
@@ -3452,6 +3484,46 @@ public class KB implements Serializable {
         }
         return;
     }
+    /***************************************************************
+     * Checks for a Leo executable, preprocesses all of the constituents
+     */
+    public void loadLeo() {
+
+        System.out.println("INFO in KB.loadVampire()");
+        String leoex = KBmanager.getMgr().getPref("leoExecutable");
+        KBmanager.getMgr().prover = KBmanager.Prover.LEO;
+        if (StringUtil.emptyString(leoex)) {
+            System.out.println("Error in loadLeo: no executable string in preferences");
+            return;
+        }
+        File executable = new File(leoex);
+        if (!executable.exists()) {
+            System.out.println("Error in loadLeo: no executable " + leoex);
+            return;
+        }
+        String lang = "thf";
+        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
+        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+            System.out.println("INFO in KB.loadLeo(): generating " + lang + "file " + infFilename);
+            try {
+                if (!formulaMap.isEmpty()) {
+                    HashSet<String> formulaStrings = new HashSet<String>();
+                    formulaStrings.addAll(formulaMap.keySet());
+                    long millis = System.currentTimeMillis();
+                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
+                    PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
+                    skb.kb = this;
+                    skb.writeFile(infFilename, null, false, pw);
+                    System.out.println("KB.loadLeo(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                }
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        return;
+    }
 
     /***************************************************************
      * Starts EProver and collects, preprocesses and loads all of the constituents into
@@ -3896,8 +3968,10 @@ public class KB implements Serializable {
                     tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                    String res = kb.askLEO(args[1], timeout, 1, "LeoLocal");
-                    System.out.println("KB.main(): completed LEO query with result: " + res);
+                    LEO leo = kb.askLeo(args[1], timeout, 1);
+                    System.out.println("KB.main(): completed LEO query with result: " + StringUtil.arrayListToCRLFString(leo.output));
+                    tpp = new TPTP3ProofProcessor();
+                    tpp.parseProofOutput(leo.output, args[1], kb, leo.qlist);
                 }
                 String link = null;
                 if (tpp != null)
