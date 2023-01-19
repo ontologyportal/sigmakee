@@ -1084,8 +1084,9 @@ public class KBcache implements Serializable {
     public void buildFunctionsSet() {
 
         for (String s : relations)
-            if (isInstanceOf(s,"Function"))  // can't use isFunction since that checks KBcache.functions
+            if (isInstanceOf(s,"Function")) { // can't use isFunction since that checks KBcache.functions
                 functions.add(s);
+            }
             else
                 predicates.add(s);
     }
