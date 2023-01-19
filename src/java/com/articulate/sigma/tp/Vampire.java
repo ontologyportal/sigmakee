@@ -55,19 +55,6 @@ public class Vampire {
 
     /** *************************************************************
      */
-    private static String[] createCommandList(File executable, String opts, File kbFile) {
-
-        String[] optar = opts.split(" ");
-        String[] cmds = new String[optar.length + 2];
-        cmds[0] = executable.toString();
-        for (int i = 0; i < optar.length; i++)
-            cmds[i+1] = optar[i];
-        cmds[optar.length+1] =  kbFile.toString();
-        return cmds;
-    }
-
-    /** *************************************************************
-     */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
         String opts = "";
@@ -226,6 +213,7 @@ public class Vampire {
     }
 
     /** ***************************************************************
+     * Read in two files and write their contents to a new file
      */
     public void catFiles(String f1, String f2, String fout) throws Exception {
 
