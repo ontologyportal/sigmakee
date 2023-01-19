@@ -130,17 +130,13 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      *  Check whether config file or any .kif constituent is newer than its
-     *  corresponding TPTP/TFF file
+     *  corresponding TPTP/TFF/THF file
      */
-    public boolean infFileOld() {
+    public boolean infFileOld(String lang) {
 
-        System.out.println("KBmanager.tptpOld(config): ");
         String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
-        String lang = "tff";
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
-            lang = "tptp";
         for (String kbname : kbs.keySet()) { // iterate through the kbs
             KB kb = getKB(kbname);
             File file = new File(kbDir + File.separator + kbname + "." + lang);
@@ -160,6 +156,19 @@ public class KBmanager implements Serializable {
         }
         System.out.println("KBmanager.infFileOld(config): returning false (not old)");
         return false;
+    }
+
+    /** ***************************************************************
+     *  Check whether config file or any .kif constituent is newer than its
+     *  corresponding TPTP/TFF/THF file
+     */
+    public boolean infFileOld() {
+
+        System.out.println("KBmanager.tptpOld(config): ");
+        String lang = "tff";
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            lang = "tptp";
+        return infFileOld(lang);
     }
 
     /** ***************************************************************
