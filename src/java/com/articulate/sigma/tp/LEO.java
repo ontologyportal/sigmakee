@@ -23,6 +23,7 @@ import com.articulate.sigma.trans.THF;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import tptp_parser.TPTPFormula;
 
 import java.io.*;
 import java.util.*;
@@ -305,8 +306,13 @@ public class LEO {
         String queryStr = "(subclass ?X ?Y)";
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         tpp.parseProofOutput(leo.output,queryStr,kb,leo.qlist);
+        for (TPTPFormula step : tpp.proof) {
+            System.out.println(":: " + step);
+            Formula f = new Formula(step.sumo);
+            System.out.println(f.format("","  ","\n"));
+        }
         System.out.println("Leo.main(): bindings: " + tpp.bindings);
-        System.out.println("Leo.main(): proof: " + tpp.proof);
+        //System.out.println("Leo.main(): proof: " + tpp.proof);
         System.out.println("-----------------\n");
         System.out.println("\n");
 /*
