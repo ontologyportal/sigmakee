@@ -34,7 +34,7 @@ import static com.igormaznitsa.prologparser.terms.TermType.*;
 
 public class TPTP3ProofProcessor {
 
-	public static boolean debug = false;
+	public static boolean debug = true;
 	public String status;
 	public boolean noConjecture = false;
 	public boolean inconsistency = false;
@@ -833,7 +833,7 @@ public class TPTP3ProofProcessor {
 			if (predString.equals("inference"))
 				supports.addAll(getSupports(((PrologStruct) pt).getTermAt(2)));
 			else if (predString.equals("cnf") || predString.equals("fof") ||
-					predString.equals("tff"))
+					predString.equals("tff") || predString.equals("thf"))
 				supports.addAll(getSupports(((PrologStruct) pt).getTermAt(3)));
 		}
 		return supports;
@@ -1030,6 +1030,7 @@ public class TPTP3ProofProcessor {
 		System.out.println("TPTP3ProofProcessor class");
 		System.out.println("  options (with a leading '-'):");
 		System.out.println("  f <file> - parse a TPTP3 proof file");
+		System.out.println("    e - parse proof as an E proof (forward style)");
 		System.out.println("  t - run test");
 		System.out.println("  h - show this help");
 	}
@@ -1053,6 +1054,10 @@ public class TPTP3ProofProcessor {
 			KB kb = KBmanager.getMgr().getKB(kbName);
 			if (args != null && args.length > 1 && args[0].contains("f")) {
 				try {
+					if (args[0].contains("e"))
+						KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+					else
+						KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
 					List<String> lines = FileUtil.readLines(args[1],false);
 					String query = "(maximumPayloadCapacity ?X (MeasureFn ?Y ?Z))";
 					StringBuffer answerVars = new StringBuffer("?X ?Y ?Z");
@@ -1061,7 +1066,7 @@ public class TPTP3ProofProcessor {
 					tpp.createProofDotGraph();
 					System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
 					for (TPTPFormula step : tpp.proof) {
-						System.out.println(step);
+						System.out.println(":: " + step);
 						Formula f = new Formula(step.sumo);
 						System.out.println(f.format("","  ","\n"));
 					}
