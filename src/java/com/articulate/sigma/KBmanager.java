@@ -141,14 +141,14 @@ public class KBmanager implements Serializable {
             KB kb = getKB(kbname);
             File file = new File(kbDir + File.separator + kbname + "." + lang);
             Date fileDate = new Date(file.lastModified());
-            System.out.println("KBmanager.tptpOld(): file " + kbname + "." + lang + " was saved on " + fileDate);
+            System.out.println("KBmanager.infFileOld(): file " + kbname + "." + lang + " was saved on " + fileDate);
             if (fileDate.compareTo(configDate) < 0) {
                 return true;
             }
             for (String f : kb.constituents) { // iterate through the constituents
                 File sfile = new File(f);
                 Date sfileDate = new Date(sfile.lastModified());
-                System.out.println("KBmanager.tptpOld(): file " + f + " was saved on " + sfileDate);
+                System.out.println("KBmanager.infFileOld(): file " + f + " was saved on " + sfileDate);
                 if (fileDate.compareTo(sfileDate) < 0) {
                     return true;
                 }
