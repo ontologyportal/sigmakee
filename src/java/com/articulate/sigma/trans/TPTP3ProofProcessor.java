@@ -34,7 +34,7 @@ import static com.igormaznitsa.prologparser.terms.TermType.*;
 
 public class TPTP3ProofProcessor {
 
-	public static boolean debug = true;
+	public static boolean debug = false;
 	public String status;
 	public boolean noConjecture = false;
 	public boolean inconsistency = false;
