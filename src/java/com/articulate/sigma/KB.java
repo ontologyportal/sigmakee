@@ -1572,8 +1572,9 @@ public class KB implements Serializable {
         }
         try { // Make the pathname of the user assertions file.
             String userAssertionKIF = this.name + _userAssertionsString;
-            String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
             String userAssertionTFF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tff";
+            String userAssertionTPTP = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".tptp";
+            String userAssertionTHF = userAssertionKIF.substring(0, userAssertionKIF.indexOf(".kif")) + ".thf";
             File dir = new File(this.kbDir);
             File kiffile = new File(dir, (userAssertionKIF)); // create kb.name_UserAssertions.kif
             File tptpfile = null;  // kb.name_UserAssertions.tptp
@@ -1581,6 +1582,8 @@ public class KB implements Serializable {
                 tptpfile = new File(dir, (userAssertionTPTP));
             if (SUMOKBtoTPTPKB.lang.equals("tff"))
                 tptpfile = new File(dir, (userAssertionTFF));
+            if (SUMOKBtoTPTPKB.lang.equals("thf"))
+                tptpfile = new File(dir, (userAssertionTHF));
             String filename = kiffile.getCanonicalPath();
             ArrayList<Formula> formulasAlreadyPresent = merge(kif, filename);
             // only check formulasAlreadyPresent when filterSimpleOnly = false;
@@ -1633,6 +1636,13 @@ public class KB implements Serializable {
                         Vampire.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // nothing much to do since Vampire has to load it all at query time
+                        // just create a single file
+                    }
+                    else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
+                        if (debug) System.out.println("KB.tell: using leo");
+                        leo.assertFormula(tptpfile.getCanonicalPath(), this, parsedFormulas,
+                                !mgr.getPref("TPTP").equalsIgnoreCase("no"));
+                        // nothing much to do since LEO has to load it all at query time
                         // just create a single file
                     }
                     result += (allAdded ? " and inference" : " but not for local inference");
@@ -1708,6 +1718,7 @@ public class KB implements Serializable {
      */
     public LEO askLeo(String suoKifFormula, int timeout, int maxAnswers) {
 
+        System.out.println("KB.askLeo(): query: " + suoKifFormula);
         try {
             if (leo == null) {
                 leo = new LEO();
@@ -1743,17 +1754,13 @@ public class KB implements Serializable {
                         combined.append(p.getFormula() + " ");
                     }
                     combined.append(")");
-                    String theTHFstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            thf.oneKIF2THF(new Formula(combined.toString()), true, this) // true - it's a query
-                            + ")).";
+                    String theTHFstatement =
+                            thf.oneKIF2THF(new Formula(combined.toString()), true, this).trim(); // true - it's a query
                     thfquery.add(theTHFstatement);
                 }
                 else {
-                    String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
-                            ",conjecture,(" +
-                            thf.oneKIF2THF(processedQuery.iterator().next(), true, this) // true - it's a query
-                            + ")).";
+                    String theTPTPstatement =
+                            thf.oneKIF2THF(processedQuery.iterator().next(), true, this).trim(); // true - it's a query
                     thfquery.add(theTPTPstatement);
                 }
                 try {
@@ -3489,7 +3496,7 @@ public class KB implements Serializable {
      */
     public void loadLeo() {
 
-        System.out.println("INFO in KB.loadVampire()");
+        System.out.println("INFO in KB.loadLeo()");
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         KBmanager.getMgr().prover = KBmanager.Prover.LEO;
         if (StringUtil.emptyString(leoex)) {
@@ -3504,23 +3511,7 @@ public class KB implements Serializable {
         String lang = "thf";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
-            System.out.println("INFO in KB.loadLeo(): generating " + lang + "file " + infFilename);
-            try {
-                if (!formulaMap.isEmpty()) {
-                    HashSet<String> formulaStrings = new HashSet<String>();
-                    formulaStrings.addAll(formulaMap.keySet());
-                    long millis = System.currentTimeMillis();
-                    SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                    PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
-                    skb.kb = this;
-                    skb.writeFile(infFilename, null, false, pw);
-                    System.out.println("KB.loadLeo(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
-                }
-            }
-            catch (Exception e) {
-                System.out.println(e.getMessage());
-                e.printStackTrace();
-            }
+            System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + "file " + infFilename);
         }
         return;
     }
