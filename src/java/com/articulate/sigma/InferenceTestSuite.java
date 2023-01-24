@@ -15,6 +15,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 
+
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -72,24 +73,6 @@ public class InferenceTestSuite {
 
     public static HashSet<String> metaPred = new HashSet(
             Arrays.asList("note", "time", "query", "answer"));
-
-    /** ***************************************************************
-     * Compare the expected answers to the returned answers.  Return
-     * true if any pair of answers is different.  Return false otherwise.
-
-    private static boolean compareAnswers(ProofProcessor pp, ArrayList answerList) {
-
-        System.out.println("INFO in InferenceTestSuite.compareAnswers(): num answers: "
-			   + String.valueOf(pp.numAnswers()));
-        for (int j = 0; j < pp.numAnswers(); j++) {
-            System.out.println("INFO in InferenceTestSuite.compareAnswers(): result: "
-			       + "" + " expected: " + (String) answerList.get(j));
-            if (!pp.equalsAnswer(j,(String) answerList.get(j)))
-                return true;
-        }
-        return false;
-    }
-*/
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -419,7 +402,7 @@ public class InferenceTestSuite {
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
-            String langExt = SUMOKBtoTPTPKB.lang;
+            String langExt = SUMOformulaToTPTPformula.lang;
             if (langExt.equals("fof"))
                 langExt = "tptp";
             Files.copy(Paths.get(kbDir + sep + kbName + "." + langExt),
@@ -492,11 +475,13 @@ public class InferenceTestSuite {
         for (InfTestData itd : tests) {
             kb.deleteUserAssertionsAndReload();
             for (String s : itd.statements)
-                kb.tell(s);
+                if (!StringUtil.emptyString(s))
+                    kb.tell(s);
             compareFiles(itd);
             maxAnswers = itd.expectedAnswers.size();
             try {
                 System.out.println("====================================");
+                System.out.println("INFO in InferenceTestSuite.test(): Note: " + itd.note);
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
                 Formula theQuery = new Formula(itd.query);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -519,6 +504,8 @@ public class InferenceTestSuite {
                         proof = kb.askEProver(processed.getFormula(), actualTimeout, maxAnswers) + " ";
                     if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
                         proof = kb.askVampire(processed.getFormula(), actualTimeout, maxAnswers) + " ";
+                    if (KBmanager.getMgr().prover == KBmanager.Prover.LEO)
+                        proof = kb.askLeo(processed.getFormula(), actualTimeout, maxAnswers) + " ";
                     duration = System.currentTimeMillis() - start;
                     System.out.print("INFO in InferenceTestSuite.test(): Duration: ");
                     System.out.println(duration);
@@ -635,7 +622,7 @@ public class InferenceTestSuite {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         for (Formula f : theQueries) {
             String processedStmt = f.getFormula();
-            if (f.isHigherOrder(kb)) {
+            if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.lang.equals("thf")) {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +
                         processedStmt + " in test " + itd.note);
                 continue;
@@ -652,6 +639,11 @@ public class InferenceTestSuite {
                 com.articulate.sigma.tp.EProver eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
                 System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
                 tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.qlist);
+            }
+            else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
+                com.articulate.sigma.tp.LEO leo = kb.askLeo(processedStmt, itd.timeout, maxAnswers);
+                System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + leo.toString());
+                tpp.parseProofOutput(leo.output, processedStmt, kb,leo.qlist);
             }
             else {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
@@ -781,6 +773,7 @@ public class InferenceTestSuite {
         System.out.println("  -a <mode> - run all test files in the given mode in config.xml inferenceTestDir");
         System.out.println("     e - run with eprover (add letter to options above)");
         System.out.println("     v - run with vampire (add letter to options above)");
+        System.out.println("     l - run with LEO-III (add letter to options above)");
         System.out.println("     f - run with TF0 language");
         System.out.println("     0 - run with TH0 language");
         System.out.println("     o - override test timeout with global timeout of " + _DEFAULT_TIMEOUT + " sec");
@@ -809,12 +802,19 @@ public class InferenceTestSuite {
                     KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
                     kb.loadEProver();
                 }
+                if (args[0].indexOf('l') != -1) {
+                    SUMOformulaToTPTPformula.lang = "thf";
+                    KBmanager.getMgr().prover = KBmanager.Prover.LEO;
+                    kb.loadLeo();
+                }
                 if (args[0].indexOf('f') != -1) {
                     SUMOformulaToTPTPformula.lang = "tff";
-                    SUMOKBtoTPTPKB.lang = "tff";
                     SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
                     skbtfakb.initOnce();
                     SUMOtoTFAform.initOnce();
+                }
+                if (args[0].indexOf('0') != -1) {
+                    SUMOformulaToTPTPformula.lang = "thf";
                 }
                 if (args[0].indexOf('v') != -1)
                     KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
