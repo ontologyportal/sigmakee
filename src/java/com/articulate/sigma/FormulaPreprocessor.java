@@ -715,29 +715,31 @@ public class FormulaPreprocessor {
                         setEqualsVartype(kb, args.get(0).getFormula(), args.get(1).getFormula(),result);
                 }
                 int argnum = 1;
-                for (Formula arg : args) {
-                    if (debug) System.out.println("arg,pred,argnum: " + arg + ", " + pred + ", " + argnum +
-                            "\nnewf: " + args + "\nis function?: " + kb.isFunctional(arg));
-                    if (arg.isVariable()) {
-                        String cl = findType(argnum, pred, kb);
-                        if (debug) System.out.println("cl: " + cl);
-                        if (StringUtil.emptyString(cl)) {
-                            if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
-                                !pred.equals("equal")) {
-                                System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
-                                        "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
-                                System.out.println("sig: " + kb.kbCache.getSignature(pred));
-                                System.out.println("sig count: " + kb.kbCache.signatures.keySet().size());
+                if (args != null) {
+                    for (Formula arg : args) {
+                        if (debug) System.out.println("arg,pred,argnum: " + arg + ", " + pred + ", " + argnum +
+                                "\nnewf: " + args + "\nis function?: " + kb.isFunctional(arg));
+                        if (arg.isVariable()) {
+                            String cl = findType(argnum, pred, kb);
+                            if (debug) System.out.println("cl: " + cl);
+                            if (StringUtil.emptyString(cl)) {
+                                if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
+                                        !pred.equals("equal")) {
+                                    System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
+                                            "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
+                                    System.out.println("sig: " + kb.kbCache.getSignature(pred));
+                                    System.out.println("sig count: " + kb.kbCache.signatures.keySet().size());
+                                }
                             }
+                            else
+                                MapUtils.addToMap(result, arg.getFormula(), cl);
                         }
-                        else
-                            MapUtils.addToMap(result, arg.getFormula(), cl);
+                        else if (arg.listP() && kb.isFunctional(arg)) { // If formula is function then recurse.
+                            if (debug) System.out.println("arg is a function: " + arg);
+                            result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
+                        }
+                        argnum++;
                     }
-                    else if (arg.listP() && kb.isFunctional(arg)) { // If formula is function then recurse.
-                        if (debug) System.out.println("arg is a function: " + arg);
-                        result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(arg), input), kb);
-                    }
-                    argnum++;
                 }
             }
         }
