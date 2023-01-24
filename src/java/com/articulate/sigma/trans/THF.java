@@ -400,11 +400,11 @@ public class THF {
         // After the translation processed has terminated for all formulas f, we
         // read off the THF signature from the map 'overallsig'
         signatures.add("\n thf(numbers,type,(" + numTp + ": $tType)).");
-        Set constants = overallsig.keySet();
-        List constantsL = new ArrayList(constants);
+        Set<String> constants = overallsig.keySet();
+        List<String> constantsL = new ArrayList(constants);
         Collections.sort(constantsL);
-        for (Iterator<String> it = constantsL.iterator(); it.hasNext();) {
-            String con = (String) it.next();
+        for (String con : constantsL) {
+            if (con.startsWith("=>")) continue;
             String ty = (String) overallsig.get(con);
             signatures.add("\n thf(" + con + ",type,(" + con + ": "
                     + ty + ")).");
@@ -462,12 +462,10 @@ public class THF {
 
         HashMap copyMap = (HashMap) map.clone();
         THFdebugOut("\n  Enter clearMapSpecial with " + f + " \n  map is " + map.toString());
-        Set keyset = map.keySet();
-        for (Iterator it = keyset.iterator(); it.hasNext();) {
-            String key = (String) it.next();
-            if (!key.contains("_THFTYPE_")) {
+        Set<String> keyset = map.keySet();
+        for (String key : keyset) {
+            if (!key.contains("_THFTYPE_"))
                 copyMap.remove(key);
-            }
         }
         THFdebugOut("\n  Exit clearMapSpecial\n  map is " + localsig.toString());	
         return copyMap;
@@ -489,7 +487,8 @@ public class THF {
         convertTypeInfo.put(boolTp,boolTp);
         convertTypeInfo.put(indTp,indTp);
         /* unknowns */
-        convertTypeInfo.put("Entity",unknownTp);
+        //convertTypeInfo.put("Entity",unknownTp);
+        convertTypeInfo.put("Entity",indTp); // trying this - AP
         convertTypeInfo.put("Object",unknownTp);
         /* Booleans */
         convertTypeInfo.put("Formula",boolTp);
@@ -1538,7 +1537,7 @@ public class THF {
      * @param thfTp is the THF type to encode
      *
      */
-    private String  makeNewConstWithSuffix(String oldConst, String thfTp) {
+    private String makeNewConstWithSuffix(String oldConst, String thfTp) {
 
         THFdebugOut("\n   Enter makeNewConstWithSuffix with oldconst " + oldConst + " and thfTp " + thfTp);
         String delimiter = "_THFTYPE_";
@@ -1557,7 +1556,7 @@ public class THF {
      * It works structurally similar to toTHF1 but it cares about the 
      * 'unknownTp' information leftover by toTHF1; several calls to THF2
      * may be required until sufficient type information is generated and
-     * all 'unknownTp' entries have dissappeared
+     * all 'unknownTp' entries have disappeared
      *
      * @param f A formula to convert into THF format
      *
@@ -1593,8 +1592,8 @@ public class THF {
             else {
                 String symcon = toTHFKifConst(sym);
                 if (terms.get(symcon) == null) {
-		    terms.put(symcon,indTp);
-		    localsig.put(symcon,indTp);
+		            terms.put(symcon,indTp);
+		            localsig.put(symcon,indTp);
                 }
                 String nwTp = groundType(symcon,(String) terms.get(symcon));
                 symcon = makeNewConstWithSuffix(symcon,nwTp);
