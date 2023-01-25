@@ -525,8 +525,8 @@ public class SUMOtoTFAform {
                 return "";
             }
             else
-                return processRecurse(new Formula(args.get(1)),parentType) + " => " +
-                        processRecurse(new Formula(args.get(2)),parentType);
+                return "(" + processRecurse(new Formula(args.get(1)),parentType) + " => " +
+                        processRecurse(new Formula(args.get(2)),parentType) + ")";
         }
         if (op.equals("<=>")) {
             if (args.size() != 3) { // op + 2 args
@@ -534,10 +534,10 @@ public class SUMOtoTFAform {
                 return "";
             }
             else
-                return "(" + processRecurse(new Formula(args.get(1)),parentType) + " => " +
+                return "((" + processRecurse(new Formula(args.get(1)),parentType) + " => " +
                         processRecurse(new Formula(args.get(2)),parentType) + ") & (" +
                         processRecurse(new Formula(args.get(2)),parentType) + " => " +
-                        processRecurse(new Formula(args.get(1)),parentType) + ")";
+                        processRecurse(new Formula(args.get(1)),parentType) + "))";
         }
         if (op.equals("or"))
             return processConjDisj(f,car,parentType,args);
