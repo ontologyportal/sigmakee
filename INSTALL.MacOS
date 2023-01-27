@@ -41,6 +41,8 @@ chmod 777 apache-tomcat-8.5.23/bin/*
 cd ../workspace
 git clone https://github.com/ontologyportal/sigmakee
 git clone https://github.com/ontologyportal/sumo
+git clone https://github.com/ontologyportal/TPTP-ANTLR
+git clone https://github.com/ontologyportal/SigmaUtils
 
 cd ../Programs
 curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
