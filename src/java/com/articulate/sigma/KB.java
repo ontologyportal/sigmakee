@@ -3458,7 +3458,7 @@ public class KB implements Serializable {
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
-            System.out.println("INFO in KB.loadVampire(): generating " + lang + "file " + infFilename);
+            System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
             try {
                 if (!formulaMap.isEmpty()) {
                     HashSet<String> formulaStrings = new HashSet<String>();
