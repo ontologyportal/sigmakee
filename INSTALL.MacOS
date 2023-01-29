@@ -23,7 +23,7 @@ these variables created before the next step, and replace /Users/user with your 
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
   export CATALINA_OPTS="-Xms500M -Xmx2500M"
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-8.5.23
-  export SIGMA_CP=$SIGMA_HOME/sigmakee/build/classes:$SIGMA_HOME/sigmakee/build/lib/*:$SIGMA_HOME/sigmakee/lib/*
+  export SIGMA_CP=$SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/*:$SIGMA_SRC/lib/*
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5):
 
