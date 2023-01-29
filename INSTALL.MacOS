@@ -74,7 +74,8 @@ README.txt below to set up accounts.  Please note however this is not working as
 
 To test run
 
-java  -Xmx2500m -classpath $SIGMA_CP com.articulate.sigma.KB
+  java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
+    com.articulate.sigma.KB -c Object Transaction
 
 To start Tomcat execute
 

@@ -209,6 +209,11 @@ You should see something like -
 java version "1.8.0_241"
 Java(TM) SE Runtime Environment (build 1.8.0_241-b07)
 Java HotSpot(TM) 64-Bit Server VM (build 25.241-b07, mixed mode)
+
+Verify that you see the same Java version when you startup Apache Tomcat that you do when you
+run java -version .  It's also a good idea to run javac -version to verify that you have installed
+the full JDK and not just te JRE.
+
 On AWS it helps to be reminded of which server you're on.  I use machine size as a reminder with
 
 export HOST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
