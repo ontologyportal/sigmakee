@@ -791,6 +791,10 @@ public class InferenceTestSuite {
             else {
                 KBmanager.getMgr().initializeOnce();
                 InferenceTestSuite its = new InferenceTestSuite();
+                if (args[0].indexOf('l') != -1)
+                    SUMOKBtoTPTPKB.lang = "thf";
+                if (args[0].indexOf('f') != -1)
+                    SUMOKBtoTPTPKB.lang = "tff";
                 KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
                 try {
                     resetAllForInference(kb);
