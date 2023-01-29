@@ -216,6 +216,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Write signatures for relations
      */
     public void writeRelationSort(String t, PrintWriter pw) {
 
