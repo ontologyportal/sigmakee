@@ -49,7 +49,7 @@ if (!role.equalsIgnoreCase("admin")) {
     }
     System.out.println("INFO in AskTell.jsp: inferenceEngine: " + inferenceEngine);
     System.out.println("INFO in AskTell.jsp: vampireMode: " + vampireMode);
-        System.out.println("INFO in AskTell.jsp: TPTPlang: " + TPTPlang);
+    System.out.println("INFO in AskTell.jsp: TPTPlang: " + TPTPlang);
     boolean syntaxError = false;
     boolean english = false;
     String englishStatement = null;
@@ -119,7 +119,6 @@ if (!role.equalsIgnoreCase("admin")) {
 
     com.articulate.sigma.tp.EProver eProver = null;
     com.articulate.sigma.tp.Vampire vampire = null;
-    String resultLeo = null;    
 
     String lineHtml =
       "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
@@ -148,14 +147,8 @@ if (!role.equalsIgnoreCase("admin")) {
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println("Vampire output: " + vampire.toString());
             }
-            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoSine")) {
-                resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoSine");
-            }	
-            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoLocal")) {
-                resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoLocal");
-            }
-            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LeoGlobal")) {
-                resultLeo = kb.askLEO(stmt,timeout,maxAnswers,"LeoGlobal");
+            if (req.equalsIgnoreCase("ask") && inferenceEngine.equals("LEO")) {
+                kb.leo = kb.askLeo(stmt,timeout,maxAnswers);
             }
         }
         catch (IOException ioe) {
@@ -185,6 +178,10 @@ if (!role.equalsIgnoreCase("admin")) {
               <% if (SUMOformulaToTPTPformula.lang.equals("tff")){ out.print(" CHECKED"); } %> >
               <label>tff mode</label> ]<BR>
     Choose an inference engine:<BR>
+
+    <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (inferenceEngine.equals("LEO")) {%>CHECKED<%}%>
+    onclick="document.getElementById('SoTPTPControl').style.display='none'" >
+    LEO-III <BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (inferenceEngine.equals("EProver")) {%>CHECKED<%}%>
     onclick="document.getElementById('SoTPTPControl').style.display='none'"
@@ -257,11 +254,24 @@ if (!role.equalsIgnoreCase("admin")) {
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
         }
     }
-    if (inferenceEngine.equals("LeoSine") || inferenceEngine.equals("LeoLocal") || inferenceEngine.equals("LeoGlobal")) {
-        if ((resultLeo != null) && (resultLeo.indexOf("Syntax error detected") != -1)) 
+    if (inferenceEngine.equals("LEO")) {
+        KBmanager.getMgr().prover = KBmanager.Prover.LEO;
+        if (kb.leo == null || kb.leo.output == null)
+            out.println("<font color='red'>Error.  No response from LEO-III.</font>");
+        if ((kb.leo != null) && (kb.leo.output.toString().indexOf("Syntax error detected") != -1))
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else 
-	    out.println("<font color='blue'>" + resultLeo + "</font>");
+        else {
+            System.out.println("in AskTell.jsp: trying LEO-III--------------");
+            com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
+            tpp.parseProofOutput(kb.leo.output, stmt, kb, kb.leo.qlist);
+            String link = tpp.createProofDotGraph();
+            if (tpp.proof.size() > 0)
+                out.println("<a href=\"" + link + "\">graphical proof</a><P>");
+            tpp.processAnswersFromProof(kb.leo.qlist,stmt);
+            System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
+            out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+        }
+
     }
 %>
     <p>
