@@ -2218,6 +2218,8 @@ public class WordNetUtilities {
             if (w.equals("all")) {
                 for (String word : words) {
                     for (String f : map.get(w)) {
+                        if (!StringUtil.isNumeric(f))
+                            continue;
                         int index = Integer.parseInt(f);
                         String frame = WordNet.wn.VerbFrames.get(index);
                         frame = frame.replace("----",word);
