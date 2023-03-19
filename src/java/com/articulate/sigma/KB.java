@@ -173,6 +173,9 @@ public class KB implements Serializable {
 
     public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 
+    // force regeneration of TPTP file
+    public static boolean force = false;
+
     public static boolean debug = false;
 
     /***************************************************************
@@ -3457,7 +3460,7 @@ public class KB implements Serializable {
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
             try {
                 if (!formulaMap.isEmpty()) {
