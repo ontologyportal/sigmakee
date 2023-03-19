@@ -40,9 +40,12 @@ public class ProofStep {
      /** A String of the inference type, e.g. add_answer_literal | assume_negation | etc. */
      public String inferenceType = null;
 
-     /** A String containing a valid KIF expression, that is the axiom 
+     /** A String containing a valid SUO-KIF expression, that is the axiom
       *  expressing the conclusion of this proof step. */
     public String axiom = null;
+
+    // ID of the SUMO axiom that corresponds to kb.axiomKey.keySet()
+    public String sourceID = "";
 
      /** The number assigned to this proof step, initially by EProver and
       *  then normalized by ProofStep.normalizeProofStepNumbers() */
