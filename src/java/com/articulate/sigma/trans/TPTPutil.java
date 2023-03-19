@@ -16,6 +16,7 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import tptp_parser.TPTPFormula;
@@ -66,8 +67,6 @@ public class TPTPutil {
      * parenthesis triggers a new line and added indentation.
      *
      * @param hyperlink - the URL to be referenced to a hyperlinked term.
-     * @param indentChars - the proper characters for indenting text.
-     * @param eolChars - the proper character for end of line.
      */
     public static String htmlTPTPFormat(Formula f, String hyperlink, boolean traditionalLogic) {
 
@@ -201,7 +200,55 @@ public class TPTPutil {
      */
     public static boolean sourceAxiom(TPTPFormula ps) {
 
+        //System.out.println("sourceAxiom() supports: " + ps.supports.size());
+        //System.out.println("sourceAxiom() ps.infRule: " + ps.infRule);
         return ps.supports.size() == 0 && !ps.infRule.startsWith("introduced");
+    }
+
+    /** ***************************************************************
+     * Is there a citation as a containsFormula relation for this
+     * axiom?
+     */
+    public static boolean citation(String sumoStep, String stepName, KB kb) {
+
+        //System.out.println("\nTPTPutil.citation: sumoStep: " + sumoStep);
+        //System.out.println("TPTPutil.citation: stepName: " + stepName);
+        ArrayList<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
+        //System.out.println("TPTPutil.citation: formulas: " + ciAxioms);
+        for (Formula f : ciAxioms) {
+            Formula arg = f.getArgument(2);
+            //System.out.println("TPTPutil.citation: formula arg: " + arg);
+            if (arg != null && arg.listP()) {
+                if (arg.equals(new Formula(sumoStep))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** ***************************************************************
+     * Is there a citation as a containsFormula relation for this
+     * axiom?
+     */
+    public static String getCitationString(String sumoStep, String stepName, KB kb) {
+
+        ArrayList<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
+        //System.out.println("TPTPutil.getCitationString: stepName: " + stepName);
+        //System.out.println("TPTPutil.getCitationString: sumo: " + sumoStep);
+        for (Formula f : ciAxioms) {
+            Formula arg = f.getArgument(2);
+            if (arg != null && arg.listP()) {
+                if (arg.equals(new Formula(sumoStep))) {
+                    //System.out.println("TPTPutil.getCitationString: formula arg: " + arg);
+                    String term = f.getStringArgument(1);
+                    ArrayList<Formula> comments = kb.askWithRestriction(0,"comment",1,term);
+                    if (comments != null && comments.size() > 0)
+                        return comments.get(0).getStringArgument(2);
+                }
+            }
+        }
+        return "";
     }
 
     /** ***************************************************************
@@ -223,6 +270,7 @@ public class TPTPutil {
         System.out.println("TPTPutil class");
         System.out.println("  options (with a leading '-'):");
         System.out.println("  f <file> - parse a TPTP3 proof file and output source axioms in SUO-KIF");
+        System.out.println("  l <file> - parse a TPTP3 proof and substitute in legal argument text");
         System.out.println("  t - run test");
         System.out.println("  h - show this help");
     }
@@ -258,6 +306,45 @@ public class TPTPutil {
                         if (TPTPutil.sourceAxiom(step)) {
                             Formula f = new Formula(step.sumo);
                             System.out.println(f.format("","  ","\n"));
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+            else if (args != null && args.length > 1 && args[0].contains("i")) {
+                try {
+                    KB.force = true;
+                    kb.loadVampire();
+                    Vampire vamp = kb.askVampire(args[1], 30, 1);
+                    //System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+                    tpp = new TPTP3ProofProcessor();
+                    tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
+                    //System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
+                    //System.out.println("TPTPutil.main(): showing only source axioms ");
+                    //System.out.println("TPTPutil.main(): axiomKey: " + KB.axiomKey);
+                    for (TPTPFormula step : tpp.proof) {
+                        //System.out.println("TPTPutil.main(): step: " + step);
+                        if (TPTPutil.sourceAxiom(step)) {
+                            Formula f = new Formula(step.sumo);
+                            String name = step.infRule;
+                            //System.out.println("TPTPutil.main(): name: " + name);
+                            String id = "";
+                            if (name.startsWith("file(")) {
+                                int firstParen = name.indexOf("(");
+                                int firstComma = name.indexOf(",");
+                                int secondParen = name.indexOf(")", firstComma + 1);
+                                id = name.substring(firstComma + 1, secondParen);
+                                //System.out.println("TPTPutil.main(): id: " + id);
+                                if (KB.axiomKey.keySet().contains(id)) {
+                                    //System.out.println("TPTPutil.main(): formula: " + KB.axiomKey.get(id));
+                                    String str = getCitationString(KB.axiomKey.get(id).toString(), name, kb);
+                                    if (!StringUtil.emptyString(str))
+                                        System.out.println("\n" + str);
+                                }
+                            }
+                            System.out.println("\n" + f.format("","  ","\n"));
                         }
                     }
                 }
