@@ -409,6 +409,7 @@ public class SUMOKBtoTPTPKB {
         kb.axiomKey = axiomKey;
         KBmanager.getMgr().serialize();
         System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
+        KB.axiomKey = axiomKey;
         System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
         return result;
     }
@@ -484,7 +485,7 @@ public class SUMOKBtoTPTPKB {
         }
         String fileWritten = skbtptpkb.writeFile(filename, null, false, pw);
         if (StringUtil.isNonEmptyString(fileWritten))
-            System.out.println("File written: " + fileWritten);
+            System.out.println("File written: " + fileWritten + " with key: " + axiomKey);
         else
             System.out.println("Could not write " + filename);
     }
