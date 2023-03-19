@@ -333,6 +333,12 @@ public class TPTP3ProofProcessor {
 					ps.inferenceType = tptpF.infRule;
 					ps.input = line;
 					ps.premises.addAll(supportIdToInts(tptpF.supports));
+					if (tptpF.supports != null && tptpF.supports.size() == 1 && tptpF.supports.get(0).startsWith("file(")) {
+						int firstParen = tptpF.supports.get(0).indexOf("(");
+						int firstComma = tptpF.supports.get(0).indexOf(",");
+						int secondParen = tptpF.supports.get(0).indexOf(")", firstComma + 1);
+						ps.sourceID = tptpF.supports.get(0).substring(firstComma + 1, secondParen);
+					}
 				}
 			}
 			else
@@ -595,7 +601,7 @@ public class TPTP3ProofProcessor {
 	 */
 	private String removePrefix(String st) {
 
-		System.out.println("TPTP3ProofProcessor.removePrefix(): " + st);
+		//System.out.println("TPTP3ProofProcessor.removePrefix(): " + st);
 		String tsp = Formula.termSymbolPrefix;
 		if (st.startsWith(tsp))
 			return st.substring(tsp.length(),st.length());
