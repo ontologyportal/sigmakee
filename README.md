@@ -175,6 +175,10 @@ sudo mkdir theuser
 sudo chown theuser theuser
 cd theuser
 ```
+make sure you're running bash (and answer /bin/bash)
+```sh
+chsh
+```
 install unzip
 ```sh
 sudo apt-get install unzip
