@@ -2161,7 +2161,7 @@ public class GenSimpTestData {
         System.out.println("  -t - run tests");
         System.out.println("  -a <filename> - generate logic/language pairs for all statements in KB");
         System.out.println("  -g <filename> - generate ground statement pairs for all relations");
-        System.out.println("  -s <filename> - generate NL/logic compositional sentences to <filename> (no extension)");
+        System.out.println("  -s <filename> <optional count> - generate NL/logic compositional <count> sentences to <filename> (no extension)");
         System.out.println("  -n - generate term formats from term names in a file");
         System.out.println("  -u - other utility");
     }
@@ -2190,10 +2190,12 @@ public class GenSimpTestData {
                     }
                 }
                 if (args != null && args.length > 1 && args[0].equals("-s")) { // create NL/logic synthetically
-                        GenSimpTestData gstd = new GenSimpTestData();
-                        gstd.initActions();
-                        englishFile.close();
-                        logicFile.close();
+                    if (args.length > 2)
+                        sentMax = Integer.parseInt(args[2]);
+                    GenSimpTestData gstd = new GenSimpTestData();
+                    gstd.initActions();
+                    englishFile.close();
+                    logicFile.close();
                 }
                 if (args != null && args.length > 0 && args[0].equals("-g")) { // generate ground statements
                     generate();
