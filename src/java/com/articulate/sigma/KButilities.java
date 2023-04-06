@@ -184,6 +184,44 @@ public class KButilities {
         return terms.size();
     }
 
+
+    /** *************************************************************
+     * Get count of all the different kinds of formulas as to their
+     * logical expressivity
+     */
+    public static Map<String,Integer> countFormulaTypes(KB kb) {
+
+        Map<String,Integer> result = new HashMap<>();
+        for (Formula f : kb.formulaMap.values()) {
+            if (f.isRule()) {
+                MapUtils.addToFreqMap(result, "rules", 1);
+                if (f.isHorn(kb))
+                    MapUtils.addToFreqMap(result, "horn", 1);
+                if (f.isHigherOrder(kb)) {
+                    if (f.isModal(kb))
+                        MapUtils.addToFreqMap(result, "modal", 1);
+                    if (f.isEpistemic(kb))
+                        MapUtils.addToFreqMap(result, "epistemic", 1);
+                    if (f.isTemporal(kb))
+                        MapUtils.addToFreqMap(result, "temporal", 1);
+                    if (f.isOtherHOL(kb))
+                        MapUtils.addToFreqMap(result, "otherHOL", 1);
+                }
+                else
+                    MapUtils.addToFreqMap(result, "first-order (inc. horn)", 1);
+            }
+            else {
+                if (f.isGround())
+                    MapUtils.addToFreqMap(result,"ground",1);
+                if (f.isBinary())
+                    MapUtils.addToFreqMap(result,"binary",1);
+                else
+                    MapUtils.addToFreqMap(result,"higher-arity",1);
+            }
+        }
+        return result;
+    }
+
     /** *************************************************************
      * Generate default synonymousExternalConcept statements for a .tsv
      */
