@@ -3876,7 +3876,8 @@ public class KB implements Serializable {
         System.out.println("  f - use TFF language");
         System.out.println("  r - use (regular) FOF language");
         System.out.println("  o <seconds> - set the query timeout");
-        System.out.println("  -c <term1> <term2> - compare term depth");
+        System.out.println("  c <term1> <term2> - compare term depth");
+        System.out.println("  s - show statistics");
     }
 
     /** ***************************************************************
@@ -3929,6 +3930,10 @@ public class KB implements Serializable {
                 System.out.println("KB.main(): set to FOF language");
                 SUMOformulaToTPTPformula.lang = "fof";
                 SUMOKBtoTPTPKB.lang = "fof";
+            }
+            if (args != null && args.length > 0 && args[0].contains("s")) {
+                System.out.println("KB.main(): show statistics");
+                System.out.println(HTMLformatter.showStatistics(kb));
             }
             int timeout = 30;
             if (args != null && args.length > 2 && args[0].contains("o")) {
