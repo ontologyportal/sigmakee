@@ -317,6 +317,22 @@ public class HTMLformatter {
 
         show.append("<table><tr><td>Relations: </td><td align=right>" + kb.getCountRelations() + "</td></tr>\n");
         show.append("<tr><td>non-linguistic axioms: </td><td align=right>" + KButilities.getCountNonLinguisticAxioms(kb) + "</td></tr>\n");
+        show.append("</table>\n");
+
+        HashMap<String,Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
+        show.append("<table><tr><td>Ground tuples: </td><td align=right>" + stats.get("ground") + "</td></tr>\n");
+        show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>" + stats.get("binary") + "</td></tr>\n");
+        show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>" + stats.get("higher-arity") + "</td></tr>\n");
+        show.append("</table>\n");
+
+        show.append("<table><tr><td></td><td> Rules: </td><td align=right>" + kb.getCountRules() + "</td></tr>\n");
+        show.append("<tr><td>&nbsp;&nbsp;of which are</td><td> horn: </td><td align=right>" + stats.get("horn") + "</td></tr>\n");
+        show.append("<tr><td></td><td> first-order: </td><td align=right>" + stats.get("first-order") + "</td></tr>\n");
+        show.append("<tr><td></td><td> temporal: </td><td align=right>" + stats.get("temporal") + "</td></tr>\n");
+        show.append("<tr><td></td><td>modal: </td><td align=right>" + stats.get("modal") + "</td></tr>\n");
+        show.append("<tr><td></td><td>epistemic: </td><td align=right>" + stats.get("epistemic") + "</td></tr>\n");
+        show.append("<tr><td></td><td>other higher-order: </td><td align=right>" + stats.get("otherHOL") + "</td></tr>\n");
+        show.append("</table>\n");
         return show.toString();
     }
 
@@ -948,29 +964,6 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
-     *  Create an HTML formatted result of a query.
-
-    public static String formatProofResult(String result, String stmt, String processedStmt,
-            String lineHtml, String kbName, String language) {
-        return formatProofResult(result, stmt, processedStmt, lineHtml, kbName, language, 1);
-    }
-
-    /** *************************************************************
-
-    public static String formatProofResult(String result, String stmt, String processedStmt,
-            String lineHtml, String kbName, String language, int answerOffset) {
-
-        if (result != null && result.toString().length() > 0) {       
-            BasicXMLparser res = new BasicXMLparser(result.toString());
-            if (res != null) {
-            	ArrayList<BasicXMLelement> elements = res.elements;            	
-          		return formatProofResult(elements, stmt, processedStmt, lineHtml, kbName, language, answerOffset);
-            }
-        }        
-        return null;
-    }
- */
-    /** *************************************************************
      * Create HTML formatted output for a TPTP3 proof
      */    
     public static String formatTPTP3ProofResult(TPTP3ProofProcessor tpp, String stmt,
@@ -1023,51 +1016,7 @@ public class HTMLformatter {
     	html.append("</table>" + "\n");
     	return html.toString();
     }
-    
-    /** *************************************************************
 
-    public static String formatProofResult(ArrayList<BasicXMLelement> proof, String stmt, String processedStmt,
-    		String lineHtml, String kbName, String language, int answerOffset) {
-
-    	StringBuilder html = new StringBuilder();
-    	ProofProcessor pp = new ProofProcessor(proof);           
-    	for (int i = 0; i < pp.numAnswers(); i++) {
-    		ArrayList<TPTPFormula> proofSteps = null;
-    		// proofSteps = pp.getProofSteps(i);
-    		//proofSteps = new ArrayList<ProofStep>(ProofStep.normalizeProofStepNumbers(proofSteps));
-    		//proofSteps = new ArrayList<ProofStep>(ProofStep.removeDuplicates(proofSteps));
-
-    		if (i != 0)
-    			html = html.append(lineHtml + "\n");
-    		html = html.append("Answer " + "\n");
-    		html = html.append(i+answerOffset);                
-    		html = html.append(". ");
-    		String[] answer = null;
-    		//answer = pp.returnAnswer(i, processedStmt).split(";");
-    		for(int k=0; k<answer.length; k++) {
-    			html.append(answer[k]+ "<br/>");
-    			String answerstr = null;
-    			//answerstr = pp.returnAnswer(i, processedStmt);
-    			if (!answerstr.equalsIgnoreCase("no")) {
-    				html = html.append("<p><table width=\"95%\">" + "\n");
-    				for (int l = 0; l < proofSteps.size(); l++) {
-    					if (l % 2 == 1)
-    						html = html.append("<tr bgcolor=#EEEEEE>" + "\n");
-    					else
-    						html = html.append("<tr>" + "\n");	                        
-    					html = html.append("<td valign=\"top\">" + "\n");
-    					html = html.append(l+1);
-    					html = html.append(". </td>" + "\n");
-    					html = html.append(HTMLformatter.proofTableFormat(stmt,proofSteps.get(l), kbName, language) + "\n");
-    					html = html.append("</tr>\n" + "\n");
-    				}
-    				html = html.append("</table>" + "\n");
-    			}
-    		}
-    	}
-    	return html.toString();
-    }
-    */
     /** *************************************************************
      */    
     public static String formatConsistencyCheck(String msg, String ccheckResult, 
