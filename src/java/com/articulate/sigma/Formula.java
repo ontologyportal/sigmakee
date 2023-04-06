@@ -2578,12 +2578,41 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Returns true if term is a SUO-KIF mathematical function, else
      * returns false.
-     *
      * @param term A String.
      */
     public static boolean isMathFunction(String term) {
 
         return (!StringUtil.emptyString(term) && MATH_FUNCTIONS.contains(term));
+    }
+
+    /** ***************************************************************
+     */
+    public boolean isModal(KB kb) {
+
+        return (this.isHigherOrder(kb) && this.getFormula().contains("modalAttribute"));
+    }
+
+    /** ***************************************************************
+     */
+    public boolean isEpistemic(KB kb) {
+
+        return (this.isHigherOrder(kb) &&
+                (this.getFormula().contains("knows") || this.getFormula().contains("believes")));
+    }
+
+    /** ***************************************************************
+     */
+    public boolean isTemporal(KB kb) {
+
+        return (this.isHigherOrder(kb) && this.getFormula().contains("holdsDuring"));
+    }
+
+    /** ***************************************************************
+     */
+    public boolean isOtherHOL(KB kb) {
+
+        return (this.isHigherOrder(kb) && !this.isTemporal(kb) &&
+                !this.isEpistemic(kb) && !this.isModal(kb));
     }
 
     /** ***************************************************************
@@ -2631,7 +2660,6 @@ public class Formula implements Comparable, Serializable {
      * Note that this test is purely syntactic, and could fail for
      * functions that do not adhere to the convention of ending all
      * functions with "Fn".
-     *
      * @param term A String.
      */
     @Deprecated
@@ -2642,10 +2670,8 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Returns true if term is a SUO-KIF Skolem term, else returns false.
-     *
+     * Returns true if term is a SUO-KIF Skolem term, else returns false
      * @param term A String.
-     *
      * @return true or false
      */
     public static boolean isSkolemTerm(String term) {
