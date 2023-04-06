@@ -320,19 +320,19 @@ public class HTMLformatter {
         show.append("</table>\n");
 
         HashMap<String,Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
-        show.append("<table><tr><td>Ground tuples: </td><td align=right>" + stats.get("ground") + "</td></tr>\n");
+        show.append("<P><table><tr><td>Ground tuples: </td><td align=right>" + stats.get("ground") + "</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>" + stats.get("binary") + "</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>" + stats.get("higher-arity") + "</td></tr>\n");
         show.append("</table>\n");
 
-        show.append("<table><tr><td></td><td> Rules: </td><td align=right>" + kb.getCountRules() + "</td></tr>\n");
+        show.append("<P><table><tr><td>Rules: </td><td align=right>" + kb.getCountRules() + "</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which are</td><td> horn: </td><td align=right>" + stats.get("horn") + "</td></tr>\n");
         show.append("<tr><td></td><td> first-order: </td><td align=right>" + stats.get("first-order") + "</td></tr>\n");
         show.append("<tr><td></td><td> temporal: </td><td align=right>" + stats.get("temporal") + "</td></tr>\n");
         show.append("<tr><td></td><td>modal: </td><td align=right>" + stats.get("modal") + "</td></tr>\n");
         show.append("<tr><td></td><td>epistemic: </td><td align=right>" + stats.get("epistemic") + "</td></tr>\n");
         show.append("<tr><td></td><td>other higher-order: </td><td align=right>" + stats.get("otherHOL") + "</td></tr>\n");
-        show.append("</table>\n");
+        show.append("</table><P>\n");
         return show.toString();
     }
 
