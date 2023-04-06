@@ -589,7 +589,11 @@ public class GenSimpTestData {
     }
 
     /** ***************************************************************
-     * @return objects
+     * Collect capability axioms of a specific form: Antecedent must be
+     * a single (instance ?X ?Y) literal.  Consequent must be a single
+     * (capability ?A ?B ?X) literal.  Returns ?Y - class of the thing,
+     * ?A - the Process type and ?B the role that ?Y plays in the process.
+     * @return Preposition objects
      */
     public HashSet<Preposition> collectCapabilities() {
 
