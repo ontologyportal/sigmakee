@@ -208,7 +208,7 @@ public class KButilities {
                         MapUtils.addToFreqMap(result, "otherHOL", 1);
                 }
                 else
-                    MapUtils.addToFreqMap(result, "first-order (inc. horn)", 1);
+                    MapUtils.addToFreqMap(result, "first-order", 1);
             }
             else {
                 if (f.isGround())
