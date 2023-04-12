@@ -37,89 +37,6 @@ public class SUMOformulaToTPTPformula {
      *
      * @param st is the StreamTokenizer_s that contains the current token
      * @return the String that is the translated token
-
-    public static String translateWordNew(String st, int type, boolean hasArguments) {
-
-        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): input: '" + st + "'");
-        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): type: " + type);
-        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): hasArguments: " + hasArguments);
-        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): containsKey: " + SUMOtoTFAform.numericConstantValues.containsKey(st));
-        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): lang: " + lang);
-        if (debug) System.out.println("translateWordNew(): " + SUMOtoTFAform.numericConstantValues);
-        int translateIndex;
-        List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT,
-                Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF,
-                Formula.EQUAL);
-        List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
-
-        List<String> kifPredicates =
-                Arrays.asList("<=","<",">",">=",
-                        "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
-
-        List<String> kifConstants =
-                Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE);
-        List<String> tptpConstants = Arrays.asList("$true","$false");
-
-        List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN,
-                Formula.PLUSFN, Formula.MINUSFN);
-        List<String> tptpFunctions = Arrays.asList("product","quotient","sum","difference");
-
-        List<String> kifRelations = new ArrayList<String>();
-        kifRelations.addAll(kifPredicates);
-        kifRelations.addAll(kifFunctions);
-        String mentionSuffix = Formula.termMentionSuffix;
-        //----Places single quotes around strings, and replace \n by space
-        if (type == 34)
-            return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
-        //----Fix variables to have leading V_
-        char ch0 = ((st.length() > 0)
-                ? st.charAt(0)
-                : 'x');
-        char ch1 = ((st.length() > 1)
-                ? st.charAt(1)
-                : 'x');
-        if (ch0 == '?' || ch0 == '@')
-            return(Formula.termVariablePrefix + st.substring(1).replace('-','_'));
-        //----Translate special constants
-        translateIndex = kifConstants.indexOf(st);
-        if (translateIndex != -1)
-            return(tptpConstants.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
-
-        //----Translate operators
-        translateIndex = kifOps.indexOf(st);
-        if (translateIndex != -1 && hasArguments) {
-            return (tptpOps.get(translateIndex));
-        }
-
-        String term = st;
-        if (!hasArguments) {
-            if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
-                    || term.endsWith("Fn")
-                    || KB.isRelationInAnyKB(term)) {
-                term += mentionSuffix;
-            }
-        }
-        if (debug) System.out.println("SUMOformulaToTPTPformula.translateWordNew(): almost done: " + term);
-        if (StringUtil.isNumeric(term) && hideNumbers && !lang.equals("tff")) {
-            if (term.indexOf(".") > -1)
-                term = term.replace('.','_');
-            if (term.indexOf("-") > -1)
-                term = term.replace('-','_');
-            term = "n__" + term;
-        }
-        if (kifOps.contains(term))
-            return(term.replace('-','_')); // shouldn't be needed, no kifOps contain '-'
-        else
-            return(Formula.termSymbolPrefix + term.replace('-','_'));
-    }
-*/
-    /** ***************************************************************
-     * Encapsulates translateWord_1, which translates the logical
-     * operators and inequalities in SUO-KIF to their TPTP
-     * equivalents.
-     *
-     * @param st is the StreamTokenizer_s that contains the current token
-     * @return the String that is the translated token
      */
     public static String translateWord(String st, int type, boolean hasArguments) {
 
@@ -129,13 +46,6 @@ public class SUMOformulaToTPTPformula {
         if (debug) System.out.println("translateWord(): " + SUMOtoTFAform.numericConstantValues);
         String result = null;
         try {
-            //if (lang.equals("tff")) {
-            //    if (SUMOtoTFAform.numericConstantValues.containsKey(st)) {
-            //        if (debug)
-            //            System.out.println("SUMOformulaToTPTPformula.translateWord(): constant " + SUMOtoTFAform.numericConstantValues.get(st));
-            //        return (SUMOtoTFAform.numericConstantValues.get(st));
-            //    }
-           // }
             result = translateWord_1(st,type,hasArguments);
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
             if (result.equals("$true" + Formula.termMentionSuffix) || result.equals("$false" + Formula.termMentionSuffix))
@@ -319,7 +229,7 @@ public class SUMOformulaToTPTPformula {
     private static String processQuant(Formula f, Formula car, String op,
                                        ArrayList<String> args) {
 
-        //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantifier");
+        if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantifier");
         if (args.size() < 2) {
             System.out.println("Error in SUMOformulaToTPTPformula.processQuant(): wrong number of arguments to " + op + " in " + f);
             return "";
@@ -378,8 +288,8 @@ public class SUMOformulaToTPTPformula {
     public static String processLogOp(Formula f, Formula car, ArrayList<String> args) {
 
         String op = car.getFormula();
-        //System.out.println("processRecurse(): op: " + op);
-        //System.out.println("processRecurse(): args: " + args);
+        if (debug) System.out.println("processLogOp(): op: " + op);
+        if (debug) System.out.println("processLogOp(): args: " + args);
         if (op.equals("and"))
             return processConjDisj(f,car,args);
         if (op.equals("=>")) {
@@ -508,6 +418,7 @@ public class SUMOformulaToTPTPformula {
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
+        if (debug) System.out.println("SUMOformulaToTPTPformula.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (SUMOKBtoTPTPKB.lang.equals("tff"))
             return "( " + SUMOtoTFAform.process(suoString,query) + " )";
@@ -521,6 +432,9 @@ public class SUMOformulaToTPTPformula {
                 stmts.add(new Formula(suoString));
             return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
         }
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+            return "( " + process(new Formula(suoString),query) + " )";
+        System.out.println("ERROR in tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
         return "( " + process(new Formula(suoString),query) + " )";
     }
 
@@ -553,254 +467,6 @@ public class SUMOformulaToTPTPformula {
         return (f.getFormula());
     }
 
-    /** ***************************************************************
-     * Parse a single formula into TPTP format
-
-    public static String tptpParseSUOKIFStringOld(String suoString, boolean query) {
-
-        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): input: " + suoString);
-        if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): input: " + suoString);
-        Formula tempF = new Formula();      // Special case to rename Foo for (instance Foo Class)
-        tempF.read(suoString);              // so a symbol can't be both a class and an instance. However,
-                                            // this may not be needed and we might just not allow a class 
-                                            // to be an instance of itself
-        if (tempF.getArgument(0).equals("instance") &&
-            tempF.getArgument(2).equals("Class")) {
-            String arg1 = tempF.getStringArgument(1);
-            // suoString = "(instance " + arg1 + Formula.classSymbolSuffix + " Class)";
-            suoString = "(instance " + arg1 + " Class)";
-        }
-        if (tempF.getArgument(0).equals("instance") &&
-                tempF.getArgument(2).equals(tempF.getArgument(1))) {
-            return null;
-        }
-        
-        StreamTokenizer_s st = null;
-        String translatedFormula = null;
-        try {
-            int parenLevel;
-            boolean inQuantifierVars;
-            boolean lastWasOpen;
-            boolean inHOL;
-            int inHOLCount;
-            Stack<String> operatorStack = new Stack<String>();
-            Stack<Integer> countStack = new Stack<Integer>();
-            Vector<String> quantifiedVariables = new Vector<String>();
-            Vector<String> allVariables = new Vector<String>();
-            int index;
-            int arity;
-            String quantification;
-
-            StringBuilder tptpFormula = new StringBuilder();
-
-            parenLevel = 0;
-            countStack.push(Integer.valueOf(0));
-            lastWasOpen = false;
-            inQuantifierVars = false;
-            inHOL = false;
-            inHOLCount = 0;
-
-            st = new StreamTokenizer_s(new StringReader(suoString));
-            KIF.setupStreamTokenizer(st);
-            do {
-                if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): looping: " + st);
-                if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 1: " + lastWasOpen);
-                if (debug) System.out.println("tptpParseSUOKIFString(): so far: " + tptpFormula);
-                st.nextToken();
-                if (st.ttype == 40) {         //----Open paren
-                    if (debug) System.out.println("tptpParseSUOKIFString(): open bracket: " + st);
-                    if (lastWasOpen)      //----Should not have ((in KIF
-                        throw new ParseException("Parsing error in " + suoString + ". Doubled open parentheses.",0);                                       
-                    if (inHOL)              //----Track nesting of ()s for hol__, so I know when to close the '
-                        inHOLCount++;
-                    lastWasOpen = true;
-                    parenLevel++;
-                    if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 2: " + lastWasOpen);
-                } 
-                else if (st.ttype == StreamTokenizer.TT_WORD &&  //----Operators
-                           (((arity = operatorArity(st)) > 0) || st.sval.equals(Formula.EQUAL))) {
-                    if (debug) System.out.println("tptpParseSUOKIFString(): operator: " + st);
-                    if (st.sval.equals(Formula.EQUAL))
-                        arity = 2;
-                    if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 3: " + lastWasOpen);
-                    if (!lastWasOpen) {             //----Operators must be preceded by a ( or else they are arguments
-                        if (countStack.peek() > 0) {
-                            if (operatorStack.peek() != ",") tptpFormula.append(" ");
-                            tptpFormula.append(operatorStack.peek());
-                            if (operatorStack.peek() != ",") tptpFormula.append(" ");
-                        }
-                        // TODO: may have to trap strings - AP
-                        tptpFormula.append(translateWordNew(st.sval, st.ttype, false));      //----Output the word
-                        incrementTOS(countStack);                         //----Increment counter for this level
-                    }
-                    else {
-                        //----This is the start of a new term - put in the infix operator if not the
-                        //----first term for this operator
-                        if (countStack.peek() > 0) {
-                            // System.out.println("  1 : countStack == " + countStack);
-                            // System.out.println("  1 : operatorStack == " + operatorStack);
-                            tptpFormula.append(operatorStack.peek());
-                        }
-                        if (inHOL && inHOLCount == 1)     //----If this is the start of a hol__ situation, quote it all
-                            tptpFormula.append("'");
-                        tptpFormula.append("(");          //----()s around all operator expressions
-                        if (arity == 1) {                 //----Output unary as prefix
-                            tptpFormula.append(translateWordNew(st.sval, st.ttype, true));
-                            countStack.push(Integer.valueOf(0));   //----Note the new operator (dummy) with 0 operands so far
-                            operatorStack.push(",");
-                            //----Check if the next thing will be the quantified variables
-                            if (st.sval.equals("forall") || st.sval.equals("exists"))
-                                inQuantifierVars = true;
-                        }
-                        else if (arity == 2) {    //----Binary operator
-                            //----Note the new operator with 0 operands so far
-                            countStack.push(Integer.valueOf(0));
-                            operatorStack.push(translateWordNew(st.sval, st.ttype, true));
-                        }
-                        lastWasOpen = false;
-                    }
-                } 
-                else if (st.ttype == 96) {   //----Back tick - token translation to TPTP. Everything gets ''ed                    
-                    if (!inHOL) {              //----They may be nested - only start the situation at the outer one
-                        inHOL = true;
-                        inHOLCount = 0;
-                    }
-                } 
-                else if (st.ttype == 34 ||  //----Quote - Term token translation to TPTP
-                           st.ttype == StreamTokenizer.TT_NUMBER ||
-                           (st.sval != null && (Character.isDigit(st.sval.charAt(0)))) ||
-                           st.ttype == StreamTokenizer.TT_WORD) {
-                    if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 4: " + lastWasOpen);
-                    if (lastWasOpen) {          //----Start of a predicate or variable list
-                        if (inQuantifierVars) { //----Variable list
-                            tptpFormula.append("[");
-                            tptpFormula.append(translateWordNew(st.sval,st.ttype,false));
-                            incrementTOS(countStack);
-                        } 
-                        else {                //----Predicate
-                            //----This is the start of a new term - put in the infix operator if not the
-                            //----first term for this operator
-                            if (countStack.peek() > 0) {
-                                if (operatorStack.peek() != ",") tptpFormula.append(" ");
-                                tptpFormula.append(operatorStack.peek());
-                                if (operatorStack.peek() != ",") tptpFormula.append(" ");
-                            }
-                            //----If this is the start of a hol__ situation, quote it all
-                            if (inHOL && inHOLCount == 1)
-                                tptpFormula.append("'");                            
-                            tptpFormula.append(translateWordNew(st.sval,st.ttype,true));   //----Predicate or function and (
-                            tptpFormula.append("(");                            
-                            countStack.push(Integer.valueOf(0));              //----Note the , for between arguments with 0 arguments so far
-                            operatorStack.push(",");
-                        }
-                        //----Argument or quantified variable
-                    } 
-                    else {
-                        if (debug) System.out.println("tptpParseSUOKIFString(): lastWasOpen 5: " + lastWasOpen);
-                        //----This is the start of a new term - put in the infix operator if not the
-                        //----first term for this operator
-                        if (countStack.peek() > 0) {
-                            if (operatorStack.peek() != ",") tptpFormula.append(" ");
-                            tptpFormula.append(operatorStack.peek());
-                            if (operatorStack.peek() != ",") tptpFormula.append(" ");
-                        }
-                        // TODO: may have to trap strings - AP
-                        tptpFormula.append(translateWordNew(st.sval,st.ttype,false));      //----Output the word
-                        incrementTOS(countStack);                         //----Increment counter for this level
-                    }
-                    //----Collect variables that are used and quantified
-                    if (!StringUtil.emptyString(st.sval)
-                        && (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@')) {
-                        if (inQuantifierVars)
-                            addVariable(st,quantifiedVariables);
-                        else
-                            addVariable(st,allVariables);
-                    }
-                    lastWasOpen = false;
-                } 
-                else if (st.ttype == 41) {      //----Close parentheses
-                    if (debug) System.out.println("tptpParseSUOKIFString(): close bracket: " + st);
-                    if (inHOL)                  //----Track nesting of ()s for hol__, so I know when to close the '
-                        inHOLCount--;
-                    //----End of quantified variable list
-                    if (inQuantifierVars) {
-                        //----Fake restarting the argument list because the quantified variable list
-                        //----does not use the operator from the surrounding expression
-                        countStack.pop();
-                        countStack.push(0);
-                        tptpFormula.append("] : ");
-                        inQuantifierVars = false;
-                        //----End of predicate or operator list
-                    } 
-                    else {                        
-                        countStack.pop();                //----Pop off the stacks to reveal the next outer layer
-                        operatorStack.pop();                        
-                        tptpFormula.append(")");         //----Close the expression               
-                        if (inHOL && inHOLCount == 0) {  //----If this closes a HOL expression, close the '
-                            tptpFormula.append("'");
-                            inHOL = false;
-                        }                        
-                        incrementTOS(countStack);        //----Note that another expression has been completed
-                    }
-                    lastWasOpen = false;
-
-                    parenLevel--;                    
-                    if (parenLevel == 0) {   //----End of the statement being processed. Universally quantify free variables
-                        //findFreeVariables(allVariables,quantifiedVariables);
-                        allVariables.removeAll(quantifiedVariables);
-                        if (allVariables.size() > 0) {
-                            if (query)
-                                quantification = "? [";
-                            else
-                                quantification = "! [";
-                            if (debug) System.out.println("SUMOformulaToTPTPformulas.tptpParseSUOKIFStringOld(): vars: " + allVariables);
-                            for (index = 0; index < allVariables.size(); index++) {
-                                if (index > 0)
-                                    quantification += ",";
-                                quantification += (String) allVariables.elementAt(index);
-                            }
-                            quantification += "] : (";
-                            tptpFormula.insert(0,"( " + quantification);
-                            tptpFormula.append(" ))");
-                        }
-                        if (StringUtil.emptyString(translatedFormula))
-                            translatedFormula = "( " + tptpFormula.toString() + " )";
-                        else
-                            translatedFormula += "& ( " + tptpFormula.toString() + " )";
-                    } 
-                    else if (parenLevel < 0) {
-                        throw new ParseException("Parsing error in " + suoString + 
-                                "Extra closing bracket at " + tptpFormula.toString(),0);
-                    }
-                } 
-                else if (st.ttype != StreamTokenizer.TT_EOF && st.ttype != StreamTokenizer.TT_EOL) {
-                    if (debug) System.out.println("tptpParseSUOKIFString(): eol: " + st);
-                	String error = null;
-                	switch (st.ttype) {
-                	case StreamTokenizer.TT_EOL : error = "End of line (which should not be an error)"; break;
-                	case StreamTokenizer.TT_NUMBER : error = "\nIllegal token '" + st.nval + "'"; break;
-                	case StreamTokenizer.TT_WORD : error = "\nIllegal token '" + st.sval + "'"; break;
-                	default : error = "\nUnknown illegal token"; break;
-                	}
-                    throw new ParseException("Parsing error in\n" + suoString + "\n" +
-                            error + " with TPTP so far:\n " + tptpFormula.toString(),0);
-                }
-            } while (st.ttype != StreamTokenizer.TT_EOF);
-
-            //----Bare word like $false didn't get done by a closing)
-            if (StringUtil.emptyString(translatedFormula))
-                translatedFormula = tptpFormula.toString();
-        }
-        catch (Exception ex2) {
-            System.out.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): ");
-            System.out.println(ex2.getMessage());
-            ex2.printStackTrace();
-        }
-        if (translatedFormula != null)
-            translatedFormula = translatedFormula.replaceAll("  "," ");
-        return translatedFormula;
-    }
-*/
     /** ***************************************************************
      * Parse formulae into TPTP format
      * Result is returned in _f.theTptpFormulas
@@ -875,49 +541,6 @@ public class SUMOformulaToTPTPformula {
         String teststr = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
         System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr,false));
-        //note we should expect
-        /*  fof(kb_SUMO_3489,axiom,(
-        ! [V__SET2,V__SET1] :
-            ( ( s__instance(V__SET1,s__Set)
-              & s__instance(V__SET2,s__Set) )
-               => ( ! [V__ELEMENT] :
-                      ( s__element(V__ELEMENT,V__SET1)
-                    <=> s__element(V__ELEMENT,V__SET2) )
-                 => V__SET1 = V__SET2 ) ) )).
-                 
-                 and not
-                 
-                 fof(kb_SUMO_3515,axiom,(( (
-      ! [V__SET2,V__SET1,V__ELEMENT] :
-          ((! [V__ELEMENT] :
-              ((s__instance(V__SET1,s__Set)
-              & s__instance(V__SET2,s__Set))
-               => (s__element(V__ELEMENT,V__SET1) <=>
-                   s__element(V__ELEMENT,V__SET2))))
-                   => (V__SET1 = V__SET2))) ))).
-                   
-        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(agent ?VAR4 ?VAR1)",false));
-        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(equal ?VAR4 ?VAR1)",false));        
-        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString("(=> " +
-                "  (and " +
-                "    (attribute ?H Muslim) " +
-                "    (equal " +
-                "      (WealthFn ?H) ?W)) " +
-                "(modalAttribute " +
-                "  (exists (?Z ?T) " +
-                "    (and " +
-                "      (instance ?Z Zakat) " +
-                "      (instance ?Y Year) " +
-                "      (during ?Y " +
-                "        (WhenFn ?H)) " +
-                "      (holdsDuring ?Y " +
-                "        (attribute ?H FullyFormed)) " +
-                "      (agent ?Z ?H) " +
-                "      (patient ?Z ?T) " +
-                "      (monetaryValue ?T ?C) " +
-                "      (greaterThan ?C " +
-                "        (MultiplicationFn ?W 0.025)))) Obligation)) ",false));
-                */
     }
 
     /** ***************************************************************
