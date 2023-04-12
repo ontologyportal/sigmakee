@@ -64,7 +64,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("Agent");
+        HashSet<String> set1 = Sets.newHashSet("AutonomousAgent");
         expected.put("?H", set1);
         HashSet<String> set2 = Sets.newHashSet("Process");
         expected.put("?D", set2);
@@ -88,7 +88,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        HashSet<String> set1 = Sets.newHashSet("Agent");
+        HashSet<String> set1 = Sets.newHashSet("AutonomousAgent");
         expected.put("?H", set1);
         HashSet<String> set2 = Sets.newHashSet("Process");
         expected.put("?D", set2);
@@ -115,7 +115,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
         HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?H", Sets.newHashSet("Agent"));
+        expected.put("?H", Sets.newHashSet("AutonomousAgent"));
         expected.put("?D", Sets.newHashSet("Process"));
         expected.put("?Car", Sets.newHashSet("Entity"));
 
@@ -294,7 +294,7 @@ public class FormulaPreprocessorComputeVariableTypesTest extends UnitTestBase  {
     @Test
     public void testComputeVariableTypesAwake() {
         Map<String, HashSet<String>> expected = Maps.newHashMap();
-        expected.put("?HUMAN", Sets.newHashSet("Agent"));
+        expected.put("?HUMAN", Sets.newHashSet("AutonomousAgent"));
         expected.put("?PROC", Sets.newHashSet("Process"));
 
         String stmt =   "(=>\n" +

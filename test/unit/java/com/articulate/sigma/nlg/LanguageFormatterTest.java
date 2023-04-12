@@ -35,10 +35,10 @@ public class LanguageFormatterTest extends UnitTestBase {
         String form = "there exist ?D and ?H such that ?D is an &%instance$\"instance\" of &%Driving$\"driving\" and ?H is an &%instance$\"instance\" of &%Human$\"human\" and ?H is an &%agent$\"agent\" of ?D";
         HashMap<String, Set<String>> instanceMap = Maps.newHashMap();
         instanceMap.put("?D", Sets.newHashSet("Process"));
-        instanceMap.put("?H", Sets.newHashSet("Agent"));
+        instanceMap.put("?H", Sets.newHashSet("AutonomousAgent"));
         HashMap<String, Set<String>> classMap = Maps.newHashMap();
 
-        String expected = "there exist &%Process$\"a  process\" and &%Agent$\"an agent\" such that &%Process$\"the process\" is an &%instance$\"instance\" of &%Driving$\"driving\" and &%Agent$\"the agent\" is an &%instance$\"instance\" of &%Human$\"human\" and &%Agent$\"the agent\" is an &%agent$\"agent\" of &%Process$\"the process\"";
+        String expected = "there exist &%Process$\"a  process\" and &%AutonomousAgent$\"an agent\" such that &%Process$\"the process\" is an &%instance$\"instance\" of &%Driving$\"driving\" and &%AutonomousAgent$\"the agent\" is an &%instance$\"instance\" of &%Human$\"human\" and &%AutonomousAgent$\"the agent\" is an &%agent$\"agent\" of &%Process$\"the process\"";
 
         String actual = LanguageFormatter.variableReplace(form, instanceMap, classMap, SigmaTestBase.kb, "EnglishLanguage");
 
