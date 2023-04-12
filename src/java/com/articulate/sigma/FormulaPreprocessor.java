@@ -1223,7 +1223,7 @@ public class FormulaPreprocessor {
         Formula f = new Formula();
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        FormulaPreprocessor.debug = true;
+        //FormulaPreprocessor.debug = true;
         System.out.println(fp.addTypeRestrictions(f,kb));
 
         System.out.println();
