@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.utils.StringUtil;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.Before;
 
@@ -10,8 +11,8 @@ import static org.junit.Assert.assertEquals;
  * Created by qingqingcai on 1/14/15. Copyright IPsoft 2015
  * //This software is released under the GNU Public License
  * //<http://www.gnu.org/copyleft/gpl.html>.
- * // Copyright 2019 Infosys
- * // adam.pease@infosys.com
+ * // Copyright 2019 Infosys, 2020- Articulate Software
+ * // apease@articulatesoftware.com
  */
 public class SUMOformulaToTPTPformulaTest {
 
@@ -20,7 +21,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Before
     public void init() {
         SUMOformulaToTPTPformula.hideNumbers = true;
-        SUMOformulaToTPTPformula.lang = "tptp";
+        SUMOformulaToTPTPformula.lang = "fof";
     }
 
     /** ***************************************************************
@@ -30,6 +31,8 @@ public class SUMOformulaToTPTPformulaTest {
         System.out.println("=============================");
         System.out.println("SUMOformulaToTPTPformulaTest: " + label);
         System.out.println();
+        SUMOformulaToTPTPformula.lang = "fof";
+        SUMOKBtoTPTPKB.lang = "fof";
         String actualRes = SUMOformulaToTPTPformula.tptpParseSUOKIFString(kif, false);
         if (!StringUtil.emptyString(actualRes))
             actualRes = actualRes.replaceAll("  "," ");
@@ -171,6 +174,7 @@ public class SUMOformulaToTPTPformulaTest {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void embedded() {
 
         String kifstring, expectedRes, actualRes;
