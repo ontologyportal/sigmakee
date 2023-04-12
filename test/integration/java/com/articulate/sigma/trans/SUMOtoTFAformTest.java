@@ -682,7 +682,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     public void testTransNum() {
 
         SUMOtoTFAform.debug = true;
-        FormulaPreprocessor.debug = true;
+        //FormulaPreprocessor.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testTransNum(): ");
         String sf = "(=> (instance ?X NegativeInteger) (greaterThan 0 ?X))";
@@ -704,7 +704,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         SUMOtoTFAform.debug = true;
         SUMOformulaToTPTPformula.debug = true;
-        FormulaPreprocessor.debug = true;
+        //FormulaPreprocessor.debug = true;
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testPropertyFn(): ");
         String sf = "(<=> (instance ?OBJ (PropertyFn ?PERSON)) (possesses ?PERSON ?OBJ))";
