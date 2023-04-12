@@ -468,7 +468,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         //PredVarInst.debug = true;
-        FormulaPreprocessor.debug = true;
+        //FormulaPreprocessor.debug = true;
         //RowVars.DEBUG = true;
         System.out.println("testTVRPreprocess: greaterThanOrEqualTo valence: " +
                 kb.kbCache.valences.get("greaterThanOrEqualTo"));
