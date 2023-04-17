@@ -1,0 +1,78 @@
+# This workflow will build a Java project with Ant
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
+
+name: Java CI
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  pull_request:
+    branches: [ "master", "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    container:
+      image: apease/sigma-ci:latest
+    steps:
+      - name: checkout sigmakee
+        uses: actions/checkout@v3
+        with:
+          path: sigmakee
+
+      - name: checkout TPTP-ANTLR
+        uses: actions/checkout@v3
+        with:
+          repository: 'ontologyportal/TPTP-ANTLR'
+          path: TPTP-ANTLR
+
+      - name: checkout SigmaUtils
+        uses: actions/checkout@v3
+        with:
+          repository: 'ontologyportal/SigmaUtils'
+          path: SigmaUtils
+
+      - name: checkout sumo
+        uses: actions/checkout@v3
+        with:
+          repository: 'ontologyportal/sumo'
+          path: sumo
+
+      - name: Setup SigmaKEE
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "SIGMA_HOME: $SIGMA_HOME"
+          echo "SIGMA_SRC: $SIGMA_SRC"
+          echo "ONTOLOGYPORTAL_GIT: $ONTOLOGYPORTAL_GIT"
+          mkdir -p $SIGMA_HOME/KBs/WordNetMappings
+          cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
+          cp -R $ONTOLOGYPORTAL_GIT/sumo/* $SIGMA_HOME/KBs
+          cp /opt/WordNet-3.0/dict/* $SIGMA_HOME/KBs/WordNetMappings/
+          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
+
+      - name: Build with Ant
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        run: ant -noinput -buildfile build.xml
+        working-directory: ./sigmakee
+
+      - name: Test SigmaKEE
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        working-directory: ./sigmakee
+        run: |
+          sed -i "s|/home/apease/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/apease/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/apease/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          java  -Xmx8g -classpath $SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/build/lib/* org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
