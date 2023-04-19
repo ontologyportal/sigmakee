@@ -102,8 +102,15 @@ public class KButilities {
     public static boolean isValidFormula(KB kb, String form) {
 
         SUMOtoTFAform.initOnce();
-        KIF kif = new KIF();
-        String result = kif.parseStatement(form);
+        String result = "";
+        try {
+            KIF kif = new KIF();
+            result = kif.parseStatement(form);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+            result = "";
+        }
         if (!StringUtil.emptyString(result)) {
             System.out.println("isValidFormula(): Error: " + result);
             return false;
