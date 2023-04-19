@@ -482,6 +482,7 @@ public class KIF {
             key = key.concat("stmt-");
             key = key.concat(sval);
         }
+        //System.out.println("KIF.createKey(): key: " + key);
         return (key);
     }
 
