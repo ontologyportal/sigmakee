@@ -76,6 +76,14 @@ public class WordNetUtilities {
     }
 
     /** ***************************************************************
+     * get the number of the verb frame
+     */
+    public static int verbFrameNum(String frame) {
+
+        return WordNet.wn.VerbFrames.indexOf(frame) + 1;
+    }
+
+    /** ***************************************************************
      * Check whether a synset format is valid
      */
     public static boolean isValidSynset9(String synset) {
