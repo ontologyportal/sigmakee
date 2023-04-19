@@ -14,6 +14,8 @@ public class LFeatures {
 
     private static final boolean debug = false;
 
+    public boolean testMode = false;
+
     private final GenSimpTestData genSimpTestData;
     public boolean attNeg = false; // for propositional attitudes
     public boolean attPlural = false;
@@ -29,18 +31,25 @@ public class LFeatures {
     public RandSet socRoles = null;
     public RandSet objects = null;
     public RandSet bodyParts = null;
-    public String preposition = "";
+    public String directPrep = "";
+    public String indirectPrep = "";
     public String secondVerb = ""; // the verb word that appears as INFINITIVE or VERB-ing or V-ing in the frame
     public String secondVerbType = ""; // the SUMO type of the second verb
+    public String secondVerbSynset = "";
     public HashSet<String> prevHumans = new HashSet<>();
     public String subj = "";
+    public String subjName = "";
     public boolean subjectPlural = false;
     public int subjectCount = 1;
+
     public RandSet processes = null;
+    public static boolean useCapabilities = true; // include process types from capabilities list
+
     public ArrayList<String> frames = null;  // verb frames for the current process type
     public String frame = null; // the particular verb frame under consideration.
+    public String framePart = null; // the frame that gets "consumed" during processing
     // Note that the frame is destructively modified as we proceed through the sentence
-    public String synset = null;
+    public String verbSynset = null;
     public String directName = null;  // the direct object
     public String directType = null;  // the direct object
     public boolean directPlural = false;
@@ -52,6 +61,9 @@ public class LFeatures {
     public boolean question = false;
     public String verb = "";
     public String verbType = ""; // the SUMO class of the verb
+    public int tense = GenSimpTestData.NOTIME;
+    public boolean polite = false;  // will a polite phrase be used for a sentence if it's an imperative
+    public boolean politeFirst = true; // if true and an imperative and politness used, put it at the beginning of the sentence, otherwise at the end
 
     public LFeatures(GenSimpTestData genSimpTestData) {
         this.genSimpTestData = genSimpTestData;
@@ -80,6 +92,11 @@ public class LFeatures {
 
         Collection<AVPair> procFreqs = genSimpTestData.findWordFreq(GenSimpTestData.kb.kbCache.getChildClasses("Process"));
         processes = RandSet.create(procFreqs);
+
+        if (useCapabilities) {
+            RandSet rs = RandSet.listToEqualPairs(GenSimpTestData.capabilities.keySet());
+            processes.terms.addAll(rs.terms);
+        }
 
         HashSet<String> orgInst = GenSimpTestData.kb.kbCache.getInstancesForType("OrganicObject");
         HashSet<String> orgClass = GenSimpTestData.kb.kbCache.getChildClasses("OrganicObject");
