@@ -1,172 +1,172 @@
 <project name="Sigma" default="all" basedir=".">
 
-<target name="init">
-  <property name="app.name" value="sigma"/>
-  <property name="build.home" value="build"/>
-  <property name="build.classes" value="${build.home}/classes"/>
-  <property name="build.lib" value="${build.home}/lib"/>
-  <property environment="env"/>
-  <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
-  <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
-  <property name="sigma.src" value="${git.home}/sigmakee"/>
-  <property name="basedir" value="${sigma.src}"/>
-  <property name="sigma.home" value="${env.SIGMA_HOME}"/>
-  <property name="tptp.home" value="${git.home}/TPTP-ANTLR"/>
-  <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
-  <property name="kbs.home" value="${sigma.home}/KBs" />
-  <property name="dist.home" value="${tomcat.home}/webapps"/>
-  <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
-  <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
-  <property name="deploy.lib" value="${deploy.home}/WEB-INF/lib"/>
-  <property name="dist.war" value="sigma.war"/>
-  <property name="javadoc.home" value="doc/api"/>
-  <property name="build.javadoc" value="${build.home}/${javadoc.home}"/>
+    <target name="init">
+        <property name="app.name" value="sigma"/>
+        <property name="build.home" value="build"/>
+        <property name="build.classes" value="${build.home}/classes"/>
+        <property name="build.lib" value="${build.home}/lib"/>
+        <property environment="env"/>
+        <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+        <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
+        <property name="sigma.src" value="${git.home}/sigmakee"/>
+        <property name="basedir" value="${sigma.src}"/>
+        <property name="sigma.home" value="${env.SIGMA_HOME}"/>
+        <property name="tptp.home" value="${git.home}/TPTP-ANTLR"/>
+        <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
+        <property name="kbs.home" value="${sigma.home}/KBs"/>
+        <property name="dist.home" value="${tomcat.home}/webapps"/>
+        <property name="deploy.home" value="${tomcat.home}/webapps/${app.name}"/>
+        <property name="deploy.classes" value="${deploy.home}/WEB-INF/classes"/>
+        <property name="deploy.lib" value="${deploy.home}/WEB-INF/lib"/>
+        <property name="dist.war" value="sigma.war"/>
+        <property name="javadoc.home" value="doc/api"/>
+        <property name="build.javadoc" value="${build.home}/${javadoc.home}"/>
 
-  <echo message="CATALINA_HOME is set to = ${tomcat.home}"/>
-  <echo message="SIGMA_HOME is set to = ${sigma.home}"/>
-  <echo message="SIGMA_SRC is set to = ${sigma.src}"/>
-  <echo message="KBs_HOME is set to = ${kbs.home}" />
-  <echo>Java Version via Ant: ${ant.java.version}</echo>
-  <echo>Java Version System Prop: ${java.version}</echo>
-  <echo>Git dir: ${env.ONTOLOGYPORTAL_GIT}</echo>
-    <echo>classpath: $CLASSPATH</echo>
-    <echo>basedir: ${basedir}</echo>
-    <delete includeemptydirs="true" failonerror="false">
-        <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
-    </delete>
-</target>
+        <echo message="CATALINA_HOME is set to = ${tomcat.home}"/>
+        <echo message="SIGMA_HOME is set to = ${sigma.home}"/>
+        <echo message="SIGMA_SRC is set to = ${sigma.src}"/>
+        <echo message="KBs_HOME is set to = ${kbs.home}"/>
+        <echo>Java Version via Ant: ${ant.java.version}</echo>
+        <echo>Java Version System Prop: ${java.version}</echo>
+        <echo>Git dir: ${env.ONTOLOGYPORTAL_GIT}</echo>
+        <echo>classpath: $CLASSPATH</echo>
+        <echo>basedir: ${basedir}</echo>
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
+        </delete>
+    </target>
 
-<target name="TPTP" depends="init">
-    <echo message="SIGMA_HOME is set to = ${sigma.home}"/>
-    <echo message="TPTP is set to = ${tptp.home}"/>
-    <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all" />
-    <ant antfile="../SigmaUtils/build.xml" inheritAll="false" target="all" />
-    <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar" />
-    <copy todir="${basedir}/lib" file="../SigmaUtils/sigmaUtils.jar" />
-</target>
+    <target name="TPTP" depends="init">
+        <echo message="SIGMA_HOME is set to = ${sigma.home}"/>
+        <echo message="TPTP is set to = ${tptp.home}"/>
+        <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
+        <ant antfile="../SigmaUtils/build.xml" inheritAll="false" target="all"/>
+        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
+        <copy todir="${basedir}/lib" file="../SigmaUtils/sigmaUtils.jar"/>
+    </target>
 
-<target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes}.">
-    <mkdir dir="${build.classes}"/>
-    <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" includeantruntime="false" classpathref="compile.classpath">
-        <src refid="core.sourcepath"/>
-    </javac>
-    <copy todir="${build.lib}">
-        <fileset dir="${basedir}/lib" />
-    </copy>
-</target>
+    <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes}.">
+        <mkdir dir="${build.classes}"/>
+        <javac destdir="${build.classes}" debug="on" optimize="on" deprecation="on" includeantruntime="false" classpathref="compile.classpath">
+            <src refid="core.sourcepath"/>
+        </javac>
+        <copy todir="${build.lib}">
+            <fileset dir="${basedir}/lib"/>
+        </copy>
+    </target>
 
-<target name="web_deploy" depends="compile" description="deploy code to sigma.war">
-    <!-- Make the root. -->   
-	<mkdir dir="${deploy.home}"/>
+    <target name="web_deploy" depends="compile" description="deploy code to sigma.war">
+        <!-- Make the root. -->
+        <mkdir dir="${deploy.home}"/>
 
-    <!-- Delete the old code -->
-    <delete includeemptydirs="true" failonerror="false">
-        <fileset dir="${deploy.home}"/>
-        <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
-    </delete>
+        <!-- Delete the old code -->
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${deploy.home}"/>
+            <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
+        </delete>
 
-    <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
-    <copy todir="${deploy.home}">
-        <fileset dir="web/jsp"/>
-    </copy>
-
-    <copy todir="${deploy.home}">
-        <fileset file="web/simple.css"/>
-    </copy>
-
-    <copy todir="${deploy.home}/pixmaps">
-        <fileset dir="web/pixmaps"/>
-    </copy>
-
-    <copy todir="${deploy.home}/lib">
-        <fileset file="${basedir}/lib/*.jar" />
-    </copy>
-
-    <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
-	<mkdir dir="${deploy.classes}"/>
-        <copy todir="${deploy.classes}">
-          <fileset dir="${build.classes}"/>
+        <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
+        <copy todir="${deploy.home}">
+            <fileset dir="web/jsp"/>
         </copy>
 
-    <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
-	<mkdir dir="${deploy.lib}"/>
-	<copy todir="${deploy.lib}">
-          <fileset dir="${basedir}/lib" />
-    </copy>
-</target>
+        <copy todir="${deploy.home}">
+            <fileset file="web/simple.css"/>
+        </copy>
 
-<target name="dist" depends="web_deploy" description="Create the *.war file and place in ${build.home}.">
-    <war warfile="${dist.home}/${dist.war}" webxml="web.xml">
-        <fileset dir="web/jsp"/>
-        <fileset file="web/simple.css"/>
-        <zipfileset dir="web/pixmaps" prefix="pixmaps"/>
-        <lib dir="${deploy.lib}"/>
-        <classes dir="${deploy.classes}"/>
-    </war>
-    <jar destfile="${build.home}/sigmakee.jar">
-        <fileset dir="${deploy.classes}"/>
-    </jar>
-</target>
+        <copy todir="${deploy.home}/pixmaps">
+            <fileset dir="web/pixmaps"/>
+        </copy>
 
-<target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
-	<delete dir="${build.javadoc}"/>
-	<mkdir dir="${build.javadoc}"/>
-	<javadoc sourcepath="src/java" destdir="${build.javadoc}" author="true" version="true" use="true" windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
-		<classpath refid="javadoc.classpath"/>
-		<classpath refid="compile.classpath"/>
-		<doctitle>Sigma API Specification</doctitle>
-		<header><![CDATA[<b>Sigma API Specification</b>]]></header>
-		<group title="Sigma" packages="com.articulate.sigma.*"/>
-		<group title="Sigma TPTPWorld" packages="TPTPWorld.*"/>
-		<group title="Sigma TPTP Parser" packages="tptp_parser.*"/>
-	</javadoc>
-</target>
+        <copy todir="${deploy.home}/lib">
+            <fileset file="${basedir}/lib/*.jar"/>
+        </copy>
 
-<!-- target name="all" depends="dist, api_doc" -->
-<target name="all" depends="dist">
-    <tstamp>
-        <format property="TODAY_US" pattern="yyyy-MM-dd HH:mm:ss:sss zzz" locale="en,US"/>
-    </tstamp>
-    <echo>the system date/time is ${TODAY_US}</echo>
-</target>
+        <!-- Create WEB-INF/classes/ and copy all the loose classes to it. -->
+        <mkdir dir="${deploy.classes}"/>
+        <copy todir="${deploy.classes}">
+            <fileset dir="${build.classes}"/>
+        </copy>
 
-<target name="install" depends="init">
-  <fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME" />
-  <copy todir="${sigma.home}/KBs">
-    <fileset dir="${kbs.home}" />
-  </copy>
-  <copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/Translations/language.txt" />
-  <copy todir="${sigma.home}/KBs/WordNetMappings">
-    <fileset dir="${kbs.home}/WordNetMappings" />
-  </copy>
+        <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
+        <mkdir dir="${deploy.lib}"/>
+        <copy todir="${deploy.lib}">
+            <fileset dir="${basedir}/lib"/>
+        </copy>
+    </target>
 
-  <!-- copy wordnet -->
-  <untar dest="${sigma.install.downloads}" compression="gzip">
-    <url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" />
-  </untar>
-  <copy todir="${sigma.home}/KBs/WordNetMappings">
-    <fileset dir="${sigma.install.downloads}/WordNet-3.0/dict" />
-  </copy>
-</target>
-	
-<path id="javadoc.classpath">
-    <pathelement path="classes:${basedir}/lib/cos.jar:"/>
-</path>
+    <target name="dist" depends="web_deploy" description="Create the *.war file and place in ${build.home}.">
+        <war warfile="${dist.home}/${dist.war}" webxml="web.xml">
+            <fileset dir="web/jsp"/>
+            <fileset file="web/simple.css"/>
+            <zipfileset dir="web/pixmaps" prefix="pixmaps"/>
+            <lib dir="${deploy.lib}"/>
+            <classes dir="${deploy.classes}"/>
+        </war>
+        <jar destfile="${build.home}/sigmakee.jar">
+            <fileset dir="${deploy.classes}"/>
+        </jar>
+    </target>
 
-<path id="core.sourcepath">
-    <pathelement path="src/java/com/articulate/sigma"/>
-    <pathelement path="src/java/com/articulate/delphi"/>
-	<pathelement path="test/corpus/java/com/articulate/sigma"/>
-	<pathelement path="test/unit/java/com/articulate/sigma"/>
-	<pathelement path="test/integration/java/com/articulate/sigma"/>
-</path>
+    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
+        <delete dir="${build.javadoc}"/>
+        <mkdir dir="${build.javadoc}"/>
+        <javadoc sourcepath="src/java" destdir="${build.javadoc}" author="true" version="true" use="true" windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
+            <classpath refid="javadoc.classpath"/>
+            <classpath refid="compile.classpath"/>
+            <doctitle>Sigma API Specification</doctitle>
+            <header><![CDATA[<b>Sigma API Specification</b>]]></header>
+            <group title="Sigma" packages="com.articulate.sigma.*"/>
+            <group title="Sigma TPTPWorld" packages="TPTPWorld.*"/>
+            <group title="Sigma TPTP Parser" packages="tptp_parser.*"/>
+        </javadoc>
+    </target>
 
-<path id="compile.classpath">
-    <fileset dir="${basedir}/lib">
-        <include name="*.jar"/>
-        <include name="tptp.jar"/>
-    </fileset>
-</path>
+    <!-- target name="all" depends="dist, api_doc" -->
+    <target name="all" depends="dist">
+        <tstamp>
+            <format property="TODAY_US" pattern="yyyy-MM-dd HH:mm:ss:sss zzz" locale="en,US"/>
+        </tstamp>
+        <echo>the system date/time is ${TODAY_US}</echo>
+    </target>
+
+    <target name="install" depends="init">
+        <fail message="SIGMA_HOME needs to be set" unless="env.SIGMA_HOME"/>
+        <copy todir="${sigma.home}/KBs">
+            <fileset dir="${kbs.home}"/>
+        </copy>
+        <copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/Translations/language.txt"/>
+        <copy todir="${sigma.home}/KBs/WordNetMappings">
+            <fileset dir="${kbs.home}/WordNetMappings"/>
+        </copy>
+
+        <!-- copy wordnet -->
+        <untar dest="${sigma.install.downloads}" compression="gzip">
+            <url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"/>
+        </untar>
+        <copy todir="${sigma.home}/KBs/WordNetMappings">
+            <fileset dir="${sigma.install.downloads}/WordNet-3.0/dict"/>
+        </copy>
+    </target>
+
+    <path id="javadoc.classpath">
+        <pathelement path="classes:${basedir}/lib/cos.jar:"/>
+    </path>
+
+    <path id="core.sourcepath">
+        <pathelement path="src/java/com/articulate/sigma"/>
+        <pathelement path="src/java/com/articulate/delphi"/>
+        <pathelement path="test/corpus/java/com/articulate/sigma"/>
+        <pathelement path="test/unit/java/com/articulate/sigma"/>
+        <pathelement path="test/integration/java/com/articulate/sigma"/>
+    </path>
+
+    <path id="compile.classpath">
+        <fileset dir="${basedir}/lib">
+            <include name="*.jar"/>
+            <include name="tptp.jar"/>
+        </fileset>
+    </path>
 
 </project>
  
