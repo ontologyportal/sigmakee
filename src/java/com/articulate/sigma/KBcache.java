@@ -995,7 +995,7 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * Get the HashSet of the given arguments from an ArrayList of Formulas.
      */
-    public static HashSet<String> collectArgFromFormulas(int arg, ArrayList<Formula> forms) {
+    public static HashSet<String> collectArgFromFormulas(int arg, List<Formula> forms) {
         
         HashSet<String> subs = new HashSet<String>();
         for (Formula f : forms) {
@@ -1096,7 +1096,7 @@ public class KBcache implements Serializable {
      * appear only as argument 2
      */
     private HashSet<String> findRoots(String rel) {
-        
+
         HashSet<String> result = new HashSet<String>();
         ArrayList<Formula> forms = kb.ask("arg",0,rel);
         HashSet<String> arg1s = collectArgFromFormulas(1,forms);
@@ -1141,11 +1141,7 @@ public class KBcache implements Serializable {
             //System.out.println("visiting " + t);
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
             if (forms != null) {
-                HashSet<String> relSubs = collectArgFromFormulas(1,forms);
-
-                Iterator<String> it = relSubs.iterator();
-                while (it.hasNext()) {
-                    String newTerm = it.next();
+                for (String newTerm: collectArgFromFormulas(1,forms)) {
                     HashSet<String> newParents = new HashSet<String>();
                     HashSet<String> oldParents = relParents.get(t);
                     if (oldParents == null) {
@@ -1194,9 +1190,7 @@ public class KBcache implements Serializable {
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,1,child);
             if (debug) System.out.println("forms " + forms);
             if (forms != null) {
-                HashSet<String> relParents = collectArgFromFormulas(2,forms);
-                //if (debug) System.out.println("visiting direct parents of " + child +  ": " + relParents);
-                for (String newTerm : relParents) {
+                for (String newTerm : collectArgFromFormulas(2,forms)) {
                     //if (debug && newTerm.indexOf("RealNumber") > -1)
                     //    System.out.println("visiting parent  " + newTerm);
                     HashSet<String> newChildren = new HashSet<String>();
@@ -1464,8 +1458,7 @@ public class KBcache implements Serializable {
             ArrayList<String> tdomains = signatures.get(t);
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
             if (forms != null) {
-                HashSet<String> relSubs = collectArgFromFormulas(1,forms);
-                for (String newTerm : relSubs) {
+                for (String newTerm : collectArgFromFormulas(1,forms)) {
                     ArrayList<String> newDomains = signatures.get(newTerm);
                     if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); newDomains: " + newDomains);
                     if (valences.get(t) == null) {
