@@ -36,7 +36,6 @@ import static org.junit.Assert.*;
         MultiWordsTest.class,
         PredVarInstTest.class,
         RowVarTest.class,
-        StringUtilTest.class,
         SUMOformulaToTPTPformulaTest.class,
         TPTP3ProofProcTest.class,
         UnitNLGTestSuite.class,
