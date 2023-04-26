@@ -147,10 +147,12 @@ public class LFeatures {
         directName = null;  // the direct object
         directType = null;  // the direct object
         directPlural = false;
+        directPrep = "";
         directCount = 1;
         indirectName = null; // the indirect object
         indirectType = null; // the indirect object
         indirectPlural = false;
+        indirectPrep = "";
         indirectCount = 1;
         secondVerb = "";
         secondVerbType = "";
