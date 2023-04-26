@@ -168,6 +168,10 @@ public class GenSimpTestData {
         prepPhrase.put("act","as ");
         prepPhrase.put("pretend","to be ");
         prepPhrase.put("act","as ");
+        prepPhrase.put("nod","to ");
+        prepPhrase.put("hunt","for "); // must have a direct object
+        prepPhrase.put("read","about ");  // TODO but also "read a book"
+        prepPhrase.put("wading","in ");
     }
 
     /** ***************************************************************
@@ -435,7 +439,7 @@ public class GenSimpTestData {
             String g = lfeat.genders.get(name);
             if (g.equalsIgnoreCase("F"))
                 gender = "Female";
-            sb.append("(instance " + var + " Human) ");
+            //sb.append("(instance " + var + " Human) ");
             sb.append("(attribute " + var + " " + gender + ") ");
             sb.append("(names \"" + name + "\" " + var + ") ");
         }
@@ -644,9 +648,7 @@ public class GenSimpTestData {
     public HashSet<Capability> collectCapabilities() {
 
         HashSet<Capability> result = new HashSet<>();
-        ArrayList<Formula> forms = kb.ask("cons",0,"capability");
         ArrayList<Formula> forms2 = kb.ask("arg",0,"requiredRole");
-        ArrayList<Formula> forms3 = kb.ask("arg",0,"prohibitedRole");
         for (Formula f : forms2) {
             //System.out.println("collectCapabilities(): form: " + f);
             Capability p = this.new Capability();
@@ -656,6 +658,8 @@ public class GenSimpTestData {
             p.must = true;
             result.add(p);
         }
+
+        ArrayList<Formula> forms3 = kb.ask("arg",0,"prohibitedRole");
         for (Formula f : forms3) {
             //System.out.println("collectCapabilities(): form: " + f);
             Capability p = this.new Capability();
@@ -665,6 +669,8 @@ public class GenSimpTestData {
             p.mustNot = true;
             result.add(p);
         }
+
+        ArrayList<Formula> forms = kb.ask("cons",0,"capability");
         for (Formula f : forms) {
             //System.out.println("collectCapabilities(): form: " + f);
             String ant = FormulaUtil.antecedent(f);
@@ -739,6 +745,7 @@ public class GenSimpTestData {
         public String present = null;
         public String part = null;
         public String trans = null; // transitivity string
+        public String derivedFromParentClass = ""; // is the term a subclass of the authored relationship
 
         public Word(String t, String r, String pr, String pa) {
             term = t; root = r; present = pr; part = pa;
@@ -1056,9 +1063,8 @@ public class GenSimpTestData {
     public String nounFormFromTerm(String term, AVPair avp) {
 
         String word = kb.getTermFormat("EnglishLanguage",term);
-        boolean subst = kb.isSubclass(term,"Substance");
         if (word == null) {
-            System.out.println("nounForm(): no term format for " + term);
+            System.out.println("nounFormFromTerm(): no term format for " + term);
             return null;
         }
         if (kb.isInstance(term)) {
@@ -1067,6 +1073,7 @@ public class GenSimpTestData {
             else
                 return capital("the ") + word;
         }
+        boolean subst = kb.isSubclass(term,"Substance");
         if (subst) {
             if (rand.nextBoolean()) {
                 AVPair quant = getQuantity(term);
@@ -1083,12 +1090,12 @@ public class GenSimpTestData {
         }
         String number = "";
         if (biasedBoolean(1,5) && kb.isSubclass(term,"CorpuscularObject")) { // occasionally make this a plural or count
-            int index = rand.nextInt(numbers.size());
+            int index = rand.nextInt(numbers.size());  // how many of the object
             avp.value = Integer.toString(index);
             if (rand.nextBoolean())
-                number = numbers.get(index);
+                number = numbers.get(index);  // sometimes spell out the number as a word...
             else
-                number = Integer.toString(index);
+                number = Integer.toString(index);  // ...and sometimes just use the number
             String suffix = "";
             if (index != 1) {
                 avp.attribute = "true";
@@ -1164,7 +1171,7 @@ public class GenSimpTestData {
     private static void addSUMOplural(StringBuffer prop, String term, AVPair plural, String var) {
 
         if (debug) System.out.println("addSUMOplural(): prop: " + prop);
-        prop.append("(instance " + var + " Collection) ");
+        //prop.append("(instance " + var + " Collection) ");
         prop.append("(memberType " + var + " " + term + ") ");
         prop.append("(memberCount " + var + " " + plural.value + ") ");
     }
@@ -1372,8 +1379,10 @@ public class GenSimpTestData {
         else if (kb.isSubclass(lfeat.subj,"AutonomousAgent") || kb.isInstanceOf(lfeat.subj,"SocialRole") || lfeat.subj.equals("You")) {
             if (kb.isSubclass(proc,"IntentionalProcess"))
                 prop.append("(agent ?P ?H) ");
-            else
+            else if (kb.isSubclass(proc,"BiologicalProcess"))
                 prop.append("(experiencer ?P ?H) ");
+            else
+                prop.append("(agent ?P ?H) ");
         }
         else {
             System.out.println("generateVerb() non-Agent, non-Role subject " + lfeat.subj + " for action " + proc);
@@ -1551,6 +1560,7 @@ public class GenSimpTestData {
                 addSUMOplural(prop,lfeat.directType,plural,"?DO");
             else
                 prop.append("(instance ?DO " + lfeat.directType + ") ");
+
             if (lfeat.directPrep.equals("to ")) {
                 prop.append("(destination ?P ?DO) ");
                 role = "destination";
@@ -1615,6 +1625,7 @@ public class GenSimpTestData {
             return;
         }
         int fnum = WordNetUtilities.verbFrameNum(lfeat.framePart);
+        if (debug) System.out.println("getPrepFromFrame(): frame num: " + fnum);
         Pattern pattern = Pattern.compile("(to |on |from |with |of |that |into |whether )", Pattern.CASE_INSENSITIVE);
         Matcher matcher = pattern.matcher(lfeat.framePart);
         boolean matchFound = matcher.find();
@@ -1634,15 +1645,15 @@ public class GenSimpTestData {
      */
     public static String getCaseRoleFromPrep(String prep) {
 
-        if (prep.equals("to"))
+        if (prep.equals("to "))
             return ("destination");
-        if (prep.equals("from"))
+        if (prep.equals("from "))
             return ("origin");
-        if (prep.equals("with"))
+        if (prep.equals("with "))
             return ("instrument");
-        if (prep.equals("of"))
+        if (prep.equals("of "))
             return ("patient");
-        if (prep.equals("on"))
+        if (prep.equals("on "))
             return ("destination");
         return "involvedInEvent";
     }
@@ -1674,11 +1685,17 @@ public class GenSimpTestData {
                 english.append(lfeat.indirectPrep + lfeat.indirectName);
             else
                 english.append(lfeat.indirectPrep + nounFormFromTerm(lfeat.indirectType,plural));
-            if (debug) System.out.println("====== generateIndirectObject(): plural: " + plural);
+            if (debug) System.out.println("generateIndirectObject(): plural: " + plural);
+
             if (plural.attribute.equals("true"))
                 addSUMOplural(prop,lfeat.indirectType,plural,"?IO");
             else
                 prop.append("(instance ?IO " + lfeat.indirectType + ") ");
+            if (lfeat.framePart.contains("somebody"))
+                prop.append(genSUMOForHuman(lfeat,lfeat.indirectName,"?IO"));
+            else
+                prop.append("(instance ?IO " + lfeat.indirectType + ")");
+
             if (english.toString().endsWith(" "))
                 english.delete(english.length()-1,english.length());
             if (lfeat.polite && !lfeat.politeFirst)
@@ -1694,20 +1711,18 @@ public class GenSimpTestData {
                 english.append("\"");
             }
             prop.append("(" + prep + " ?P ?IO) ");
-            if (lfeat.framePart.contains("somebody"))
-                prop.append(genSUMOForHuman(lfeat,lfeat.indirectName,"?IO"));
-            else
-                prop.append("(instance ?IO " + lfeat.indirectType + ")");
+
             if (lfeat.subj != null && lfeat.subj.equals("You")) {
-                String newProp = prop.toString().replace(" ?H "," You ");
+                String newProp = prop.toString().replace(" ?H"," You");
                 prop.setLength(0);
                 prop.append(newProp);
             }
             prop.append(closeParens(lfeat));
             onceWithoutInd = false;
-            if (debug) System.out.println("====== generateIndirectObject(): " + english);
+            if (debug) System.out.println("generateIndirectObject(): " + english);
             if (KButilities.isValidFormula(kb,prop.toString())) {
                 if (debug) System.out.println("generateIndirectObject(): valid formula: " + Formula.textFormat(prop.toString()));
+                String finalEnglish = english.toString().replaceAll("  "," ");
                 englishFile.println(english);
                 logicFile.println(prop);
                 sentCount++;
@@ -1741,13 +1756,14 @@ public class GenSimpTestData {
             }
             prop.append(closeParens(lfeat));
             if (lfeat.subj != null && lfeat.subj.equals("You")) {
-                String newProp = prop.toString().replace(" ?H "," You ");
+                String newProp = prop.toString().replace(" ?H"," You");
                 prop.setLength(0);
                 prop.append(newProp);
             }
-            if (debug) System.out.println("====== generateIndirectObject(): " + english);
+            if (debug) System.out.println("generateIndirectObject(): " + english);
             if (KButilities.isValidFormula(kb,prop.toString())) {
                 if (debug) System.out.println("generateIndirectObject(): valid formula: " + Formula.textFormat(prop.toString()));
+                String finalEnglish = english.toString().replaceAll("  "," ");
                 englishFile.println(english);
                 logicFile.println(prop);
                 sentCount++;
@@ -1774,7 +1790,7 @@ public class GenSimpTestData {
                 english.append("\"");
             prop.append(closeParens(lfeat));
             if (lfeat.subj != null && lfeat.subj.equals("You")) {
-                String newProp = prop.toString().replace(" ?H "," You ");
+                String newProp = prop.toString().replace(" ?H"," You");
                 prop.setLength(0);
                 prop.append(newProp);
             }
@@ -1783,6 +1799,7 @@ public class GenSimpTestData {
                 if (debug) System.out.println("====== generateIndirectObject(): " + english);
                 if (KButilities.isValidFormula(kb,prop.toString())) {
                     if (debug) System.out.println("generateIndirectObject(): valid formula: " + Formula.textFormat(prop.toString()));
+                    String finalEnglish = english.toString().replaceAll("  "," ");
                     englishFile.println(english);
                     logicFile.println(prop);
                     sentCount++;
@@ -2336,11 +2353,19 @@ public class GenSimpTestData {
         Collection<Capability> caps = gstd.collectCapabilities();
         //System.out.println("GenSimpTestData.genProcTable(): " + caps.size() + " capability entries");
         //System.out.println(caps);
+        extendCapabilities(caps);
+    }
+
+    /** ***************************************************************
+     * generate subclasses for each capability
+     */
+    public void extendCapabilities(Collection<Capability> caps) {
+
         for (Capability c : caps) {
             HashSet<String> childClasses = kb.kbCache.getChildClasses(c.proc);
             if (childClasses != null) {
-                childClasses.add(c.proc);
-                for (String cls : childClasses) {
+                childClasses.add(c.proc); // add the original class
+                for (String cls : childClasses) { // add each of the subclasses
                     c.proc = cls;
                     HashSet<Capability> hs = new HashSet<>();
                     if (capabilities.containsKey(c.proc))
@@ -2472,6 +2497,19 @@ public class GenSimpTestData {
                     //testToy();
                     //testProgressPrint();
                     GenSimpTestData gstd = new GenSimpTestData();
+                    KBmanager.getMgr().initializeOnce();
+                    kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+                    String word = "Sheep";
+                    System.out.println("exceptions: " + WordNet.wn.exceptionNounPluralHash);
+                    for (int i = 0; i < 10; i++)
+                        System.out.println("noun form: " + gstd.nounFormFromTerm(word,new AVPair()));
+                    if (WordNet.wn.exceptionNounPluralHash.containsKey(word))
+                        System.out.println("noun form for sheep: " + WordNet.wn.exceptionNounPluralHash.get(word));
+                    LFeatures lfeat = new LFeatures(gstd);
+                    lfeat.frame = "Something ----s something Adjective/Noun";
+                    lfeat.framePart = lfeat.frame;
+                    System.out.println("frame: ");
+                    gstd.getPrepFromFrame(lfeat);
                     //gstd.testVerbs();
                     //gstd.testLFeatures();
                 }
