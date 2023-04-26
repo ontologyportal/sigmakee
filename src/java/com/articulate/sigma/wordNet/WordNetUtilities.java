@@ -80,7 +80,7 @@ public class WordNetUtilities {
      */
     public static int verbFrameNum(String frame) {
 
-        return WordNet.wn.VerbFrames.indexOf(frame) + 1;
+        return WordNet.wn.VerbFrames.indexOf(frame);
     }
 
     /** ***************************************************************
