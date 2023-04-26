@@ -184,6 +184,14 @@ public class GenSimpTestDataTest {
 
     /** ***************************************************************
      */
+    @Test public void testWading1() { testCapability("Wading","patient","Book",false);}
+
+    /** ***************************************************************
+     */
+    @Test public void testChimney1() { testCapability("Eating","objectTransferred","Chimney",false);}
+
+    /** ***************************************************************
+     */
     @Test
     public void testSell() {
 
