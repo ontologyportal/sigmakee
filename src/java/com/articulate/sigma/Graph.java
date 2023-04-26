@@ -95,7 +95,7 @@ public class Graph {
     private String generateDocumentationColumn(KB kb, String term, String href, String language) {
 
         String docString = "";
-        ArrayList<Formula> docStmts = kb.askWithRestriction(0,"documentation",1,term);
+        ArrayList<Formula> docStmts = kb.askWithTwoRestrictions(0,"documentation",1,term,2,language);
         if (docStmts.size() > 0) {
             Formula doc = (Formula) docStmts.get(0);
             docString = doc.getStringArgument(3);
