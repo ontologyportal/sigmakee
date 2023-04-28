@@ -98,6 +98,7 @@ public class GenSimpTestData {
         initOthers();
         initPrepPhrase();
         initEndings();
+        genProcTable();
     }
 
     /** ***************************************************************
@@ -401,6 +402,7 @@ public class GenSimpTestData {
         HashMap<String,String> result = new HashMap<>();
         ArrayList<ArrayList<String>> fn = DB.readSpreadsheet(kb.kbDir +
                 File.separator + "WordNetMappings/FirstNames.csv", null, false, ',');
+        fn.remove(0);  // remove the header
         for (ArrayList<String> ar : fn) {
             String firstName = ar.get(0);
             String g = ar.get(1);
@@ -649,6 +651,7 @@ public class GenSimpTestData {
 
         HashSet<Capability> result = new HashSet<>();
         ArrayList<Formula> forms2 = kb.ask("arg",0,"requiredRole");
+        System.out.println("collectCapabilities(): requiredRoles: " + forms2);
         for (Formula f : forms2) {
             //System.out.println("collectCapabilities(): form: " + f);
             Capability p = this.new Capability();
@@ -1060,7 +1063,7 @@ public class GenSimpTestData {
      * @param term is a SUMO term
      * @param avp is a hack to return whether there was a plural, and its count
      */
-    public String nounFormFromTerm(String term, AVPair avp) {
+    public String nounFormFromTerm(String term, AVPair avp, String other) {
 
         String word = kb.getTermFormat("EnglishLanguage",term);
         if (word == null) {
@@ -1070,8 +1073,13 @@ public class GenSimpTestData {
         if (kb.isInstance(term)) {
             if (kb.kbCache.isInstanceOf(term,"Human"))
                 return word;
-            else
-                return capital("the ") + word;
+            else {
+                if (StringUtil.emptyString(other))
+                    return capital("the ") + word;
+                else
+                    return capital(word);
+            }
+
         }
         boolean subst = kb.isSubclass(term,"Substance");
         if (subst) {
@@ -1184,7 +1192,7 @@ public class GenSimpTestData {
 
         String bodyPart = lfeat.bodyParts.getNext();     // get a body part
         AVPair plural = new AVPair();
-        english.append(capital(nounFormFromTerm(bodyPart,plural)) + " ");
+        english.append(capital(nounFormFromTerm(bodyPart,plural,"")) + " ");
         if (plural.attribute.equals("true"))
             addSUMOplural(prop,bodyPart,plural,"?O");
         else
@@ -1302,7 +1310,7 @@ public class GenSimpTestData {
             String term = lfeat.objects.getNext();
             lfeat.subj = term;
             AVPair plural = new AVPair();
-            english.append(capital(nounFormFromTerm(term,plural)) + " ");
+            english.append(capital(nounFormFromTerm(term,plural,"")) + " ");
             if (plural.attribute.equals("true")) {
                 addSUMOplural(prop, term, plural, "?H");
                 lfeat.subjectPlural = true;
@@ -1539,9 +1547,9 @@ public class GenSimpTestData {
             //    (kb.isSubclass(dprep.noun,"Region") || kb.isSubclass(dprep.noun,"StationaryObject"))) {
             if (debug) System.out.println("generateDirectObject(3): location, region or object: " + english);
             if (lfeat.directType.equals("Human"))
-                english.append("to " + other + nounFormFromTerm(lfeat.directName,plural) + " ");
+                english.append("to " + other + nounFormFromTerm(lfeat.directName,plural,other) + " ");
             else
-                english.append("to " + other + nounFormFromTerm(lfeat.directType,plural) + " ");
+                english.append("to " + other + nounFormFromTerm(lfeat.directType,plural,other) + " ");
             if (plural.attribute.equals("true"))
                 addSUMOplural(prop,lfeat.directType,plural,"?DO");
             else
@@ -1555,7 +1563,7 @@ public class GenSimpTestData {
             if (lfeat.directType.equals("Human"))
                 english.append(lfeat.directPrep + other + lfeat.directName + " ");
             else
-                english.append(lfeat.directPrep + other + nounFormFromTerm(lfeat.directType,plural) + " ");
+                english.append(lfeat.directPrep + other + nounFormFromTerm(lfeat.directType,plural,other) + " ");
             if (plural.attribute.equals("true"))
                 addSUMOplural(prop,lfeat.directType,plural,"?DO");
             else
@@ -1585,10 +1593,10 @@ public class GenSimpTestData {
             english.delete(0,english.length());
             return;
         }
-        if (debug) System.out.println("generateDirectObject(): english: " + english);
-        if (debug) System.out.println("generateDirectObject(): prop: " + prop);
-        if (debug) System.out.println("generateDirectObject(): plural: " + plural);
-        if (debug) System.out.println("generateDirectObject(): lfeat.framePart: " + lfeat.framePart);
+        if (debug) System.out.println("generateDirectObject(5): english: " + english);
+        if (debug) System.out.println("generateDirectObject(5): prop: " + prop);
+        if (debug) System.out.println("generateDirectObject(5): plural: " + plural);
+        if (debug) System.out.println("generateDirectObject(5): lfeat.framePart: " + lfeat.framePart);
     }
 
     /** ***************************************************************
@@ -1684,7 +1692,7 @@ public class GenSimpTestData {
             if (lfeat.indirectType.equals("Human"))
                 english.append(lfeat.indirectPrep + lfeat.indirectName);
             else
-                english.append(lfeat.indirectPrep + nounFormFromTerm(lfeat.indirectType,plural));
+                english.append(lfeat.indirectPrep + nounFormFromTerm(lfeat.indirectType,plural,""));
             if (debug) System.out.println("generateIndirectObject(): plural: " + plural);
 
             if (plural.attribute.equals("true"))
@@ -2167,7 +2175,7 @@ public class GenSimpTestData {
                 type.append(lfeat.socRoles.getNext());
                 prop.append("(attribute " + var + " " + type + ") ");
                 AVPair plural = new AVPair();
-                english.append(capital(nounFormFromTerm(type.toString(),plural)) + " ");
+                english.append(capital(nounFormFromTerm(type.toString(),plural,"")) + " ");
                 if (lfeat.prevHumans.contains(type))  // don't allow the same name or role twice in a sentence
                     found = true;
                 else
@@ -2349,8 +2357,7 @@ public class GenSimpTestData {
         System.out.println("GenSimpTestData.genProcTable(): start");
         KBmanager.getMgr().initializeOnce();
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        GenSimpTestData gstd = new GenSimpTestData();
-        Collection<Capability> caps = gstd.collectCapabilities();
+        Collection<Capability> caps = collectCapabilities();
         //System.out.println("GenSimpTestData.genProcTable(): " + caps.size() + " capability entries");
         //System.out.println(caps);
         extendCapabilities(caps);
@@ -2374,6 +2381,13 @@ public class GenSimpTestData {
                     capabilities.put(cls, hs);
                 }
             }
+            else {
+                HashSet<Capability> hs = new HashSet<>();
+                if (capabilities.containsKey(c.proc))
+                    hs = capabilities.get(c.proc);
+                hs.add(c);
+                capabilities.put(c.proc, hs);
+            }
         }
     }
 
@@ -2383,8 +2397,10 @@ public class GenSimpTestData {
      */
     public boolean checkCapabilities(String proc, String role, String obj) {
 
+        System.out.println("checkCapabilities(): starting");
         if (debug) System.out.println("checkCapabilities(): (proc,role,obj): " + proc + ", " + role + ", " + obj);
         if (capabilities.containsKey(proc)) {
+            System.out.println("checkCapabilities(): found capabilities: " + capabilities.get(proc));
             HashSet<Capability> caps = capabilities.get(proc);
             for (Capability c : caps) {
                 if (c.caserole.equals(role) && c.object.equals(obj) && !c.negated && c.must) {
@@ -2395,7 +2411,7 @@ public class GenSimpTestData {
                     if (debug) System.out.println("checkCapabilities(): rejected.  Conflict with: " + c);
                     return false;
                 }
-                if (c.caserole.equals(role) && !c.object.equals(obj) && !c.negated && c.must) {
+                if (c.caserole.equals(role) && !c.object.equals(obj) && !kb.isSubclass(obj,c.object) && !c.negated && c.must) {
                     if (debug) System.out.println("checkCapabilities(): rejected.  Conflict with: " + c);
                     return false;
                 }
@@ -2404,6 +2420,9 @@ public class GenSimpTestData {
                     return false;
                 }
             }
+        }
+        else {
+            System.out.println("checkCapabilities(): " + proc + " not found.");
         }
         if (debug) System.out.println("checkCapabilities(): approved");
         return true;
@@ -2477,7 +2496,6 @@ public class GenSimpTestData {
                 }
                 if (args != null && args.length > 0 && args[0].equals("-u")) {
                     GenSimpTestData gstd = new GenSimpTestData();
-                    gstd.genProcTable();
                 }
                 if (args != null && args.length > 0 && args[0].equals("-a")) { // generate NL/logic for all existing axioms
                     allAxioms();
@@ -2502,7 +2520,7 @@ public class GenSimpTestData {
                     String word = "Sheep";
                     System.out.println("exceptions: " + WordNet.wn.exceptionNounPluralHash);
                     for (int i = 0; i < 10; i++)
-                        System.out.println("noun form: " + gstd.nounFormFromTerm(word,new AVPair()));
+                        System.out.println("noun form: " + gstd.nounFormFromTerm(word,new AVPair(),""));
                     if (WordNet.wn.exceptionNounPluralHash.containsKey(word))
                         System.out.println("noun form for sheep: " + WordNet.wn.exceptionNounPluralHash.get(word));
                     LFeatures lfeat = new LFeatures(gstd);

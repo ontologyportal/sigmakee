@@ -86,7 +86,7 @@ public class GenSimpTestDataTest {
         GenSimpTestData gstd = new GenSimpTestData();
         StringBuffer english = new StringBuffer();
         AVPair avp = new AVPair();
-        String v = gstd.nounFormFromTerm(term,avp);
+        String v = gstd.nounFormFromTerm(term,avp,"");
         System.out.println("testNoun(): noun form: " + v);
         if (!v.toLowerCase().contains(expected)) {
             System.out.println("Error!: found " + v + " Expected: " + expected);
