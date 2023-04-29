@@ -5,6 +5,10 @@ FROM apease/sigma-ci:latest as builder
 FROM tomcat:9.0.73-jdk8-temurin-jammy as runtime
 #FROM eclipse-temurin:8-jdk-jammy
 
+RUN apt update; \
+    apt-get install -y --no-install-recommends \
+            graphviz
+
 COPY --from=builder \
     /usr/local/bin/e_ltb_runner /usr/local/bin/e_ltb_runner
 
