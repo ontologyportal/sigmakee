@@ -125,7 +125,7 @@ public class KBcache implements Serializable {
     /** Disjoint relationships which were explicitly defined in "partition", "disjoint",
      * and "disjointDecomposition" expressions
      **/
-    public HashMap<String, HashSet<String>> explicitDisjoint = new HashMap<>();
+    public HashMap<String, Set<String>> explicitDisjoint = new HashMap<>();
 
     // each pair of classes as class1\tclass2
     // transitive closure of classes based on explicitDisjoint
@@ -236,7 +236,7 @@ public class KBcache implements Serializable {
             this.valences = Maps.newHashMap(kbCacheIn.valences);
         }
         if (kbCacheIn.explicitDisjoint != null) {
-            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.explicitDisjoint.entrySet()) {
+            for (Map.Entry<String, Set<String>> entry : kbCacheIn.explicitDisjoint.entrySet()) {
                 String key = entry.getKey();
                 HashSet<String> newSet = Sets.newHashSet(entry.getValue());
                 this.explicitDisjoint.put(key, newSet);
@@ -546,7 +546,7 @@ public class KBcache implements Serializable {
                         //System.out.println("buildExplicitDisjointMap(): " + key + ", " + vals);
                     }
                     else {
-                        HashSet<String> vals = explicitDisjoint.get(key);
+                        Set<String> vals = explicitDisjoint.get(key);
                         vals.add(val);
                         explicitDisjoint.put(key, vals);
                         //System.out.println("buildExplicitDisjointMap(): " + key + ", " + vals);
@@ -563,7 +563,7 @@ public class KBcache implements Serializable {
 
         long t1 = System.currentTimeMillis();
         for (String p1 : explicitDisjoint.keySet()) {
-            HashSet<String> vals = explicitDisjoint.get(p1);
+            Set<String> vals = explicitDisjoint.get(p1);
             HashSet<String> children1 = getChildClasses(p1);
             if (children1 == null)
                 children1 = new HashSet<>();
