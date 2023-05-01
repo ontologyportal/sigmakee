@@ -2403,9 +2403,13 @@ public class GenSimpTestData {
             System.out.println("checkCapabilities(): found capabilities: " + capabilities.get(proc));
             HashSet<Capability> caps = capabilities.get(proc);
             for (Capability c : caps) {
-                if (c.caserole.equals(role) && c.object.equals(obj) && !c.negated && c.must) {
+                if (c.caserole.equals(role) && (c.object.equals(obj) || kb.isSubclass(obj,c.object)) && !c.negated && c.must) {
                     if (debug) System.out.println("checkCapabilities(): approved");
                     return true;
+                }
+                if (c.caserole.equals(role) && !c.object.equals(obj) & !kb.isSubclass(obj,c.object) && c.must) {
+                    if (debug) System.out.println("checkCapabilities(): rejected, object is not a " + c.object);
+                    return false;
                 }
                 if (c.caserole.equals(role) && c.object.equals(obj) && c.mustNot) {
                     if (debug) System.out.println("checkCapabilities(): rejected.  Conflict with: " + c);
@@ -2424,7 +2428,7 @@ public class GenSimpTestData {
         else {
             System.out.println("checkCapabilities(): " + proc + " not found.");
         }
-        if (debug) System.out.println("checkCapabilities(): approved");
+        if (debug) System.out.println("checkCapabilities(): approved by default");
         return true;
     }
 
