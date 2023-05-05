@@ -80,7 +80,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
         String expected = "(=> \n" +
                 "  (and \n" +
-                "    (instance ?PA Object)\n" +
+                "    (instance ?PA Physical)\n" +
                 "    (instance ?G Graph)\n" +
                 "    (instance ?PN Physical)\n" +
                 "    (instance ?M UnitOfMeasure)\n" +
@@ -114,14 +114,15 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "            (and\n" +
                 "               (instance ?WATER Water)\n" +
                 "               (part ?WATER ?CLOUD)\n" +
-                "               (measure ?WATER ?MEASURE1)\n" +
-                "               (measure ?PART ?MEASURE2)\n" +
+                "               (measure ?WATER (MeasureFn ?MEASURE1 ?UNIT))\n" +
+                "               (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
                 "               (greaterThan ?MEASURE1 ?MEASURE2))))))";
 
         String expected = "(=> \n" +
                 "  (and \n" +
-                "    (instance ?MEASURE1 PhysicalQuantity)\n" +
-                "    (instance ?MEASURE2 PhysicalQuantity) )\n" +
+                "    (instance ?MEASURE1 RealNumber)\n" +
+                "    (instance ?UNIT UnitOfMeasure)\n" +
+                "    (instance ?MEASURE2 RealNumber) )\n" +
                 "  (=>\n" +
                 "    (instance ?CLOUD WaterCloud)\n" +
                 "    (forall (?PART)\n" +
@@ -135,8 +136,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
                 "            (and\n" +
                 "              (instance ?WATER Water)\n" +
                 "              (part ?WATER ?CLOUD)\n" +
-                "              (measure ?WATER ?MEASURE1)\n" +
-                "              (measure ?PART ?MEASURE2)\n" +
+                "              (measure ?WATER (MeasureFn ?MEASURE1 ?UNIT))\n" +
+                "              (measure ?PART (MeasureFn ?MEASURE2 ?UNIT))\n" +
                 "              (greaterThan ?MEASURE1 ?MEASURE2) )))))))";
 
         test("testAddTypeRestrictions3()",stmt,expected);
@@ -187,8 +188,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
 
         String expected = "(=> \n" +
                 "  (and \n" +
-                "    (instance ?OBJ Agent)\n" +
-                "    (instance ?AXIS Agent) )\n" +
+                "    (instance ?OBJ AutonomousAgent)\n" +
+                "    (instance ?AXIS AutonomousAgent) )\n" +
                 "  (=>\n" +
                 "    (axis ?AXIS ?OBJ)\n" +
                 "    (exists (?R)\n" +
