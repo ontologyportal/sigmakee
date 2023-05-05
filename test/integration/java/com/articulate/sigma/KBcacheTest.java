@@ -52,7 +52,7 @@ public class KBcacheTest extends IntegrationTestBase {
         assertEquals(expected, actual);
 
         child = "City";
-        expected = new HashSet<>(Arrays.asList("Entity", "Physical", "Object", "Region", "GeographicArea", "Agent", "GeopoliticalArea", "LandArea"));
+        expected = new HashSet<>(Arrays.asList("Entity", "Physical", "Object", "Region", "GeographicArea", "AutonomousAgent", "GeopoliticalArea", "LandArea"));
         actual = cache.getParentClasses(child);
         assertEquals(expected, actual);
 
@@ -80,12 +80,15 @@ public class KBcacheTest extends IntegrationTestBase {
                 "VenezuelanEquineEncephalitis", "ConsciousnessAttribute", "LifeThreateningDisease", "NonspecificDisease",
                 "PsychologicalDysfunction", "Neurosis", "Psychosis", "TyphoidFever", "StateOfMind", "TraitAttribute"));
 */
-        HashSet<String> expected = new HashSet<>(Arrays.asList("BodyPosition", "PsychologicalDysfunction", "Fingerprint",
-                "SensoryDisability", "InfectiousDisease", "PsychologicalAttribute", "DiseaseOrSyndrome",
-                "PhysicalDisability", "ViralDisease", "VisualAcuityAttribute", "NonspecificDisease", "SexAttribute",
-                "BacterialDisease", "Disability", "Neurosis", "Psychosis", "LiteracyAttribute",
-                "ConsciousnessAttribute", "StateOfMind", "TraitAttribute", "AnimacyAttribute", "EmotionalState",
-                "DevelopmentalAttribute", "BiologicalAttribute"));
+        HashSet<String> expected = new HashSet<>(Arrays.asList("VaccinatableDisease", "PsychologicalDysfunction",
+                "PsychologicalAttribute", "PhysicalDisability", "ViralDisease", "VisualAcuityAttribute",
+                "PostTraumaticStressDisorder", "TickBorneEncephalitis", "NonspecificDisease", "ChronicDisease",
+                "SexAttribute", "Disability", "Neurosis", "Psychosis", "Hepatitis", "LiteracyAttribute",
+                "RiftValleyFever", "StateOfMind", "AcquiredImmunoDeficiencySyndrome", "VenezuelanEquineEncephalitis",
+                "BiologicalAttribute", "EmotionalState", "BodyPosition", "Fingerprint", "SensoryDisability",
+                "InfectiousDisease", "DiseaseOrSyndrome", "PhysicalDisease", "ParasiticDisease", "TyphoidFever",
+                "Depression", "BacterialDisease", "FungalDisease", "ConsciousnessAttribute", "TraitAttribute",
+                "AnimacyAttribute", "HemorrhagicFever", "Influenza", "DevelopmentalAttribute", "LifeThreateningDisease"));
 
         HashSet<String> actual = cache.getChildClasses(parent);
         assertEquals(expected, actual);
