@@ -1385,9 +1385,9 @@ public class GenSimpTestData {
         else if (lfeat.framePart.startsWith("Something"))
             prop.append("(involvedInEvent ?P ?H) ");
         else if (lfeat.subj != null &&
-                  (kb.isSubclass(lfeat.subj,"AutonomousAgent")) ||
+                  (kb.isSubclass(lfeat.subj,"AutonomousAgent") ||
                    kb.isInstanceOf(lfeat.subj,"SocialRole") ||
-                   lfeat.subj.equals("You")) {
+                   lfeat.subj.equals("You"))) {
             if (kb.isSubclass(proc,"IntentionalProcess"))
                 prop.append("(agent ?P ?H) ");
             else if (kb.isSubclass(proc,"BiologicalProcess"))
