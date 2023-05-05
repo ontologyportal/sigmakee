@@ -15,6 +15,7 @@ August 9, Acapulco, Mexico.
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
@@ -195,7 +196,7 @@ public class WNdiagnostics {
                             String bareTargetSUMO = WordNetUtilities.getBareSUMOTerm(targetSUMO);
                             if (sumoTerm != null) {
                                 KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-                                HashSet<String> SUMOtaxonomy = new HashSet<String>();
+                                Set<String> SUMOtaxonomy = new HashSet<String>();
                                 String arrow = "->";
                                 if (avp.attribute.equals("hypernym")) 
                                     SUMOtaxonomy = kb.kbCache.getParentClasses(bareSUMOterm);                                                                  

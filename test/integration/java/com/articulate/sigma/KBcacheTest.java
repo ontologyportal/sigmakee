@@ -48,7 +48,7 @@ public class KBcacheTest extends IntegrationTestBase {
 
         String child = "IrreflexiveRelation";
         HashSet<String> expected = new HashSet<>(Arrays.asList("Entity", "Relation", "InheritableRelation", "Abstract", "BinaryRelation"));
-        HashSet<String> actual = cache.getParentClasses(child);
+        Set<String> actual = cache.getParentClasses(child);
         assertEquals(expected, actual);
 
         child = "City";
