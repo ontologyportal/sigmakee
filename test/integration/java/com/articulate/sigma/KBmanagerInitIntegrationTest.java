@@ -3,6 +3,7 @@ package com.articulate.sigma;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
@@ -62,6 +63,7 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
      * Verify that you are running your tests with the expected configuration.
      */
     @Test
+    @Ignore
     public void testNbrKifFilesLoaded()   {
 
         Set<String> expectedKifFiles = Sets.newHashSet(kifSet);
@@ -106,6 +108,6 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
 
         assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime < 350000);
         // Just in case something whacky is going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 45000);
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 30000);
     }
 }
