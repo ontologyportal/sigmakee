@@ -121,8 +121,8 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
         String expected = "(=> \n" +
                 "  (and \n" +
                 "    (instance ?MEASURE1 RealNumber)\n" +
-                "    (instance ?UNIT UnitOfMeasure)\n" +
-                "    (instance ?MEASURE2 RealNumber) )\n" +
+                "    (instance ?MEASURE2 RealNumber)\n" +
+                "    (instance ?UNIT UnitOfMeasure) )\n" +
                 "  (=>\n" +
                 "    (instance ?CLOUD WaterCloud)\n" +
                 "    (forall (?PART)\n" +
