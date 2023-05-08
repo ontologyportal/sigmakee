@@ -1396,7 +1396,7 @@ public class GenSimpTestData {
                 prop.append("(agent ?P ?H) ");
         }
         else {
-            System.out.println("generateVerb() non-Agent, non-Role subject " + lfeat.subj + " for action " + proc);
+            if (debug) System.out.println("generateVerb() non-Agent, non-Role subject " + lfeat.subj + " for action " + proc);
             prop.delete(0,prop.length());
             return;
         }
