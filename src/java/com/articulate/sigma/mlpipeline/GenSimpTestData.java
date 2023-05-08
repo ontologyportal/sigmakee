@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 
 public class GenSimpTestData {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
     public static KB kb;
     public static boolean skip = false;
     public static HashSet<String> skipTypes = new HashSet<>();
@@ -721,7 +721,7 @@ public class GenSimpTestData {
      */
     public void constrainTerms(Collection<String> terms) {
 
-        System.out.println("constrainTerms(): ");
+        if (debug) System.out.println("constrainTerms(): ");
         HashSet<String> newProcList = new HashSet<>(terms);
         terms.clear();
         for (String proc : newProcList) {
@@ -2107,12 +2107,12 @@ public class GenSimpTestData {
         if (!lfeat.testMode)
             lfeat.clearSVO(); // clear flags set for each sentence
         getPrepFromFrame(lfeat);
-        System.out.println("genProc() verb: '" + lfeat.verb + "'");
-        System.out.println("genProc() prepPhrases: " + prepPhrase);
-        System.out.println("genProc() preposition: " + lfeat.directPrep);
-        System.out.println("genProc() contains key: " + prepPhrase.containsKey(lfeat.verb));
-        System.out.println("genProc() empty prep: " + StringUtil.emptyString(lfeat.directPrep));
-        System.out.println("genProc() new prep: " + prepPhrase.get(lfeat.verb));
+        if (debug) System.out.println("genProc() verb: '" + lfeat.verb + "'");
+        if (debug) System.out.println("genProc() prepPhrases: " + prepPhrase);
+        if (debug) System.out.println("genProc() preposition: " + lfeat.directPrep);
+        if (debug) System.out.println("genProc() contains key: " + prepPhrase.containsKey(lfeat.verb));
+        if (debug) System.out.println("genProc() empty prep: " + StringUtil.emptyString(lfeat.directPrep));
+        if (debug) System.out.println("genProc() new prep: " + prepPhrase.get(lfeat.verb));
         if (prepPhrase.containsKey(lfeat.verb) && StringUtil.emptyString(lfeat.directPrep))
             lfeat.directPrep = prepPhrase.get(lfeat.verb);
         if (debug) System.out.println("genProc() frame: " + lfeat.framePart);
@@ -2400,10 +2400,10 @@ public class GenSimpTestData {
      */
     public boolean checkCapabilities(String proc, String role, String obj) {
 
-        System.out.println("checkCapabilities(): starting");
+        if (debug) System.out.println("checkCapabilities(): starting");
         if (debug) System.out.println("checkCapabilities(): (proc,role,obj): " + proc + ", " + role + ", " + obj);
         if (capabilities.containsKey(proc)) {
-            System.out.println("checkCapabilities(): found capabilities: " + capabilities.get(proc));
+            if (debug) System.out.println("checkCapabilities(): found capabilities: " + capabilities.get(proc));
             HashSet<Capability> caps = capabilities.get(proc);
             for (Capability c : caps) {
                 if (c.caserole.equals(role) && (c.object.equals(obj) || kb.isSubclass(obj,c.object)) && !c.negated && c.must) {
@@ -2429,7 +2429,7 @@ public class GenSimpTestData {
             }
         }
         else {
-            System.out.println("checkCapabilities(): " + proc + " not found.");
+            if (debug) System.out.println("checkCapabilities(): " + proc + " not found.");
         }
         if (debug) System.out.println("checkCapabilities(): approved by default");
         return true;
@@ -2443,7 +2443,7 @@ public class GenSimpTestData {
         HashSet<String> attribs = kb.kbCache.getInstancesForType("Attribute");
         for (String s : attribs) {
             ArrayList<String> synsets = WordNetUtilities.getEquivalentSynsetsFromSUMO(s);
-            System.out.println("term and synset: " + s + ", " + synsets);
+            if (debug) System.out.println("term and synset: " + s + ", " + synsets);
         }
     }
 
