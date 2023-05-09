@@ -121,6 +121,13 @@ public class KBcacheTest extends IntegrationTestBase {
                 "NegativeRealNumber","NegativeInteger","BinaryNumber", "RealNumber"));
 
         TreeSet<String> actual = new TreeSet<String>(cache.getChildClasses(parent));
+
+        System.out.println("KBcacheTest.testBuildChildren2(): actual: " + actual);
+        System.out.println("KBcacheTest.testBuildChildren2(): expected: " + expected);
+        if (actual.equals(expected))
+            System.out.println("KBcacheTest.testBuildChildren2(): pass");
+        else
+            System.out.println("KBcacheTest.testBuildChildren2(): fail");
         assertEquals(expected, actual);
     }
 
@@ -295,7 +302,11 @@ public class KBcacheTest extends IntegrationTestBase {
         //System.out.println("childOfP(\"Shirt\", \"WearableItem\"): " + cache.childOfP("subclass", "WearableItem","Shirt"));
         //System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"WearableItem\"): " + SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
         System.out.println("testSignature(): cache.getSignature(memberTypeCount): " + cache.getSignature("memberTypeCount"));
-        assertTrue(cache.getSignature("memberTypeCount").equals(new ArrayList(Arrays.asList("", "Collection", "Class", "NonnegativeInteger"))));
+        ArrayList<String> expected = new ArrayList(Arrays.asList("", "Collection", "Class", "NonnegativeInteger"));
+        ArrayList<String> actual = cache.getSignature("memberTypeCount");
+        System.out.println("actual: " + actual);
+        System.out.println("expoected: " + expected);
+        assertTrue(actual.equals(expected));
     }
 
     /** *************************************************************
@@ -355,6 +366,8 @@ public class KBcacheTest extends IntegrationTestBase {
                     System.out.println("fail - " + rel + " not instance of Predicate");
                     System.out.println("parents of " + rel + " " + cache.instanceOf.get(rel));
                 }
+                else
+                    System.out.println("success for predicate: " + rel);
             }
         }
         for (String rel : rels) {
@@ -363,6 +376,8 @@ public class KBcacheTest extends IntegrationTestBase {
                     System.out.println("fail - " + rel + " not instance of Predicate");
                     System.out.println("parents of " + rel + " " + cache.instanceOf.get(rel));
                 }
+                else
+                    System.out.println("success for predicate: " + rel);
                 assertTrue(cache.isInstanceOf(rel, "Predicate"));
             }
         }
