@@ -22,7 +22,7 @@ public class SUMOKBtoTPTPKB {
 
     public static HashSet<String> excludedPredicates = new HashSet<>();
 
-    public ArrayList<String> alreadyWrittenTPTPs = new ArrayList<String>();
+    public Set<String> alreadyWrittenTPTPs = new HashSet<>();
 
     // maps TPTP axiom IDs to SUMO formulas
     public static HashMap<String,Formula> axiomKey = new HashMap<>();
@@ -360,8 +360,8 @@ public class SUMOKBtoTPTPKB {
                 }
                 for (String theTPTPFormula : f.theTptpFormulas) {
                     if (!StringUtil.emptyString(theTPTPFormula) &&
-                            !filterAxiom(f,theTPTPFormula,pw) &&
-                            !alreadyWrittenTPTPs.contains(theTPTPFormula)) {
+                            !alreadyWrittenTPTPs.contains(theTPTPFormula) &&
+                            !filterAxiom(f,theTPTPFormula,pw)) {
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : writing " + theTPTPFormula);
                         String name = "kb_" + getSanitizedKBname() + "_" + axiomIndex++;
                         axiomKey.put(name,f);
