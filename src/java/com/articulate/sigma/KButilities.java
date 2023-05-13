@@ -1166,6 +1166,7 @@ public class KButilities {
         System.out.println("  -v - is formula valid");
         System.out.println("  -a \"<formula>\" - show all attributes of a SUO-KIF formula");
         System.out.println("  -t - generate a table of termFormat(s)");
+        System.out.println("  -l - list all terms in the KB");
     }
 
     /** *************************************************************
@@ -1187,6 +1188,10 @@ public class KButilities {
             Infrastructure infra = new Infrastructure();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-l")) {
+                for (String t : kb.terms)
+                    System.out.println(t);
             }
             else if (args != null && args.length > 0 && args[0].equals("-j")) {
                 Set<String> tuples = generateSemanticNetwork(kb,false,false);
