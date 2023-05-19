@@ -475,7 +475,7 @@ public class SUMOKBtoTPTPKB {
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + SUMOKBtoTPTPKB.lang;
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new BufferedWriter(new FileWriter(filename, true)));
