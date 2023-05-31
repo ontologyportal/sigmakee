@@ -282,6 +282,7 @@ public class SUMOKBtoTPTPKB {
             //if (debug) pr.println("% INFO in SUMOKBtoTPTPKB.writeFile(): added formulas: " + orderedFormulae.size());
             int counter = 0;
             int formCount = 0;
+            int total = orderedFormulae.size();
             for (Formula f : orderedFormulae) {
                 f.theTptpFormulas = new HashSet<>();
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
@@ -303,9 +304,9 @@ public class SUMOKBtoTPTPKB {
                     pw.println("% not higher order");
                 if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
                     continue;
-                if (counter++ == 100) System.out.print(".");
+                if (counter++ % 100 == 0) System.out.print(".");
                 if ((counter % 4000) == 1)
-                    System.out.println("\nSUMOKBtoTPTPKB.writeFile() : still working");
+                    System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                 Set<Formula> processed = fp.preProcess(f,false,kb);
@@ -475,7 +476,7 @@ public class SUMOKBtoTPTPKB {
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
-        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + SUMOKBtoTPTPKB.lang;
+        String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
         PrintWriter pw = null;
         try {
             pw = new PrintWriter(new BufferedWriter(new FileWriter(filename, true)));
