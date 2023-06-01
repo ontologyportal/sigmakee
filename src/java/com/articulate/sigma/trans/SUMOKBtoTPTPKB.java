@@ -486,7 +486,7 @@ public class SUMOKBtoTPTPKB {
         }
         String fileWritten = skbtptpkb.writeFile(filename, null, false, pw);
         if (StringUtil.isNonEmptyString(fileWritten))
-            System.out.println("File written: " + fileWritten + " with key: " + axiomKey);
+            System.out.println("File written: " + fileWritten);
         else
             System.out.println("Could not write " + filename);
     }
