@@ -2531,7 +2531,7 @@ public class SUMOtoTFAform {
      */
     private static void buildNumericConstraints() {
 
-        System.out.println("INFO in SUMOtoTFAform.buildNumericConstraints(): kbCache : " + kb.kbCache);
+        if (debug) System.out.println("INFO in SUMOtoTFAform.buildNumericConstraints(): kbCache : " + kb.kbCache);
         HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
         if (intChildren == null)
             return;

@@ -40,6 +40,8 @@ public class FormulaPreprocessor {
 
     public static boolean addOnlyNonNumericTypes = false;
 
+    public static HashSet<String> errors = new HashSet<>();
+    
     /** ***************************************************************
      * A + is appended to the type if the parameter must be a class
      *

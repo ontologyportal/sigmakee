@@ -236,7 +236,7 @@ public class DB {
             boolean areTokensListed = ((lineStartTokens != null) && !lineStartTokens.isEmpty());
             boolean skippingHeader = true;
             while ((line = lr.readLine()) != null) {
-                if(skippingHeader) {
+                if (skippingHeader) {
                     skippingHeader = line.startsWith(";") || line.trim().isEmpty();
                 }
                 if (!skippingHeader) {
