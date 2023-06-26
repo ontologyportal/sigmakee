@@ -121,7 +121,11 @@
         <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
         <mkdir dir="${deploy.lib}"/>
         <copy todir="${deploy.lib}">
-            <fileset dir="${basedir}/lib"/>
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+                <exclude name="*-sources.jar"/>
+                <exclude name="*-javadoc.jar"/>
+            </fileset>
         </copy>
     </target>
 

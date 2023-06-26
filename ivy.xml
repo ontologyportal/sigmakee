@@ -1,12 +1,14 @@
 <ivy-module version="2.0">
     <info organisation="org.ontologyportal" module="sigmakee"/>
     <dependencies>
-        <dependency org="org.antlr" name="antlr4" rev="4.9.3"/>
+        <dependency org="org.antlr" name="antlr4-runtime" rev="4.9.3" transitive="false"/>
         <dependency org="junit" name="junit" rev="4.12"/>
-        <dependency org="edu.stanford.nlp" name="stanford-corenlp" rev="4.5.4"/>
-        <dependency org="com.google.guava" name="guava" rev="19.0"/>
-        <dependency org="javax.mail" name="mail" rev="1.4"/>
-        <dependency org="net.sf.py4j" name="py4j" rev="0.10.6"/>
-        <dependency org="com.igormaznitsa" name="java-prolog-parser" rev="2.0.2"/>
+        <dependency org="edu.stanford.nlp" name="stanford-corenlp" rev="4.5.4" transitive="false"/>
+        <dependency org="com.google.guava" name="guava" rev="19.0" transitive="false"/>
+        <dependency org="javax.mail" name="mail" rev="1.4" transitive="false"/>
+        <dependency org="net.sf.py4j" name="py4j" rev="0.10.6" transitive="false"/>
+        <dependency org="com.igormaznitsa" name="java-prolog-parser" rev="2.0.2" transitive="false"/>
+        <dependency org="com.googlecode.json-simple" name="json-simple" rev="1.1.1" transitive="false"/>
+        <dependency org="org.apache.commons" name="commons-lang3" rev="3.12.0" transitive="false"/>
     </dependencies>
 </ivy-module>
