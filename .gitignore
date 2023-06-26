@@ -18,3 +18,5 @@
 /EBatchConfig.txt
 
 .idea/
+.ivy
+lib

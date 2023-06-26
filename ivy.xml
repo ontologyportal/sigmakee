@@ -1,0 +1,12 @@
+<ivy-module version="2.0">
+    <info organisation="org.ontologyportal" module="sigmakee"/>
+    <dependencies>
+        <dependency org="org.antlr" name="antlr4" rev="4.9.3"/>
+        <dependency org="junit" name="junit" rev="4.12"/>
+        <dependency org="edu.stanford.nlp" name="stanford-corenlp" rev="4.5.4"/>
+        <dependency org="com.google.guava" name="guava" rev="19.0"/>
+        <dependency org="javax.mail" name="mail" rev="1.4"/>
+        <dependency org="net.sf.py4j" name="py4j" rev="0.10.6"/>
+        <dependency org="com.igormaznitsa" name="java-prolog-parser" rev="2.0.2"/>
+    </dependencies>
+</ivy-module>
