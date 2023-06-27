@@ -1,4 +1,5 @@
-FROM apease/sigma-ci:latest as builder
+ARG IMAGE_ACCOUNT=apease
+FROM $IMAGE_ACCOUNT/sigma-ci:latest as builder
 
 #################################################
 # runtime image.
