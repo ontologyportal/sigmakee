@@ -79,6 +79,14 @@ jobs:
           sed -i "s|/home/apease/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           java  -Xmx8g -classpath $SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/build/lib/* org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
+      - name: Prune KB
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+        working-directory: ${{ github.workspace }}
+        run: |
+          find $SIGMA_HOME/KBs -name '*.ser' -delete
+          rm -rf $SIGMA_HOME/KBs/tests
+
       - name: Upload sigmakee jars
         uses: actions/upload-artifact@v3
         with:
@@ -87,6 +95,13 @@ jobs:
             ./sigmakee/build/sigmakee.jar
             ./sigmakee/config.xml
             ./sigmakee-runtime
+
+      - name: Upload sigmakee war
+        uses: actions/upload-artifact@v3
+        with:
+          name: sigma-webapp
+          path: /usr/local/tomcat/webapps/sigma.war
+
 
   build-sumo-ci:
     runs-on: ubuntu-latest
@@ -110,10 +125,17 @@ jobs:
         with:
           name: artifact
 
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: sigma-webapp
+
       - name: Setup SigmaKEE
         run: |
+          ls .
           sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" ./sigmakee/config.xml
           sed -i "s|/home/theuser/workspace/vampire/vampire|/usr/local/bin/vampire|g" ./sigmakee/config.xml
+          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" ./sigmakee/config.xml
           cp ./sigmakee/config.xml ./sigmakee-runtime/KBs
 
       - name: Set image account name
@@ -122,7 +144,7 @@ jobs:
         run: |
           echo "IMAGE_ACCOUNT=${DOCKER_ACCOUNT:-$DEFAULT_DOCKER_ACCOUNT}" >> $GITHUB_ENV
 
-      - name: Build and push
+      - name: Build and push sumo-ci
         uses: docker/build-push-action@v4
         with:
           context: .
@@ -131,5 +153,15 @@ jobs:
             IMAGE_ACCOUNT=${{ env.IMAGE_ACCOUNT }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.IMAGE_ACCOUNT }}/sumo-ci:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push sigmakee
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: docker/sigmakee/Dockerfile
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ env.IMAGE_ACCOUNT }}/sigmakee:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
