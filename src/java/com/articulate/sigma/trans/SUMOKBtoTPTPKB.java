@@ -248,7 +248,7 @@ public class SUMOKBtoTPTPKB {
      */
     public void writeHeader(PrintWriter pw, String sanitizedKBName) {
 
-        if (pw == null) {
+        if (pw != null) {
             pw.println("% Articulate Software");
             pw.println("% www.ontologyportal.org www.articulatesoftware.com");
             pw.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
