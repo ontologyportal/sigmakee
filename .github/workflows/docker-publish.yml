@@ -47,6 +47,7 @@ jobs:
           context: .
           file: docker/sigma-ci/Dockerfile
           push: ${{ github.event_name == 'push' }}
+          platforms: linux/amd64,linux/arm64
           tags: ${{ env.IMAGE_ACCOUNT }}/sigma-ci:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
