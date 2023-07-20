@@ -1,6 +1,6 @@
 FROM tomcat:9.0.73-jdk8-temurin-jammy as builder
 
-ARG VAMPIRE_GIT=c1643839b2a4e90057611837e018ad831c2da9fd
+ARG VAMPIRE_GIT=8d999c1350ea5d7839cb98350371c3e4833b2cb6
 
 RUN apt update; \
     apt-get install -y --no-install-recommends \
