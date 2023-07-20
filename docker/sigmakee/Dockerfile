@@ -26,3 +26,4 @@ COPY ./sigmakee/build/lib/*.jar /root/sigmakee/
 COPY ./sigma.war $CATALINA_HOME/webapps/sigma.war
 
 ENV SIGMA_HOME=/root/sigmakee-runtime
+ENV CATALINA_OPTS="${CATALINA_OPTS} -Xmx10g"
