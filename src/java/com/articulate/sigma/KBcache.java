@@ -51,7 +51,7 @@ public class KBcache implements Serializable {
     public Set<String> relations = new HashSet<>();
 
     // all the functions in the kb
-    public HashSet<String> functions = new HashSet<String>();
+    public Set<String> functions = new HashSet<String>();
 
     // all relations that are not functions
     public HashSet<String> predicates = new HashSet<>();

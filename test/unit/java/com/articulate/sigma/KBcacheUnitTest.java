@@ -99,7 +99,7 @@ public class KBcacheUnitTest {
 
         System.out.println("Test functions");
         HashSet<String> expected = new HashSet<>(Arrays.asList("CitizenryFn", "ResidentFn"));
-        HashSet<String> actual = kb.kbCache.functions;
+        Set<String> actual = kb.kbCache.functions;
         System.out.println("functions:" + actual);
         assertEquals(expected, actual);
     }
