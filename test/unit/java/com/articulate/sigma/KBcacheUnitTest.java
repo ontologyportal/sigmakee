@@ -88,7 +88,7 @@ public class KBcacheUnitTest {
         HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
                 "var", "rel", "subclass", "CitizenryFn", "ResidentFn", "relsub",
                 "subrelation"));
-        HashSet<String> actual = kb.kbCache.relations;
+        Set<String> actual = kb.kbCache.relations;
         assertEquals(expected, actual);
     }
 

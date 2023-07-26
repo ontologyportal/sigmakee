@@ -48,7 +48,7 @@ public class KBcache implements Serializable {
     public static final String _cacheFileSuffix = "_Cache.kif";
 
     // all the relations in the kb
-    public HashSet<String> relations = new HashSet<String>();
+    public Set<String> relations = new HashSet<>();
 
     // all the functions in the kb
     public HashSet<String> functions = new HashSet<String>();
