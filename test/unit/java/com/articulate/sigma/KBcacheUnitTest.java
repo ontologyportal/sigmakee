@@ -113,7 +113,7 @@ public class KBcacheUnitTest {
         HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
                 "var", "rel", "subclass", "relsub",
                 "subrelation"));
-        HashSet<String> actual = kb.kbCache.predicates;
+        Set<String> actual = kb.kbCache.predicates;
         System.out.println("predicates:" + actual);
         assertEquals(expected, actual);
     }
@@ -125,7 +125,7 @@ public class KBcacheUnitTest {
 
         System.out.println("Test transRels");
         HashSet<String> expected = new HashSet<>(Arrays.asList("subclass", "subAttribute", "subrelation"));
-        HashSet<String> actual = kb.kbCache.transRels;
+        Set<String> actual = kb.kbCache.transRels;
         assertEquals(expected, actual);
     }
 

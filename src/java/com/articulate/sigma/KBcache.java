@@ -51,19 +51,19 @@ public class KBcache implements Serializable {
     public Set<String> relations = new HashSet<>();
 
     // all the functions in the kb
-    public Set<String> functions = new HashSet<String>();
+    public Set<String> functions = new HashSet<>();
 
     // all relations that are not functions
-    public HashSet<String> predicates = new HashSet<>();
+    public Set<String> predicates = new HashSet<>();
 
     // all the transitive relations in the kb
-    public HashSet<String> transRels = new HashSet<String>();
+    public Set<String> transRels = new HashSet<>();
 
     // all the transitive relations between instances in the kb that must have the same type
-    public HashSet<String> instRels = new HashSet<String>();
+    public Set<String> instRels = new HashSet<>();
 
     // all the transitive relations between instances in the kb
-    public HashSet<String> instTransRels = new HashSet<String>();
+    public Set<String> instTransRels = new HashSet<>();
 
     // all the transitive relations that are known to be appropriate to use at the time
     // this code was created
