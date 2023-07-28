@@ -3,7 +3,8 @@ package com.articulate.sigma;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeSet;
 
 import static org.junit.Assert.assertEquals;
@@ -25,10 +26,10 @@ public class CaseRoleTest extends IntegrationTestBase {
         // Collect all expected instances for "CaseRole", by running KBcache.buildTransInstOf()
         cache.instanceOf = new HashMap<>();
         cache.buildTransInstOf();
-        HashMap<String, HashSet<String>> expectedInstancesMap = cache.instanceOf;
+        Map<String, Set<String>> expectedInstancesMap = cache.instanceOf;
         TreeSet<String> expectedInstancesForCaseRole = new TreeSet<>();
         for (String inst : expectedInstancesMap.keySet()) {
-            HashSet<String> parentClasses = expectedInstancesMap.get(inst);
+            Set<String> parentClasses = expectedInstancesMap.get(inst);
             if (parentClasses.contains("CaseRole"))
                 expectedInstancesForCaseRole.add(inst);
         }
@@ -36,10 +37,10 @@ public class CaseRoleTest extends IntegrationTestBase {
         // Collect all actual instances for "CaseRole", by running KBcache.buildDirectInstances()
         cache.instanceOf = new HashMap<>();
         cache.buildDirectInstances();
-        HashMap<String, HashSet<String>> actualInstancesMap = cache.instanceOf;
+        Map<String, Set<String>> actualInstancesMap = cache.instanceOf;
         TreeSet<String> actualInstancesForCaseRole = new TreeSet<>();
         for (String inst : actualInstancesMap.keySet()) {
-            HashSet<String> parentClasses = actualInstancesMap.get(inst);
+            Set<String> parentClasses = actualInstancesMap.get(inst);
             if (parentClasses.contains("CaseRole"))
                 actualInstancesForCaseRole.add(inst);
         }

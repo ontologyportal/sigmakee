@@ -143,7 +143,7 @@ public class KBcacheTest extends IntegrationTestBase {
         System.out.println("testbuildTransInstOf(): testing: " + relation);
         HashSet<String> expected = new HashSet<>(Arrays.asList("Entity", "Relation", "InheritableRelation",
                 "Abstract", "BinaryPredicate", "BinaryRelation", "Predicate"));
-        HashSet<String> actual = cache.getParentClassesOfInstance(relation);
+        Set<String> actual = cache.getParentClassesOfInstance(relation);
         assertEquals(expected, actual);
 
         relation = "during";  // TODO: since during is a subrelation of temporalPart it should be a superset here - bad test
