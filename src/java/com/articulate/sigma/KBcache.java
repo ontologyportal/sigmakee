@@ -88,7 +88,7 @@ public class KBcache implements Serializable {
 
     // all the instances of a class key, including through subrelation
     // and subAttribute
-    public HashMap<String, HashSet<String>> instances = new HashMap<>();
+    public Map<String, Set<String>> instances = new HashMap<>();
 
     /** A temporary list of instances built during creation of the
      * children map, in order to efficiently create the instances map
@@ -376,7 +376,7 @@ public class KBcache implements Serializable {
      */
     public void addInstance(String child, String parent) {
 
-        HashSet<String> is = instances.get(parent);
+        Set<String> is = instances.get(parent);
         if (is == null) {
             is = new HashSet<>();
             instances.put(parent, is);
@@ -478,7 +478,7 @@ public class KBcache implements Serializable {
     public void addTransitiveInstances() {
 
         for (String s : instances.keySet()) {
-            HashSet<String> allInst = instances.get(s);
+            Set<String> allInst = instances.get(s);
             allInst.addAll(getInstancesForType(s));
             instances.put(s,allInst);
         }
@@ -751,7 +751,7 @@ public class KBcache implements Serializable {
      */
     public void correctValences() {
 
-        HashSet<String> hs = instances.get("VariableArityRelation");
+        Set<String> hs = instances.get("VariableArityRelation");
         if (hs == null)
             return;
         for (String s : hs) {
@@ -942,7 +942,7 @@ public class KBcache implements Serializable {
             classes = new HashSet<>();
         classes.add(cl);
         for (String c : classes) {
-            HashSet<String> is = instances.get(c);
+            Set<String> is = instances.get(c);
             if (debug) System.out.println("getInstancesForType(): instances of " + c + " : " + is);
             if (is != null)
                 instancesForType.addAll(is);
@@ -1896,7 +1896,7 @@ public class KBcache implements Serializable {
                 total / nkbc.parents.keySet().size());
         System.out.println("KBcache.showSizes(): instanceOf size: " + nkbc.instanceOf.size());
         total = 0;
-        for (HashSet<String> seconds : nkbc.instances.values())
+        for (Set<String> seconds : nkbc.instances.values())
             total = total + seconds.size();
         System.out.println("KBcache.showSizes(): instances average values size (# instances ): " +
                 total / nkbc.instances.keySet().size());
