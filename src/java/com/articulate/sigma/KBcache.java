@@ -84,8 +84,7 @@ public class KBcache implements Serializable {
      * subAttribute and subrelation.  May not do what you think
      * since the key is the child (instance)
      */
-    public HashMap<String, HashSet<String>> instanceOf =
-            new HashMap<String, HashSet<String>>();
+    public Map<String, Set<String>> instanceOf = new HashMap<>();
 
     // all the instances of a class key, including through subrelation
     // and subAttribute
@@ -156,7 +155,7 @@ public class KBcache implements Serializable {
         // instRels = new HashSet<String>();
         instTransRels = new HashSet<String>(50,(float) 0.75);
         parents = new HashMap<>(60,(float) 0.75);
-        instanceOf = new HashMap<String, HashSet<String>>(kbin.getCountTerms()/3,(float) 0.75);
+        instanceOf = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
         instances = new HashMap<>(kbin.getCountTerms(),(float) 0.75);
         insts = new HashSet<>(kbin.getCountTerms(),(float) 0.75);
         children = new HashMap<String, HashMap<String, HashSet<String>>>(60,(float) 0.75);
@@ -198,7 +197,7 @@ public class KBcache implements Serializable {
             }
         }
         if (kbCacheIn.instanceOf != null) {
-            for (Map.Entry<String, HashSet<String>> entry : kbCacheIn.instanceOf.entrySet()) {
+            for (Map.Entry<String, Set<String>> entry : kbCacheIn.instanceOf.entrySet()) {
                 String key = entry.getKey();
                 HashSet<String> newSet = Sets.newHashSet(entry.getValue());
                 this.instanceOf.put(key, newSet);
@@ -311,7 +310,7 @@ public class KBcache implements Serializable {
     public boolean isInstanceOf(String i, String c) {
 
         if (instanceOf.containsKey(i)) {
-            HashSet<String> hashSet = instanceOf.get(i);
+            Set<String> hashSet = instanceOf.get(i);
             if (hashSet == null) {
                 System.out.println("Error in KBcache.isInstanceOf(): null result for " + i);
                 return false;
@@ -334,7 +333,7 @@ public class KBcache implements Serializable {
      */
     public boolean transInstOf(String child, String parent) {
     
-        HashSet<String> prents = instanceOf.get(child);
+        Set<String> prents = instanceOf.get(child);
         if (prents != null)
             return prents.contains(parent);
         else
@@ -400,7 +399,7 @@ public class KBcache implements Serializable {
         //}
         kb.terms.add(newTerm);
         kb.capterms.put(newTerm.toUpperCase(),newTerm);
-        HashSet<String> iset = instanceOf.get(term);
+        Set<String> iset = instanceOf.get(term);
         instanceOf.put(newTerm,iset);
         //if (newTerm.endsWith("Fn"))
         //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
@@ -463,7 +462,7 @@ public class KBcache implements Serializable {
             String parent = f.getStringArgument(2);
             addInstance(child,parent);
             Map<String,Set<String>> superclasses = parents.get("subclass");
-            HashSet<String> iset = new HashSet<String>();
+            Set<String> iset = new HashSet<String>();
             if (instanceOf.get(child) != null)
                 iset = instanceOf.get(child);
             iset.add(parent);
@@ -714,7 +713,7 @@ public class KBcache implements Serializable {
                                     String cl = f2.getStringArgument(2);
                                     if (debug) System.out.println("buildTransInstOf(): cl: " + cl);
                                     Map<String,Set<String>> superclasses = parents.get("subclass");
-                                    HashSet<String> pset = new HashSet<String>();
+                                    Set<String> pset = new HashSet<String>();
                                     if (instanceOf.get(child) != null)
                                         pset = instanceOf.get(child);
                                     pset.add(cl);
@@ -730,7 +729,7 @@ public class KBcache implements Serializable {
                 	String cl = f.getStringArgument(2);
                     if (debug) System.out.println("buildTransInstOf(): cl2: " + cl);
                     Map<String,Set<String>> superclasses = parents.get("subclass");
-                    HashSet<String> iset = new HashSet<String>();
+                    Set<String> iset = new HashSet<String>();
                     if (instanceOf.get(child) != null)
                         iset = instanceOf.get(child);
                     iset.add(cl);
@@ -792,7 +791,7 @@ public class KBcache implements Serializable {
         HashSet<String> p1 = new HashSet<>();
         HashSet<String> p2 = new HashSet<>();
         if (kb.isInstance(t1)) {
-            HashSet<String> temp = getParentClassesOfInstance(t1);
+            Set<String> temp = getParentClassesOfInstance(t1);
             if (temp != null)
                 p1.addAll(temp);
         }
@@ -802,7 +801,7 @@ public class KBcache implements Serializable {
                 p1.addAll(temp);
         }
         if (kb.isInstance(t2)) {
-            HashSet<String> temp = getParentClassesOfInstance(t2);
+            Set<String> temp = getParentClassesOfInstance(t2);
             if (temp != null)
                 p2.addAll(temp);
         }
@@ -909,9 +908,9 @@ public class KBcache implements Serializable {
      * getParentClassesOfInstances(UnitedStates) returns Nation and its
      * super classes from subclass expressions.
      */
-    public HashSet<String> getParentClassesOfInstance(String cl) {
+    public Set<String> getParentClassesOfInstance(String cl) {
         
-        HashSet<String> ps = instanceOf.get(cl);
+        Set<String> ps = instanceOf.get(cl);
         if (ps != null)
             return ps;
         else
@@ -1521,7 +1520,7 @@ public class KBcache implements Serializable {
             }
 
             for (String inst : instanceOf.keySet()) {
-                HashSet<String> valSet = instanceOf.get(inst);
+                Set<String> valSet = instanceOf.get(inst);
                 for (String parent : valSet) {
                     String tuple = "(instance " + inst + " " + parent + ")";
                     if (!kb.formulaMap.containsKey(tuple)) {
@@ -1582,7 +1581,7 @@ public class KBcache implements Serializable {
         }
         System.out.println("KBcache.storeCacheAsFormulas(): finished relations, starting instances");
         for (String inst : instanceOf.keySet()) {
-            HashSet<String> valSet = instanceOf.get(inst);
+            Set<String> valSet = instanceOf.get(inst);
             for (String parent : valSet) {
                 String tuple = "(instance " + inst + " " + parent + ")";
                 if (!kb.formulaMap.containsKey(tuple)) {

@@ -136,7 +136,7 @@ public class KBcacheUnitTest {
 
         System.out.println("Test parents");
         HashSet<String> expected = new HashSet<>(Arrays.asList("Relation", "Entity"));
-        HashSet<String> actual = kb.kbCache.getParentClassesOfInstance("rel");
+        Set<String> actual = kb.kbCache.getParentClassesOfInstance("rel");
         assertEquals(expected, actual);
     }
 
