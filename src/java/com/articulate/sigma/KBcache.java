@@ -93,7 +93,7 @@ public class KBcache implements Serializable {
     /** A temporary list of instances built during creation of the
      * children map, in order to efficiently create the instances map
      **/
-    public HashSet<String> insts = new HashSet<>();
+    public Set<String> insts = new HashSet<>();
 
     /** All the cached "child" relations of all transitive relations
      * meaning the relations between all first arguments and the
@@ -118,7 +118,7 @@ public class KBcache implements Serializable {
             new HashMap<String, ArrayList<String>>();
 
     // The number of arguments to each relation.  Variable arity is -1
-    public HashMap<String, Integer> valences = new HashMap<String, Integer>();
+    public Map<String, Integer> valences = new HashMap<String, Integer>();
 
     /** Disjoint relationships which were explicitly defined in "partition", "disjoint",
      * and "disjointDecomposition" expressions
@@ -127,10 +127,10 @@ public class KBcache implements Serializable {
 
     // each pair of classes as class1\tclass2
     // transitive closure of classes based on explicitDisjoint
-    public HashSet<String> disjoint = new HashSet<>();
+    public Set<String> disjoint = new HashSet<>();
 
     // each pair of relations as rel1\trel2
-    public HashSet<String> disjointRelations = new HashSet<>();
+    public Set<String> disjointRelations = new HashSet<>();
 
     public boolean initialized = false;
 
