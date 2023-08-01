@@ -67,7 +67,7 @@ jobs:
         run: ant -noinput -buildfile build.xml
         working-directory: ./sigmakee
 
-      - name: Test SigmaKEE
+      - name: Prepare test env
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
@@ -77,9 +77,33 @@ jobs:
           sed -i "s|/home/apease/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/apease/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/apease/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+
+      - name: Run unit tests
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        working-directory: ./sigmakee
+        run: |
           java  -Xmx8g -classpath $SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/build/lib/* org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
-      - name: Prune KB
+      - name: Clean KB after unit test
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+        working-directory: ${{ github.workspace }}
+        run: |
+          find $SIGMA_HOME/KBs -name '*.ser' -delete
+
+      - name: Run integration tests
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        working-directory: ./sigmakee
+        run: |
+          java  -Xmx8g -classpath $SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/build/lib/* org.junit.runner.JUnitCore com.articulate.sigma.IntegrationTestSuite
+
+      - name: Prune KB after integration tests
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
         working-directory: ${{ github.workspace }}

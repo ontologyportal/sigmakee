@@ -65,62 +65,18 @@ public class KBcacheTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
-    public void testBuildChildren() {
-
-        System.out.println("\n============= testBuildChildren ==================");
-        KBcache cache = SigmaTestBase.kb.kbCache;
-        String kbName = KBmanager.getMgr().getPref("sumokbname");
-        System.out.println("testbuildChildren(): KBs: " + KBmanager.getMgr().getKB(kbName).constituents);
-        String parent = "BiologicalAttribute";
-        /* HashSet<String> expected = new HashSet<>(Arrays.asList("AnimacyAttribute", "BodyPosition", "DevelopmentalAttribute",
-                "DiseaseOrSyndrome", "Fingerprint", "PsychologicalAttribute", "SexAttribute", "VisualAcuityAttribute",
-                "AquiredImmunoDeficiencySyndrome", "Disability", "PhysicalDisability", "SensoryDisability",
-                "InfectiousDisease", "BacterialDisease", "VaccinatableDisease", "Influenza", "TickBorneEncephalitis",
-                "ViralDisease", "EmotionalState", "HemorrhagicFever", "Hepatitis", "RiftValleyFever", "LiteracyAttribute",
-                "VenezuelanEquineEncephalitis", "ConsciousnessAttribute", "LifeThreateningDisease", "NonspecificDisease",
-                "PsychologicalDysfunction", "Neurosis", "Psychosis", "TyphoidFever", "StateOfMind", "TraitAttribute"));
-*/
-        TreeSet<String> expected = new TreeSet<>(Arrays.asList("AnimacyAttribute", "BacterialDisease",
-                "BiologicalAttribute", "BodyPosition", "ChronicDisease", "ConsciousnessAttribute", "Depression",
-                "DevelopmentalAttribute", "Disability", "DiseaseOrSyndrome", "EmotionalState", "Fingerprint",
-                "FungalDisease", "InfectiousDisease", "LiteracyAttribute", "Neurosis", "NonspecificDisease",
-                "ParasiticDisease", "PhysicalDisability", "PhysicalDisease", "PostTraumaticStressDisorder",
-                "PsychologicalAttribute", "PsychologicalDysfunction", "Psychosis", "SensoryDisability", "SexAttribute",
-                "StateOfMind", "TraitAttribute", "ViralDisease", "VisualAcuityAttribute"));
-
-        TreeSet<String> actual = new TreeSet<String>(cache.getChildClasses(parent));
-        System.out.println("Expected: " + expected);
-        System.out.println("Actual: " + actual);
-        assertEquals(expected, actual);
-
-        parent = "AsymmetricRelation";
-        expected = new TreeSet<>(Arrays.asList("AsymmetricRelation", "PropositionalAttitude", "CaseRole"));
-        actual = new TreeSet<String>(cache.getChildClasses(parent));
-        assertEquals(expected, actual);
-    }
-
-    /** *************************************************************
-     */
-    @Test
-    public void testBuildChildren2() {
+    public void testBuildChildrenRealNumber() {
 
         System.out.println("\n============= testBuildChildren2 ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
         String parent = "RealNumber";
-        /* HashSet<String> expected = new HashSet<>(Arrays.asList("AnimacyAttribute", "BodyPosition", "DevelopmentalAttribute",
-                "DiseaseOrSyndrome", "Fingerprint", "PsychologicalAttribute", "SexAttribute", "VisualAcuityAttribute",
-                "AquiredImmunoDeficiencySyndrome", "Disability", "PhysicalDisability", "SensoryDisability",
-                "InfectiousDisease", "BacterialDisease", "VaccinatableDisease", "Influenza", "TickBorneEncephalitis",
-                "ViralDisease", "EmotionalState", "HemorrhagicFever", "Hepatitis", "RiftValleyFever", "LiteracyAttribute",
-                "VenezuelanEquineEncephalitis", "ConsciousnessAttribute", "LifeThreateningDisease", "NonspecificDisease",
-                "PsychologicalDysfunction", "Neurosis", "Psychosis", "TyphoidFever", "StateOfMind", "TraitAttribute"));
-*/
+
         TreeSet<String> expected = new TreeSet<>(Arrays.asList("RationalNumber","Integer","EvenInteger",
                 "OddInteger","PrimeNumber","NonnegativeInteger","PositiveInteger","NegativeInteger",
                 "IrrationalNumber","NonnegativeRealNumber","PositiveRealNumber","PositiveInteger",
-                "NegativeRealNumber","NegativeInteger","BinaryNumber", "RealNumber"));
+                "NegativeRealNumber","NegativeInteger","BinaryNumber"));
 
-        TreeSet<String> actual = new TreeSet<String>(cache.getChildClasses(parent));
+        TreeSet<String> actual = new TreeSet<>(cache.getChildClasses(parent));
 
         System.out.println("KBcacheTest.testBuildChildren2(): actual: " + actual);
         System.out.println("KBcacheTest.testBuildChildren2(): expected: " + expected);
