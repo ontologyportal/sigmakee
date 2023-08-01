@@ -155,7 +155,7 @@ public class PredVarInst {
             if (debug) System.out.println("handleDouble2(): is function " + kb.isFunction(r1));
             if (kb.kbCache.functions.contains(r1)) // || kb.isFunction(r1))
                 continue;
-            HashSet<String> children = kb.kbCache.children.get("subrelation").get(r1);
+            Set<String> children = kb.kbCache.children.get("subrelation").get(r1);
             if (children != null) {
                 for (String r2 : children) {
                     int arity1 = kb.kbCache.getArity(r1);
