@@ -148,7 +148,7 @@ public class KBcacheUnitTest {
         System.out.println("Test children");
         HashSet<String> expected = new HashSet<>(Arrays.asList("relsub"));
         System.out.println("testChildren(): subrelations: " + kb.kbCache.children.get("subrelation"));
-        HashSet<String> actual = null;
+        Set<String> actual = null;
         if (kb.kbCache.children.get("subrelation") != null)
             actual = kb.kbCache.children.get("subrelation").get("rel");
         System.out.println("testChildren(): actual: " + actual);

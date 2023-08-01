@@ -102,8 +102,7 @@ public class KBcache implements Serializable {
      * relationships.  The interior HashMap is the set of terms and
      * their transitive closure of children.
      */
-    public HashMap<String, HashMap<String, HashSet<String>>> children =
-            new HashMap<String, HashMap<String, HashSet<String>>>();
+    public Map<String, Map<String, Set<String>>> children = new HashMap<>();
 
     /** Relation name keys and argument types with 0th arg always ""
      * except in the case of Functions where the 0th arg will be the
@@ -158,7 +157,7 @@ public class KBcache implements Serializable {
         instanceOf = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
         instances = new HashMap<>(kbin.getCountTerms(),(float) 0.75);
         insts = new HashSet<>(kbin.getCountTerms(),(float) 0.75);
-        children = new HashMap<String, HashMap<String, HashSet<String>>>(60,(float) 0.75);
+        children = new HashMap<>(60,(float) 0.75);
         signatures = new HashMap<String, ArrayList<String>>(kbin.getCountTerms()/3,(float) 0.75);
         valences = new HashMap<String, Integer>(kbin.getCountTerms()/3,(float) 0.75);
         explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
@@ -207,12 +206,12 @@ public class KBcache implements Serializable {
             this.insts = Sets.newHashSet(kbCacheIn.insts);
         }
         if (kbCacheIn.children != null) {
-            for (Map.Entry<String, HashMap<String, HashSet<String>>> outerEntry : kbCacheIn.children.entrySet()) {
+            for (Map.Entry<String, Map<String, Set<String>>> outerEntry : kbCacheIn.children.entrySet()) {
                 String outerKey = outerEntry.getKey();
 
-                HashMap<String, HashSet<String>> newInnerMap = Maps.newHashMap();
-                HashMap<String, HashSet<String>> oldInnerMap = outerEntry.getValue();
-                for (Map.Entry<String, HashSet<String>> innerEntry : oldInnerMap.entrySet()) {
+                Map<String, Set<String>> newInnerMap = Maps.newHashMap();
+                Map<String, Set<String>> oldInnerMap = outerEntry.getValue();
+                for (Map.Entry<String, Set<String>> innerEntry : oldInnerMap.entrySet()) {
                     String innerKey = innerEntry.getKey();
                     if (innerEntry != null && innerEntry.getValue() != null) {
                         HashSet newInnerSet = Sets.newHashSet(innerEntry.getValue());
@@ -283,10 +282,10 @@ public class KBcache implements Serializable {
         if (parent.equals(child)) {
             return false;
         }
-        HashMap<String,HashSet<String>> childMap = children.get(rel);
+        Map<String,Set<String>> childMap = children.get(rel);
         if (childMap == null)
             return false;
-        HashSet<String> childSet = childMap.get(parent);
+        Set<String> childSet = childMap.get(parent);
         if (debug) System.out.println("INFO in KBcache.childOfP(): children of " + parent + " : " + childSet);
         if (childSet == null) {
         	if (debug) System.out.println("INFO in KBcache.childOfP(): null childset for relation, parent, child: "
@@ -495,11 +494,11 @@ public class KBcache implements Serializable {
             String arg1 = f.getStringArgument(1);
             String arg2 = f.getStringArgument(2);
             pairs.add(arg1 + "\t" + arg2);
-            HashSet<String> children1 = getChildRelations(arg1);
+            Set<String> children1 = getChildRelations(arg1);
             if (children1 == null)
                 children1 = new HashSet<>();
             children1.add(arg1);
-            HashSet<String> children2 = getChildRelations(arg2);
+            Set<String> children2 = getChildRelations(arg2);
             if (children2 == null)
                 children2 = new HashSet<>();
             children2.add(arg2);
@@ -562,12 +561,12 @@ public class KBcache implements Serializable {
         long t1 = System.currentTimeMillis();
         for (String p1 : explicitDisjoint.keySet()) {
             Set<String> vals = explicitDisjoint.get(p1);
-            HashSet<String> children1 = getChildClasses(p1);
+            Set<String> children1 = getChildClasses(p1);
             if (children1 == null)
                 children1 = new HashSet<>();
             children1.add(p1);
             for (String p2 : vals) {
-                HashSet<String> children2 = getChildClasses(p2);
+                Set<String> children2 = getChildClasses(p2);
                 if (children2 == null)
                     children2 = new HashSet<>();
                 children2.add(p2);
@@ -764,10 +763,10 @@ public class KBcache implements Serializable {
      */
     public String mostSpecificParent(HashSet<String> p1) {
 
-        HashMap<String,HashSet<String>> subclasses = children.get("subclass");
+        Map<String,Set<String>> subclasses = children.get("subclass");
         TreeSet<AVPair> countIndex = new TreeSet<AVPair>();
         for (String cl : p1) {
-            HashSet<String> classes = subclasses.get(cl);
+            Set<String> classes = subclasses.get(cl);
             if (classes == null)
                 System.out.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
             else {
@@ -849,9 +848,9 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * return child relations for the given rel from subrelation expressions.
      */
-    public HashSet<String> getChildRelations(String rel) {
+    public Set<String> getChildRelations(String rel) {
 
-        HashMap<String,HashSet<String>> ps = children.get("subrelation");
+        Map<String,Set<String>> ps = children.get("subrelation");
         if (ps != null)
             return ps.get(rel);
         else
@@ -861,9 +860,9 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * return child classes for the given cl from subclass expressions.
      */
-    public HashSet<String> getChildClasses(String cl) {
+    public Set<String> getChildClasses(String cl) {
         
-        HashMap<String,HashSet<String>> ps = children.get("subclass");
+        Map<String,Set<String>> ps = children.get("subclass");
         if (ps != null)
             return ps.get(cl);
         else
@@ -873,9 +872,9 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * return child term for the given cl from rel expressions.
      */
-    public HashSet<String> getChildTerms(String cl, String rel) {
+    public Set<String> getChildTerms(String cl, String rel) {
 
-        HashMap<String,HashSet<String>> ps = children.get(rel);
+        Map<String,Set<String>> ps = children.get(rel);
         if (ps != null)
             return ps.get(cl);
         else
@@ -888,7 +887,7 @@ public class KBcache implements Serializable {
     public HashSet<String> getChildInstances(String cl) {
 
         HashSet<String> result = new HashSet<>();
-        HashMap<String,HashSet<String>> ps = children.get("subclass");
+        Map<String,Set<String>> ps = children.get("subclass");
         if (ps != null && ps.values() != null) {
             for (String cc : ps.get(cl)) {
                 HashSet<String> insts = getInstancesForType(cc);
@@ -933,8 +932,8 @@ public class KBcache implements Serializable {
 
         if (debug) System.out.println("getInstancesForType(): " + cl);
         HashSet<String> instancesForType = new HashSet<>();
-        HashMap<String,HashSet<String>> ps = children.get("subclass");
-        HashSet<String> classes = new HashSet<>();
+        Map<String,Set<String>> ps = children.get("subclass");
+        Set<String> classes = new HashSet<>();
         if (ps != null)
             classes = ps.get(cl);
         if (debug) System.out.println("getInstancesForType(): subclasses of " + cl + " : " + classes);
@@ -949,10 +948,10 @@ public class KBcache implements Serializable {
         }
         if (debug) System.out.println("getInstancesForType(): " + instancesForType);
         HashSet<String> instancesForType2 = new HashSet<>();
-        HashMap<String,HashSet<String>> attr = children.get("subAttribute");
-        HashMap<String,HashSet<String>> arel = children.get("subrelation");
+        Map<String,Set<String>> attr = children.get("subAttribute");
+        Map<String,Set<String>> arel = children.get("subrelation");
         for (String i : instancesForType) {
-            HashSet<String> temp = null;
+            Set<String> temp = null;
             if (attr != null) {
                 temp = attr.get(i);
                 if (temp != null)
@@ -1172,7 +1171,7 @@ public class KBcache implements Serializable {
      */
     private void breadthFirstBuildChildren(String leaf, String rel) {
         
-        HashMap<String,HashSet<String>> relChildren = children.get(rel);
+        Map<String,Set<String>> relChildren = children.get(rel);
         if (relChildren == null) {
             System.out.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
             return;
@@ -1192,7 +1191,7 @@ public class KBcache implements Serializable {
                     //if (debug && newTerm.indexOf("RealNumber") > -1)
                     //    System.out.println("visiting parent  " + newTerm);
                     HashSet<String> newChildren = new HashSet<String>();
-                    HashSet<String> oldChildren = relChildren.get(child);
+                    Set<String> oldChildren = relChildren.get(child);
                     //if (debug) System.out.println("existing children of " + child +  ": " + oldChildren);
                     if (oldChildren == null) {
                         oldChildren = new HashSet<String>();
@@ -1200,7 +1199,7 @@ public class KBcache implements Serializable {
                     }
                     newChildren.addAll(oldChildren);
                     newChildren.add(child);
-                    HashSet<String> newTermChildren = relChildren.get(newTerm);
+                    Set<String> newTermChildren = relChildren.get(newTerm);
                     if (newTermChildren != null)
                         newChildren.addAll(newTermChildren);
                     relChildren.put(newTerm, newChildren);
@@ -1223,12 +1222,12 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * Build "children" relations recursively from the root
      */
-    private HashSet<String> buildChildrenNew(String term, String rel) {
+    private Set<String> buildChildrenNew(String term, String rel) {
 
         if (debug) System.out.println("buildChildrenNew(): looking at " + term + " with relation " + rel);
         if (children.get(rel) == null)
             children.put(rel,new HashMap<>());
-        HashMap<String,HashSet<String>> allChildren = children.get(rel);
+        Map<String,Set<String>> allChildren = children.get(rel);
         if (visited.contains(term))
             return allChildren.get(term);
         visited.add(term);
@@ -1245,7 +1244,7 @@ public class KBcache implements Serializable {
             //System.out.println(f.sourceFile);
             String newTerm = f.getStringArgument(1);// argument 1 is the "child" in any binary relation
             if (debug) System.out.println("buildChildrenNew(): new term " + newTerm);
-            HashSet<String> children = buildChildrenNew(newTerm, rel);
+            Set<String> children = buildChildrenNew(newTerm, rel);
             if (debug) System.out.println("buildChildrenNew(): children of " + newTerm + " are " + children);
             if (allChildren.containsKey(newTerm) && allChildren.get(newTerm) != null)
                 children.addAll(allChildren.get(newTerm));
@@ -1314,13 +1313,13 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("INFO in KBcache.buildChildren()");
         for (String rel : transRels) {
             if (debug) System.out.println("INFO in KBcache.buildChildren(): rel: " + rel);
-            HashMap<String,HashSet<String>> value = new HashMap<>(50,(float) 0.75);
+            Map<String,Set<String>> value = new HashMap<>(50,(float) 0.75);
             HashSet<String> roots = findRoots(rel);
             if (debug) System.out.println("INFO in KBcache.buildChildren(): roots: " + roots);
             children.put(rel, value);
             for (String root : roots) {
                 visited = new HashSet<>(); // reset the visited list for each new root and relation
-                HashSet<String> c = buildChildrenNew(root, rel);
+                Set<String> c = buildChildrenNew(root, rel);
                 if (c != null)
                     value.put(root,c);
                 insts.add(root);// TODO: shouldn't need this
@@ -1777,7 +1776,7 @@ public class KBcache implements Serializable {
         while (it.hasNext()) {
             String rel = it.next();
             System.out.println("Relation: " + rel);
-            HashMap<String,HashSet<String>> relmap = nkbc.children.get(rel);
+            Map<String,Set<String>> relmap = nkbc.children.get(rel);
             Iterator<String> it2 = relmap.keySet().iterator();
             while (it2.hasNext()) {
                 String term = it2.next();
@@ -1844,7 +1843,7 @@ public class KBcache implements Serializable {
     public static void showChildren(KBcache nkbc) {
 
         String term = "Integer";
-        HashSet<String> classes = nkbc.getChildClasses(term);
+        Set<String> classes = nkbc.getChildClasses(term);
         System.out.println("KBcache.showChildren(): children of " + term + ": " +
                 classes);
         //nkbc.children = new HashMap<>();
@@ -1901,7 +1900,7 @@ public class KBcache implements Serializable {
         System.out.println("KBcache.showSizes(): instances average values size (# instances ): " +
                 total / nkbc.instances.keySet().size());
         total = 0;
-        for (HashMap<String, HashSet<String>> seconds : nkbc.children.values())
+        for (Map<String, Set<String>> seconds : nkbc.children.values())
             total = total + seconds.keySet().size();
         System.out.println("KBcache.showSizes(): children average values size (# children for relations): " +
                 total / nkbc.children.keySet().size());

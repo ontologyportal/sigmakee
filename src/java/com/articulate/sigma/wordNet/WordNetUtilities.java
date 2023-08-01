@@ -2458,9 +2458,9 @@ public class WordNetUtilities {
      */
     private static void addTermAndSubs(KB kb, HashSet<String> orig, String term) {
 
-        HashSet<String> newterms = null;
+        Set<String> newterms = null;
         if (kb.isAttribute(term))
-            newterms = (HashSet) kb.getAllSub(term,"subAttribute");
+            newterms = kb.getAllSub(term,"subAttribute");
         else
             newterms = kb.kbCache.getChildClasses(term);
         if (newterms != null)

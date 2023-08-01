@@ -22,10 +22,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean debug = false;
 
-    public static HashSet<String> qChildren = new HashSet<String>();
-    public static HashSet<String> iChildren = new HashSet<String>();
-    public static HashSet<String> rChildren = new HashSet<String>();
-    public static HashSet<String> lChildren = new HashSet<String>();
+    public static Set<String> qChildren = new HashSet<String>();
+    public static Set<String> iChildren = new HashSet<String>();
+    public static Set<String> rChildren = new HashSet<String>();
+    public static Set<String> lChildren = new HashSet<String>();
     public static HashSet<String> qNotR = new HashSet<String>();
     public static HashSet<String> qNotI = new HashSet<String>();
     public static HashSet<String> qNotL = new HashSet<String>();

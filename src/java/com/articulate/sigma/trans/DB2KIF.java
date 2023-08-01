@@ -300,9 +300,9 @@ public class DB2KIF {
             String t = kb.getArgType(r,2);
             if (StringUtil.emptyString(t))
                 continue;
-            HashSet<String> insts = new HashSet<String>();
+            Set<String> insts = new HashSet<String>();
             if (kb.isInstance(t)) {
-                HashMap<String,HashSet<String>> temp = kb.kbCache.children.get("subAttribute");
+                Map<String,Set<String>> temp = kb.kbCache.children.get("subAttribute");
                 if (insts != null)
                     insts = temp.get(t);
                 else
@@ -314,7 +314,7 @@ public class DB2KIF {
                     insts.addAll(cls);
                 System.out.println("DB2KIF.initValues(): instances: " + cls);
                 for (String c : cls) {
-                    HashSet<String> children = kb.kbCache.children.get("subAttribute").get(c);
+                    Set<String> children = kb.kbCache.children.get("subAttribute").get(c);
                     if (children != null)
                         insts.addAll(children);
                 }

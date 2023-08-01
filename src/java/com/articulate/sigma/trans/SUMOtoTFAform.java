@@ -2433,8 +2433,8 @@ public class SUMOtoTFAform {
             System.out.println("formula: " + f);
             return null;
         }
-        HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
-        HashSet<String> realChildren = new HashSet<String>();
+        Set<String> intChildren = kb.kbCache.getChildClasses("Integer");
+        Set<String> realChildren = new HashSet<String>();
         if (kb.kbCache.getChildClasses("RealNumber") != null)
             realChildren.addAll(kb.kbCache.getChildClasses("RealNumber"));
         if (realChildren.contains("Integer"))
@@ -2532,7 +2532,7 @@ public class SUMOtoTFAform {
     private static void buildNumericConstraints() {
 
         if (debug) System.out.println("INFO in SUMOtoTFAform.buildNumericConstraints(): kbCache : " + kb.kbCache);
-        HashSet<String> intChildren = kb.kbCache.getChildClasses("Integer");
+        Set<String> intChildren = kb.kbCache.getChildClasses("Integer");
         if (intChildren == null)
             return;
         HashSet<String> realChildren = new HashSet<String>();
