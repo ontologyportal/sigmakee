@@ -2263,7 +2263,7 @@ public class Formula implements Comparable, Serializable {
         if (this.listP()) {
             String pred = this.car();
             if (debug) System.out.println("Formula.isHigherOrder(): pred: " + pred);
-            ArrayList sig = kb.kbCache.getSignature(pred);
+            List sig = kb.kbCache.getSignature(pred);
             if (sig != null && !Formula.isVariable(pred) && sig.contains("Formula"))
                 return true;
             boolean logop = isLogicalOperator(pred);

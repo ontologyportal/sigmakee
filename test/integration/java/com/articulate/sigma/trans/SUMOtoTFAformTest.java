@@ -56,7 +56,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testExtractSig(): ");
-        ArrayList<String> sorts = SUMOtoTFAform.relationExtractSigFromName("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
+        List<String> sorts = SUMOtoTFAform.relationExtractSigFromName("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
         System.out.println(sorts);
         String expectedRes = "[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]";
         String result = sorts.toString();
@@ -116,7 +116,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testSorts(): ");
-        ArrayList<String> actual = skbtfakb.kb.kbCache.getSignature("AbsoluteValueFn__0Re1ReFn");
+        List<String> actual = skbtfakb.kb.kbCache.getSignature("AbsoluteValueFn__0Re1ReFn");
         String expectedRes = "[RealNumber, RealNumber]";
         System.out.println("testSorts(): expected: " + expectedRes);
         System.out.println("testSorts(): actual:    " + actual);

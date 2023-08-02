@@ -259,7 +259,7 @@ public class KBcacheTest extends IntegrationTestBase {
         //System.out.println("SigmaTestBase.kb.isChildOf(\"Shirt\", \"WearableItem\"): " + SigmaTestBase.kb.isChildOf("Shirt", "WearableItem"));
         System.out.println("testSignature(): cache.getSignature(memberTypeCount): " + cache.getSignature("memberTypeCount"));
         ArrayList<String> expected = new ArrayList(Arrays.asList("", "Collection", "Class", "NonnegativeInteger"));
-        ArrayList<String> actual = cache.getSignature("memberTypeCount");
+        List<String> actual = cache.getSignature("memberTypeCount");
         System.out.println("actual: " + actual);
         System.out.println("expoected: " + expected);
         assertTrue(actual.equals(expected));
