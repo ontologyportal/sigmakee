@@ -86,7 +86,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public boolean hasNumericArg(String t) {
 
-        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        List<String> sig = kb.kbCache.signatures.get(t);
         boolean result = false;
         for (String s : sig) {
             if (kb.isSubclass(s,"Quantity"))
@@ -101,7 +101,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public boolean hasNumericSuperArg(String t) {
 
-        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        List<String> sig = kb.kbCache.signatures.get(t);
         boolean result = false;
         for (String s : sig) {
             if (kb.isSubclass("RealNumber",s))
@@ -118,7 +118,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         if (t.startsWith("AssignmentFn"))
             return true;
-        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        List<String> sig = kb.kbCache.signatures.get(t);
         boolean result = false;
         for (String s : sig) {
             if (s.equals("List"))
@@ -225,7 +225,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             System.out.println("ERROR in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t))
             return;
-        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        List<String> sig = kb.kbCache.signatures.get(t);
         if (sig == null || sig.size() == 0) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
             System.out.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
@@ -289,7 +289,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (kb.isFunction(t)) {
             index = 0;
         }
-        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        List<String> sig = kb.kbCache.signatures.get(t);
         HashMap<String,HashSet<String>> modsig = new HashMap<>();
         for (int i = index; i < sig.size(); i++) {
             String s = sig.get(i);
@@ -351,7 +351,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String newRel = t + "__" + e + suffix;
         if (kb.terms.contains(newRel))
             return;
-        ArrayList<String> sig = kb.kbCache.signatures.get(t);
+        List<String> sig = kb.kbCache.signatures.get(t);
         if (sig == null || sig.size() == 0) {
             System.out.println("Error in SUMOKBtoTFAKB.extendRelationSig(): t: " + t);
             Thread.dumpStack();
@@ -396,7 +396,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     /** *************************************************************
      */
-    private boolean expandableArg(String rel, int argnum, ArrayList<String> sig) {
+    private boolean expandableArg(String rel, int argnum, List<String> sig) {
 
         String type = "";
         if (argnum < sig.size())
@@ -466,7 +466,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         for (String r : rels) {
             if (r.equals("ListFn"))
                 continue;
-            ArrayList<String> sig = kb.kbCache.getSignature(r);
+            List<String> sig = kb.kbCache.getSignature(r);
             int size = sig.size();
             if (size > 1)
                 size = size - 1;  // first sig element is range, some sig elements before variable arity element may be fixed and explicit

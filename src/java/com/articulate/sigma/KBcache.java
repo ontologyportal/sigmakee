@@ -113,8 +113,7 @@ public class KBcache implements Serializable {
      * types (when there's a domainSubclass etc) are designated by a
      * '+' appended to the class name.
      **/
-    public HashMap<String, ArrayList<String>> signatures =
-            new HashMap<String, ArrayList<String>>();
+    public Map<String, List<String>> signatures = new HashMap<>();
 
     // The number of arguments to each relation.  Variable arity is -1
     public Map<String, Integer> valences = new HashMap<String, Integer>();
@@ -158,7 +157,7 @@ public class KBcache implements Serializable {
         instances = new HashMap<>(kbin.getCountTerms(),(float) 0.75);
         insts = new HashSet<>(kbin.getCountTerms(),(float) 0.75);
         children = new HashMap<>(60,(float) 0.75);
-        signatures = new HashMap<String, ArrayList<String>>(kbin.getCountTerms()/3,(float) 0.75);
+        signatures = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
         valences = new HashMap<String, Integer>(kbin.getCountTerms()/3,(float) 0.75);
         explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
         disjoint = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
@@ -223,7 +222,7 @@ public class KBcache implements Serializable {
         }
 
         if (kbCacheIn.signatures != null) {
-            for (Map.Entry<String, ArrayList<String>> entry : kbCacheIn.signatures.entrySet()) {
+            for (Map.Entry<String, List<String>> entry : kbCacheIn.signatures.entrySet()) {
                 String key = entry.getKey();
                 ArrayList<String> newSet = Lists.newArrayList(entry.getValue());
                 this.signatures.put(key, newSet);
@@ -260,7 +259,7 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * An ArrayList utility method
      */
-    private void arrayListReplace(ArrayList<String> al, int index, String newEl) {
+    private void arrayListReplace(List<String> al, int index, String newEl) {
         
         if (index > al.size()) {
             System.out.println("Error in KBcache.arrayListReplace(): index " + index +
@@ -432,7 +431,7 @@ public class KBcache implements Serializable {
          * types (when there's a domainSubclass etc) are designated by a
          * '+' appended to the class name.
          **/
-        ArrayList<String> sig = signatures.get(term);
+        List<String> sig = signatures.get(term);
 
         if (sig == null && term != null && term.equals("equal")) {
             sig = new ArrayList<>();
@@ -441,7 +440,7 @@ public class KBcache implements Serializable {
         }
         if (sig == null)
             System.out.println("Error in KBcache.extendInstance(): no sig for term " + term);
-        ArrayList<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
+        List<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
         signatures.put(newTerm,newsig);
         // The number of arguments to each relation.  Variable arity is -1
         valences.put(newTerm,valences.get(term));
@@ -970,7 +969,7 @@ public class KBcache implements Serializable {
 
     /** ***************************************************************
      */
-    public ArrayList<String> getSignature(String rel) {
+    public List<String> getSignature(String rel) {
 
         return signatures.get(rel);
     }
@@ -983,7 +982,7 @@ public class KBcache implements Serializable {
 
         if (!kb.isFunction(f))
             return null;
-        ArrayList<String> sig = getSignature(f);
+        List<String> sig = getSignature(f);
         if (sig == null || sig.size() == 0)
             return null;
         return sig.get(0);
@@ -1343,7 +1342,7 @@ public class KBcache implements Serializable {
      * Fill an array of String with the specified String up to but
      * not including the index, starting from the end of the array
      */
-    private static void fillArrayList(String st, ArrayList<String> ar, int start, int end) {
+    private static void fillArrayList(String st, List<String> ar, int start, int end) {
     
         for (int i = start; i < end; i++) 
             if (i > ar.size()-1 || StringUtil.emptyString(ar.get(i)))
@@ -1452,11 +1451,11 @@ public class KBcache implements Serializable {
         V.add(root);
         while (!Q.isEmpty()) {
             String t = Q.remove();
-            ArrayList<String> tdomains = signatures.get(t);
+            List<String> tdomains = signatures.get(t);
             ArrayList<Formula> forms = kb.askWithRestriction(0,rel,2,t);
             if (forms != null) {
                 for (String newTerm : collectArgFromFormulas(1,forms)) {
-                    ArrayList<String> newDomains = signatures.get(newTerm);
+                    List<String> newDomains = signatures.get(newTerm);
                     if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); newDomains: " + newDomains);
                     if (valences.get(t) == null) {
                         System.out.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
@@ -1624,7 +1623,7 @@ public class KBcache implements Serializable {
             String rel = it.next();
             //System.out.println("KBcache.buildInstTransRels(): -------------------: " + rel);
             boolean instrel = true;
-            ArrayList<String> sig = signatures.get(rel);
+            List<String> sig = signatures.get(rel);
             if (sig == null) {
                 System.out.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
             }
@@ -1712,7 +1711,7 @@ public class KBcache implements Serializable {
     public void copyNewPredFromVariableArity(String pred, String oldPred, int arity) {
 
         if (debug) System.out.println("copyNewPredFromVariableArity(): pred,oldPred: " + pred + ", " + oldPred);
-        ArrayList<String> oldSig = signatures.get(oldPred);
+        List<String> oldSig = signatures.get(oldPred);
         ArrayList<String> newSig = new ArrayList<>();
         if (oldSig != null)
             newSig = new ArrayList(oldSig);
@@ -1736,7 +1735,7 @@ public class KBcache implements Serializable {
      */
     public String variableArityType(String r) {
 
-        ArrayList<String> sig = getSignature(r);
+        List<String> sig = getSignature(r);
         if (sig == null)
             System.out.println("Error in variableArityType() null signature for " + r);
         String type = sig.get(sig.size() - 1);
@@ -1792,7 +1791,7 @@ public class KBcache implements Serializable {
         Iterator<String> it3 = nkbc.relations.iterator();
         while (it3.hasNext()) {
             String rel = it3.next();
-            ArrayList<String> domains = nkbc.signatures.get(rel);
+            List<String> domains = nkbc.signatures.get(rel);
             System.out.println(rel + ": " + domains);
         }
         System.out.println();
@@ -1804,7 +1803,7 @@ public class KBcache implements Serializable {
         System.out.println();
         System.out.println("-------------- signatures ----------------");
         for (String rel : nkbc.signatures.keySet()) {
-            ArrayList<String> sig = nkbc.signatures.get(rel);
+            List<String> sig = nkbc.signatures.get(rel);
             System.out.println(rel + ": " + sig);
         }
         System.out.println();

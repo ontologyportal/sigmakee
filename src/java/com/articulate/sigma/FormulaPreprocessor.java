@@ -49,7 +49,7 @@ public class FormulaPreprocessor {
      * ArrayList element 0 is the result, if a function, 1 is the first
      * argument, 2 is the second etc.
      */
-    private ArrayList<String> getTypeList(String pred, KB kb) {
+    private List<String> getTypeList(String pred, KB kb) {
 
         return kb.kbCache.signatures.get(pred);
     }
@@ -81,7 +81,7 @@ public class FormulaPreprocessor {
      */
     public static String findType(int numarg, String pred, KB kb) {
 
-        ArrayList<String> sig = null;
+        List<String> sig = null;
         if (kb == null || kb.kbCache == null) {
             System.out.println("Error in FormulaPreprocessor.findType(): null cache");
             return null;

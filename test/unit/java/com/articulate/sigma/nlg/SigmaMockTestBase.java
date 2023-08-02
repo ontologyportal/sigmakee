@@ -84,7 +84,7 @@ public class SigmaMockTestBase {
             "SymbolicString",
             "Entity");
 
-    private static final HashMap<String, ArrayList<String>> signaturesMap = Maps.newHashMap();
+    private static final Map<String, List<String>> signaturesMap = Maps.newHashMap();
 
     private static final ArrayList<Formula> LANG_FORMAT_MAP_COLS = Lists.newArrayList(
             new Formula("(format EnglishLanguage agent \"%2 is %n an &%agent of %1\")"),
