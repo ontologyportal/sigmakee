@@ -1633,6 +1633,7 @@ public class KB implements Serializable {
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         eprover.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
                         eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
+                        result += " and inference";
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
                         if (debug) System.out.println("KB.tell: using vampire");
@@ -1640,6 +1641,7 @@ public class KB implements Serializable {
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // nothing much to do since Vampire has to load it all at query time
                         // just create a single file
+                        result += " and inference";
                     }
                     else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
                         if (debug) System.out.println("KB.tell: using leo");
@@ -1647,8 +1649,10 @@ public class KB implements Serializable {
                                 !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                         // nothing much to do since LEO has to load it all at query time
                         // just create a single file
+                        result += " and inference";
                     }
-                    result += (allAdded ? " and inference" : " but not for local inference");
+                    else
+                        result += " but not for local inference";
                 }
             }
         }
