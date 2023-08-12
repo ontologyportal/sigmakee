@@ -54,10 +54,10 @@ public class KIF {
     private int parseMode = NORMAL_PARSE_MODE;
 
     /** The set of all terms in the knowledge base. This is a set of Strings. */
-    public TreeSet<String> terms = new TreeSet<String>();
+    public TreeSet<String> terms = new TreeSet<>();
 
     /** A hashMap to store term frequencies for each term in knowledge base */
-    public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
+    public Map<String, Integer> termFrequency = new HashMap<>();
 
     /**
      * A HashMap of ArrayLists of Formulas. Each String key points to a list of
@@ -66,7 +66,7 @@ public class KIF {
      *
      * @see #createKey(String, boolean, boolean, int, int) for key format.
      */
-    public HashMap<String, ArrayList<String>> formulas = new HashMap<String, ArrayList<String>>();
+    public HashMap<String, ArrayList<String>> formulas = new HashMap<>();
 
     /**
      * A HashMap of String keys representing the formula, and Formula values.
@@ -74,16 +74,19 @@ public class KIF {
      * Formula that is that string, along with information about at what line
      * number and in what file it appears.
      */
-    public HashMap<String, Formula> formulaMap = new HashMap<String, Formula>();
+    public HashMap<String, Formula> formulaMap = new HashMap<>();
+
+    // all the formulas ordered by their start line
+    public TreeMap<Integer, Formula> formulasOrdered = new TreeMap<>();
 
     public String filename;
     private File file;
     private int totalLinesForComments = 0;
 
     /** warnings generated during parsing */
-    public TreeSet<String> warningSet = new TreeSet<String>();
+    public TreeSet<String> warningSet = new TreeSet<>();
     /** errors generated during parsing */
-    public TreeSet<String> errorSet = new TreeSet<String>();
+    public TreeSet<String> errorSet = new TreeSet<>();
 
     /*****************************************************************
      */
@@ -100,6 +103,7 @@ public class KIF {
             termFrequency = new HashMap<String, Integer>((int) size/25, (float) 0.75);
             formulas = new HashMap<String, ArrayList<String>>((int) size/3, (float) 0.75);
             formulaMap = new HashMap<String, Formula>((int) size/3, (float) 0.75);
+            //formulasOrdered = new TreeMap<Integer, Formula>((int) size/3, (float) 0.75);
         }
         filename = fname;
     }
@@ -340,6 +344,7 @@ public class KIF {
                             }
                         }
                         formulaMap.put(f.getFormula(), f);
+                        formulasOrdered.put(f.startLine,f);
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
