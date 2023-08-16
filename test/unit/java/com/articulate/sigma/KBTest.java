@@ -53,6 +53,24 @@ public class KBTest extends UnitTestBase {
     }
 
     /** ***************************************************************
+     * test deleteUserAssertionsAndReload()
+     */
+    @Test
+    public void testDeleteUserAss() {
+
+        System.out.println("============== testDeleteUserAss =====================");
+        SigmaTestBase.kb.tell("(instance JohnJacob Human)");
+        ArrayList<Formula> results = SigmaTestBase.kb.ask("arg",1,"JohnJacob");
+        System.out.println("testDeleteUserAss(): results: " + results);
+        assertEquals(1, results.size());
+        SigmaTestBase.kb.deleteUserAssertionsAndReload();
+        results = SigmaTestBase.kb.ask("arg",1,"JohnJacob");
+        System.out.println("User assertions deleted");
+        System.out.println("testDeleteUserAss(): results after delete: " + results);
+        assertEquals(0, results.size());
+    }
+
+    /** ***************************************************************
      */
     @Test
     public void testIsSubclass2()   {
