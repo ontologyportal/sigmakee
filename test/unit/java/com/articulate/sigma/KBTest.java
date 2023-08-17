@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
@@ -50,6 +52,36 @@ public class KBTest extends UnitTestBase {
 
         ArrayList<Formula> actual = SigmaTestBase.kb.askWithTwoRestrictions(0, "subclass", 1, "Boy", 2, "Entity");
         assertEquals(0, actual.size());
+    }
+
+    /** ***************************************************************
+     * test deleteUserAssertionsAndReload()
+     */
+    @Test
+    public void testDeleteUserAssVamp() {
+
+        System.out.println("============== testDeleteUserAssVamp =====================");
+        SigmaTestBase.kb.tell("(instance JohnJacob Human)");
+        String query = "(instance JohnJacob Human)";
+        Vampire vamp = SigmaTestBase.kb.askVampire(query,10,1);
+        System.out.println("testDeleteUserAssVamp(): results: " + vamp.output);
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        tpp.parseProofOutput(vamp.output,query,kb,new StringBuffer());
+        if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
+            System.out.println("testDeleteUserAssVamp(1): success");
+        else
+            System.out.println("testDeleteUserAssVamp(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
+        assertTrue(tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")));
+        SigmaTestBase.kb.deleteUserAssertionsAndReload();
+        vamp = SigmaTestBase.kb.askVampire(query,10,1);
+        tpp.parseProofOutput(vamp.output, query, kb, new StringBuffer());
+        System.out.println("User assertions deleted");
+        System.out.println("testDeleteUserAssVamp(): results after delete: " + vamp);
+        if (tpp.proof == null || tpp.status.equals("Timeout"))
+            System.out.println("testDeleteUserAssVamp(2): success");
+        else
+            System.out.println("testDeleteUserAssVamp(2): fail, proof size: " + tpp.proof.size() + " '" + tpp.status + "'");
+        assertTrue(tpp.proof == null || tpp.status.equals("Timeout"));
     }
 
     /** ***************************************************************
