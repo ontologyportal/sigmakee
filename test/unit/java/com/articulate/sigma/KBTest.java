@@ -69,7 +69,8 @@ public class KBTest extends UnitTestBase {
         else
             System.out.println("testDeleteUserAssVamp(): results: " + null);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-        tpp.parseProofOutput(vamp.output,query,kb,new StringBuffer());
+        if (vamp != null)
+            tpp.parseProofOutput(vamp.output,query,kb,new StringBuffer());
         if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
             System.out.println("testDeleteUserAssVamp(1): success");
         else
