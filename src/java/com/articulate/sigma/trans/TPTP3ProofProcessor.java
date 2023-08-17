@@ -665,7 +665,7 @@ public class TPTP3ProofProcessor {
                     continue;
                 }
                 if (line.indexOf("SZS status") != -1) {
-                    status = line.substring(13);
+                    status = line.substring(13, line.indexOf(" ",14));
 					if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): tpp.status: " + status);
                 }
                 if (line.indexOf("SZS answers") != -1) {
