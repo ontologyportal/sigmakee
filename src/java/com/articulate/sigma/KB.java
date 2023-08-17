@@ -2657,6 +2657,19 @@ public class KB implements Serializable {
         HashMap<String, String> langFormatMap = getTermFormatMap(lang);
         return langFormatMap.get(term);
     }
+    /** *************************************************************
+     */
+    public void deleteUserAssertionsForInference() {
+
+        String userAssertionTPTP = this.name + KB._userAssertionsTPTP;
+        if (SUMOKBtoTPTPKB.lang.equals("tff"))
+            userAssertionTPTP = this.name + KB._userAssertionsTFF;
+        File dir = new File(KBmanager.getMgr().getPref("kbDir"));
+        String fname = dir + File.separator + userAssertionTPTP;
+        File ufile = new File(fname);
+        if (ufile.exists())
+            FileUtil.delete(dir + File.separator + userAssertionTPTP);
+    }
 
     /*****************************************************************
      * Deletes user assertions, both in the files and in the constituents list.
@@ -2674,6 +2687,7 @@ public class KB implements Serializable {
         if (toRemove != null) {
             constituents.remove(toRemove);
         }
+        deleteUserAssertionsForInference();
     }
 
     /*****************************************************************
@@ -2697,6 +2711,7 @@ public class KB implements Serializable {
                 }
             }
         }
+        deleteUserAssertionsForInference();
     }
 
     /***************************************************************
@@ -3548,7 +3563,9 @@ public class KB implements Serializable {
                 eprover = null;
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
-                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + ".tptp";
+                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "" +
+                        "" +
+                        ".tptp";
                 if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().infFileOld()) {
                     System.out.println("INFO in KB.loadEProver(): generating TPTP file");
                     skb.writeFile(tptpFilename,null, false,pw);
@@ -3767,6 +3784,8 @@ public class KB implements Serializable {
             display2.addAll(display.subList(0,10));
             System.out.println("KB.contradictionHelp(): minusAxioms: " +
                     StringUtil.arrayListToCRLFString(display2) + "...");
+
+
             deletedOldInfFiles(filename,prefix);
             FileUtil.writeLines(filename, minusAxioms);
             ArrayList<String> constituents = new ArrayList<>();
