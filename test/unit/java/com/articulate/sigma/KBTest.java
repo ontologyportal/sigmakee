@@ -64,7 +64,10 @@ public class KBTest extends UnitTestBase {
         SigmaTestBase.kb.tell("(instance JohnJacob Human)");
         String query = "(instance JohnJacob Human)";
         Vampire vamp = SigmaTestBase.kb.askVampire(query,10,1);
-        System.out.println("testDeleteUserAssVamp(): results: " + vamp.output);
+        if (vamp != null)
+            System.out.println("testDeleteUserAssVamp(): results: " + vamp.output);
+        else
+            System.out.println("testDeleteUserAssVamp(): results: " + null);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         tpp.parseProofOutput(vamp.output,query,kb,new StringBuffer());
         if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
