@@ -20,6 +20,8 @@ public class KBcacheTest extends IntegrationTestBase {
         for (String s : reqFiles) {
             if (!KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s)) {
                 System.out.println("Error in KBcacheTest.requiredKB() required file " + s + " missing");
+                System.out.println("only have files " +
+                        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).constituents);
                 System.exit(-1);
             }
         }
