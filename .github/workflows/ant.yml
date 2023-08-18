@@ -77,6 +77,7 @@ jobs:
           sed -i "s|/home/apease/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/apease/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/apease/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/apease/workspace/vampire/vampire|/usr/local/bin/vampire|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
 
       - name: Run unit tests
         env:
@@ -87,12 +88,36 @@ jobs:
         run: |
           java  -Xmx8g -classpath $SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/build/lib/* org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 
-      - name: Clean KB after unit test
+
+      - name: Setup SIGMA_HOME for integration tests
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
         working-directory: ${{ github.workspace }}
         run: |
           find $SIGMA_HOME/KBs -name '*.ser' -delete
+          cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
+          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/workspace/vampire/vampire|/usr/local/bin/vampire|g" $SIGMA_HOME/KBs/config.xml
+          sed -i '/<kb name/,/<\/kb>/d' $SIGMA_HOME/KBs/config.xml
+
+      - name: Setup KB for integration tests
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+        working-directory: ${{ github.workspace }}
+        run: >
+          sed -i '/<\/configuration>/i\
+          <kb name="SUMO">\n
+          <constituent filename="Merge.kif"\/>\n
+          <constituent filename="Mid-level-ontology.kif"\/>\n
+          <constituent filename="english_format.kif"\/>\n
+          <constituent filename="domainEnglishFormat.kif"\/>\n
+          <\/kb>' $SIGMA_HOME/KBs/config.xml
 
       - name: Run integration tests
         env:
