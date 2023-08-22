@@ -1,0 +1,77 @@
+<configuration>
+    <preference name="adminBrowserLimit" value="200" />
+    <preference name="baseDir" value="/root/.sigmakee" />
+    <preference name="cache" value="yes" />
+    <preference name="celtdir" value="" />
+    <preference name="editDir" value="/root/workspace/sumo" />
+    <preference name="eprover" value="/root/E/bin/e_ltb_runner" />
+    <preference name="graphVizDir" value="/usr/bin" />
+    <preference name="holdsPrefix" value="no" />
+    <preference name="hostname" value="localhost" />
+    <preference name="https" value="false" />
+    <preference name="inferenceTestDir" value="/root/.sigmakee/KBs/tests" />
+    <preference name="jedit" value="jedit" />
+    <preference name="kbDir" value="/root/.sigmakee/KBs" />
+    <preference name="leoExecutable" value="/root/leo" />
+    <preference name="lineNumberCommand" value="" />
+    <preference name="loadCELT" value="no" />
+    <preference name="logDir" value="/root/.sigmakee/logs" />
+    <preference name="logLevel" value="warning" />
+    <preference name="port" value="8080" />
+    <preference name="prolog" value="" />
+    <preference name="reportDup" value="no" />
+    <preference name="reportFnError" value="no" />
+    <preference name="showcached" value="no" />
+    <preference name="sumokbname" value="SUMO" />
+    <preference name="systemsDir" value="/root" />
+    <preference name="termFormats" value="no" />
+    <preference name="testOutputDir" value="/var/tomcat/apache-tomcat-5.5.25/webapps/sigma/tests" />
+    <preference name="TPTPDisplay" value="no" />
+    <preference name="tptpHomeDir" value="/root" />
+    <preference name="TPTP" value="yes" />
+    <preference name="typePrefix" value="yes" />
+    <preference name="userBrowserLimit" value="25" />
+    <preference name="vampire" value="/root/workspace/vampire/vampire" />
+    <kb name="SUMO" >
+      <constituent filename="english_format.kif" />
+      <constituent filename="domainEnglishFormat.kif" />
+      <constituent filename="ArabicCulture.kif" />
+      <constituent filename="Biography.kif" />
+      <constituent filename="Cars.kif" />
+      <constituent filename="Catalog.kif" />
+      <constituent filename="Communications.kif" />
+      <constituent filename="CountriesAndRegions.kif" />
+      <constituent filename="Dining.kif" />
+      <constituent filename="Economy.kif" />
+      <constituent filename="engineering.kif" />
+      <constituent filename="FinancialOntology.kif" />
+      <constituent filename="Food.kif" />
+      <constituent filename="Geography.kif" />
+      <constituent filename="Government.kif" />
+      <constituent filename="Hotel.kif" />
+      <constituent filename="Justice.kif" />
+      <constituent filename="Languages.kif" />
+      <constituent filename="Law.kif" />
+      <constituent filename="Media.kif" />
+      <constituent filename="Merge.kif" />
+      <constituent filename="Mid-level-ontology.kif" />
+      <constituent filename="MilitaryDevices.kif" />
+      <constituent filename="Military.kif" />
+      <constituent filename="MilitaryPersons.kif" />
+      <constituent filename="MilitaryProcesses.kif" />
+      <constituent filename="Music.kif" />
+      <constituent filename="naics.kif" />
+      <constituent filename="People.kif" />
+      <constituent filename="pictureList.kif" />
+      <constituent filename="pictureList-ImageNet.kif" />
+      <constituent filename="QoSontology.kif" />
+      <constituent filename="Sports.kif" />
+      <constituent filename="TransnationalIssues.kif" />
+      <constituent filename="Transportation.kif" />
+      <constituent filename="TransportDetail.kif" />
+      <constituent filename="UXExperimentalTerms.kif" />
+      <constituent filename="VirusProteinAndCellPart.kif" />
+      <constituent filename="Weather.kif" />
+      <constituent filename="WMD.kif" />
+    </kb>
+  </configuration>
