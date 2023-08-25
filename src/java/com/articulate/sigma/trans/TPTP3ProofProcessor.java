@@ -641,7 +641,7 @@ public class TPTP3ProofProcessor {
     /** ***************************************************************
 	 * Compute binding and proof from the theorem prover's response. Leave
 	 * out the statements of relation sorts that is part of the TFF proof output.
-	 * @param qlist is the list of quantifiers in order of the original query,
+	 * @param qlist is the list of quantified variables in order of the original query,
 	 *              which is the order Vampire and Eprover will follow when
 	 *              reporting answers
      */
@@ -649,8 +649,12 @@ public class TPTP3ProofProcessor {
 
 		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " +
 				lines);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): # lines: " +
+				lines.size());
 		if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
 			lines = joinNreverseInputLines(lines);
+		if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): after reverse: " +
+				lines);
         try {
             boolean inProof = false;
             boolean finishAnswersTuple = false;

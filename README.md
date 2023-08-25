@@ -341,7 +341,7 @@ example, an older CASC strategy, you can set an environment variable, as in the 
 being sure to terminate with -t for the timeout
 
 ```aidl
-VAMPIRE_OPTS="--mode portfolio --schedule casc_2019 -t"
+VAMPIRE_OPTS="--mode portfolio --schedule casc_2019 --proof tptp -t"
 ```
 
 ## MacOS install notes
