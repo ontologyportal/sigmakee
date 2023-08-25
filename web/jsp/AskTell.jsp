@@ -143,6 +143,8 @@ if (!role.equalsIgnoreCase("admin")) {
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
                 if (vampireMode.equals("Avatar"))
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
+                if (vampireMode.equals("Custom"))
+                    com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
                 vampire = kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println("Vampire output: " + vampire.toString());
@@ -197,7 +199,10 @@ if (!role.equalsIgnoreCase("admin")) {
           <label>CASC mode</label>
       <input type="radio" id="Avatar" name="vampireMode" value="Avatar"
           <% if (vampireMode.equals("Avatar")) { out.print(" CHECKED"); } %> >
-          <label>Avatar mode</label> ]<BR>
+          <label>Avatar mode</label>
+      <input type="radio" id="Avatar" name="vampireMode" value="Custom"
+          <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
+          <label>Custom mode</label>]<BR>
 
     <INPUT type="submit" name="request" value="Ask">
 

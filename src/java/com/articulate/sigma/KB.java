@@ -1871,7 +1871,10 @@ public class KB implements Serializable {
     public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
 
         StringBuffer sb = new StringBuffer();
-        Vampire.mode = Vampire.ModeType.CASC;
+        if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
+            Vampire.mode = Vampire.ModeType.CUSTOM;
+        else
+            Vampire.mode = Vampire.ModeType.CASC;
         Vampire vampire = askVampire(suoKifFormula,30,1);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         tpp.parseProofOutput(vampire.output, suoKifFormula, this, vampire.qlist);

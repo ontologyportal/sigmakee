@@ -39,7 +39,8 @@ public class Vampire {
     public StringBuffer qlist = null; // quantifier list in order for answer extraction
     public ArrayList<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
-    public enum ModeType {AVATAR, CASC}; // Avatar is faster but doesn't provide answer variables
+    public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
+                                                 // Custom takes value from env var
     public static ModeType mode = ModeType.CASC;
     public static boolean debug = false;
 
@@ -62,6 +63,8 @@ public class Vampire {
             opts = "--proof tptp -t";
         if (mode == ModeType.CASC)
             opts = "--avatar off -qa answer_literal --mode casc --proof tptp -t";
+        if (mode == ModeType.CUSTOM)
+            opts = System.getenv("VAMPIRE_OPTS");
         String[] optar = opts.split(" ");
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();

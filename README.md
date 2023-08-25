@@ -336,6 +336,13 @@ You'll then need to edit your config.xml file to point to the vampire executable
 ```
 editing the path to conform to your system
 
+If you want to use Vampire with options different from Avatar or the latest CASC strategy, for
+example, an older CASC strategy, you can set an environment variable, as in the assignment below,
+being sure to terminate with -t for the timeout
+
+```aidl
+VAMPIRE_OPTS="--mode portfolio --schedule casc_2019 -t"
+```
 
 ## MacOS install notes
 
