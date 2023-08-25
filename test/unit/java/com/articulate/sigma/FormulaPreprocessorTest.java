@@ -25,6 +25,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class FormulaPreprocessorTest extends UnitTestBase  {
 
+    @After
+    public void tearDown() {
+        SUMOformulaToTPTPformula.lang = "fof";
+        SUMOKBtoTPTPKB.lang = "fof";
+    }
+
     /** ***************************************************************
      */
     // TODO: Technically, this should to in the FormulaTest class, but the gatherRelationsWithArgTypes( ) method requires a KB
