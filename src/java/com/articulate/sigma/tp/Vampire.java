@@ -41,7 +41,7 @@ public class Vampire {
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
                                                  // Custom takes value from env var
-    public static ModeType mode = ModeType.CASC;
+    public static ModeType mode = null;
     public static boolean debug = false;
 
     /** *************************************************************
