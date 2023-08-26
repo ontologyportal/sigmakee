@@ -1848,7 +1848,15 @@ public class KB implements Serializable {
                     try {
                         System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                         System.out.println("KB.askVampire(): qlist: " + stptp.qlist);
+                        System.out.println("KB.askVampire(): mode before: " + Vampire.mode);
                         Vampire vampire = new Vampire();
+                        if (Vampire.mode == null) {
+                            if (!StringUtil.emptyString(System.getenv("VAMPIRE_OPTS")))
+                                Vampire.mode = Vampire.ModeType.CUSTOM;
+                            else
+                                Vampire.mode = Vampire.ModeType.CASC;
+                        }
+                        System.out.println("KB.askVampire(): mode: " + Vampire.mode);
                         vampire.run(this, s, timeout, tptpquery);
                         vampire.qlist = stptp.qlist;
                         return vampire;
