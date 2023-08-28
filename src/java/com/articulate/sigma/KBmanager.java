@@ -743,7 +743,7 @@ public class KBmanager implements Serializable {
             OMWordnet.readOMWfiles();
         }
         String cwa = preferences.get("cwa");
-        if (cwa.equals("true"))
+        if (!StringUtil.emptyString(cwa) && cwa.equals("true"))
             SUMOKBtoTPTPKB.CWA = true;
         else
             SUMOKBtoTPTPKB.CWA = false;
