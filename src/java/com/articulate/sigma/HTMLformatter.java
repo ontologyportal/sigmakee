@@ -971,8 +971,15 @@ public class HTMLformatter {
 
         StringBuffer html = new StringBuffer();
     	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number of steps: " + tpp.proof.size());
+        //System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): status: " + tpp.status);
+        //System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): no conjecture: " + tpp.noConjecture);
     	if (tpp.proof == null || tpp.proof.size() == 0) {
     	    html.append("Fail with status: " + tpp.status + "<br>\n");
+        }
+        if (tpp != null && !StringUtil.emptyString(tpp.status) &&
+                (tpp.status.equals("Refutation") || tpp.status.equals("CounterSatisfiable") || tpp.status.equals("Theorem")) && tpp.noConjecture) {
+            tpp.inconsistency = true;
+            html.append("<b>Danger! No conjecture, possible inconsistency!</b><P>\n");
         }
     	if (tpp.bindingMap != null && tpp.bindingMap.keySet().size() > 0) { // if an answer predicate appears in the proof, use it
             for (String s : tpp.bindingMap.keySet()) {
@@ -981,7 +988,7 @@ public class HTMLformatter {
                 String term = TPTP2SUMO.transformTerm(tpp.bindingMap.get(s));
                 String kbHref = HTMLformatter.createKBHref(kbName, language);
                 html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-                html.append("<br/>");
+                html.append("<br/>\n");
             }
         }
     	else {
@@ -994,7 +1001,7 @@ public class HTMLformatter {
                 String term = TPTP2SUMO.transformTerm(tpp.bindings.get(i));
                 String kbHref = HTMLformatter.createKBHref(kbName,language);
                 html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-                html.append("<br/>");
+                html.append("<br/>\n");
             }
         }
     	html.append("<p><table width=\"95%\">" + "\n");
@@ -1007,13 +1014,13 @@ public class HTMLformatter {
     			html.append("<tr bgcolor=#EEEEEE>" + "\n");
     		else
     			html.append("<tr>" + "\n");
-    		html.append("<td valign=\"top\">" + "\n");
+    		html.append("<td valign=\"top\">\n");
     		html.append(ps.id + ".");
-    		html.append("</td>" + "\n");
+    		html.append("</td>\n");
     		html.append(HTMLformatter.proofTableFormat(stmt,tpp.proof.get(l), kbName, language) + "\n");
-    		html.append("</tr>\n" + "\n");
+    		html.append("</tr>\n\n");
     	}
-    	html.append("</table>" + "\n");
+    	html.append("</table>\n");
     	return html.toString();
     }
 
