@@ -930,6 +930,8 @@ public class KBcache implements Serializable {
     public HashSet<String> getInstancesForType(String cl) {
 
         if (debug) System.out.println("getInstancesForType(): " + cl);
+        if (cl.equals("Class"))
+            return (HashSet<String>) getChildClasses("Entity");
         HashSet<String> instancesForType = new HashSet<>();
         Map<String,Set<String>> ps = children.get("subclass");
         Set<String> classes = new HashSet<>();
