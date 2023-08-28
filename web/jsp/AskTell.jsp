@@ -32,6 +32,13 @@ if (!role.equalsIgnoreCase("admin")) {
 
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
+    String cwa = request.getParameter("CWA");
+    if (StringUtil.emptyString(cwa))
+        cwa = "no";
+    if (cwa.equals("yes"))
+        SUMOKBtoTPTPKB.CWA = true;
+    else
+        SUMOKBtoTPTPKB.CWA = false;
     String inferenceEngine = request.getParameter("inferenceEngine");
     String vampireMode = request.getParameter("vampireMode");
     if (StringUtil.emptyString(vampireMode))
@@ -50,6 +57,7 @@ if (!role.equalsIgnoreCase("admin")) {
     System.out.println("INFO in AskTell.jsp: inferenceEngine: " + inferenceEngine);
     System.out.println("INFO in AskTell.jsp: vampireMode: " + vampireMode);
     System.out.println("INFO in AskTell.jsp: TPTPlang: " + TPTPlang);
+    System.out.println("INFO in AskTell.jsp: cwa: " + cwa);
     boolean syntaxError = false;
     boolean english = false;
     String englishStatement = null;
@@ -178,7 +186,9 @@ if (!role.equalsIgnoreCase("admin")) {
               <label>tptp mode</label>
           <input type="radio" id="TPTPlang" name="TPTPlang" value="tff"
               <% if (SUMOformulaToTPTPformula.lang.equals("tff")){ out.print(" CHECKED"); } %> >
-              <label>tff mode</label> ]<BR>
+              <label>tff mode</label> ]
+    &nbsp;&nbsp;<INPUT TYPE=CHECKBOX NAME="CWA" id="CWA" VALUE="yes" <% if (cwa.equals("yes")) {%>CHECKED<%}%>
+    <label>Closed World Assumption</label><br>
     Choose an inference engine:<BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (inferenceEngine.equals("LEO")) {%>CHECKED<%}%>
@@ -200,7 +210,7 @@ if (!role.equalsIgnoreCase("admin")) {
       <input type="radio" id="Avatar" name="vampireMode" value="Avatar"
           <% if (vampireMode.equals("Avatar")) { out.print(" CHECKED"); } %> >
           <label>Avatar mode</label>
-      <input type="radio" id="Avatar" name="vampireMode" value="Custom"
+      <input type="radio" id="Custom" name="vampireMode" value="Custom"
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
           <label>Custom mode</label>]<BR>
 
@@ -218,6 +228,12 @@ if (!role.equalsIgnoreCase("admin")) {
         out.println("Status: ");
         out.println(status.toString());
     }
+    if (cwa.equals("yes"))
+        SUMOKBtoTPTPKB.CWA = true;
+    else
+        SUMOKBtoTPTPKB.CWA = false;
+    System.out.println("INFO in AskTell.jsp (2): cwa: " + cwa);
+    System.out.println("INFO in AskTell.jsp (2): CWA: " + SUMOKBtoTPTPKB.CWA);
     if (inferenceEngine.equals("EProver")) {
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         if ((eProver != null) && (eProver.output.contains("Syntax error detected")))
@@ -243,6 +259,8 @@ if (!role.equalsIgnoreCase("admin")) {
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
         if (vampireMode.equals("Avatar"))
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
+        if (vampireMode.equals("Custom"))
+            com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
         if (vampire == null || vampire.output == null)
             out.println("<font color='red'>Error.  No response from Vampire.</font>");
         else if ((vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
