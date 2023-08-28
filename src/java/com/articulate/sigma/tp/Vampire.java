@@ -182,6 +182,7 @@ public class Vampire {
     }
 
     /** ***************************************************************
+     * Write all the strings in @param stmts to temp-stmt.[tptp|tff|thf]
      */
     public void writeStatements(HashSet<String> stmts, String type) {
 
@@ -218,8 +219,15 @@ public class Vampire {
     /** ***************************************************************
      * Read in two files and write their contents to a new file
      */
-    public void catFiles(String f1, String f2, String fout) throws Exception {
+    public void concatFiles(String f1, String f2, String fout) throws Exception {
 
+        System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
+        File f1file = new File(f1);
+        File f2file = new File(f2);
+        if (!f1file.exists())
+            System.out.println("ERROR in concatFiles(): " + f1 + " does not exist");
+        if (!f2file.exists())
+            System.out.println("ERROR in concatFiles(): " + f2 + " does not exist");
         PrintWriter pw = new PrintWriter(fout);
         BufferedReader br = new BufferedReader(new FileReader(f1));
         String line = br.readLine();
@@ -282,7 +290,7 @@ public class Vampire {
             return;
         }
         writeStatements(stmts, lang);
-        catFiles(kbFile.toString(),stmtFile,outfile);
+        concatFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);
     }
