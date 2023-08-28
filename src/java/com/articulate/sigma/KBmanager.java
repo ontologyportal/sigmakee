@@ -49,7 +49,7 @@ public class KBmanager implements Serializable {
     private String error = "";
 
     public static final List<String> configKeys =
-            Arrays.asList("sumokbname", "testOutputDir", "TPTPDisplay", "semRewrite",
+            Arrays.asList("cwa", "sumokbname", "testOutputDir", "TPTPDisplay", "semRewrite",
                     "eprover", "inferenceTestDir", "baseDir", "hostname",
                     "logLevel", "systemsDir", "dbUser", "loadFresh", "userBrowserLimit",
                     "adminBrowserLimit", "https", "graphWidth", "overwrite", "typePrefix",
@@ -731,7 +731,7 @@ public class KBmanager implements Serializable {
         System.out.println("Info in KBmanager.setConfiguration():");
         preferencesFromXML(configuration);
         kbsFromXML(configuration);
-        String kbDir = (String) preferences.get("kbDir");
+        String kbDir = preferences.get("kbDir");
         String sep = File.separator;
         System.out.println("Info in KBmanager.setConfiguration(): Using kbDir: " + kbDir);
         long milis = System.currentTimeMillis();
@@ -742,6 +742,11 @@ public class KBmanager implements Serializable {
             VerbNet.processVerbs();
             OMWordnet.readOMWfiles();
         }
+        String cwa = preferences.get("cwa");
+        if (cwa.equals("true"))
+            SUMOKBtoTPTPKB.CWA = true;
+        else
+            SUMOKBtoTPTPKB.CWA = false;
         System.out.println("KBmanager.setConfiguration(): linguistics load time: " + (System.currentTimeMillis() - milis) / 1000);
         if (kbs != null && kbs.size() > 0 && !WordNet.initNeeded) {
             for (String kbName : kbs.keySet()) {
