@@ -20,6 +20,8 @@ public class SUMOKBtoTPTPKB {
 
     public static String lang = "fof"; // or thf
 
+    public static boolean CWA = true;  // implement the closed world assumption
+
     public static HashSet<String> excludedPredicates = new HashSet<>();
 
     public Set<String> alreadyWrittenTPTPs = new HashSet<>();
@@ -378,6 +380,9 @@ public class SUMOKBtoTPTPKB {
             System.out.println();
             printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
             printTFFNumericConstants(pw);
+            System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
+            if (CWA)
+                pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
             if (conjecture != null) {  //----Print conjecture if one has been supplied
                 // conjecture.getTheTptpFormulas() should return a
                 // List containing only one String, so the iteration
