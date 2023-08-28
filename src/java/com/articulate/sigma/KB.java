@@ -3510,6 +3510,9 @@ public class KB implements Serializable {
                         PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
                         stff.writeSorts(pw);
                         stff.writeFile(infFilename,null,false,pw);
+                        System.out.println("INFO in KB.loadVampire(): CWA: " + SUMOKBtoTPTPKB.CWA);
+                        if (SUMOKBtoTPTPKB.CWA)
+                            pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
                         stff.printTFFNumericConstants(pw);
                         pw.flush();
                         pw.close();
