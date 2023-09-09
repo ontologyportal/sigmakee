@@ -17,6 +17,7 @@ import java.util.List;
 public class CWAUNA {
 
     public static int axiomIndex = 0;
+
     /** ***************************************************************
      */
     public static String buildDistinct(HashSet<String> allArgs) {
@@ -28,9 +29,35 @@ public class CWAUNA {
         sb.append("fof(" + name + ",axiom,");
         sb.append("$distinct(");
         for (String arg : allArgs)
-            sb.append("s__" + arg + ",");
-        sb.delete(sb.length()-1,sb.length());
+            sb.append("s__" + arg + ",\n");
+        sb.delete(sb.length()-2,sb.length());
         sb.append(")).");
+        return sb.toString();
+    }
+
+    /** ***************************************************************
+     * build the big axiom that creates the closed word for eqch closed
+     * relation
+     */
+    public static String buildExclusions(KB kb, String rel) {
+
+        StringBuffer sb = new StringBuffer();
+        if (kb.kbCache.getArity(rel) != 2)
+            return sb.toString();
+        String name = "cwa_ex_" + axiomIndex++;
+        sb.append("fof(" + name + ",axiom,");
+        sb.append("![X,Y] : (\n" + "s__" + rel + "(X,Y) => (");
+        ArrayList<Formula> forms = kb.ask("arg", 0, rel);
+        System.out.println("buildExclusions(): # formulas: " + forms.size());
+        if (forms == null || forms.size() == 0)
+            return "";
+        for (Formula f : forms) {
+            ArrayList<String> args = f.argumentsToArrayListString(1);
+            sb.append(" ( X = s__" + args.get(0) + " & Y = s__" + args.get(1) + " )");
+            sb.append (" | \n");
+        }
+        sb.delete(sb.length()-4,sb.length());
+        sb.append(" ))).");
         return sb.toString();
     }
 
@@ -38,7 +65,7 @@ public class CWAUNA {
      * Collect all constants used in ClosedWorldPredicate(s) and their
      * subrelation(s) and assert them as $distinct.
      */
-    public static void run1 (KB kb ) {
+    public static void runold (KB kb ) {
 
         System.out.println("CWAUNA.run()");
         ArrayList<String> result = new ArrayList<>();
@@ -64,13 +91,16 @@ public class CWAUNA {
      * Collect all constants for types (and subclasses) required for ClosedWorldPredicate(s) and their
      * subrelation(s) and assert them as $distinct.
      */
-    public static ArrayList<String> run (KB kb ) {
+    public static ArrayList<String> run(KB kb) {
 
         System.out.println("CWAUNA.run()");
         ArrayList<String> result = new ArrayList<>();
         HashSet<String> rels = kb.kbCache.getInstancesForType("ClosedWorldPredicate");
         System.out.println("CWAUNA.run(): rels: " + rels);
         for (String rel : rels) {
+            String e = buildExclusions(kb,rel);
+            if (!StringUtil.emptyString(e))
+                result.add(e);
             HashSet<String> sig = new HashSet<>();
             List<String> arsig = kb.kbCache.getSignature(rel);
             System.out.println("CWAUNA.run(1): " + rel + " with sig: " + arsig);
