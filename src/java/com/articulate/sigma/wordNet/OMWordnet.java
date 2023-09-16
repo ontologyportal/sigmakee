@@ -5,6 +5,10 @@ import java.util.*;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.nlg.NLGUtils;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import static com.articulate.sigma.wordNet.WordNet.baseDir;
 
@@ -243,6 +247,50 @@ August 9, Acapulco, Mexico.
     }
 
     /** ***************************************************************
+     */
+    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(false); //No need to pre-register the class
+        return kryo;
+    });
+
+    /** ***************************************************************
+     */
+    public static void encoder(Object object) {
+
+        Output output = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "omw.ser");
+            output = new Output(file);
+            kryoLocal.get().writeObject(output,object);
+            output.flush();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        //return output.toBytes();
+    }
+
+    /** ***************************************************************
+     */
+    public static <T> T decoder() {
+
+        Object ob = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileInputStream file = new FileInputStream(kbDir + File.separator + "omw.ser");
+            Input input = new Input(file);
+            //Input input = new Input(bytes);
+            ob = kryoLocal.get().readObject(input, OMWordnet.class);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (T) ob;
+    }
+
+    /** ***************************************************************
      *  Check whether sources are newer than serialized version.
      */
     public static boolean serializedOld() {
@@ -274,26 +322,22 @@ August 9, Acapulco, Mexico.
         omw = null;
         try {
             // Reading the object from a file
-            FileInputStream file = new FileInputStream(baseDir + File.separator + "omw.ser");
-            ObjectInputStream in = new ObjectInputStream(file);
+            //FileInputStream file = new FileInputStream(baseDir + File.separator + "omw.ser");
+            //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
-            omw = (OMWordnet) in.readObject();
+            omw = decoder();
             if (serializedOld()) {
                 omw = null;
                 System.out.println("OMWordnet.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
-            in.close();
-            file.close();
+            //in.close();
+            //file.close();
             System.out.println("OMWordnet.loadSerialized(): OMW has been deserialized ");
         }
-        catch(IOException ex) {
-            System.out.println("Error in OMWordnet.loadSerialized(): IOException is caught");
-            ex.printStackTrace();
-        }
-        catch(ClassNotFoundException ex) {
-            System.out.println("Error in OMWordnet.loadSerialized(): ClassNotFoundException is caught");
+        catch(Exception ex) {
+            System.out.println("Error in OMWordnet.loadSerialized()");
             ex.printStackTrace();
         }
     }
@@ -305,15 +349,16 @@ August 9, Acapulco, Mexico.
 
         try {
             // Reading the object from a file
-            FileOutputStream file = new FileOutputStream(baseDir + File.separator + "omw.ser");
-            ObjectOutputStream out = new ObjectOutputStream(file);
+            //FileOutputStream file = new FileOutputStream(baseDir + File.separator + "omw.ser");
+            //ObjectOutputStream out = new ObjectOutputStream(file);
             // Method for deserialization of object
-            out.writeObject(omw);
-            out.close();
-            file.close();
+            //out.writeObject(omw);
+            encoder(omw);
+            //out.close();
+            //file.close();
             System.out.println("OMWordnet.serialize(): OMW has been serialized ");
         }
-        catch(IOException ex) {
+        catch(Exception ex) {
             System.out.println("Error in OMWordNet.serialize(): IOException is caught");
             ex.printStackTrace();
         }

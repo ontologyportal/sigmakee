@@ -111,8 +111,8 @@ public class KB implements Serializable {
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
     public HashMap<String,Integer> termDepthCache = new HashMap<>();
 
-    /* A synchronized SortedSet of Strings, which are all the terms in the KB.     */
-    public SortedSet<String> terms = Collections.synchronizedSortedSet(new TreeSet<String>());
+    /* A SortedSet of Strings, which are all the terms in the KB.     */
+    public SortedSet<String> terms = new TreeSet<String>();
 
     // A Map from all uppercase terms to their possibly mixed case original versions
     public HashMap<String,String> capterms = new HashMap<>();
@@ -177,6 +177,11 @@ public class KB implements Serializable {
     public static boolean force = false;
 
     public static boolean debug = false;
+
+    /***************************************************************
+     */
+    public KB() {
+    }
 
     /***************************************************************
      * Constructor which takes the name of the KB and the location where KBs preprocessed

@@ -28,6 +28,8 @@ import py4j.GatewayServer;
 
 import java.io.*;
 import java.util.*;
+import com.esotericsoftware.kryo.*;
+import com.esotericsoftware.kryo.io.*;
 
 /** This is a class that manages a group of knowledge bases.  It should only
  *  have one instance, contained in its own static member variable.
@@ -178,29 +180,68 @@ public class KBmanager implements Serializable {
 
         manager = null;
         try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileInputStream file = new FileInputStream(kbDir + File.separator + "kbmanager.ser");
-            ObjectInputStream in = new ObjectInputStream(file);
+            //String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            //FileInputStream file = new FileInputStream(kbDir + File.separator + "kbmanager.ser");
+            //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
-            KBmanager temp = (KBmanager) in.readObject();
-            manager = temp;
-            in.close();
-            file.close();
+            //KBmanager temp = (KBmanager) in.readObject();
+            manager = decoder();
+            //in.close();
+            //file.close();
             System.out.println("KBmanager.loadSerialized(): KBmanager has been deserialized ");
             initialized = true;
         }
-        catch (java.io.InvalidClassException ex) {
-            System.out.println("Error in KBmanager.loadSerialized(): InvalidClassException is caught");
-            ex.printStackTrace();
-            return false;
-        }
         catch (Exception ex) {
-            System.out.println("Error in KBmanager.loadSerialized(): IOException is caught");
+            System.out.println("Error in KBmanager.loadSerialized()");
             ex.printStackTrace();
             return false;
         }
         manager.preferences.putAll(prefOverride);
         return true;
+    }
+
+    /** ***************************************************************
+     */
+    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(false); //No need to pre-register the class
+        return kryo;
+    });
+
+    /** ***************************************************************
+     */
+    public static void encoder(Object object) {
+
+        Output output = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "kbmanager.ser");
+            output = new Output(file);
+            kryoLocal.get().writeObject(output,object);
+            output.flush();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        //return output.toBytes();
+    }
+
+    /** ***************************************************************
+     */
+    public static <T> T decoder() {
+
+        Object ob = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileInputStream file = new FileInputStream(kbDir + File.separator + "kbmanager.ser");
+            Input input = new Input(file);
+            //Input input = new Input(bytes);
+            ob = kryoLocal.get().readObject(input,KBmanager.class);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (T) ob;
     }
 
     /** ***************************************************************
@@ -210,16 +251,17 @@ public class KBmanager implements Serializable {
 
         try {
             // Reading the object from a file
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "kbmanager.ser");
-            ObjectOutputStream out = new ObjectOutputStream(file);
-            // Method for deserialization of object
-            out.writeObject(manager);
-            out.close();
-            file.close();
+            //String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            //FileOutputStream file = new FileOutputStream(kbDir + File.separator + "kbmanager.ser");
+            //ObjectOutputStream out = new ObjectOutputStream(file);
+
+            //out.writeObject(manager);
+            //out.close();
+            //file.close();
+            encoder(manager);
             System.out.println("KBmanager.serialize(): KBmanager has been serialized ");
         }
-        catch (IOException ex) {
+        catch (Exception ex) {
             System.out.println("Error in KBmanager.serialize(): IOException is caught");
             ex.printStackTrace();
         }

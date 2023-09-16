@@ -21,6 +21,9 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 
 import java.io.*;
 import java.util.*;
@@ -1743,6 +1746,51 @@ public class WordNet implements Serializable {
         return result;
     }
 
+
+    /** ***************************************************************
+     */
+    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(false); //No need to pre-register the class
+        return kryo;
+    });
+
+    /** ***************************************************************
+     */
+    public static void encoder(Object object) {
+
+        Output output = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "wn.ser");
+            output = new Output(file);
+            kryoLocal.get().writeObject(output,object);
+            output.flush();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        //return output.toBytes();
+    }
+
+    /** ***************************************************************
+     */
+    public static <T> T decoder() {
+
+        Object ob = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileInputStream file = new FileInputStream(kbDir + File.separator + "wn.ser");
+            Input input = new Input(file);
+            //Input input = new Input(bytes);
+            ob = kryoLocal.get().readObject(input, OMWordnet.class);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (T) ob;
+    }
+
     /** ***************************************************************
      */
     public static boolean serializedExists() {
@@ -1776,30 +1824,26 @@ public class WordNet implements Serializable {
         wn = null;
         try {
             // Reading the object from a file
-            FileInputStream file = new FileInputStream(baseDir + File.separator + "wn.ser");
-            ObjectInputStream in = new ObjectInputStream(file);
+            //FileInputStream file = new FileInputStream(baseDir + File.separator + "wn.ser");
+            //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
-            wn = (WordNet) in.readObject();
+            wn = decoder();
             if (serializedOld()) {
                 wn = null;
                 System.out.println("WordNet.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
-            in.close();
-            file.close();
+            //in.close();
+            //file.close();
             System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
             initNeeded = false;
             System.out.println("INFO in WordNet.loadSerialized(): origMaxNounSynsetID: " +
                     wn.origMaxNounSynsetID + " maxNounSynsetID: " +
                     wn.maxNounSynsetID);
         }
-        catch(IOException ex) {
-            System.out.println("Error in WordNet.loadSerialized(): IOException is caught");
-            ex.printStackTrace();
-        }
-        catch(ClassNotFoundException ex) {
-            System.out.println("Error in WordNet.loadSerialized(): ClassNotFoundException is caught");
+        catch(Exception ex) {
+            System.out.println("Error in WordNet.loadSerialized()");
             ex.printStackTrace();
         }
     }
@@ -1815,17 +1859,18 @@ public class WordNet implements Serializable {
             System.out.println("Error in WordNet.serialize(): empty max synset id");
         try {
             // Reading the object from a file
-            FileOutputStream file = new FileOutputStream(baseDir + File.separator + "wn.ser");
-            ObjectOutputStream out = new ObjectOutputStream(file);
+            //FileOutputStream file = new FileOutputStream(baseDir + File.separator + "wn.ser");
+            //ObjectOutputStream out = new ObjectOutputStream(file);
             // Method for deserialization of object
-            out.writeObject(wn);
-            out.close();
-            file.close();
+            //out.writeObject(wn);
+            encoder(wn);
+            //out.close();
+            //file.close();
             System.out.println("WordNet.serialize(): WN has been serialized ");
             initNeeded = false;
         }
-        catch(IOException ex) {
-            System.out.println("Error in WordNet.serialize(): IOException is caught");
+        catch(Exception ex) {
+            System.out.println("Error in WordNet.serialize():");
             ex.printStackTrace();
         }
     }

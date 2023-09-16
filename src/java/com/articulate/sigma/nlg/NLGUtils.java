@@ -2,6 +2,9 @@ package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import edu.stanford.nlp.ling.CoreLabel;
 
 import java.io.*;
@@ -29,6 +32,50 @@ public class NLGUtils implements Serializable {
         System.out.println("NLGUtils.init(): initializing with " + kbDir);
         nlg = new NLGUtils();
         nlg.readKeywordMap(kbDir);
+    }
+
+    /** ***************************************************************
+     */
+    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(false); //No need to pre-register the class
+        return kryo;
+    });
+
+    /** ***************************************************************
+     */
+    public static void encoder(Object object) {
+
+        Output output = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
+            output = new Output(file);
+            kryoLocal.get().writeObject(output,object);
+            output.flush();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        //return output.toBytes();
+    }
+
+    /** ***************************************************************
+     */
+    public static <T> T decoder() {
+
+        Object ob = null;
+        try {
+            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
+            FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
+            Input input = new Input(file);
+            //Input input = new Input(bytes);
+            ob = kryoLocal.get().readObject(input,NLGUtils.class);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        return (T) ob;
     }
 
     /** ***************************************************************
@@ -70,19 +117,19 @@ public class NLGUtils implements Serializable {
         nlg = null;
         try {
             // Reading the object from a file
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
-            FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
-            ObjectInputStream in = new ObjectInputStream(file);
+            //String kbDir = KBmanager.getMgr().getPref("kbDir");
+            //FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
+            //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
-            nlg = (NLGUtils) in.readObject();
+            nlg = decoder();
             if (serializedOld()) {
                 nlg = null;
                 System.out.println("NLGUtils.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
-            in.close();
-            file.close();
+            //in.close();
+            //file.close();
             System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
         }
         catch (Exception ex) {
