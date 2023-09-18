@@ -1783,7 +1783,7 @@ public class WordNet implements Serializable {
             FileInputStream file = new FileInputStream(kbDir + File.separator + "wn.ser");
             Input input = new Input(file);
             //Input input = new Input(bytes);
-            ob = kryoLocal.get().readObject(input, OMWordnet.class);
+            ob = kryoLocal.get().readObject(input, WordNet.class);
         }
         catch (Exception e) {
             e.printStackTrace();
