@@ -965,7 +965,7 @@ public class SUMOtoTFAform {
                 type = newArgTypes.get(i);
             if (car.getFormula().startsWith("instance")) {
                 if (Formula.isTerm(s) && i == 1) {
-                    if (args.size() > 1 && builtInOrSubNumericType(args.get(2))) {
+                    if (args.size() > 2 && builtInOrSubNumericType(args.get(2))) {
                         if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): found constant: " + s + " with type " + args.get(2));
                         numericConstantTypes.put(s, args.get(2));
                     }
@@ -2307,7 +2307,7 @@ public class SUMOtoTFAform {
         //if (debug) System.out.println("SUMOtoTFAform.process(): f so far: " + f);
         varmap = fp.findAllTypeRestrictions(f, kb);
         if (inconsistentVarTypes()) {
-            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variables types: " + varmap + " in : " + f);
+            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
             return "";
         }
         counter = 0;
