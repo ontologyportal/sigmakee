@@ -606,6 +606,7 @@ public class KBcache implements Serializable {
     /** ***************************************************************
      * check if rel1 and rel2 are disjoint
      * return true if rel1 and rel2 are disjoint; otherwise return false.
+     * TODO: can find spurious type conflict when in scope of disjunctions
      */
     public boolean checkDisjoint(KB kb, String c1, String c2) {
 
@@ -641,26 +642,6 @@ public class KBcache implements Serializable {
         }
         else
             return false;
-        /**
-        HashSet<String> ancestors_rel1 = kb.kbCache.getParentClasses(c1);
-        HashSet<String> ancestors_rel2 = kb.kbCache.getParentClasses(c2);
-        if (ancestors_rel1 == null || ancestors_rel2 == null)
-            return false;
-
-        ancestors_rel1.add(c1);
-        ancestors_rel2.add(c2);
-        for (String s1 : ancestors_rel1) {
-            for (String s2 : ancestors_rel2) {
-                if (kb.kbCache.isExplicitDisjoint(kb.kbCache.explicitDisjoint, s1, s2)) {
-                    if (debug)
-                        System.out.println(c1 + " and " + c2 +
-                                " are disjoint relations, because of " + s1 + " and " + s2);
-                    return true;
-                }
-            }
-        }
-        return false;
-         **/
     }
 
     /** ***************************************************************
