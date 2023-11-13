@@ -20,7 +20,7 @@ public class SUMOKBtoTPTPKB {
 
     public static String lang = "fof"; // or thf
 
-    public static boolean CWA = true;  // implement the closed world assumption
+    public static boolean CWA = false;  // implement the closed world assumption
 
     public static HashSet<String> excludedPredicates = new HashSet<>();
 
