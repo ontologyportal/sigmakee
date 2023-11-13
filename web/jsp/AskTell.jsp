@@ -261,11 +261,11 @@ if (!role.equalsIgnoreCase("admin")) {
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
         if (vampireMode.equals("Custom"))
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
-        if (vampire == null || vampire.output == null)
+        if (req.equalsIgnoreCase("ask") && (vampire == null || vampire.output == null))
             out.println("<font color='red'>Error.  No response from Vampire.</font>");
-        else if ((vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
+        else if (vampire != null && (vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else if (vampire.output != null) {
+        else if (vampire != null && vampire.output != null) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
