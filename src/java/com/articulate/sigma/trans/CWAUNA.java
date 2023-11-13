@@ -53,8 +53,10 @@ public class CWAUNA {
             return "";
         for (Formula f : forms) {
             ArrayList<String> args = f.argumentsToArrayListString(1);
-            sb.append(" ( X = s__" + args.get(0) + " & Y = s__" + args.get(1) + " )");
-            sb.append (" | \n");
+            if (Formula.atom(args.get(0)) && Formula.atom(args.get(1))) {
+                sb.append(" ( X = s__" + args.get(0) + " & Y = s__" + args.get(1) + " )");
+                sb.append(" | \n");
+            }
         }
         sb.delete(sb.length()-4,sb.length());
         sb.append(" ))).");
