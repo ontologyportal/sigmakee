@@ -1125,6 +1125,19 @@ public class KButilities {
         return sb.toString();
     }
 
+    /** *************************************************************
+     * Generate a textual list of terms and their documentation strings
+     * from a file.
+     */
+    public static void genDoc(KB kb, String fname) {
+
+        ArrayList<Formula> al = kb.ask("arg",0,"documentation");
+        for (Formula form : al) {
+            if (form.sourceFile.endsWith(fname))
+                System.out.println(form.getArgument(1) + "\t" + form.getArgument(3));
+        }
+    }
+
     /** ***************************************************************
      * utility method to merge two HashMaps of String keys and a values
      * of an HashSet of Strings.  Note that parent classes in the set of
@@ -1160,13 +1173,14 @@ public class KButilities {
         System.out.println("  -j - generate semantic network as JSON");
         System.out.println("  -o - generate semantic network as another JSON format");
         System.out.println("  -q - generate semantic network as SQL");
-        System.out.println("  -r - generate semantic network as |-delimited tripls");
+        System.out.println("  -r - generate semantic network as |-delimited triples");
         System.out.println("  -n - generate NL for every formula");
         System.out.println("  -f - list formulas for every documentation string term");
         System.out.println("  -v - is formula valid");
         System.out.println("  -a \"<formula>\" - show all attributes of a SUO-KIF formula");
         System.out.println("  -t - generate a table of termFormat(s)");
         System.out.println("  -l - list all terms in the KB");
+        System.out.println("  -doc <file> - list terms with doc strings for all terms in a file");
     }
 
     /** *************************************************************
@@ -1188,6 +1202,9 @@ public class KButilities {
             Infrastructure infra = new Infrastructure();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
+            }
+            else if (args != null && args.length > 1 && args[0].equals("-doc")) {
+                genDoc(kb,args[1]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-l")) {
                 for (String t : kb.terms)
