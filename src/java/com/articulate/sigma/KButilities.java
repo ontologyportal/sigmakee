@@ -1133,8 +1133,11 @@ public class KButilities {
 
         ArrayList<Formula> al = kb.ask("arg",0,"documentation");
         for (Formula form : al) {
-            if (form.sourceFile.endsWith(fname))
-                System.out.println(form.getArgument(1) + "\t" + form.getArgument(3));
+            if (form.sourceFile.endsWith(fname)) {
+                String arg = form.getArgument(3).toString();
+                arg = arg.replace("&%","");
+                System.out.println(form.getArgument(1) + "\t" + arg);
+            }
         }
     }
 
