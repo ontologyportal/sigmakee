@@ -796,11 +796,9 @@ public class Diagnostics {
             if (fw != null) fw.close();
             empty.addConstituent(emptyCFilename);
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error writing file " + emptyCFilename);
-        }
         catch (Exception e) {
             System.out.println(e.getMessage());
+            e.printStackTrace();
         }
         return empty;
     }
