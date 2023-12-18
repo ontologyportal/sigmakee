@@ -26,6 +26,7 @@ import com.articulate.sigma.dataProc.Infrastructure;
 import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
+import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
@@ -1131,6 +1132,7 @@ public class KButilities {
      */
     public static void genDoc(KB kb, String fname) {
 
+        System.out.println(genDocHeader(true));
         ArrayList<Formula> al = kb.ask("arg",0,"documentation");
         for (Formula form : al) {
             if (form.sourceFile.endsWith(fname)) {
@@ -1139,6 +1141,192 @@ public class KButilities {
                 System.out.println(form.getArgument(1) + "\t" + arg);
             }
         }
+    }
+
+    /** *************************************************************
+     */
+    private static ArrayList<String> genAscii() {
+
+        ArrayList<String> al = new ArrayList<>();
+        for (int i = 65; i < 91; i++)
+            al.add(Character.valueOf((char) i).toString());
+        for (int i = 97; i < 123; i++)
+            al.add(Character.valueOf((char) i).toString());
+        return al;
+    }
+
+    /** *************************************************************
+     */
+    private static String genDocHeader(boolean onePage) {
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("<h2>Data Dictionary</h2>");
+        ArrayList<String> ascii = genAscii();
+        if (onePage) {
+            for (String s : ascii)
+                sb.append("<a href=\"dict.html#" + s + "\">" + s + "</a>&nbsp;&nbsp;");
+        }
+        else
+            for (String s : ascii) {
+                sb.append("<a href=\"" + s + "dict.html\">" + s + "</a>&nbsp;&nbsp;");
+        }
+        sb.append("<P>\n");
+        sb.append("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        return sb.toString();
+    }
+
+    /** *************************************************************
+     */
+    private static TreeMap<String,PrintWriter> genHTMLDocFiles(KB kb) {
+
+        String head = genDocHeader(false);
+        TreeMap<String,PrintWriter> files = new TreeMap<>();
+        ArrayList<String> ascii = genAscii();
+        FileWriter fw = null;
+        PrintWriter pw = null;
+        for (String s : ascii) {
+            try {
+                fw = new FileWriter(s + "dict.html");
+                pw = new PrintWriter(fw);
+                pw.println(head + "\n");
+                files.put(s,pw);
+            }
+            catch (Exception e) {
+                System.out.println(e.getMessage());
+                e.printStackTrace();
+            }
+        }
+        return files;
+    }
+
+    /** *************************************************************
+     * collect all the documentation strings
+     */
+    private static TreeMap<String,String> genDocList(KB kb) {
+
+        ArrayList<Formula> al = kb.ask("arg",0,"documentation");
+        TreeMap<String,String> map = new TreeMap<>();
+        for (Formula form : al) {
+            if (form.getArgument(2).toString().equals("EnglishLanguage")) {
+                String arg2 = form.getArgument(3).toString();
+                //arg = arg.replace("&%","");
+                String arg1 = form.getArgument(1).toString();
+                arg2 = StringUtil.removeEnclosingQuotes(kb.formatStaticDocumentation(arg2, "EnglishLanguage", true));
+                arg2 = arg2.replace("&term=", "");
+                map.put(arg1, arg2);
+            }
+        }
+        return map;
+    }
+
+    /** *************************************************************
+     * flush and close all files
+     */
+    private static void closeDocList(TreeMap<String,PrintWriter> files) {
+
+        for (String term : files.keySet()) {
+            PrintWriter pw = files.get(term);
+            pw.println("</table>\n");
+            pw.flush();
+            pw.close();
+        }
+    }
+
+    /** *************************************************************
+     * flush and close all files
+     */
+    private static String htmlForDoc(String term, String doc, boolean noSUMO) {
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("<a name=\"" + term + "\">" + term + "</td><td></a>");
+        sb.append(doc);
+        if (!noSUMO) {
+            sb.append("[and <a href=\"https://sigma.ontologyportal.org:8443/sigma/Browse.jsp?term=");
+            sb.append(term + "\">full SUMO definition</a>]");
+        }
+        sb.append("</td></tr>\n");
+        return sb.toString();
+    }
+
+    /** *************************************************************
+     * generate one documentation string entry
+     */
+    private static String genDocLine(boolean shade, String term, String doc) {
+
+        StringBuffer sb = new StringBuffer();
+        if (shade)
+            sb.append("<tr bgcolor=\"#ddd\"><td>");
+        else
+            sb.append("<tr><td>");
+        sb.append(htmlForDoc(term,doc,false));
+        return sb.toString();
+    }
+
+    /** *************************************************************
+     * Generate a HTML list of terms and their documentation strings
+     * from a file as upper and lowercase individual files so that each
+     * file isn't gigantic
+     */
+    public static void genAllAlphaHTMLDoc(KB kb) {
+
+        TreeMap<String,String> map = genDocList(kb);
+        TreeMap<String,PrintWriter> files = genHTMLDocFiles(kb);
+        boolean shade = false;
+        for (String term : map.keySet()) {
+            String arg2 = map.get(term);
+            PrintWriter pw = files.get(Character.toString(term.charAt(0)));
+            pw.println(genDocLine(shade, term, arg2));
+            shade = ! shade;
+        }
+        closeDocList(files);
+    }
+
+    /** *************************************************************
+     * Generate a HTML list of terms and their documentation strings
+     * from a file.
+     */
+    public static void genAllHTMLDoc(KB kb) {
+
+        System.out.println("<h2>Data Dictionary</h2>");
+        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        TreeMap<String,String> map = genDocList(kb);
+        boolean shade = false;
+        for (String term : map.keySet()) {
+            String arg2 = map.get(term);
+            if (shade)
+                System.out.println("<tr bgcolor=\"#ddd\"><td>");
+            else
+                System.out.println("<tr><td>");
+            System.out.println(htmlForDoc(term,arg2,false));
+            shade = ! shade;
+        }
+        System.out.println("</table>\n");
+    }
+
+    /** *************************************************************
+     * Generate a HTML list of terms and their documentation strings
+     * from a file.
+     */
+    public static void genSpecificTermDoc(KB kb, String file) {
+
+        List<String> lines = FileUtil.readLines(file);
+        genDocHeader(true); // true = one page
+        System.out.println("<h2>Data Dictionary</h2>");
+        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        TreeMap<String,String> map = genDocList(kb);
+        boolean shade = false;
+        for (String term : map.keySet()) {
+            if (!lines.contains(term))
+                continue;
+            String arg2 = map.get(term);
+            if (shade)
+                System.out.println("<tr bgcolor=\"#ddd\"><td>");
+            else
+                System.out.println("<tr><td>");
+            System.out.println(htmlForDoc(term,arg2,true));
+            shade = ! shade;
+        }
+        System.out.println("</table>\n");
     }
 
     /** ***************************************************************
@@ -1184,6 +1372,8 @@ public class KButilities {
         System.out.println("  -t - generate a table of termFormat(s)");
         System.out.println("  -l - list all terms in the KB");
         System.out.println("  -doc <file> - list terms with doc strings for all terms in a file");
+        System.out.println("  -odoc <file> - list terms with doc strings for all terms in a file one per line");
+        System.out.println("  -adoc - list terms with doc strings for all terms in a KB");
     }
 
     /** *************************************************************
@@ -1207,7 +1397,16 @@ public class KButilities {
                 genSynLinks(args[1]);
             }
             else if (args != null && args.length > 1 && args[0].equals("-doc")) {
+                System.out.println("KBmutilities.main(): writing documentation");
                 genDoc(kb,args[1]);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-adoc")) {
+                System.out.println("KBmutilities.main(): writing documentation");
+                genAllAlphaHTMLDoc(kb);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-odoc")) {
+                System.out.println("KBmutilities.main(): writing documentation");
+                genSpecificTermDoc(kb,args[1]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-l")) {
                 for (String t : kb.terms)

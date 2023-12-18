@@ -3397,6 +3397,48 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Hyperlink terms identified with '&%' to the URL that brings up that term in the
+     * ba static file Handle (and ignore) suffixes on the term. For example
+     * "&%Processes" would get properly linked to the term "Process", if present
+     * in the knowledge base.
+     */
+    public String formatStaticDocumentation(String documentation, String language, boolean onePage) {
+
+        String formatted = documentation;
+        if (StringUtil.isNonEmptyString(formatted)) {
+            StringBuilder sb = new StringBuilder(formatted);
+            int i = -1;
+            int j = -1;
+            int start = 0;
+            String term = "";
+            while ((start < sb.length()) && ((i = sb.indexOf("&%", start)) != -1)) {
+                sb.delete(i, (i + 2));
+                j = i;
+                while ((j < sb.length()) && !Character.isWhitespace(sb.charAt(j)) && sb.charAt(j) != '"')
+                    j++;
+                while (j > i) {
+                    term = sb.substring(i, j);
+                    if (containsTerm(term))
+                        break;
+                    j--;
+                }
+                if (j > i) {
+                    StringBuilder hsb = new StringBuilder("<a href=\"");
+                    if (!onePage)
+                        hsb.append(term.charAt(0) );
+                    hsb.append("dict.html#");
+                    hsb.append(StringUtil.toSafeNamespaceDelimiter(term));
+                    hsb.append("\">" + term + "</a>");
+                    sb.replace(i, j, hsb.toString());
+                    start = (i + hsb.length());
+                }
+            }
+            formatted = sb.toString();
+        }
+        return formatted;
+    }
+
+    /***************************************************************
      * Save the contents of the current KB to a file.
      */
     public String writeInferenceEngineFormulas(TreeSet<String> forms) {
