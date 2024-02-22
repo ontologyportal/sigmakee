@@ -1233,12 +1233,35 @@ public class KButilities {
     }
 
     /** *************************************************************
-     * flush and close all files
+     * Generate a HTML list of labels from termFormats
      */
-    private static String htmlForDoc(String term, String doc, boolean noSUMO) {
+    public static List<String> getLabelsForTerm(KB kb, String term, String lang) {
 
+        List<String> result = new ArrayList<>();
+        ArrayList<Formula> al = kb.askWithTwoRestrictions(0,"termFormat",1,lang,2,term);
+        return result;
+    }
+
+    /** *************************************************************
+     * flush and close all files
+     * @param coreTerm just marks in the table whether the term is "core" or not.
+     *                 This is useful only for specific applications
+     * Show term, label, inCore, doc
+     */
+    private static String htmlForDoc(KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
+
+        List<String> labels = getLabelsForTerm(kb,term,lang);
         StringBuffer sb = new StringBuffer();
-        sb.append("<a name=\"" + term + "\">" + term + "</td><td></a>");
+        sb.append("<a name=\"" + term + "\">" + term + "</a></td><td>");
+        for (String s : labels)
+            sb.append(s + ", ");
+        sb.delete(sb.length()-2,sb.length());
+        sb.append("</td><td>");
+        if (coreTerm)
+            sb.append("yes");
+        else
+            sb.append("no");
+        sb.append("</td><td>");
         sb.append(doc);
         if (!noSUMO) {
             sb.append("[and <a href=\"https://sigma.ontologyportal.org:8443/sigma/Browse.jsp?term=");
@@ -1251,14 +1274,14 @@ public class KButilities {
     /** *************************************************************
      * generate one documentation string entry
      */
-    private static String genDocLine(boolean shade, String term, String doc) {
+    private static String genDocLine(boolean shade, KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
 
         StringBuffer sb = new StringBuffer();
         if (shade)
             sb.append("<tr bgcolor=\"#ddd\"><td>");
         else
             sb.append("<tr><td>");
-        sb.append(htmlForDoc(term,doc,false));
+        sb.append(htmlForDoc(kb,term,lang,doc,noSUMO,coreTerm));
         return sb.toString();
     }
 
@@ -1275,7 +1298,7 @@ public class KButilities {
         for (String term : map.keySet()) {
             String arg2 = map.get(term);
             PrintWriter pw = files.get(Character.toString(term.charAt(0)));
-            pw.println(genDocLine(shade, term, arg2));
+            pw.println(genDocLine(shade, kb, term, "EnglishLanguage", arg2,false,false));
             shade = ! shade;
         }
         closeDocList(files);
@@ -1297,33 +1320,45 @@ public class KButilities {
                 System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
                 System.out.println("<tr><td>");
-            System.out.println(htmlForDoc(term,arg2,false));
+            // (KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm)
+            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,false));
             shade = ! shade;
         }
         System.out.println("</table>\n");
     }
 
     /** *************************************************************
+     */
+    public static List<String> getLinkedTermsInDoc(KB kb, String term) {
+
+        List<String> result = new ArrayList<>();
+        return result;
+    }
+
+    /** *************************************************************
      * Generate a HTML list of terms and their documentation strings
      * from a file.
      */
-    public static void genSpecificTermDoc(KB kb, String file) {
+    public static void genSpecificTermDoc(KB kb, String file, String lang) {
 
         List<String> lines = FileUtil.readLines(file);
+        List<String> aux = new ArrayList<>();
         genDocHeader(true); // true = one page
         System.out.println("<h2>Data Dictionary</h2>");
-        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
+        System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
         TreeMap<String,String> map = genDocList(kb);
         boolean shade = false;
         for (String term : map.keySet()) {
             if (!lines.contains(term))
                 continue;
+            List<String> links = getLinkedTermsInDoc(kb,term); // empty list if none
+            aux.addAll(links);
             String arg2 = map.get(term);
             if (shade)
                 System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
                 System.out.println("<tr><td>");
-            System.out.println(htmlForDoc(term,arg2,true));
+            System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,true));
             shade = ! shade;
         }
         System.out.println("</table>\n");
@@ -1404,9 +1439,9 @@ public class KButilities {
                 System.out.println("KBmutilities.main(): writing documentation");
                 genAllAlphaHTMLDoc(kb);
             }
-            else if (args != null && args.length > 0 && args[0].equals("-odoc")) {
+            else if (args != null && args.length > 1 && args[0].equals("-odoc")) {
                 System.out.println("KBmutilities.main(): writing documentation");
-                genSpecificTermDoc(kb,args[1]);
+                genSpecificTermDoc(kb,args[1],args[2]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-l")) {
                 for (String t : kb.terms)
