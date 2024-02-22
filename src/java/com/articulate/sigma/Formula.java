@@ -1644,6 +1644,8 @@ public class Formula implements Comparable, Serializable {
      * is a function or sentence), then return null.  If the starting
      * argument is greater than the number of arguments, also return
      * null.
+     *
+     * Deprecated - use complexArgumentsToArrayList()
      */
     @Deprecated
     public ArrayList<Formula> argumentsToArrayList(int start) {
