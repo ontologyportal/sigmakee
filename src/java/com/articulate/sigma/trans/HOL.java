@@ -42,8 +42,7 @@ public class HOL {
         ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
         fstring.append("(forall (?W" + worldNum + ") (=> (accreln s__" + f.car() + " " +
                 flist.get(0) + " ?W" + worldNum + " ?W" + (worldNum + 1) + ") ");
-        for (Formula arg : flist)
-            fstring.append(" " + processRecurse(arg,kb,worldNum));
+        fstring.append(" " + processRecurse(flist.get(1),kb,worldNum));
         fstring.append(")))");
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -58,9 +57,8 @@ public class HOL {
         StringBuffer fstring = new StringBuffer();
         ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
         fstring.append("(forall (?W" + worldNum + ") (=> (accreln s__modalAttribute " +
-                flist.get(0) + " ?W" + worldNum + " ?W" + (worldNum + 1) + ") ");
-        for (Formula arg : flist)
-            fstring.append(" " + processRecurse(arg,kb,worldNum));
+                flist.get(1) + " ?W" + worldNum + " ?W" + (worldNum + 1) + ") ");
+        fstring.append(processRecurse(flist.get(0),kb,worldNum));
         fstring.append(")))");
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -84,8 +82,11 @@ public class HOL {
             StringBuffer fstring = new StringBuffer();
             fstring.append("(" + f.car());
             for (Formula arg : flist)
-                fstring.append("," + processRecurse(arg,kb,worldNum));
-            fstring.append(" W" + worldNum + ")");
+                fstring.append(" " + processRecurse(arg,kb,worldNum));
+            if (Formula.isLogicalOperator(f.car()))
+                fstring.append(")");
+            else
+                fstring.append(" ?W" + worldNum + ")");
             Formula result = new Formula();
             result.read(fstring.toString());
             return result;
