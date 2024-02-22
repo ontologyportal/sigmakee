@@ -299,6 +299,9 @@ public class SUMOKBtoTPTPKB {
                 }
                 if (f.isHigherOrder(kb)) {
                     pw.println("% is higher order");
+                    if (lang.equals("tff")) {
+                        f = HOL.processHigherOrder(f,kb);
+                    }
                     if (removeHOL)
                         continue;
                 }
