@@ -40,8 +40,9 @@ public class HOL {
 
         StringBuffer fstring = new StringBuffer();
         ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
+        worldNum = worldNum + 1;
         fstring.append("(forall (?W" + worldNum + ") (=> (accreln s__" + f.car() + " " +
-                flist.get(0) + " ?W" + worldNum + " ?W" + (worldNum + 1) + ") ");
+                flist.get(0) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
         fstring.append(" " + processRecurse(flist.get(1),kb,worldNum));
         fstring.append(")))");
         Formula result = new Formula();
@@ -56,8 +57,9 @@ public class HOL {
 
         StringBuffer fstring = new StringBuffer();
         ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
+        worldNum = worldNum + 1;
         fstring.append("(forall (?W" + worldNum + ") (=> (accreln s__modalAttribute " +
-                flist.get(1) + " ?W" + worldNum + " ?W" + (worldNum + 1) + ") ");
+                flist.get(1) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
         fstring.append(processRecurse(flist.get(0),kb,worldNum));
         fstring.append(")))");
         Formula result = new Formula();
