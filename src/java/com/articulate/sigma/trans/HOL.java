@@ -112,6 +112,24 @@ public class HOL {
 
     /***************************************************************
      */
+    public static void addTFFHeader(KB kb) {
+
+        System.out.println("tff(worlds_tp,type,(w : $tType)).\n" +
+                "tff(modals_tp,type,(m : $tType)).\n" +
+                "tff(accreln_tp,type,(accreln : (m * $i * w * w) > $o)).");
+    }
+
+    /***************************************************************
+     */
+    public static void addTHFHeader(KB kb) {
+
+        System.out.println("thf(worlds_tp,type,(w : $tType)).\n" +
+                "thf(modals_tp,type,(m : $tType)).\n" +
+                "thf(accreln_tp,type,(accreln : (m > $i > w > w > $o))).");
+    }
+
+    /***************************************************************
+     */
     public static void main(String[] args) {
 
         KBmanager.getMgr().initializeOnce();
