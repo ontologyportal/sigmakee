@@ -215,6 +215,7 @@ public class FormulaPreprocessor {
                 types.addAll(explicitTypes);
             varmap.put(var, types);
         }
+        if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions: returning: " + varmap);
         return varmap;
     }
 
@@ -265,7 +266,7 @@ public class FormulaPreprocessor {
                     }
                     if (!t.endsWith("+")) {
                         if (!addOnlyNonNumericTypes || !kb.isSubclass(t,"Quantity")) {
-                            if (!t.equals("Entity"))
+                            if (!t.equals("Entity") && !t.equals("World")) // trap world type in THF that is already restricted with THF language type restriction
                                 sb.append(" (instance " + unquantifiedV + " " + t + ") ");
                         }
                     }
