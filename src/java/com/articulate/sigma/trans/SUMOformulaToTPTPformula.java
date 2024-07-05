@@ -398,8 +398,6 @@ public class SUMOformulaToTPTPformula {
     }
 
     /** *************************************************************
-     * This is the primary method of the class.  It takes a SUO-KIF
-     * formula and returns a TPTP formula.
      */
     public static void generateQList(Formula f) {
 
