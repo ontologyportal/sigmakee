@@ -3,12 +3,13 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.KIF;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 
-public class HOL {
+public class Modals {
 
     public static final ArrayList<String> formulaPreds = new ArrayList<String>(
             Arrays.asList("KappaFn", "ProbabilityFn", "believes",
@@ -80,15 +81,24 @@ public class HOL {
                 return handleHOLpred(f,kb,worldNum);
             if (f.car().equals("modalAttribute"))
                 return handleModalAttribute(f,kb,worldNum);
-            ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
+            //System.out.println("Modals.processRecurse(): " + f);
+            int argStart = 1;
+            if (Formula.isQuantifier(f.car()))
+                argStart = 2;
+            ArrayList<Formula> flist = f.complexArgumentsToArrayList(argStart);
             StringBuffer fstring = new StringBuffer();
             fstring.append("(" + f.car());
+            if (argStart == 2) // append quantifier list without processing
+                fstring.append(" " + f.getStringArgument(1));
             for (Formula arg : flist)
                 fstring.append(" " + processRecurse(arg,kb,worldNum));
-            if (Formula.isLogicalOperator(f.car()))
+            if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
                 fstring.append(")");
-            else
+            else {
                 fstring.append(" ?W" + worldNum + ")");
+                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
+                sig.add("World");
+            }
             Formula result = new Formula();
             result.read(fstring.toString());
             return result;
@@ -98,7 +108,7 @@ public class HOL {
 
     /***************************************************************
      */
-    public static Formula processHigherOrder(Formula f, KB kb) {
+    public static Formula processModals(Formula f, KB kb) {
 
         int worldNum = 1;
         Formula result = new Formula();
@@ -107,25 +117,30 @@ public class HOL {
         result = processRecurse(f,kb,worldNum);
         String fstring = result.getFormula();
         result.read(fstring);
+        HashSet<String> types = new HashSet<String>();
+        types.add("World");
+        for (int i = 1; i <= worldNum; i++)
+            result.varTypeCache.put("?W" + i,types);
         return result;
     }
 
     /***************************************************************
      */
-    public static void addTFFHeader(KB kb) {
+    public static String getTFFHeader() {
 
-        System.out.println("tff(worlds_tp,type,(w : $tType)).\n" +
+        return "tff(worlds_tp,type,(w : $tType)).\n" +
                 "tff(modals_tp,type,(m : $tType)).\n" +
-                "tff(accreln_tp,type,(accreln : (m * $i * w * w) > $o)).");
+                "tff(accreln_tp,type,(accreln : (m * $i * w * w) > $o)).";
     }
 
     /***************************************************************
      */
-    public static void addTHFHeader(KB kb) {
+    public static String getTHFHeader() {
 
-        System.out.println("thf(worlds_tp,type,(w : $tType)).\n" +
+        return "thf(worlds_tp,type,(w : $tType)).\n" +
+                "thf(s__worlds_tp,type,(s__World : w)).\n" +
                 "thf(modals_tp,type,(m : $tType)).\n" +
-                "thf(accreln_tp,type,(accreln : (m > $i > w > w > $o))).");
+                "thf(accreln_tp,type,(accreln : (m > $i > w > w > $o))).";
     }
 
     /***************************************************************
@@ -140,7 +155,7 @@ public class HOL {
                 "    (not\n" +
                 "        (modalAttribute ?FORMULA Permission)))";
         Formula f = new Formula(fstr);
-        System.out.println(processHigherOrder(f,kb) + "\n\n");
+        System.out.println(processModals(f,kb) + "\n\n");
 
         fstr = "(=>\n" +
                 "    (and\n" +
@@ -151,7 +166,18 @@ public class HOL {
                 "        (wants ?AGENT ?THING)\n" +
                 "        (desires ?AGENT ?THING)))";
         f = new Formula(fstr);
-        System.out.println(processHigherOrder(f,kb));
+        System.out.println(processModals(f,kb)+ "\n\n");
 
+        fstr = "(=> " +
+                "  (instance ?ARGUMENT Argument ?W1) " +
+                "  (exists (?PREMISES ?CONCLUSION) " +
+                "    (and " +
+                "      (instance ?PREMISES Formula) " +
+                "      (instance ?CONCLUSION Argument) " +
+                "      (and " +
+                "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
+                "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
+        f = new Formula(fstr);
+        System.out.println(processModals(f,kb)+ "\n\n");
     }
 }
