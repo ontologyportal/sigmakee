@@ -267,8 +267,10 @@ public class LEO {
             return;
         }
         writeStatements(stmts, lang);
-        if (!kbFile.exists() || KBmanager.getMgr().infFileOld("thf"))
-            THF.writeTHF(kb);
+        if (!kbFile.exists() || KBmanager.getMgr().infFileOld("thf")) {
+            ArrayList<String> kbAll2 = THF.transTHF(kb);
+            THF.writeTHF(kb,kbAll2);
+        }
         catFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);
