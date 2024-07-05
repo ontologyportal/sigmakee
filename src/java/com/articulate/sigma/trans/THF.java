@@ -250,10 +250,11 @@ public class THF {
             f.read(form.makeQuantifiersExplicit(true));
         if (debug) System.out.println("\nKIF2THF -- translating KIF formula: " + f.getFormula().trim());
         // we request some semantic type-relevant information on the
-        // function and
-        // relation symbols involved; this information is used with priority
+        // function and relation symbols involved; this information is used with priority
         // below
-        HashMap relTypeInfo = f.gatherRelationsWithArgTypes(kb);
+        HashMap<String, ArrayList> relTypeInfo = f.gatherRelationsWithArgTypes(kb);
+        if (debug) System.out.println("oneKIF2THF(): reltypes: " + relTypeInfo);
+        if (debug) System.out.println("oneKIF2THF(): localsig: " + localsig);
         // we initialize the terms-to-types mapping and start the actual
         // translation
         terms = (HashMap) overallsig.clone();
@@ -1828,20 +1829,45 @@ public class THF {
     }
 
     /** ***************************************************************
-     * A test method.
      */
-    public static void writeTHF(KB kb) {
+    public static ArrayList<String> transModalTHF(KB kb) {
+
+        THF thf = new THF();
+        Collection coll = Collections.EMPTY_LIST;
+        Collection<Formula> result = new ArrayList<Formula>();
+        for (Formula f : kb.formulaMap.values()) {
+            System.out.println("THF.transModalTHF(): " + f);
+            Formula res = Modals.processModals(f, kb);
+            if (res != null)
+                result.add(res);
+        }
+        ArrayList<String> kbAll2 = thf.KIF2THF(result,coll,kb);
+        return kbAll2;
+    }
+
+    /** ***************************************************************
+     */
+    public static ArrayList<String> transTHF(KB kb) {
+
+        THF thf = new THF();
+        Collection coll = Collections.EMPTY_LIST;
+        ArrayList<String> kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+        return kbAll2;
+    }
+
+    /** ***************************************************************
+     */
+    public static void writeTHF(KB kb, ArrayList<String> kbAll2) {
 
         THF thf = new THF();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
-            System.out.println("\n\nTHF.main(): Test on all KB kb content:");
-            Collection coll = Collections.EMPTY_LIST;
-            ArrayList<String> kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+            System.out.println("\n\nTHF.writeTHF()");
             String filename = kbDir + sep + kb.name + ".thf";
             FileWriter fstream = new FileWriter(filename);
             BufferedWriter out = new BufferedWriter(fstream);
+            out.write(Modals.getTHFHeader());
             for (String s : kbAll2)
                 out.write(s);
             out.close();
@@ -1853,32 +1879,75 @@ public class THF {
     }
 
     /** ***************************************************************
+     */
+    public static void test(KB kb) {
+
+        String fstr = "(=> " +
+                "  (instance ?ARGUMENT Argument ?W1) " +
+                "  (exists (?PREMISES ?CONCLUSION) " +
+                "    (and " +
+                "      (instance ?PREMISES Formula) " +
+                "      (instance ?CONCLUSION Argument) " +
+                "      (and " +
+                "        (equal (PremisesFn ?ARGUMENT ?W1) ?PREMISES) " +
+                "        (conclusion ?CONCLUSION ?ARGUMENT ?W1)))))";
+        Formula f = new Formula(fstr);
+        Formula modal = Modals.processModals(f,kb);
+        THF thf = new THF();
+        String result = thf.oneKIF2THF(modal, false, kb);
+        System.out.println(result);
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("THF");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  m - THF translation with modals");
+        System.out.println("  o - basic THF translation");
+        System.out.println("  t - test");
+        System.out.println("  h - show this help");
+    }
+
+    /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
 
-        THF thf = new THF();
-        KBmanager kbmgr = KBmanager.getMgr();
-        kbmgr.initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        String kbDir = KBmanager.getMgr().getPref("kbDir");
-        if (kb.errors.size() > 0)
-            System.out.println("Errors: " + kb.errors);
-        String sep = File.separator;
-        try {            
-    	    System.out.println("\n\nTHF.main(): Test on all KB kb content:");
-    	    Collection coll = Collections.EMPTY_LIST;
-    	    ArrayList<String> kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
-    	    String filename = kbDir + sep + kb.name + ".thf";
-    	    FileWriter fstream = new FileWriter(filename);
-    	    BufferedWriter out = new BufferedWriter(fstream);
-            for (String s : kbAll2)
-    	        out.write(s);
-    	    out.close();
-    	    System.out.println("\n\nTHF.main(): Result written to file " + filename);
+        System.out.println("========================================");
+        System.out.println("INFO in THF.main()");
+        System.out.println("args:" + args.length + " : " + Arrays.toString(args));
+        if (args == null) {
+            System.out.println("no command given");
+            showHelp();
         }
-        catch (Exception ex) {
-            ex.printStackTrace();
+        else if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
+            KBmanager kbmgr = KBmanager.getMgr();
+            kbmgr.initializeOnce();
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            System.out.println("THF.main(): KB loaded");
+            if (kb.errors.size() > 0) {
+                System.out.println("Errors: " + kb.errors);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-o")) {
+                System.out.println("THF.main(): translate to THF");
+                ArrayList<String> kbAll2 = transTHF(kb);
+                writeTHF(kb, kbAll2);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-t")) {
+                System.out.println("THF.main(): translate to THF");
+                test(kb);
+            }
+            else if (args != null && args.length > 0 && args[0].equals("-m")) {
+                System.out.println("THF.main(): translate to THF with modals");
+                ArrayList<String> kbAll2 = transModalTHF(kb);
+                writeTHF(kb, kbAll2);
+            }
+            else
+                showHelp();
         }
     }
 }
