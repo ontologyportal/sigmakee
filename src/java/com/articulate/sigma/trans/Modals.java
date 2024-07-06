@@ -45,7 +45,7 @@ public class Modals {
         fstring.append("(=> (accreln " + f.car() + " " +
                 flist.get(0) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
         fstring.append(" " + processRecurse(flist.get(1),kb,worldNum));
-        fstring.append("))");
+        fstring.append(")");
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
@@ -62,7 +62,7 @@ public class Modals {
         fstring.append("(=> (accreln modalAttribute " +
                 flist.get(1) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
         fstring.append(processRecurse(flist.get(0),kb,worldNum));
-        fstring.append("))");
+        fstring.append(")");
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
@@ -107,9 +107,23 @@ public class Modals {
     }
 
     /***************************************************************
+     * Add the signature for the Kripke accessibility relation
+     */
+    public static void addAccrelnDef(KB kb) {
+
+        ArrayList<String> sig = new ArrayList<>();
+        sig.add(""); // empty 0th argument for relations
+        sig.add("Entity");
+        sig.add("Entity");
+        sig.add("World");
+        sig.add("World");
+        kb.kbCache.signatures.put("accreln",sig);
+    }
+    /***************************************************************
      */
     public static Formula processModals(Formula f, KB kb) {
 
+        addAccrelnDef(kb);
         int worldNum = 1;
         Formula result = new Formula();
         //if (!f.isHigherOrder(kb))
@@ -128,19 +142,19 @@ public class Modals {
      */
     public static String getTFFHeader() {
 
-        return "tff(worlds_tp,type,(w : $tType)).\n" +
+        return "tff(worlds_tp,type,($w : $tType)).\n" +
                 "tff(modals_tp,type,(m : $tType)).\n" +
-                "tff(accreln_tp,type,(accreln : (m * $i * w * w) > $o)).";
+                "tff(accreln_tp,type,(s__accreln : ($m * $i * $w * $w) > $o)).";
     }
 
     /***************************************************************
      */
     public static String getTHFHeader() {
 
-        return "thf(worlds_tp,type,(w : $tType)).\n" +
-                "thf(s__worlds_tp,type,(s__World : w)).\n" +
-                "thf(modals_tp,type,(m : $tType)).\n" +
-                "thf(accreln_tp,type,(accreln : (m > $i > w > w > $o))).";
+        return "thf(worlds_tp,type,($w : $tType)).\n" +
+                "thf(s__worlds_tp,type,(s__World : $w)).\n" +
+                "thf(modals_tp,type,($m : $tType)).\n" +
+                "thf(accreln_tp,type,(s__accreln : ($i > $i > $w > $w > $o))).";
     }
 
     /***************************************************************
