@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class THFnew {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
     public static int axNum = 0;
 
     /** *************************************************************
@@ -242,6 +242,9 @@ public class THFnew {
             String result = processRecurse(f,typeMap);
             if (debug) System.out.println("THFnew.process(): result 1: " + result);
             HashSet<String> UqVars = f.collectUnquantifiedVariables();
+            HashSet<String> types = new HashSet<>();
+            types.add("World");
+            typeMap.put("?W1",types);
             String qlist = generateQList(f,typeMap,UqVars);
             if (debug) System.out.println("THFnew.process(): typeMap: " + typeMap);
             if (debug) System.out.println("THFnew.process(): qlist: " + qlist);
@@ -301,13 +304,18 @@ public class THFnew {
         if (res != null) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processed = fp.preProcess(res, false, kb);
-            if (debug) System.out.println("oneTrans(): processed: " + processed);
+            if (debug) System.out.println("THFnew.oneTrans(): res.varTypeCache: " + res.varTypeCache);
+            if (debug) System.out.println("THFnew.oneTrans(): processed: " + processed);
+            if (debug) System.out.println("THFnew.oneTrans(): accreln sig: " + kb.kbCache.getSignature("accreln"));
+            res.varTypeCache.clear(); // clear so it really computes the types instead of just returning the type cache
             HashMap<String, HashSet<String>> typeMap = fp.findAllTypeRestrictions(res, kb);
+            if (debug) System.out.println("THFnew.oneTrans(): typeMap(1): " + typeMap);
             typeMap.putAll(res.varTypeCache);
+            if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
             HashSet<String> types = new HashSet<String>();
             types.add("World");
             typeMap.put("?W",types);
-            if (debug) System.out.println("THFnew.oneTrans(): typeMap: " + typeMap);
+            if (debug) System.out.println("THFnew.oneTrans(): typeMap(3): " + typeMap);
             for (Formula fnew : processed) {
                 if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " + variableArity(kb,fnew.car()));
                 if (variableArity(kb,fnew.car()))
