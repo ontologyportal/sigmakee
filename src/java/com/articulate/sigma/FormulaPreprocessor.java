@@ -295,6 +295,8 @@ public class FormulaPreprocessor {
         if (debug) System.out.println("addTypeRestrictions: result: " + f);
         if (debug) System.out.println("addTypeRestrictions: form at end: " + form);
         if (debug) System.out.println("addTypeRestrictions: sb at end: '" + sb + "'");
+        if (debug) System.out.println("addTypeRestrictions(: varmap at end" + varmap);
+        f.varTypeCache = varmap;
         return f;
     }
 
@@ -646,6 +648,7 @@ public class FormulaPreprocessor {
 
         if (form.varTypeCache.keySet().size() > 0 && KBmanager.initialized) { // type lists can change as KBs are read
             if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): returning cached types for \n" + form);
+            if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): types: " + form.varTypeCache);
             return form.varTypeCache;
         }
         if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypes(): \n" + form);
@@ -1134,6 +1137,8 @@ public class FormulaPreprocessor {
                 //    if (debug) System.out.println("preProcess(): not adding types");
                 f.read(fnew.getFormula());
                 f.higherOrder = fnew.higherOrder;
+                f.varTypeCache = fnew.varTypeCache;
+                if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): varTypeCache: " + f.varTypeCache);
             }
         }
 
