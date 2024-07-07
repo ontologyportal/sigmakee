@@ -264,9 +264,10 @@ public class THFnew {
      */
     public static boolean variableArity(KB kb, String pred) {
 
-        System.out.println("variableArity(): pred: " + pred); // eliminate prefix and suffix
-        if (pred.length() > 4)
-            System.out.println("variableArity(): sub: " + pred.substring(0,pred.length()-3));
+        if (debug) System.out.println("variableArity(): pred: " + pred); // eliminate prefix and suffix
+        if (debug)
+            if (pred.length() > 4)
+                System.out.println("variableArity(): sub: " + pred.substring(0,pred.length()-3));
         if (!pred.contains("_") || pred.length() < 4)
             return false;
         return kb.isInstanceOf(pred.substring(0,pred.length()-3),"VariableArityRelation");
@@ -281,7 +282,7 @@ public class THFnew {
      */
     public static Formula adjustArity(KB kb, Formula f) {
 
-        System.out.println("adjustArity(): f: " + f);
+        if (debug) System.out.println("adjustArity(): f: " + f);
         String fstr = f.cdr().substring(1);
         String pred = f.car();
         Pattern p = Pattern.compile("([\\w_]+__)(\\d)");
@@ -290,7 +291,7 @@ public class THFnew {
             int num = Integer.parseInt(m.group(2));
             num--;
             Formula result = new Formula("(" + m.group(1) + num + " " + fstr);
-            System.out.println("adjustArity(): result: " + result);
+            if (debug) System.out.println("adjustArity(): result: " + result);
             return result;
         }
         return f;
@@ -376,7 +377,7 @@ public class THFnew {
      */
     public static String sigString(List<String> sig, KB kb, boolean function) {
 
-        System.out.println("sigString(): sig: " + sig);
+        if (debug) System.out.println("sigString(): sig: " + sig);
         StringBuffer sb = new StringBuffer();
         boolean first = false;
         String range = "";
@@ -431,7 +432,7 @@ public class THFnew {
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
                 List<String> sig = kb.kbCache.signatures.get(t);
-                System.out.println("THFnew.writeTypes(): sig " + sig + " for " + t);
+                if (debug) System.out.println("THFnew.writeTypes(): sig " + sig + " for " + t);
                 if (!Formula.isLogicalOperator(t) && !t.equals("equals")) { // make sure to update the signature
                     sig.add("World");
                 }
@@ -469,7 +470,7 @@ public class THFnew {
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
         try {
-            System.out.println("\n\nTHFnew.transModalTHF()");
+            if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
             String filename = kbDir + sep + kb.name + ".thf";
             FileWriter fstream = new FileWriter(filename);
             BufferedWriter out = new BufferedWriter(fstream);
