@@ -154,7 +154,11 @@ public class Modals {
         return "thf(worlds_tp,type,($w : $tType)).\n" +
                 "thf(s__worlds_tp,type,(s__World : $w)).\n" +
                 "thf(modals_tp,type,($m : $tType)).\n" +
-                "thf(accreln_tp,type,(s__accreln : ($i > $i > $w > $w > $o))).";
+                "thf(accreln_tp,type,(s__accreln : ($m > $i > $w > $w > $o))).\n" +
+                "thf(knows_tp,type,(s__knows : $m)).\n" +
+                "thf(believes_tp,type,(s__believes : $m)).\n" +
+                "thf(knows_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
+                "thf(believes_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
     }
 
     /***************************************************************
