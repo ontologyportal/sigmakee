@@ -362,6 +362,8 @@ public class THFnew {
             pred.equals("format") ||
             pred.equals("externalImage") ||
             pred.equals("comment") ||
+            pred.equals("knows") ||  // handled in header
+            pred.equals("believes") ||  //handled in header
             StringUtil.isNumeric(pred) ||
             pred.equals("equal") ||
             pred.equals("=") ||
@@ -442,20 +444,20 @@ public class THFnew {
                 }
                 boolean isFunction = false;
                 if (kb.isInstanceOf(t,"Function")) {
-                    out.write("thf(" + t + "_tp,type,(" +
+                    out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                             SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : ("); // write signature
                     isFunction = true;
                 }
                 else
-                    out.write("thf(" + t + "_tp,type,(" +
+                    out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                             SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : ("); // write signature
                 String sigStr = sigString(sig,kb,isFunction);
                 out.write(sigStr + "))).\n");
-                out.write("thf(" + t + "_tp,type,(" +
+                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
             }
             else
-                out.write("thf(" + t + "_tp,type,(" +
+                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true)+ " : $i)).\n");
         }
     }
