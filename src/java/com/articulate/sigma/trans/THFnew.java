@@ -205,6 +205,8 @@ public class THFnew {
             return "($i > $o)";
         if (typeMap.get(v).contains("World"))
             return "$w";
+        if (typeMap.get(v).contains("Modal"))
+            return "$m";
         return "$i";
     }
 
@@ -345,10 +347,18 @@ public class THFnew {
 
         if (f.getFormula().contains(Formula.LOG_FALSE) || f.getFormula().contains(Formula.LOG_TRUE))
             return true;
-        if (f.isGround())
-            for (String s : f.argumentsToArrayListString(0))
+        if (f.isGround()) {
+            ArrayList<String> ar = f.argumentsToArrayListString(0);
+            if (ar.get(0).equals("instance") && kb.isInstanceOf(ar.get(1),"NormativeAttribute"))
+                return true;  // defined as type "$m" directly in THF
+            if (ar.get(0).equals("subAttribute") && kb.isInstanceOf(ar.get(1),"NormativeAttribute"))
+                return true;  // defined as type "$m" directly in THF
+            if (ar.get(0).equals("contraryAttribute") && kb.isInstanceOf(ar.get(1),"NormativeAttribute"))
+                return true;  // defined as type "$m" directly in THF
+            for (String s : ar)
                 if (exclude(s))
                     return true;
+        }
         String pred = f.car();
         return exclude(pred);
     }
@@ -456,6 +466,9 @@ public class THFnew {
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
             }
+            else if (kb.isInstanceOf(t,"NormativeAttribute"))
+                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $m)).\n"); // write relation constant
             else
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true)+ " : $i)).\n");
