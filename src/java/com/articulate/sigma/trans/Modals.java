@@ -59,7 +59,7 @@ public class Modals {
         StringBuffer fstring = new StringBuffer();
         ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln modalAttribute " +
+        fstring.append("(=> (accrelnP " +
                 flist.get(1) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
         fstring.append(processRecurse(flist.get(0),kb,worldNum));
         fstring.append(")");
@@ -120,6 +120,19 @@ public class Modals {
         kb.kbCache.signatures.put("accreln",sig);
     }
     /***************************************************************
+     * Add the signature for the Kripke accessibility relation
+     */
+    public static void addAccrelnDefP(KB kb) {
+
+        ArrayList<String> sig = new ArrayList<>();
+        sig.add(""); // empty 0th argument for relations
+        sig.add("Modal");
+        sig.add("World");
+        sig.add("World");
+        kb.kbCache.signatures.put("accreln",sig);
+    }
+
+    /***************************************************************
      */
     public static Formula processModals(Formula f, KB kb) {
 
@@ -155,6 +168,7 @@ public class Modals {
                 "thf(s__worlds_tp,type,(s__World : $w)).\n" +
                 "thf(modals_tp,type,($m : $tType)).\n" +
                 "thf(accreln_tp,type,(s__accreln : ($m > $i > $w > $w > $o))).\n" +
+                "thf(accrelnP_tp,type,(s__accrelnP : ($m > $w > $w > $o))).\n" +
                 "thf(knows_tp,type,(s__knows : $m)).\n" +
                 "thf(believes_tp,type,(s__believes : $m)).\n" +
                 "thf(knows_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
