@@ -8,9 +8,6 @@
 # JUnit output
 /TEST*.xml
 
-# Javadoc output
-/doc
-
 # Emacs temp files
 *~
 
