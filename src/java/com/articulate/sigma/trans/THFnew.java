@@ -369,7 +369,7 @@ public class THFnew {
         }
         if (f.isGround()) {
             if (debug) System.out.println("exclude(): is ground: " + f);
-            ArrayList<String> ar = f.argumentsToArrayListString(1);
+            ArrayList<String> ar = f.argumentsToArrayListString(0);
             if (protectedRelation(ar.get(0)) && Modals.modalAttributes.contains(ar.get(1))) {
                 out.write("% exclude(): modal attribute in protected relation: " + ar.get(0) +
                         " " + ar.get(1) + "\n");
@@ -410,7 +410,7 @@ public class THFnew {
                 pred.equals("format") ||
                 pred.equals("externalImage") ||
                 pred.equals("comment")) {
-            out.write("excludePred(): " + "\n");
+            out.write("% excludePred(): " + "\n");
             return true;
         }
         else
@@ -439,7 +439,7 @@ public class THFnew {
             pred.equals(Formula.LOG_FALSE) ||
             pred.equals(Formula.LOG_TRUE) ||
             Formula.isLogicalOperator(pred)) {
-            out.write("excludeForTypedef(): " + pred + "\n");
+            out.write("% excludeForTypedef(): " + pred + "\n");
             return true;
         }
         else
