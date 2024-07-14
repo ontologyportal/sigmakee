@@ -33,6 +33,9 @@ public class Modals {
     public static final ArrayList<String> regHOLpred = new ArrayList<String>(
             Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
 
+    public static final HashSet<String> modalAttributes = new HashSet<String>(Arrays.asList("Possibility",
+            "Necessity", "Permission", "Obligation", "Prohibition"));
+
     /***************************************************************
      * Handle the predicates given in regHOLpred, which have a parameter
      * followed by a formula.
@@ -97,6 +100,15 @@ public class Modals {
             else {
                 fstring.append(" ?W" + worldNum + ")");
                 List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
+                if (sig == null) {
+                    if (!Formula.isVariable(f.car()))
+                        System.out.println("Error in processRecurse(): null signature for " + f.car());
+                    else {
+                        Formula result = new Formula();
+                        result.read(fstring.toString());
+                        return result;
+                    }
+                }
                 sig.add("World");
             }
             Formula result = new Formula();
@@ -129,7 +141,7 @@ public class Modals {
         sig.add("Modal");
         sig.add("World");
         sig.add("World");
-        kb.kbCache.signatures.put("accreln",sig);
+        kb.kbCache.signatures.put("accrelnP",sig);
     }
 
     /***************************************************************
@@ -137,6 +149,7 @@ public class Modals {
     public static Formula processModals(Formula f, KB kb) {
 
         addAccrelnDef(kb);
+        addAccrelnDefP(kb);
         int worldNum = 1;
         Formula result = new Formula();
         //if (!f.isHigherOrder(kb))

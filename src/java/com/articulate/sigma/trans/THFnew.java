@@ -303,6 +303,8 @@ public class THFnew {
      */
     public static void oneTrans(KB kb, Formula f, BufferedWriter bw) throws IOException {
 
+        bw.write("% original: " + f.getFormula() + "\n" +
+                " from file " + f.sourceFile + " at line " + f.startLine + "\n");
         Formula res = Modals.processModals(f, kb);
         if (res != null) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -343,44 +345,103 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static boolean exclude(Formula f, KB kb) {
+    public static boolean protectedRelation(String s) {
 
-        if (f.getFormula().contains(Formula.LOG_FALSE) || f.getFormula().contains(Formula.LOG_TRUE))
+        if (s.equals("instance") || s.equals("subAttribute") || s.equals("contraryAttribute"))
             return true;
-        if (f.isGround()) {
-            ArrayList<String> ar = f.argumentsToArrayListString(0);
-            if (ar.get(0).equals("instance") && kb.isInstanceOf(ar.get(1),"NormativeAttribute"))
-                return true;  // defined as type "$m" directly in THF
-            if (ar.get(0).equals("subAttribute") && kb.isInstanceOf(ar.get(1),"NormativeAttribute"))
-                return true;  // defined as type "$m" directly in THF
-            if (ar.get(0).equals("contraryAttribute") && kb.isInstanceOf(ar.get(1),"NormativeAttribute"))
-                return true;  // defined as type "$m" directly in THF
-            for (String s : ar)
-                if (exclude(s))
-                    return true;
-        }
-        String pred = f.car();
-        return exclude(pred);
+        else
+            return false;
     }
 
     /** ***************************************************************
+     * Formulas to exclude from the translation
      */
-    public static boolean exclude(String pred) {
+    public static boolean exclude(Formula f, KB kb, BufferedWriter out) throws IOException {
+
+        if (debug) System.out.println("exclude(): " + f);
+        if (f.getFormula().contains("\"")) {
+            out.write("% exclude(): quote" + "\n");
+            return true;
+        }
+        if (f.getFormula().contains(Formula.LOG_FALSE) || f.getFormula().contains(Formula.LOG_TRUE)) {
+            out.write("% exclude(): contains true or false constant" + "\n");
+            return true;
+        }
+        if (f.isGround()) {
+            if (debug) System.out.println("exclude(): is ground: " + f);
+            ArrayList<String> ar = f.argumentsToArrayListString(1);
+            if (protectedRelation(ar.get(0)) && Modals.modalAttributes.contains(ar.get(1))) {
+                out.write("% exclude(): modal attribute in protected relation: " + ar.get(0) +
+                        " " + ar.get(1) + "\n");
+                return true;  // defined as type "$m" directly in THF
+            }
+            for (String s : ar) {
+                if (Formula.listP(s) && exclude(new Formula(s),kb,out)) {
+                    out.write("% excluded(): interior list: " + f);
+                    return true;
+                }
+                if (debug) System.out.println("exclude(): arguments: " + ar);
+                if (debug) System.out.println("exclude(): testing: " + s);
+                if (StringUtil.isNumeric(s)) {
+                    out.write("exclude(): is numeric(2): \n");
+                    if (s.contains(".") || s.contains("-") || s.length() > 1)
+                        return true;
+                    if (s.charAt(0) < '1' || s.charAt(0) > '6')
+                        return true;
+                    if (debug) System.out.println("exclude(): not excluded");
+                }
+            }
+        }
+        String pred = f.car();
+        return excludePred(pred,out);
+    }
+
+    /** ***************************************************************
+     * Predicates that denote formulas that shouldn't be included in
+     * the translation.
+     */
+    public static boolean excludePred(String pred, BufferedWriter out) throws IOException {
+
+        if (pred.equals("documentation") ||
+                pred.equals("termFormat") ||
+                pred.equals("conventionalShortName") ||
+                pred.equals("externalImage") ||
+                pred.equals("abbreviation") ||
+                pred.equals("format") ||
+                pred.equals("externalImage") ||
+                pred.equals("comment")) {
+            out.write("excludePred(): " + "\n");
+            return true;
+        }
+        else
+            return false;
+    }
+
+    /** ***************************************************************
+     * Predicates that denote formulas that shouldn't be included in
+     * type definitions of the translation.
+     */
+    public static boolean excludeForTypedef(String pred, BufferedWriter out) throws IOException {
 
         if (pred.equals("documentation") ||
             pred.equals("termFormat") ||
+            pred.equals("conventionalShortName") ||
+            pred.equals("externalImage") ||
+            pred.equals("abbreviation") ||
             pred.equals("format") ||
             pred.equals("externalImage") ||
             pred.equals("comment") ||
             pred.equals("knows") ||  // handled in header
             pred.equals("believes") ||  //handled in header
-            StringUtil.isNumeric(pred) ||
+            //StringUtil.isNumeric(pred) ||
             pred.equals("equal") ||
             pred.equals("=") ||
             pred.equals(Formula.LOG_FALSE) ||
             pred.equals(Formula.LOG_TRUE) ||
-            Formula.isLogicalOperator(pred))
+            Formula.isLogicalOperator(pred)) {
+            out.write("excludeForTypedef(): " + pred + "\n");
             return true;
+        }
         else
             return false;
     }
@@ -440,7 +501,7 @@ public class THFnew {
 
         writeIntegerTypes(kb,out);
         for (String t : kb.terms) {
-            if (exclude(t))
+            if (excludeForTypedef(t,out))
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
                 List<String> sig = kb.kbCache.signatures.get(t);
@@ -466,7 +527,7 @@ public class THFnew {
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
             }
-            else if (kb.isInstanceOf(t,"NormativeAttribute"))
+            else if (Modals.modalAttributes.contains(t))
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $m)).\n"); // write relation constant
             else
@@ -493,8 +554,12 @@ public class THFnew {
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
-                if (!exclude(f,kb))
+                if (!exclude(f,kb,out))
                     oneTrans(kb,f,out);
+                else {
+                    out.write("% excluded: " + f.getFormula() + "\n" +
+                            "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+                }
             }
             out.close();
             System.out.println("\n\nTHFnew.transModalTHF(): Result written to file " + filename);
