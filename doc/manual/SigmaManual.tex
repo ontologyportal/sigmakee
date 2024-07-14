@@ -140,10 +140,11 @@ installing exactly as instructed first, then maybe uninstall and try again,
 altering things to your taste, if that's essential.  Make sure you can complete the
 instructions and run Sigma before trying the "Hello World".
 
-We'll try just initializing Sigma and asking what is the parent class of the
+We'll try just initializing Sigma (in listing \ref{lst:SigmaHelloW}) and asking what is the parent class of the
 SUMO term \texttt{PrimaryColor}.
 
-\begin{lstlisting}[language=java, basicstyle=\ttfamily\small\bfseries]
+\begin{lstlisting}[language=java, basicstyle=\ttfamily\small\bfseries, caption=
+Simplest Java call to Sigma", label=lst:SigmaHelloW]
 import com.articulate.sigma.*;
 
 public class MySigma {
@@ -344,12 +345,14 @@ ant-part
 cons-connected
 \end{lstlisting}
 
+\begin{sloppypar}
 KIF will primarily fill in two of its member variables during parsing.  \texttt{formulaMap}
 will be a map of keys from \texttt{createKey()} and the string version of the formula itself
 as a key.  The values will be instances of \texttt{Formula}\index[classes]{KIF}.  \texttt{Formula} is an important
 class with many operations.  It holds the original \texttt{String} version of the \texttt{Formula}
 plus several transformations of the \texttt{Formula} that will be explained shortly.  It also
 contains information about the lines in the source file from which it came.
+\end{sloppypar}
 
 After parsing and indexing, Sigma builds some caches for efficiency.  Note that
 the caches are not strictly necessary - SUMO is defined precisely in logic and its
@@ -406,27 +409,17 @@ by \texttt{FormulaPreprocessor.preProcess()}\index[classes]{FormulaPreprocessor}
 \section{Configuration}
 \label{chap:KnowRepr:sec:Conf}
 
+\begin{figure}
+  \centering
+  \includegraphics[width=4.5in]{pictures/config.jpg}
+  \caption{Sigma configuration elements}
+  \label{fig:config}
+\end{figure}
+
 Configuration of Sigma is first governed by the environment variable \texttt{SIGMA\_HOME},
 which in the default configuration with point to a directory ".sigmakee" in the
 user's home directory. Configuration of the Tomcat web service is governed by
-the \texttt{CATALINA\_HOME} environment variable.
-  The hierarchical directory structure below shows a default installation.
-
-\begin{verbatim}
-home
-  user
-    workspace
-      sigmakee
-      sumo
-        WordNetMappings
-    .sigmakee
-      KBs
-        WordNetMappings
-var
-  tomcat
-    webapps
-      sigma
-\end{verbatim}
+the \texttt{CATALINA\_HOME} environment variable. (see Figure \ref{fig:config})
 
 \begin{sloppypar}
 The "workspace" directory will hold the Git modules for sigmakee and sumo. When
@@ -484,15 +477,15 @@ only.
 
 \item \textbf{editorCommand}  - Obsolete
 
-\item \textbf{englishPCFG} - value =
-\texttt{/home/user/Programs/stanford-corenlp-full-2015-12-09} - the directory in
+\item \begin{sloppypar}\textbf{englishPCFG} - value =
+\texttt{/home/user/Programs/ stanford-corenlp-full-2015-12-09} - the directory in
 which the englishPCFG parser model file for Stanford's CoreNLP system is found.
 This is used by the class \texttt{WSD}\index[classes]{WSD} in word sense
-disambiguation
+disambiguation\end{sloppypar}
 
-\item \textbf{graphDir} - value =
-\texttt{/var/tomcat/apache-tomcat-8.0.41/webapps/sigma/graph} - the subdirectory
-under which graph images will be placed
+\item \begin{sloppypar}\textbf{graphDir} - value =
+\texttt{/var/tomcat/apache-tomcat-8.0.41/ webapps/sigma/graph} - the subdirectory
+under which graph images will be placed\end{sloppypar}
 
   \item \textbf{graphVizDir} - value = \texttt{/usr/bin} - The directory in which the
 executable for the open source GraphViz graph drawing software resides 
@@ -512,9 +505,9 @@ https protocol.  When true this requires that the user has configured the server
 on which Sigma is running for https, including having a certificate from a
 certificate authority
 
-\item \textbf{inferenceEngine} - value =
-\texttt{/home/user/Programs/E/PROVER/e_ltb_runner} - the location of the theorem
-prover executable
+\item \begin{sloppypar}\textbf{inferenceEngine} - value =
+\texttt{/home/user/Programs/ E/PROVER/e\_ltb\_runner} - the location of the theorem
+prover executable\end{sloppypar}
 
 \item \textbf{inferenceTestDir} - value =
 \texttt{/home/user/.sigmakee/KBs/tests} - the location for a suite of inference
@@ -558,9 +551,9 @@ number gets put in the hyperlinks in the browser.
 
   \item \textbf{prolog} - Obsolete
 
-  \item \textbf{semRewrite} - value = \texttt{/home/user/workspace/sumo/WordNetMappings/SemRewrite.txt} 
+  \item \begin{sloppypar}\textbf{semRewrite} - value = \texttt{/home/user/workspace/sumo/ WordNetMappings/SemRewrite.txt} 
 This isn't used by SigmaKEE but is used by SigmaNLP.  It probably should be in a 
-separate configuration file.
+separate configuration file.\end{sloppypar}
 
   \item \textbf{showcached} - value = no - Whether to show cached statement in the browser, or 
 just show statements that are loaded from \texttt{.kif} files
@@ -571,8 +564,8 @@ just show statements that are loaded from \texttt{.kif} files
 are installed in a local installation of TPTP.  This is not exactly obsolete, but hasn't
 been tested in many years, and most users will not be concerned with it.
 
-  \item \textbf{testOutputDir} - value = \texttt{/var/tomcat/apache-tomcat-5.5.25/webapps/sigma/tests} 
-- Where to place the results of running inference test questions.
+  \item \begin{sloppypar}\textbf{testOutputDir} - value = \texttt{/var/tomcat/apache-tomcat-5.5.25/ webapps/sigma/tests} 
+- Where to place the results of running inference test questions.\end{sloppypar}
 
   \item \textbf{TPTPDisplay} - value = no - Whether to display axioms in TPTP format.  This is a bit
 obsolete as it's now possible to do this from the "Formal Language" menu in the Sigma term browser.
@@ -611,7 +604,6 @@ non-relational instances and classes are written with initial capital letters.
 
 \begin{figure}
 \begin{framed}
-\label{fig:PredVarEx}
 \begin{verbatim}
 (instance part TransitiveRelation)
 (<=>
@@ -624,12 +616,12 @@ non-relational instances and classes are written with initial capital letters.
       (?REL ?INST1 ?INST3))))
 \end{verbatim}
 \caption{Example axioms showing predicate variables}
+\label{fig:PredVarEx}
 \end{framed}   
 \end{figure}
 
 \begin{figure}
 \begin{framed}
-\label{fig:HoldsPrefix}
 \begin{verbatim}
 (holds instance part TransitiveRelation)
 (<=>
@@ -642,15 +634,18 @@ non-relational instances and classes are written with initial capital letters.
       (holds ?REL ?INST1 ?INST3))))
 \end{verbatim}
 \caption{Example axioms with holds prefixing}
+\label{fig:HoldsPrefix}
 \end{framed} 
 \end{figure}
 
+\begin{sloppypar}
 First-order provers do not typically support variables in the predicate
 position. Our first approach was to add a "dummy" predicate to all clauses other
 than those with logical operators.   For example, the axioms in Figure
 \ref{fig:PredVarEx}, which have the variable {\tt ?REL} in the predicate
 position, become the axioms in Figure \ref{fig:HoldsPrefix}.  This transformation
 is performed in \texttt{FormulaPreprocessor.preProcessRecurse()}\index[classes]{FormulaPreprocessor}.
+\end{sloppypar}
 
 This transformation however resulted in poor performance for theorem provers
 that give special indexing priority to the predicate when searching the proof
@@ -658,7 +653,6 @@ space.
 
 \begin{figure}
 \begin{framed}
-\label{fig:HoldsInsert}
 \begin{verbatim}
 (=>
   (holds inverse ?REL1 ?REL2)
@@ -668,6 +662,7 @@ space.
       (holds ?REL2 ?INST2 ?INST1))))
 \end{verbatim}
 \caption{"holds" insertion}
+\label{fig:HoldsInsert}
 \end{framed} 
 \end{figure}
 
@@ -683,7 +678,6 @@ becomes as shown in Figure \ref{fig:HoldsArity}.
 
 \begin{figure}
 \begin{framed}
-\label{fig:HoldsArity}
 \begin{verbatim}
 (=>
   (holds_3__ inverse ?REL1 ?REL2)
@@ -693,6 +687,7 @@ becomes as shown in Figure \ref{fig:HoldsArity}.
       (holds_3__ ?REL2 ?INST2 ?INST1))))
 \end{verbatim}
 \caption{Holds prefix with arity}
+\label{fig:HoldsArity}
 \end{framed}
 \end{figure}
 
@@ -704,7 +699,6 @@ TransitiveRelation}\index{TransitiveRelation} as in Figure \ref{fig:ExAxPred}
  
 \begin{figure}
 \begin{framed}
-\label{fig:ExAxPred}
 \begin{verbatim}
 (=>
   (and
@@ -713,6 +707,7 @@ TransitiveRelation}\index{TransitiveRelation} as in Figure \ref{fig:ExAxPred}
   (part ?INST1 ?INST3))
 \end{verbatim}
 \caption{Example axiom with predicate instantiation}
+\label{fig:ExAxPred}
 \end{framed}
 \end{figure}
 
@@ -724,7 +719,7 @@ limited to the set of predicates existing in the knowledge base, rather than
 ranging over all possible predicates.
 
 \begin{sloppypar}
-This transformation is called in \texttt{FormulaPreprocessor.replacePredVarsAndRowVars()}
+This transformation is called in \texttt{FormulaPreprocessor. replacePredVarsAndRowVars()}
 \index[classes]{FormulaPreprocessor}
 and \texttt{PredVarInst.instantiatePredVars()}\index[classes]{PredVarInst} 
 does most of the actual work of the
@@ -744,7 +739,6 @@ interpretation, as described now, does keep SUO-KIF out of this problem.
 
 \begin{figure}
 \begin{framed}
-\label{fig:RowVar}
 \begin{verbatim}
 (=>
   (and
@@ -753,12 +747,12 @@ interpretation, as described now, does keep SUO-KIF out of this problem.
   (?REL2 @ROW))
 \end{verbatim}
 \caption{Axiom with row variables}
+\label{fig:RowVar}
 \end{framed} 
 \end{figure}
 
 \begin{figure}
 \begin{framed}
-\label{fig:RowExpand}
 \begin{verbatim}
 (=>
   (and
@@ -773,6 +767,7 @@ interpretation, as described now, does keep SUO-KIF out of this problem.
   (?REL2 ?ARG1 ?ARG2))
 \end{verbatim}
 \caption{Row variable expansion}
+\label{fig:RowExpand}
 \end{framed} 
 \end{figure}
 
@@ -876,7 +871,6 @@ finding an accurate \index{proof}proof.
  
 \begin{figure}
 \begin{framed}
-\label{fig:ExAx}
 \begin{verbatim}
 (=>
   (and
@@ -887,6 +881,7 @@ finding an accurate \index{proof}proof.
     (equal ?AGENT ?PATIENT)))
 \end{verbatim}
 \caption{Example axiom}
+\label{fig:ExAx}
 \end{framed}
 \end{figure}
 
@@ -899,7 +894,6 @@ allowed each test to run for a long enough time.
 
 \begin{figure}
 \begin{framed}
-\label{fig:SortPref}
 \begin{verbatim}
 (=>
   (and
@@ -914,6 +908,7 @@ allowed each test to run for a long enough time.
       (equal ?AGENT ?PATIENT)))
 \end{verbatim}
 \caption{Sortal prefixing}
+\label{fig:SortPref}
 \end{framed}
 \end{figure}
 
@@ -930,7 +925,6 @@ are not necessary.
 
 \begin{figure}
 \begin{framed}
-\label{fig:NaiveSort}
 \begin{verbatim}
 (=>
   (and
@@ -947,10 +941,14 @@ are not necessary.
       (equal ?AGENT ?PATIENT)))
 \end{verbatim}
 \caption{Naive sortal prefixing}
+\label{fig:NaiveSort}
 \end{framed}
 \end{figure}
 
-This processing is handled in \texttt{FormulaPreprocessor.addTypeRestrictions()}\index[classes]{FormulaPreprocessor}.
+\begin{sloppypar}
+This processing is handled in 
+\texttt{FormulaPreprocessor. addTypeRestrictions()}\index[classes]{FormulaPreprocessor}.
+\end{sloppypar}
 
 After these pre-processing steps are performed to transform row variables, instantiate
 predicate variables and add sortal prefixes, Sigma then can translate the formulas
@@ -996,22 +994,27 @@ public Formula clausify() {
 			
 \begin{verbatim}					
 a<=>b is the same as        (<=> A B) is the same as 
-(a=>b)\&(b=>a)               (and (=> A B) (=> B A))
-a=>b is the same as -a|b	(=> A B) is the same as (or (not A) B)
+(a=>b)\&(b=>a)              (and (=> A B) (=> B A))
+
+a=>b is the same as -a|b    (=> A B) same as (or (not A) B)
 \end{verbatim}
 
 \subsection{Move negation inwards}
 
 \begin{verbatim}
--(p|q) becomes -p\&-q		(not (or P Q)) becomes 
-					        (and (not P) (not Q))
--(p\&q) becomes -p|-q		(not (and P Q)) becomes 
-					        (or (not P) (not Q))
--![X]:p becomes ?[X]:-p		(not (forall (?X) P)) becomes 
-					        (exists (?X) (not P))
--?[X]:p becomes ![X]:-p		(not (exists (?X) P)) becomes 
-					        (forall (?X) (not P))
---p becomes p			    (not (not P)) becomes P
+-(p|q) becomes -p\&-q           (not (or P Q)) becomes 
+                                (and (not P) (not Q))
+                                
+-(p\&q) becomes -p|-q           (not (and P Q)) becomes 
+                                (or (not P) (not Q))
+                                
+-![X]:p becomes ?[X]:-p	        (not (forall (?X) P)) becomes 
+                                (exists (?X) (not P))
+                                
+-?[X]:p becomes ![X]:-p	        (not (exists (?X) P)) becomes 
+                                (forall (?X) (not P))
+                                
+--p becomes p                   (not (not P)) becomes P
 \end{verbatim}
 
 \subsection{Standardize variables}
@@ -1021,24 +1024,26 @@ confusion, variables of the same name but different scope in a formula are
 renamed.
 
 \begin{verbatim}
-![X]:p(X)|?[X]:q(X) becomes	    (or 
-![X]:p(X)|?[Y]:q(Y)		            (forall (?X) 
-					                    (p ?X)) 
-					                (exists (?X) 
-					                    (q ?X)))
-					            becomes
-					            (or 
-					                (forall (?X) 
-					                    (p ?X)) 
-					                (exists (?Y) 
-					                    (q ?Y)))
+![X]:p(X)|?[X]:q(X) becomes          (or 
+![X]:p(X)|?[Y]:q(Y)                    (forall (?X) 
+                                         (p ?X)) 
+                                       (exists (?X) 
+                                         (q ?X)))
+                                     becomes
+                                     
+                                     (or 
+                                       (forall (?X) 
+                                         (p ?X)) 
+                                       (exists (?Y) 
+                                         (q ?Y)))
 \end{verbatim}
 
 \subsection{Move quantifiers left}
 
 \begin{verbatim}
-p|![X]q(X) becomes 		(or P (forall (?X) (q ?X))) becomes
-![X]p|q(X)				(forall (?X) (or P (q ?X)))
+p|![X]q(X) becomes         (or P (forall (?X) (q ?X))) becomes
+
+![X]p|q(X)                 (forall (?X) (or P (q ?X)))
 \end{verbatim}
 
 \subsection{Skolemization}
@@ -1048,39 +1053,39 @@ Include every universally quantified variable that is in scope, inside the
 function.
 
 \begin{verbatim}
-![X]:p(X) =>  		        (forall (?X)
-    (?[Y]:h(Y) \& a(X,Y))	  (=>
-    		  				    (p ?X)
-	        				    (exists (?Y)
-	        				      (and
-	        				        (h ?Y)
-	            					(a ?X ?Y)))))
+![X]:p(X) =>                     (forall (?X)
+    (?[Y]:h(Y) \& a(X,Y))          (=>
+                                     (p ?X)
+                                     (exists (?Y)
+                                       (and
+                                         (h ?Y)
+                                         (a ?X ?Y)))))
 \end{verbatim}	
-					  
-becomes		
+
+becomes	
 
 \begin{verbatim}
 ![X]:p(X) => 	            (forall (?X)
-    (h(skf(X)) \&                (=>
-     a(X,skf(X)))			        (p ?X)
-     			  			    (and
-						            (h (skf ?X))
-						            (a ?X (skf ?X))))
+    (h(skf(X)) \&           (=>
+     a(X,skf(X)))             (p ?X)
+                              (and
+                                (h (skf ?X))
+                                (a ?X (skf ?X))))
 \end{verbatim}
 
 
 \subsection{Distribute and over or}
 
 \begin{verbatim}
-(a \& b) | c becomes 		(or (and a b) c) becomes
-(a | c) \& (b | c)		 	(and (or a c) (or b c))
+(a \& b) | c becomes     (or (and a b) c) becomes
+(a | c) \& (b | c)       (and (or a c) (or b c))
 \end{verbatim}
 
 \subsection{Flatten nested conjunctions and disjunctions}
 
 \begin{verbatim}
-(a | b) | c becomes 		(or (or a b) c) becomes
-a | b | c				    (or a b c)
+(a | b) | c becomes     (or (or a b) c) becomes
+a | b | c               (or a b c)
 \end{verbatim}
 
 
@@ -1386,7 +1391,6 @@ Figure \ref{fig:Ambulating}.
 
 \begin{figure}
 \begin{framed}
-\label{fig:Ambulating}
 \begin{verbatim}
 (=> 
     (and 
@@ -1395,6 +1399,7 @@ Figure \ref{fig:Ambulating}.
     (attribute ?AGENT Standing)) 
 \end{verbatim}
 \caption{An axiom for {\tt Ambulating}}
+\label{fig:Ambulating}
 \end{framed}
 \end{figure}
 
@@ -1490,7 +1495,7 @@ can relations without any natural language \texttt{format} expression (checked i
 \end{sloppypar}
 
 We test for cases where terms do not appear in any rules (in
-\texttt{Diagnostics.termsWithoutRules()}).  This again is common in collections
+\texttt{Diagnostics. termsWithoutRules()}).  This again is common in collections
 of instance-level facts, but undesirable for many classes or relations, where it
 should be possible to define precisely the intended meaning of the term with a
 small number of formal rules, as well as statements like class membership.
@@ -1601,7 +1606,6 @@ in order to get the second answer, the new query would become as shown in Figure
 
 \begin{figure}
 \begin{framed}
-\label{fig:NegQuery}
 \begin{verbatim}
 (and 
   (instance ?X PrimaryColor)
@@ -1609,6 +1613,7 @@ in order to get the second answer, the new query would become as shown in Figure
     (equals ?X Red)))
 \end{verbatim}
 \caption{New query, negating the first result in order to find a new answer.}
+\label{fig:NegQuery}
 \end{framed}
 \end{figure}
 
@@ -1623,7 +1628,6 @@ a proof. For example, take the knowledge base shown in Figure \ref{fig:ContKB}.
 
 \begin{figure}
 \begin{framed}
-\label{fig:ContKB}
 \begin{verbatim}
 (fatherOf John Bill)
 (fatherOf John Mark)
@@ -1638,6 +1642,7 @@ a proof. For example, take the knowledge base shown in Figure \ref{fig:ContKB}.
              (equal ?Y ?Z)))))))
 \end{verbatim}
 \caption{Example contradictory knowledge base}
+\label{fig:ContKB}
 \end{framed}
 \end{figure}
 
@@ -1682,7 +1687,6 @@ example, see Figure \ref{fig:RedunKB}.
 
 \begin{figure}
 \begin{framed}
-\label{fig:RedunKB}
 \begin{verbatim}
 (subclass Table Furniture)
 (subclass DiningTable Table)
@@ -1698,6 +1702,7 @@ example, see Figure \ref{fig:RedunKB}.
 (instance subclass TransitiveRelation)
 \end{verbatim}
 \caption{Example redundant knowledge base}
+\label{fig:RedunKB}
 \end{framed}
 \end{figure}
 
@@ -2125,12 +2130,12 @@ implemented it.
 \item Geoff Sutcliffe and his students Steven Trac and Frank Theiss developed the TPTP
 interface.
 
-\item Stephan Schulz helped with the interface to Eprover
+\item Stephan Schulz helped with the interface to Eprover and co-authored \cite{ps14}.
 
 \item Andrei Voronkov and Andrei Riazanov developed the interface to Vampire
 
-\item Andrei Holumb, Andrew Reed, Stelian Serban, Qingqing Cai, James Gung, Jerry
-Kurlandski, Piegen You, Harsh Kholi, Lyndon Xiang Nagaraj Bhat, Kyle Johnson,
+\item Andrei Holub, Andrew Reed, Stelian Serban, Qingqing Cai, James Gung, Jerry
+Kurlandski, Peigen You, Harsh Kholi, Lyndon Xiang, Nagaraj Bhat, Kyle Johnson,
 Gretchen Kern all contributed to Sigma during the year I spent at IPsoft.
 
 \item Thanks to Infosys (and Vishal Sikka, Alex Gray and Sanjay Mehta) for their
