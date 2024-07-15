@@ -304,7 +304,7 @@ public class THFnew {
     public static void oneTrans(KB kb, Formula f, BufferedWriter bw) throws IOException {
 
         bw.write("% original: " + f.getFormula() + "\n" +
-                " from file " + f.sourceFile + " at line " + f.startLine + "\n");
+                "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
         Formula res = Modals.processModals(f, kb);
         if (res != null) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -383,7 +383,7 @@ public class THFnew {
                 if (debug) System.out.println("exclude(): arguments: " + ar);
                 if (debug) System.out.println("exclude(): testing: " + s);
                 if (StringUtil.isNumeric(s)) {
-                    out.write("exclude(): is numeric(2): \n");
+                    out.write("% exclude(): is numeric(2): \n");
                     if (s.contains(".") || s.contains("-") || s.length() > 1)
                         return true;
                     if (s.charAt(0) < '1' || s.charAt(0) > '6')
