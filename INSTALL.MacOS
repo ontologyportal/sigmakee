@@ -25,7 +25,7 @@ these variables created before the next step, and replace /Users/user with your 
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-8.5.23
   export SIGMA_CP=$SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/*:$SIGMA_SRC/lib/*
 
-Next, execute step-by-step the commands below (tested on MacOS 10.14.5):
+Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
 cd ~
 mkdir workspace
@@ -47,6 +47,12 @@ git clone https://github.com/ontologyportal/SigmaUtils
 cd ../Programs
 curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 tar xvfz WordNet-3.0.tar.gz
+
+If while you are trying to decompress the WordNet-3.0 file, you are getting the message "Unsuported format" then try to download WordNet-3.0 again by using the next command:
+- wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+and try to uncompress again:
+- tar xvfz WordNet-3.0.tar.gz
+
 cp -iav WordNet-3.0/dict/* ~/workspace/sumo/WordNetMappings/
 rm WordNet-3.0.tar.gz
 
@@ -63,8 +69,8 @@ cp -R ~/workspace/sumo/* ~/.sigmakee/KBs/
 mkdir ~/.sigmakee/KBs/WordNetMappings
 cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
 
-cp ../.sigmakee/config.xml $SIGMA_HOME/KBs
-(edit the config.xml changing all `~` to the value of `$HOME` and adapting all variables)
+cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
+(SOS) edit the config.xml changing all `wrong paths` to the value of `$HOME` and adapting all variables)
 
 cd ~/workspace/sigmakee
 ant
@@ -77,12 +83,16 @@ To test run
   java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
     com.articulate.sigma.KB -c Object Transaction
 
-To start Tomcat execute
 
+If you want to monitor the servers condition and if it started successfully you can run:
+tail -f $CATALINA_HOME/logs/catalina.out
+
+To start Tomcat execute:
 $CATALINA_HOME/bin/startup.sh
 
 Point your browser at http://localhost:8080/sigma/login.html
 
+You may have some error on login or on a term search initially, that's because server may need ~3 min to initialize everything.
 
 Debugging
 
