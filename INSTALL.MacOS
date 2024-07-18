@@ -27,6 +27,20 @@ these variables created before the next step, and replace /Users/user with your 
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
+You will need Java 1.8 to compile and run Apache Tomcat.
+
+! For ARM processors download it from here: https://www.oracle.com/java/technologies/downloads/#java8-mac
+
+# Check you java 8 path, open a terminal and run:
+
+  /usr/libexec/java_home --verbose
+
+# Find your 1.8 (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
+
+  export JAVA_HOME= 'path from before'
+
+(eg mine is: export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-1.8.jdk/Contents/Home)
+
 cd ~
 mkdir workspace
 mkdir .sigmakee
