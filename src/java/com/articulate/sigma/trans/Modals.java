@@ -184,6 +184,8 @@ public class Modals {
                 "thf(accrelnP_tp,type,(s__accrelnP : ($m > $w > $w > $o))).\n" +
                 "thf(knows_tp,type,(s__knows : $m)).\n" +
                 "thf(believes_tp,type,(s__believes : $m)).\n" +
+                "thf(desires_tp,type,(s__desires : $m)).\n" +
+                "thf(desires_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
                 "thf(knows_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
                 "thf(believes_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
     }
