@@ -1486,7 +1486,7 @@ public class SUMOtoTFAform {
                 term = t.substring(0,t.length()-1);
             if (StringUtil.emptyString(term) || !kb.containsTerm(term)) {
                 if (!StringUtil.emptyString(term))
-                    System.out.println("Error in SUMOtoTFAform.mostSpecificTerm(): no such term: " + term);
+                    System.out.println("Error in SUMOtoTFAform.mostSpecificType(): no such term: " + term);
                 continue;
             }
             if (!isBuiltInNumericType(term) && isNumericType(term))
