@@ -299,7 +299,7 @@ public class SUMOKBtoTPTPKB {
                 }
                 if (f.isHigherOrder(kb)) {
                     pw.println("% is higher order");
-                    if (lang.equals("tff")) {
+                    if (lang.equals("thf")) {  // TODO create a flag for adding modals (or not)
                         f = Modals.processModals(f,kb);
                     }
                     if (removeHOL)
