@@ -154,7 +154,10 @@ public class THFnew {
             int ttype = f.getFormula().charAt(0);
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
-            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+            boolean hasArguments = false; // if it's a modal op, don't add the __m suffix
+            if (Modals.regHOLpred.contains(f.getFormula()))
+                hasArguments = true;
+            return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,hasArguments);
         }
         Formula car = f.carAsFormula();
         //System.out.println("THFnew.processRecurse(): car: " + car);
@@ -245,8 +248,8 @@ public class THFnew {
             if (debug) System.out.println("THFnew.process(): result 1: " + result);
             HashSet<String> UqVars = f.collectUnquantifiedVariables();
             HashSet<String> types = new HashSet<>();
-            types.add("World");
-            typeMap.put("?W1",types);
+            //types.add("World");
+            //typeMap.put("?W1",types);
             String qlist = generateQList(f,typeMap,UqVars);
             if (debug) System.out.println("THFnew.process(): typeMap: " + typeMap);
             if (debug) System.out.println("THFnew.process(): qlist: " + qlist);
@@ -301,6 +304,17 @@ public class THFnew {
 
     /** ***************************************************************
      */
+    public static String makeWorldVar(KB kb, Formula f) {
+
+        Set<String> vars = f.collectAllVariables();
+        int num = 0;
+        while (vars.contains("?W" + num))
+            num++;
+        return "?W" + num;
+    }
+
+    /** ***************************************************************
+     */
     public static void oneTrans(KB kb, Formula f, BufferedWriter bw) throws IOException {
 
         bw.write("% original: " + f.getFormula() + "\n" +
@@ -319,7 +333,8 @@ public class THFnew {
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
             HashSet<String> types = new HashSet<String>();
             types.add("World");
-            typeMap.put("?W",types);
+            String worldVar = makeWorldVar(kb,f);
+            typeMap.put(worldVar,types);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(3): " + typeMap);
             for (Formula fnew : processed) {
                 if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " + variableArity(kb,fnew.car()));
@@ -327,12 +342,12 @@ public class THFnew {
                     fnew = adjustArity(kb,fnew);   // hack to correct arity after adding world argument
                 if (fnew.getFormula().startsWith("(instance ") &&
                         fnew.getFormula().endsWith("Class)")) {
-                    fnew.read("(forall (?W) " +
+                    fnew.read("(forall (" + worldVar + ") " +
                             fnew.getFormula().substring(0, fnew.getFormula().length() - 1) +
-                            " ?W))");
+                            " " + worldVar + "))");
                     types = new HashSet<String>();
                     types.add("World");
-                    fnew.varTypeCache.put("?W",types);  // add the "World" type for the ?W since this is post-processModals()
+                    fnew.varTypeCache.put(worldVar,types);  // add the "World" type for the ?W since this is post-processModals()
                 }
                 if (bw == null)
                     System.out.println(process(new Formula(fnew), typeMap, false));
@@ -347,7 +362,7 @@ public class THFnew {
      */
     public static boolean protectedRelation(String s) {
 
-        if (s.equals("instance") || s.equals("subAttribute") || s.equals("contraryAttribute"))
+        if (s.equals("domain") || s.equals("instance") || s.equals("subAttribute") || s.equals("contraryAttribute"))
             return true;
         else
             return false;
@@ -433,6 +448,7 @@ public class THFnew {
             pred.equals("comment") ||
             pred.equals("knows") ||  // handled in header
             pred.equals("believes") ||  //handled in header
+            pred.equals("desires") ||  //handled in header
             //StringUtil.isNumeric(pred) ||
             pred.equals("equal") ||
             pred.equals("=") ||
