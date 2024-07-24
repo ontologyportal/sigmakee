@@ -62,7 +62,7 @@ public class Vampire {
         if (mode == ModeType.AVATAR)
             opts = "--proof tptp -t";
         if (mode == ModeType.CASC)
-            opts = "--avatar off -qa answer_literal --mode casc --proof tptp -t";
+            opts = "--avatar off --mode casc --proof tptp -t";
         if (mode == ModeType.CUSTOM)
             opts = System.getenv("VAMPIRE_OPTS");
         String[] optar = opts.split(" ");
