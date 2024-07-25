@@ -573,7 +573,25 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * A test method.
      */
+    public static void testTptpParse4() {
+
+        KBmanager.getMgr().initializeOnce();
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+
+        String teststr = "(=> (and (instance ?CELL HexaploidCell) (part ?N ?CELL) " +
+                "(instance ?N CellNucleus) (located ?COLL ?N) (instance ?COLL Collection) " +
+                "(memberType ?COLL Chromosome)) (exists (?A ?B ?C) " +
+                "(and (instance ?A HomologousChromosomeSet) (subCollection ?A ?COLL) " +
+                "(instance ?B HomologousChromosomeSet) (subCollection ?B ?COLL) " +
+                "(instance ?C HomologousChromosomeSet) (subCollection ?C ?COLL) " +
+                "(not (and (equal ?A ?B) (equal ?A ?C) (equal ?B ?C))))))";
+        System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr, false));
+    }
+
+    /** ***************************************************************
+     * A test method.
+     */
     public static void main(String[] args) {
-        testTptpParse3();
+        testTptpParse4();
     }
 }
