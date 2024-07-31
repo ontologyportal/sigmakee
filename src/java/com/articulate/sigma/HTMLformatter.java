@@ -29,6 +29,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import tptp_parser.*;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDateTime;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
@@ -303,12 +305,22 @@ public class HTMLformatter {
     }
 
     /** *************************************************************
+     */
+    public static String getDate() {
+
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+        LocalDateTime now = LocalDateTime.now();
+        return dtf.format(now);
+    }
+
+    /** *************************************************************
      *  Show knowledge base statistics
      */
     public static String showStatistics(KB kb) {
 
         StringBuilder show = new StringBuilder();
-        show.append("<b>Knowledge base statistics: </b><br><table>");
+        show.append("<b>Knowledge base statistics: </b> as of ");
+        show.append(getDate() + "<br><table>");
         show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
         show.append("<td>  " + kb.getCountTerms());
         show.append("</td><td> " + kb.getCountAxioms());
@@ -1141,15 +1153,12 @@ public class HTMLformatter {
     
     /** *************************************************************
      */    
-    public static void main(String[] args) {
-    	
-        try {
-            KBmanager.getMgr().initializeOnce();
-        } catch (Exception ex ) {
-            System.out.println(ex.getMessage());
-        }
+    public static void main(String[] args) throws IOException {
+
+        KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("INFO in HTMLformatter.main()");
+        System.out.println("INFO in HTMLformatter.main(): " + showStatistics(kb));
         ArrayList<Formula> forms = KButilities.termIntersection(kb,"ShapeChange","ShapeAttribute");
         /* should get from Merge.kif 15034-15041
          * (=>
