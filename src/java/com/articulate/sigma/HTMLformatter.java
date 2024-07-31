@@ -36,11 +36,11 @@ import java.time.LocalDateTime;
 public class HTMLformatter {
 
     public static String htmlDivider =
-        ("<table align=\"left\" width=\"50%\">"
-                + "<tr><td bgcolor=\"#A8BACF\">"
-                + "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\">"
-                + "</td></tr>"
-                + "</table><br><br>\n");
+            ("<table align=\"left\" width=\"50%\">"
+                    + "<tr><td bgcolor=\"#A8BACF\">"
+                    + "<img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\">"
+                    + "</td></tr>"
+                    + "</table><br><br>\n");
 
     // set by BrowseBody.jsp or SimpleBrowseBody.jsp
     public static String kbHref = "";
@@ -49,15 +49,15 @@ public class HTMLformatter {
     public static String language = "EnglishLanguage";
 
     public static ArrayList<String> availableFormalLanguages =
-        new ArrayList<String>(Arrays.asList("SUO-KIF","TPTP","traditionalLogic","OWL"));
+            new ArrayList<String>(Arrays.asList("SUO-KIF", "TPTP", "traditionalLogic", "OWL"));
 
     public static boolean debug = false;
 
-    /** *************************************************************
-     *  Create the HTML for the labeled divider between the sections
-     *  of the term display.  Each section displays a sorted list of
-     *  the Formulae for which a term appears in a specified argument
-     *  position.
+    /**************************************************************
+     * Create the HTML for the labeled divider between the sections
+     * of the term display.  Each section displays a sorted list of
+     * the Formulae for which a term appears in a specified argument
+     * position.
      */
     public static String htmlDivider(String label) {
 
@@ -106,16 +106,16 @@ public class HTMLformatter {
         return result;
     }
 
-    /** *************************************************************
-     *  Create the HTML for a kb link.
+    /**************************************************************
+     * Create the HTML for a kb link.
      */
     public static String createKBHref(String kbName, String language) {
-    
+
         return createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
     }
 
-    /** *************************************************************
-     *  Create the HTML for a link, taking care of http/https, hostname and port
+    /**************************************************************
+     * Create the HTML for a link, taking care of http/https, hostname and port
      */
     public static String createHrefStart() {
 
@@ -134,8 +134,8 @@ public class HTMLformatter {
         return https + "://" + hostname + ":" + port;
     }
 
-    /** *************************************************************
-     *  Create the text for a single step in a proof.
+    /**************************************************************
+     * Create the text for a single step in a proof.
      */
     public static String proofTextFormat(String query, ProofStep step, String kbName, String language) {
 
@@ -185,23 +185,22 @@ public class HTMLformatter {
                 }
             }
         }
-
         return result.toString();
     }
 
-    /** *************************************************************
-     *  Create the HTML for a single step in a proof.
+    /**************************************************************
+     * Create the HTML for a single step in a proof.
      */
     public static String proofTableFormat(String query, TPTPFormula step, String kbName, String language) {
 
-        if (debug)  System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
+        if (debug) System.out.println("Info in HTMLformatter.proofTableFormat(): " + step);
         StringBuilder result = new StringBuilder();
         Formula f = new Formula();
         KB kb = KBmanager.getMgr().getKB(kbName);
         f.read(step.sumo);
         f.read(Formula.postProcess(f.getFormula()));
         f.read(ProofProcessor.removeNestedAnswerClause(f.getFormula()));
-        String kbHref = HTMLformatter.createKBHref(kbName,language);
+        String kbHref = HTMLformatter.createKBHref(kbName, language);
 
         if (f.getFormula().equalsIgnoreCase("FALSE")) {        // Successful resolution theorem proving results in a contradiction.
             f.read("true");                           // Change "FALSE" to "True" so it makes more sense to the user.
@@ -234,7 +233,7 @@ public class HTMLformatter {
                 else if (f.getFormula().contains("ans0"))
                     result.append("answer literal introduction");
                 else {
-                    result.append("[KB -" );
+                    result.append("[KB -");
                     String key = step.infRule;
                     Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(key);
                     if (originalF != null)
@@ -269,7 +268,7 @@ public class HTMLformatter {
         return result.toString();
     }
 
-    /** *************************************************************
+    /**************************************************************
      */
     public static String processFormalLanguage(String flang) {
 
@@ -279,7 +278,7 @@ public class HTMLformatter {
             return flang;
     }
 
-    /** *************************************************************
+    /**************************************************************
      */
     public static String processNaturalLanguage(String lang, KB kb) {
 
@@ -289,8 +288,8 @@ public class HTMLformatter {
             return lang;
     }
 
-    /** *************************************************************
-     *  Show a hyperlinked list of terms.
+    /**************************************************************
+     * Show a hyperlinked list of terms.
      */
     public static String termList(ArrayList<String> terms, String kbHref) {
 
@@ -298,13 +297,13 @@ public class HTMLformatter {
         for (int i = 0; i < terms.size(); i++) {
             String term = terms.get(i);
             show.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-            if (i < terms.size()-1)
+            if (i < terms.size() - 1)
                 show.append(", ");
         }
         return show.toString();
     }
 
-    /** *************************************************************
+    /**************************************************************
      */
     public static String getDate() {
 
@@ -313,8 +312,8 @@ public class HTMLformatter {
         return dtf.format(now);
     }
 
-    /** *************************************************************
-     *  Show knowledge base statistics
+    /**************************************************************
+     * Show knowledge base statistics
      */
     public static String showStatistics(KB kb) {
 
@@ -331,7 +330,7 @@ public class HTMLformatter {
         show.append("<tr><td>non-linguistic axioms: </td><td align=right>" + KButilities.getCountNonLinguisticAxioms(kb) + "</td></tr>\n");
         show.append("</table>\n");
 
-        HashMap<String,Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
+        HashMap<String, Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
         show.append("<P><table><tr><td>Ground tuples: </td><td align=right>" + stats.get("ground") + "</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>" + stats.get("binary") + "</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>" + stats.get("higher-arity") + "</td></tr>\n");
@@ -348,25 +347,25 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /** *************************************************************
-     *  Show knowledge base statistics
+    /**************************************************************
+     * Show knowledge base statistics
      */
     public static String showLanguageStats(KB kb, String lang) {
 
         StringBuilder show = new StringBuilder();
-        show.append("<tr><td>termFormats: </td><td align=right>" + KButilities.getCountTermFormats(kb,lang) + "</td></tr>\n");
-        show.append("<tr><td>unique terms in termFormats: </td><td align=right> " + KButilities.getCountUniqueTermFormats(kb,lang) + "</td></tr>\n");
+        show.append("<tr><td>termFormats: </td><td align=right>" + KButilities.getCountTermFormats(kb, lang) + "</td></tr>\n");
+        show.append("<tr><td>unique terms in termFormats: </td><td align=right> " + KButilities.getCountUniqueTermFormats(kb, lang) + "</td></tr>\n");
         show.append("</table><p>\n");
         return show.toString();
     }
 
-    /** *************************************************************
-     *  Show a map if coordinates are given in the kb
+    /**************************************************************
+     * Show a map if coordinates are given in the kb
      */
     public static String showMap(KB kb, String term) {
 
-        ArrayList<Formula> lats = kb.askWithRestriction(0,"latitude",1,term);
-        ArrayList<Formula> lons = kb.askWithRestriction(0,"longitude",1,term);
+        ArrayList<Formula> lats = kb.askWithRestriction(0, "latitude", 1, term);
+        ArrayList<Formula> lons = kb.askWithRestriction(0, "longitude", 1, term);
         String result = "";
         int zoom = 12;
         if (lats != null && lats.size() > 0 && lons != null && lons.size() > 0) {
@@ -374,35 +373,35 @@ public class HTMLformatter {
             String lat = f.getStringArgument(2);
             f = lons.get(0);
             String lon = f.getStringArgument(2);
-            if (kb.childOf(term,"Nation"))
+            if (kb.childOf(term, "Nation"))
                 zoom = 6;
-            if (kb.childOf(term,"Ocean"))
+            if (kb.childOf(term, "Ocean"))
                 zoom = 3;
-            if (kb.childOf(term,"Continent"))
+            if (kb.childOf(term, "Continent"))
                 zoom = 6;
             result = "<a href=\"http://maps.google.com/maps?q=" + lat + "," + lon + "&zoom=" + zoom +
-            "&markers=label:" + term +
-            "\"><img src=\"http://maps.google.com/maps/api/staticmap?center=" + lat + "," +
-            lon + "&size=200x100&sensor=false&zoom=" + zoom + "&markers=label:" + term + "\"></a>\n";
+                    "&markers=label:" + term +
+                    "\"><img src=\"http://maps.google.com/maps/api/staticmap?center=" + lat + "," +
+                    lon + "&size=200x100&sensor=false&zoom=" + zoom + "&markers=label:" + term + "\"></a>\n";
         }
         return result;
     }
 
-    /** *************************************************************
-     *  Show knowledge base pictures
+    /**************************************************************
+     * Show knowledge base pictures
      */
     public static String showPictures(KB kb, String term) {
 
-        return showNumberPictures(kb,term,4);
+        return showNumberPictures(kb, term, 4);
     }
 
-    /** *************************************************************
-     *  Show knowledge base pictures
+    /**************************************************************
+     * Show knowledge base pictures
      */
     public static String showNumberPictures(KB kb, String term, int count) {
 
         StringBuilder show = new StringBuilder();
-        ArrayList<Formula> pictures = kb.askWithRestriction(0,"externalImage",1,term);   // Handle picture display
+        ArrayList<Formula> pictures = kb.askWithRestriction(0, "externalImage", 1, term);   // Handle picture display
         if (pictures != null && pictures.size() > 0) {
             show.append("<br>");
             int numPictures = pictures.size();
@@ -415,16 +414,16 @@ public class HTMLformatter {
                 Formula f = pictures.get(i);
                 String url = f.getStringArgument(2);
                 if (url.startsWith("\"https://upload.wikimedia.org")) {
-                    String imageFile = url.substring(url.lastIndexOf("/")+1,url.length()-1);
+                    String imageFile = url.substring(url.lastIndexOf("/") + 1, url.length() - 1);
                     if (imageFile.matches("\\d+px-.*"))
-                        imageFile = imageFile.substring(imageFile.indexOf("px-")+3);
+                        imageFile = imageFile.substring(imageFile.indexOf("px-") + 3);
                     String domain = "https://simple.wikipedia.org/";
                     if (url.indexOf("/en/") > -1)
                         domain = "https://en.wikipedia.org/";
                     if (url.indexOf("/commons/") > -1)
                         domain = "https://commons.wikimedia.org/";
                     show.append("<a href=\"" + domain + "wiki/Image:" +
-                            imageFile + "\"><img width=\"100\" src=" + url + "></a>\n" );
+                            imageFile + "\"><img width=\"100\" src=" + url + "></a>\n");
                 }
                 else
                     show.append("<a href=" + url + "><img width=\"100\" src=" + url + "></a>\n");
@@ -435,21 +434,21 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /** *************************************************************
+    /**************************************************************
      */
     public static String showNeighborTerms(KB kb, String term) {
-    	return HTMLformatter.showNeighborTerms(kb, term, term);
+        return HTMLformatter.showNeighborTerms(kb, term, term);
     }
 
-    /** *************************************************************
-     *  Show alphabetic list of neighbor terms
+    /**************************************************************
+     * Show alphabetic list of neighbor terms
      */
     public static String showNeighborTerms(KB kb, String nonRelTerm, String relTerm) {
-    	
+
         String markup = "";
         try {
             StringBuilder show = new StringBuilder();
-            ArrayList<String> relations = kb.getNearestRelations(relTerm); 
+            ArrayList<String> relations = kb.getNearestRelations(relTerm);
             ArrayList<String> nonRelations = kb.getNearestNonRelations(nonRelTerm);
             String lowcaseTerm = Character.toLowerCase(nonRelTerm.charAt(0)) + nonRelTerm.substring(1);
             String uppercaseTerm = Character.toUpperCase(relTerm.charAt(0)) + relTerm.substring(1);
@@ -459,25 +458,25 @@ public class HTMLformatter {
             show.append("<td><FONT face='Arial,helvetica' size=+3> <b> " + nonRelTerm + "</b></FONT></td></tr>\n<br><br>");
             for (int i = 0; i < 30; i++) {
                 String relation = (String) relations.get(i);
-                String relationName = DocGen.getInstance(kb.name).showTermName(kb,relation,language);
+                String relationName = DocGen.getInstance(kb.name).showTermName(kb, relation, language);
                 String nonRelation = (String) nonRelations.get(i);
-                String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb,nonRelation,language);
-                if (! relation.isEmpty() || ! nonRelation.isEmpty()) {
-                	if (i == 0)
-                		show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(0) + "&relation=" + relations.get(0) + "&KBPOS=" + 1 + "\">previous " + 25 + "</a>" + "</i></td></tr>\n");
+                String nonRelationName = DocGen.getInstance(kb.name).showTermName(kb, nonRelation, language);
+                if (!relation.isEmpty() || !nonRelation.isEmpty()) {
+                    if (i == 0)
+                        show.append("<tr><td><i><a href=\"" + kbHref + "&nonrelation=" + nonRelations.get(0) + "&relation=" + relations.get(0) + "&KBPOS=" + 1 + "\">previous " + 25 + "</a>" + "</i></td></tr>\n");
 
                     show.append("<tr>\n");
-                    show.append("  <td><a href=\"" + kbHref +"&term=");
-                    show.append(   nonRelation + "\">" + nonRelation + " (" + nonRelationName + ")</a>" + "</td>");
-                    show.append("  <td><a href=\"" + kbHref +"&term=");
-                    show.append(   relation + "\">" + relation + " (" + relationName + ")</a>" + "</td>");
+                    show.append("  <td><a href=\"" + kbHref + "&term=");
+                    show.append(nonRelation + "\">" + nonRelation + " (" + nonRelationName + ")</a>" + "</td>");
+                    show.append("  <td><a href=\"" + kbHref + "&term=");
+                    show.append(relation + "\">" + relation + " (" + relationName + ")</a>" + "</td>");
                     show.append("</tr>\n");
-                    if (i == 14) 
+                    if (i == 14)
                         show.append("<tr><td><FONT SIZE=4 COLOR=\"RED\">" + uppercaseTerm + " </FONT></td>" +
-                        			"<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>"); 
+                                "<td><FONT SIZE=4 COLOR=\"RED\">" + lowcaseTerm + " </FONT></td></tr>");
                     if (i == 29)
-                        show.append("<tr><td><i><a href=\"" + kbHref +"&nonrelation=" + nonRelations.get(29) + "&relation=" + relations.get(29) + "&KBPOS=" + 1 + "\">next " + 25 + "</a>" + "</i></td></tr>\n");
-                 }
+                        show.append("<tr><td><i><a href=\"" + kbHref + "&nonrelation=" + nonRelations.get(29) + "&relation=" + relations.get(29) + "&KBPOS=" + 1 + "\">next " + 25 + "</a>" + "</i></td></tr>\n");
+                }
             }
             show.append("</table></td>");
             markup = show.toString();
@@ -488,100 +487,100 @@ public class HTMLformatter {
         return markup;
     }
 
-    /** *****************************************************
-    */
+    /******************************************************
+     */
     public static ArrayList<String> getAllRelTerms(KB kb, ArrayList<String> matchesList) {
-        
+
         ArrayList<String> result = new ArrayList<String>();
-        for (int i = 0; i < matchesList.size(); i++) 
+        for (int i = 0; i < matchesList.size(); i++)
             if (kb.kbCache.relations.contains(matchesList.get(i)))
                 result.add(matchesList.get(i));
         return result;
     }
-    
-    /** *****************************************************
-    */
+
+    /******************************************************
+     */
     public static ArrayList<String> getAllNonRelTerms(KB kb, ArrayList<String> matchesList) {
-        
+
         ArrayList<String> result = new ArrayList<String>();
-        for (int i = 0; i < matchesList.size(); i++) 
+        for (int i = 0; i < matchesList.size(); i++)
             if (!kb.kbCache.relations.contains(matchesList.get(i)))
                 result.add(matchesList.get(i));
         return result;
     }
-   
-    /** *****************************************************
-    * Show list of 30 relation & nonRelation terms that contain a match to the input RE term. The inputed Strings 
-    * relREmatch and nonRelREmatch are the two relation and nonRelation terms respectively that are the first terms
-    * at the top of the list. They are passed into the method to keep track of what 30 terms are being viewed. 
-    */
+
+    /******************************************************
+     * Show list of 30 relation & nonRelation terms that contain a match to the input RE term. The inputed Strings
+     * relREmatch and nonRelREmatch are the two relation and nonRelation terms respectively that are the first terms
+     * at the top of the list. They are passed into the method to keep track of what 30 terms are being viewed.
+     */
     public static String showREMatches(KB kb, String relREmatch, String nonRelREmatch, String term) {
-    	
+
         String markup = "";
-        try {	
-        	StringBuilder show = new StringBuilder();
-        	ArrayList<String> matchesList = kb.getREMatch(term,true);
-        	ArrayList<String> relTermsList = getAllRelTerms(kb,matchesList);
-        	ArrayList<String> nonRelTermsList = getAllNonRelTerms(kb,matchesList);
-        	ArrayList<String> largerList = (relTermsList.size() > nonRelTermsList.size()) ? relTermsList : nonRelTermsList;
-        	ArrayList<String> smallerList = (relTermsList.size() > nonRelTermsList.size()) ? nonRelTermsList : relTermsList;
-        	int sizeDiff = largerList.size() - smallerList.size();
-        	for (int i = 0; i < sizeDiff; i++) {				//buffer smaller list
-        		smallerList.add("");
-        	} 
-        	show.append("<table><tr><td>");
-        	show.append("<table>");
-        	show.append("<tr><td><FONT face='Arial,helvetica' size=+3> <b> " + term + "</b></FONT></td>");
-        	show.append("</tr>\n<br><br>");
-        	for (String t : largerList) {
-        		if (t.equals((largerList == relTermsList ? relREmatch : nonRelREmatch))) {		//keeps track of which term is at the top
-        			int matchIndex = largerList.indexOf(t);      //matchIndex is the index of an REmatch in the larger list
-        			int listLength = largerList.size();          //listLength is the the larger count of either relMatches or nonRelMatches
-        			int finalIndex = (listLength > (matchIndex + 29) ? (matchIndex + 30) : listLength);    //finalIndex is 1 + the index of the final match that will be displayed
-        			//If there are at least 30 more matches after REmatch, then finalIndex=matchIndex+30, otherwise finalIndex = listLength
-        			for (int i = matchIndex; i < finalIndex; i++) {
-        				if (i == matchIndex && i != 0)     //if there are other matches before REmatch, previous 30 should be linked at the top of the page
-        					show.append("<tr><td><i><a href=\"" + kbHref + "&relREmatch=" + relTermsList.get(matchIndex-29) + "&nonRelREmatch=" + nonRelTermsList.get(matchIndex-29) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">previous " + 30 + "</a>" + "</i></td></tr>\n");
-        				show.append("<tr>\n");
-        				if (nonRelTermsList.get(i) == "") 
-        					show.append("    <td><b> " + " " + "</b></td>");
-        				else {
-        					show.append("    <td><a href=\"" + kbHref +"&term=");
-        					show.append(   nonRelTermsList.get(i) + "\">" + nonRelTermsList.get(i) + "</a>" + "</td>");
-        				}
-        				if (relTermsList.get(i) == "") 
-        					show.append("    <td><b> " + " " + "</b></td>");
-        				else {
-        					show.append("    <td><a href=\"" + kbHref +"&term=");
-        					show.append(   relTermsList.get(i) + "\">" + relTermsList.get(i) + "</a>" + "</td>");
-        				}
-        				show.append("</tr>\n");
-        				if (i == (finalIndex - 1) && listLength > (matchIndex + 30)) {
-        					int nextCount = (listLength > finalIndex + 29) ? 30 : (listLength - finalIndex + 1);
-        					show.append("<tr><td><i><a href=\"" + kbHref +"&relREmatch=" + relTermsList.get(i) + "&nonRelREmatch=" + nonRelTermsList.get(i) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">next " + nextCount + "</a>" + "</i></td></tr>\n");
-        				}
-        			}
-        			show.append("</table></td>");
-        			markup = show.toString();
-        			break;
-        		}
-        	}
+        try {
+            StringBuilder show = new StringBuilder();
+            ArrayList<String> matchesList = kb.getREMatch(term, true);
+            ArrayList<String> relTermsList = getAllRelTerms(kb, matchesList);
+            ArrayList<String> nonRelTermsList = getAllNonRelTerms(kb, matchesList);
+            ArrayList<String> largerList = (relTermsList.size() > nonRelTermsList.size()) ? relTermsList : nonRelTermsList;
+            ArrayList<String> smallerList = (relTermsList.size() > nonRelTermsList.size()) ? nonRelTermsList : relTermsList;
+            int sizeDiff = largerList.size() - smallerList.size();
+            for (int i = 0; i < sizeDiff; i++) {                //buffer smaller list
+                smallerList.add("");
+            }
+            show.append("<table><tr><td>");
+            show.append("<table>");
+            show.append("<tr><td><FONT face='Arial,helvetica' size=+3> <b> " + term + "</b></FONT></td>");
+            show.append("</tr>\n<br><br>");
+            for (String t : largerList) {
+                if (t.equals((largerList == relTermsList ? relREmatch : nonRelREmatch))) {        //keeps track of which term is at the top
+                    int matchIndex = largerList.indexOf(t);      //matchIndex is the index of an REmatch in the larger list
+                    int listLength = largerList.size();          //listLength is the the larger count of either relMatches or nonRelMatches
+                    int finalIndex = (listLength > (matchIndex + 29) ? (matchIndex + 30) : listLength);    //finalIndex is 1 + the index of the final match that will be displayed
+                    //If there are at least 30 more matches after REmatch, then finalIndex=matchIndex+30, otherwise finalIndex = listLength
+                    for (int i = matchIndex; i < finalIndex; i++) {
+                        if (i == matchIndex && i != 0)     //if there are other matches before REmatch, previous 30 should be linked at the top of the page
+                            show.append("<tr><td><i><a href=\"" + kbHref + "&relREmatch=" + relTermsList.get(matchIndex - 29) + "&nonRelREmatch=" + nonRelTermsList.get(matchIndex - 29) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">previous " + 30 + "</a>" + "</i></td></tr>\n");
+                        show.append("<tr>\n");
+                        if (nonRelTermsList.get(i) == "")
+                            show.append("    <td><b> " + " " + "</b></td>");
+                        else {
+                            show.append("    <td><a href=\"" + kbHref + "&term=");
+                            show.append(nonRelTermsList.get(i) + "\">" + nonRelTermsList.get(i) + "</a>" + "</td>");
+                        }
+                        if (relTermsList.get(i) == "")
+                            show.append("    <td><b> " + " " + "</b></td>");
+                        else {
+                            show.append("    <td><a href=\"" + kbHref + "&term=");
+                            show.append(relTermsList.get(i) + "\">" + relTermsList.get(i) + "</a>" + "</td>");
+                        }
+                        show.append("</tr>\n");
+                        if (i == (finalIndex - 1) && listLength > (matchIndex + 30)) {
+                            int nextCount = (listLength > finalIndex + 29) ? 30 : (listLength - finalIndex + 1);
+                            show.append("<tr><td><i><a href=\"" + kbHref + "&relREmatch=" + relTermsList.get(i) + "&nonRelREmatch=" + nonRelTermsList.get(i) + "&KBPOS=" + 2 + "&term=" + encodeForURL(term) + "\">next " + nextCount + "</a>" + "</i></td></tr>\n");
+                        }
+                    }
+                    show.append("</table></td>");
+                    markup = show.toString();
+                    break;
+                }
+            }
         }
         catch (Exception ex) {
-        		ex.printStackTrace();
+            ex.printStackTrace();
         }
         return markup;
     }
-      
-    /** *************************************************************
-     *  Show a hyperlinked list of term mappings from WordNet.
+
+    /**************************************************************
+     * Show a hyperlinked list of term mappings from WordNet.
      */
     public static String termMappingsList(String terms, String kbHref) {
 
         StringBuilder result = new StringBuilder();
         String[] sumoList = terms.split("\\s+");
         result.append("<p><ul><li>\tSUMO Mappings:  ");
-        for (int j=0; j<sumoList.length; j++) {
+        for (int j = 0; j < sumoList.length; j++) {
             String sumoEquivalent = sumoList[j];
             sumoEquivalent = sumoEquivalent.trim();
 
@@ -601,8 +600,8 @@ public class HTMLformatter {
         return result.toString();
     }
 
-    /** *************************************************************
-     *  Show a hyperlinked list of WordNet synsets.
+    /**************************************************************
+     * Show a hyperlinked list of WordNet synsets.
      */
     public static String synsetList(ArrayList<String> synsets, String kbHref) {
 
@@ -613,7 +612,7 @@ public class HTMLformatter {
                 show.append("<a href=\"" + kbHref + "&synset=" + synset + "\">" + synset + "</a>");
             else
                 show.append(synset);
-            if (i < synsets.size()-1)
+            if (i < synsets.size() - 1)
                 show.append(", ");
             if (i % 10 == 0)
                 show.append("\n");
@@ -621,28 +620,28 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /** *************************************************************
-     *  Create the HTML for a section of the Sigma term browser page.
-     *  Needs a <table>...</table> enclosure to format HTML properly.
+    /**************************************************************
+     * Create the HTML for a section of the Sigma term browser page.
+     * Needs a <table>...</table> enclosure to format HTML properly.
      */
     public static String formatFormulaList(ArrayList<Formula> forms, String header, KB kb,
-            String language, String flang, int start, int localLimit, String limitString) {
+                                           String language, String flang, int start, int localLimit, String limitString) {
 
         HashSet<String> printedForms = new HashSet<>();
         boolean traditionalLogic = false;
         if (flang.equals("traditionalLogic"))
-            traditionalLogic = true;        
+            traditionalLogic = true;
         StringBuilder show = new StringBuilder();
         boolean isArabic = (language.matches(".*(?i)arabic.*") || language.equalsIgnoreCase("ar"));
         if (forms.size() < localLimit || localLimit == 0)
             localLimit = forms.size();
         for (int i = start; i < localLimit; i++) {
-        	//System.out.println("formatFormulaList(): " + forms.get(i).getClass().getName());
-        	String strForm = forms.get(i).getFormula();
-        	if (printedForms.contains(strForm))
-        	    continue;
-        	printedForms.add(strForm);
-        	//System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
+            //System.out.println("formatFormulaList(): " + forms.get(i).getClass().getName());
+            String strForm = forms.get(i).getFormula();
+            if (printedForms.contains(strForm))
+                continue;
+            printedForms.add(strForm);
+            //System.out.println("INFO in HTMLformatter.formatFormulaList(): formula: " + strForm);
             Formula f = (Formula) kb.formulaMap.get(strForm);
             if (f == null) {
                 System.out.println("Error in HTMLformatter.formatFormulaList(): null formula object for " +
@@ -656,11 +655,11 @@ public class HTMLformatter {
                 show.append("<tr><td width=\"50%\" valign=\"top\">");
                 String formattedFormula = null;
                 if (flang.equals("TPTP") || flang.equals("traditionalLogic"))
-                    formattedFormula = TPTPutil.htmlTPTPFormat(f,kbHref,traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
+                    formattedFormula = TPTPutil.htmlTPTPFormat(f, kbHref, traditionalLogic) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                 else
                     formattedFormula = f.htmlFormat(kbHref) + "</td>\n<td width=\"10%\" valign=\"top\" bgcolor=\"#B8CADF\">";
                 if (Formula.DOC_PREDICATES.contains(arg0))
-                    show.append(kb.formatDocumentation(kbHref,formattedFormula,language));
+                    show.append(kb.formatDocumentation(kbHref, formattedFormula, language));
                 else
                     show.append(formattedFormula);
                 File srcfile = new File(f.sourceFile);
@@ -697,7 +696,7 @@ public class HTMLformatter {
         return show.toString();
     }
 
-    /** *************************************************************
+    /**************************************************************
      * Launch the jEdit editor with the cursor at the specified line
      * number.  Edit the file in the specified editDir, which should
      * be different from Sigma's KBs directory.  Recommended practice
@@ -719,8 +718,8 @@ public class HTMLformatter {
                 jeditcmd = jeditconfig;
         }
         ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-                jeditcmd, editDir + File.separator + file ," +line:" + line,
-                "-norestore", "-reuseview" ));
+                jeditcmd, editDir + File.separator + file, " +line:" + line,
+                "-norestore", "-reuseview"));
         System.out.println("EProver(): command: " + commands);
         try {
             System.out.println("launchEditor(): commands: " + commands);
@@ -734,14 +733,14 @@ public class HTMLformatter {
         }
     }
 
-    /** *************************************************************
-     *  Create the HTML for a section of the Sigma term browser page.
+    /**************************************************************
+     * Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormatLimit(String term, String header, KB kb,
-            String language, String flang, int start, int limit,
-            int arg, String type) {
+                                                   String language, String flang, int start, int limit,
+                                                   int arg, String type) {
 
-        ArrayList<Formula> forms = kb.ask(type,arg,term);
+        ArrayList<Formula> forms = kb.ask(type, arg, term);
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
@@ -757,82 +756,82 @@ public class HTMLformatter {
                 limitString = ("<tr><td><br></td></tr><tr><td>Display limited to "
                         + limit + " items. "
                         + "<a href=\"BrowseExtra.jsp?term=" + term + "&lang=" + language + "&flang=" + flang
-                        + "&kb=" + kb.name + "&start=" + (start+limit)
+                        + "&kb=" + kb.name + "&start=" + (start + limit)
                         + "&arg=" + arg + "&type=" + type + "\">Show next "
                         + limit + "</a></td></tr>\n");
 
-            show.append(formatFormulaList(forms,header,kb,language,flang,start,localLimit,limitString));
+            show.append(formatFormulaList(forms, header, kb, language, flang, start, localLimit, limitString));
             show.append(limitString);
             show.append("</table>\n");
         }
         return show.toString();
     }
 
-    /** *************************************************************
-     *  Create the HTML for a section of the Sigma term browser page.
+    /**************************************************************
+     * Create the HTML for a section of the Sigma term browser page.
      */
     public static String browserSectionFormat(String term, String header,
-            KB kb, String language, String flang, int arg, String type) {
+                                              KB kb, String language, String flang, int arg, String type) {
 
-        return browserSectionFormatLimit(term, header,kb, language, flang, 0, 50, arg,type);
+        return browserSectionFormatLimit(term, header, kb, language, flang, 0, 50, arg, type);
     }
 
-    /** *************************************************************
-     *  Change spaces to "%20" along with many other URL codes. (for passing regex expressions through hyperlinks)
+    /**************************************************************
+     * Change spaces to "%20" along with many other URL codes. (for passing regex expressions through hyperlinks)
      */
     public static String encodeForURL(String s) {
-    	
-    	s = s.replaceAll(" ","%20");
-    	s = s.replaceAll("\\!","%21");
-    	s = s.replaceAll("\\$","%24");
-    	s = s.replaceAll("\\(","%28");
-    	s = s.replaceAll("\\)","%29");
-    	s = s.replaceAll("\\*","%2A");
-    	s = s.replaceAll("\\+","%2B");
-    	s = s.replaceAll("\\.","%2E");
-    	s = s.replaceAll("\\?","%3F");
-    	s = s.replaceAll("\\[","%5B");
-    	s = s.replaceAll("\\]","%5D");
-    	s = s.replaceAll("\\^","%5E");
+
+        s = s.replaceAll(" ", "%20");
+        s = s.replaceAll("\\!", "%21");
+        s = s.replaceAll("\\$", "%24");
+        s = s.replaceAll("\\(", "%28");
+        s = s.replaceAll("\\)", "%29");
+        s = s.replaceAll("\\*", "%2A");
+        s = s.replaceAll("\\+", "%2B");
+        s = s.replaceAll("\\.", "%2E");
+        s = s.replaceAll("\\?", "%3F");
+        s = s.replaceAll("\\[", "%5B");
+        s = s.replaceAll("\\]", "%5D");
+        s = s.replaceAll("\\^", "%5E");
 
         return s;
     }
 
-    /** *************************************************************
-     *  Change spaces to "%20"
+    /**************************************************************
+     * Change spaces to "%20"
      */
     public static String decodeFromURL(String s) {
 
-        return s.replaceAll("%20"," ");
+        return s.replaceAll("%20", " ");
     }
 
-    /** *************************************************************
-     *  change reserved characters from '&' tags
+    /**************************************************************
+     * change reserved characters from '&' tags
      */
     public static String encodeForHTML(String s) {
 
-        s = s.replaceAll("&lt;","<");
-        s = s.replaceAll("&gt;",">");
+        s = s.replaceAll("&lt;", "<");
+        s = s.replaceAll("&gt;", ">");
         return s;
     }
 
-    /** *************************************************************
-     *  change reserved characters to '&' tags
+    /**************************************************************
+     * change reserved characters to '&' tags
      */
     public static String decodeFromHTML(String s) {
 
-        s = s.replaceAll("<","&lt;");
-        s = s.replaceAll(">","&gt;");
+        s = s.replaceAll("<", "&lt;");
+        s = s.replaceAll(">", "&gt;");
         return s;
     }
 
-    /** *************************************************************
-     *  Create an HTML menu, given an ArrayList of Strings where the
-     *  value(s) are String representations of int(s) but the displayed
-     *  menu items are String(s).
+    /**************************************************************
+     * Create an HTML menu, given an ArrayList of Strings where the
+     * value(s) are String representations of int(s) but the displayed
+     * menu items are String(s).
      */
-    public static String createNumberedMenu(String menuName, String selectedOption, 
-    		ArrayList<String> options) {
+    public static String createNumberedMenu(String menuName, String selectedOption,
+                                            ArrayList<String> options) {
 
         StringBuilder result = new StringBuilder();
 
@@ -854,26 +853,26 @@ public class HTMLformatter {
         return result.toString();
     }
 
-    /** *************************************************************
-     *  Create an HTML menu, given an ArrayList of Strings.
+    /**************************************************************
+     * Create an HTML menu, given an ArrayList of Strings.
      */
     public static String createMenu(String menuName, String selectedOption, ArrayList<String> options) {
-    	
+
         String params = null;
         return createMenu(menuName, selectedOption, options, params);
     }
-    
-    /** *************************************************************
-     *  Create an HTML menu of KB names
+
+    /**************************************************************
+     * Create an HTML menu of KB names
      */
     public static String createKBMenu(String kbName) {
-    	
-    	ArrayList<String> kbnames = new ArrayList<String>();
-    	kbnames.addAll(KBmanager.getMgr().getKBnames());
-    	return(HTMLformatter.createMenu("kb",kbName,kbnames));
+
+        ArrayList<String> kbnames = new ArrayList<String>();
+        kbnames.addAll(KBmanager.getMgr().getKBnames());
+        return (HTMLformatter.createMenu("kb", kbName, kbnames));
     }
-    
-    /** *************************************************************
+
+    /**************************************************************
      * hyperlink formulas in error messages.  It assumes that the errors
      * are in and TreeSet of Strings in kb.errors.  It further
      * assumes that the error message is given first, followed by
@@ -881,37 +880,37 @@ public class HTMLformatter {
      * characters.
      */
     public static String formatErrorsWarnings(TreeSet<String> list, KB kb) {
-        
+
         System.out.println("INFO in HTMLformatter.formatErrors(): href: " + kbHref);
         StringBuilder result = new StringBuilder();
         Iterator<String> it = list.iterator();
         while (it.hasNext()) {
-            String err = it.next();            
-			err = err.replaceAll("\\n", "<br>");
+            String err = it.next();
+            err = err.replaceAll("\\n", "<br>");
             int p = err.indexOf(":");
-			String begin = "<br>";
+            String begin = "<br>";
             String end = "";
             if (p > -1) {
-				begin += err.substring(0, p + 1);
+                begin += err.substring(0, p + 1);
                 end = err.substring(p + 1);
                 Formula f = new Formula();
                 f.read(end);
                 //end = f.htmlFormat(kbHref);
-                end = f.htmlFormat(kb,kbHref);
+                end = f.htmlFormat(kb, kbHref);
             }
             else
                 begin = err;
 
-			result.append(begin + end + "<P>");
+            result.append(begin + end + "<P>");
         }
         return result.toString();
     }
 
-    /** *************************************************************
-     *  Create an HTML menu with an ID, given an ArrayList of
-     *  Strings, and possibly multiple selections.
+    /**************************************************************
+     * Create an HTML menu with an ID, given an ArrayList of
+     * Strings, and possibly multiple selections.
      */
-    public static String createMultiMenu(String menuName, TreeMap<String,String> options) {
+    public static String createMultiMenu(String menuName, TreeMap<String, String> options) {
 
         StringBuilder result = new StringBuilder();
 
@@ -939,11 +938,11 @@ public class HTMLformatter {
         return result.toString();
     }
 
-    /** *************************************************************
-     *  Create an HTML menu with an ID, given an ArrayList of Strings.
+    /**************************************************************
+     * Create an HTML menu with an ID, given an ArrayList of Strings.
      */
-    public static String createMenu(String menuName, String selectedOption, 
-    		ArrayList<String> options, String params) {
+    public static String createMenu(String menuName, String selectedOption,
+                                    ArrayList<String> options, String params) {
 
         //System.out.println("createMenu(): menuName: " + menuName);
         //System.out.println("createMenu(): options: " + options);
@@ -956,8 +955,8 @@ public class HTMLformatter {
 
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=" + menuNameProcessed);
-        if (params != null) 
-            result.append(" " + params + " ");        
+        if (params != null)
+            result.append(" " + params + " ");
         result.append(">\n  ");
         for (String menuItem : menuOptions) {
             result.append("<option value='");
@@ -975,25 +974,25 @@ public class HTMLformatter {
         return result.toString();
     }
 
-    /** *************************************************************
+    /**************************************************************
      * Create HTML formatted output for a TPTP3 proof
-     */    
+     */
     public static String formatTPTP3ProofResult(TPTP3ProofProcessor tpp, String stmt,
                                                 String lineHtml, String kbName, String language) {
 
         StringBuffer html = new StringBuffer();
-    	System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number of steps: " + tpp.proof.size());
+        System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): number of steps: " + tpp.proof.size());
         //System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): status: " + tpp.status);
         //System.out.println("INFO in HTMLformatter.formatTPTP3ProofResult(): no conjecture: " + tpp.noConjecture);
-    	if (tpp.proof == null || tpp.proof.size() == 0) {
-    	    html.append("Fail with status: " + tpp.status + "<br>\n");
+        if (tpp.proof == null || tpp.proof.size() == 0) {
+            html.append("Fail with status: " + tpp.status + "<br>\n");
         }
         if (tpp != null && !StringUtil.emptyString(tpp.status) &&
                 (tpp.status.equals("Refutation") || tpp.status.equals("CounterSatisfiable") || tpp.status.equals("Theorem")) && tpp.noConjecture) {
             tpp.inconsistency = true;
             html.append("<b>Danger! No conjecture, possible inconsistency!</b><P>\n");
         }
-    	if (tpp.bindingMap != null && tpp.bindingMap.keySet().size() > 0) { // if an answer predicate appears in the proof, use it
+        if (tpp.bindingMap != null && tpp.bindingMap.keySet().size() > 0) { // if an answer predicate appears in the proof, use it
             for (String s : tpp.bindingMap.keySet()) {
                 html.append("Answer " + "\n");
                 html.append(s + " = ");
@@ -1003,111 +1002,111 @@ public class HTMLformatter {
                 html.append("<br/>\n");
             }
         }
-    	else {
+        else {
             for (int i = 0; i < tpp.bindings.size(); i++) {
                 //if (i != 0)
                 //    html.append(lineHtml + "\n");
                 html.append("Answer " + "\n");
-                html.append(i+1);
+                html.append(i + 1);
                 html.append(". ");
                 String term = TPTP2SUMO.transformTerm(tpp.bindings.get(i));
-                String kbHref = HTMLformatter.createKBHref(kbName,language);
+                String kbHref = HTMLformatter.createKBHref(kbName, language);
                 html.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
                 html.append("<br/>\n");
             }
         }
-    	html.append("<p><table width=\"95%\">" + "\n");
-    	for (int l = 0; l < tpp.proof.size(); l++) {
-    	    TPTPFormula ps = tpp.proof.get(l);
-    	    //System.out.println("HTMLformatter.formatTPTP3ProofResult(): role: " + ps.role);
-    	    if (ps.role.equals("type"))
-    	        continue; // ignore type definitions in tff proof output
-    		if (l % 2 == 1)
-    			html.append("<tr bgcolor=#EEEEEE>" + "\n");
-    		else
-    			html.append("<tr>" + "\n");
-    		html.append("<td valign=\"top\">\n");
-    		html.append(ps.id + ".");
-    		html.append("</td>\n");
-    		html.append(HTMLformatter.proofTableFormat(stmt,tpp.proof.get(l), kbName, language) + "\n");
-    		html.append("</tr>\n\n");
-    	}
-    	html.append("</table>\n");
-    	return html.toString();
+        html.append("<p><table width=\"95%\">" + "\n");
+        for (int l = 0; l < tpp.proof.size(); l++) {
+            TPTPFormula ps = tpp.proof.get(l);
+            //System.out.println("HTMLformatter.formatTPTP3ProofResult(): role: " + ps.role);
+            if (ps.role.equals("type"))
+                continue; // ignore type definitions in tff proof output
+            if (l % 2 == 1)
+                html.append("<tr bgcolor=#EEEEEE>" + "\n");
+            else
+                html.append("<tr>" + "\n");
+            html.append("<td valign=\"top\">\n");
+            html.append(ps.id + ".");
+            html.append("</td>\n");
+            html.append(HTMLformatter.proofTableFormat(stmt, tpp.proof.get(l), kbName, language) + "\n");
+            html.append("</tr>\n\n");
+        }
+        html.append("</table>\n");
+        return html.toString();
     }
 
-    /** *************************************************************
-     */    
-    public static String formatConsistencyCheck(String msg, String ccheckResult, 
-    		String language, int page) {
-	
-    	StringBuilder html = new StringBuilder();
-    	String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";    	
-    	html.append(msg);
-    	html.append("<br/>");
-    	
-    	if (ccheckResult != null) {
-    		BasicXMLparser res = new BasicXMLparser(ccheckResult);
-    		String kbName = null;
-    		try {
-    			if (res != null) {	    	    			    				
-	    			ArrayList elements = res.elements;
-	    			ArrayList subElements = ((BasicXMLelement) elements.get(0)).subelements;
-	    			
-	    			for (int i = 0; i < subElements.size(); i++) {
-	    				BasicXMLelement item = (BasicXMLelement) subElements.get(i);
-	    				
-	    				if (item.tagname.equals("kb")) 
-	    					kbName = item.contents;
-	    				else if (item.tagname.equals("entries")) {
-	    					ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;	    					
-    	    	    		html.append("<br/><b><u>Consistency Check Results:</u></b><br />");		    					
-	    					if (page == 0) {
-	    						String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
-	    						html.append("<br />");
-	    						html.append("<table width=80% frame='border'>");
-	    						html.append("<tr><td>Query</td><td>Result Type</td><td>Source File</td><tr>");
+    /**************************************************************
+     */
+    public static String formatConsistencyCheck(String msg, String ccheckResult,
+                                                String language, int page) {
 
-	    						for (int j=0; j < entries.size(); j++) {
-		    						ArrayList entry = ((BasicXMLelement) entries.get(j)).subelements;
-		     						String query = null;
-		    						String type = null;
-		    						String sourceFile = null;
-		    						for (int k=0; k < entry.size(); k++) {
-		    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);				    								    							
-		    							if (entryItem.tagname.equals("query")) 
-		    								query = entryItem.contents;
-		    							else if (entryItem.tagname.equals("type"))
-		    								type = entryItem.contents;
-		    							else if (entryItem.tagname.equals("sourceFile"))
-		    								sourceFile = entryItem.contents;
-		    						}			    						
-		    						int pageNum = j + 1;
-		    						html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td><td>" + sourceFile + "</td></tr>");
-	    						}		    						
-	    						html.append("</table>");		    						
-	    						if (entries.size() > 0)
-		    		    			html.append("<br/><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=1'><p>Individual Results&#32;&gt;&gt;</p></a>");
-	    					}		    					
-	    					else if (page >= 1 && page <= entries.size()) {		    						
-	    						int j = page - 1;		    						
-	    						ArrayList<BasicXMLelement> entry = ((BasicXMLelement) entries.get(j)).subelements;
-	    						String query = null;
-	    						String type = null;
-    							String processedQ = null;
-	    						String proof = null;
-	    						String sourceFile = null;	    							
-	    						for (int k=0; k < entry.size(); k++) {
-	    							BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);			    							    							
-	    							if (entryItem.tagname.equals("query")) 
-	    								query = entryItem.contents;
-	    							else if (entryItem.tagname.equals("type"))
-	    								type = entryItem.contents;
-	    							else if (entryItem.tagname.equals("processedStatement"))
-	    								processedQ = entryItem.contents;
-	    							else if (entryItem.tagname.equals("sourceFile"))
-	    								sourceFile = entryItem.contents;
-	    							else if (entryItem.tagname.equals("proof")) {
+        StringBuilder html = new StringBuilder();
+        String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+        html.append(msg);
+        html.append("<br/>");
+
+        if (ccheckResult != null) {
+            BasicXMLparser res = new BasicXMLparser(ccheckResult);
+            String kbName = null;
+            try {
+                if (res != null) {
+                    ArrayList elements = res.elements;
+                    ArrayList subElements = ((BasicXMLelement) elements.get(0)).subelements;
+
+                    for (int i = 0; i < subElements.size(); i++) {
+                        BasicXMLelement item = (BasicXMLelement) subElements.get(i);
+
+                        if (item.tagname.equals("kb"))
+                            kbName = item.contents;
+                        else if (item.tagname.equals("entries")) {
+                            ArrayList entries = ((BasicXMLelement) subElements.get(i)).subelements;
+                            html.append("<br/><b><u>Consistency Check Results:</u></b><br />");
+                            if (page == 0) {
+                                String pagelink = "CCheck.jsp?kb=" + kbName + "&lang=" + language + "&page=";
+                                html.append("<br />");
+                                html.append("<table width=80% frame='border'>");
+                                html.append("<tr><td>Query</td><td>Result Type</td><td>Source File</td><tr>");
+
+                                for (int j = 0; j < entries.size(); j++) {
+                                    ArrayList entry = ((BasicXMLelement) entries.get(j)).subelements;
+                                    String query = null;
+                                    String type = null;
+                                    String sourceFile = null;
+                                    for (int k = 0; k < entry.size(); k++) {
+                                        BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
+                                        if (entryItem.tagname.equals("query"))
+                                            query = entryItem.contents;
+                                        else if (entryItem.tagname.equals("type"))
+                                            type = entryItem.contents;
+                                        else if (entryItem.tagname.equals("sourceFile"))
+                                            sourceFile = entryItem.contents;
+                                    }
+                                    int pageNum = j + 1;
+                                    html.append("<tr><td><a href='" + pagelink + pageNum + "'>" + query + "</a></td><td>" + type + "</td><td>" + sourceFile + "</td></tr>");
+                                }
+                                html.append("</table>");
+                                if (entries.size() > 0)
+                                    html.append("<br/><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=1'><p>Individual Results&#32;&gt;&gt;</p></a>");
+                            }
+                            else if (page >= 1 && page <= entries.size()) {
+                                int j = page - 1;
+                                ArrayList<BasicXMLelement> entry = ((BasicXMLelement) entries.get(j)).subelements;
+                                String query = null;
+                                String type = null;
+                                String processedQ = null;
+                                String proof = null;
+                                String sourceFile = null;
+                                for (int k = 0; k < entry.size(); k++) {
+                                    BasicXMLelement entryItem = (BasicXMLelement) entry.get(k);
+                                    if (entryItem.tagname.equals("query"))
+                                        query = entryItem.contents;
+                                    else if (entryItem.tagname.equals("type"))
+                                        type = entryItem.contents;
+                                    else if (entryItem.tagname.equals("processedStatement"))
+                                        processedQ = entryItem.contents;
+                                    else if (entryItem.tagname.equals("sourceFile"))
+                                        sourceFile = entryItem.contents;
+                                    else if (entryItem.tagname.equals("proof")) {
                                         if (type.indexOf("Error") == -1)
                                             //if (entryItem.attributes.get("src") != null && entryItem.attributes.get("src").equals("EProver"))
                                             // TODO update to TPTP3 ANTLR	proof = formatTPTP3ProofResult(entryItem.subelements, query, kbName, language, 0);
@@ -1118,61 +1117,83 @@ public class HTMLformatter {
                                             proof = proof.replaceAll("%3E", ">");
                                         }
                                         // else proof = entryItem.contents;
-	    							}
-	    						}
-    							html.append("<br/>Query:  " + query + "<br />");
-	    		    			html.append("Type:  " + type + "<br />");
-	    		    			html.append("Source File: " + sourceFile + "<br /><br />");
-	    		    			html.append(proof);
+                                    }
+                                }
+                                html.append("<br/>Query:  " + query + "<br />");
+                                html.append("Type:  " + type + "<br />");
+                                html.append("Source File: " + sourceFile + "<br /><br />");
+                                html.append(proof);
 
-	    		    			html.append(lineHtml);
-	    		    			html.append("<table width=80% frame='void'");
-    		    				html.append("<tr>");
-    		    				int before = page - 1;
-    		    				int after = page + 1;
-	    		    			if (page == 1) 
-	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Result</a></td>");		    		    			
-	    		    			else if (page > 1) {
-	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");		    	
-	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Results&#32;&gt;&gt;</a></td>");		    	
-	    		    			}
-	    		    			if (after <= entries.size() && page >= 1) 
-	    		    				html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + after + "'>Next&#32;&gt;&gt;</a></td>");		    		    			
-	    		    			html.append("</tr></table>");
-	    					}
-	    				}
-	    			}		    						    			 
-    			}
-    		}
-    		catch (Exception ex) {
-    			System.out.println(ex.getMessage());
-    		}
-       	}    	    	    	
-    	return html.toString();
+                                html.append(lineHtml);
+                                html.append("<table width=80% frame='void'");
+                                html.append("<tr>");
+                                int before = page - 1;
+                                int after = page + 1;
+                                if (page == 1)
+                                    html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Result</a></td>");
+                                else if (page > 1) {
+                                    html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + before + "'>&lt;&lt;&#32;Prev</a></td>");
+                                    html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=0'>&lt;&lt;&#32;Summary Results&#32;&gt;&gt;</a></td>");
+                                }
+                                if (after <= entries.size() && page >= 1)
+                                    html.append("<td><a href='CCheck.jsp?lang=" + language + "&kb=" + kbName + "&page=" + after + "'>Next&#32;&gt;&gt;</a></td>");
+                                html.append("</tr></table>");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) {
+                System.out.println(ex.getMessage());
+            }
+        }
+        return html.toString();
     }
-    
-    /** *************************************************************
-     */    
+
+    /****************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("HTMLformatter class");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  h - show this help screen");
+        System.out.println("  t - run tests");
+    }
+
+    /** **************************************************************
+     */
     public static void main(String[] args) throws IOException {
 
-        KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("INFO in HTMLformatter.main()");
-        System.out.println("INFO in HTMLformatter.main(): " + showStatistics(kb));
-        ArrayList<Formula> forms = KButilities.termIntersection(kb,"ShapeChange","ShapeAttribute");
-        /* should get from Merge.kif 15034-15041
-         * (=>
-    (and
-        (instance ?OBJ Object)
-        (attribute ?OBJ Pliable))
-    (exists (?CHANGE)
-        (and
-            (instance ?CHANGE ShapeChange)
-            (patient ?CHANGE ?OBJ))))
-            */        
-        System.out.println("INFO in HTMLformatter.main(): got intersections: " + forms);
-        System.out.println("HTMLformatter.main() ready to call formatFormulaList( )");
-        System.out.println(HTMLformatter.formatFormulaList(forms,"",  kb, "EnglishLanguage",  "SUO-KIF", 0, 0, ""));
+        System.out.println("INFO in KB.main()");
+        if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
+            KBmanager.prefOverride.put("loadLexicons", "false");
+            System.out.println("KB.main(): Note! Not loading lexicons.");
+            KBmanager.getMgr().initializeOnce();
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            KB kb = KBmanager.getMgr().getKB(kbName);
+            if (args != null)
+                System.out.println("KB.main(): args[0]: " + args[0]);
+            if (args != null && args.length > 0 && args[0].contains("t")) {
+                System.out.println("INFO in HTMLformatter.main()");
+                System.out.println("INFO in HTMLformatter.main(): " + showStatistics(kb));
+                ArrayList<Formula> forms = KButilities.termIntersection(kb, "ShapeChange", "ShapeAttribute");
+                    /* should get from Merge.kif 15034-15041
+                     * (=>
+                (and
+                    (instance ?OBJ Object)
+                    (attribute ?OBJ Pliable))
+                (exists (?CHANGE)
+                    (and
+                        (instance ?CHANGE ShapeChange)
+                        (patient ?CHANGE ?OBJ))))
+                        */
+                System.out.println("INFO in HTMLformatter.main(): got intersections: " + forms);
+                System.out.println("HTMLformatter.main() ready to call formatFormulaList( )");
+                System.out.println(HTMLformatter.formatFormulaList(forms, "", kb, "EnglishLanguage", "SUO-KIF", 0, 0, ""));
+            }
+        }
     }
 }
 
