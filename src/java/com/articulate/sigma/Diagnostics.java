@@ -151,6 +151,18 @@ public class Diagnostics {
     /** *****************************************************************
      * Return a list of terms that do not have Entity as a parent term.
      */
+    public static boolean termNotBelowEntity(String term, KB kb) {
+
+        if (LOG_OPS.contains(term) || term.equals("equal") || term.equals("Entity") || StringUtil.isNumeric(term))
+            return false;
+        else if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity"))
+                return true;
+        return false;
+    }
+
+    /** *****************************************************************
+     * Return a list of terms that do not have Entity as a parent term.
+     */
     public static ArrayList<String> termsNotBelowEntity(KB kb) {
 
         System.out.println("INFO in Diagnostics.termsNotBelowEntity(): "); 
@@ -159,13 +171,11 @@ public class Diagnostics {
         Iterator<String> it = kb.getTerms().iterator();
         while (it.hasNext() && (resultLimit < 1 || count < resultLimit)) {
             String term = it.next();
-            if (LOG_OPS.contains(term) || term.equals("Entity") || StringUtil.isNumeric(term)) 
+            if (!termNotBelowEntity(term,kb))
                 continue;
             else {
-                if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity")) {
                     result.add(term); 
                     count++;
-                }
             }
             if (resultLimit > 0 && count > resultLimit)
                 result.add("limited to 100 results");            
