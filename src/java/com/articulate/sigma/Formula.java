@@ -59,6 +59,9 @@ public class Formula implements Comparable, Serializable {
     public static final String TIMESFN  = "MultiplicationFn";
     public static final String DIVIDEFN = "DivisionFn";
     public static final String FLOORFN = "FloorFn";
+    public static final String ROUNDFN = "RoundFn";
+    public static final String CEILINGFN = "CeilingFn";
+    public static final String REMAINDERFN = "RemainderFn";
     public static final String SKFN     = "SkFn";
     public static final String SK_PREF = "Sk";
     public static final String FN_SUFF = "Fn";
@@ -102,7 +105,10 @@ public class Formula implements Comparable, Serializable {
                                                                      MINUSFN,
                                                                      TIMESFN,
                                                                      DIVIDEFN,
-                                                                     FLOORFN);
+                                                                     FLOORFN,
+                                                                     ROUNDFN,
+                                                                     CEILINGFN,
+                                                                     REMAINDERFN);
 
     public static final List<String> DOC_PREDICATES = Arrays.asList("documentation",
                                                                     "comment",
