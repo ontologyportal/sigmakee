@@ -168,26 +168,26 @@ public class Modals {
      */
     public static String getTFFHeader() {
 
-        return "tff(worlds_tp,type,($w : $tType)).\n" +
+        return "tff(worlds_tp,type,(w : $tType)).\n" +
                 "tff(modals_tp,type,(m : $tType)).\n" +
-                "tff(accreln_tp,type,(s__accreln : ($m * $i * $w * $w) > $o)).";
+                "tff(accreln_tp,type,(s__accreln : (m * $i * w * w) > $o)).";
     }
 
     /***************************************************************
      */
     public static String getTHFHeader() {
 
-        return "thf(worlds_tp,type,($w : $tType)).\n" +
-                "thf(s__worlds_tp,type,(s__World : $w)).\n" +
-                "thf(modals_tp,type,($m : $tType)).\n" +
-                "thf(accreln_tp,type,(s__accreln : ($m > $i > $w > $w > $o))).\n" +
-                "thf(accrelnP_tp,type,(s__accrelnP : ($m > $w > $w > $o))).\n" +
-                "thf(knows_tp,type,(s__knows : $m)).\n" +
-                "thf(believes_tp,type,(s__believes : $m)).\n" +
-                "thf(desires_tp,type,(s__desires : $m)).\n" +
-                "thf(desires_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
-                "thf(knows_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:$w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
+        return "thf(worlds_tp,type,(w : $tType)).\n" +
+                "thf(s__worlds_tp,type,(s__World : w)).\n" +
+                "thf(modals_tp,type,(m : $tType)).\n" +
+                "thf(accreln_tp,type,(s__accreln : (m > $i > w > w > $o))).\n" +
+                "thf(accrelnP_tp,type,(s__accrelnP : (m > w > w > $o))).\n" +
+                "thf(knows_tp,type,(s__knows : m)).\n" +
+                "thf(believes_tp,type,(s__believes : m)).\n" +
+                "thf(desires_tp,type,(s__desires : m)).\n" +
+                "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
+                "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
     }
 
     /***************************************************************
