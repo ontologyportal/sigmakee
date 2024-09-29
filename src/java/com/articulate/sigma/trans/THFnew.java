@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class THFnew {
 
-    public static boolean debug = false;
+    public static boolean debug = true;
     public static int axNum = 0;
 
     /** *************************************************************
@@ -205,11 +205,11 @@ public class THFnew {
         if (typeMap.get(v) == null)
             return "$i";
         if (typeMap.get(v).contains("Formula"))
-            return "($i > $o)";
+            return "(w > $o)";
         if (typeMap.get(v).contains("World"))
-            return "$w";
+            return "w";
         if (typeMap.get(v).contains("Modal"))
-            return "$m";
+            return "m";
         return "$i";
     }
 
@@ -384,7 +384,7 @@ public class THFnew {
         }
         if (f.isGround()) {
             if (debug) System.out.println("exclude(): is ground: " + f);
-            ArrayList<String> ar = f.argumentsToArrayListString(0);
+            ArrayList<String> ar = f.complexArgumentsToArrayListString(0);
             if (protectedRelation(ar.get(0)) && Modals.modalAttributes.contains(ar.get(1))) {
                 out.write("% exclude(): modal attribute in protected relation: " + ar.get(0) +
                         " " + ar.get(1) + "\n");
@@ -482,7 +482,7 @@ public class THFnew {
             else if (kb.isInstanceOf(t,"Formula") || t.equals("Formula"))
                 sb.append("$o > ");
             else if (kb.isInstanceOf(t,"World") || t.equals("World"))
-                sb.append("$w > ");
+                sb.append("w > ");
             else
                 sb.append("$i > ");
         }
