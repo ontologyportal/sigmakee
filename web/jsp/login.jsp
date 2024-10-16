@@ -18,7 +18,7 @@ import="com.articulate.sigma.*"
 
     Please cite the following article in any publication with references:
 
-    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    Pease A., and Benzm??ller C. (2013). Sigma: An Integrated Development Environment
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
@@ -26,7 +26,7 @@ import="com.articulate.sigma.*"
 String userName = request.getParameter("userName");
 String password = request.getParameter("password");
 
-PasswordService ps = new PasswordService();
+PasswordService ps = PasswordService.getInstance();
 if (ps.userExists(userName)) {
     User u = User.fromDB(ps.conn,userName);
     if (u != null && ps.encrypt(password).equals(u.password)) {
