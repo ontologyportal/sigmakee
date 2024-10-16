@@ -643,7 +643,7 @@ public class KB implements Serializable {
      */
     public static boolean isRelationInAnyKB(String i) {
 
-        HashMap<String, KB> kbs = KBmanager.getMgr().kbs;
+        Map<String, KB> kbs = KBmanager.getMgr().kbs;
         if (!kbs.isEmpty()) {
             KB kb = null;
             Iterator<KB> it = kbs.values().iterator();
