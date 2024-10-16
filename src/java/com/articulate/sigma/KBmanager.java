@@ -42,12 +42,12 @@ public class KBmanager implements Serializable {
     protected static final String CONFIG_FILE = "config.xml";
 
     // preferences set before initialization that override values in config.xml
-    public static HashMap<String,String> prefOverride = new HashMap<String,String>();
-    private HashMap<String,String> preferences = new HashMap<String,String>();
-    public HashMap<String,KB> kbs = new HashMap<String,KB>();
+    public static Map<String,String> prefOverride = new HashMap<>();
+    public Map<String,KB> kbs = new HashMap<>();
     public static boolean initialized = false;
     public static boolean initializing = false;
     public static boolean debug = false;
+    private final Map<String,String> preferences = new HashMap<>();
     private String error = "";
 
     public static final List<String> configKeys =
@@ -606,11 +606,11 @@ public class KBmanager implements Serializable {
         try (FileInputStream fis = new FileInputStream(in);
              FileOutputStream fos = new FileOutputStream(out)
         ){
-            byte[] buf = new byte[1024];  
-            int i = 0;  
-            while ((i = fis.read(buf)) != -1) {  
-                fos.write(buf, 0, i);  
-            }  
+            byte[] buf = new byte[1024];
+            int i = 0;
+            while ((i = fis.read(buf)) != -1) {
+                fos.write(buf, 0, i);
+            }
             fos.flush();
         }
         catch (Exception ex) {
@@ -884,8 +884,8 @@ public class KBmanager implements Serializable {
         File fDir = new File(dir);
         String username = preferences.get("userName");
         String userrole = preferences.get("userRole");
-        String config_file = (((username != null) 
-                               && userrole.equalsIgnoreCase("administrator") 
+        String config_file = (((username != null)
+                               && userrole.equalsIgnoreCase("administrator")
                                && !username.equalsIgnoreCase("admin"))
                               ? username + "_"
                               : "") + CONFIG_FILE;
