@@ -1,8 +1,8 @@
-/** This code is copyright Articulate Software (c) 2005.  
+/** This code is copyright Articulate Software (c) 2005.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Ted Gordon in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Ted Gordon in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  */
 package com.articulate.sigma;
 
@@ -31,29 +31,26 @@ import static java.lang.System.exit;
 public final class PasswordService {
 
     private static PasswordService instance;
-    private static HashMap users = new HashMap();
 
     // open the password DB as a server so both Sigma and SigmaNLP can access at once
-    //public static final String JDBCString = "jdbc:h2:tcp://localhost/~/var/passwd";
-    public static final String JDBCString = "jdbc:h2:tcp://localhost/home/apease/var/passwd;AUTO_SERVER=TRUE";
-    public static String UserName = "sumo";
-    public Connection conn = null;
-    //public static Server server = null;
-  
-    /** ***************************************************************** 
+    public static final String JDBC_CREATE_DB = "jdbc:h2:file:" + System.getProperty("user.home") + "/var/passwd;AUTO_SERVER=TRUE";
+    public static final String JDBC_ACCESS_DB = JDBC_CREATE_DB;
+    public static final String INITIAL_ADMIN_USER = "sumo"; // <- initial user when creating DB
+    public Connection conn = null; // <- for JSP
+
+    /** *****************************************************************
      * Create an instance of PasswordService
      */
-    public PasswordService() {
+    private PasswordService() {
 
         System.out.println("PasswordService()");
         try {
-            //server = Server.createTcpServer().start();
-            Class.forName("org.h2.Driver");
-            conn = DriverManager.getConnection(JDBCString, UserName, "");
-            System.out.println("main(): Opened DB " + JDBCString);
+            Class.forName("org.h2.Driver"); // <- redundant for local invocation, but the JSPs need this
+            conn = DriverManager.getConnection(JDBC_ACCESS_DB, INITIAL_ADMIN_USER, "");
+            System.out.println("init(): Opened DB via: " + JDBC_ACCESS_DB);
         }
-        catch (Exception e) {
-            System.out.println("Error in PasswordService(): " + e.getMessage());
+        catch (ClassNotFoundException | SQLException e) {
+            System.err.println("Error in PasswordService(): " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -88,13 +85,13 @@ public final class PasswordService {
         return generatedPassword;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static synchronized PasswordService getInstance() {
 
         if (instance == null)
             instance = new PasswordService();
-        return instance;        
+        return instance;
     }
 
     /** *****************************************************************
@@ -107,11 +104,7 @@ public final class PasswordService {
             User user = User.fromDB(conn,username);
             //System.out.println("INFO in PasswordService.authenticateDB(): Input: " + username + " " + pass);
             //System.out.println("INFO in PasswordService.authenticateDB(): Reading: " + user.username + " " + user.password);
-            if (pass.equals(user.password)) {
-                return true;
-            }
-            else
-                return false;
+            return pass.equals(user.password);
         }
         else
             return false;
@@ -121,19 +114,16 @@ public final class PasswordService {
      */
     public boolean userExists(String username) {
 
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet res = stmt.executeQuery("SELECT * FROM USERS where username='" + username + "';");
-            boolean result = res.next();
-            res.close();
-            //stmt.close();
-            return result;
+        boolean result = false;
+        try (Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT * FROM USERS where username='" + username + "';")) {
+            result = res.next();
         }
-        catch (Exception e) {
-            System.out.println("Error in userExistsDB(): " + e.getMessage());
+        catch (SQLException e) {
+            System.err.println("Error in userExistsDB(): " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
+        return result;
     }
 
     /** *****************************************************************
@@ -151,17 +141,16 @@ public final class PasswordService {
      */
     public Set<String> userIDs() {
 
-        HashSet<String> result = new HashSet<>();
-        try {
-            Statement stmt = conn.createStatement();
-            ResultSet res = stmt.executeQuery("SELECT username FROM USERS;");
+        Set<String> result = new HashSet<>();
+        try (Statement stmt = conn.createStatement();
+            ResultSet res = stmt.executeQuery("SELECT username FROM USERS;")) {
             while (!res.isLast()) {
                 res.next();
                 result.add(res.getString(1));
             }
         }
-        catch (Exception e) {
-            System.out.println("Error in userIDs(): " + e.getMessage());
+        catch (SQLException e) {
+            System.err.println("Error in userIDs(): " + e.getMessage());
             e.printStackTrace();
         }
         return result;
@@ -171,14 +160,11 @@ public final class PasswordService {
      */
     public void deleteUser(String uname) {
 
-        HashSet<String> result = new HashSet<>();
-        try {
-            Statement stmt = conn.createStatement();
+        try (Statement stmt = conn.createStatement()) {
             stmt.execute("delete FROM USERS where username='" + uname + "';");
-            stmt.close();
         }
         catch (Exception e) {
-            System.out.println("Error in deleteUser(): " + e.getMessage());
+            System.err.println("Error in deleteUser(): " + e.getMessage());
             e.printStackTrace();
             return;
         }
@@ -189,17 +175,17 @@ public final class PasswordService {
      */
     public void login() {
 
+        System.out.println("Login");
         Console c = System.console();
         if (c == null) {
             System.err.println("No console.");
             exit(1);
         }
-
-        String username = c.readLine("Enter your username: ");
+        String login = c.readLine("Enter your username: ");
         String password = new String(c.readPassword("Enter your password: "));
         //System.out.println("password: " + password);
-        if (userExists(username)) {
-            boolean valid = authenticate(username,encrypt(password));
+        if (userExists(login)) {
+            boolean valid = authenticate(login,encrypt(password));
             if (valid) {
                 //System.out.println(User.fromDB(conn, username));
                 System.out.println("login successful");
@@ -208,7 +194,7 @@ public final class PasswordService {
                 System.out.println("Invalid username/password");
         }
         else
-            System.out.println("User " + username + " does not exist");
+            System.out.println("User " + login + " does not exist");
     }
 
     /** *****************************************************************
@@ -254,6 +240,7 @@ public final class PasswordService {
         //Create a Session object & authenticate uid and pwd
         Session sessionobj = Session.getInstance(propvls,
                 new javax.mail.Authenticator() {
+                    @Override
                     protected PasswordAuthentication getPasswordAuthentication() {
                         return new PasswordAuthentication(uname, pwd);
                     }
@@ -284,18 +271,18 @@ public final class PasswordService {
             System.err.println("No console.");
             exit(1);
         }
-        String login = c.readLine("Enter your login: ");
+        String login = c.readLine("Enter your username: ");
         String password = new String(c.readPassword("Enter your password: "));
         if (userExists(login))
             System.out.println("User " + login + " already exists");
         else {
-            String email = new String(c.readLine("Enter your email address: "));
+            String email = c.readLine("Enter your email address: ");
             User u = new User();
             u.username = login;
             u.password = encrypt(password);
             u.role = "guest";
             u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
             addUser(u);
             mailModerator(u);
         }
@@ -311,18 +298,18 @@ public final class PasswordService {
             System.err.println("No console.");
             exit(1);
         }
-        String login = c.readLine("Enter your login: ");
+        String login = c.readLine("Enter your username: ");
         String password = new String(c.readPassword("Enter your password: "));
         if (userExists(login))
             System.out.println("User " + login + " already exists");
         else {
-            String email = new String(c.readLine("Enter your email address: "));
+            String email = c.readLine("Enter your email address: ");
             User u = new User();
             u.username = login;
             u.password = encrypt(password);
             u.role = "admin";
             u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
             addUser(u);
         }
     }
@@ -335,7 +322,7 @@ public final class PasswordService {
         String login = user;
         String password = p;
         if (userExists(login))
-            System.out.println("Error: User " + login + " already exists");
+            System.err.println("Error: User " + login + " already exists");
         else {
             String email = e;
             User u = new User();
@@ -343,7 +330,7 @@ public final class PasswordService {
             u.password = encrypt(password);
             u.role = "admin";
             u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
             addUser(u);
         }
     }
@@ -360,15 +347,15 @@ public final class PasswordService {
         }
         String password = new String(c.readPassword("Enter user password: "));
         if (userExists(user))
-            System.out.println("User " + user + " already exists");
+            System.err.println("User " + user + " already exists");
         else {
-            String email = new String(c.readLine("Enter your email address: "));
+            String email = c.readLine("Enter your email address: ");
             User u = new User();
             u.username = user;
             u.password = encrypt(password);
             u.role = "user";
             u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
+            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
             addUser(u);
         }
     }
@@ -390,7 +377,7 @@ public final class PasswordService {
             u.toggleRole(conn);
         }
         else
-            System.out.println("invalid login");
+            System.err.println("invalid login");
     }
 
     /** *****************************************************************
@@ -406,61 +393,55 @@ public final class PasswordService {
         System.out.println("-u    show User IDs");
         System.out.println("-r    Register a new username and password (fail if username taken)");
         System.out.println("-a3 <u> <p> <e>  create Admin user");
-        System.out.println("-o <id>          change user rOle");
+        System.out.println("-o <id>          change user role");
         System.out.println("-n <id>          create New guest user");
         System.out.println("-f <id>          find user with given ID");
         System.out.println("-d <id>          Delete user with given ID");
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static void main(String args[]) {
 
-        PasswordService ps = null;
+        PasswordService ps = PasswordService.getInstance();
         try {
-            ps = new PasswordService();
-            if (args != null) {
-                if (args.length > 0 && args[0].equals("-r"))
-                    ps.register();
-                else if (args.length > 0 && args[0].equals("-l"))
+            if (args != null && args.length > 0) {
+                if (args[0].equals("-h"))
+                    showHelp();
+                else if (args[0].equals("-l"))
                     ps.login();
-                else if (args.length > 0 && args[0].equals("-c"))
+                else if (args[0].equals("-c"))
                     User.createDB();
-                else if (args.length > 0 && args[0].equals("-a"))
+                else if (args[0].equals("-a"))
                     ps.createAdmin();
+                else if (args[0].equals("-u"))
+                    System.out.println(ps.userIDs());
+                else if (args[0].equals("-r"))
+                    ps.register();
                 else if (args.length > 3 && args[0].equals("-a3"))
                     ps.createAdmin3(args[1],args[2],args[3]);
-                else if (args.length > 0 && args[0].equals("-u"))
-                    System.out.println(ps.userIDs());
-                else if (args.length > 1 && args[0].equals("-f"))
-                    System.out.println(User.fromDB(ps.conn, args[1]));
-                else if (args.length > 1 && args[0].equals("-n"))
-                    ps.createUser(args[1]);
-                else if (args.length > 1 && args[0].equals("-d"))
-                    ps.deleteUser(args[1]);
                 else if (args.length > 1 && args[0].equals("-o"))
                     ps.changeUserRole(args[1]);
+                else if (args.length > 1 && args[0].equals("-n"))
+                    ps.createUser(args[1]);
+                else if (args.length > 1 && args[0].equals("-f"))
+                    System.out.println(User.fromDB(ps.conn, args[1]));
+                else if (args.length > 1 && args[0].equals("-d"))
+                    ps.deleteUser(args[1]);
                 else {
-                    System.out.println("unrecognized command\n");
+                    System.out.println("unrecognized command:" + args[0] + "\n");
                     showHelp();
                 }
             }
             else
                 showHelp();
-            ps.conn.createStatement().execute("SHUTDOWN");
-            ps.conn.close();
-            System.out.println("PasswordService.main(): Closed DB");
-        }
-        catch(Exception e) {
-            System.out.println("Error in main(): " + e.getMessage());
-            //Handle errors for Class.forName
-            e.printStackTrace();
         }
         finally {
             //finally block used to close resources
             try {
-                if (ps.conn != null)
+                if (ps != null && ps.conn != null)
                     ps.conn.close();
+                System.out.println("PasswordService.main(): Closed DB");
                 //Server.shutdownTcpServer(JDBCString,"", true, true);
             }
             catch(SQLException se){
@@ -468,7 +449,6 @@ public final class PasswordService {
             }
         }
         System.out.println("completed PasswordService.main(): ");
-        exit(0);
     }
 
 }
