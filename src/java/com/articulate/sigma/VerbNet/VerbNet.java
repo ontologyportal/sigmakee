@@ -26,19 +26,19 @@ public class VerbNet {
 
     public static KB kb;
 
-    private static boolean debug = false;
-    private static boolean echo = false;
-    private static HashMap<String,SimpleElement> verbFiles = new HashMap<>();
-    private static HashMap<String,String> roles = new HashMap<>(); // VN to SUMO role mappings
+    private static final boolean DEBUG = false;
+    private static final boolean ECHO = false;
+    private static final Map<String,SimpleElement> VERB_FILES = new HashMap<>();
+    private static final Map<String,String> ROLES = new HashMap<>(); // VN to SUMO role mappings
     private static boolean initialized = false;
     public static int verbcount = 0;
     public static int syncount = 0;
 
     // a mapping of a WordNet key to a VerbNet pair of VerbID\tmember-word-name
-    public static HashMap<String,String> wnMapping = new HashMap<>();
+    public static Map<String,String> wnMapping = new HashMap<>();
 
     // verb ID keys and Verb values
-    public static HashMap<String,Verb> verbs = new HashMap<>();
+    public static Map<String,Verb> verbs = new HashMap<>();
 
     public static boolean disable = false;
 
@@ -49,7 +49,7 @@ public class VerbNet {
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
             disable = true;
         if (disable) return;
-        ArrayList<String> keys = new ArrayList<String>(Arrays.asList("Actor","involvedInEvent",
+        List<String> keys = new ArrayList<>(Arrays.asList("Actor","involvedInEvent",
             "Agent","agent", "Asset","objectTransferred", "Attribute","attribute",
             "Beneficiary","beneficiary", "Cause","involvedInEvent",
             "Co-Agent","agent", "Co-Patient","patient", "Co-Theme","patient",
@@ -67,7 +67,7 @@ public class VerbNet {
             "Value", "measure"));
         if (!initialized) {
             for (int i = 1; i < keys.size()/2; i++) {
-                roles.put(keys.get(i*2 - 1), keys.get(i*2));
+                ROLES.put(keys.get(i*2 - 1), keys.get(i*2));
             }
             readVerbFiles();
             initialized = true;
@@ -78,7 +78,6 @@ public class VerbNet {
      */
     public static void readVerbFiles() {
 
-        SimpleElement configuration = null;
         try {
             String dirStr = KBmanager.getMgr().getPref("verbnet");
             System.out.println("VerbNet.readVerbFiles(): loading files from: " + dirStr);
@@ -89,21 +88,23 @@ public class VerbNet {
             }
             try {
                 File folder = new File(dirStr);
+                BufferedReader br;
+                SimpleDOMParser sdp;
                 for (File fileEntry : folder.listFiles()) {
                     if (!fileEntry.toString().endsWith(".xml"))
                         continue;
-                    BufferedReader br = new BufferedReader(new FileReader(fileEntry.toString()));
-                    SimpleDOMParser sdp = new SimpleDOMParser();
-                    verbFiles.put(fileEntry.toString(), sdp.parse(br));
+                    br = new BufferedReader(new FileReader(fileEntry.toString()));
+                    sdp = new SimpleDOMParser();
+                    VERB_FILES.put(fileEntry.toString(), sdp.parse(br));
                 }
             }
             catch (FileNotFoundException e) {
-                System.out.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
+                System.err.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
                 e.printStackTrace();
             }
         }
-        catch (Exception e) {
-            System.out.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
+        catch (IOException e) {
+            System.err.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -112,15 +113,18 @@ public class VerbNet {
      */
     public static void processVerbs() {
 
-        for (String fname : verbFiles.keySet()) {
-            if (echo) System.out.println("\n==================");
-            if (echo) System.out.println("VerbNet.processVerbs(): " + fname);
-            SimpleElement verb = verbFiles.get(fname);
-            String name = (String) verb.getAttribute("ID");
+        SimpleElement verb;
+        String name, xmlns, xsi;
+        Verb v;
+        for (String fname : VERB_FILES.keySet()) {
+            if (ECHO) System.out.println("\n==================");
+            if (ECHO) System.out.println("VerbNet.processVerbs(): " + fname);
+            verb = VERB_FILES.get(fname);
+            name = (String) verb.getAttribute("ID");
             verbcount++;
-            String xmlns = (String) verb.getAttribute("xmlns:xsi");
-            String xsi = (String) verb.getAttribute("xsi:noNamespaceSchemaLocation");
-            Verb v = new Verb();
+            xmlns = (String) verb.getAttribute("xmlns:xsi");
+            xsi = (String) verb.getAttribute("xsi:noNamespaceSchemaLocation");
+            v = new Verb();
             v.ID = name;
             v.readVerb(verb);
             verbs.put(name,v);
@@ -131,7 +135,7 @@ public class VerbNet {
      */
     private static String formatForSynset(String synset) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         String verb = VerbNet.wnMapping.get(synset);
         if (StringUtil.emptyString(verb) || !verb.contains("|"))
             return "";
@@ -147,15 +151,17 @@ public class VerbNet {
      */
     public static String formatVerbsList(TreeMap<String,ArrayList<String>> tm) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         int count = 0;
         Iterator<String> it = tm.keySet().iterator();
+        String word, synset, res;
+        List<String> synsetList;
         while (it.hasNext() && count < 50) {
-            String word = (String) it.next();
-            ArrayList<String> synsetList = tm.get(word);
+            word = (String) it.next();
+            synsetList = tm.get(word);
             for (int i = 0; i < synsetList.size(); i++) {
-                String synset = synsetList.get(i);
-                String res = formatForSynset(synset);
+                synset = synsetList.get(i);
+                res = formatForSynset(synset);
                 if (StringUtil.emptyString(res))
                     continue;
                 if (StringUtil.emptyString(result.toString()))
@@ -172,15 +178,16 @@ public class VerbNet {
     /** *************************************************************
      * @param tm Map of words with their corresponding synset numbers
      */
-    public static String formatVerbs(TreeMap<String,String> tm) {
+    public static String formatVerbs(Map<String,String> tm) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         int count = 0;
         Iterator<String> it = tm.keySet().iterator();
+        String word, synset, res;
         while (it.hasNext() && count < 50) {
-            String word = it.next();
-            String synset = tm.get(word);
-            String res = formatForSynset(synset);
+            word = it.next();
+            synset = tm.get(word);
+            res = formatForSynset(synset);
             if (StringUtil.emptyString(res))
                 continue;
             if (StringUtil.emptyString(result.toString()))
