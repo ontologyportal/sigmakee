@@ -357,7 +357,6 @@ Open up CMD prompt
 
 ```
     wsl –install
-    sudo snap install chromium
     .bashrc already existed in home directory. Did not update path.  
     echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc 
     Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000 
