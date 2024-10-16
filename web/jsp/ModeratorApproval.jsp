@@ -17,7 +17,7 @@ import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpSe
 
     Please cite the following article in any publication with references:
 
-    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    Pease A., and Benzm?ller C. (2013). Sigma: An Integrated Development Environment
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
