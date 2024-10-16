@@ -4,8 +4,6 @@ import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /** ***************************************************************
  * Base class for unit tests which are closer to integration tests because they require a large KB configuration.
@@ -33,7 +31,7 @@ public class IntegrationTestBase extends SigmaTestBase {
                 throw new Exception();
         }
         catch (Exception e) {
-            System.out.println("Error in IntegrationTestBase initialization with dir: " + d);
+            System.err.println("Error in IntegrationTestBase initialization with dir: " + d);
             e.printStackTrace();
         }
         RESOURCES_DIR = new File(d);
@@ -75,7 +73,7 @@ public class IntegrationTestBase extends SigmaTestBase {
         kb.deleteUserAssertions();
 
         // Remove the assertions in the files.
-        File userAssertionsFile = new File(KB_PATH, KBmanager.getMgr().getPref("sumokbname") + kb._userAssertionsString);
+        File userAssertionsFile = new File(KB_PATH, KBmanager.getMgr().getPref("sumokbname") + KB._userAssertionsString);
         if (userAssertionsFile.exists()) {
             userAssertionsFile.delete();
             userAssertionsFile.createNewFile();
