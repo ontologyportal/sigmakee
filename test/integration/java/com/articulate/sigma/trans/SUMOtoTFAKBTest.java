@@ -3,15 +3,10 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.*;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
-import static junit.framework.TestCase.assertEquals;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -92,7 +87,7 @@ public class SUMOtoTFAKBTest extends IntegrationTestBase {
         HashSet<String> result = stfa.missingSorts(new Formula(f));
         String expectedRes = "tff(listFn__2ReFn_sig,type,s__ListFn__2ReFn : (  $i * $real  ) > $i ).";
         String resultStr = "";
-        if (result != null && result.size() > 0)
+        if (result != null && !result.isEmpty())
             resultStr = result.iterator().next();
         System.out.println("testMissingSort(): result: " + resultStr);
         System.out.println("testMissingSort(): expect: " + expectedRes);
