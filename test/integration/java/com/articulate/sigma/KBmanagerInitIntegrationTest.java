@@ -85,8 +85,9 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     private void filterExpectedKifs(List<String> actualKifFiles, Set<String> expectedKifFiles) {
 
         List<String> remainingActualKifFiles = Lists.newArrayList(actualKifFiles);
+        String fileName;
         for (String file : actualKifFiles) {
-            String fileName = file.substring(file.lastIndexOf("/") + 1);
+            fileName = file.substring(file.lastIndexOf("/") + 1);
             if (kifSet.contains(fileName))  {
                 remainingActualKifFiles.remove(file);
                 expectedKifFiles.remove(fileName);
@@ -106,8 +107,8 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
     @Test
     public void testInitializationTime()   {
 
-        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime < 350000);
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime < 35000);
         // Just in case something whacky is going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 30000);
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 10000);
     }
 }
