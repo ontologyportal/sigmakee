@@ -19,7 +19,7 @@ import org.junit.runners.Suite;
     KbIntegrationTest.class,
     PredVarInstIntegrationTest.class,
     TPTP3Test.class,
-    WSDwKBTest.class
+    WSDwKBtest.class
 })
 public class IntegrationSigmaTestSuite extends UnitTestBase {
 
