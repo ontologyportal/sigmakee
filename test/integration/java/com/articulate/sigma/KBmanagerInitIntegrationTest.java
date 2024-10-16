@@ -13,7 +13,7 @@ import static org.junit.Assert.*;
 
 public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
 
-    private static Set<String> kifSet = Sets.newHashSet();
+    private static final Set<String> kifSet = Sets.newHashSet();
 
     /** ***************************************************************
      */
