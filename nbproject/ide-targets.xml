@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project basedir=".." name="SigmaKEE-IDE">
+
+    <property file="nbproject/private/private.properties"/>
+    <property file="build.properties"/>
+
+    <path id="dcp">
+        <path path="${debug.classpath}"/>
+    </path>
+    <path id="tcp">
+        <path path="${run.test.classpath}"/>
+    </path>
+    <target name="debug-selected-file-in-java" depends="compile">
+        <fail unless="debug.class">Must set property 'debug.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="dcp"/>
+        </nbjpdastart>
+        <java classname="${debug.class}"
+              classpathref="dcp"
+              fork="true">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx10g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg line="-c Object Transaction"/>
+        </java>
+    </target>
+    <target name="debug-nb" depends="compile">
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="dcp"/>
+        </nbjpdastart>
+        <java classname="com.articulate.sigma.KB"
+              classpathref="dcp"
+              fork="true">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx10g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg line="-c Object Transaction"/>
+        </java>
+    </target>
+    <target name="run-selected-file-in-test" depends="compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-Xmx4g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class} failed!" if="test.failed"/>
+    </target>
+    <target name="debug-selected-file-in-test" depends="compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="tcp"/>
+        </nbjpdastart>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx4g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class} failed!" if="test.failed"/>
+    </target>
+    <target name="run-single-test-method" depends="compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-Xmx4g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class}#${method} failed!" if="test.failed"/>
+    </target>
+    <target name="debug-single-test-method" depends="compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="tcp"/>
+        </nbjpdastart>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx4g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class}#${method} failed!" if="test.failed"/>
+    </target>
+</project>
