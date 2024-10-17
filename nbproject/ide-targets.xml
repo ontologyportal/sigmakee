@@ -8,8 +8,8 @@
     -->
 
     <property file="nbproject/private/private.properties"/>
-    <import file="../build.xml"/>
-    <import file="${catalina.base}/bin/catalina-tasks.xml"/>
+    <import   file="../build.xml"/>
+    <import   file="${catalina.base}/bin/catalina-tasks.xml"/>
 
     <path id="dcp">
         <path path="${debug.classpath}"/>
@@ -20,6 +20,55 @@
     <path id="tcp">
         <path path="${run.test.classpath}"/>
     </path>
+
+    <!--
+    ====
+    INIT
+    ====
+    -->
+
+    <target name="init" depends="init-ivy">
+        <echo message="${app.name} v${product.Version}"/>
+        <property environment="env"/>
+        <echo message="CATALINA_HOME is set to: ${catalina.home}"/>
+        <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
+        <echo message="SIGMA_SRC is set to: ${basedir}"/>
+        <echo message="KBs_HOME is set to: ${kbs.home}"/>
+        <echo>Java Version via Ant: ${ant.java.version}</echo>
+        <echo>Java Version System Prop: ${java.version}</echo>
+        <echo message="Git dir: ${ontologyportal.git}"/>
+        <echo>classpath: ${run.classpath}</echo>
+        <echo>basedir: ${basedir}</echo>
+
+        <tstamp>
+            <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
+        </tstamp>
+    </target>
+
+    <target name="clean.extra.files" depends="clean">
+        <delete file="${test.result.xml}"/>
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${basedir}">
+                <include name="junit*.properties"/>
+            </fileset>
+        </delete>
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${kbs.home}">
+                <include name="SUMO.tptp"/>
+                <include name="NLGUtils.ser"/>
+                <include name="kbmanager.ser"/>
+                <include name="omw.ser"/>
+                <include name="wn.ser"/>
+            </fileset>
+        </delete>
+        <delete>
+            <fileset dir="${catalina.base}/logs">
+                <include name="*.log"/>
+                <include name="*.txt"/>
+                <include name="*.out"/>
+            </fileset>
+        </delete>
+    </target>
 
     <!--
     =================
@@ -67,7 +116,7 @@
     ===================
     -->
 
-    <target name="test" depends="compile.test" description="Runs a parent Unit test suite for all of SigmaKEE test packages">
+    <target name="test" depends="clean.extra.files,compile.test" description="Runs a parent Unit test suite for all of SigmaKEE test packages">
         <java classname="org.junit.runner.JUnitCore"
               classpath="${run.test.classpath}"
               fork="true">
@@ -78,7 +127,7 @@
             <arg value="com.articulate.sigma.UnitTestSuite"/>
         </java>
     </target>
-    <target name="run-selected-file-in-test" depends="compile.test">
+    <target name="run-selected-file-in-test" depends="clean.extra.files,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -100,7 +149,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method" depends="compile.test">
+    <target name="run-single-test-method" depends="clean.extra.files,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -196,7 +245,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="compile">
+    <target name="debug-nb" depends="clean.extra.files,compile">
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -211,7 +260,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="compile">
+    <target name="debug-selected-file-in-java" depends="clean.extra.files,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -227,7 +276,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug.password.service" depends="compile">
+    <target name="debug.password.service" depends="clean.extra.files,compile">
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -249,7 +298,7 @@
     =====================
     -->
 
-    <target name="debug-selected-file-in-test" depends="compile.test">
+    <target name="debug-selected-file-in-test" depends="clean.extra.files,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -275,7 +324,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method" depends="compile.test">
+    <target name="debug-single-test-method" depends="clean.extra.files,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
