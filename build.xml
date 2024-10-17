@@ -61,7 +61,7 @@
         <property environment="env"/>
         <echo message="CATALINA_HOME is set to: ${env.CATALINA_HOME}"/>
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
-        <echo message="SIGMA_SRC is set to: ${basedir}"/>
+        <echo message="SIGMA_SRC is set to: ${sigma.src}"/>
         <echo message="KBs_HOME is set to: ${kbs.home}"/>
         <echo>Java Version via Ant: ${ant.java.version}</echo>
         <echo>Java Version System Prop: ${java.version}</echo>
@@ -184,7 +184,7 @@
         <delete file="${dist.war}"/>
     </target>
 
-    <target name="install" depends="init">
+    <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
         <fail message="SIGMA_HOME needs to be set" unless="sigma.home"/>
         <copy todir="${sigma.home}/KBs">
             <fileset dir="${kbs.home}"/>
