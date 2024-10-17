@@ -233,6 +233,7 @@ PS1=Vagrant:$PS1
 ## Linux Installation
 
 ```sh
+cd ~
 mkdir workspace
 mkdir Programs
 cd Programs
