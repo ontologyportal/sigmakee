@@ -7,6 +7,13 @@
     ========
     -->
 
+    <path id="compile.classpath">
+        <fileset dir="${basedir}/lib">
+            <include name="*.jar"/>
+            <exclude name="junit*"/>
+            <exclude name="hamcrest*"/>
+        </fileset>
+    </path>
     <property file="build.properties"/>
 
     <!--
@@ -169,8 +176,12 @@
             <fileset dir="${deploy.home}"/>
             <fileset dir="${catalina.home}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
+        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <fileset dir="${lib.dir}">
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
         <delete file="${dist.war}"/>
-        <delete file="${test.result.xml}"/>
     </target>
 
     <target name="install" depends="init">
