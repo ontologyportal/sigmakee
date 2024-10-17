@@ -1599,7 +1599,7 @@ public class KB implements Serializable {
             // inference, since these axioms do exist in formulasAlreadyPresent but not in
             // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
             // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
-            if (SUMOKBtoTPTPKB.filterSimpleOnly == false && !formulasAlreadyPresent.isEmpty()) {
+            if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
                 String sf = formulasAlreadyPresent.get(0).sourceFile;
                 result = "The formula was already added from " + sf;
             }

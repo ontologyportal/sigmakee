@@ -43,9 +43,7 @@ public class NLGUtils implements Serializable {
      */
     private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(true); // we need these two classes registered
-        kryo.register(NLGUtils.class);
-        kryo.register(HashMap.class);
+        kryo.setRegistrationRequired(false); //No need to pre-register the class
         return kryo;
     });
 
