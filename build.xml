@@ -7,13 +7,6 @@
     ========
     -->
 
-    <path id="compile.classpath">
-        <fileset dir="${basedir}/lib">
-            <include name="*.jar"/>
-            <exclude name="junit*"/>
-            <exclude name="hamcrest*"/>
-        </fileset>
-    </path>
     <property file="build.properties"/>
 
     <!--
@@ -45,6 +38,14 @@
                  uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
         <ivy:retrieve/>
     </target>
+
+    <path id="compile.classpath">
+        <fileset dir="${basedir}/lib">
+            <include name="*.jar"/>
+            <exclude name="junit*"/>
+            <exclude name="hamcrest*"/>
+        </fileset>
+    </path>
 
     <path id="core.sourcepath">
         <pathelement path="${src.dir}/com/articulate/sigma"/>
