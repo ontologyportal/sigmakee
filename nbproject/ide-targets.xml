@@ -29,10 +29,9 @@
 
     <target name="init" depends="init-ivy">
         <echo message="${app.name} v${product.Version}"/>
-        <property environment="env"/>
         <echo message="CATALINA_HOME is set to: ${catalina.home}"/>
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
-        <echo message="SIGMA_SRC is set to: ${basedir}"/>
+        <echo message="SIGMA_SRC is set to: ${sigma.src}"/>
         <echo message="KBs_HOME is set to: ${kbs.home}"/>
         <echo>Java Version via Ant: ${ant.java.version}</echo>
         <echo>Java Version System Prop: ${java.version}</echo>
@@ -77,10 +76,10 @@
     -->
 
     <target name="run" depends="compile" description="Performs a test run of SigmaKEE">
-        <java classname="com.articulate.sigma.KB"
+        <java classname="${main.class}"
               classpath="${run.classpath}"
               fork="true">
-            <jvmarg value="-Xmx10g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -92,7 +91,7 @@
         <java classname="${run.class}"
               classpathref="rcp"
               fork="true">
-            <jvmarg value="-Xmx10g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -102,7 +101,7 @@
         <java classname="com.articulate.sigma.PasswordService"
               classpath="${run.classpath}"
               fork="true">
-            <jvmarg value="-Xmx5g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -120,7 +119,7 @@
         <java classname="org.junit.runner.JUnitCore"
               classpath="${run.test.classpath}"
               fork="true">
-            <jvmarg value="-Xmx8g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -135,7 +134,7 @@
                haltonfailure="yes"
                fork="yes"
                showoutput="yes">
-            <jvmarg value="-Xmx4g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -157,7 +156,7 @@
                haltonfailure="yes"
                fork="yes"
                showoutput="yes">
-            <jvmarg value="-Xmx4g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -253,7 +252,7 @@
               classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg value="-Xmx10g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -269,7 +268,7 @@
               classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg value="-Xmx10g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -284,7 +283,7 @@
               classpath="${run.classpath}"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg value="-Xmx5g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -310,7 +309,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg value="-Xmx4g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -336,7 +335,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg value="-Xmx4g"/>
+            <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
