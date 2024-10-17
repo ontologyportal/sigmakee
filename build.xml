@@ -1,4 +1,5 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" name="SigmaKEE" default="all" basedir=".">
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+         name="SigmaKEE" default="all" basedir=".">
 
     <!--
     ========
@@ -6,8 +7,7 @@
     ========
     -->
 
-    <import file="nbproject/ide-targets.xml"/>
-    <import file="${catalina.base}/bin/catalina-tasks.xml"/>
+    <property file="build.properties"/>
 
     <!--
     ============
@@ -51,13 +51,14 @@
 
     <target name="init" depends="init-ivy">
         <echo message="${app.name} v${product.Version}"/>
-        <echo message="CATALINA_HOME is set to: ${catalina.home}"/>
+        <property environment="env"/>
+        <echo message="CATALINA_HOME is set to: ${env.CATALINA_HOME}"/>
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="SIGMA_SRC is set to: ${basedir}"/>
         <echo message="KBs_HOME is set to: ${kbs.home}"/>
         <echo>Java Version via Ant: ${ant.java.version}</echo>
         <echo>Java Version System Prop: ${java.version}</echo>
-        <echo message="Git dir: ${workspace}"/>
+        <echo message="Git dir: ${env.ONTOLOGYPORTAL_GIT}"/>
         <echo>classpath: ${run.classpath}</echo>
         <echo>basedir: ${basedir}</echo>
 
@@ -66,7 +67,7 @@
         </tstamp>
     </target>
 
-    <target name="prepare" depends="init" description="deploy code to sigma.war">
+    <target name="prepare" depends="init" description="Prepare for deploying code to sigma.war">
         <mkdir dir="${build.classes.dir}"/>
 
         <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
@@ -92,7 +93,7 @@
         </copy>
     </target>
 
-    <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes}.">
+    <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes.dir}.">
         <javac destdir="${build.classes.dir}"
                debug="on"
                optimize="on"
@@ -104,7 +105,7 @@
         </javac>
     </target>
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${build.home}.">
+    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
         <manifest file="MANIFEST.MF">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
@@ -136,96 +137,6 @@
         <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
     </target>
 
-    <!--
-    =================
-    DEPLOY / UNDEPLOY
-    =================
-    -->
-
-    <target name="stop" description="stop web application in tomcat">
-<!--        <stop url="${mgr.url}"
-              username="${username}"
-              password="${password}"
-              path="${context}"/>-->
-        <exec executable="${catalina.home}/bin/${shutdown}">
-            <env key="CATALINA_HOME" value="${catalina.home}"/>
-        </exec>
-    </target>
-
-    <target name="start" description="start web application in tomcat">
-<!--        <start url="${mgr.url}"
-               username="${username}"
-               password="${password}"
-               path="${context}"/>-->
-        <exec executable="sh">
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_OPS" value="${catalina.ops}"/>
-            <env key="CATALINA_HOME" value="${catalina.home}"/>
-            <arg value="-c"/>
-            <arg value="'${catalina.home}/bin/${startup}'"/>
-        </exec>
-    </target>
-
-    <target name="deploy"
-            depends="undeploy,all"
-            description="Builds the web application, starts a local Tomcat server and runs sigmakee">
-        <sequential>
-            <antcall target="start"/>
-            <sleep seconds="2"/>
-            <deploy url="${mgr.url}"
-                    username="${username}"
-                    password="${password}"
-                    path="${context}"
-                    war="${basedir}/${dist.dir}/${web.app.name}.war"/>
-            <sleep seconds="2"/>
-            <antcall target="open.sigmakee.url"/>
-        </sequential>
-    </target>
-
-    <target name="open.sigmakee.url">
-        <exec executable="sh">
-            <arg value="-c"/>
-            <arg value="open -u ${deploy.url}"/>
-        </exec>
-    </target>
-
-    <target name="undeploy"
-            description="Removes the web application and stops the local Tomcat server">
-        <sequential>
-            <undeploy url="${mgr.url}"
-                      username="${username}"
-                      password="${password}"
-                      path="${context}"/>
-            <sleep seconds="2"/>
-            <antcall target="stop"/>
-        </sequential>
-    </target>
-
-    <!-- target name="all" depends="dist, api_doc" -->
-    <target name="all" depends="clean,dist">
-        <echo>System date/time is: ${TODAY_US}</echo>
-    </target>
-
-    <!--
-    ==========
-    RUN / TEST
-    ==========
-    -->
-
-    <target name="run" depends="compile" description="Performs a test run of SigmaKEE">
-        <java classname="com.articulate.sigma.KB"
-              classpath="${run.classpath}"
-              fork="true">
-            <jvmarg value="-Xmx10g"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg line="-c Object Transaction"/>
-        </java>
-    </target>
-
     <target name="compile.test" depends="compile" description="Compile the project's test classes.">
         <mkdir dir="${build.test.classes.dir}"/>
         <javac destdir="${build.test.classes.dir}"
@@ -239,35 +150,16 @@
         </javac>
     </target>
 
-    <target name="test.single" depends="compile.test" description="Runs a single test method">
-        <java classname="com.articulate.sigma.SingleJUnitTestRunner"
-              classpath="${run.test.classpath}"
-              fork="true">
-            <jvmarg value="-Xmx4g"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg value="com.articulate.sigma.trans.TPTP3ProofProcTest#testGetPrologArgs4"/>
-        </java>
-    </target>
-
-    <target name="test" depends="compile.test" description="Runs a unit test suite for all of SigmaKEE">
-        <java classname="org.junit.runner.JUnitCore"
-              classpath="${run.test.classpath}"
-              fork="true">
-            <jvmarg value="-Xmx8g"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg value="com.articulate.sigma.UnitTestSuite"/>
-        </java>
-    </target>
-
     <!--
     =====
     ADMIN
     =====
     -->
+
+    <!-- target name="all" depends="dist, api_doc" -->
+    <target name="all" depends="clean,dist">
+        <echo>System date/time is: ${TODAY_US}</echo>
+    </target>
 
     <target name="clean" description="Delete old build, dist and web directories">
         <delete includeemptydirs="true" failonerror="false">
@@ -312,34 +204,6 @@
             <group title="Sigma TPTPWorld" packages="TPTPWorld.*"/>
             <group title="Sigma TPTP Parser" packages="tptp_parser.*"/>
         </javadoc>
-    </target>
-
-    <target name="password.servcice" depends="compile" description="Performs account management services">
-        <java classname="com.articulate.sigma.PasswordService"
-              classpath="${run.classpath}"
-              fork="true">
-            <jvmarg value="-Xmx5g"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg line="${pword.props}"/>
-        </java>
-    </target>
-
-    <target name="debug.password.servcice" depends="compile">
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
-            <classpath path="${run.classpath}"/>
-        </nbjpdastart>
-        <java classname="com.articulate.sigma.PasswordService"
-              classpath="${run.classpath}"
-              fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg value="-Xmx5g"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg line="${pword.props}"/>
-        </java>
     </target>
 
 </project>

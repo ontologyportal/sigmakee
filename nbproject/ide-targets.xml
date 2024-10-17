@@ -1,24 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project basedir=".." name="SigmaKEE-IDE">
 
+    <!--
+    ========
+    TASKDEFs
+    ========
+    -->
+
     <property file="nbproject/private/private.properties"/>
-    <property file="build.properties"/>
+    <import file="../build.xml"/>
+    <import file="${catalina.base}/bin/catalina-tasks.xml"/>
 
     <path id="dcp">
         <path path="${debug.classpath}"/>
     </path>
+    <path id="rcp">
+        <path path="${run.classpath}"/>
+    </path>
     <path id="tcp">
         <path path="${run.test.classpath}"/>
     </path>
-    <target name="debug-selected-file-in-java" depends="compile">
-        <fail unless="debug.class">Must set property 'debug.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
-            <classpath refid="dcp"/>
-        </nbjpdastart>
-        <java classname="${debug.class}"
-              classpathref="dcp"
+
+    <!--
+    =================
+    RUN TASKS FOR SRC
+    =================
+    -->
+
+    <target name="run" depends="compile" description="Performs a test run of SigmaKEE">
+        <java classname="com.articulate.sigma.KB"
+              classpath="${run.classpath}"
               fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg value="-Xmx10g"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -26,19 +38,44 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug-nb" depends="compile">
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
-            <classpath refid="dcp"/>
-        </nbjpdastart>
-        <java classname="com.articulate.sigma.KB"
-              classpathref="dcp"
+    <target name="run-selected-file-in-java" depends="compile">
+        <fail unless="run.class">Must set property 'run.class'</fail>
+        <java classname="${run.class}"
+              classpathref="rcp"
               fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg value="-Xmx10g"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg line="-c Object Transaction"/>
+        </java>
+    </target>
+    <target name="password.service" depends="compile" description="Performs account management services">
+        <java classname="com.articulate.sigma.PasswordService"
+              classpath="${run.classpath}"
+              fork="true">
+            <jvmarg value="-Xmx5g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg line="${pword.props}"/>
+        </java>
+    </target>
+
+    <!--
+    ===================
+    RUN TASKS FOR TESTS
+    ===================
+    -->
+
+    <target name="test" depends="compile.test" description="Runs a parent Unit test suite for all of SigmaKEE test packages">
+        <java classname="org.junit.runner.JUnitCore"
+              classpath="${run.test.classpath}"
+              fork="true">
+            <jvmarg value="-Xmx8g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg value="com.articulate.sigma.UnitTestSuite"/>
         </java>
     </target>
     <target name="run-selected-file-in-test" depends="compile.test">
@@ -49,32 +86,6 @@
                haltonfailure="yes"
                fork="yes"
                showoutput="yes">
-            <jvmarg value="-Xmx4g"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <formatter type="plain" usefile="false"/>
-            <classpath>
-                <path refid="tcp"/>
-            </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
-                <formatter type="xml"/>
-            </test>
-        </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
-    </target>
-    <target name="debug-selected-file-in-test" depends="compile.test">
-        <fail unless="test.class">Must set property 'test.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
-            <classpath refid="tcp"/>
-        </nbjpdastart>
-        <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg value="-Xmx4g"/>
             <env key="SIGMA_HOME" value="${sigma.home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -111,6 +122,159 @@
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
+
+    <!--
+    =================
+    DEPLOY / UNDEPLOY
+    =================
+    -->
+
+    <target name="stop" description="stop web application in tomcat">
+<!--        <stop url="${mgr.url}"
+              username="${username}"
+              password="${password}"
+              path="${context}"/>-->
+        <exec executable="${catalina.home}/bin/${shutdown}">
+            <env key="CATALINA_HOME" value="${catalina.home}"/>
+        </exec>
+    </target>
+
+    <target name="start" description="start web application in tomcat">
+<!--        <start url="${mgr.url}"
+               username="${username}"
+               password="${password}"
+               path="${context}"/>-->
+        <exec executable="sh">
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_OPS" value="${catalina.ops}"/>
+            <env key="CATALINA_HOME" value="${catalina.home}"/>
+            <arg value="-c"/>
+            <arg value="'${catalina.home}/bin/${startup}'"/>
+        </exec>
+    </target>
+
+    <target name="deploy"
+            depends="undeploy,all"
+            description="Builds the web application, starts a local Tomcat server and runs sigmakee">
+        <sequential>
+            <antcall target="start"/>
+            <sleep seconds="2"/>
+            <deploy url="${mgr.url}"
+                    username="${username}"
+                    password="${password}"
+                    path="${context}"
+                    war="${basedir}/${dist.dir}/${web.app.name}.war"/>
+            <sleep seconds="2"/>
+            <antcall target="open.sigmakee.url"/>
+        </sequential>
+    </target>
+
+    <target name="open.sigmakee.url">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="open -u ${deploy.url}"/>
+        </exec>
+    </target>
+
+    <target name="undeploy"
+            description="Removes the web application and stops the local Tomcat server">
+        <sequential>
+            <undeploy url="${mgr.url}"
+                      username="${username}"
+                      password="${password}"
+                      path="${context}"/>
+            <sleep seconds="2"/>
+            <antcall target="stop"/>
+        </sequential>
+    </target>
+
+    <!--
+    ===================
+    DEBUG TASKS FOR SRC
+    ===================
+    -->
+
+    <target name="debug-nb" depends="compile">
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="dcp"/>
+        </nbjpdastart>
+        <java classname="com.articulate.sigma.KB"
+              classpathref="dcp"
+              fork="true">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx10g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg line="-c Object Transaction"/>
+        </java>
+    </target>
+    <target name="debug-selected-file-in-java" depends="compile">
+        <fail unless="debug.class">Must set property 'debug.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="dcp"/>
+        </nbjpdastart>
+        <java classname="${debug.class}"
+              classpathref="dcp"
+              fork="true">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx10g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg line="-c Object Transaction"/>
+        </java>
+    </target>
+    <target name="debug.password.service" depends="compile">
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="dcp"/>
+        </nbjpdastart>
+        <java classname="com.articulate.sigma.PasswordService"
+              classpath="${run.classpath}"
+              fork="true">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx5g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg line="${pword.props}"/>
+        </java>
+    </target>
+
+    <!--
+    =====================
+    DEBUG TASKS FOR TESTS
+    =====================
+    -->
+
+    <target name="debug-selected-file-in-test" depends="compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="tcp"/>
+        </nbjpdastart>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg value="-Xmx4g"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class} failed!" if="test.failed"/>
+    </target>
     <target name="debug-single-test-method" depends="compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
@@ -137,4 +301,5 @@
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
+
 </project>

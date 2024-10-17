@@ -14,7 +14,7 @@ auxiliary.show.customizer.message=<message>
  will show your customized message when someone attempts to open the customizer.  -->
             <name>SigmaKEE</name>
             <properties>
-                <property name="ant.script">build.xml</property>
+                <property name="ant.script">nbproject/ide-targets.xml</property>
             </properties>
             <folders>
                 <source-folder>
@@ -76,6 +76,19 @@ auxiliary.show.customizer.message=<message>
                 <action name="debug">
                     <script>${ant.script}</script>
                     <target>debug-nb</target>
+                </action>
+                <action name="run.single">
+                    <script>${ant.script}</script>
+                    <target>run-selected-file-in-java</target>
+                    <context>
+                        <property>run.class</property>
+                        <folder>src/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
                 </action>
                 <action name="debug.single">
                     <script>${ant.script}</script>
@@ -249,6 +262,10 @@ auxiliary.show.customizer.message=<message>
                 <action name="deploy">
                     <script>${ant.script}</script>
                     <target>deploy</target>
+                </action>
+                <action name="undeploy">
+                    <script>${ant.script}</script>
+                    <target>undeploy</target>
                 </action>
             </ide-actions>
             <export>
