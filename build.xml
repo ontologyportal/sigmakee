@@ -97,7 +97,7 @@
         <copy todir="${lib.dir}" file="${sigma.utils.home}/sigmaUtils.jar"/>
         <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
         <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <path path="${javac.classpath}"/>
+            <path refid="compile.classpath"/>
         </copy>
     </target>
 
