@@ -106,8 +106,8 @@
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
         <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
-        <copy todir="${lib.dir}" file="${tptp.home}/tptp.jar"/>
-        <copy todir="${lib.dir}" file="${sigma.utils.home}/sigmaUtils.jar"/>
+        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
+        <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
         <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
         <copy todir="${build.home}/WEB-INF/lib" flatten="true">
             <path refid="compile.classpath"/>
@@ -131,7 +131,7 @@
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
-            <lib dir="${lib.dir}"/>
+            <lib dir="${basedir}/lib"/>
             <classes dir="${build.classes.dir}"/>
         </war>
         <jar destfile="${build.home}/${app.name}.jar">
@@ -172,7 +172,7 @@
             <fileset dir="${catalina.home}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
-            <fileset dir="${lib.dir}">
+            <fileset dir="${basedir}/lib">
                 <include name="*.jar"/>
             </fileset>
         </delete>
