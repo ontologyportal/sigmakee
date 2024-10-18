@@ -42,6 +42,36 @@
     ====
     -->
 
+    <property name="src.dir" value="src/java"/>
+    <property name="test.corpus.dir" value="test/corpus/java"/>
+    <property name="test.integration.dir" value="test/integration/java"/>
+    <property name="test.unit.dir" value="test/unit/java"/>
+    <property name="javac.release" value="11"/>
+    <property name="web.app.name" value="sigma"/>
+    <property name="app.name" value="${web.app.name}kee"/>
+    <property name="build.home" value="build"/>
+    <property name="build.classes.dir" value="${build.home}/WEB-INF/classes"/>
+    <property name="build.test.classes.dir" value="${build.home}/test/classes"/>
+    <property name="dist.dir" value="dist"/>
+    <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
+    <property name="dist.javadoc.dir" value="${dist.dir}/doc/api"/>
+
+    <property environment="env"/>
+    <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+    <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
+    <property name="web.dir" value="web"/>
+    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
+    <property name="sigma.src" value="${git.home}/${app.name}"/>
+    <property name="basedir" value="${sigma.src}"/>
+    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
+    <property name="tptp.home" value="${git.home}/TPTP-ANTLR"/>
+    <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
+    <property name="sigma.utils.home" value="${git.home}/SigmaUtils"/>
+    <property name="kbs.home" value="${git.home}/sumo"/>
+    <property name="dist.home" value="${tomcat.home}/webapps"/>
+    <property name="deploy.home" value="${dist.home}/${app.name}"/>
+    <property name="dist.war" value="${deploy.home}/${web.app.name}.war"/>
+
     <path id="compile.classpath">
         <fileset dir="${basedir}/lib">
             <include name="*.jar"/>
@@ -49,8 +79,11 @@
             <exclude name="hamcrest*"/>
         </fileset>
     </path>
-    <property file="build.properties"/> <!-- for ant.refid prop -->
-
+    <path id="compile.test.classpath">
+        <path refid="compile.classpath"/>
+        <pathelement location="${build.classes.dir}"/>
+        <pathelement path="${basedir}/lib/hamcrest-core-1.3.jar:${basedir}/lib/junit-4.12.jar"/>
+    </path>
     <path id="core.sourcepath">
         <pathelement path="${src.dir}/com/articulate/sigma"/>
         <pathelement path="${src.dir}/com/articulate/delphi"/>
@@ -62,10 +95,6 @@
     </path>
 
     <target name="init" depends="init-ivy">
-        <property environment="env"/>
-        <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
-        <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
-
         <echo message="${app.name} v${product.Version}"/>
         <echo message="CATALINA_HOME is set to: ${tomcat.home}"/>
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
@@ -74,7 +103,7 @@
         <echo>Java Version via Ant: ${ant.java.version}</echo>
         <echo>Java Version System Prop: ${java.version}</echo>
         <echo message="Git dir: ${git.home}"/>
-        <echo>classpath: ${run.classpath}</echo>
+        <echo>classpath: ${env.SIGMA_CP}</echo>
         <echo>basedir: ${basedir}</echo>
 
         <tstamp>
@@ -120,14 +149,14 @@
                optimize="on"
                deprecation="on"
                includeantruntime="false"
-               classpath="${javac.classpath}"
+               classpathref="compile.classpath"
                release="${javac.release}">
             <src refid="core.sourcepath"/>
         </javac>
     </target>
 
     <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
-        <war warfile="${tomcat.home}/webapps/${web.app.name}.war" webxml="${web.dir}/web.xml">
+        <war warfile="${dist.war}" webxml="${web.dir}/web.xml">
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
@@ -146,7 +175,7 @@
                optimize="on"
                deprecation="on"
                includeantruntime="false"
-               classpath="${javac.test.classpath}"
+               classpathref="compile.test.classpath"
                release="${javac.release}">
             <src refid="test.sourcepath"/>
         </javac>
