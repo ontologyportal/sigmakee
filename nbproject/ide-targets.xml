@@ -90,7 +90,7 @@
     ===================
     -->
 
-    <target name="test" depends="clean.extra.files,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+    <target name="test" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <java classname="org.junit.runner.JUnitCore"
               classpath="${run.test.classpath}"
               fork="true">
@@ -101,7 +101,7 @@
             <arg value="com.articulate.sigma.UnitTestSuite"/>
         </java>
     </target>
-    <target name="run-selected-test-in-corpus" depends="clean.extra.files,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -117,13 +117,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-selected-test-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -139,13 +139,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-selected-test-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+    <target name="run-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -161,13 +161,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
+    <target name="run-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -183,13 +183,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+    <target name="run-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -205,7 +205,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -285,7 +285,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="clean.extra.files,prep.main.config,compile">
+    <target name="debug-nb" depends="thorough.clean,prep.main.config,compile">
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -300,7 +300,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="clean.extra.files,prep.main.config,compile">
+    <target name="debug-selected-file-in-java" depends="thorough.clean,prep.main.config,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -338,7 +338,7 @@
     =====================
     -->
 
-    <target name="debug-selected-test-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
+    <target name="debug-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -358,13 +358,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-selected-test-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+    <target name="debug-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -384,13 +384,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
+    <target name="debug-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -410,13 +410,13 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+    <target name="debug-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -436,7 +436,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -492,8 +492,8 @@
     <target name="prep.integration.config">
         <copy tofile="${sigma.home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
-    <target name="clean.extra.files" depends="clean">
-        <delete file="${test.result.xml}"/>
+    <target name="thorough.clean" depends="clean">
+        <delete file="${test.result}.xml"/>
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>
@@ -514,7 +514,7 @@
             </fileset>
         </delete>
     </target>
-    <target name="all" depends="clean.extra.files,dist">
+    <target name="all" depends="thorough.clean,dist">
         <echo>System date/time is: ${TODAY_US}</echo>
     </target>
 

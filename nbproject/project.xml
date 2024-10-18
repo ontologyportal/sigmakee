@@ -107,7 +107,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="test.single">
                     <script>${ant.script}</script>
-                    <target>run-selected-file-in-test</target>
+                    <target>run-selected-test-in-corpus</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/corpus/java</folder>
@@ -120,7 +120,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="test.single">
                     <script>${ant.script}</script>
-                    <target>run-selected-file-in-test</target>
+                    <target>run-selected-test-in-integration</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/integration/java</folder>
@@ -133,7 +133,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="test.single">
                     <script>${ant.script}</script>
-                    <target>run-selected-file-in-test</target>
+                    <target>run-selected-test-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/unit/java</folder>
@@ -146,7 +146,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="run.single.method">
                     <script>${ant.script}</script>
-                    <target>run-single-test-method</target>
+                    <target>run-single-test-method-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/coprus/java</folder>
@@ -159,7 +159,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="run.single.method">
                     <script>${ant.script}</script>
-                    <target>run-single-test-method</target>
+                    <target>run-single-test-method-in-integration</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/integration/java</folder>
@@ -198,7 +198,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.test.single">
                     <script>${ant.script}</script>
-                    <target>debug-selected-file-in-test</target>
+                    <target>debug-selected-test-in-integration</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/integration/java</folder>
@@ -211,7 +211,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.test.single">
                     <script>${ant.script}</script>
-                    <target>debug-selected-file-in-test</target>
+                    <target>debug-selected-test-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/unit/java</folder>
