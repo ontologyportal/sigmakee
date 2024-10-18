@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOformulaToTPTPformulaTest;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
@@ -18,9 +19,10 @@ import org.junit.runners.Suite;
     KBmanagerInitIntegrationTest.class,
     KbIntegrationTest.class,
     PredVarInstIntegrationTest.class,
-    TPTP3Test.class,
-    WSDwKBtest.class
+    SUMOformulaToTPTPformulaTest.class, // <- already tested in the UnitTestSuite
+//    TPTP3Test.class,
+//    WSDwKBtest.class
 })
-public class IntegrationSigmaTestSuite extends UnitTestBase {
+public class IntegrationSigmaTestSuite extends IntegrationTestBase {
 
 }
