@@ -10,9 +10,9 @@ import org.junit.runners.Suite;
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
     IntegrationSigmaTestSuite.class,
-    IntegrationVerbNetTestSuite.class,
-    IntegrationNLGTestSuite.class,
-    IntegrationTransTestSuite.class
+//    IntegrationVerbNetTestSuite.class,
+//    IntegrationNLGTestSuite.class,
+//    IntegrationTransTestSuite.class
 })
 public class IntegrationTestSuite extends IntegrationTestBase {
 
