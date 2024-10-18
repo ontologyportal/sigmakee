@@ -155,7 +155,7 @@
         </javac>
     </target>
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile.test" description="Create the *.war file and place in ${dist.dir}.">
         <war warfile="${dist.war}" webxml="${web.dir}/web.xml">
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
