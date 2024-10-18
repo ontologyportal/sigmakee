@@ -279,7 +279,7 @@ public class SUMOKBtoTPTPKB {
             return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
         }
         String result = null;
-        try (pw) {
+        try {
             int axiomIndex = 1;   // a count appended to axiom names to make a unique ID
             TreeMap<String,String> relationMap = new TreeMap<>(); // A Map of variable arity relations keyed by new name
             writeHeader(pw,fileName);
