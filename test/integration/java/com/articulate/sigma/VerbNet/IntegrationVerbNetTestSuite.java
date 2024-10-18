@@ -14,6 +14,6 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     VerbNetTest.class
 })
-public class IntegrationVerbNetTestSuite extends UnitTestBase {
+public class IntegrationVerbNetTestSuite extends IntegrationTestBase {
 
 }
