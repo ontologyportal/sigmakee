@@ -44,38 +44,13 @@
         </tstamp>
     </target>
 
-    <target name="clean.extra.files" depends="clean">
-        <delete file="${test.result.xml}"/>
-        <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${basedir}">
-                <include name="junit*.properties"/>
-            </fileset>
-        </delete>
-        <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${kbs.home}">
-                <include name="SUMO.tptp"/>
-                <include name="NLGUtils.ser"/>
-                <include name="kbmanager.ser"/>
-                <include name="omw.ser"/>
-                <include name="wn.ser"/>
-            </fileset>
-        </delete>
-        <delete>
-            <fileset dir="${catalina.base}/logs">
-                <include name="*.log"/>
-                <include name="*.txt"/>
-                <include name="*.out"/>
-            </fileset>
-        </delete>
-    </target>
-
     <!--
     =================
     RUN TASKS FOR SRC
     =================
     -->
 
-    <target name="run" depends="compile" description="Performs a test run of SigmaKEE">
+    <target name="run" depends="prep.main.config,compile" description="Performs a test run of SigmaKEE using default arguments">
         <java classname="${main.class}"
               classpath="${run.classpath}"
               fork="true">
@@ -86,7 +61,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="run-selected-file-in-java" depends="compile">
+    <target name="run-selected-file-in-java" depends="prep.main.config,compile">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <java classname="${run.class}"
               classpathref="rcp"
@@ -115,7 +90,7 @@
     ===================
     -->
 
-    <target name="test" depends="clean.extra.files,compile.test" description="Runs a parent Unit test suite for all of SigmaKEE test packages">
+    <target name="test" depends="clean.extra.files,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <java classname="org.junit.runner.JUnitCore"
               classpath="${run.test.classpath}"
               fork="true">
@@ -126,7 +101,7 @@
             <arg value="com.articulate.sigma.UnitTestSuite"/>
         </java>
     </target>
-    <target name="run-selected-file-in-test" depends="clean.extra.files,compile.test">
+    <target name="run-selected-test-in-corpus" depends="clean.extra.files,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -148,7 +123,73 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method" depends="clean.extra.files,compile.test">
+    <target name="run-selected-test-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class} failed!" if="test.failed"/>
+    </target>
+    <target name="run-selected-test-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class} failed!" if="test.failed"/>
+    </target>
+    <target name="run-single-test-method-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class}#${method} failed!" if="test.failed"/>
+    </target>
+    <target name="run-single-test-method-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -244,7 +285,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="clean.extra.files,compile">
+    <target name="debug-nb" depends="clean.extra.files,prep.main.config,compile">
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -259,7 +300,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="clean.extra.files,compile">
+    <target name="debug-selected-file-in-java" depends="clean.extra.files,prep.main.config,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -275,7 +316,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug.password.service" depends="clean.extra.files,compile">
+    <target name="debug.password.service" depends="compile">
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -297,7 +338,7 @@
     =====================
     -->
 
-    <target name="debug-selected-file-in-test" depends="clean.extra.files,compile.test">
+    <target name="debug-selected-test-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -323,7 +364,33 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method" depends="clean.extra.files,compile.test">
+    <target name="debug-selected-test-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="tcp"/>
+        </nbjpdastart>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class} failed!" if="test.failed"/>
+    </target>
+    <target name="debug-single-test-method-in-integration" depends="clean.extra.files,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -348,6 +415,107 @@
             </test>
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
+    </target>
+    <target name="debug-single-test-method-in-unit" depends="clean.extra.files,prep.unit.config,compile.test">
+        <fail unless="test.class">Must set property 'test.class'</fail>
+        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+            <classpath refid="tcp"/>
+        </nbjpdastart>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               fork="yes"
+               showoutput="yes">
+            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result.xml}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${test.class}#${method} failed!" if="test.failed"/>
+    </target>
+
+    <!--
+    =====
+    ADMIN
+    =====
+    -->
+
+    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+        <manifest file="${mainifest.mf}">
+            <attribute name="Built-By" value="${my.name} ${my.email}"/>
+            <attribute name="Specification-Title"
+                       value="${product.Name}"/>
+            <attribute name="Specification-Version"
+                       value="${product.version.major}.${product.version.minor}"/>
+            <attribute name="Specification-Vendor"
+                       value="${spec.vendor}"/>
+            <attribute name="Implementation-Title"
+                       value="${ant.project.name}"/>
+            <attribute name="Implementation-Version"
+                       value="${product.Version} built on ${TODAY_US}"/>
+            <attribute name="Implementation-Vendor"
+                       value="${nps}, ${moves.institute}, ${savage.research.group}"/>
+            <attribute name="Implementation-URL"
+                       value="${savage.url}"/>
+        </manifest>
+        <jar destfile="${dist.jar}"
+             basedir="${build.classes.dir}"
+             manifest="${mainifest.mf}">
+            <metainf file="LICENSE"/>
+        </jar>
+        <war destfile="${dist.dir}/${web.app.name}.war"
+             basedir="${build.home}"
+             webxml="${web.dir}/web.xml"
+             manifest="MANIFEST.MF">
+            <metainf file="LICENSE"/>
+        </war>
+        <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
+    </target>
+
+    <!-- Copy customized config files to their respective directories -->
+    <target name="prep.main.config">
+        <!-- Restore main config post integration testing -->
+        <copy todir="${sigma.home}/KBs" file="${main.config}" overwrite="true"/>
+    </target>
+    <target name="prep.unit.config">
+        <copy todir="${test.unit.resources.dir}" file="${unit.config}" overwrite="true"/>
+    </target>
+    <target name="prep.integration.config">
+        <copy tofile="${sigma.home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
+    </target>
+    <target name="clean.extra.files" depends="clean">
+        <delete file="${test.result.xml}"/>
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${basedir}">
+                <include name="junit*.properties"/>
+            </fileset>
+        </delete>
+        <!-- Prune KB after integration tests -->
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${kbs.home}">
+                <!--<include name="SUMO.tptp"/>-->
+                <include name="*.ser"/>
+            </fileset>
+        </delete>
+        <delete>
+            <fileset dir="${catalina.base}/logs">
+                <include name="*.log"/>
+                <include name="*.txt"/>
+                <include name="*.out"/>
+            </fileset>
+        </delete>
+    </target>
+    <target name="all" depends="clean.extra.files,dist">
+        <echo>System date/time is: ${TODAY_US}</echo>
     </target>
 
 </project>
