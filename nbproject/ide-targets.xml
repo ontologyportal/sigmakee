@@ -8,6 +8,7 @@
     -->
 
     <property file="nbproject/private/private.properties"/>
+    <property file="build.properties"/>
     <import   file="../build.xml"/>
     <import   file="${catalina.base}/bin/catalina-tasks.xml"/>
 

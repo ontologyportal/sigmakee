@@ -165,6 +165,7 @@
         </war>
         <jar destfile="${build.home}/${app.name}.jar">
             <fileset dir="${build.classes.dir}"/>
+            <fileset dir="${build.test.classes.dir}"/>
         </jar>
     </target>
 

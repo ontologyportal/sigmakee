@@ -52,7 +52,7 @@ auxiliary.show.customizer.message=<message>
             <ide-actions>
                 <action name="build">
                     <script>${ant.script}</script>
-                    <target>compile</target>
+                    <target>dist</target>
                 </action>
                 <action name="javadoc">
                     <script>${ant.script}</script>
@@ -73,7 +73,7 @@ auxiliary.show.customizer.message=<message>
                 <action name="rebuild">
                     <script>${ant.script}</script>
                     <target>clean</target>
-                    <target>compile</target>
+                    <target>dist</target>
                 </action>
                 <action name="debug">
                     <script>${ant.script}</script>
@@ -325,6 +325,7 @@ auxiliary.show.customizer.message=<message>
                     <ide-action name="deploy"/>
                     <ide-action name="test"/>
                     <ide-action name="debug"/>
+                    <ide-action name="undeploy"/>
                 </context-menu>
             </view>
             <subprojects/>
