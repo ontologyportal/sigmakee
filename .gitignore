@@ -17,3 +17,8 @@
 .idea/
 .ivy
 lib
+/nbproject/private/
+/MANIFEST.MF
+/test.result.xml
+.DS_Store
+/file.bin

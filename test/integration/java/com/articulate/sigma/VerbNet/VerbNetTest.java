@@ -3,13 +3,13 @@ package com.articulate.sigma.VerbNet;
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.*;
-import org.junit.Test;
 
-import static org.junit.Assert.*;
 import java.util.*;
 
-public class VerbNetTest extends IntegrationTestBase {
+import org.junit.Test;
+import static org.junit.Assert.*;
 
+public class VerbNetTest extends IntegrationTestBase {
 
     /** *************************************************************
      */

@@ -643,7 +643,7 @@ public class KB implements Serializable {
      */
     public static boolean isRelationInAnyKB(String i) {
 
-        HashMap<String, KB> kbs = KBmanager.getMgr().kbs;
+        Map<String, KB> kbs = KBmanager.getMgr().kbs;
         if (!kbs.isEmpty()) {
             KB kb = null;
             Iterator<KB> it = kbs.values().iterator();
@@ -1599,7 +1599,7 @@ public class KB implements Serializable {
             // inference, since these axioms do exist in formulasAlreadyPresent but not in
             // SUMO.tptp. In the future, when SUMO can completely run using whole KB, we
             // can remove SUMOKBtoTPTPKB.fitlerSimpleOnly==false;
-            if (SUMOKBtoTPTPKB.filterSimpleOnly == false && !formulasAlreadyPresent.isEmpty()) {
+            if (!SUMOKBtoTPTPKB.FILTER_SIMPLE_ONLY && !formulasAlreadyPresent.isEmpty()) {
                 String sf = formulasAlreadyPresent.get(0).sourceFile;
                 result = "The formula was already added from " + sf;
             }
@@ -3539,14 +3539,13 @@ public class KB implements Serializable {
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
-            try {
+            try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
                 if (!formulaMap.isEmpty()) {
-                    HashSet<String> formulaStrings = new HashSet<String>();
-                    formulaStrings.addAll(formulaMap.keySet());
+//                    HashSet<String> formulaStrings = new HashSet<String>();
+//                    formulaStrings.addAll(formulaMap.keySet());
                     long millis = System.currentTimeMillis();
                     if (lang.equals("tptp")) {
                         SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                        PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
                         skb.kb = this;
                         skb.writeFile(infFilename, null, false, pw);
                     }
@@ -3554,7 +3553,6 @@ public class KB implements Serializable {
                         SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
                         stff.kb = this;
                         SUMOtoTFAform.initOnce();
-                        PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
                         stff.writeSorts(pw);
                         stff.writeFile(infFilename,null,false,pw);
                         System.out.println("INFO in KB.loadVampire(): CWA: " + SUMOKBtoTPTPKB.CWA);
@@ -3572,7 +3570,6 @@ public class KB implements Serializable {
                 e.printStackTrace();
             }
         }
-        return;
     }
     /***************************************************************
      * Checks for a Leo executable, preprocesses all of the constituents
@@ -3612,11 +3609,10 @@ public class KB implements Serializable {
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        try {
-            PrintWriter pw = new PrintWriter(new FileWriter(infFilename));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
             if (!formulaMap.isEmpty()) {
-                HashSet<String> formulaStrings = new HashSet<String>();
-                formulaStrings.addAll(formulaMap.keySet());
+//                HashSet<String> formulaStrings = new HashSet<String>();
+//                formulaStrings.addAll(formulaMap.keySet());
                 if (eprover != null) {
                     System.out.println("INFO in KB.loadEProver(): terminating old process first");
                     eprover.terminate();
@@ -3643,7 +3639,6 @@ public class KB implements Serializable {
             mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
             System.out.println("Error in KB.loadEProver(): EProver not loaded");
         }
-        return;
     }
 
     /*****************************************************************

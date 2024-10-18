@@ -22,13 +22,13 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
     public static boolean debug = false;
 
-    public static Set<String> qChildren = new HashSet<String>();
-    public static Set<String> iChildren = new HashSet<String>();
-    public static Set<String> rChildren = new HashSet<String>();
-    public static Set<String> lChildren = new HashSet<String>();
-    public static HashSet<String> qNotR = new HashSet<String>();
-    public static HashSet<String> qNotI = new HashSet<String>();
-    public static HashSet<String> qNotL = new HashSet<String>();
+    public static Set<String> qChildren = new HashSet<>();
+    public static Set<String> iChildren = new HashSet<>();
+    public static Set<String> rChildren = new HashSet<>();
+    public static Set<String> lChildren = new HashSet<>();
+    public static HashSet<String> qNotR = new HashSet<>();
+    public static HashSet<String> qNotI = new HashSet<>();
+    public static HashSet<String> qNotL = new HashSet<>();
 
     public static final String INT_SUFFIX = "In";
     public static final String REAL_SUFFIX = "Re";
@@ -54,27 +54,27 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (qChildren != null)
                 qNotR.addAll(qChildren);
             else
-                qChildren = new HashSet<String>();
+                qChildren = new HashSet<>();
             if (rChildren != null)
                 qNotR.removeAll(rChildren);
             else
-                rChildren = new HashSet<String>();
+                rChildren = new HashSet<>();
             qNotR.add("RationalNumber");
             if (qChildren != null) qNotI.addAll(qChildren);
             if (iChildren != null)
                 qNotI.removeAll(iChildren);
             else
-                iChildren = new HashSet<String>();
+                iChildren = new HashSet<>();
             qNotI.add("Integer");
             if (qChildren != null) qNotL.addAll(qChildren);
             if (lChildren != null)
                 qNotL.removeAll(lChildren);
             else
-                lChildren = new HashSet<String>();
+                lChildren = new HashSet<>();
             qNotL.add("RealNumber");
             String lang = KBmanager.getMgr().getPref("TPTPlang");
             if (!StringUtil.emptyString(lang))
-                this.lang = lang;
+                SUMOKBtoTFAKB.lang = lang;
             SUMOtoTFAform.initOnce();
         }
         initialized = true;
@@ -170,10 +170,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         if (StringUtil.emptyString(s))
             return false;
-        if (s.equals("RationalNumber") || s.equals("Integer") || s.equals("RealNumber") ||
-                kb.isSubclass(s,"Integer") || kb.isSubclass(s,"RationalNumber") || kb.isSubclass(s,"RealNumber"))
-            return true;
-        return false;
+        return s.equals("RationalNumber") || s.equals("Integer") || s.equals("RealNumber") ||
+                kb.isSubclass(s,"Integer") || kb.isSubclass(s,"RationalNumber") || kb.isSubclass(s,"RealNumber");
     }
 
     /** *************************************************************
@@ -226,18 +224,18 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t))
             return;
         List<String> sig = kb.kbCache.signatures.get(t);
-        if (sig == null || sig.size() == 0) {
+        if (sig == null || sig.isEmpty()) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
             System.out.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
             pw.flush();
             Thread.dumpStack();
             return;
         }
-        StringBuffer sigBuf = new StringBuffer();
+        StringBuilder sigBuf = new StringBuilder();
         //if (kb.isFunction(t))
         //    sigBuf.append(" " + translateSort(sig.get(0)) + " *");
         for (String s : sig.subList(1,sig.size()))
-            sigBuf.append(" " + translateSort(kb,s) + " *");
+            sigBuf.append(" ").append(translateSort(kb,s)).append(" *");
         if (sigBuf.length() == 0) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): " + t);
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): signature: " + sig);
@@ -269,9 +267,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String patternString = "__(\\d)(In|Re|Ra|En)+";
         Pattern pattern = Pattern.compile(patternString);
         Matcher matcher = pattern.matcher(t);
-        if (matcher.find())
-            return true;
-        return false;
+        return matcher.find();
     }
 
     /** *************************************************************
@@ -352,7 +348,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (kb.terms.contains(newRel))
             return;
         List<String> sig = kb.kbCache.signatures.get(t);
-        if (sig == null || sig.size() == 0) {
+        if (sig == null || sig.isEmpty()) {
             System.out.println("Error in SUMOKBtoTFAKB.extendRelationSig(): t: " + t);
             Thread.dumpStack();
             return;
@@ -363,7 +359,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (extsig.size() > sigmax)
             sigmax = extsig.size();
         for (int i = 0; i < sigmax; i++) {
-            if (extsig != null && i < extsig.size() && !StringUtil.emptyString(extsig.get(i)))
+            if (i < extsig.size() && !StringUtil.emptyString(extsig.get(i)))
                 SUMOtoTFAform.safeSet(combinedSig,i,extsig.get(i));
             else
                 SUMOtoTFAform.safeSet(combinedSig,i,sig.get(i));
@@ -398,7 +394,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     private boolean expandableArg(String rel, int argnum, List<String> sig) {
 
-        String type = "";
+        String type;
         if (argnum < sig.size())
             type = sig.get(argnum);
         else
@@ -411,10 +407,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return true;
         if (listOperator(rel) && type.equals("Entity"))
             return true;
-        if (hasNumericArg(rel) && kb.isSubclass(type,"Quantity"))
-            return true;
-        else
-            return false;
+        return hasNumericArg(rel) && kb.isSubclass(type,"Quantity");
     }
 
     /** *************************************************************
@@ -470,10 +463,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             int size = sig.size();
             if (size > 1)
                 size = size - 1;  // first sig element is range, some sig elements before variable arity element may be fixed and explicit
-            StringBuffer inStr = new StringBuffer();
-            StringBuffer reStr = new StringBuffer();
-            StringBuffer raStr = new StringBuffer();
-            StringBuffer enStr = new StringBuffer();
+            StringBuilder inStr = new StringBuilder();
+            StringBuilder reStr = new StringBuilder();
+            StringBuilder raStr = new StringBuilder();
+            StringBuilder enStr = new StringBuilder();
             if (expandableArg(r,0,sig)) {
                 inStr.append("0In");
                 reStr.append("0Re");
@@ -486,10 +479,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (hasNumericArg(r) || listOperator(r)) {
                 for (int i = size; i <= 7; i++) {
                     //if (expandableArg(r,i,sig)) {
-                        inStr.append(Integer.toString(i) + "In");
-                        reStr.append(Integer.toString(i) + "Re");
-                        raStr.append(Integer.toString(i) + "Ra");
-                        enStr.append(Integer.toString(i) + "En");
+                    inStr.append(Integer.toString(i)).append("In");
+                        reStr.append(Integer.toString(i)).append("Re");
+                        raStr.append(Integer.toString(i)).append("Ra");
+                        enStr.append(Integer.toString(i)).append("En");
                     //}
                     String newInStr = Integer.toString(i) + fnSuffix + "__" + inStr.toString();
                     String newReStr = Integer.toString(i) + fnSuffix + "__" + reStr.toString();
@@ -522,7 +515,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         handleListFn(toExtend);
         for (String t : kb.getTerms()) {
             pw.println("% SUMOKBtoTFAKB.writeSorts(): " + t);
-            String fnSuffix = "";
+            String fnSuffix;
             if (kb.isFunction(t))
                 fnSuffix = "Fn";
             if (Formula.isLogicalOperator(t) || t.equals("equal"))
@@ -570,16 +563,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         SUMOKBtoTPTPKB.lang = "tff";
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
-        PrintWriter pw = null;
         System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
-        try {
-            pw = new PrintWriter(new FileWriter(filename));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
             System.out.println("---------------------------");
             System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");
             skbtfakb.writeFile(filename, null, false, pw);
-            pw.flush();
-            pw.close();
         }
         catch (Exception e) {
             e.printStackTrace();

@@ -3,17 +3,21 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.SigmaTestBase;
 import com.articulate.sigma.UnitTestBase;
+
 import com.google.common.collect.Lists;
+
 import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  *
  */
 public class NLGUtilsTest extends UnitTestBase {
+
     @Test(expected=IllegalArgumentException.class)
     public void testReadKeywordMapNull() {
         NLGUtils.readKeywordMap(null);
@@ -179,6 +183,11 @@ public class NLGUtilsTest extends UnitTestBase {
         List<String> expected = Lists.newArrayList("?H");
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testDecoder() {
+        assertNotNull(NLGUtils.decoder());
     }
 
 }

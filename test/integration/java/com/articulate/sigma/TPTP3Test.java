@@ -2,13 +2,14 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
+import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.LineNumberReader;
 import java.io.StringReader;
 
-import com.articulate.sigma.utils.StringUtil;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -27,8 +28,8 @@ public class TPTP3Test extends IntegrationTestBase {
             LineNumberReader lnr = new LineNumberReader(r);
             tpp.parseProofOutput(lnr, kb);
         }
-        catch (Exception ex) {
-            System.out.println(ex.getMessage());
+        catch (FileNotFoundException ex) {
+            System.err.println(ex.getMessage());
         }
         String result = tpp.proof.toString().trim();
         System.out.println("Result: " + result);

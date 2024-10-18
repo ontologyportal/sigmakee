@@ -27,9 +27,10 @@ public class CaseRoleTest extends IntegrationTestBase {
         cache.instanceOf = new HashMap<>();
         cache.buildTransInstOf();
         Map<String, Set<String>> expectedInstancesMap = cache.instanceOf;
-        TreeSet<String> expectedInstancesForCaseRole = new TreeSet<>();
+        Set<String> expectedInstancesForCaseRole = new TreeSet<>();
+        Set<String> parentClasses;
         for (String inst : expectedInstancesMap.keySet()) {
-            Set<String> parentClasses = expectedInstancesMap.get(inst);
+            parentClasses = expectedInstancesMap.get(inst);
             if (parentClasses.contains("CaseRole"))
                 expectedInstancesForCaseRole.add(inst);
         }
@@ -38,9 +39,9 @@ public class CaseRoleTest extends IntegrationTestBase {
         cache.instanceOf = new HashMap<>();
         cache.buildDirectInstances();
         Map<String, Set<String>> actualInstancesMap = cache.instanceOf;
-        TreeSet<String> actualInstancesForCaseRole = new TreeSet<>();
+        Set<String> actualInstancesForCaseRole = new TreeSet<>();
         for (String inst : actualInstancesMap.keySet()) {
-            Set<String> parentClasses = actualInstancesMap.get(inst);
+            parentClasses = actualInstancesMap.get(inst);
             if (parentClasses.contains("CaseRole"))
                 actualInstancesForCaseRole.add(inst);
         }

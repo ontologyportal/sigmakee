@@ -1,10 +1,8 @@
 package com.articulate.sigma;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 
 import static org.junit.Assert.*;
 

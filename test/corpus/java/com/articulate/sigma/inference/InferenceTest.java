@@ -3,23 +3,26 @@ package com.articulate.sigma.inference;
 import com.articulate.sigma.InferenceTestSuite;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+
 import com.google.common.collect.Lists;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class InferenceTest {
+
+    private static final String SIGMA_SRC = System.getenv("SIGMA_SRC");
 
     private static KB kb;
 
@@ -37,7 +40,7 @@ public class InferenceTest {
                 Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {
             if (!kb.containsFile(s)) {
-                System.out.println("Error in InferenceTest.setKB(): required file " + s + " missing");
+                System.err.println("Error in InferenceTest.setKB(): required file " + s + " missing");
                 System.exit(-1);
             }
         }
@@ -48,12 +51,12 @@ public class InferenceTest {
     @Parameterized.Parameters(name="{0}")
     public static <T> Collection<T> prepare() {
 
-        String testDataDirectoryPath = "test/corpus/java/resources/InferenceTestData";
+        String testDataDirectoryPath = SIGMA_SRC + File.separator + "test/corpus/java/resources/InferenceTestData";
         boolean enableIncludeTestsList = false;   // If enableIncludeTestsList=true, only run test files in includeTestsList
         boolean enableExcludeTestsList = false;   // If enableIncludeTestsList=false & enableExcludeTestsList=true, only run test files NOT in excludeTestsLists
                                                   // If enableIncludeTestsList=false & enableExcludeTestsList=false, run all test files in InferenceTestData
-        ArrayList<String> includeTestsList = Lists.newArrayList("QA1");
-        ArrayList<String> excludeTestsList = Lists.newArrayList("TQG2", "TQG4", "TQG10");
+        List<String> includeTestsList = Lists.newArrayList("QA1");
+        List<String> excludeTestsList = Lists.newArrayList("TQG2", "TQG4", "TQG10");
         return getTestFiles(testDataDirectoryPath, includeTestsList, enableIncludeTestsList,
                 excludeTestsList, enableExcludeTestsList);
     }
@@ -61,8 +64,8 @@ public class InferenceTest {
     /** ***************************************************************
      */
     public static <T> Collection<T> getTestFiles(String testDataDirectoryPath,
-                  ArrayList<String> includeTestsList, boolean enableIncludeTestsList,
-                  ArrayList<String> excludeTestsList, boolean enableExcludeTestsList) {
+                  List<String> includeTestsList, boolean enableIncludeTestsList,
+                  List<String> excludeTestsList, boolean enableExcludeTestsList) {
 
         Collection<T> result = Lists.newArrayList();
         File folder = new File(testDataDirectoryPath);
@@ -90,8 +93,8 @@ public class InferenceTest {
             }
         }
         catch (IOException e) {
-            System.out.println("Error in InferenceTest.getTestFiles(): using path: " + testDataDirectoryPath);
-            System.out.println(e.getMessage());
+            System.err.println("Error in InferenceTest.getTestFiles(): using path: " + testDataDirectoryPath);
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return result;
@@ -103,8 +106,6 @@ public class InferenceTest {
     public void test() {
 
         System.out.println("InferenceTest.test(): " + fInput);
-        ArrayList<String> expectedAnswers = new ArrayList<>();
-        ArrayList<String> actualAnswers = new ArrayList<>();
         InferenceTestSuite its = new InferenceTestSuite();
         InferenceTestSuite.InfTestData itd = its.inferenceUnitTest(fInput,kb);
         System.out.println("expected: " + itd.expectedAnswers);

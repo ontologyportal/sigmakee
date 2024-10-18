@@ -1,0 +1,364 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://www.netbeans.org/ns/project/1">
+    <type>org.netbeans.modules.ant.freeform</type>
+    <configuration>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/1">
+            <name>SigmaKEE</name>
+        </general-data>
+        <general-data xmlns="http://www.netbeans.org/ns/freeform-project/2">
+            <!-- Do not use Project Properties customizer when editing this file manually.
+ To prevent the customizer from showing, create nbproject/project.properties file and enter
+auxiliary.show.customizer=false
+property there. Adding
+auxiliary.show.customizer.message=<message>
+ will show your customized message when someone attempts to open the customizer.  -->
+            <name>SigmaKEE</name>
+            <properties>
+                <property name="ant.script">nbproject/ide-targets.xml</property>
+                <property-file>nbproject/private/project.properties</property-file>
+                <property-file>build.properties</property-file>
+            </properties>
+            <folders>
+                <source-folder>
+                    <label>${app.name}</label>
+                    <location>.</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+                <source-folder>
+                    <label>Test Corpus</label>
+                    <type>java</type>
+                    <location>test/corpus/java</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+                <source-folder>
+                    <label>Test Integration</label>
+                    <type>java</type>
+                    <location>test/integration/java</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+                <source-folder>
+                    <label>Test Unit</label>
+                    <type>java</type>
+                    <location>test/unit/java</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+                <source-folder>
+                    <label>Source Packages</label>
+                    <type>java</type>
+                    <location>src/java</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+            </folders>
+            <ide-actions>
+                <action name="build">
+                    <script>${ant.script}</script>
+                    <target>dist</target>
+                </action>
+                <action name="javadoc">
+                    <script>${ant.script}</script>
+                    <target>api_doc</target>
+                </action>
+                <action name="clean">
+                    <script>${ant.script}</script>
+                    <target>clean</target>
+                </action>
+                <action name="run">
+                    <script>${ant.script}</script>
+                    <target>run</target>
+                </action>
+                <action name="test">
+                    <script>${ant.script}</script>
+                    <target>test</target>
+                </action>
+                <action name="rebuild">
+                    <script>${ant.script}</script>
+                    <target>clean</target>
+                    <target>dist</target>
+                </action>
+                <action name="debug">
+                    <script>${ant.script}</script>
+                    <target>debug-nb</target>
+                </action>
+                <action name="run.single">
+                    <script>${ant.script}</script>
+                    <target>run-selected-file-in-java</target>
+                    <context>
+                        <property>run.class</property>
+                        <folder>src/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single">
+                    <script>${ant.script}</script>
+                    <target>debug-selected-file-in-java</target>
+                    <context>
+                        <property>debug.class</property>
+                        <folder>src/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="test.single">
+                    <script>${ant.script}</script>
+                    <target>run-selected-test-in-corpus</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/corpus/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="test.single">
+                    <script>${ant.script}</script>
+                    <target>run-selected-test-in-integration</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/integration/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="test.single">
+                    <script>${ant.script}</script>
+                    <target>run-selected-test-in-unit</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/unit/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single.method">
+                    <script>${ant.script}</script>
+                    <target>run-single-test-method-in-unit</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/coprus/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single.method">
+                    <script>${ant.script}</script>
+                    <target>run-single-test-method-in-integration</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/integration/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="run.single.method">
+                    <script>${ant.script}</script>
+                    <target>run-single-test-method</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/unit/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.test.single">
+                    <script>${ant.script}</script>
+                    <target>debug-selected-file-in-test</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/corpus/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.test.single">
+                    <script>${ant.script}</script>
+                    <target>debug-selected-test-in-integration</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/integration/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.test.single">
+                    <script>${ant.script}</script>
+                    <target>debug-selected-test-in-unit</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/unit/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single.method">
+                    <script>${ant.script}</script>
+                    <target>debug-single-test-method</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/corpus/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single.method">
+                    <script>${ant.script}</script>
+                    <target>debug-single-test-method</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/integration/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="debug.single.method">
+                    <script>${ant.script}</script>
+                    <target>debug-single-test-method</target>
+                    <context>
+                        <property>test.class</property>
+                        <folder>test/unit/java</folder>
+                        <pattern>\.java$</pattern>
+                        <format>java-name</format>
+                        <arity>
+                            <one-file-only/>
+                        </arity>
+                    </context>
+                </action>
+                <action name="deploy">
+                    <script>${ant.script}</script>
+                    <target>deploy</target>
+                </action>
+                <action name="undeploy">
+                    <script>${ant.script}</script>
+                    <target>undeploy</target>
+                </action>
+            </ide-actions>
+            <export>
+                <type>folder</type>
+                <location>build/test/classes</location>
+                <script>${ant.script}</script>
+                <build-target>compile</build-target>
+            </export>
+            <export>
+                <type>folder</type>
+                <location>build/test/classes</location>
+                <script>${ant.script}</script>
+                <build-target>compile</build-target>
+            </export>
+            <export>
+                <type>folder</type>
+                <location>build/test/classes</location>
+                <script>${ant.script}</script>
+                <build-target>compile</build-target>
+            </export>
+            <export>
+                <type>folder</type>
+                <location>build/WEB-INF/classes</location>
+                <script>${ant.script}</script>
+                <build-target>compile</build-target>
+            </export>
+            <view>
+                <items>
+                    <source-folder style="packages">
+                        <label>Test Corpus</label>
+                        <location>test/corpus/java</location>
+                    </source-folder>
+                    <source-folder style="packages">
+                        <label>Test Integration</label>
+                        <location>test/integration/java</location>
+                    </source-folder>
+                    <source-folder style="packages">
+                        <label>Test Unit</label>
+                        <location>test/unit/java</location>
+                    </source-folder>
+                    <source-folder style="packages">
+                        <label>Source Packages</label>
+                        <location>src/java</location>
+                    </source-folder>
+                    <source-file>
+                        <location>${ant.script}</location>
+                    </source-file>
+                </items>
+                <context-menu>
+                    <ide-action name="build"/>
+                    <ide-action name="rebuild"/>
+                    <ide-action name="clean"/>
+                    <ide-action name="javadoc"/>
+                    <ide-action name="run"/>
+                    <ide-action name="deploy"/>
+                    <ide-action name="test"/>
+                    <ide-action name="debug"/>
+                    <ide-action name="undeploy"/>
+                </context-menu>
+            </view>
+            <subprojects/>
+        </general-data>
+        <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/5">
+            <compilation-unit>
+                <package-root>test/corpus/java</package-root>
+                <unit-tests/>
+                <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/antlr4-runtime-4.9.3.jar:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/hamcrest-core-1.3.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.12.jar:lib/kryo-5.0.0-RC2.jar:lib/mail-1.4.jar:lib/minlog-1.3.1.jar:lib/objenesis-3.3.jar:lib/py4j-0.10.6.jar:lib/reflectasm-1.11.9.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <built-to>build/test/classes</built-to>
+                <source-level>11</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>test/integration/java</package-root>
+                <unit-tests/>
+                <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/antlr4-runtime-4.9.3.jar:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/hamcrest-core-1.3.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.12.jar:lib/kryo-5.0.0-RC2.jar:lib/mail-1.4.jar:lib/minlog-1.3.1.jar:lib/objenesis-3.3.jar:lib/py4j-0.10.6.jar:lib/reflectasm-1.11.9.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <built-to>build/test/classes</built-to>
+                <source-level>11</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>test/unit/java</package-root>
+                <unit-tests/>
+                <classpath mode="compile">build/WEB-INF/classes:lib/antlr4-runtime-4.9.3.jar:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/hamcrest-core-1.3.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.12.jar:lib/kryo-5.0.0-RC2.jar:lib/mail-1.4.jar:lib/minlog-1.3.1.jar:lib/objenesis-3.3.jar:lib/py4j-0.10.6.jar:lib/reflectasm-1.11.9.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <built-to>build/test/classes</built-to>
+                <source-level>11</source-level>
+            </compilation-unit>
+            <compilation-unit>
+                <package-root>src/java</package-root>
+                <classpath mode="compile">lib/antlr4-runtime-4.9.3.jar:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.0.0-RC2.jar:lib/mail-1.4.jar:lib/minlog-1.3.1.jar:lib/objenesis-3.3.jar:lib/py4j-0.10.6.jar:lib/reflectasm-1.11.9.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <built-to>build/WEB-INF/classes</built-to>
+                <javadoc-built-to>dist/doc/api</javadoc-built-to>
+                <source-level>11</source-level>
+            </compilation-unit>
+        </java-data>
+    </configuration>
+</project>

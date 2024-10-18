@@ -62,7 +62,7 @@ cd ../Programs
 curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 tar xvfz WordNet-3.0.tar.gz
 
-If while you are trying to decompress the WordNet-3.0 file, you are getting the message "Unsuported format" then try to download WordNet-3.0 again by using the next command:
+If while you are trying to decompress the WordNet-3.0 file, you are getting the message "Unsupported format" then try to download WordNet-3.0 again by using the next command:
 - wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 and try to uncompress again:
 - tar xvfz WordNet-3.0.tar.gz

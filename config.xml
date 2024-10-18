@@ -53,7 +53,7 @@
     <constituent filename="Geography.kif" />
     <constituent filename="Government.kif" />
     <constituent filename="Hotel.kif" />
-    <constituent filename="HotelDetail.kif" />
+    <!--<constituent filename="HotelDetail.kif" />-->
     <constituent filename="Justice.kif" />
     <constituent filename="Languages.kif" />
     <constituent filename="Law.kif" />

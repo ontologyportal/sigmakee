@@ -58,6 +58,8 @@ public class THFtest extends IntegrationTestBase {
         String expected = "thf(ax1641,axiom,((! [ROW3: $i,ROW1: $i,ROW2: $i]: " +
                 "(((instance_THFTYPE_IiioI @ ROW3 @ lLanguage_THFTYPE_i) & " +
                 "(instance_THFTYPE_IiioI @ ROW1 @ lSymbolicString_THFTYPE_i)) =>";
+
+        test(msg, f, expected);
     }
 
 }

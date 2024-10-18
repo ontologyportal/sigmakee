@@ -1,16 +1,17 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
 import static org.junit.Assert.*;
 import org.junit.Ignore;
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  */
@@ -29,14 +30,10 @@ public class SUMOtoTFATest extends UnitTestBase {
         SUMOformulaToTPTPformula.lang = "tff";
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new FileWriter(filename));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
-            pw.flush();
-            pw.close();
         }
-        catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
         }
         SUMOtoTFAform.setNumericFunctionInfo();
@@ -48,7 +45,7 @@ public class SUMOtoTFATest extends UnitTestBase {
     public void testBuildConstraints() {
 
         System.out.println("\n========= testBuildConstraints ==========\n");
-        String kifstring, expectedRes, actualRes;
+        String expectedRes, actualRes;
         expectedRes = "(or (equal (SignumFn ?NUMBER) 1) (equal (SignumFn ?NUMBER) 0))";
         SUMOtoTFAform.initOnce();
         actualRes = SUMOtoTFAform.numericConstraints.get("NonnegativeRealNumber");
@@ -112,7 +109,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "        (subProcess ?S2 ?P))\n" +
                 "    (relatedEvent ?S1 ?S2))";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__P : $i,V__S1 : $i,V__S2 : $i] : ((s__instance(V__P, s__Process) & " +
                 "s__instance(V__S1, s__Process) & s__instance(V__S2, s__Process)) => " +
@@ -144,7 +141,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "            (instance ?R Electricity)\n" +
                 "            (resource ?EV ?R))))";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__EV : $i,V__DEV : $i] : " +
                 "((s__instance(V__DEV, s__ElectricDevice) & s__instance(V__EV, s__Process) & " +
@@ -175,7 +172,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "        (subProcess ?SUB ?PROC))\n" +
                 "    (eventLocated ?SUB ?LOC))";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__PROC : $i,V__SUB : $i,V__LOC : $i] : " +
                 "(s__instance(V__SUB, s__Process) => (s__instance(V__PROC, s__Process) & " +
@@ -205,7 +202,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "(forall (?ARC3) (=> (graphPart ?ARC3 ?PATH) (or (equal ?ARC3 ?ARC1) (equal ?ARC3 ?ARC2))))) " +
                 "(equal (PathWeightFn ?PATH) (AdditionFn ?NUMBER1 ?NUMBER2)))\n";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__SUM : $i,V__NUMBER1 : $i,V__NUMBER2 : $i,V__ARC1 : $i,V__PATH : $i,V__ARC2 : $i] : " +
                 "((s__instance(V__ARC1, s__GraphArc) & s__instance(V__PATH, s__GraphPath) & " +
@@ -236,7 +233,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         kifstring = "(exists (?ARC1 ?ARC2 ?PATH) (and (graphPart ?ARC1 ?PATH) " +
                 "(graphPart ?ARC2 ?PATH) (arcWeight ?ARC1 ?NUMBER1)))\n";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__NUMBER1 : $i] : (( ? [V__ARC1:$i, V__ARC2:$i, V__PATH:$i] : " +
                 "((s__instance(V__ARC1, s__GraphArc) & s__instance(V__ARC2, s__GraphElement) & " +
@@ -281,7 +278,7 @@ public class SUMOtoTFATest extends UnitTestBase {
                 "        (exists (?ITEM) \n" +
                 "          (greaterThan @ROW ?ITEM))))))";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__ROW1 : $i] : (((s__instance(s__greaterThan__m, s__TotalValuedRelation) & " +
                 "s__instance(s__greaterThan__m, s__Predicate)) => ( ? [V__VALENCE:$int] : " +
@@ -325,7 +322,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         kifstring = "(=> (and (instance ?INT1 Integer) (instance ?INT2 Integer)) " +
                 "(not (and (lessThan ?INT1 ?INT2) (lessThan ?INT2 (SuccessorFn ?INT1)))))\n";
         Set<Formula> forms = SUMOtoTFAform.fp.preProcess(new Formula(kifstring),false,kb);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return;
         expectedRes = "! [V__INT2 : $int,V__INT1 : $int] : (~(($less(V__INT1 ,V__INT2) & " +
                 "$less(V__INT2 ,s__SuccessorFn__0In1InFn(V__INT1)))))";

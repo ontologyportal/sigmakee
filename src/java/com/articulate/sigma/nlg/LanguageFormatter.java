@@ -38,7 +38,7 @@ public class LanguageFormatter {
     public static boolean debug = false;
 
     // a list of format parameters or words and the sentence words they match with
-    public static HashMap<String,CoreLabel> outputMap = new HashMap<>();
+    public static Map<String,CoreLabel> outputMap = new HashMap<>();
     private final String statement;
 
     private final Map<String, String> phraseMap;
@@ -54,8 +54,8 @@ public class LanguageFormatter {
     private final Map<String, HashSet<String>> variableToInstanceMap;
 
     // Modifiable versions of variableTypes and variableToInstanceMap for informal NLG.
-    private HashMap<String, Set<String>> variableTypesNLG;
-    private  Map<String, Set<String>> variableToInstanceMapNLG;
+    private Map<String, Set<String>> variableTypesNLG;
+    private Map<String, Set<String>> variableToInstanceMapNLG;
 
     // FIXME: Verify that we handle all operators, then delete this field.
     private static final List<String> notReadyOperators = Lists.newArrayList();
@@ -81,6 +81,7 @@ public class LanguageFormatter {
     // prepending a '?' to the token plus its index, or by appending
     // a '*' to the token
     public static class VariableAnnotation implements CoreAnnotation<String> {
+        @Override
         public Class<String> getType() {
             return String.class;
         }
@@ -90,6 +91,7 @@ public class LanguageFormatter {
     // The value is the number of the argument in a relation, corresponding
     // to this text token
     public static class RelationArgumentAnnotation implements CoreAnnotation<Integer> {
+        @Override
         public Class<Integer> getType() {
             return Integer.class;
         }
@@ -109,7 +111,7 @@ public class LanguageFormatter {
         this.statement = stmt;
         this.phraseMap = phraseMap;
         this.termMap = termMap;
-        this.kb = kb;
+        LanguageFormatter.kb = kb;
         this.language = language;
 
         Formula f = new Formula();
@@ -128,13 +130,17 @@ public class LanguageFormatter {
         variableToInstanceMapNLG = new HashMap<>(variableToInstanceMap);
         variableTypesNLG = new HashMap<>();
 
+        String variable;
+        Set<String> origInstances;
+        Set<String> newInstances;
+        String newStr;
         // variableToInstanceMapNLG should map variables to the correct surface form of the SUMO term
         for (Map.Entry<String, Set<String>> entry : variableToInstanceMapNLG.entrySet()) {
-            String variable = entry.getKey();
-            Set<String> origInstances = entry.getValue();
-            Set<String> newInstances = Sets.newHashSet();
+            variable = entry.getKey();
+            origInstances = entry.getValue();
+            newInstances = Sets.newHashSet();
             for (String instance : origInstances) {
-                String newStr = SumoProcessCollector.getProperFormOfEntity(instance, kb);
+                newStr = SumoProcessCollector.getProperFormOfEntity(instance, kb);
                 newInstances.add(newStr);
             }
             variableToInstanceMapNLG.put(variable, newInstances);
@@ -143,12 +149,12 @@ public class LanguageFormatter {
         // variableTypes should map variables to the correct surface form of the SUMO term, but we want it to contain
         // only those terms not in variableToInstanceMapNLG
         for (Map.Entry<String, HashSet<String>> entry : variableTypes.entrySet()) {
-            String variable = entry.getKey();
+            variable = entry.getKey();
             if (! variableToInstanceMapNLG.containsKey(variable)) {
-                Set<String> origInstances = entry.getValue();
-                Set<String> newInstances = Sets.newHashSet();
+                origInstances = entry.getValue();
+                newInstances = Sets.newHashSet();
                 for (String instance : origInstances) {
-                    String newStr = SumoProcessCollector.getProperFormOfEntity(instance, kb);
+                    newStr = SumoProcessCollector.getProperFormOfEntity(instance, kb);
                     newInstances.add(newStr);
                 }
                 variableTypesNLG.put(variable, newInstances);
@@ -194,25 +200,30 @@ public class LanguageFormatter {
                 f.read(statement);
                 FormulaPreprocessor fp = new FormulaPreprocessor();
                 //HashMap varMap = fp.computeVariableTypes(kb);
-                HashMap<String, Set<String>> instanceMap = new HashMap<>();
-                HashMap<String, Set<String>> classMap = new HashMap<>();
-                HashMap<String, HashSet<String>> types = fp.computeVariableTypes(f, kb);
+                Map<String, Set<String>> instanceMap = new HashMap<>();
+                Map<String, Set<String>> classMap = new HashMap<>();
+                Map<String, HashSet<String>> types = fp.computeVariableTypes(f, kb);
                 Iterator<String> it = types.keySet().iterator();
+                String var;
+                Set<String> typeList;
+                Iterator<String> it2;
+                String t;
+                Set<String> values;
                 while (it.hasNext()) {
-                    String var = it.next();
-                    HashSet<String> typeList = types.get(var);
-                    Iterator<String> it2 = typeList.iterator();
+                    var = it.next();
+                    typeList = types.get(var);
+                    it2 = typeList.iterator();
                     while (it2.hasNext()) {
-                        String t = it2.next();
+                        t = it2.next();
                         if (t.endsWith("+")) {
-                            Set<String> values = new HashSet<>();
+                            values = new HashSet<>();
                             if (classMap.containsKey(var))
                                 values = classMap.get(var);
                             values.add(t.substring(0, t.length()-1));
                             classMap.put(var, values);
                         }
                         else {
-                            Set<String> values = new HashSet<>();
+                            values = new HashSet<>();
                             if (instanceMap.containsKey(var))
                                 values = instanceMap.get(var);
                             values.add(t);
@@ -261,7 +272,7 @@ public class LanguageFormatter {
             return "";
         }
         StringBuilder result = new StringBuilder();
-        String ans = null;
+        String ans;
         Formula f = new Formula(stmt);
 
         theStack.insertFormulaArgs(f);
@@ -351,11 +362,12 @@ public class LanguageFormatter {
             else
                 result.append(processAtom(pred, termMap));
             f.read(f.cdr());
+            String arg;
             while (!f.empty()) {
                 if (debug) System.out.println("INFO in LanguageFormatter.paraphraseStatement(): stmt: " + f);
                 if (debug) System.out.println("length: " + f.listLength());
                 if (debug) System.out.println("result: " + result);
-                String arg = f.car();
+                arg = f.car();
                 f.read(f.cdr());
                 result.append(" ");
                 if (Formula.atom(arg))
@@ -386,9 +398,10 @@ public class LanguageFormatter {
         if (variableMap.containsKey(key))     {
             Set<String> oldSet = variableMap.get(key);
             Set<String> newSet = Sets.newHashSet();
+            String newStr;
             for (String oldStr : oldSet)   {
                 // modify each noun accordingly
-                String newStr = property.getSurfaceFormForNoun(oldStr, kb);
+                newStr = property.getSurfaceFormForNoun(oldStr, kb);
                 newSet.add(newStr);
             }
             variableMap.put(key, newSet);
@@ -416,7 +429,7 @@ public class LanguageFormatter {
 
                     if (variableTypes.containsKey(processInstanceName)) {
 
-                        HashSet<String> vals = variableTypes.get(processInstanceName);
+                        Set<String> vals = variableTypes.get(processInstanceName);
                         if (NLGUtils.containsProcess(vals, kb))  {
                             // Mark the argument as PROCESSED.
                             theStack.markFormulaArgAsProcessed(formula.getFormula());
@@ -491,13 +504,13 @@ public class LanguageFormatter {
                 if (debug) System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
-            ArrayList<String> args = new ArrayList<>();
+            List<String> args = new ArrayList<>();
             Formula f = new Formula();
             f.read(stmt);
             String pred = f.getStringArgument(0);
             f.read(f.cdr());
 
-            String ans = null;
+            String ans;
 
             if (LanguageFormatter.notReadyOperators.contains(pred))   {
                 doInformalNLG = false;
@@ -524,10 +537,10 @@ public class LanguageFormatter {
                 return ans;
             }
             try {
-                String arg = null;
+                String arg, result;
                 while (!f.empty()) {
                     arg = f.car();
-                    String result = paraphraseStatement(arg, false, depth + 1);
+                    result = paraphraseStatement(arg, false, depth + 1);
                     if (StringUtil.isNonEmptyString(result))    {
                         args.add(result);
                         // Let the next element down in the stack know whether we've performed informal NLG.
@@ -836,8 +849,8 @@ public class LanguageFormatter {
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 3.5 format: " + strFormat);
         int num = 1;                                          // handle arguments
         String argPointer = ("%" + num);
-        String arg = "";
-        String para = "";
+        String arg;
+        String para;
         while (strFormat.contains(argPointer)) {
             if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + f.getFormula());
             if (debug) System.out.println("arg: " + f.getArgument(num));
@@ -895,12 +908,12 @@ public class LanguageFormatter {
 
         String result = atom;
         String unquoted = StringUtil.removeEnclosingQuotes(atom);
-        boolean isNumber = false;
+        boolean isNumber;
         try {
             Double dbl = Double.valueOf(unquoted);
             isNumber = !dbl.isNaN();
         }
-        catch (Exception nex) {
+        catch (NumberFormatException nex) {
             isNumber = false;
         }
         if (isNumber)
@@ -940,8 +953,8 @@ public class LanguageFormatter {
         try {
             if (!Formula.isVariable(word) && (termMap != null)) {
                 String pph = termMap.get(word);
-                if (StringUtil.isNonEmptyString(pph)) 
-                    ans = pph;                
+                if (StringUtil.isNonEmptyString(pph))
+                    ans = pph;
             }
         }
         catch (Exception ex) {
@@ -969,83 +982,89 @@ public class LanguageFormatter {
         form = form + " ";
         if (debug) System.out.println("LanguageFormatter.createObjectMap(): input " + form);
         int tokenNum = 1;
-        boolean inQuote = false;
+//        boolean inQuote;
         int index = 0;
-        StringBuffer termBuffer = new StringBuffer();
+        StringBuilder termBuffer = new StringBuilder();
+        CoreLabel cl;
+        int phraseEnd;
+        String phrase;
+        int argnum;
+        String[] phraseWords;
         while (index < form.length()) {
             //System.out.println(index);
-            if (form.charAt(index) == '"') {
-                System.out.println("Error in LanguageFormatter.createObjectMap(): premature quote at index " +
-                        index + " in " + form);
-                return;
-            }
-            else if (form.charAt(index) == ' ') {
-                CoreLabel cl = new CoreLabel();
-                cl.setOriginalText(termBuffer.toString());
-                cl.setValue(termBuffer.toString());
-                cl.setIndex(tokenNum);
-                if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl);
-                if (debug) System.out.println("LanguageFormatter.createObjectMap(): termBuffer: " + termBuffer);
-                outputMap.put(termBuffer.toString(),cl);
-                termBuffer = new StringBuffer();
-                tokenNum++;
-                index++;
-            }
-            else if (form.charAt(index) == '&') {
-                index++;
-                if (form.charAt(index) != '%') {
-                    System.out.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
-                            form.charAt(index) + " in " + form);
+            switch (form.charAt(index)) {
+                case '"':
+                    System.out.println("Error in LanguageFormatter.createObjectMap(): premature quote at index " +
+                            index + " in " + form);
                     return;
-                }
-                index++;
-                int termEnd = form.indexOf("$",index);
-                if (termEnd == -1) {
-                    System.out.println("Error in LanguageFormatter.createObjectMap(): missing $ in " +
-                            form + " after " + index);
-                    return;
-                }
-                String term = form.substring(index,termEnd);
-                int quote1 = termEnd + 1;
-                if (form.charAt(quote1) != '"') {
-                    System.out.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
-                            form.charAt(quote1) +" at index " + quote1 + " in " + form);
-                    return;
-                }
-                int phraseStart = quote1 + 1;
-                int phraseEnd = form.indexOf("\"",phraseStart);
-                String phrase = form.substring(phraseStart,phraseEnd);
-                phrase = StringUtil.removeDoubleSpaces(phrase);
-                int argnum = -1;
-                if (Character.isDigit(form.charAt(phraseEnd+1)))
-                    argnum = Integer.parseInt(Character.toString(form.charAt(phraseEnd+1)));
-                String[] phraseWords = phrase.split(" ");
-                for (String s : phraseWords) {
-                    CoreLabel cl = new CoreLabel();
-                    cl.setOriginalText(s);
-                    cl.setValue(s);
+                case ' ':
+                    cl = new CoreLabel();
+                    cl.setOriginalText(termBuffer.toString());
+                    cl.setValue(termBuffer.toString());
                     cl.setIndex(tokenNum);
-                    cl.set(RelationArgumentAnnotation.class,argnum);
-                    if (!kb.isInstanceOf(term,"Relation"))
-                        cl.setCategory(term);
-                    else
-                        if (debug) System.out.println("LanguageFormatter.createObjectMap(): " + term + " is a relation");
-                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): argnum: " +  cl.get(RelationArgumentAnnotation.class));
-                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): category: " + term);
-                    outputMap.put(cl.toString(),cl);
-                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl.toString());
-                    //outputMap.put(s + "-" + Integer.toString(tokenNum),term);
+                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl);
+                    if (debug) System.out.println("LanguageFormatter.createObjectMap(): termBuffer: " + termBuffer);
+                    outputMap.put(termBuffer.toString(),cl);
+                    termBuffer = new StringBuilder();
                     tokenNum++;
-                }
-                index = phraseEnd + 1;
-                if (argnum != -1)
                     index++;
-                if (index < form.length()-1 && form.charAt(index) == ' ')
+                    break;
+                case '&':
                     index++;
-            }
-            else {
-                termBuffer.append(form.charAt(index));
-                index++;
+                    if (form.charAt(index) != '%') {
+                        System.out.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
+                                form.charAt(index) + " in " + form);
+                        return;
+                    }
+                    index++;
+                    int termEnd = form.indexOf("$",index);
+                    if (termEnd == -1) {
+                        System.out.println("Error in LanguageFormatter.createObjectMap(): missing $ in " +
+                                form + " after " + index);
+                        return;
+                    }
+                    String term = form.substring(index,termEnd);
+                    int quote1 = termEnd + 1;
+                    if (form.charAt(quote1) != '"') {
+                        System.out.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
+                                form.charAt(quote1) +" at index " + quote1 + " in " + form);
+                        return;
+                    }
+                    int phraseStart = quote1 + 1;
+                    phraseEnd = form.indexOf("\"",phraseStart);
+                    phrase = form.substring(phraseStart,phraseEnd);
+                    phrase = StringUtil.removeDoubleSpaces(phrase);
+                    argnum = -1;
+                    if (Character.isDigit(form.charAt(phraseEnd+1)))
+                        argnum = Integer.parseInt(Character.toString(form.charAt(phraseEnd+1)));
+                    phraseWords = phrase.split(" ");
+                    for (String s : phraseWords) {
+                        cl = new CoreLabel();
+                        cl.setOriginalText(s);
+                        cl.setValue(s);
+                        cl.setIndex(tokenNum);
+                        cl.set(RelationArgumentAnnotation.class,argnum);
+                        if (!kb.isInstanceOf(term,"Relation"))
+                            cl.setCategory(term);
+                        else
+                            if (debug) System.out.println("LanguageFormatter.createObjectMap(): " + term + " is a relation");
+                        if (debug) System.out.println("LanguageFormatter.createObjectMap(): argnum: " +  cl.get(RelationArgumentAnnotation.class));
+                        if (debug) System.out.println("LanguageFormatter.createObjectMap(): category: " + term);
+                        outputMap.put(cl.toString(),cl);
+                        if (debug) System.out.println("LanguageFormatter.createObjectMap(): CoreLabel: " + cl.toString());
+                        //outputMap.put(s + "-" + Integer.toString(tokenNum),term);
+                        tokenNum++;
+                    }
+                    index = phraseEnd + 1;
+                    if (argnum != -1)
+                        index++;
+                    if (index < form.length()-1 && form.charAt(index) == ' ')
+                        index++;
+                    break;
+                default:
+                    termBuffer.append(form.charAt(index));
+                    index++;
+                    break;
             }
         }
         if (debug) System.out.println("LanguageFormatter.createObjectMap(): result " + outputMap);
@@ -1065,7 +1084,7 @@ public class LanguageFormatter {
      */
     private static String incrementalVarReplace(String form, String varString, String varType,
                                                 String varPretty, String language,
-                                                boolean isClass, HashMap<String,Integer> typeMap) {
+                                                boolean isClass, Map<String, Integer> typeMap) {
 
         String argNumStr = "";
         if (debug) System.out.println("LanguageFormatter.incrementalVarReplace(): form " + form);
@@ -1081,7 +1100,7 @@ public class LanguageFormatter {
             argNumStr = Integer.toString(cl.get(RelationArgumentAnnotation.class));
             outputMap.put(varString, cl); // create a "dummy" CoreLabel to hold the variable value
         }
-        if (form.indexOf("?") < 0) // if there are variables, the replacements are not done yet
+        if (!form.contains("?")) // if there are variables, the replacements are not done yet
             createObjectMap(form);
         String result = form;
         // Make necessary changes if the variable is a quoted string, i.e. a name.
@@ -1095,22 +1114,23 @@ public class LanguageFormatter {
 
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
-        if (StringUtil.emptyString(varPretty)) 
-            varPretty = varType;        
+        if (StringUtil.emptyString(varPretty))
+            varPretty = varType;
         boolean found = true;
         int occurrenceCounter = 1;
         if (typeMap.keySet().contains(varType)) {
             occurrenceCounter = typeMap.get(varType);
             occurrenceCounter++;
-            typeMap.put(varType,Integer.valueOf(occurrenceCounter));
+            typeMap.put(varType, occurrenceCounter);
         }
         else
-            typeMap.put(varType,Integer.valueOf(1));
+            typeMap.put(varType, 1);
         int count = 1;
+        String article;
+        String replacement;
+        String defArt;
         while (found) {
             if (result.contains(varString) && count < 20) {
-                String article = "";
-                String replacement = "";
                 if (isClass) {
                     article = NLGUtils.getArticle("kind", count, occurrenceCounter, language);
                     replacement = (article + " " + NLGUtils.getKeyword("kind of", language)
@@ -1125,7 +1145,7 @@ public class LanguageFormatter {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
                     replacement = (article + " " + varPretty);
                     if (isArabic) {
-                        String defArt = NLGUtils.getKeyword("the", language);
+                        defArt = NLGUtils.getKeyword("the", language);
                         if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
                             // This has to be refined to insert shadda for sun letters.
                             varPretty = (defArt + varPretty);
@@ -1149,36 +1169,41 @@ public class LanguageFormatter {
      * type.
      */
     public static String variableReplace(String form, Map<String, Set<String>> instMap,
-            HashMap<String, Set<String>> classMap, KB kb, String language) {
+            Map<String, Set<String>> classMap, KB kb, String language) {
 
         String result = form;
-        HashMap<String,Integer> typeMap = new HashMap<>();
-        ArrayList<String> varList = NLGUtils.collectOrderedVariables(form);
+        Map<String,Integer> typeMap = new HashMap<>();
+        List<String> varList = NLGUtils.collectOrderedVariables(form);
         Iterator<String> it = varList.iterator();
+        String varString;
+        Set<String> instanceArray;
+        Set<String> subclassArray;
+        String varType;
+        String varPretty;
         while (it.hasNext()) {
-            String varString = it.next();
+            varString = it.next();
             if (StringUtil.isNonEmptyString(varString)) {
-                Set<String> instanceArray = instMap.get(varString);
-                Set<String> subclassArray = classMap.get(varString);
+                instanceArray = instMap.get(varString);
+                subclassArray = classMap.get(varString);
 
                 if (subclassArray != null && !subclassArray.isEmpty()) {
-                    String varType = (String) subclassArray.toArray()[0];
-                    String varPretty = kb.getTermFormatMap(language).get(varType);
+                    varType = (String) subclassArray.toArray()[0];
+                    varPretty = kb.getTermFormatMap(language).get(varType);
                     result = incrementalVarReplace(result, varString, varType, varPretty, language, true, typeMap);
                 }
                 else {
                     if (instanceArray != null && !instanceArray.isEmpty()) {
-                        String varType = (String) instanceArray.toArray()[0];
-                        String varPretty = kb.getTermFormatMap(language).get(varType);
+                        varType = (String) instanceArray.toArray()[0];
+                        varPretty = kb.getTermFormatMap(language).get(varType);
                         result = incrementalVarReplace(result, varString, varType, varPretty, language, false, typeMap);
                     }
                     else {
-                        String varPretty = kb.getTermFormatMap(language).get("Entity");
+                        varPretty = kb.getTermFormatMap(language).get("Entity");
                         if (StringUtil.emptyString(varPretty))
                             varPretty = "entity";
                         result = incrementalVarReplace(result, varString, "Entity", varPretty, language, false, typeMap);
                     }
-                }         
+                }
             }
         }
         if (debug) System.out.println("LanguageFormatter.variableReplace(): " + result);

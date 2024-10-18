@@ -2,13 +2,13 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.wordNet.*;
 import com.google.common.collect.Lists;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.*;
 
-import static junit.framework.TestCase.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+
 import static junit.framework.TestCase.assertEquals;
 
 public class WSDwKBtest extends IntegrationTestBase {

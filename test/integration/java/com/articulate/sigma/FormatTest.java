@@ -16,8 +16,9 @@ public class FormatTest extends IntegrationTestBase {
         Map<String, String> phraseMap = SigmaTestBase.kb.getFormatMap("EnglishLanguage");
 
         StringBuilder problems = new StringBuilder("\n");
+        String value;
         for (Map.Entry<String, String> entry : phraseMap.entrySet())   {
-            String value = entry.getValue();
+            value = entry.getValue();
             if (value.matches(".*%(p|n)\\(.*"))  {
                 problems.append("Syntax error. '").append(entry.getKey()).append("' has a p (pos) or n (neg) followed by a left paren instead of a left curly brace: '").append(value).append("'\n");
             }
@@ -39,20 +40,22 @@ public class FormatTest extends IntegrationTestBase {
         Map<String, String> phraseMap = SigmaTestBase.kb.getFormatMap("EnglishLanguage");
 
         StringBuilder problems = new StringBuilder("\n");
+        String value;
+        int leftParensCt, rightParensCt, leftCurlyCt, rightCurlyCt, leftSquareBracket, rightSquareBracket;
         for (Map.Entry<String, String> entry : phraseMap.entrySet()) {
-            String value = entry.getValue();
-            int leftParensCt = value.length() - value.replace("(", "").length();
-            int rightParensCt = value.length() - value.replace(")", "").length();
+            value = entry.getValue();
+            leftParensCt = value.length() - value.replace("(", "").length();
+            rightParensCt = value.length() - value.replace(")", "").length();
             if (leftParensCt != rightParensCt) {
                 problems.append("Syntax error. '").append(entry.getKey()).append("' contains unmatching parentheses: '").append(value).append("'\n");
             }
-            int leftCurlyCt = value.length() - value.replace("{", "").length();
-            int rightCurlyCt = value.length() - value.replace("}", "").length();
+            leftCurlyCt = value.length() - value.replace("{", "").length();
+            rightCurlyCt = value.length() - value.replace("}", "").length();
             if (leftCurlyCt != rightCurlyCt) {
                 problems.append("Syntax error. '").append(entry.getKey()).append("' contains unmatching curly braces: '").append(value).append("'\n");
             }
-            int leftSquareBracket = value.length() - value.replace("[", "").length();
-            int rightSquareBracket = value.length() - value.replace("]", "").length();
+            leftSquareBracket = value.length() - value.replace("[", "").length();
+            rightSquareBracket = value.length() - value.replace("]", "").length();
             if (leftSquareBracket != rightSquareBracket) {
                 problems.append("Syntax error. '").append(entry.getKey()).append("' contains unmatching square brackets: '").append(value).append("'\n");
             }

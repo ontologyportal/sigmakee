@@ -10,7 +10,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
@@ -20,31 +19,31 @@ import java.util.*;
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal
 */
 
 /** A framework for doing a series of assertions and queries, and for comparing
- *  the actual result of queries against an expected result.  Also will 
+ *  the actual result of queries against an expected result.  Also will
  *  keep track of the time needed for each query.  Tests are expected in files
- *  with a .tq extension contained in a directory specified by the 
- *  "inferenceTestDir" parameter, and results are provided in the same directory 
+ *  with a .tq extension contained in a directory specified by the
+ *  "inferenceTestDir" parameter, and results are provided in the same directory
  *  with a .res extension.
- * 
+ *
  *  The test files contain legal KIF expressions including several kinds of
  *  meta-information.  Meta-predicates include (note <String>), (query <Formula>),
  *  and (answer <term1>..<termn>).  There may be only one note and query statements,
  *  but there may be several answer statements, if multiple binding sets are
  *  expected.
- * 
+ *
  *  Comments are allowed in test files, and are signified by a ';', after which
  *  all content on the line is ignored.
- * 
+ *
  *  Note that since answers are provided in an ordered list, without reference
  *  to their respective variable names, that the inference engine is assumed to
  *  return bindings in the same order.
@@ -71,7 +70,7 @@ public class InferenceTestSuite {
     // save TPTP translations of each problem as <probName>.p
     public static boolean saveTPTP =  true;
 
-    public static HashSet<String> metaPred = new HashSet(
+    public static Set<String> metaPred = new HashSet(
             Arrays.asList("note", "time", "query", "answer"));
 
     /** ***************************************************************
@@ -82,15 +81,15 @@ public class InferenceTestSuite {
      * TODO: If both answersList and tpp.bindings are a lit of entities,
      *       we enforce that all entity pair should be exactly the same;
      */
-    private static boolean sameAnswers(ArrayList<String> actualAnswerList, ArrayList<String> expectedAnswerList) {
+    private static boolean sameAnswers(List<String> actualAnswerList, List<String> expectedAnswerList) {
 
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
+        String actualRes;
         for (int i = 0; i < actualAnswerList.size(); i++) {
-            String actualRes = actualAnswerList.get(i);
+            actualRes = actualAnswerList.get(i);
             if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
-                TPTP2SUMO tptp2sumo =  new TPTP2SUMO();
-                actualRes = normalizeSkolem(tptp2sumo.formToSUMO(actualRes));
+                actualRes = normalizeSkolem(TPTP2SUMO.formToSUMO(actualRes));
                 if (!normalizeSkolem(expectedAnswerList.get(i)).equals(actualRes)) {
                     if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: " +
                             actualRes + " and " + expectedAnswerList.get(i));
@@ -116,16 +115,16 @@ public class InferenceTestSuite {
      * TODO: If both answersList and tpp.bindings are a lit of entities,
      *       we enforce that all entity pair should be exactly the same;
      */
-    private static boolean sameAnswers(TPTP3ProofProcessor tpp, ArrayList<String> answerList) {
+    private static boolean sameAnswers(TPTP3ProofProcessor tpp, List<String> answerList) {
 
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): expected answers: " + answerList);
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): tpp proof size: " + tpp.proof.size());
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): bindings: " + tpp.bindings);
-        if ((tpp == null || tpp.proof.size() == 0) && (answerList == null || answerList.contains("no")))
+        if ((tpp == null || tpp.proof.isEmpty()) && (answerList == null || answerList.contains("no")))
             return true;         // return true if no answers are found in the inference engine
         if (answerList != null && !answerList.isEmpty()) {
             if (answerList.get(0).equals("yes"))
-                return tpp.proof.size() > 0 && tpp.containsFalse;   // return true if "yes" is expected, and we do find a contradiction (answer)
+                return !tpp.proof.isEmpty() && tpp.containsFalse;   // return true if "yes" is expected, and we do find a contradiction (answer)
             else
                 return sameAnswers(tpp.bindings, answerList);
         }
@@ -137,8 +136,8 @@ public class InferenceTestSuite {
     private static File setOutputDir() throws IOException {
 
         String outputDirPath = KBmanager.getMgr().getPref("testOutputDir");
-        if ((outputDirPath != null) && !outputDirPath.equals(""))            
-            return new File(outputDirPath);  // testOutputDir is set.     
+        if ((outputDirPath != null) && !outputDirPath.equals(""))
+            return new File(outputDirPath);  // testOutputDir is set.
         else
             return null;
     }
@@ -161,15 +160,17 @@ public class InferenceTestSuite {
      *  Copy test files to the output directory so that they are visible
      *  to Sigma as a Tomcat application.
      */
-    private static void copyTestFiles(ArrayList<File> files, File outputDir) throws IOException  {
+    private static void copyTestFiles(List<File> files, File outputDir) throws IOException  {
 
         if ((outputDir == null) || !outputDir.isDirectory()) {
             System.out.println("Error in InferenceTestSuite.copyTestFiles(): Could not find  " + outputDir);
             return;
         }
+        String target;
+        File fout;
         for (File f : files) {
-            String target = outputDir.getAbsolutePath() + File.separator + f.getName();
-            File fout = new File(target);
+            target = outputDir.getAbsolutePath() + File.separator + f.getName();
+            fout = new File(target);
             if (!fout.exists()) {
                 Files.copy(f.toPath(), fout.toPath());
                 System.out.println("InferenceTestSuite.copyTestFiles(): copied file to: " + fout.getAbsolutePath());
@@ -183,36 +184,36 @@ public class InferenceTestSuite {
      *  Note that 'files' variable is modified as a side effect.
      *  @return error messages, or null if none
      */
-    private static String getTestFiles(ArrayList<File> files, File outputDir) throws IOException  {
+    private static String getTestFiles(List<File> files, File outputDir) throws IOException  {
 
         String inferenceTestDirPath = KBmanager.getMgr().getPref("inferenceTestDir");
-        if ((inferenceTestDirPath == null) || inferenceTestDirPath.equals("")) 
+        if ((inferenceTestDirPath == null) || inferenceTestDirPath.equals(""))
             return("Error in InferenceTestSuite.getTestFiles(): The Sigma preference \"inferenceTestDir\" has not been set");
-        
+
         File inferenceTestDir = new File(inferenceTestDirPath);
-        if (!inferenceTestDir.isDirectory() && !inferenceTestDir.mkdir()) 
+        if (!inferenceTestDir.isDirectory() && !inferenceTestDir.mkdir())
             return("Error in InferenceTestSuite.getTestFiles(): Could not find or create " +
                     inferenceTestDir.getCanonicalPath());
-        
+
         if (!outputDir.isDirectory() && !outputDir.mkdirs()) {
             File baseDir = new File(KBmanager.getMgr().getPref("baseDir"));
             if (baseDir.isDirectory()) {
                 File webappsDir = new File(baseDir,"webapps");
                 if (webappsDir.isDirectory()) {
                     File waSigmaDir = new File(webappsDir,"sigma");
-                    if (waSigmaDir.isDirectory()) 
-                        outputDir = new File(waSigmaDir,"tests");                    
+                    if (waSigmaDir.isDirectory())
+                        outputDir = new File(waSigmaDir,"tests");
                 }
             }
         }
-        if ((outputDir == null) || !outputDir.isDirectory()) 
-            return("Error in InferenceTestSuite.getTestFiles(): Could not find or create " + outputDir);        
+        if (!outputDir.isDirectory())
+            return("Error in InferenceTestSuite.getTestFiles(): Could not find or create " + outputDir);
 
         // At this point, inferenceTestDir and outputDir should be
         // set to viable values.
         File[] newfiles = inferenceTestDir.listFiles();
-        System.out.println("INFO in InferenceTestSuite.getTestFiles(): number of files: " + newfiles.length); 
-        if (newfiles == null || newfiles.length == 0) {
+        System.out.println("INFO in InferenceTestSuite.getTestFiles(): number of files: " + newfiles.length);
+        if (newfiles.length == 0) {
             System.out.println("Error in InferenceTestSuite.getTestFiles(): No test files found in " +
                     inferenceTestDir.getCanonicalPath());
             return("No test files found in " + inferenceTestDir.getCanonicalPath());
@@ -259,12 +260,12 @@ public class InferenceTestSuite {
         public String filename = "";
         public String note = "";
         public String query = "";
-        public HashSet<String> kbFiles = new HashSet<>();
-        public ArrayList<String> expectedAnswers = new ArrayList<>();
-        public ArrayList<String> actualAnswers = new ArrayList<>();
+        public Set<String> kbFiles = new HashSet<>();
+        public List<String> expectedAnswers = new ArrayList<>();
+        public List<String> actualAnswers = new ArrayList<>();
         public int timeout = 30;
-        public ArrayList<String> files = new ArrayList<>();
-        public ArrayList<String> statements = new ArrayList<>();
+        public List<String> files = new ArrayList<>();
+        public List<String> statements = new ArrayList<>();
         public boolean inconsistent = false;
         public boolean success = false;
         public float execTime = 0;
@@ -282,7 +283,7 @@ public class InferenceTestSuite {
         for (String f : itd.files) {
             if (!kb.containsFile(f)) {
                 result = false;
-                System.out.println("Error in InferenceTestSuite.compareFiles(): Required file " + f + " not in KB");
+                System.err.println("Error in InferenceTestSuite.compareFiles(): Required file " + f + " not in KB");
             }
         }
         for (String f : kb.constituents) {
@@ -317,7 +318,7 @@ public class InferenceTestSuite {
         else {
             Formula ansForm = new Formula(answerstring);
             if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answer form: " + ansForm);
-            ArrayList<String> answers = ansForm.complexArgumentsToArrayListString(1);
+            List<String> answers = ansForm.complexArgumentsToArrayListString(1);
             if (debug) System.out.println("INFO in InferenceTestSuite.readTestFile(): answers: " + answers);
             //answerstring = normalizeSkolem(answerstring);
             //answerstring = StringUtil.removeEnclosingCharPair(answerstring,1,'(',')');
@@ -347,7 +348,7 @@ public class InferenceTestSuite {
                 System.out.println("INFO in InferenceTestSuite.readTestFile(): num formulas: " +
                         String.valueOf(test.formulaMap.keySet().size()));
                 for (String formula : test.formulaMap.keySet()) {
-                    if (formula.indexOf(";") != -1)
+                    if (formula.contains(";"))
                         formula = formula.substring(0, formula.indexOf(";"));
                     System.out.println("INFO in InferenceTestSuite.readTestFile(): Formula: " + formula);
                     if (formula.startsWith("(note"))
@@ -373,7 +374,7 @@ public class InferenceTestSuite {
             }
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return ifd;
@@ -382,11 +383,12 @@ public class InferenceTestSuite {
     /** ***************************************************************
      * Read in all the .tq inference test files from the given list
      */
-    public ArrayList<InfTestData> readTestFiles(ArrayList<File> files) {
+    public List<InfTestData> readTestFiles(List<File> files) {
 
-        ArrayList<InfTestData> result = new ArrayList<>();
+        List<InfTestData> result = new ArrayList<>();
+        InfTestData ifd;
         for (File f : files) {
-            InfTestData ifd = readTestFile(f);
+            ifd = readTestFile(f);
             if (ifd != null)
                 result.add(ifd);
         }
@@ -410,7 +412,7 @@ public class InferenceTestSuite {
             Files.copy(Paths.get(kbDir + sep + "temp-stmt." + langExt),
                     Paths.get(kbDir + sep + name + ".p"), StandardCopyOption.REPLACE_EXISTING);
         }
-        catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -442,12 +444,12 @@ public class InferenceTestSuite {
         throws IOException {
 
         kb = inputKB;
-        if (TPTPlocation == "" || TPTPlocation == null) {
+        if ("".equals(TPTPlocation) || TPTPlocation == null) {
             TPTPlocation = KBmanager.getMgr().getPref("systemsDir");
         }
         System.out.println("INFO in InferenceTestSuite.test(): Note that any prior user assertions will be deleted.");
         System.out.println("INFO in InferenceTestSuite.test(): Prover: " + KBmanager.getMgr().prover);
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         FileWriter fw = null;
         int fail = 0;
         int pass = 0;
@@ -455,7 +457,7 @@ public class InferenceTestSuite {
         String proof = null;
 
         String language = "EnglishLanguage";
-        int maxAnswers = 1;
+        int maxAnswers;
         totalTime = 0;
         long duration = 0;
         result = result.append("<h2>Inference tests</h2>\n");
@@ -463,15 +465,26 @@ public class InferenceTestSuite {
 
         File outputDir = setOutputDir();
         clearOutputDir(outputDir);
-        ArrayList<File> files = new ArrayList();
+        List<File> files = new ArrayList();
         String error = getTestFiles(files,outputDir);
         copyTestFiles(files,outputDir);
-        if (error != null) 
+        if (error != null)
             return error;
 
-        ArrayList<InfTestData> tests = readTestFiles(files);
+        List<InfTestData> tests = readTestFiles(files);
         System.out.println("INFO in InferenceTestSuite.test(): number of files: " + files.size());
         int counter = 0;
+        Formula theQuery;
+        FormulaPreprocessor fp;
+        SUMOKBtoTFAKB stfa;
+        Set<Formula> theQueries;
+        long start;
+        String lineHtml;
+        String rfn;
+        String resultsFilename;
+        File resultsFile;
+        TPTP3ProofProcessor tpp;
+        String resultString;
         for (InfTestData itd : tests) {
             kb.deleteUserAssertionsAndReload();
             for (String s : itd.statements)
@@ -483,19 +496,19 @@ public class InferenceTestSuite {
                 System.out.println("====================================");
                 System.out.println("INFO in InferenceTestSuite.test(): Note: " + itd.note);
                 System.out.println("INFO in InferenceTestSuite.test(): Query: " + itd.query);
-                Formula theQuery = new Formula(itd.query);
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                SUMOKBtoTFAKB stfa = new SUMOKBtoTFAKB();
+                theQuery = new Formula(itd.query);
+                fp = new FormulaPreprocessor();
+                stfa = new SUMOKBtoTFAKB();
                 stfa.initOnce();
                 SUMOtoTFAform.initOnce();
-                Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
+                theQueries = fp.preProcess(theQuery,true,kb);
                 for (Formula processed : theQueries) {
                     if (processed.isHigherOrder(kb)) {
                         System.out.println("Error in InferenceTestSuite.test(): skipping higher order query: " +
                                 processed + " in test " + itd.note);
                         continue;
                     }
-                    long start = System.currentTimeMillis();
+                    start = System.currentTimeMillis();
                     System.out.println("INFO in InferenceTestSuite.test(): Query " + processed + " is posed to " + KBmanager.getMgr().prover);
                     int actualTimeout = itd.timeout;
                     if (overrideTimeout)
@@ -516,31 +529,29 @@ public class InferenceTestSuite {
                 }
             }
             catch (Exception ex) {
-                    result = result.append("<br>Error in InferenceTestSuite.test() while executing query " +
-					   itd.filename + ": " + ex.getMessage() + "<br>");
+                    result = result.append("<br>Error in InferenceTestSuite.test() while executing query ").append(itd.filename).append(": ").append(ex.getMessage()).append("<br>");
             }
-            String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'>" +
+            lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-            String rfn = itd.filename;
-            String resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
-            File resultsFile = new File(outputDir, resultsFilename);
-            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            rfn = itd.filename;
+            resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
+            resultsFile = new File(outputDir, resultsFilename);
+            tpp = new TPTP3ProofProcessor();
             try {
                 fw = new FileWriter(resultsFile);
                 pw = new PrintWriter(fw);
                 tpp.parseProofOutput(proof, kb);
                 System.out.println("InferenceTestSuite.test() proof status: " + tpp.status + " for " + itd.note);
                 itd.SZSstatus = tpp.status;
-                if (tpp != null && tpp.status != null && (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem"))) {
+                if (tpp.status != null && (tpp.status.contains("Refutation") ||  tpp.status.contains("Theorem"))) {
                     pw.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kb.name, language));
                     System.out.println("InferenceTestSuite.test() wrote results of: " + itd.note + " to " + resultsFile);
                 }
                 else
-                    if (tpp != null)
-                        pw.println(tpp.status);
+                    pw.println(tpp.status);
                 itd.actualAnswers = tpp.bindings;
             }
-            catch (java.io.IOException e) {
+            catch (IOException e) {
                 throw new IOException("Error writing file " + resultsFile.getCanonicalPath());
             }
             finally {
@@ -548,7 +559,7 @@ public class InferenceTestSuite {
                     if (pw != null) { pw.close(); }
                     if (fw != null) { fw.close(); }
                 }
-                catch (Exception ex) {
+                catch (IOException ex) {
                     ex.printStackTrace();
                 }
             }
@@ -557,9 +568,8 @@ public class InferenceTestSuite {
                 itd.inconsistent = true;
             }
             boolean different = true;
-            if (proof != null && tpp != null && tpp.status != null && !tpp.status.startsWith("Timeout"))
+            if (proof != null && tpp.status != null && !tpp.status.startsWith("Timeout"))
                 different = !sameAnswers(tpp,itd.expectedAnswers);
-            String resultString = "";
             if (different || tpp.noConjecture) {
                 resultString = "fail";
                 fail++;
@@ -568,11 +578,9 @@ public class InferenceTestSuite {
                 resultString = "succeed";
                 pass++;
             }
-            result.append("<tr><td>" + itd.note + "</td><td><a href=\"tests/" + itd.filename +
-                                    "\">" + itd.filename + "</a></td>");
-            result.append("<td><a href=\"" + outputDir.getName() + "/" + resultsFile.getName() +
-                                   "\">" + resultString + "</a></td>");
-            result.append("<td>" + String.valueOf(duration) + "</td></tr>\n");
+            result.append("<tr><td>").append(itd.note).append("</td><td><a href=\"tests/").append(itd.filename).append("\">").append(itd.filename).append("</a></td>");
+            result.append("<td><a href=\"").append(outputDir.getName()).append("/").append(resultsFile.getName()).append("\">").append(resultString).append("</a></td>");
+            result.append("<td>").append(String.valueOf(duration)).append("</td></tr>\n");
             System.out.println("Finished test #" + (counter+1) + " of " + files.size() + " : " + itd.filename);
             System.out.println(resultString);
             System.out.println();
@@ -588,7 +596,7 @@ public class InferenceTestSuite {
         result.append("Total correct: ");
         result.append(String.valueOf(pass));
         result.append("<P>\n");
-        
+
         result.append("Total failed: ");
         result.append(String.valueOf(fail));
         result.append("<P>\n");
@@ -603,7 +611,7 @@ public class InferenceTestSuite {
      * Note that this procedure DOES NOT delete any prior user assertions.
      */
     public InfTestData inferenceUnitTest(String testpath, KB kb) {
-
+        this.kb = kb; // tdn 10/15/24
         System.out.println("INFO in InferenceTestSuite.inferenceUnitTest(): testpath: " + testpath);
         // read the test file
         InfTestData itd = readTestFile(new File(testpath));
@@ -620,8 +628,12 @@ public class InferenceTestSuite {
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Formula> theQueries = fp.preProcess(theQuery,true,kb);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        String processedStmt;
+        Vampire vampire;
+        com.articulate.sigma.tp.EProver eprover;
+        com.articulate.sigma.tp.LEO leo;
         for (Formula f : theQueries) {
-            String processedStmt = f.getFormula();
+            processedStmt = f.getFormula();
             if (f.isHigherOrder(kb) && !SUMOformulaToTPTPformula.lang.equals("thf")) {
                 System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): skipping higher order query: " +
                         processedStmt + " in test " + itd.note);
@@ -630,24 +642,29 @@ public class InferenceTestSuite {
             System.out.println("\n============================");
             System.out.println("InferenceTestSuite.inferenceUnitTest(): ask: " + processedStmt);
             System.out.println("INFO in InferenceTestSuite.test(): Query is posed to " + KBmanager.getMgr().prover);
-            if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                Vampire vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
-                System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
-                tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
-            }
-            else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                com.articulate.sigma.tp.EProver eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
-                System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
-                tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.qlist);
-            }
-            else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                com.articulate.sigma.tp.LEO leo = kb.askLeo(processedStmt, itd.timeout, maxAnswers);
-                System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + leo.toString());
-                tpp.parseProofOutput(leo.output, processedStmt, kb,leo.qlist);
-            }
-            else {
-                System.out.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
+            if (null == KBmanager.getMgr().prover) {
+                System.err.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
                 continue;
+            }
+            else switch (KBmanager.getMgr().prover) {
+                case VAMPIRE:
+                    vampire = kb.askVampire(processedStmt, itd.timeout, maxAnswers);
+                    System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + vampire.toString());
+                    tpp.parseProofOutput(vampire.output, processedStmt, kb,vampire.qlist);
+                    break;
+                case EPROVER:
+                    eprover = kb.askEProver(processedStmt, itd.timeout, maxAnswers);
+                    System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + eprover.toString());
+                    tpp.parseProofOutput(eprover.output, processedStmt, kb,eprover.qlist);
+                    break;
+                case LEO:
+                    leo = kb.askLeo(processedStmt, itd.timeout, maxAnswers);
+                    System.out.println("InferenceTestSuite.inferenceUnitTest(): proof: " + leo.toString());
+                    tpp.parseProofOutput(leo.output, processedStmt, kb,leo.qlist);
+                    break;
+                default:
+                    System.err.println("Error in InferenceTestSuite.inferenceUnitTest(): no prover or unknown prover: " + KBmanager.getMgr().prover);
+                    continue;
             }
             if (tpp.inconsistency) {
                 System.out.println("*****************************************");
@@ -667,7 +684,7 @@ public class InferenceTestSuite {
             //    itd.actualAnswers.addAll(itd.actualAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): tpp status: " + tpp.status);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): actual answers: " + itd.actualAnswers);
-            if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.size() == 0)
+            if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty())
                 itd.actualAnswers.add("yes");
             if (tpp.inconsistency) {
                 itd.inconsistent = true;
@@ -677,12 +694,9 @@ public class InferenceTestSuite {
             System.out.println("InferenceTestSuite.inferenceUnitTest(): expected answers(2): " + itd.expectedAnswers);
             System.out.println("InferenceTestSuite.inferenceUnitTest(): status: " + tpp.status);
             boolean different = true;
-            if (tpp != null && tpp.proof != null  && !tpp.status.startsWith("Timeout"))
+            if (tpp.proof != null  && !tpp.status.startsWith("Timeout"))
                 different = !sameAnswers(tpp,itd.expectedAnswers);
-            if (different || tpp.noConjecture)
-                itd.success = false;
-            else
-                itd.success = true;
+            itd.success = !(different || tpp.noConjecture);
         }
 
         System.out.println("\n============================");
@@ -727,8 +741,8 @@ public class InferenceTestSuite {
             }
         }
         catch (Exception e) {
-            System.out.println("Error in InferenceTestSuite.cmdLineTest()");
-            System.out.println(e.getMessage());
+            System.err.println("Error in InferenceTestSuite.cmdLineTest()");
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return false;
@@ -744,7 +758,7 @@ public class InferenceTestSuite {
         kb.deleteUserAssertions();
         // Remove the assertions in the files.
         File userAssertionsFile = new File(KBmanager.getMgr().getPref("kbDir") +
-                KBmanager.getMgr().getPref("sumokbname") + kb._userAssertionsString);
+                KBmanager.getMgr().getPref("sumokbname") + KB._userAssertionsString);
         if (userAssertionsFile.exists())
             userAssertionsFile.delete();
         String tptpFileName = userAssertionsFile.getAbsolutePath().replace(".kif", ".tptp");
@@ -799,7 +813,7 @@ public class InferenceTestSuite {
                 try {
                     resetAllForInference(kb);
                 }
-                catch (Exception e) {
+                catch (IOException e) {
                     e.printStackTrace();
                 }
                 if (args[0].indexOf('e') != -1) {
@@ -826,17 +840,17 @@ public class InferenceTestSuite {
                     overrideTimeout = true;
                 System.out.println("in InferenceTestSuite.main(): using prover: " + KBmanager.getMgr().prover);
 
-                if (args != null && args.length > 1 && args[0].indexOf("t") != -1) {
+                if (args.length > 1 && args[0].contains("t")) {
                     its.cmdLineTest(args[1]);
                 }
-                else if (args != null && args.length > 1 && args[0].indexOf("i") != -1) {
+                else if (args.length > 1 && args[0].contains("i")) {
                     its.runPassing();
                 }
-                else if (args != null && args.length > 0 && args[0].indexOf("a") != -1) {
+                else if (args.length > 0 && args[0].contains("a")) {
                     try {
                         its.test(kb);
                     }
-                    catch (Exception e) {
+                    catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
@@ -846,4 +860,4 @@ public class InferenceTestSuite {
             showHelp();
     }
 }
- 
+

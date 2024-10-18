@@ -5,12 +5,15 @@ import java.util.*;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.nlg.NLGUtils;
+import static com.articulate.sigma.wordNet.WordNet.baseDir;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
-import static com.articulate.sigma.wordNet.WordNet.baseDir;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public class OMWordnet implements Serializable {
 
@@ -31,7 +34,7 @@ August 9, Acapulco, Mexico.
  Infosys LTD.
  */
     // String key of language name
-    // Interior key of a 9-digit WordNet synset and value of and ArrayList of 
+    // Interior key of a 9-digit WordNet synset and value of and ArrayList of
     // non-English synset Strings
     public HashMap<String,HashMap<String,ArrayList<String>>> wordnets =
             new HashMap<String,HashMap<String,ArrayList<String>>>();
@@ -44,12 +47,14 @@ August 9, Acapulco, Mexico.
 
     public static boolean disable = false; // disable for debugging
 
+    private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
+
     /** *************************************************************
      */
     private static char getOMWMappingSuffix(String SUMOmapping) {
-        
+
         switch (WordNetUtilities.getSUMOMappingSuffix(SUMOmapping)) {
-            case '=': return '='; 
+            case '=': return '=';
             case '+': return '\u2282'; // '⊂';
             case '@': return '\u2208'; // '∈';
             case ':': return '\u2260'; // '≠';
@@ -57,7 +62,7 @@ August 9, Acapulco, Mexico.
         }
         return ' ';
     }
-    
+
     /** *************************************************************
      */
     private static void generateOMWformat(String fileWithPath) {
@@ -65,7 +70,7 @@ August 9, Acapulco, Mexico.
         System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file " + fileWithPath);
         try {
             File f = new File(fileWithPath);
-            FileWriter r = new FileWriter(f); 
+            FileWriter r = new FileWriter(f);
             PrintWriter pw = new PrintWriter(r);
             pw.println("# SUMO http://www.ontologyportal.org");
             Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator();
@@ -110,7 +115,7 @@ August 9, Acapulco, Mexico.
     /** *************************************************************
      */
     private static void readOMWformat(String inputFileWithPath, String langName) {
-        
+
         //System.out.println("INFO in WordNetUtilities.readOMWformat(): creating table entry for " + langName);
         HashMap<String,ArrayList<String>> wordnet = new HashMap<String,ArrayList<String>>();
         OMWordnet.omw.wordnets.put(langName,wordnet);
@@ -132,12 +137,12 @@ August 9, Acapulco, Mexico.
                 if (tabIndex > -1) {
                     String id = line.substring(0,tabIndex);
                     int tab2index = line.indexOf("\t",tabIndex+1);
-                    if (tab2index > -1) { 
+                    if (tab2index > -1) {
                         //System.out.println(tabIndex + " " + tab2index);
-                        String type = line.substring(tabIndex+1,tab2index);  
+                        String type = line.substring(tabIndex+1,tab2index);
                         if (type.endsWith("lemma")) {
                             int end = line.length();
-                            String value = line.substring(tab2index+1,end);  
+                            String value = line.substring(tab2index+1,end);
                             ArrayList<String> val = wordnet.get(id);
                             if (val == null)
                                 val = new ArrayList<String>();
@@ -146,7 +151,7 @@ August 9, Acapulco, Mexico.
                         }
                         if (type.contains(":def ")) {
                             int end = line.length();
-                            String value = line.substring(tab2index+1,end);  
+                            String value = line.substring(tab2index+1,end);
                             ArrayList<String> val = gloss.get(id);
                             if (val == null)
                                 val = new ArrayList<String>();
@@ -155,7 +160,7 @@ August 9, Acapulco, Mexico.
                         }
                         if (type.contains(":exe ")) {
                             int end = line.length();
-                            String value = line.substring(tab2index+1,end);  
+                            String value = line.substring(tab2index+1,end);
                             ArrayList<String> val = example.get(id);
                             if (val == null)
                                 val = new ArrayList<String>();
@@ -163,7 +168,7 @@ August 9, Acapulco, Mexico.
                             example.put(id,val);
                         }
                     }
-                }            
+                }
             }
         }
         catch (IOException ioe) {
@@ -197,11 +202,11 @@ August 9, Acapulco, Mexico.
             "TaiwanChineseLanguage","SpanishLanguage","SwedishLanguage",
             "ThaiLanguage","MalayLanguage"));
 
-    
+
     /** *************************************************************
      */
     public static String codeToLanguage(String code) {
-        
+
         if (lcodes.contains(code))
             return lnames.get(lcodes.indexOf(code));
         else
@@ -211,19 +216,19 @@ August 9, Acapulco, Mexico.
     /** *************************************************************
      */
     public static String languageToCode(String lang) {
-        
+
         if (lnames.contains(lang))
             return lcodes.get(lnames.indexOf(lang));
-        else 
+        else
             return "";
     }
-    
+
     /** *************************************************************
      * Convert a 9-digit, POS-prefixed WordNet synset to a POS-suffix
      * OMW synset.
      */
     public static String toOMWsynset(String synset) {
-        
+
         //System.out.println("INFO in OMWordnet.toOMWsynset(): " + synset);
         if (synset.length() != 9) {
             System.out.println("Error in OMWordnet.toOMWsynset(): synset not 9 digits: " + synset);
@@ -232,12 +237,12 @@ August 9, Acapulco, Mexico.
         char POS = WordNetUtilities.posNumberToLetter(synset.charAt(0));
         return synset.substring(1) + "-" + POS;
     }
-    
+
     /** *************************************************************
      * Convert a POS-suffix OMW synset to an 8-digit WordNet synset.
      */
     public static String fromOMWsynset(String synset) {
-        
+
         //System.out.println("INFO in OMWordnet.fromOMWsynset(): " + synset);
         if (synset.length() != 10) {
             System.out.println("Error in OMWordnet.fromOMWsynset(): synset not 9 digits: " + synset);
@@ -258,31 +263,25 @@ August 9, Acapulco, Mexico.
      */
     public static void encoder(Object object) {
 
-        Output output = null;
-        try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "omw.ser");
-            output = new Output(file);
-            kryoLocal.get().writeObject(output,object);
-            output.flush();
+        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        Path path = Paths.get(kbDir, "omw.ser");
+        try (Output output = new Output(Files.newOutputStream(path))) {
+            kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        //return output.toBytes();
     }
 
     /** ***************************************************************
      */
     public static <T> T decoder() {
 
-        Object ob = null;
-        try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileInputStream file = new FileInputStream(kbDir + File.separator + "omw.ser");
-            Input input = new Input(file);
-            //Input input = new Input(bytes);
-            ob = kryoLocal.get().readObject(input, OMWordnet.class);
+        OMWordnet ob = null;
+        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        Path path = Paths.get(kbDir, "omw.ser");
+        try (Input input = new Input(Files.newInputStream(path))) {
+            ob = kryoLocal.get().readObject(input,OMWordnet.class);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -364,6 +363,14 @@ August 9, Acapulco, Mexico.
         }
     }
 
+    /** ***************************************************************
+     */
+    public static boolean serializedExists() {
+
+        File serfile = new File(baseDir + File.separator + "omw.ser");
+        return serfile.exists();
+    }
+
     /** *************************************************************
      * Assumes a fixed set of files in the KBs directory.
      */
@@ -373,34 +380,35 @@ August 9, Acapulco, Mexico.
             disable = true;
         if (disable)
             return;
-        loadSerialized();
+        if (serializedExists())
+            loadSerialized();
         if (omw != null)
             return;
         omw = new OMWordnet();
-        String kbDir = KBmanager.getMgr().getPref("kbDir");  
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
         System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
         for (int i = 0; i < lcodes.size(); i++) {
-            String filename = kbDir + File.separator + "OMW" + 
-                    File.separator + lcodes.get(i)  + File.separator + 
+            String filename = kbDir + File.separator + "OMW" +
+                    File.separator + lcodes.get(i)  + File.separator +
                     "wn-data-" + lcodes.get(i) + ".tab";
             System.out.print(filename);
-            readOMWformat(filename,lcodes.get(i));            
+            readOMWformat(filename,lcodes.get(i));
         }
         serialize();
         System.out.println();
     }
-    
+
     /** *************************************************************
      */
     public static void generateOMWOWLformat(KB kb) {
-        
+
         String line;
         //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file ");
         try {
             String kbDir = KBmanager.getMgr().getPref("kbDir");
-            File f = new File(kbDir + File.separator + "OMW" + 
+            File f = new File(kbDir + File.separator + "OMW" +
                     File.separator + "OMW.owl");
-            FileWriter fw = new FileWriter(f); 
+            FileWriter fw = new FileWriter(f);
             PrintWriter pw = new PrintWriter(fw);
             pw.println("<rdf:RDF xml:base=\"http://www.ontologyportal.org/SUMO.owl\">");
             pw.println("<owl:Ontology rdf:about=\"http://www.ontologyportal.org/SUMO.owl\">");
@@ -410,14 +418,14 @@ August 9, Acapulco, Mexico.
             pw.println("www.gnu.org.</rdfs:comment><rdfs:comment xml:lang=\"en\">Produced on date: Tue Sep 03 11:07:34 PDT 2013");
             pw.println("</rdfs:comment></owl:Ontology><owl:Class rdf:about=\"#Object\">");
             pw.println("<rdfs:isDefinedBy rdf:resource=\"http://www.ontologyportal.org/SUMO.owl\"/>");
-            pw.println("<wnd:equivalenceRelation rdf:resource=\"http://www.ontologyportal.org/WNDefs.owl#WN30-100019613\"/>");            
+            pw.println("<wnd:equivalenceRelation rdf:resource=\"http://www.ontologyportal.org/WNDefs.owl#WN30-100019613\"/>");
         }
         catch (IOException ioe) {
             System.out.println(ioe.getMessage());
             ioe.printStackTrace();
         }
     }
-    
+
     /** ***************************************************************
      * HTML format a list of word senses
      * @param term is the SUMO term
@@ -454,11 +462,11 @@ August 9, Acapulco, Mexico.
             result.append("...");
         return result.toString();
     }
-    
+
     /** *************************************************************
      */
     private static String formatArrayList(ArrayList<String> al) {
-        
+
         if (al == null) return "";
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < al.size(); i++) {
@@ -467,13 +475,13 @@ August 9, Acapulco, Mexico.
         }
         return sb.toString();
     }
-    
+
     /** *************************************************************
      */
     public static String displaySynset(String kbName, String synset, String params) {
-        
-        StringBuffer sb = new StringBuffer();        
-        sb.append("<table>"); 
+
+        StringBuffer sb = new StringBuffer();
+        sb.append("<table>");
         String name = "";
         String id = "";
         ArrayList<String> words = null;
@@ -500,7 +508,7 @@ August 9, Acapulco, Mexico.
         sb.append("</table>\n");
         return sb.toString();
     }
-    
+
     /** ***************************************************************
      *  A main method, used only for testing.  It should not be called
      *  during normal operation.
