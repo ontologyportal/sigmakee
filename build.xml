@@ -2,18 +2,15 @@
          name="SigmaKEE" default="all" basedir=".">
 
     <!--
-    ========
-    TASKDEFs
-    ========
+    ===
+    IVY
+    ===
     -->
 
-    <property file="build.properties"/>
-
-    <!--
-    ============
-    BUILD / DIST
-    ============
-    -->
+    <property name="ivy.install.version" value="2.5.1"/>
+    <property name="ivy.home" value="${basedir}/.ivy"/>
+    <property name="ivy.jar.dir" value="${ivy.home}/lib"/>
+    <property name="ivy.jar.file" value="${ivy.jar.dir}/ivy.jar"/>
 
     <target name="check.for.ivy.jar">
         <available file="${ivy.jar.file}" property="ivy.present"/>
@@ -39,6 +36,12 @@
         <ivy:retrieve/>
     </target>
 
+    <!--
+    ====
+    INIT
+    ====
+    -->
+
     <path id="compile.classpath">
         <fileset dir="${basedir}/lib">
             <include name="*.jar"/>
@@ -46,6 +49,7 @@
             <exclude name="hamcrest*"/>
         </fileset>
     </path>
+    <property file="build.properties"/> <!-- for ant.refid prop -->
 
     <path id="core.sourcepath">
         <pathelement path="${src.dir}/com/articulate/sigma"/>
@@ -58,15 +62,18 @@
     </path>
 
     <target name="init" depends="init-ivy">
-        <echo message="${app.name} v${product.Version}"/>
         <property environment="env"/>
-        <echo message="CATALINA_HOME is set to: ${env.CATALINA_HOME}"/>
+        <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+        <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
+
+        <echo message="${app.name} v${product.Version}"/>
+        <echo message="CATALINA_HOME is set to: ${tomcat.home}"/>
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="SIGMA_SRC is set to: ${sigma.src}"/>
         <echo message="KBs_HOME is set to: ${kbs.home}"/>
         <echo>Java Version via Ant: ${ant.java.version}</echo>
         <echo>Java Version System Prop: ${java.version}</echo>
-        <echo message="Git dir: ${env.ONTOLOGYPORTAL_GIT}"/>
+        <echo message="Git dir: ${git.home}"/>
         <echo>classpath: ${run.classpath}</echo>
         <echo>basedir: ${basedir}</echo>
 
@@ -87,6 +94,12 @@
             <fileset dir="${web.dir}/pixmaps"/>
         </copy>
     </target>
+
+    <!--
+    ============
+    BUILD / DIST
+    ============
+    -->
 
     <target name="TPTP" depends="prepare">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
@@ -114,35 +127,16 @@
     </target>
 
     <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
-        <manifest file="MANIFEST.MF">
-            <attribute name="Built-By" value="${my.name} ${my.email}"/>
-            <attribute name="Specification-Title"
-                       value="${product.Name}"/>
-            <attribute name="Specification-Version"
-                       value="${product.version.major}.${product.version.minor}"/>
-            <attribute name="Specification-Vendor"
-                       value="${spec.vendor}"/>
-            <attribute name="Implementation-Title"
-                       value="${ant.project.name}"/>
-            <attribute name="Implementation-Version"
-                       value="${product.Version} built on ${TODAY_US}"/>
-            <attribute name="Implementation-Vendor"
-                       value="${nps}, ${moves.institute}, ${savage.research.group}"/>
-            <attribute name="Implementation-URL"
-                       value="${savage.url}"/>
-        </manifest>
-        <jar destfile="${dist.jar}"
-             basedir="${build.classes.dir}"
-             manifest="MANIFEST.MF">
-            <metainf file="LICENSE"/>
-        </jar>
-        <war destfile="${dist.dir}/${web.app.name}.war"
-             basedir="${build.home}"
-             webxml="${web.dir}/web.xml"
-             manifest="MANIFEST.MF">
-            <metainf file="LICENSE"/>
+        <war warfile="${tomcat.home}/webapps/${web.app.name}.war" webxml="${web.dir}/web.xml">
+            <zipfileset dir="${web.dir}/jsp"/>
+            <zipfileset file="${web.dir}/simple.css"/>
+            <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
+            <lib dir="${lib.dir}"/>
+            <classes dir="${build.classes.dir}"/>
         </war>
-        <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
+        <jar destfile="${build.home}/${app.name}.jar">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
     </target>
 
     <target name="compile.test" depends="compile" description="Compile the project's test classes.">
@@ -169,7 +163,7 @@
         <echo>System date/time is: ${TODAY_US}</echo>
     </target>
 
-    <target name="clean" description="Delete old build, dist and web directories">
+    <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${build.home}"/>  <!-- avoid problems with package name changes by deleting everything -->
             <fileset dir="${dist.dir}"/>
