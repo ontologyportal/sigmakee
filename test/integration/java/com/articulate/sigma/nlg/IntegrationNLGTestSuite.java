@@ -1,6 +1,5 @@
 package com.articulate.sigma.nlg;
 
-import com.articulate.sigma.VerbNet.*;
 import com.articulate.sigma.*;
 
 import org.junit.runner.RunWith;
@@ -15,6 +14,6 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     HtmlParaphraseIntegrationTest.class
 })
-public class IntegrationNLGTestSuite extends UnitTestBase {
+public class IntegrationNLGTestSuite extends IntegrationTestBase {
 
 }

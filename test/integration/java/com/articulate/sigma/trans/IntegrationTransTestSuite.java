@@ -1,6 +1,5 @@
 package com.articulate.sigma.trans;
 
-import com.articulate.sigma.nlg.*;
 import com.articulate.sigma.*;
 
 import org.junit.runner.RunWith;
@@ -18,6 +17,6 @@ import org.junit.runners.Suite;
     THFtest.class,
     TPTP2SUMOTest.class
 })
-public class IntegrationTransTestSuite extends UnitTestBase {
+public class IntegrationTransTestSuite extends IntegrationTestBase {
 
 }
