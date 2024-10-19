@@ -233,6 +233,7 @@ PS1=Vagrant:$PS1
 ## Linux Installation
 
 ```sh
+cd ~
 mkdir workspace
 mkdir Programs
 cd Programs
@@ -350,6 +351,36 @@ VAMPIRE_OPTS="--mode portfolio --avatar off -qa answer_literal --schedule casc_2
 ## MacOS install notes
 
 See INSTALL.MacOS
+
+## Windows Subsystem for Linux Install Notes
+
+Open up CMD prompt
+
+```
+    wsl –install
+    .bashrc already existed in home directory. Did not update path.  
+    echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc 
+    Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000 
+    mkdir /home/theuser/Programs 
+    cd Programs 
+    sudo apt-get install openjdk-8-jdk 
+    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre" >> .bashrc 
+```
+
+Follow Linux install instructions on:
+```
+https://github.com/ontologyportal/sigmakee
+```
+
+Modify the following files, replace "theuser" with your username 
+```
+~/workspace/sigmakee/config.xml
+~/workspace/sigmakee/test/unit/java/resources/config_all.xml
+~/workspace/sigmakee/test/unit/java/resources/config_topAndMid.xml
+~/workspace/sigmakee/test/integration/java/resources/config_all.xml
+~/workspace/sigmakee/test/integration/java/resources/config_topAndMid.xml
+~/workspace/sigmakee/test/integration/java/resources/config_topOnly.xml
+```
 
 
 ## jEdit Integration (optional)
