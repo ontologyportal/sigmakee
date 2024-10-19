@@ -59,18 +59,18 @@ git clone https://github.com/ontologyportal/TPTP-ANTLR
 git clone https://github.com/ontologyportal/SigmaUtils
 
 cd ../Programs
-curl -O 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+curl -O 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 tar xvfz WordNet-3.0.tar.gz
 
 If while you are trying to decompress the WordNet-3.0 file, you are getting the message "Unsupported format" then try to download WordNet-3.0 again by using the next command:
-- wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+- wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 and try to uncompress again:
 - tar xvfz WordNet-3.0.tar.gz
 
 cp -iav WordNet-3.0/dict/* ~/workspace/sumo/WordNetMappings/
 rm WordNet-3.0.tar.gz
 
-curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
+curl -O 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar xvzf E.tgz
 cd E
 ./configure
