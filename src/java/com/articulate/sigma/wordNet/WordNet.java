@@ -21,6 +21,8 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
+import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
@@ -30,7 +32,9 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /** ***************************************************************
  *  This program finds and displays SUMO terms that are related in meaning to the English
@@ -43,6 +47,8 @@ import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
  *  @author Adam Pease
  */
 public class WordNet implements Serializable {
+
+    private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
 
     public static boolean disable = false;
     public static boolean debug = false;
@@ -83,7 +89,7 @@ public class WordNet implements Serializable {
 
     public String origMaxNounSynsetID = "";
     public String origMaxVerbSynsetID = "";
-    
+
     /** Keys are SUMO terms, values are ArrayLists(s) of
      * POS-prefixed 9-digit synset String(s) meaning that the part of speech code is
      * prepended to the synset number. */
@@ -122,7 +128,7 @@ public class WordNet implements Serializable {
      * given in the key.  */
     public HashMap<String,HashMap<String,Integer>> wordCoFrequencies = new HashMap<String,HashMap<String,Integer>>();
 
-    /** a HashMap of HashMaps where the key is a word and the value is a 
+    /** a HashMap of HashMaps where the key is a word and the value is a
      * HashMap of 9-digit POS-prefixed senses which is the value of the AVPair,
      * and the number of times that sense occurs in the Brown corpus, which is
      * the key of the AVPair*/
@@ -149,12 +155,12 @@ public class WordNet implements Serializable {
      * from index.sense, which reduces all words to lower case */
     public HashMap<String,String> senseKeys = new HashMap<String,String>();
 
-    /** A HashMap where the keys are 9 digit POS prefixed WordNet synset byte offsets, 
+    /** A HashMap where the keys are 9 digit POS prefixed WordNet synset byte offsets,
      * and the values are of the form word_POS_sensenum (alpha POS like "VB"). Note
      * that all words are from index.sense, which reduces
      * all words to lower case */
     public HashMap<String,String> reverseSenseIndex = new HashMap<String,String>();
-    
+
     /** A HashMap where keys are 8 digit
      * WordNet synset byte offsets or synsets appended with a dash and a specific
      * word such as "12345678-foo" or in the case where the frame applies to the entire
@@ -184,7 +190,7 @@ public class WordNet implements Serializable {
      * has String keys which are PWN30 synsets with 8-digit synsets a dash and then a alphabetic
      * part of speech character.  Values are words in the target language. */
     public HashMap<String,HashMap<String,String>> OMW = new HashMap<String,HashMap<String,String>>();
-    
+
     /**  This array contains all of the regular expression strings that
      * will be compiled to Pattern objects for use in the methods in
      * this file. */
@@ -314,7 +320,7 @@ public class WordNet implements Serializable {
     /** ***************************************************************
      */
     private void makeFileMap() {
-    	
+
         wnFilenames.put("noun_mappings",    "WordNetMappings30-noun.txt" );
         wnFilenames.put("verb_mappings",    "WordNetMappings30-verb.txt" );
         wnFilenames.put("adj_mappings",     "WordNetMappings30-adj.txt" );
@@ -336,14 +342,14 @@ public class WordNet implements Serializable {
      * Pattern objects in the Pattern[] regexPatterns.
      */
     public void compileRegexPatterns() {
-        
+
         System.out.println("INFO in WordNet.compileRegexPatterns(): compiling patterns");
         regexPatterns = new Pattern[regexPatternStrings.length];
         for (int i = 0; i < regexPatternStrings.length; i++) {
             regexPatterns[i] = Pattern.compile(regexPatternStrings[i]);
-            if (!(regexPatterns[i] instanceof Pattern)) 
+            if (!(regexPatterns[i] instanceof Pattern))
                 System.out.println("ERROR in WordNet.compileRegexPatterns(): could not compile \""
-                        + regexPatternStrings[i] + "\"");            
+                        + regexPatternStrings[i] + "\"");
         }
         return;
     }
@@ -357,7 +363,7 @@ public class WordNet implements Serializable {
      * @return A File object
      */
     public File getWnFile(String key, String override) {
-        
+
         File theFile = null;
         try {
             if (override != null)
@@ -409,7 +415,7 @@ public class WordNet implements Serializable {
         }
         return words;
     }
-    
+
     /** ***************************************************************
      * Return an ArrayList of the string split by periods.
      */
@@ -625,7 +631,7 @@ public class WordNet implements Serializable {
      *  provided, in which case assume it is a full path.
      */
     private void readNouns() throws java.io.IOException {
-    	
+
         System.out.println("INFO in WordNet.readNouns(): Reading WordNet noun files");
         LineNumberReader lr = null;
         try {
@@ -652,7 +658,7 @@ public class WordNet implements Serializable {
             }
             System.out.println("x");
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
-                    + " seconds to process " + nounFile.getCanonicalPath() + 
+                    + " seconds to process " + nounFile.getCanonicalPath() +
                     " with " + lr.getLineNumber() + " lines");
             // System.out.println("INFO in WordNet.readNouns(): Reading WordNet noun exceptions");
             nounFile = getWnFile("noun_exceptions",null);
@@ -816,7 +822,7 @@ public class WordNet implements Serializable {
             }
             System.out.println("x");
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
-                    + " seconds to process " + verbFile.getCanonicalPath()  + 
+                    + " seconds to process " + verbFile.getCanonicalPath()  +
                     " with " + lr.getLineNumber() + " lines");
             // System.out.println("INFO in WordNet.readVerbs(): Reading WordNet verb exceptions");
             verbFile = getWnFile("verb_exceptions",null);
@@ -828,7 +834,7 @@ public class WordNet implements Serializable {
             r = new FileReader( verbFile );
             lr = new LineNumberReader(r);
             while ((line = lr.readLine()) != null) {
-                // 12: p = Pattern.compile("(\\S+)\\s+(\\S+).*");  
+                // 12: p = Pattern.compile("(\\S+)\\s+(\\S+).*");
                 m = regexPatterns[12].matcher(line);  // TODO: Note we ignore more then one base form for a given tense
                 if (m.matches()) {
                     exceptionVerbHash.put(m.group(1),m.group(2));          // 1-past/progressive, 2-root
@@ -915,7 +921,7 @@ public class WordNet implements Serializable {
             }
             System.out.println("x");
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
-                    + " seconds to process " + adjFile.getCanonicalPath() + 
+                    + " seconds to process " + adjFile.getCanonicalPath() +
                     " with " + lr.getLineNumber() + " lines");
         }
         catch (Exception ex) {
@@ -984,7 +990,7 @@ public class WordNet implements Serializable {
             }
             System.out.println("x");
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
-                    + " seconds to process " + advFile.getCanonicalPath() + 
+                    + " seconds to process " + advFile.getCanonicalPath() +
                     " with " + lr.getLineNumber() + " lines");
         }
         catch (Exception ex) {
@@ -1278,9 +1284,9 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
-     * Read word sense frequencies into a HashMap of PriorityQueues 
-     * containing AVPairs where the value is a word and the attribute 
-     * (on which PriorityQueue is sorted) is an 8 digit String 
+     * Read word sense frequencies into a HashMap of PriorityQueues
+     * containing AVPairs where the value is a word and the attribute
+     * (on which PriorityQueue is sorted) is an 8 digit String
      * representation of an integer count.
      */
     public void readSenseCount() {
@@ -1295,7 +1301,7 @@ public class WordNet implements Serializable {
         try {
             siFile = getWnFile("cntlist",null);
             if (siFile == null) {
-                System.out.println("Error in WordNet.readSenseCount(): The sense count file does not exist in " + 
+                System.out.println("Error in WordNet.readSenseCount(): The sense count file does not exist in " +
                         baseDir + File.separator + "cntlist");
                 return;
             }
@@ -1398,7 +1404,7 @@ public class WordNet implements Serializable {
      *  A routine which looks up a given list of words in the hashtables
      *  to find the relevant word definitions and SUMO mappings.
      *  @param input is the target sentence to be parsed. See WordSenseBody.jsp for usage.
-     *  @param context is the larger context of the sentence. Can mean more accurate results. 
+     *  @param context is the larger context of the sentence. Can mean more accurate results.
      *  @param params is the set of html parameters
      *  @returns a String that is the sentence taken apart and displayed in HTML
      */
@@ -1420,16 +1426,16 @@ public class WordNet implements Serializable {
                 //String synsetColl = wordSynsetList.get(1);
                 //ArrayList<String> synsetList = splitToArrayList(synsetColl); //removes all punctuation and whitespace
                 //ArrayList<String> wordList = splitToArrayList(wordColl);
-            
+
                 result.append(sumoSentimentDisplay(sentence)); //attaches sentiment display already in HTML format
                 HashMap<String,Integer> conceptMap = (HashMap<String,Integer>) DB.computeConceptSentiment(sentence); //returns Hashmap of key=SUMO concept, value=sentiment score
                 System.out.println("INFO in WordNet.sumoSentenceDisplay(): map " + conceptMap);
-                
+
                 if (synsetList == null) {
                     result.append("<b> No words could be mapped for Sense Analysis. </b>\n");
                     return result.toString();
                 }
-            
+
                 ArrayList<String> SUMOtermList = new ArrayList<String>();
                 int listLength = synsetList.size();
                 for (int i = 0; i < listLength; i++) {
@@ -1437,47 +1443,47 @@ public class WordNet implements Serializable {
                     String trm = getSUMOMapping(s); //returns a SUMO term in the form "&%term=" that matches the synset
                     SUMOtermList.add(trm);
                 }
-            
+
                 String synset = new String();
                 String word = new String();
                 String SUMOterm = new String();
                 String documentation = new String();
 
-                for (int j = 0; j < listLength; j++) {        
+                for (int j = 0; j < listLength; j++) {
                     synset = synsetList.get(j);
                     ArrayList<String> words = synsetsToWords.get(synset);
                     if (words != null && words.size() > 0)
                         word = words.get(0);
                     else
                         word = "";
-                    SUMOterm = SUMOtermList.get(j); 
+                    SUMOterm = SUMOtermList.get(j);
                     if (nounDocumentationHash.containsKey(synset.substring(1)) && synset.substring(0,1).equals("1")) {
                         documentation = (String) nounDocumentationHash.get(synset.substring(1));
                         result.append("<a href=\"WordNet.jsp?synset=" + synset + "&" + params + "\">" + synset + "</a> ");
-                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=1" + 
+                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=1" +
                                 "\">" + word + "</a>" + "-  " + documentation + ".\n");
                     }
                     else if (verbDocumentationHash.containsKey(synset.substring(1)) && synset.substring(0,1).equals("2")) {
                         documentation = (String) verbDocumentationHash.get(synset.substring(1));
                         result.append("<a href=\"WordNet.jsp?synset=" + synset + "&" + params + "\">" + synset + "</a> ");
-                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=2" + 
+                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=2" +
                                 "\">" + word + "</a>" + "-  " + documentation + ".\n");
                     }
                     else if (adjectiveDocumentationHash.containsKey(synset.substring(1)) && synset.substring(0,1).equals("3")) {
                         documentation = (String) adjectiveDocumentationHash.get(synset.substring(1));
                         result.append("<a href=\"WordNet.jsp?synset=" + synset + "&" + params + "\">" + synset + "</a> ");
-                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=3" + 
+                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=3" +
                                 "\">" + word + "</a>" + "-  " + documentation + ".\n");
                     }
                     else if (adverbDocumentationHash.containsKey(synset.substring(1)) && synset.substring(0,1).equals("4")) {
                         documentation = (String) adverbDocumentationHash.get(synset.substring(1));
                         result.append("<a href=\"WordNet.jsp?synset=" + synset + "&" + params + "\">" + synset + "</a> ");
-                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=4" + 
+                        result.append(" " + "<a href=\"WordNet.jsp?simple=no" + "&" + params + "&word=" + word + "&POS=4" +
                                 "\">1" + word + "</a>" + "-  " + documentation + ".\n");
                     }
-                                
-                    if (SUMOterm == null) 
-                        result.append("<P>" + word + " not yet mapped to SUMO<P>"); 
+
+                    if (SUMOterm == null)
+                        result.append("<P>" + word + " not yet mapped to SUMO<P>");
                     else {
                         result.append(HTMLformatter.termMappingsList(SUMOterm,"<a href=\"Browse.jsp?" + params + "&term="));
                         if (conceptMap.containsKey(SUMOterm.substring(2,SUMOterm.length()-1))) { //SUMOterm is in form &%term=, so must remove &% and = to match to a key in conceptMap
@@ -1487,16 +1493,16 @@ public class WordNet implements Serializable {
                     }
                 }
                 result.append("<br><br>");
-            }      
+            }
             return result.toString();
         }
         catch (NullPointerException ex) {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
             return "<b>Error</b>";
-        }        
+        }
     }
-    
+
     /** ***************************************************************
      *  A routine that uses computeSentiment in DB.java to display a sentiment score for a single sentence
      *  as well as the individual scores of scored descriptors.
@@ -1504,18 +1510,18 @@ public class WordNet implements Serializable {
      *  @returns a String that is the sentence scored and displayed in HTML
      */
     public String sumoSentimentDisplay(String sentence) {
-        
+
         try {
             StringBuffer result = new StringBuffer();
             Integer overallSentiment = DB.computeSentiment(sentence); //returns a single Integer of total sentiment
-            
+
             String newSentence = WordNet.wn.removeStopWords(sentence.trim());
             newSentence = StringUtil.removePunctuation(newSentence);
             ArrayList<String> words = splitToArrayList(newSentence);
             HashMap<String,Integer> scoreMap = new HashMap<String,Integer>();
             for (String w : words) { //must gather individual scores that went into created the overall sentiment
                 Integer score = DB.computeSentimentForWord(w);
-                if (score != 0) 
+                if (score != 0)
                     scoreMap.put(w,score);
             }
             result.append("<b>Overall Sentence Sentiment Score: </b>" + overallSentiment.toString() + "<br>");
@@ -1529,7 +1535,7 @@ public class WordNet implements Serializable {
             return "<b> NullPointerException </b>";
         }
     }
-        
+
     /** ***************************************************************
      *  A routine which takes a full pathname as input and returns a sentence by sentence display of sense
      *  and sentiment analysis
@@ -1540,7 +1546,7 @@ public class WordNet implements Serializable {
      *   and displayed in HTML
      */
     public String sumoFileDisplay(String pathname, String counter, String params) {
-        
+
         try {
             File file = new File(pathname);
             if (file.exists() && file.length() == 0)
@@ -1556,12 +1562,12 @@ public class WordNet implements Serializable {
             dataStream.close();
             String text = textBuffer.toString();
             Integer overallSentiment = DB.computeSentiment(text); //returns an Integer that is the overall sentiment of the entire file
-            ArrayList<String> sentenceList = (ArrayList<String>) splitToArrayListSentence(text); //splits by periods. Runs into trouble with titles such as Mr. Test. 
+            ArrayList<String> sentenceList = (ArrayList<String>) splitToArrayListSentence(text); //splits by periods. Runs into trouble with titles such as Mr. Test.
             StringBuffer result = new StringBuffer();
             result.append("<b>Overall File Sentiment Score: </b>" + overallSentiment.toString() + "<br><br>");
             if (Integer.parseInt(counter) > 0) {
                 String prevCount = Integer.toString(Integer.parseInt(counter) - 1);
-                result.append("<i><a href=\"WordSense.jsp?" + params + "&sentence=" + pathname + "&sentCounter=" + prevCount + "\">" + "previous sentence (" + counter + " more)</a></i><br>");            
+                result.append("<i><a href=\"WordSense.jsp?" + params + "&sentence=" + pathname + "&sentCounter=" + prevCount + "\">" + "previous sentence (" + counter + " more)</a></i><br>");
             }
             String targetSentence = sentenceList.get(Integer.parseInt(counter));
             result.append(sumoSentenceDisplay(targetSentence, text, params)); //sumoSentenceDisplay does all the heavy lifting in sentence parsing and sense gathering
@@ -1570,7 +1576,7 @@ public class WordNet implements Serializable {
                 String remainingCount = Integer.toString(sentenceList.size() - Integer.parseInt(counter) - 1);
                 result.append("<i><a href=\"WordSense.jsp?" + params + "&sentence=" + pathname + "&sentCounter=" + nextCount + "\">" + "next sentence (" + remainingCount + " more)</a></i>");
             }
-            
+
             return result.toString();
         }
         catch (FileNotFoundException e) {
@@ -1580,14 +1586,14 @@ public class WordNet implements Serializable {
             return "<b> IO error </b>";
         }
     }
-    
+
     /** ***************************************************************
      * @return true if the input String is a file pathname. Determined by whether
-     * the string contains a forward or backward slash. This is only used in WordSense.jsp and will fail if 
+     * the string contains a forward or backward slash. This is only used in WordSense.jsp and will fail if
      * a sentence that is not a file contains a forward or back slash.
      */
     public boolean isFile(String s) {
-        
+
         return (s.contains("\\")||s.contains("/") ? true : false);
     }
 
@@ -1718,7 +1724,7 @@ public class WordNet implements Serializable {
         newSentence = removeStopWords(newSentence);
         //System.out.println("INFO in collectSUMOWordSenses(): processed sentence: " + newSentence);
         ArrayList<String> al = splitToArrayList(newSentence);
-        if (al == null) 
+        if (al == null)
             return result;
         for (int i = 0; i < al.size(); i++) {
             String word = al.get(i);
@@ -1759,31 +1765,25 @@ public class WordNet implements Serializable {
      */
     public static void encoder(Object object) {
 
-        Output output = null;
-        try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "wn.ser");
-            output = new Output(file);
-            kryoLocal.get().writeObject(output,object);
-            output.flush();
+        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        Path path = Paths.get(kbDir, "wn.ser");
+        try (Output output = new Output(Files.newOutputStream(path))) {
+            kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        //return output.toBytes();
     }
 
     /** ***************************************************************
      */
     public static <T> T decoder() {
 
-        Object ob = null;
-        try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileInputStream file = new FileInputStream(kbDir + File.separator + "wn.ser");
-            Input input = new Input(file);
-            //Input input = new Input(bytes);
-            ob = kryoLocal.get().readObject(input, WordNet.class);
+        WordNet ob = null;
+        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        Path path = Paths.get(kbDir, "wn.ser");
+        try (Input input = new Input(Files.newInputStream(path))) {
+            ob = kryoLocal.get().readObject(input,WordNet.class);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -1901,7 +1901,7 @@ public class WordNet implements Serializable {
             wn = new WordNet();
             wn.makeFileMap();
             wn.compileRegexPatterns();
-            
+
             wn.readNouns();
             wn.readVerbs();
             wn.readAdjectives();
@@ -1948,7 +1948,7 @@ public class WordNet implements Serializable {
                     if (wn == null)
                         loadFresh();
                 }
-                DB.readSentimentArray();                
+                DB.readSentimentArray();
             }
         }
         catch (Exception ex) {
@@ -2186,7 +2186,7 @@ public class WordNet implements Serializable {
                     else if (verbSynsetHash.containsKey(mixedCase))
                         result = mixedCase;
                     else if (verbSynsetHash.containsKey(input))
-                        result = input;                    
+                        result = input;
                 }
             }
         }
@@ -2506,7 +2506,7 @@ public class WordNet implements Serializable {
 
         String input = inp;
         StringBuffer buf = new StringBuffer();
-        
+
         String mixedCase = input;
         String str = input;
         if (input.contains(" "))
@@ -2653,7 +2653,7 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
-     
+
     private String fromXML(SimpleElement configuration) {
 
         StringBuffer result = new StringBuffer();
@@ -3067,7 +3067,7 @@ public class WordNet implements Serializable {
      */
     public String senseKeyPOS (String senseKey) {
 
-        if (StringUtil.emptyString(senseKey)) 
+        if (StringUtil.emptyString(senseKey))
             return "";
         int underscore2 = senseKey.lastIndexOf("_");
         if (underscore2 < 0) return "";
@@ -3351,12 +3351,12 @@ public class WordNet implements Serializable {
         maxVerbSynsetID = generateSynsetID(maxVerbSynsetID);
         return maxVerbSynsetID;
     }
-    
+
     /** ***************************************************************
      * Generate a new noun synset from a termFormat
      */
     public String nounSynsetFromTermFormat(String tf, String SUMOterm, KB kb) {
-        
+
         String synsetID = generateNounSynsetID();
         ArrayList<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (forms.size() > 0) {
@@ -3379,7 +3379,7 @@ public class WordNet implements Serializable {
      * Generate a new verb synset from a termFormat
      */
     public String verbSynsetFromTermFormat(String tf, String SUMOterm, KB kb) {
-        
+
         String synsetID = generateVerbSynsetID();
         ArrayList<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (forms.size() > 0) {
@@ -3441,13 +3441,13 @@ public class WordNet implements Serializable {
             al = new ArrayList<String>();
         al.add(synsetID);
         SUMOHash.put(SUMOterm, al);
-        
-        ArrayList<String> words = synsetsToWords.get(synsetID); 
+
+        ArrayList<String> words = synsetsToWords.get(synsetID);
         if (words == null)
             words = new ArrayList<String>();
         words.add(tf);
         synsetsToWords.put(synsetID,words);
-        
+
         String letterPOS = WordNetUtilities.posNumberToLetters(pos);
 
         String key = createNewSenseIndexKey(tf + "_" + letterPOS + "_");
@@ -3480,7 +3480,7 @@ public class WordNet implements Serializable {
         //        tf + ", " + key + ", " + synsetID + ", " + SUMOterm);
         //System.out.println("WordNet.synsetFromTermFormat(): millis: " + (System.currentTimeMillis() - millis));
     }
-    
+
     /** ***************************************************************
      * Generate a new synset from a termFormat
      */
@@ -3538,7 +3538,7 @@ public class WordNet implements Serializable {
                 origMaxNounSynsetID + " and: " + maxNounSynsetID);
         System.out.println("WordNet.termFormatsToSynsets(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
     }
-    
+
     /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
@@ -3560,14 +3560,14 @@ public class WordNet implements Serializable {
         System.out.println("Best word frequency: " + WordNet.wn.wordFrequencies.get(word).last());
         System.out.println("Best word frequency value: " + WordNet.wn.wordFrequencies.get(word).last().value);
         // HashMap<String,TreeSet<AVPair>> wordFrequencies
-        System.out.println("Best word frequency value sense index: " + 
+        System.out.println("Best word frequency value sense index: " +
                 WordNet.wn.senseIndex.get(WordNet.wn.wordFrequencies.get(word).last().value));
         System.out.println("Best default sense w/POS: " + WSD.getBestDefaultSense(word,2));
         System.out.println("Best default sense w/o POS: " + WSD.getBestDefaultSense(word));
-        System.out.println("Best default sense w/o POS sense index: " + 
+        System.out.println("Best default sense w/o POS sense index: " +
                 WordNet.wn.reverseSenseIndex.get(WSD.getBestDefaultSense(word,2)));
     }
-    
+
     /** ***************************************************************
      *  A method used only for testing.  It should not be called
      *  during normal operation.
@@ -3650,8 +3650,8 @@ public class WordNet implements Serializable {
      *  during normal operation.
      */
     public static void main (String[] args) {
-        
-        //testWordFreq();    
+
+        //testWordFreq();
         //checkWordsToSenses();
         //getEntailments();
         System.out.println("INFO in WordNet.main()");

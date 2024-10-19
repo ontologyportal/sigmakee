@@ -1,14 +1,13 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.*;
+
+import java.util.Map;
+
+import static org.junit.Assert.*;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-import com.articulate.sigma.*;
-import static org.junit.Assert.*;
-
-import java.io.BufferedReader;
-import java.io.StringReader;
-import java.util.HashMap;
 
 public class TPTP2SUMOTest {
 
@@ -36,7 +35,7 @@ public class TPTP2SUMOTest {
             // kif = TPTP2SUMO.convert(reader, false);
             tptp_parser.TPTPVisitor sv = new tptp_parser.TPTPVisitor();
             sv.parseString(input);
-            HashMap<String, tptp_parser.TPTPFormula> hm = sv.result;
+            Map<String, tptp_parser.TPTPFormula> hm = sv.result;
             for (String s : hm.keySet()) {
                 System.out.println(hm.get(s));
                 System.out.println("\t" + hm.get(s).sumo + "\n");
@@ -44,7 +43,7 @@ public class TPTP2SUMOTest {
             }
         }
         catch (Exception e) {
-            System.out.println("e: " + e);
+            System.err.println("e: " + e);
         }
     }
 

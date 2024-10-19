@@ -4,14 +4,16 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBcache;
 import com.articulate.sigma.wordNet.WordNet;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 
 import java.io.File;
 import java.util.*;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 /****************************************************************
  * Class mocks KB and KBcache so that unit tests can be run independently and without long initialization.
@@ -160,11 +162,7 @@ public class SigmaMockTestBase {
         public boolean isSubclass(String c1, String c2) {
             List<String> list = recognizedMap.get(c2);
 
-            if (list != null && list.contains(c1)) {
-                return true;
-            }
-
-            return false;
+            return list != null && list.contains(c1);
         }
 
         @Override
@@ -192,10 +190,7 @@ public class SigmaMockTestBase {
         public boolean isInstanceOf(String i, String c)    {
             List<String> list = recognizedMap.get(c);
 
-            if (list.contains(i))    {
-                return true;
-            }
-            return false;
+            return list.contains(i);
         }
     }
 

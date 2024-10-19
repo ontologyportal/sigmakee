@@ -1,8 +1,8 @@
 <%@ include    file="Prelude.jsp" %>
 
-<% 
+<%
 if (!role.equalsIgnoreCase("admin"))
-    response.sendRedirect("KBs.jsp");     
+    response.sendRedirect("KBs.jsp");
 %>
 <HTML>
 <HEAD>
@@ -23,11 +23,11 @@ if (!role.equalsIgnoreCase("admin"))
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
 */
@@ -45,10 +45,10 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   }
   else {
       inferenceEngine = KBmanager.getMgr().getPref("inferenceEngine");
-      if (inferenceEngine == null) 
-          inferenceEngine = "";      
+      if (inferenceEngine == null)
+          inferenceEngine = "";
   }
-  
+
   String celtdir = request.getParameter("celtdir");
   if (celtdir != null) {
       changed = true;
@@ -117,7 +117,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
           || !overwrite.equalsIgnoreCase("yes"))
           overwrite = "no";
   }
-  
+
   String showcached = request.getParameter("showcached");
   if (showcached != null) {
       changed = true;
@@ -128,7 +128,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       if (showcached == null)
           showcached = "yes";
   }
-  
+
   String loadCELT = request.getParameter("loadCELT");
   if (loadCELT != null) {
       changed = true;
@@ -162,7 +162,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       if (testOutputDir == null)
           testOutputDir = "";
   }
-  
+
   String TPTPDisplay = request.getParameter("TPTPDisplay");
   if (TPTPDisplay != null) {
       changed = true;
@@ -229,7 +229,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       if (graphDir == null)
           graphDir = "";
   }
-  
+
   String editorCommand = request.getParameter("editorCommand");
   if (editorCommand != null) {
       changed = true;
@@ -283,7 +283,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       if (logDir == null)
           logDir = "";
   }
-          
+
   String logLevel = request.getParameter("logLevel");
   if (logLevel != null) {
       changed = true;
@@ -294,14 +294,14 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
       if (logLevel == null)
           logLevel = "warning";
   }
-                    
-  if (changed == true) 
+
+  if (changed == true)
       KBmanager.getMgr().writeConfiguration();
 
   // Force retranslation and new inference engine creation if inference
   // parameters have changed.
 
-  HashSet<String> kbNames = KBmanager.getMgr().getKBnames();
+  Set<String> kbNames = KBmanager.getMgr().getKBnames();
   Iterator<String> it = null;
   if ((kbNames != null) && !(kbNames.isEmpty())) {
       if (reload) {
@@ -346,7 +346,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     <label for="inferenceTestDir">
     <INPUT type="text" SIZE=50 name="inferenceTestDir" value=<%=inferenceTestDir %> >
     Directory in which tests for the inference engine are found</label><P>
-    
+
     <label for="testOutputDir">
     <INPUT type="text" SIZE=50 name="testOutputDir" value=<%=testOutputDir %> >
     Directory in which consistency check output can be found</label><P>
@@ -358,7 +358,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     <label for="graphDir">
     <INPUT type="text" SIZE=50 name="graphDir" value=<%=graphDir %> >
     Directory in which dot graphs will be saved</label><P>
-    
+
     <label for="systemsDir">
     <INPUT type="text" SIZE=50 name="systemsDir" value=<%=systemsDir %> >
     Directory in which built in ATP systems are located</label><P>
@@ -378,118 +378,118 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     <label for="logLevel">
     <INPUT type="text" name="logLevel" value=<%=logLevel %> >
     Level of messages to be logged (can be severe, warning, info, config, finest) </label><P>
-    
-    <label for="overwrite">                                                   
+
+    <label for="overwrite">
     <INPUT type="radio" name="overwrite" value="yes" <%  // default is no
     overwrite = mgr.getPref("overwrite");
     if (StringUtil.isNonEmptyString(overwrite) &&
-        overwrite.equalsIgnoreCase("yes")) 
-        out.print("checked=yes"); 
+        overwrite.equalsIgnoreCase("yes"))
+        out.print("checked=yes");
     %> > yes
-    <INPUT type="radio" name="overwrite" value="no" <% 
+    <INPUT type="radio" name="overwrite" value="no" <%
     if (StringUtil.emptyString(overwrite) ||
-            overwrite.equalsIgnoreCase("no")) 
+            overwrite.equalsIgnoreCase("no"))
             out.print("checked=no"); %> > no
       : Overwrite files of the same name when creating, copying, and loading KB constituents</label><P>
 
-    <label for="showcached">                                                   
+    <label for="showcached">
     <INPUT type="radio" name="showcached" value="yes" <%                       // default to showing cached statements
         if (KBmanager.getMgr().getPref("showcached") == null ||
-            KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("yes"))
+            out.print("checked=yes");
         %> > yes
-    <INPUT type="radio" name="showcached" value="no" <% 
+    <INPUT type="radio" name="showcached" value="no" <%
         if (KBmanager.getMgr().getPref("showcached") != null &&
-            KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no")) 
+            KBmanager.getMgr().getPref("showcached").equalsIgnoreCase("no"))
             out.print("checked=no"); %> > no
     : Show cached statements in the term browser</label><P>
 
-    <label for="loadCELT">  
+    <label for="loadCELT">
     <INPUT type="radio" name="loadCELT" value="yes" <%                            // default to no CELT
         if (KBmanager.getMgr().getPref("loadCELT") != null &&
-            KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-    <INPUT type="radio" name="loadCELT" value="no" <% 
+            KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes"))
+            out.print("checked=no");
+        %> > yes</input>
+    <INPUT type="radio" name="loadCELT" value="no" <%
         if (KBmanager.getMgr().getPref("loadCELT") == null ||
-            KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("no"))
+            out.print("checked=yes");
         %> > no
     : Load CELT at startup</label><P>
 
 <p><strong>Formula Translation Options</strong></p>
     <ol>
     <li>
-        <label for="typePrefix">  
-        <INPUT type="radio" name="typePrefix" value="yes" <% 
+        <label for="typePrefix">
+        <INPUT type="radio" name="typePrefix" value="yes" <%
         if (KBmanager.getMgr().getPref("typePrefix") != null &&
-            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-        <INPUT type="radio" name="typePrefix" value="no" <% 
+            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("yes"))
+            out.print("checked=no");
+        %> > yes</input>
+        <INPUT type="radio" name="typePrefix" value="no" <%
         if (KBmanager.getMgr().getPref("typePrefix") == null ||
-            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("typePrefix").equalsIgnoreCase("no"))
+            out.print("checked=yes");
         %> > no
         : Add a "sortal" antecedent to every axiom </label><P>
     </li>
 
     <li>
-        <label for="holdsPrefix">  
+        <label for="holdsPrefix">
         <INPUT type="radio" name="holdsPrefix" value="yes" <%
         if (KBmanager.getMgr().getPref("holdsPrefix") != null &&
-            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-        <INPUT type="radio" name="holdsPrefix" value="no" <% 
+            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("yes"))
+            out.print("checked=no");
+        %> > yes</input>
+        <INPUT type="radio" name="holdsPrefix" value="no" <%
         if (KBmanager.getMgr().getPref("holdsPrefix") == null ||
-            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("holdsPrefix").equalsIgnoreCase("no"))
+            out.print("checked=yes");
         %> > no
         : Prefix all clauses with "holds" (otherwise instantiate all variables in predicate position)</label><P>
     </li>
 
     <li>
-        <label for="cache">  
+        <label for="cache">
         <INPUT type="radio" name="cache" value="yes" <%   // default to no caching
         if (KBmanager.getMgr().getPref("cache") != null &&
-            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-        <INPUT type="radio" name="cache" value="no" <% 
+            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes"))
+            out.print("checked=no");
+        %> > yes</input>
+        <INPUT type="radio" name="cache" value="no" <%
         if (KBmanager.getMgr().getPref("cache") == null ||
-            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("cache").equalsIgnoreCase("no"))
+            out.print("checked=yes");
         %> > no
         : Employ statement caching</label><P>
     </li>
 
     <li>
-        <label for="TPTP">  
+        <label for="TPTP">
         <INPUT type="radio" name="TPTP" value="yes" <%   // default to no TPTP
         if (KBmanager.getMgr().getPref("TPTP") != null &&
-            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-        <INPUT type="radio" name="TPTP" value="no" <% 
+            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("yes"))
+            out.print("checked=no");
+        %> > yes</input>
+        <INPUT type="radio" name="TPTP" value="no" <%
         if (KBmanager.getMgr().getPref("TPTP") == null ||
-            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("TPTP").equalsIgnoreCase("no"))
+            out.print("checked=yes");
         %> > no
         : Perform TPTP translation</label><P>
     </li>
 
     <li>
-        <label for="TPTPDisplay">  
+        <label for="TPTPDisplay">
         <INPUT type="radio" name="TPTPDisplay" value="yes" <%   // default to no TPTPDisplay
         if (KBmanager.getMgr().getPref("TPTPDisplay") != null &&
-            KBmanager.getMgr().getPref("TPTPDisplay").equalsIgnoreCase("yes")) 
-            out.print("checked=no"); 
-        %> > yes</input> 
-        <INPUT type="radio" name="TPTPDisplay" value="no" <% 
+            KBmanager.getMgr().getPref("TPTPDisplay").equalsIgnoreCase("yes"))
+            out.print("checked=no");
+        %> > yes</input>
+        <INPUT type="radio" name="TPTPDisplay" value="no" <%
         if (KBmanager.getMgr().getPref("TPTPDisplay") == null ||
-            KBmanager.getMgr().getPref("TPTPDisplay").equalsIgnoreCase("no")) 
-            out.print("checked=yes"); 
+            KBmanager.getMgr().getPref("TPTPDisplay").equalsIgnoreCase("no"))
+            out.print("checked=yes");
         %> > no
         : Display TPTP translation</label><P>
     </li>

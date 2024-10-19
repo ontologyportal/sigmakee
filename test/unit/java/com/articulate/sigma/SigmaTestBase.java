@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.wordNet.WordNet;
+
 import com.google.common.collect.Lists;
 
 import java.io.*;
@@ -20,9 +21,8 @@ public class SigmaTestBase {
      */
     protected static void doSetUp(BufferedReader reader) {
 
-        KBmanager manager = KBmanager.getMgr();
         SimpleElement configuration = null;
-        if (!manager.initialized) {
+        if (!KBmanager.initialized) {
             try {
                 SimpleDOMParser sdp = new SimpleDOMParser();
                 //sdp.setSkipProlog(false);
@@ -34,7 +34,7 @@ public class SigmaTestBase {
 
             KBmanager.getMgr().setDefaultAttributes();
             KBmanager.getMgr().setConfiguration(configuration);
-            manager.initialized = true;
+            KBmanager.initialized = true;
         }
         kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         checkConfiguration();
@@ -51,7 +51,7 @@ public class SigmaTestBase {
         if (WordNet.wn.synsetsToWords.isEmpty()) {
             problemList.add("WordNet mappings are empty.");
         }
-        List kbnames = Arrays.asList("english_format.kif","domainEnglishFormat.kif", 
+        List kbnames = Arrays.asList("english_format.kif","domainEnglishFormat.kif",
             "Merge.kif", "Mid-level-ontology.kif", "ArabicCulture.kif", "Cars.kif",
             "Catalog.kif", "Communications.kif", "CountriesAndRegions.kif", "Dining.kif",
             "Economy.kif", "engineering.kif", "FinancialOntology.kif", "Food.kif",
@@ -60,9 +60,9 @@ public class SigmaTestBase {
             "MilitaryProcesses.kif", "Music.kif", "naics.kif", "People.kif",
             "QoSontology.kif", "Sports.kif", "TransnationalIssues.kif", "Transportation.kif",
             "TransportDetail.kif","VirusProteinAndCellPart.kif","WMD.kif");
-                
+
         if (KBmanager.getMgr().getKBnames().containsAll(kbnames)) {
-            problemList.add("KB missing one or more files. Expected: " + kbnames + 
+            problemList.add("KB missing one or more files. Expected: " + kbnames +
                     " actual:" + KBmanager.getMgr().getKBnames());
         }
         if (! problemList.isEmpty()) {
@@ -95,14 +95,14 @@ public class SigmaTestBase {
             xmlReader = new BufferedReader(new FileReader(path));
             //xmlReader = new BufferedReader(new InputStreamReader(theClass.getResourceAsStream(path)));
         }
-        catch (Exception ex)  {
+        catch (FileNotFoundException ex)  {
             //try {
                 //URI uri = theClass.getClassLoader().getResource(".").toURI();
                 //URI uri = theClass.getResource(".").toURI();
                 //String msg = "Could not find " + path + " in " + uri.toString();
                 ex.printStackTrace();
-                System.out.println(ex.getMessage());
-                System.out.println("SigmaTestBase.getXmlReader(): Could not find " + path);
+                System.err.println(ex.getMessage());
+                System.err.println("SigmaTestBase.getXmlReader(): Could not find " + path);
                 //throw new IllegalStateException(msg);
             //}
             //catch (URISyntaxException e) {

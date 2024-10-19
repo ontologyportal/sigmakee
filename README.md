@@ -238,8 +238,8 @@ mkdir workspace
 mkdir Programs
 cd Programs
 wget 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
-wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
+wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+wget 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
 unzip apache-tomcat-8.5.23.zip
 rm apache-tomcat-8.5.23.zip
@@ -535,7 +535,7 @@ Note that you need to enter the entire statement above, including calling "bash"
 Users should also see
 
 https://sourceforge.net/p/sigmakee/wiki/required_data_files/
-Mac instructions - https://sourceforge.net/p/sigmakee/wiki/Sigma%20Setup%20on%20Mac/ 
+Mac instructions - https://sourceforge.net/p/sigmakee/wiki/Sigma%20Setup%20on%20Mac/
 Ubuntu - https://sourceforge.net/p/sigmakee/wiki/Setting%20up%20Sigma%20on%20Ubuntu/
 
 ## User Interface
@@ -543,7 +543,7 @@ Ubuntu - https://sourceforge.net/p/sigmakee/wiki/Setting%20up%20Sigma%20on%20Ubu
 There's not enough documentation on Sigma so I'm starting a bit here in preparation for a real
 manual.
 
-Sigma has a number of functions controlled through its JSP-based interface.  
+Sigma has a number of functions controlled through its JSP-based interface.
 
 * [AddConstituent.jsp](web/jsp/AddConstituent.jsp)
   - adds a constituent SUO-KIF file to a knowledge base.  Accessible only to

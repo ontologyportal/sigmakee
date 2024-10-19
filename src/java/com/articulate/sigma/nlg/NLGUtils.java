@@ -2,12 +2,17 @@ package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
+
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
+
 import edu.stanford.nlp.ling.CoreLabel;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 /**
@@ -18,9 +23,9 @@ public class NLGUtils implements Serializable {
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     private static final String PHRASES_FILENAME = "Translations/language.txt";
     private static NLGUtils nlg = null;
-    private HashMap<String,HashMap<String,String>> keywordMap;
+    private Map<String, Map<String, String>> keywordMap;
     // a list of format parameters or words and the sentence words they match with
-    public static HashMap<String,CoreLabel> outputMap = new HashMap<>();
+    public static Map<String, CoreLabel> outputMap = new HashMap<>();
     public static boolean debug = false;
 
     /** *************************************************************
@@ -31,7 +36,7 @@ public class NLGUtils implements Serializable {
             return;
         System.out.println("NLGUtils.init(): initializing with " + kbDir);
         nlg = new NLGUtils();
-        nlg.readKeywordMap(kbDir);
+        NLGUtils.readKeywordMap(kbDir);
     }
 
     /** ***************************************************************
@@ -46,30 +51,24 @@ public class NLGUtils implements Serializable {
      */
     public static void encoder(Object object) {
 
-        Output output = null;
-        try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
-            output = new Output(file);
-            kryoLocal.get().writeObject(output,object);
-            output.flush();
+        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        Path path = Paths.get(kbDir, "NLGUtils.ser");
+        try (Output output = new Output(Files.newOutputStream(path))) {
+            kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-        //return output.toBytes();
     }
 
     /** ***************************************************************
      */
     public static <T> T decoder() {
 
-        Object ob = null;
-        try {
-            String kbDir = System.getenv("SIGMA_HOME") + File.separator + "KBs";
-            FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
-            Input input = new Input(file);
-            //Input input = new Input(bytes);
+        NLGUtils ob = null;
+        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        Path path = Paths.get(kbDir, "NLGUtils.ser");
+        try (Input input = new Input(Files.newInputStream(path))) {
             ob = kryoLocal.get().readObject(input,NLGUtils.class);
         }
         catch (Exception e) {
@@ -103,9 +102,7 @@ public class NLGUtils implements Serializable {
         Date configDate = new Date(phrasesFile.lastModified());
         File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
         Date saveDate = new Date(serfile.lastModified());
-        if (saveDate.compareTo(configDate) < 0)
-            return true;
-        return false;
+        return saveDate.compareTo(configDate) < 0;
     }
 
     /** ***************************************************************
@@ -133,10 +130,9 @@ public class NLGUtils implements Serializable {
             System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
         }
         catch (Exception ex) {
-            System.out.println("Error in NLGUtils.loadSerialized(): IOException is caught");
+            System.err.println("Error in NLGUtils.loadSerialized(): IOException is caught");
             ex.printStackTrace();
             nlg = null;
-            return;
         }
     }
 
@@ -148,17 +144,16 @@ public class NLGUtils implements Serializable {
         try {
             // Reading the object from a file
             String kbDir = KBmanager.getMgr().getPref("kbDir");
-            FileOutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
-            ObjectOutputStream out = new ObjectOutputStream(file);
-            System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
-            // Method for deserialization of object
-            out.writeObject(nlg);
-            out.close();
-            file.close();
+            try (OutputStream file = new FileOutputStream(kbDir + File.separator + "NLGUtils.ser");
+                ObjectOutputStream out = new ObjectOutputStream(file)) {
+                System.out.println("NLGUtils.serialize(): nlg size " + getKeywordMap().keySet().size());
+                // Method for deserialization of object
+                out.writeObject(nlg);
+            }
             System.out.println("NLGUtils.serialize(): NLGUtils has been serialized: " + nlg);
         }
         catch (IOException ex) {
-            System.out.println("Error in NLGUtils.serialize(): IOException is caught");
+            System.err.println("Error in NLGUtils.serialize(): IOException is caught");
             ex.printStackTrace();
         }
     }
@@ -206,12 +201,15 @@ public class NLGUtils implements Serializable {
         int dktoklen = dktok.length();
         int prevti = -1;
         int ti = 0;
-        int tj = -1;
-        int di = -1;
-        int dj = -1;
-        int dk = -1;
-        int dl = -1;
-        int digit = -1;
+        int tj;
+        int di;
+        int dj;
+        int dk;
+        int dl;
+//        int digit;
+        String termName, displayName;
+        StringBuilder rsb;
+        int rsblen;
         // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
         while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
             prevti = ti;
@@ -221,7 +219,7 @@ public class NLGUtils implements Serializable {
             di = sb.indexOf(ditok, tj);
             if (di == -1)
                 break;
-            String termName = sb.substring(tj, di);
+            termName = sb.substring(tj, di);
             dj = (di + ditoklen);
             if (dj >= sblen)
                 break;
@@ -229,10 +227,10 @@ public class NLGUtils implements Serializable {
             if (dk == -1)
                 break;
 
-            String displayName = sb.substring(dj, dk);
+            displayName = sb.substring(dj, dk);
             if (StringUtil.emptyString(displayName))
                 displayName = termName;
-            StringBuilder rsb = new StringBuilder();
+            rsb = new StringBuilder();
             rsb.append(anchorStart);
             rsb.append(termName);
             rsb.append("\">");
@@ -241,7 +239,7 @@ public class NLGUtils implements Serializable {
             dl = (dk + dktoklen);
             if (dl > sblen)
                 break;
-            int rsblen = rsb.length();
+            rsblen = rsb.length();
             if (dk != -1 && (dk+1) < sb.toString().length() && Character.isDigit(sb.toString().charAt(dk+1)))
                 sb = sb.replace(ti, dl+1, rsb.toString()); // replace the argument number
             else
@@ -277,20 +275,21 @@ public class NLGUtils implements Serializable {
         }
 
         StringBuilder result = new StringBuilder();
-        String comma = nlg.getKeyword(",", language);
+        String comma = NLGUtils.getKeyword(",", language);
         String space = " ";
         String[] arr = strseq.split(space);
         int lastIdx = (arr.length - 1);
+        String val;
         for (int i = 0; i < arr.length; i++) {
-            String val = arr[i];
+            val = arr[i];
             if (i > 0) {
-                if (val.equals(nlg.getKeyword("and", language))) {
+                if (val.equals(NLGUtils.getKeyword("and", language))) {
                     // Make behavior for lists that include "and" the same as for those that don't.
                     continue;
                 }
                 if (i == lastIdx) {
                     result.append(space);
-                    result.append(nlg.getKeyword("and", language));
+                    result.append(NLGUtils.getKeyword("and", language));
                 }
                 else {
                     result.append(comma);
@@ -341,7 +340,7 @@ public class NLGUtils implements Serializable {
             setKeywordMap(new HashMap<>());
         int lc = 0;
         BufferedReader br = null;
-        File phrasesFile = null;
+        File phrasesFile;
         try {
             if (getKeywordMap().isEmpty()) {
                 System.out.println("Filling keywordMap");
@@ -350,12 +349,13 @@ public class NLGUtils implements Serializable {
                 if (!phrasesFile.canRead())
                     throw new Exception("Cannot read \"" + phrasesFile.getCanonicalPath() + "\"");
                 br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile),"UTF-8"));
-                HashMap<String,String> phrasesByLang = null;
-                List<String> phraseList = null;
+                Map<String, String> phrasesByLang;
+                List<String> phraseList;
                 List<String> languageKeys = null;
                 String delim = "|";
-                String key = null;
-                String line = null;
+                String key;
+                String line;
+                int plLen;
                 while ((line = br.readLine()) != null) {
                     lc++;
                     line = line.trim();
@@ -369,7 +369,7 @@ public class NLGUtils implements Serializable {
                             phraseList = Arrays.asList(line.split("\\" + delim));
                             phrasesByLang = new HashMap<>();
                             key = phraseList.get(0);
-                            int plLen = phraseList.size();
+                            plLen = phraseList.size();
                             for (int i = 0; i < plLen; i++)
                                 phrasesByLang.put(languageKeys.get(i), phraseList.get(i));
                             getKeywordMap().put(key.intern(), phrasesByLang);
@@ -384,21 +384,21 @@ public class NLGUtils implements Serializable {
             }
         }
         catch (Exception ex) {
-            System.out.println("ERROR loading " + PHRASES_FILENAME + " at line " + lc + ":");
-            System.out.println(ex.getMessage());
+            System.err.println("ERROR loading " + PHRASES_FILENAME + " at line " + lc + ":");
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
         finally {
             try {
                 if (br != null) { br.close(); }
             }
-            catch (Exception ex2) {
+            catch (IOException ex2) {
                 ex2.printStackTrace();
             }
             System.out.println("EXIT NLGUtils.readKeywordMap(" + dir + ") with size " + getKeywordMap().keySet().size());
         }
-        serialize();
-        return;
+//        serialize(); // old method. Replace w/ Kryo serialization (tdn) 10/15/24
+        encoder(nlg);
     }
 
     /** **************************************************************
@@ -413,39 +413,39 @@ public class NLGUtils implements Serializable {
 
         String ordinal = "";
         switch (occurrence) {
-        case 3: ordinal = nlg.getKeyword("third", language); break;
-        case 4: ordinal = nlg.getKeyword("fourth", language); break;
-        case 5: ordinal = nlg.getKeyword("fifth", language); break;
-        case 6: ordinal = nlg.getKeyword("sixth", language); break;
-        case 7: ordinal = nlg.getKeyword("seventh", language); break;
-        case 8: ordinal = nlg.getKeyword("eighth", language); break;
-        case 9: ordinal = nlg.getKeyword("ninth", language); break;
-        case 10: ordinal = nlg.getKeyword("tenth", language); break;
-        case 11: ordinal = nlg.getKeyword("eleventh", language); break;
-        case 12: ordinal = nlg.getKeyword("twelfth", language); break;
+        case 3: ordinal = NLGUtils.getKeyword("third", language); break;
+        case 4: ordinal = NLGUtils.getKeyword("fourth", language); break;
+        case 5: ordinal = NLGUtils.getKeyword("fifth", language); break;
+        case 6: ordinal = NLGUtils.getKeyword("sixth", language); break;
+        case 7: ordinal = NLGUtils.getKeyword("seventh", language); break;
+        case 8: ordinal = NLGUtils.getKeyword("eighth", language); break;
+        case 9: ordinal = NLGUtils.getKeyword("ninth", language); break;
+        case 10: ordinal = NLGUtils.getKeyword("tenth", language); break;
+        case 11: ordinal = NLGUtils.getKeyword("eleventh", language); break;
+        case 12: ordinal = NLGUtils.getKeyword("twelfth", language); break;
         }
         boolean isArabic = (language.matches(".*(?i)arabic.*")
                 || language.equalsIgnoreCase("ar"));
         if (count == 1 && occurrence == 2)
-            return nlg.getKeyword("another", language);
+            return NLGUtils.getKeyword("another", language);
         if (count > 1) {
             if (occurrence == 1) {
                 if (isArabic)
                     return ordinal;
                 else
-                    return (nlg.getKeyword("the", language));
+                    return (NLGUtils.getKeyword("the", language));
             }
             else if (occurrence > 2) {
                 if (isArabic)
                     return ordinal;
                 else
-                    return (nlg.getKeyword("the", language) + " " + ordinal);
+                    return (NLGUtils.getKeyword("the", language) + " " + ordinal);
             }
             else {
                 if (isArabic)
-                    return (nlg.getKeyword("the", language) + " " + nlg.getKeyword("other", language));
+                    return (NLGUtils.getKeyword("the", language) + " " + NLGUtils.getKeyword("other", language));
                 else
-                    return (nlg.getKeyword("the", language) + " " + nlg.getKeyword("other", language));
+                    return (NLGUtils.getKeyword("the", language) + " " + NLGUtils.getKeyword("other", language));
             }
         }
         // count = 1 (first occurrence of a type)
@@ -457,7 +457,7 @@ public class NLGUtils implements Serializable {
                 return "a " + ordinal;
         }
         else if (isArabic) {
-            String defArt = nlg.getKeyword("the", language);
+            String defArt = NLGUtils.getKeyword("the", language);
             if (ordinal.startsWith(defArt)) {
                 // remove the definite article
                 ordinal = ordinal.substring(defArt.length());
@@ -474,12 +474,12 @@ public class NLGUtils implements Serializable {
      * Collect all the variables occurring in a formula in order.  Return
      * an ArrayList of Strings.
      */
-    static ArrayList<String> collectOrderedVariables(String form) {
+    static List<String> collectOrderedVariables(String form) {
 
         boolean inString = false;
         boolean inVar = false;
         String var = "";
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (int i = 0; i < form.length(); i++) {
             char ch = form.charAt(i);
             switch (ch) {
@@ -506,7 +506,7 @@ public class NLGUtils implements Serializable {
 
     /** **************************************************************
      */
-    public static HashMap<String, HashMap<String, String>> getKeywordMap() {
+    public static Map<String, Map<String, String>> getKeywordMap() {
 
         if (NLGUtils.nlg == null || NLGUtils.nlg.keywordMap == null) {
             return null;
@@ -516,7 +516,7 @@ public class NLGUtils implements Serializable {
 
     /** **************************************************************
      */
-    public static void setKeywordMap(HashMap<String, HashMap<String, String>> themap) {
+    public static void setKeywordMap(Map<String, Map<String, String>> themap) {
 
         if (NLGUtils.nlg == null)
             NLGUtils.nlg = new NLGUtils();
@@ -532,7 +532,7 @@ public class NLGUtils implements Serializable {
             if (debug) System.out.println("Error in NLGUtils.getKeyword(): keyword map is null");
             return ans;
         }
-        HashMap<String,String> hm = getKeywordMap().get(englishWord);
+        Map<String,String> hm = getKeywordMap().get(englishWord);
         if (hm != null) {
             String tmp = hm.get(language);
             if (tmp != null)
@@ -558,7 +558,7 @@ public class NLGUtils implements Serializable {
                                         Map<String,String> termMap, KB kb, String language) {
 
         LanguageFormatter languageFormatter = new LanguageFormatter(stmt, phraseMap, termMap, kb, language);
-        outputMap = languageFormatter.outputMap;
+        outputMap = LanguageFormatter.outputMap;
         return languageFormatter.htmlParaphrase(href);
     }
 
@@ -581,7 +581,7 @@ public class NLGUtils implements Serializable {
     public static String expandStar(Formula f, String strFormat, String lang) {
 
         String result = strFormat;
-        ArrayList<String> problems = new ArrayList<>();
+        List<String> problems = new ArrayList<>();
         try {
             int flen = f.listLength();
             if (StringUtil.isNonEmptyString(strFormat) && (flen > 1)) {
@@ -589,22 +589,26 @@ public class NLGUtils implements Serializable {
                 int p2 = strFormat.indexOf("%*");
                 if (p2 != -1) {
                     int slen = strFormat.length();
-                    String lb = null;
-                    String rb = null;
-                    int lbi = -1;
-                    int rbi = -1;
-                    String ss = null;
-                    String range = null;
-                    String[] rangeArr = null;
-                    String[] rangeArr2 = null;
-                    String lowStr = null;
-                    String highStr = null;
-                    int low = -1;
-                    int high = -1;
-                    String delim = " ";
-                    boolean isRange = false;
+                    String lb;
+                    String rb;
+                    int lbi;
+                    int rbi;
+                    String ss;
+                    String range;
+                    String[] rangeArr;
+                    String[] rangeArr2;
+                    String lowStr;
+                    String highStr;
+                    int low;
+                    int high;
+                    String delim;
+                    boolean isRange;
                     boolean[] argsToPrint = new boolean[ flen ];
-                    int nArgsSet = -1;
+                    int nArgsSet;
+                    String AND;
+                    int nAdded;
+                    boolean addAll;
+                    int nToAdd;
                     StringBuilder sb = new StringBuilder();
                     while ((p1 < slen) && (p2 >= 0) && (p2 < slen)) {
                         sb.append(strFormat.substring(p1, p2));
@@ -641,7 +645,7 @@ public class NLGUtils implements Serializable {
                                         lowStr = rangeArr2[0].trim();
                                         try {
                                             low = Integer.parseInt(lowStr);
-                                        } catch (Exception e1) {
+                                        } catch (NumberFormatException e1) {
                                             problems.add("Error in format \"" + strFormat + "\": bad value in \"" + ss + "\"");
                                             low = 1;
                                         }
@@ -651,7 +655,7 @@ public class NLGUtils implements Serializable {
                                                 highStr = rangeArr2[1].trim();
                                                 try {
                                                     high = Integer.parseInt(highStr);
-                                                } catch (Exception e2) {
+                                                } catch (NumberFormatException e2) {
                                                     problems.add("Error in format \"" + strFormat + "\": bad value in \"" + ss + "\"");
                                                     high = (flen - 1);
                                                 }
@@ -671,12 +675,12 @@ public class NLGUtils implements Serializable {
                             lbi = p1;
                             if (lbi < slen) { lb = strFormat.substring(lbi, (lbi + 1)); }
                         }
-                        String AND = nlg.getKeyword("and", lang);
+                        AND = NLGUtils.getKeyword("and", lang);
                         if (StringUtil.emptyString(AND))
                             AND = "+";
-                        int nAdded = 0;
-                        boolean addAll = (nArgsSet == 0);
-                        int nToAdd = (addAll ? (argsToPrint.length - 1) : nArgsSet);
+                        nAdded = 0;
+                        addAll = (nArgsSet == 0);
+                        nToAdd = (addAll ? (argsToPrint.length - 1) : nArgsSet);
                         for (int i = 1 ; i < argsToPrint.length ; i++) {
                             if (addAll || argsToPrint[i]) {
                                 if (nAdded >= 1) {
@@ -717,7 +721,7 @@ public class NLGUtils implements Serializable {
         }
         if (! problems.isEmpty()) {
             String errStr = KBmanager.getMgr().getError();
-            String str = null;
+            String str;
             if (errStr == null) { errStr = ""; }
             Iterator<String> it = problems.iterator();
             while (it.hasNext()) {
@@ -759,11 +763,13 @@ public class NLGUtils implements Serializable {
                 String termKey = "term=";
                 int sbLen = sb.length();
                 if (sbLen > 0) {
-                    int codePoint = -1;
-                    int termCodePoint = -1;
-                    int termPos = -1;
-                    String uc = null;
+                    int codePoint;
+                    int termCodePoint;
+                    int termPos;
+                    String uc;
                     int i = 0;
+                    String fs;
+                    String ss;
                     while ((i > -1) && (i < sbLen)) {
                         // System.out.println("x");
                         codePoint = Character.codePointAt(sb, i);
@@ -793,9 +799,8 @@ public class NLGUtils implements Serializable {
                         }
                     }
                     if (addFullStop) {
-                        String fs = nlg.getKeyword(".", language);
+                        fs = NLGUtils.getKeyword(".", language);
                         if (StringUtil.isNonEmptyString(fs)) {
-                            String ss = "";
                             sbLen = sb.length();
                             i = (sbLen - 1);
                             while ((i > 0) && (i < sbLen)) {
