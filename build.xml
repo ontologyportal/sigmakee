@@ -51,6 +51,7 @@
     <property name="app.name" value="${web.app.name}kee"/>
     <property name="build.home" value="build"/>
     <property name="build.classes.dir" value="${build.home}/WEB-INF/classes"/>
+    <property name="build.lib" value="${build.home}/lib"/>
     <property name="build.test.classes.dir" value="${build.home}/test/classes"/>
     <property name="dist.dir" value="dist"/>
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
@@ -63,14 +64,13 @@
     <property name="sigma.home" value="${env.SIGMA_HOME}"/>
     <property name="sigma.src" value="${git.home}/${app.name}"/>
     <property name="basedir" value="${sigma.src}"/>
-    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
-    <property name="tptp.home" value="${git.home}/TPTP-ANTLR"/>
+    <property name="tptp.home" value="../TPTP-ANTLR"/>
     <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
-    <property name="sigma.utils.home" value="${git.home}/SigmaUtils"/>
+    <property name="sigma.utils.home" value="../SigmaUtils"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
     <property name="dist.home" value="${tomcat.home}/webapps"/>
     <property name="deploy.home" value="${dist.home}/${app.name}"/>
-    <property name="dist.war" value="${deploy.home}/${web.app.name}.war"/>
+    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
 
     <path id="compile.classpath">
         <fileset dir="${basedir}/lib">
@@ -160,13 +160,19 @@
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
-            <lib dir="${basedir}/lib"/>
+            <lib dir="${basedir}/lib">
+                <exclude name="junit*"/>
+                <exclude name="hamcrest*"/>
+            </lib>
             <classes dir="${build.classes.dir}"/>
         </war>
         <jar destfile="${build.home}/${app.name}.jar">
             <fileset dir="${build.classes.dir}"/>
             <fileset dir="${build.test.classes.dir}"/>
         </jar>
+        <copy todir="${build.lib}"> <!-- Comply w/ GitHub CI script -->
+            <fileset dir="${basedir}/lib"/>
+        </copy>
     </target>
 
     <target name="compile.test" depends="compile" description="Compile the project's test classes.">
