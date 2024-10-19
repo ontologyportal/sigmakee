@@ -8,8 +8,8 @@
     -->
 
     <property file="nbproject/private/private.properties"/>
-    <property file="build.properties"/>
     <import   file="../build.xml"/>
+    <property file="nbproject/build.properties"/>
     <import   file="${catalina.base}/bin/catalina-tasks.xml"/>
 
     <path id="dcp">
@@ -30,10 +30,10 @@
 
     <target name="init" depends="init-ivy">
         <echo message="${app.name} v${product.Version}"/>
-        <echo message="CATALINA_HOME is set to: ${catalina.home}"/>
-        <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
-        <echo message="SIGMA_SRC is set to: ${sigma.src}"/>
-        <echo message="KBs_HOME is set to: ${kbs.home}"/>
+        <echo message="CATALINA_HOME is set to: ${catalina.base}"/>
+        <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
+        <echo message="SIGMA_SRC is set to: ${sigma_src}"/>
+        <echo message="KBs_HOME is set to: ${kbs_home}"/>
         <echo>Java Version via Ant: ${ant.java.version}</echo>
         <echo>Java Version System Prop: ${java.version}</echo>
         <echo message="Git dir: ${ontologyportal.git}"/>
@@ -56,7 +56,7 @@
               classpath="${run.classpath}"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg line="-c Object Transaction"/>
@@ -68,7 +68,7 @@
               classpathref="rcp"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
         </java>
@@ -78,7 +78,7 @@
               classpath="${run.classpath}"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg line="${pword.props}"/>
@@ -96,7 +96,7 @@
               classpath="${run.test.classpath}"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg value="com.articulate.sigma.UnitTestSuite"/>
@@ -111,7 +111,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -133,7 +133,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -155,7 +155,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -177,7 +177,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -199,7 +199,7 @@
                fork="yes"
                showoutput="yes">
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -224,8 +224,8 @@
               username="${username}"
               password="${password}"
               path="${context}"/>-->
-        <exec executable="${catalina.home}/bin/${shutdown}">
-            <env key="CATALINA_HOME" value="${catalina.home}"/>
+        <exec executable="${catalina.base}/bin/${shutdown}">
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
         </exec>
     </target>
 
@@ -235,18 +235,18 @@
                password="${password}"
                path="${context}"/>-->
         <exec executable="sh">
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_OPS" value="${catalina.ops}"/>
-            <env key="CATALINA_HOME" value="${catalina.home}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg value="-c"/>
-            <arg value="'${catalina.home}/bin/${startup}'"/>
+            <arg value="'${catalina.base}/bin/${startup}'"/>
         </exec>
     </target>
 
     <target name="deploy"
-            depends="undeploy,all"
+            depends="all"
             description="Builds the web application, starts a local Tomcat server and runs sigmakee">
         <sequential>
             <antcall target="start"/>
@@ -255,7 +255,7 @@
                     username="${username}"
                     password="${password}"
                     path="${context}"
-                    war="${basedir}/${dist.dir}/${web.app.name}.war"/>
+                    war="${basedir}/${dist_war}"/>
             <sleep seconds="2"/>
             <antcall target="open.sigmakee.url"/>
         </sequential>
@@ -295,7 +295,7 @@
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg line="-c Object Transaction"/>
@@ -311,7 +311,7 @@
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg line="-c Object Transaction"/>
@@ -326,7 +326,7 @@
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg line="${pword.props}"/>
@@ -352,7 +352,7 @@
                showoutput="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -378,7 +378,7 @@
                showoutput="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -404,7 +404,7 @@
                showoutput="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -430,7 +430,7 @@
                showoutput="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma.home}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <formatter type="plain" usefile="false"/>
@@ -451,7 +451,7 @@
     -->
 
     <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
-        <manifest file="${mainifest.mf}">
+        <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
                        value="${product.Name}"/>
@@ -470,7 +470,7 @@
         </manifest>
         <jar destfile="${dist.jar}"
              basedir="${build.classes.dir}"
-             manifest="${mainifest.mf}">
+             manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
         </jar>
         <war destfile="${dist.dir}/${web.app.name}.war"
@@ -485,13 +485,13 @@
     <!-- Copy customized config files to their respective directories -->
     <target name="prep.main.config">
         <!-- Restore main config post integration testing -->
-        <copy todir="${sigma.home}/KBs" file="${main.config}" overwrite="true"/>
+        <copy todir="${sigma_home}/KBs" file="${main.config}" overwrite="true"/>
     </target>
     <target name="prep.unit.config">
         <copy todir="${test.unit.resources.dir}" file="${unit.config}" overwrite="true"/>
     </target>
     <target name="prep.integration.config">
-        <copy tofile="${sigma.home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
+        <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
     <target name="thorough.clean" depends="clean">
         <delete file="${test.result}.xml"/>
@@ -502,7 +502,7 @@
         </delete>
         <!-- Prune KB after integration tests -->
         <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${kbs.home}">
+            <fileset dir="${sigma_home}/KBs">
                 <!--<include name="SUMO.tptp"/>-->
                 <include name="*.ser"/>
             </fileset>
