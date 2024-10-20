@@ -272,7 +272,7 @@
             <jvmarg line="${run.jvmargs}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
-                <path refid="tcp"/>
+                <path refid="run.test.classpath"/>
             </classpath>
             <test name="${integration.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
                 <formatter type="xml"/>
