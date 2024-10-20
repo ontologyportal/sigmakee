@@ -274,7 +274,7 @@
             <classpath>
                 <path refid="run.test.classpath"/>
             </classpath>
-            <test name="${integration.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
