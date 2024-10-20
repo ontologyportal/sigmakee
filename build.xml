@@ -211,6 +211,7 @@
               classpathref="run.test.classpath"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
+            <arg value="com.articulate.sigma.UnitTestSuite"/>
         </java>
     </target>
     <target name="test.integration" depends="compile.test" description="Runs the UnitTestSuite">
