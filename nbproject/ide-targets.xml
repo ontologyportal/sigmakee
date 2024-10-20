@@ -576,6 +576,9 @@
             <fileset dir="${catalina.logs.dir}">
                 <include name="*.*"/>
             </fileset>
+            <fileset dir="${basedir}">
+                <include name="*.owl"/>
+            </fileset>
         </delete>
     </target>
     <target name="all" depends="thorough.clean,dist">
