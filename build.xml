@@ -1,7 +1,9 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant"
          name="SigmaKEE" default="all" basedir=".">
-    <description>This build file meant to be invoked only from the command line.
-                 It's purpose is for building/testing in CI environment</description>
+    <description>
+        This build file is meant to be invoked only from the command line. It's
+        purpose is for building/testing in CI environment
+    </description>
 
     <!--
     ===
@@ -35,6 +37,11 @@
         </path>
         <taskdef resource="org/apache/ivy/ant/antlib.xml"
                  uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
         <ivy:retrieve/>
     </target>
 
@@ -319,11 +326,6 @@
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
-        </delete>
-        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
-            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
-                <include name="*.jar"/>
-            </fileset>
         </delete>
         <delete file="${dist.war}"/>
     </target>
