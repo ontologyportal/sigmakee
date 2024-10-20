@@ -290,7 +290,7 @@
         </junitreport>
         <antcall target="open.junit.report"/>
     </target>
-    <target name="open.unit.report">
+    <target name="open.junit.report">
         <exec executable="sh">
             <arg value="-c"/>
             <arg value="open -u ${report.html}"/>
