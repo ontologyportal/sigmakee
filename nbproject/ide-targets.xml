@@ -46,6 +46,18 @@
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
+    <target name="TPTP" depends="prepare">
+        <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
+        <echo message="TPTP is set to: ${tptp.home}"/>
+        <!-- TPTP already builds SigmaUtils -->
+        <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
+        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
+        <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
+        <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
+        <copy todir="${build.home}/WEB-INF/lib" flatten="true">
+            <path refid="compile.classpath"/>
+        </copy>
+    </target>
 
     <!--
     =================
@@ -109,7 +121,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${unit.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -131,7 +143,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${integration.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -255,7 +267,7 @@
     =================
     -->
 
-    <target name="stop" description="stop web application in tomcat">
+    <target name="stop.tomcat" description="stop web application in tomcat">
 <!--        <stop url="${mgr.url}"
               username="${username}"
               password="${password}"
@@ -265,7 +277,7 @@
         </exec>
     </target>
 
-    <target name="start" description="start web application in tomcat">
+    <target name="start.tomcat" description="start web application in tomcat">
 <!--        <start url="${mgr.url}"
                username="${username}"
                password="${password}"
@@ -282,11 +294,10 @@
         <antcall target="monitor.catalina.out"/>
     </target>
 
-    <target name="monitor.catalina.out">
-        <exec executable="sh">
-            <arg value="-c"/>
-            <arg value="tail"/>
-            <arg line="-f ${catalina.logs.dir}/catalina.out"/>
+    <available file="${catalina.out}" property="catalina.out.present"/>
+    <target name="monitor.catalina.out" if="catalina.out.present">
+        <exec executable="tail" dir="${catalina.logs.dir}">
+            <arg line="-f '${catalina.out}'"/>
         </exec>
     </target>
 
@@ -294,13 +305,13 @@
             depends="all"
             description="Builds the web application, starts a local Tomcat server and runs sigmakee">
         <sequential>
-            <antcall target="start"/>
+            <antcall target="start.tomcat"/>
             <sleep seconds="2"/>
             <deploy url="${mgr.url}"
                     username="${username}"
                     password="${password}"
                     path="${context}"
-                    war="${basedir}/${dist_war}"/>
+                    war="${basedir}/${dist.dir}/${web.app.name}.war"/>
             <sleep seconds="2"/>
             <antcall target="open.sigmakee.url"/>
         </sequential>
@@ -321,7 +332,7 @@
                       password="${password}"
                       path="${context}"/>
             <sleep seconds="2"/>
-            <antcall target="stop"/>
+            <antcall target="stop.tomcat"/>
         </sequential>
     </target>
 
@@ -505,13 +516,17 @@
             <attribute name="Specification-Vendor"
                        value="${spec.vendor}"/>
             <attribute name="Implementation-Title"
-                       value="${ant.project.name}"/>
+                       value="${impl.title}"/>
             <attribute name="Implementation-Version"
                        value="${product.Version} built on ${TODAY_US}"/>
             <attribute name="Implementation-Vendor"
                        value="${nps}, ${moves.institute}, ${savage.research.group}"/>
             <attribute name="Implementation-URL"
-                       value="${savage.url}"/>
+                       value="${sumo.url}"/>
+            <attribute name="Implementation-Vendor-Id"
+                       value="${impl.vendor.id}"/>
+            <attribute name="Main-Class"
+                       value="${main.class}"/>
         </manifest>
         <jar destfile="${dist.jar}"
              basedir="${build.classes.dir}"
@@ -539,6 +554,12 @@
         <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
     <target name="thorough.clean" depends="clean">
+        <delete includeemptydirs="true" failonerror="false">
+            <!-- Delete the old web code -->
+            <fileset dir="${deploy_home}"/>
+            <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
+        </delete>
+        <delete file="${dist_war}"/>
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>
