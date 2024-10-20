@@ -291,7 +291,7 @@
             <arg value="-c"/>
             <arg value="'${catalina.base}/bin/${startup}'"/>
         </exec>
-        <antcall target="monitor.catalina.out"/>
+        <!--<antcall target="monitor.catalina.out"/>-->
     </target>
 
     <available file="${catalina.out}" property="catalina.out.present"/>
