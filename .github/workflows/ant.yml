@@ -157,16 +157,6 @@ jobs:
           name: sigma-webapp
           path: /usr/local/tomcat/webapps/sigma.war
 
-      - name: Test Report
-        uses: dorny/test-reporter@v1
-        if: success() || failure()
-        with:
-          name: Test Results
-          path: ${{ github.workspace }}/target/surefire-reports/TEST-com.norb.utils.UtilsTestSuite.xml
-          reporter: java-junit
-          list-suites: all
-          list-tests: all
-
 # build-sumo-ci:
 #    runs-on: ubuntu-latest
 #    needs: build
