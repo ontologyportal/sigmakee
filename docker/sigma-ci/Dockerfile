@@ -1,4 +1,4 @@
-FROM tomcat:9.0.73-jdk8-temurin-jammy as builder
+FROM tomcat:9.0.73-jdk8-temurin-jammy AS builder
 
 ARG VAMPIRE_GIT=8d999c1350ea5d7839cb98350371c3e4833b2cb6
 
@@ -37,7 +37,7 @@ RUN apt update; \
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.73-jdk8-temurin-jammy as runtime
+FROM tomcat:9.0.73-jdk8-temurin-jammy AS runtime
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
