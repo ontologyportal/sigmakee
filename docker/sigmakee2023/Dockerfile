@@ -15,7 +15,7 @@ RUN apk add apache-ant
 RUN apk add zlib-dev
 RUN apk add g++
 RUN apk add linux-headers
-RUN apk add openjdk8
+RUN apk add openjdk11
 
 # Setup home directory
 RUN cd /root \

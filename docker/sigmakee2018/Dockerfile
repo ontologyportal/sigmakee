@@ -1,25 +1,25 @@
 FROM tomcat:latest
 
-ENV SIGMADIR=/sigma 
+ENV SIGMADIR=/sigma
 
 ENV PATH=$PATH:$JAVA_HOME/bin \
     WORKSPACE=$SIGMADIR/workspace \
     PROGRAMS=$SIGMADIR/Programs \
     SIGMA_HOME=$SIGMADIR/sigmakee \
     CATALINA_OPTS="$CATALINA_OPTS -Xms500M -Xmx2500M"\
-    ME=root 
+    ME=root
 
 ENV KBDIR=$SIGMA_HOME/KBs \
     SUMO_SRC=$WORKSPACE/sumo \
     SIGMA_SRC=$WORKSPACE/sigmakee \
-    ONTOLOGYPORTAL_GIT=$WORKSPACE 
+    ONTOLOGYPORTAL_GIT=$WORKSPACE
 
 EXPOSE 8080
 WORKDIR $SIGMADIR
 
 # Install packages from apt
 RUN apt update &&\
-    apt -qq install -y ant git make gcc graphviz openjdk-8-jdk-headless &&\
+    apt -qq install -y ant git make gcc graphviz openjdk-11-jdk-headless &&\
     rm -rf /var/lib/apt/lists/* && \
     apt clean -y &&\
     apt autoclean -y &&\
