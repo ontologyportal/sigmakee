@@ -21,7 +21,7 @@ COPY --from=builder \
 
 COPY ./sigmakee-runtime /root/sigmakee-runtime/
 
-COPY ./sigmakee/lib/*.jar /root/sigmakee/
+COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
 
 COPY ./sigma.war $CATALINA_HOME/webapps/sigma.war
 
