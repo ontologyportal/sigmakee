@@ -296,7 +296,7 @@
             <arg value="open -u ${report.html}"/>
         </exec>
         <exec executable="sh" osfamily="unix">
-            <arg value="xdg-open ${report.html} &"/>
+            <arg value="xdg-open ${report.html} &amp;"/>
         </exec>
     </target>
 
