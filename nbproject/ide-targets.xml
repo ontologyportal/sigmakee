@@ -29,16 +29,18 @@
     -->
 
     <target name="init" depends="init-ivy">
-        <echo message="${app.name} v${product.Version}"/>
-        <echo message="CATALINA_HOME is set to: ${catalina.base}"/>
-        <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
-        <echo message="SIGMA_SRC is set to: ${sigma_src}"/>
-        <echo message="KBs_HOME is set to: ${kbs_home}"/>
-        <echo>Java Version via Ant: ${ant.java.version}</echo>
-        <echo>Java Version System Prop: ${java.version}</echo>
-        <echo message="Git dir: ${ontologyportal.git}"/>
-        <echo>classpath: ${run.classpath}</echo>
-        <echo>basedir: ${basedir}</echo>
+        <echo message="Welcome to the ${product.Name} v${product.Version}"/>
+        <echo message="Specification Vendor:     ${spec.vendor}"/>
+        <echo message=""/>
+        <echo message="CATALINA_HOME is set to:  ${catalina.base}"/>
+        <echo message="SIGMA_HOME    is set to:  ${sigma_home}"/>
+        <echo message="SIGMA_SRC     is set to:  ${sigma_src}"/>
+        <echo message="KBs_HOME      is set to:  ${kbs_home}"/>
+        <echo message="Git dir       is set to:  ${ontologyportal.git}"/>
+        <echo message="basedir       is set to:  ${basedir}"/>
+        <echo message="classpath:                ${run.classpath}"/>
+        <echo message="Java Version via Ant:     ${ant.java.version}"/>
+        <echo message="Java Version System Prop: ${java.version}"/>
 
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
@@ -91,7 +93,8 @@
     ===================
     -->
 
-    <target name="test" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+    <target name="test" depends="test.unit,test.integration"/>
+    <target name="test.unit" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <java classname="org.junit.runner.JUnitCore"
               classpath="${run.test.classpath}"
               fork="true">
@@ -100,6 +103,17 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <arg value="com.articulate.sigma.UnitTestSuite"/>
+        </java>
+    </target>
+    <target name="test.integration" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+        <java classname="org.junit.runner.JUnitCore"
+              classpath="${run.test.classpath}"
+              fork="true">
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <arg value="com.articulate.sigma.IntegrationTestSuite"/>
         </java>
     </target>
     <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
@@ -242,6 +256,15 @@
             <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg value="-c"/>
             <arg value="'${catalina.base}/bin/${startup}'"/>
+        </exec>
+        <antcall target="monitor.catalina.out"/>
+    </target>
+
+    <target name="monitor.catalina.out">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="tail"/>
+            <arg line="-f ${catalina.logs.dir}/catalina.out"/>
         </exec>
     </target>
 
@@ -471,13 +494,13 @@
         <jar destfile="${dist.jar}"
              basedir="${build.classes.dir}"
              manifest="${manifest.mf}">
-            <metainf file="LICENSE"/>
+            <metainf file="${project.license}"/>
         </jar>
         <war destfile="${dist.dir}/${web.app.name}.war"
              basedir="${build.home}"
              webxml="${web.dir}/web.xml"
-             manifest="MANIFEST.MF">
-            <metainf file="LICENSE"/>
+             manifest="${manifest.mf}">
+            <metainf file="${project.license}"/>
         </war>
         <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
     </target>
@@ -508,15 +531,13 @@
             </fileset>
         </delete>
         <delete>
-            <fileset dir="${catalina.base}/logs">
-                <include name="*.log"/>
-                <include name="*.txt"/>
-                <include name="*.out"/>
+            <fileset dir="${catalina.logs.dir}">
+                <include name="*.*"/>
             </fileset>
         </delete>
     </target>
     <target name="all" depends="thorough.clean,dist">
-        <echo>System date/time is: ${TODAY_US}</echo>
+        <echo message="System date/time is: ${TODAY_US}"/>
     </target>
 
 </project>
