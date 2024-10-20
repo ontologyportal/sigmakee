@@ -95,26 +95,48 @@
 
     <target name="test" depends="test.unit,test.integration"/>
     <target name="test.unit" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
-        <java classname="org.junit.runner.JUnitCore"
-              classpath="${run.test.classpath}"
-              fork="true">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg value="com.articulate.sigma.UnitTestSuite"/>
-        </java>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${unit.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
-        <java classname="org.junit.runner.JUnitCore"
-              classpath="${run.test.classpath}"
-              fork="true">
+    <target name="test.integration" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the IntegrationTestSuite">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg value="com.articulate.sigma.IntegrationTestSuite"/>
-        </java>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${integration.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
     </target>
     <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -132,7 +154,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -154,7 +176,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -176,7 +198,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -198,7 +220,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -220,7 +242,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -382,7 +404,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -408,7 +430,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -434,7 +456,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -460,7 +482,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -517,7 +539,6 @@
         <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
     <target name="thorough.clean" depends="clean">
-        <delete file="${test.result}.xml"/>
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>
