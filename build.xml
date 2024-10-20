@@ -1,5 +1,7 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant"
          name="SigmaKEE" default="all" basedir=".">
+    <description>This build file meant to be invoked only from the command line.
+                 It's purpose is for building/testing in CI environment</description>
 
     <!--
     ===
@@ -42,12 +44,19 @@
     ====
     -->
 
-    <property name="product.Name" value="Sigma Knowledge Engineering Environment (${ant.project.name})"/>
+    <property name="impl.title" value="SigmaKEE"/>
+    <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
     <property name="product.version.major" value="1"/>
     <property name="product.version.minor" value="0"/>
     <property name="product.version.patch" value="0"/>
     <property name="product.Version" value="${product.version.major}.${product.version.minor}.${product.version.patch}"/>
     <property name="spec.vendor" value="Adam Pease"/>
+    <property name="nps" value="Naval Postgraduate School (NPS), Monterey, CA"/>
+    <property name="cs.dept" value="Computer Science (CS) DEPT"/>
+    <property name="sumo.url" value="http://www.ontologyportal.org"/>
+    <property name="manifest.mf" value="MANIFEST.MF"/>
+    <property name="main.class" value="com.articulate.sigma.KB"/>
+    <property name="impl.vendor.id" value="edu.nps.cs"/>
 
     <property name="src.dir" value="src/java"/>
     <property name="test.corpus.dir" value="test/corpus/java"/>
@@ -188,7 +197,30 @@
     </target>
 
     <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
-        <war warfile="${dist.war}" webxml="${web.dir}/web.xml">
+        <manifest file="${manifest.mf}">
+            <attribute name="Built-By" value="${user.name}"/>
+            <attribute name="Specification-Title"
+                       value="${product.Name}"/>
+            <attribute name="Specification-Version"
+                       value="${product.version.major}.${product.version.minor}"/>
+            <attribute name="Specification-Vendor"
+                       value="${spec.vendor}"/>
+            <attribute name="Implementation-Title"
+                       value="${impl.title}"/>
+            <attribute name="Implementation-Version"
+                       value="${product.Version} built on ${TODAY_US}"/>
+            <attribute name="Implementation-Vendor"
+                       value="${nps}, ${cs.dept}"/>
+            <attribute name="Implementation-URL"
+                       value="${sumo.url}"/>
+            <attribute name="Implementation-Vendor-Id"
+                       value="${impl.vendor.id}"/>
+            <attribute name="Main-Class"
+                       value="${main.class}"/>
+        </manifest>
+        <war destfile="${dist.war}"
+             webxml="${web.dir}/web.xml"
+             manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
@@ -199,7 +231,8 @@
             </lib>
             <classes dir="${build.classes.dir}"/>
         </war>
-        <jar destfile="${build.home}/${app.name}.jar">
+        <jar destfile="${build.home}/${app.name}.jar"
+             manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <fileset dir="${build.classes.dir}"/>
         </jar>
@@ -222,7 +255,7 @@
             <classpath>
                 <path refid="run.test.classpath"/>
             </classpath>
-            <test name="${unit.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -275,6 +308,7 @@
         <echo>System date/time is: ${TODAY_US}</echo>
     </target>
 
+    <!-- Works only from the CLI -->
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${build.home}"/>  <!-- avoid problems with package name changes by deleting everything -->
@@ -284,7 +318,7 @@
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
-            <fileset dir="${basedir}/lib">
+            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
             </fileset>
         </delete>
