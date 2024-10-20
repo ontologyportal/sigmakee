@@ -91,7 +91,7 @@
     <path id="compile.test.classpath">
         <path refid="compile.classpath"/>
         <pathelement location="${build.classes.dir}"/>
-        <pathelement path="${basedir}/lib/hamcrest-core-1.3.jar:${basedir}/lib/junit-4.13.2jar"/>
+        <pathelement path="${basedir}/lib/hamcrest-core-1.3.jar:${basedir}/lib/junit-4.13.2.jar"/>
     </path>
     <path id="run.test.classpath">
         <path refid="compile.test.classpath"/>
@@ -182,7 +182,7 @@
         </javac>
     </target>
 
-    <target name="dist" depends="compile.test" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
         <war warfile="${dist.war}" webxml="${web.dir}/web.xml">
             <metainf file="LICENSE"/>
             <zipfileset dir="${web.dir}/jsp"/>
@@ -197,11 +197,7 @@
         <jar destfile="${build.home}/${app.name}.jar">
             <metainf file="LICENSE"/>
             <fileset dir="${build.classes.dir}"/>
-            <fileset dir="${build.test.classes.dir}"/>
         </jar>
-        <copy todir="${build.lib}"> <!-- Comply w/ GitHub CI script -->
-            <fileset dir="${basedir}/lib"/>
-        </copy>
     </target>
 
     <!--
