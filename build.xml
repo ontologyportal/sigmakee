@@ -63,6 +63,10 @@
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="${dist.dir}/doc/api"/>
     <property name="web.dir" value="web"/>
+    <property name="reports.dir" value="${build.home}/reports"/>
+    <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
+    <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
+    <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
 
     <property environment="env"/>
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
@@ -180,6 +184,7 @@
                release="${javac.release}">
             <src refid="test.sourcepath"/>
         </javac>
+        <mkdir dir="${reports.dir}"/>
     </target>
 
     <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
@@ -207,20 +212,56 @@
     -->
 
     <target name="test.unit" depends="compile.test" description="Runs the UnitTestSuite">
-        <java classname="org.junit.runner.JUnitCore"
-              classpathref="run.test.classpath"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <arg value="com.articulate.sigma.UnitTestSuite"/>
-        </java>
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="run.test.classpath"/>
+            </classpath>
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${unit.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="compile.test" description="Runs the UnitTestSuite">
-        <java classname="org.junit.runner.JUnitCore"
-              classpathref="run.test.classpath"
-              fork="true">
+    <target name="test.integration" depends="compile.test" description="Runs the IntegrationTestSuite">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
-            <arg value="com.articulate.sigma.IntegrationTestSuite"/>
-        </java>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${build.home}/${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${integration.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
+    </target>
+    <target name="junit.report" >
+        <junitreport todir="${reports.dir}">
+            <fileset dir="${reports.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.dir}/html"/>
+        </junitreport>
+        <antcall target="open.junit.report"/>
+    </target>
+    <target name="open.unit.report">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="open -u ${report.html}"/>
+        </exec>
     </target>
 
     <!--
