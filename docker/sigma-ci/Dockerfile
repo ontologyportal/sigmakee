@@ -17,12 +17,12 @@ RUN apt update; \
     tar xf WordNet-3.0.tar.gz ; \
     git clone --depth 1 https://github.com/vprover/vampire ; \
     cd vampire ; \
-    git submodule update --init ; \
+    git checkout $VAMPIRE_GIT ; \
     cd .. ;\
-    wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.1.tar.gz ; \
+    wget 'https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.1.tar.gz' &&\
     tar -xzf z3-4.12.1.tar.gz ; \
     rm -rf vampire/z3 ; \
-    mv z3-z3-4.12.1 vampire/z3 ; \
+    mv z3-z3-4.12.1/* vampire/z3 ; \
     mkdir vampire/z3/build ; \
     mkdir vampire/build ; \
     cd vampire/z3/build ; \
