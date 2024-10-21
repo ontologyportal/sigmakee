@@ -25,7 +25,7 @@
   <preference name="sumokbname" value="SUMO" />
   <preference name="systemsDir" value="/home/theuser" />
   <preference name="termFormats" value="no" />
-  <preference name="testOutputDir" value="/var/tomcat/apache-tomcat-5.5.25/webapps/sigma/tests" />
+  <preference name="testOutputDir" value="/var/tomcat/apache-tomcat-9.0.96/webapps/sigma/tests" />
   <preference name="TPTPDisplay" value="no" />
   <preference name="tptpHomeDir" value="/home/theuser" />
   <preference name="TPTP" value="yes" />

@@ -33,8 +33,8 @@ RUN cd /root \
     && echo "export SIGMA_HOME=/root/.sigmakee" >> .bashrc \
     && echo "export SIGMA_SRC=/root/workspace/sigmakee" >> .bashrc \
     && echo "export ONTOLOGYPORTAL_GIT=/root/workspace" >> .bashrc \
-    && echo 'export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g"' >> .bashrc \
-    && echo "export CATALINA_HOME=/root/Programs/apache-tomcat-8.5.23" >> .bashrc \
+    && echo 'export CATALINA_OPTS="-Xmx10g"' >> .bashrc \
+    && echo "export CATALINA_HOME=/root/Programs/apache-tomcat-9.0.96" >> .bashrc \
     && source .bashrc
 
 # Setup Vampire
@@ -46,17 +46,17 @@ RUN cd /root/workspace \
 
 # Setup Apache, E and Wordnet
 RUN cd /root/Programs \
-    && wget 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip' \
-    && wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' \
+    && wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-8.5.23.zip' \
+    && wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' \
     && wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz' \
     && tar -xvzf E.tgz \
-    && unzip apache-tomcat-8.5.23.zip \
-    && rm apache-tomcat-8.5.23.zip
+    && unzip apache-tomcat-9.0.96.zip \
+    && rm apache-tomcat-9.0.96.zip
 
-RUN cd /root/Programs/apache-tomcat-8.5.23/bin \
+RUN cd /root/Programs/apache-tomcat-9.0.96/bin \
     && chmod 777 *
 
-RUN cd /root/Programs/apache-tomcat-8.5.23/webapps \
+RUN cd /root/Programs/apache-tomcat-9.0.96/webapps \
     && chmod 777 *
 
 # Setup E
@@ -88,4 +88,4 @@ RUN cd /root/workspace/sigmakee \
 RUN cp -R /root/workspace/sumo/* /root/.sigmakee/KBs
 COPY kbs /root/.sigmakee/KBs
 
-CMD cd /root && source .bashrc && /root/Programs/apache-tomcat-8.5.23/bin/startup.sh && tail -f /root/Programs/apache-tomcat-8.5.23/logs/catalina.out
+CMD cd /root && source .bashrc && /root/Programs/apache-tomcat-9.0.96/bin/startup.sh && tail -f /root/Programs/apache-tomcat-9.0.96/logs/catalina.out

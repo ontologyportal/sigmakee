@@ -1,4 +1,4 @@
-FROM tomcat:9.0.73-jdk8-temurin-jammy AS builder
+FROM tomcat:9.0.96-jdk11-temurin-jammy AS builder
 
 ARG VAMPIRE_GIT=8d999c1350ea5d7839cb98350371c3e4833b2cb6
 
@@ -13,7 +13,7 @@ RUN apt update; \
     cd E ; \
     ./configure && make ;\
     cd .. ;\
-    wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' ; \
+    wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' ; \
     tar xf WordNet-3.0.tar.gz ; \
     git clone --depth 1 https://github.com/vprover/vampire ; \
     cd vampire ; \

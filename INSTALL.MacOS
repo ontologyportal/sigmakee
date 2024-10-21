@@ -21,25 +21,28 @@ these variables created before the next step, and replace /Users/user with your 
   export SIGMA_HOME=/Users/user/.sigmakee
   export SIGMA_SRC=/Users/user/workspace/sigmakee
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
-  export CATALINA_OPTS="-Xms500M -Xmx2500M"
-  export CATALINA_HOME=/Users/user/Programs/apache-tomcat-8.5.23
+  export CATALINA_OPTS="-Xmx10g"
+  export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.96
+  export PATH=$CATALINA_HOME/bin:$PATH
   export SIGMA_CP=$SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/*:$SIGMA_SRC/lib/*
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
-You will need Java 1.8 to compile and run Apache Tomcat.
+You will need at least Java 11+ to compile SigmaKee and to run Apache Tomcat.
 
-! For ARM processors download it from here: https://www.oracle.com/java/technologies/downloads/#java8-mac
+! For ARM processors download it from here: https://jdk.java.net/archive/
+    Scroll down to 11.0.2
 
-# Check you java 8 path, open a terminal and run:
+# Check you java 11 path, open a terminal and run:
 
   /usr/libexec/java_home --verbose
 
-# Find your 1.8 (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
+# Find your 11 (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
 
-  export JAVA_HOME= 'path from before'
+  export JAVA_HOME= 'path from before', then make sure "bin" is on our PATH
 
-(eg mine is: export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-1.8.jdk/Contents/Home)
+  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.0.2.jdk/Contents/Home
+  export PATH=$JAVA_HOME/bin:$PATH
 
 cd ~
 mkdir workspace
@@ -47,10 +50,10 @@ mkdir .sigmakee
 mkdir Programs
 
 cd Programs
-curl -O 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
-unzip apache-tomcat-8.5.23.zip
-rm apache-tomcat-8.5.23.zip
-chmod 777 apache-tomcat-8.5.23/bin/*
+curl -O 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-9.0.96.zip'
+unzip apache-tomcat-9.0.96.zip
+rm apache-tomcat-9.0.96.zip
+chmod 777 apache-tomcat-9.0.96/bin/*
 
 cd ../workspace
 git clone https://github.com/ontologyportal/sigmakee
@@ -72,6 +75,7 @@ rm WordNet-3.0.tar.gz
 
 curl -O 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar xvzf E.tgz
+rm E.tgz
 cd E
 ./configure
 make
@@ -82,6 +86,7 @@ mkdir ~/.sigmakee/KBs/
 cp -R ~/workspace/sumo/* ~/.sigmakee/KBs/
 mkdir ~/.sigmakee/KBs/WordNetMappings
 cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
+May have to precede the last command with "sudo"
 
 cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
 (SOS) edit the config.xml changing all `wrong paths` to the value of `$HOME` and adapting all variables)
@@ -94,7 +99,7 @@ README.txt below to set up accounts.  Please note however this is not working as
 
 To test run
 
-  java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
+  java -Xmx10g -cp /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/WEB-INF/lib/* \
     com.articulate.sigma.KB -c Object Transaction
 
 
@@ -102,7 +107,8 @@ If you want to monitor the servers condition and if it started successfully you 
 tail -f $CATALINA_HOME/logs/catalina.out
 
 To start Tomcat execute:
-$CATALINA_HOME/bin/startup.sh
+$CATALINA_HOME/bin/startup.sh or,
+simply: startup.sh since $CATALINA_HOME/bin was export to your PATH
 
 Point your browser at http://localhost:8080/sigma/login.html
 

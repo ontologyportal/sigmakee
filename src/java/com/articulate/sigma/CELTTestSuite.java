@@ -12,16 +12,16 @@ import com.articulate.sigma.KB;
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
-/** A framework for testing CELT. 
+/** A framework for testing CELT.
  */
 public class CELTTestSuite {
 
@@ -44,17 +44,17 @@ public class CELTTestSuite {
         result = result.append("<td><b>Expected</b></td><td><b>Actual</b></td><td><b>ok</b></td></tr>");
         String celtTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
         if (celtTestDir == null)
-            celtTestDir = "~/Programs/apache-tomcat-8.5.57";
+            celtTestDir = "~/Programs/apache-tomcat-9.0.96";
         String celtTestFile = celtTestDir + File.separator + "celtTest.txt";
         KIF test = new KIF();
         try {
             test.readFile(celtTestFile);
         }
         catch (Exception e) {
-            return("Error in CELTTestSuite.test(): exception reading file: " + 
+            return("Error in CELTTestSuite.test(): exception reading file: " +
                     celtTestFile + ".\n" + e.getMessage());
         }
-        System.out.println("INFO in CELTTestSuite.test(): num formulas: " + 
+        System.out.println("INFO in CELTTestSuite.test(): num formulas: " +
             String.valueOf(test.formulaMap.keySet().size()));
         Iterator it = test.formulaMap.keySet().iterator();
         String sentence = null;
@@ -68,7 +68,7 @@ public class CELTTestSuite {
         String port = KBmanager.getMgr().getPref("port");
         if (port == null)
             port = "8080";
-        String html = "http://" + hostname + ":" + port + 
+        String html = "http://" + hostname + ":" + port +
             "/sigma/Browse.jsp?lang=EnglishLanguage&kb=" + kb.name;
 
         while (it.hasNext()) {
@@ -84,7 +84,7 @@ public class CELTTestSuite {
             }
             else if (formula.startsWith("(answer")) {
                 expectedAnswer = formula.substring(8,formula.length()-1);
-                if (isSentence) 
+                if (isSentence)
                     isPair = true;
                 isAnswer = true;
                 isSentence = false;

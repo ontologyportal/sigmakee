@@ -161,7 +161,7 @@ handy to add stuff to .bashrc
 ```sh
 echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
 echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
-echo "export JAVA_HOME=/home/theuser/Programs/jdk1.8.0_112" >> .bashrc
+echo "export JAVA_HOME=/home/theuser/Programs/jdk-11.0.2" >> .bashrc
 ```
 
 load the definitions into your environment
@@ -174,10 +174,6 @@ then you can add the last one
 echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
 source .bashrc
 ```
-
-I've only tested on Oracle JDK 1.8. If you want to use OpenJDK or a version of Java other than 1.8 do so at your own risk.
-You may need to download Java and set your
-JAVA_HOME http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html .  First,
 
 ```sh
 mkdir /home/theuser/Programs
@@ -198,7 +194,7 @@ to the java version you downloaded) -
 
 ```sh
 sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk1.8.0_version/bin/java" 1
-sudo update-alternatives --set java /home/theuser/Programs/jdk1.8.0_version/bin/java
+sudo update-alternatives --set java /home/theuser/Programs/jdk-11.0.2/bin/java
 ```
 
 Verify that it's installed correctly with
@@ -209,13 +205,13 @@ java -version
 You should see something like -
 
 ```
-java version "1.8.0_241"
-Java(TM) SE Runtime Environment (build 1.8.0_241-b07)
-Java HotSpot(TM) 64-Bit Server VM (build 25.241-b07, mixed mode)
+openjdk version "11.0.2" 2019-01-15
+OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
+OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)
 ```
 
 Verify that you see the same Java version when you startup Apache Tomcat that you do when you
-run java -version .  It's also a good idea to run javac -version to verify that you have installed
+run java -version . It's also a good idea to run javac -version to verify that you have installed
 the full JDK and not just te JRE.
 
 On AWS it helps to be reminded of which server you're on.  I use machine size as a reminder with
@@ -237,13 +233,13 @@ cd ~
 mkdir workspace
 mkdir Programs
 cd Programs
-wget 'https://archive.apache.org/dist/tomcat/tomcat-8/v8.5.23/bin/apache-tomcat-8.5.23.zip'
+wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip'
 wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 wget 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
-unzip apache-tomcat-8.5.23.zip
-rm apache-tomcat-8.5.23.zip
-cd ~/Programs/apache-tomcat-8.5.23/bin
+unzip apache-tomcat-9.0.96.zip
+rm apache-tomcat-9.0.96.zip
+cd ~/Programs/apache-tomcat-9.0.96/bin
 chmod 777 *
 cd ../webapps
 chmod 777 *
@@ -276,8 +272,9 @@ sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export SIGMA_SRC=~/workspace/sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g\"" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-8.5.23" >> .bashrc
+echo "export CATALINA_OPTS=\"-Xmx10g\"" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
+echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 sudo add-apt-repository universe
@@ -289,7 +286,7 @@ ant
 To test run
 
 ```sh
-java  -Xmx10g -classpath /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
+java -Xmx10g -cp /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
     com.articulate.sigma.KB -c Object Transaction
 ```
 
@@ -297,6 +294,12 @@ Start Tomcat with
 ```sh
 $CATALINA_HOME/bin/startup.sh
 ```
+or simply
+```sh
+startup.sh
+```
+since $CATALINA_HOME/bin is on your PATH
+
 Point your browser at http://localhost:8080/sigma/login.html
 
 
@@ -358,13 +361,13 @@ Open up CMD prompt
 
 ```
     wsl –install
-    .bashrc already existed in home directory. Did not update path.  
-    echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc 
-    Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000 
-    mkdir /home/theuser/Programs 
-    cd Programs 
-    sudo apt-get install openjdk-8-jdk 
-    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/jre" >> .bashrc 
+    .bashrc already existed in home directory. Did not update path.
+    echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
+    Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000
+    mkdir /home/theuser/Programs
+    cd Programs
+    sudo apt-get install openjdk-11-jdk
+    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/jre" >> .bashrc
 ```
 
 Follow Linux install instructions on:
@@ -372,7 +375,7 @@ Follow Linux install instructions on:
 https://github.com/ontologyportal/sigmakee
 ```
 
-Modify the following files, replace "theuser" with your username 
+Modify the following files, replace "theuser" with your username
 ```
 ~/workspace/sigmakee/config.xml
 ~/workspace/sigmakee/test/unit/java/resources/config_all.xml
@@ -387,7 +390,7 @@ Modify the following files, replace "theuser" with your username
 
 If you install jEdit (see http://jedit.org) and configure Sigma properly, you can click on a source
 file and line number for a statement in the Sigma Browse page and be taken to
-the editor, open on that line.  By default, the edit feature will make use of your $ONTOLOGYPORTAL_GIT
+the editor, open on that line. By default, the edit feature will make use of your $ONTOLOGYPORTAL_GIT
 environment variable, and try to open the file in that location in the "sumo" module. Recommended practice
 is to edit .kif files in your local Git repository and then copy them to the .sigmakee/KBs directory. If
 you wish to edit in a different location, either a different repository or a different directory altogether,
@@ -406,8 +409,8 @@ program, you'll need to set a path in config.xml, for example
 ## jUnit testing on the command line
 
 ```sh
-java  -Xmx8g -classpath \
-  /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
+java -Xmx8g -cp \
+  /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/WEB-INF/lib/* \
   org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
 ```
 
@@ -415,7 +418,7 @@ one test method at a time can be run with help from the SingleJUnitTestRunner cl
 for example
 
 ```sh
-java -Xmx4g -classpath /home/apease/workspace/sigmakee/build/classes: \
+java -Xmx4g -cp /home/apease/workspace/sigmakee/build/WEB-INF/classes: \
   /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner \
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 ```

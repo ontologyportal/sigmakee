@@ -6,7 +6,7 @@ ENV PATH=$PATH:$JAVA_HOME/bin \
     WORKSPACE=$SIGMADIR/workspace \
     PROGRAMS=$SIGMADIR/Programs \
     SIGMA_HOME=$SIGMADIR/sigmakee \
-    CATALINA_OPTS="$CATALINA_OPTS -Xms500M -Xmx2500M"\
+    CATALINA_OPTS="-Xmx10g"\
     ME=root
 
 ENV KBDIR=$SIGMA_HOME/KBs \
@@ -26,7 +26,7 @@ RUN apt update &&\
     mkdir -p $WORKSPACE $PROGRAMS $KBDIR &&\
     # E prover
     cd $PROGRAMS &&\
-    wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz' &&\
+    wget 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz' &&\
     tar xvf E.tgz &&\
     cd $PROGRAMS/E &&\
     ./configure && make && make install &&\

@@ -342,7 +342,7 @@
 
         <!-- copy wordnet -->
         <untar dest="${sigma.install.downloads}" compression="gzip">
-            <url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"/>
+            <url url="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"/>
         </untar>
         <copy todir="${sigma.home}/KBs/WordNetMappings">
             <fileset dir="${sigma.install.downloads}/WordNet-3.0/dict"/>
