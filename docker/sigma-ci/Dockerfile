@@ -17,7 +17,7 @@ RUN apt update; \
     tar xf WordNet-3.0.tar.gz ; \
     git clone --depth 1 https://github.com/vprover/vampire ; \
     cd vampire ; \
-    git checkout $VAMPIRE_GIT ; \
+    git submodule update --init ; \
     cd .. ;\
     wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.1.tar.gz ; \
     tar -xzf z3-4.12.1.tar.gz ; \
@@ -26,7 +26,7 @@ RUN apt update; \
     mkdir vampire/z3/build ; \
     mkdir vampire/build ; \
     cd vampire/z3/build ; \
-    cmake .. -DZ3_BUILD_EXECUTABLE=OFF -DZ3_BUILD_TEST_EXECUTABLES=OFF ; \
+    cmake .. -DZ3_BUILD_EXECUTABLE=OFF -DZ3_BUILD_TEST_EXECUTABLES=OFF -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ; \
     make -j`nproc` ; \
     cd ../../build ; \
     cmake .. ; \
