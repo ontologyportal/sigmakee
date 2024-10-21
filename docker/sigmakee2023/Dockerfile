@@ -46,7 +46,7 @@ RUN cd /root/workspace \
 
 # Setup Apache, E and Wordnet
 RUN cd /root/Programs \
-    && wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-8.5.23.zip' \
+    && wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip' \
     && wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' \
     && wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz' \
     && tar -xvzf E.tgz \
