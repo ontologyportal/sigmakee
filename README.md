@@ -314,7 +314,7 @@ from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 # Vampire
 
 If you want to use Vampire instead of or in addition to E, follow the instructions
-at https://github.com/vprover/vampire#source-build.
+at https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 
 ## Older instructions
 You may need to install the Zlib library if you don't have it already installed
@@ -336,7 +336,7 @@ make vampire_rel
 mv vampire_rel_master* vampire
 ```
 
-You'll then need to edit your config.xml file to point to the vampire executable.  Add the line
+You'll then need to edit your config.xml file to point to the vampire executable. Add the line
 
 ```xml
   <preference name="vampire" value="/home/theuser/workspace/vampire/vampire" />
