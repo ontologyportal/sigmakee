@@ -26,7 +26,7 @@ echo "export PATH=$PATH:$JAVA_HOME/bin" >> ~/.bashrc && source ~/.bashrc
 #echo "export CATALINA_HOME=/usr/share/tomcat8" >> ~/.bashrc && source ~/.bashrc
 echo "export CATALINA_HOME=/var/lib/tomcat8" >> ~/.bashrc && source ~/.bashrc
 
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xms500M -Xmx2500M\"" >> ~/.bashrc 
+echo "export CATALINA_OPTS=\"-Xmx10g\"" >> ~/.bashrc
 
 source ~/.bashrc
 
@@ -55,7 +55,7 @@ cp -r $SUMO_SRC/* $KBDIR
 
 # download WordNet
 cd $WORKSPACE
-wget -q 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+wget -q 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 tar xf WordNet-3.0.tar.gz
 mv WordNet-3.0/dict/* $KBDIR/WordNetMappings
 rm -r WordNet-3.0*

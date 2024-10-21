@@ -12,7 +12,7 @@ echo "Cloning SUMO..."
 git clone https://github.com/ontologyportal/sumo SUMO
 
 echo "Downloading WordNet..."
-wget -q 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+wget -q 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 tar xf WordNet-3.0.tar.gz
 mkdir WordNetMappings
 mv WordNet-3.0/dict/* WordNetMappings

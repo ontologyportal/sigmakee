@@ -8,7 +8,7 @@ import os
 # to_openjdk17
 # neo4j start
 # This code depends upon having SigmaKEE installed and having run the following to create the tuples (you must change to conform to your paths)
-# $ java -Xmx14g -classpath /home/theuser/workspace/sigmakee/lib/*:/home/theuser/workspace/sigmakee/build/classes com.articulate.sigma.KButilities -r
+# $ java -Xmx14g -cp /home/theuser/workspace/sigmakee/lib/*:/home/theuser/workspace/sigmakee/build/WEB-INF/classes com.articulate.sigma.KButilities -r
 # Note that the java code will write to a file called triples.txt that the python code will read from
 # You will need to run
 #   pip3 install neo4j
@@ -17,7 +17,7 @@ import os
 # author: Adam Pease
 
 class SUMOasNeo:
-    
+
     def __init__(self, uri, user, password):
         self.driver = GraphDatabase.driver(uri, auth=(user, password))
         self.documentation = dict()
@@ -40,7 +40,7 @@ class SUMOasNeo:
         except ValueError:
             is_number = False
         return is_number
-        
+
     @staticmethod
     def process(tx,l):
         #result = tx.run("MATCH (n) DETACH DELETE n")
@@ -70,10 +70,10 @@ class SUMOasNeo:
                 triple[0] = triple[0].replace("-","_")
             if len(triple) == 3:
                 if triple[1] == "documentation":
-                    self.documentation[triple[0]] = triple[2]              
+                    self.documentation[triple[0]] = triple[2]
                 #print(triple)
         file1.close()
-        
+
     def readTriples(self):
         result = []
         file1 = open(os.getenv('SIGMA_HOME') + '/KBs/triples.txt', 'r')
@@ -81,7 +81,7 @@ class SUMOasNeo:
         for line in Lines:
             triple = line.strip().split("|")
             if len(triple) == 2:
-                if not self.is_number(triple[0]): 
+                if not self.is_number(triple[0]):
                     if "-" in triple[0]:
                         triple[0] = triple[0].replace("-","_")
                     str = "CREATE (" + triple[0] + ":Thing {label: \"" + triple[0] + "\", url:\"https://sigma.ontologyportal.org:8443/sigma/Browse.jsp?lang=EnglishLanguage&flang=SUO-KIF&kb=SUMO&term=" + triple[0] + "\""
@@ -96,8 +96,8 @@ class SUMOasNeo:
                     if "-" in triple[0]:
                         triple[0] = triple[0].replace("-","_")
                     if "-" in triple[2]:
-                        triple[2] = triple[2].replace("-","_")                        
-                    result.append("MATCH (a:Thing), (b:Thing) WHERE a.label = \"" + triple[0] + "\" AND b.label = \"" + triple[2] + "\" " + "CREATE (a)-[:" + triple[1] + "]->(b)")              
+                        triple[2] = triple[2].replace("-","_")
+                    result.append("MATCH (a:Thing), (b:Thing) WHERE a.label = \"" + triple[0] + "\" AND b.label = \"" + triple[2] + "\" " + "CREATE (a)-[:" + triple[1] + "]->(b)")
                 #print(triple)
         file1.close()
         return result
@@ -110,4 +110,4 @@ if __name__ == "__main__":
         greeter.run(l)
     greeter.close()
 
-    
+

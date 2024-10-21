@@ -1,5 +1,9 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant"
          name="SigmaKEE" default="all" basedir=".">
+    <description>
+        This build file is meant to be invoked only from the command line. It's
+        purpose is for building/testing in CI environment
+    </description>
 
     <!--
     ===
@@ -33,6 +37,11 @@
         </path>
         <taskdef resource="org/apache/ivy/ant/antlib.xml"
                  uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
+        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
         <ivy:retrieve/>
     </target>
 
@@ -42,11 +51,24 @@
     ====
     -->
 
+    <property name="impl.title" value="SigmaKEE"/>
+    <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
+    <property name="product.version.major" value="1"/>
+    <property name="product.version.minor" value="0"/>
+    <property name="product.version.patch" value="0"/>
+    <property name="product.Version" value="${product.version.major}.${product.version.minor}.${product.version.patch}"/>
+    <property name="spec.vendor" value="Adam Pease"/>
+    <property name="nps" value="Naval Postgraduate School (NPS), Monterey, CA"/>
+    <property name="cs.dept" value="Computer Science (CS) DEPT"/>
+    <property name="sumo.url" value="http://www.ontologyportal.org"/>
+    <property name="manifest.mf" value="MANIFEST.MF"/>
+    <property name="main.class" value="com.articulate.sigma.KB"/>
+    <property name="impl.vendor.id" value="edu.nps.cs"/>
+
     <property name="src.dir" value="src/java"/>
     <property name="test.corpus.dir" value="test/corpus/java"/>
     <property name="test.integration.dir" value="test/integration/java"/>
     <property name="test.unit.dir" value="test/unit/java"/>
-    <property name="javac.release" value="11"/>
     <property name="web.app.name" value="sigma"/>
     <property name="app.name" value="${web.app.name}kee"/>
     <property name="build.home" value="build"/>
@@ -56,21 +78,28 @@
     <property name="dist.dir" value="dist"/>
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="${dist.dir}/doc/api"/>
+    <property name="web.dir" value="web"/>
+    <property name="reports.dir" value="${build.home}/reports"/>
+    <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
+    <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
+    <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
 
     <property environment="env"/>
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
     <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
-    <property name="web.dir" value="web"/>
-    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
     <property name="sigma.src" value="${git.home}/${app.name}"/>
     <property name="basedir" value="${sigma.src}"/>
+    <property name="sigma.home" value="${env.SIGMA_HOME}"/>
     <property name="tptp.home" value="../TPTP-ANTLR"/>
     <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
     <property name="sigma.utils.home" value="../SigmaUtils"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
     <property name="dist.home" value="${tomcat.home}/webapps"/>
-    <property name="deploy.home" value="${dist.home}/${app.name}"/>
+    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
     <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
+
+    <property name="javac.release" value="11"/>
+    <property name="run.jvmargs" value="-Xmx10g"/>
 
     <path id="compile.classpath">
         <fileset dir="${basedir}/lib">
@@ -82,7 +111,11 @@
     <path id="compile.test.classpath">
         <path refid="compile.classpath"/>
         <pathelement location="${build.classes.dir}"/>
-        <pathelement path="${basedir}/lib/hamcrest-core-1.3.jar:${basedir}/lib/junit-4.12.jar"/>
+        <pathelement path="${basedir}/lib/hamcrest-core-1.3.jar:${basedir}/lib/junit-4.13.2.jar"/>
+    </path>
+    <path id="run.test.classpath">
+        <path refid="compile.test.classpath"/>
+        <pathelement location="${build.test.classes.dir}"/>
     </path>
     <path id="core.sourcepath">
         <pathelement path="${src.dir}/com/articulate/sigma"/>
@@ -95,16 +128,18 @@
     </path>
 
     <target name="init" depends="init-ivy">
-        <echo message="${app.name} v${product.Version}"/>
-        <echo message="CATALINA_HOME is set to: ${tomcat.home}"/>
-        <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
-        <echo message="SIGMA_SRC is set to: ${sigma.src}"/>
-        <echo message="KBs_HOME is set to: ${kbs.home}"/>
-        <echo>Java Version via Ant: ${ant.java.version}</echo>
-        <echo>Java Version System Prop: ${java.version}</echo>
-        <echo message="Git dir: ${git.home}"/>
-        <echo>classpath: ${env.SIGMA_CP}</echo>
-        <echo>basedir: ${basedir}</echo>
+        <echo message="Welcome to the ${product.Name} v${product.Version}"/>
+        <echo message="Specification Vendor:     ${spec.vendor}"/>
+        <echo message=""/>
+        <echo message="CATALINA_HOME is set to:  ${tomcat.home}"/>
+        <echo message="SIGMA_HOME    is set to:  ${sigma.home}"/>
+        <echo message="SIGMA_SRC     is set to:  ${sigma.src}"/>
+        <echo message="KBs_HOME      is set to:  ${kbs.home}"/>
+        <echo message="Git dir       is set to:  ${git.home}"/>
+        <echo message="basedir       is set to:  ${basedir}"/>
+        <echo message="classpath:                ${env.SIGMA_CP}"/>
+        <echo message="Java Version via Ant:     ${ant.java.version}"/>
+        <echo message="Java Version System Prop: ${java.version}"/>
 
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
@@ -154,27 +189,6 @@
             <src refid="core.sourcepath"/>
         </javac>
     </target>
-
-    <target name="dist" depends="compile.test" description="Create the *.war file and place in ${dist.dir}.">
-        <war warfile="${dist.war}" webxml="${web.dir}/web.xml">
-            <zipfileset dir="${web.dir}/jsp"/>
-            <zipfileset file="${web.dir}/simple.css"/>
-            <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
-            <lib dir="${basedir}/lib">
-                <exclude name="junit*"/>
-                <exclude name="hamcrest*"/>
-            </lib>
-            <classes dir="${build.classes.dir}"/>
-        </war>
-        <jar destfile="${build.home}/${app.name}.jar">
-            <fileset dir="${build.classes.dir}"/>
-            <fileset dir="${build.test.classes.dir}"/>
-        </jar>
-        <copy todir="${build.lib}"> <!-- Comply w/ GitHub CI script -->
-            <fileset dir="${basedir}/lib"/>
-        </copy>
-    </target>
-
     <target name="compile.test" depends="compile" description="Compile the project's test classes.">
         <mkdir dir="${build.test.classes.dir}"/>
         <javac destdir="${build.test.classes.dir}"
@@ -186,6 +200,111 @@
                release="${javac.release}">
             <src refid="test.sourcepath"/>
         </javac>
+        <mkdir dir="${reports.dir}"/>
+    </target>
+
+    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+        <manifest file="${manifest.mf}">
+            <attribute name="Built-By" value="${user.name}"/>
+            <attribute name="Specification-Title"
+                       value="${product.Name}"/>
+            <attribute name="Specification-Version"
+                       value="${product.version.major}.${product.version.minor}"/>
+            <attribute name="Specification-Vendor"
+                       value="${spec.vendor}"/>
+            <attribute name="Implementation-Title"
+                       value="${impl.title}"/>
+            <attribute name="Implementation-Version"
+                       value="${product.Version} built on ${TODAY_US}"/>
+            <attribute name="Implementation-Vendor"
+                       value="${nps}, ${cs.dept}"/>
+            <attribute name="Implementation-URL"
+                       value="${sumo.url}"/>
+            <attribute name="Implementation-Vendor-Id"
+                       value="${impl.vendor.id}"/>
+            <attribute name="Main-Class"
+                       value="${main.class}"/>
+        </manifest>
+        <war destfile="${dist.war}"
+             webxml="${web.dir}/web.xml"
+             manifest="${manifest.mf}">
+            <metainf file="LICENSE"/>
+            <zipfileset dir="${web.dir}/jsp"/>
+            <zipfileset file="${web.dir}/simple.css"/>
+            <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
+            <lib dir="${basedir}/lib">
+                <exclude name="junit*"/>
+                <exclude name="hamcrest*"/>
+            </lib>
+            <classes dir="${build.classes.dir}"/>
+        </war>
+        <jar destfile="${build.home}/${app.name}.jar"
+             manifest="${manifest.mf}">
+            <metainf file="LICENSE"/>
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+
+    <!--
+    ==========
+    UNIT TESTS <- These are only meant to be run within the CI environment
+    ==========
+    -->
+
+    <target name="test.unit" depends="compile.test" description="Runs the UnitTestSuite">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="run.test.classpath"/>
+            </classpath>
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${unit.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
+    </target>
+    <target name="test.integration" depends="compile.test" description="Runs the IntegrationTestSuite">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="run.test.classpath"/>
+            </classpath>
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${integration.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
+    </target>
+    <target name="junit.report" >
+        <junitreport todir="${reports.dir}">
+            <fileset dir="${reports.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.dir}/html"/>
+        </junitreport>
+        <antcall target="open.junit.report"/>
+    </target>
+    <target name="open.junit.report">
+        <exec executable="sh" osfamily="mac">
+            <arg value="-c"/>
+            <arg value="open -u ${report.html}"/>
+        </exec>
+        <exec executable="sh" osfamily="unix">
+            <arg value="xdg-open ${report.html}"/>
+        </exec>
     </target>
 
     <!--
@@ -199,18 +318,14 @@
         <echo>System date/time is: ${TODAY_US}</echo>
     </target>
 
+    <!-- Works only from the CLI -->
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${build.home}"/>  <!-- avoid problems with package name changes by deleting everything -->
             <fileset dir="${dist.dir}"/>
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
-            <fileset dir="${catalina.home}/work/Catalina/localhost/${web.app.name}"/>
-        </delete>
-        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
-            <fileset dir="${basedir}/lib">
-                <include name="*.jar"/>
-            </fileset>
+            <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete file="${dist.war}"/>
     </target>
@@ -227,7 +342,7 @@
 
         <!-- copy wordnet -->
         <untar dest="${sigma.install.downloads}" compression="gzip">
-            <url url="http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"/>
+            <url url="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"/>
         </untar>
         <copy todir="${sigma.home}/KBs/WordNetMappings">
             <fileset dir="${sigma.install.downloads}/WordNet-3.0/dict"/>

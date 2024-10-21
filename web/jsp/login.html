@@ -1,71 +1,63 @@
 <HTML>
-<HEAD>
-    <TITLE>Sigma Login</TITLE>
+    <HEAD>
+        <TITLE>Sigma Login</TITLE>
+    </HEAD>
 
-<BODY>
+    <BODY>
+        <table width="95%" cellspacing="0" cellpadding="0">
+            <tr>
+                <td valign="top">
+                    <table cellspacing="0" cellpadding="0">
+                        <tr>
+                            <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif" alt="pixmaps/sigmaSymbol.gif"></td>
+                            <td>&nbsp;&nbsp;</td>
+                            <td align="left" valign="top"><img src="pixmaps/logoText.gif" alt="pixmaps/logoText.gif"><BR>
+                                <b>Sigma Login</b></td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+        <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' alt="'pixmaps/1pixel.gif'" width=1 height=1 border=0></TD></tr></table><BR>
 
-<p>
-<table width="95%" cellspacing="0" cellpadding="0">
-    <tr>
-        <td valign="top">
-            <table cellspacing="0" cellpadding="0">
-                <tr>
-                    <td align="left" valign="top"><img src="pixmaps/sigmaSymbol.gif"></td>
-                    <td>&nbsp;&nbsp;</td>
-                    <td align="left" valign="top"><img src="pixmaps/logoText.gif"><BR>
-                        <b>Sigma Login</b></td>
-                </tr>
+        <FORM METHOD="POST" ACTION="login.jsp">
+            <table>
+                <TR>
+                    <TD>
+                        <B>User name:</B>
+                    </TD>
+                    <TD>
+                        <B><INPUT NAME="userName" TYPE="TEXT" MAXLENGTH="20" SIZE="10"></B>
+                    </TD>
+                </TR>
+
+                <TR>
+                    <TD>
+                        <B>Password:</B>
+                    </TD>
+                    <TD>
+                        <B><INPUT NAME="password" TYPE="Password" MAXLENGTH="20" SIZE="6"></B>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD>
+                        <B><INPUT VALUE="  Log In  " TYPE="SUBMIT"></B>
+                    </TD>
+                    <td></td>
+                </TR>
             </table>
-        </td>
-    </tr>
-</table>
-<p>
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
+        </FORM>
+            <!--
+            <p>
+            <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
-
-<FORM METHOD="POST" ACTION="login.jsp">
-    <p>
-    <table>
-        <TR>
-          <TD>
-            <B>User name:</B>
-          </TD>
-          <TD>
-            <B><INPUT NAME="userName" TYPE="TEXT" MAXLENGTH="20" SIZE="10"></B>
-          </TD>
-        </TR>
-
-        <TR>
-          <TD>
-            <B>Password:</B>
-          </TD>
-          <TD>
-            <B><INPUT NAME="password" TYPE="Password" MAXLENGTH="20" SIZE="6"></B>
-          </TD>
-        </TR>
-
-        <TR>
-          <TD>
-            <B><INPUT VALUE="  Log In  " TYPE="SUBMIT"></B>
-          </TD>
-        </TR>
-    </table>
-</FORM>
-<P>
-<P>
-
-<!--
-<p>
-<table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
-
-<FORM METHOD="POST" ACTION="Register.jsp">
-    <table>
-        <tr>
-           <td><B><INPUT VALUE="Register new account" TYPE="SUBMIT"></B> (requires moderator approval)</td>
-        </tr>
-    </table>
-</FORM>
--->
-
-</BODY>
+            <FORM METHOD="POST" ACTION="Register.jsp">
+                <table>
+                    <tr>
+                       <td><B><INPUT VALUE="Register new account" TYPE="SUBMIT"></B> (requires moderator approval)</td>
+                    </tr>
+                </table>
+            </FORM>
+            -->
+    </BODY>
 </HTML>
