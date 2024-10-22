@@ -1,6 +1,7 @@
-FROM tomcat:9.0.73-jdk8-temurin-jammy as builder
+FROM tomcat:9.0.96-jdk11-temurin-jammy AS builder
 
-ARG VAMPIRE_GIT=8d999c1350ea5d7839cb98350371c3e4833b2cb6
+# Followed instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
+# for buildling latest vampire w/ latest Z3
 
 RUN apt update; \
     apt-get install -y --no-install-recommends \
@@ -13,31 +14,25 @@ RUN apt update; \
     cd E ; \
     ./configure && make ;\
     cd .. ;\
-    wget 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' ; \
+    wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' ; \
     tar xf WordNet-3.0.tar.gz ; \
-    git clone --depth 1 https://github.com/vprover/vampire ; \
+    git clone https://github.com/vprover/vampire ; \
     cd vampire ; \
-    git checkout $VAMPIRE_GIT ; \
-    cd .. ;\
-    wget https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.1.tar.gz ; \
-    tar -xzf z3-4.12.1.tar.gz ; \
-    rm -rf vampire/z3 ; \
-    mv z3-z3-4.12.1 vampire/z3 ; \
-    mkdir vampire/z3/build ; \
-    mkdir vampire/build ; \
-    cd vampire/z3/build ; \
-    cmake .. -DZ3_BUILD_EXECUTABLE=OFF -DZ3_BUILD_TEST_EXECUTABLES=OFF ; \
+    git submodule update --init ; \
+    mkdir build ; \
+    mkdir z3/build && cd z3/build ; \
+    cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ; \
     make -j`nproc` ; \
     cd ../../build ; \
     cmake .. ; \
     make -j`nproc` ; \
     cd .. ; \
-    cp build/bin/vampire_* vampire ; \
+    cp build/vampire vampire ; \
     ./checks/sanity vampire
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.73-jdk8-temurin-jammy as runtime
+FROM tomcat:9.0.96-jdk11-temurin-jammy AS runtime
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner

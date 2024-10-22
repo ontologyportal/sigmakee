@@ -1,10 +1,9 @@
 ARG IMAGE_ACCOUNT=apease
-FROM $IMAGE_ACCOUNT/sigma-ci:latest as builder
+FROM $IMAGE_ACCOUNT/sigma-ci:latest AS builder
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.73-jdk8-temurin-jammy as runtime
-#FROM eclipse-temurin:8-jdk-jammy
+FROM tomcat:9.0.96-jdk11-temurin-jammy AS runtime
 
 RUN apt update; \
     apt-get install -y --no-install-recommends \
@@ -21,7 +20,7 @@ COPY --from=builder \
 
 COPY ./sigmakee-runtime /root/sigmakee-runtime/
 
-COPY ./sigmakee/build/lib/*.jar /root/sigmakee/
+COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
 
 COPY ./sigmakee/build/sigmakee.jar /root/sigmakee/
 

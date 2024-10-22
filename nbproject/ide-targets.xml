@@ -29,20 +29,34 @@
     -->
 
     <target name="init" depends="init-ivy">
-        <echo message="${app.name} v${product.Version}"/>
-        <echo message="CATALINA_HOME is set to: ${catalina.base}"/>
-        <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
-        <echo message="SIGMA_SRC is set to: ${sigma_src}"/>
-        <echo message="KBs_HOME is set to: ${kbs_home}"/>
-        <echo>Java Version via Ant: ${ant.java.version}</echo>
-        <echo>Java Version System Prop: ${java.version}</echo>
-        <echo message="Git dir: ${ontologyportal.git}"/>
-        <echo>classpath: ${run.classpath}</echo>
-        <echo>basedir: ${basedir}</echo>
+        <echo message="Welcome to the ${product.Name} v${product.Version}"/>
+        <echo message="Specification Vendor:     ${spec.vendor}"/>
+        <echo message=""/>
+        <echo message="CATALINA_HOME is set to:  ${catalina.base}"/>
+        <echo message="SIGMA_HOME    is set to:  ${sigma_home}"/>
+        <echo message="SIGMA_SRC     is set to:  ${sigma_src}"/>
+        <echo message="KBs_HOME      is set to:  ${kbs_home}"/>
+        <echo message="Git dir       is set to:  ${ontologyportal.git}"/>
+        <echo message="basedir       is set to:  ${basedir}"/>
+        <echo message="classpath:                ${run.classpath}"/>
+        <echo message="Java Version via Ant:     ${ant.java.version}"/>
+        <echo message="Java Version System Prop: ${java.version}"/>
 
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
+    </target>
+    <target name="TPTP" depends="prepare">
+        <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
+        <echo message="TPTP is set to: ${tptp.home}"/>
+        <!-- TPTP already builds SigmaUtils -->
+        <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
+        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
+        <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
+        <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
+        <copy todir="${build.home}/WEB-INF/lib" flatten="true">
+            <path refid="compile.classpath"/>
+        </copy>
     </target>
 
     <!--
@@ -91,16 +105,50 @@
     ===================
     -->
 
-    <target name="test" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
-        <java classname="org.junit.runner.JUnitCore"
-              classpath="${run.test.classpath}"
-              fork="true">
+    <target name="test" depends="test.unit,test.integration"/>
+    <target name="test.unit" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg value="com.articulate.sigma.UnitTestSuite"/>
-        </java>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${unit.test.suite}" haltonfailure="no" todir="${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${unit.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
+    </target>
+    <target name="test.integration" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the IntegrationTestSuite">
+        <junit printsummary="yes"
+               errorProperty="test.failed"
+               failureproperty="test.failed"
+               haltonfailure="yes"
+               showoutput="yes"
+               fork="yes">
+            <jvmarg line="${run.jvmargs}"/>
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <formatter type="plain" usefile="false"/>
+            <classpath>
+                <path refid="tcp"/>
+            </classpath>
+            <test name="${integration.test.suite}" haltonfailure="no" todir="${reports.dir}">
+                <formatter type="xml"/>
+            </test>
+        </junit>
+        <fail message="${integration.test.suite} failed!" if="test.failed"/>
+        <antcall target="junit.report"/>
     </target>
     <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -118,7 +166,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -140,7 +188,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -162,7 +210,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -184,7 +232,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -206,7 +254,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -219,7 +267,7 @@
     =================
     -->
 
-    <target name="stop" description="stop web application in tomcat">
+    <target name="stop.tomcat" description="stop web application in tomcat">
 <!--        <stop url="${mgr.url}"
               username="${username}"
               password="${password}"
@@ -229,7 +277,7 @@
         </exec>
     </target>
 
-    <target name="start" description="start web application in tomcat">
+    <target name="start.tomcat" description="start web application in tomcat">
 <!--        <start url="${mgr.url}"
                username="${username}"
                password="${password}"
@@ -243,19 +291,27 @@
             <arg value="-c"/>
             <arg value="'${catalina.base}/bin/${startup}'"/>
         </exec>
+        <!--<antcall target="monitor.catalina.out"/>-->
+    </target>
+
+    <available file="${catalina.out}" property="catalina.out.present"/>
+    <target name="monitor.catalina.out" if="catalina.out.present">
+        <exec executable="tail" dir="${catalina.logs.dir}">
+            <arg line="-f '${catalina.out}'"/>
+        </exec>
     </target>
 
     <target name="deploy"
             depends="all"
             description="Builds the web application, starts a local Tomcat server and runs sigmakee">
         <sequential>
-            <antcall target="start"/>
+            <antcall target="start.tomcat"/>
             <sleep seconds="2"/>
             <deploy url="${mgr.url}"
                     username="${username}"
                     password="${password}"
                     path="${context}"
-                    war="${basedir}/${dist_war}"/>
+                    war="${basedir}/${dist.dir}/${web.app.name}.war"/>
             <sleep seconds="2"/>
             <antcall target="open.sigmakee.url"/>
         </sequential>
@@ -276,7 +332,7 @@
                       password="${password}"
                       path="${context}"/>
             <sleep seconds="2"/>
-            <antcall target="stop"/>
+            <antcall target="stop.tomcat"/>
         </sequential>
     </target>
 
@@ -359,7 +415,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -385,7 +441,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -411,7 +467,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -437,7 +493,7 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no" outfile="${test.result}">
+            <test name="${test.class}" methods="${method}" haltonfailure="no">
                 <formatter type="xml"/>
             </test>
         </junit>
@@ -460,24 +516,28 @@
             <attribute name="Specification-Vendor"
                        value="${spec.vendor}"/>
             <attribute name="Implementation-Title"
-                       value="${ant.project.name}"/>
+                       value="${impl.title}"/>
             <attribute name="Implementation-Version"
                        value="${product.Version} built on ${TODAY_US}"/>
             <attribute name="Implementation-Vendor"
                        value="${nps}, ${moves.institute}, ${savage.research.group}"/>
             <attribute name="Implementation-URL"
-                       value="${savage.url}"/>
+                       value="${sumo.url}"/>
+            <attribute name="Implementation-Vendor-Id"
+                       value="${impl.vendor.id}"/>
+            <attribute name="Main-Class"
+                       value="${main.class}"/>
         </manifest>
         <jar destfile="${dist.jar}"
              basedir="${build.classes.dir}"
              manifest="${manifest.mf}">
-            <metainf file="LICENSE"/>
+            <metainf file="${project.license}"/>
         </jar>
         <war destfile="${dist.dir}/${web.app.name}.war"
              basedir="${build.home}"
              webxml="${web.dir}/web.xml"
-             manifest="MANIFEST.MF">
-            <metainf file="LICENSE"/>
+             manifest="${manifest.mf}">
+            <metainf file="${project.license}"/>
         </war>
         <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
     </target>
@@ -494,7 +554,12 @@
         <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
     <target name="thorough.clean" depends="clean">
-        <delete file="${test.result}.xml"/>
+        <delete includeemptydirs="true" failonerror="false">
+            <!-- Delete the old web code -->
+            <fileset dir="${deploy_home}"/>
+            <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
+        </delete>
+        <delete file="${dist_war}"/>
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>
@@ -508,15 +573,16 @@
             </fileset>
         </delete>
         <delete>
-            <fileset dir="${catalina.base}/logs">
-                <include name="*.log"/>
-                <include name="*.txt"/>
-                <include name="*.out"/>
+            <fileset dir="${catalina.logs.dir}">
+                <include name="*.*"/>
+            </fileset>
+            <fileset dir="${basedir}">
+                <include name="*.owl"/>
             </fileset>
         </delete>
     </target>
     <target name="all" depends="thorough.clean,dist">
-        <echo>System date/time is: ${TODAY_US}</echo>
+        <echo message="System date/time is: ${TODAY_US}"/>
     </target>
 
 </project>

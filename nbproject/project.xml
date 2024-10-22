@@ -60,7 +60,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="clean">
                     <script>${ant.script}</script>
-                    <target>clean</target>
+                    <target>thorough.clean</target>
                 </action>
                 <action name="run">
                     <script>${ant.script}</script>
@@ -72,7 +72,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="rebuild">
                     <script>${ant.script}</script>
-                    <target>clean</target>
+                    <target>thorough.clean</target>
                     <target>dist</target>
                 </action>
                 <action name="debug">
@@ -274,25 +274,25 @@ auxiliary.show.customizer.message=<message>
                 <type>folder</type>
                 <location>build/test/classes</location>
                 <script>${ant.script}</script>
-                <build-target>compile</build-target>
+                <build-target>compile.test</build-target>
             </export>
             <export>
                 <type>folder</type>
                 <location>build/test/classes</location>
                 <script>${ant.script}</script>
-                <build-target>compile</build-target>
+                <build-target>compile.test</build-target>
             </export>
             <export>
                 <type>folder</type>
                 <location>build/test/classes</location>
                 <script>${ant.script}</script>
-                <build-target>compile</build-target>
+                <build-target>compile.test</build-target>
             </export>
             <export>
                 <type>folder</type>
                 <location>build/WEB-INF/classes</location>
                 <script>${ant.script}</script>
-                <build-target>compile</build-target>
+                <build-target>dist</build-target>
             </export>
             <view>
                 <items>

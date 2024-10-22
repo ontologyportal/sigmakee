@@ -3,7 +3,7 @@
 \usepackage{url}
 \usepackage{listings}
 \usepackage{theorem}
-\usepackage{graphicx} 
+\usepackage{graphicx}
 %\usepackage{caption}
 \usepackage{subfig}
 \usepackage{gb4e}
@@ -85,10 +85,10 @@ progress at least weekly so that other developers can sync up with their
 changes.  This has also resulted in a detailed public record of the development
 and evolution of SUMO \cite{pb10}.
 
-Ontology is a broad area, and there are many approaches to ontology.  The purpose 
+Ontology is a broad area, and there are many approaches to ontology.  The purpose
 of this manual is not to teach ontology, or SUMO, so a prerequisite for starting
 to work with Sigma is to read the book "Ontology: A Practical Guide", and complete
-all the exercises in the book.  Otherwise, many aspects of Sigma will be 
+all the exercises in the book.  Otherwise, many aspects of Sigma will be
 mysterious.
 
 This manual is a prerequesite for understaning the functionality of the SigmaNLP
@@ -116,7 +116,7 @@ whatever domain theory is needed for the user's chosen application area.
 
 Tools within Sigma (Figure \ref{fig:SigmaOver}) can be broadly segmented into
 several groups, (1) browsing and display, (2) analysis and debugging, (3)
-inference, and (4) mapping, merging and translation.  
+inference, and (4) mapping, merging and translation.
 
 In this manual we provide an index (starting on page \pageref{classindex})) to
 all the classes mentioned, so that it can be used as a reference going beyond
@@ -128,7 +128,7 @@ what one can find in the JavaDoc for Sigma\footnote{which is online at
 \section{Hello World}
 
 The best way to learn how to use a code library is to start doing something with it. So,
-we'll start with a "Hello World" example for using Sigma.  We'll keep it simple and just 
+we'll start with a "Hello World" example for using Sigma.  We'll keep it simple and just
 use the command line.  We'll assume use on Linux as well.
 
 First, follow the installation instructions for Sigma at
@@ -185,19 +185,19 @@ java -classpath $SIGMA_SRC/build/*:$SIGMA_SRC/lib/*:. MySigma
 
 \begin{lstlisting}[basicstyle=\ttfamily\small\bfseries]
 Info in KBmanager.initializeOnce()
-Info in KBmanager.initializeOnce(): initializing with 
+Info in KBmanager.initializeOnce(): initializing with
   /home/apease/.sigmakee/KBs
 KBmanager.readConfiguration()
 KBmanager.serializedExists(): true
-KBmanager.serializedOld(config): 
-KBmanager.serializedOld(config): save date: Wed Mar 14 
+KBmanager.serializedOld(config):
+KBmanager.serializedOld(config): save date: Wed Mar 14
   10:39:20 PDT 2018
 kbsFilenamesFromXML(): Completed loading KB names
 KBmanager.serializedOld(config): returning false (not old)
-KBmanager.loadSerialized(): KBmanager has been deserialized 
-WordNet.initOnce(): using baseDir = 
+KBmanager.loadSerialized(): KBmanager has been deserialized
+WordNet.initOnce(): using baseDir =
   /home/apease/.sigmakee/KBs/WordNetMappings
-WordNet.loadSerialized(): WN has been deserialized 
+WordNet.loadSerialized(): WN has been deserialized
 ENTER DB.readSpreadsheet(/home/apease/.sigmakee/KBs/
   WordNetMappings/sentiment.csv, null)
 ENTER DB.readSpreadsheet(java.io.FileReader@28ba21f3, null)
@@ -210,9 +210,9 @@ NLGUtils.init(): initializing with /home/apease/.sigmakee/KBs
 NLGUtils.readKeywordMap():
 NLGUtils.serializedExists(): true
 NLGUtils.loadSerialized()
-NLGUtils.loadSerialized(): NLGUtils has been deserialized 
-INFO in OMWordnet.readOMWfiles(): reading files: 
-OMWordnet.loadSerialized(): OMW has been deserialized 
+NLGUtils.loadSerialized(): NLGUtils has been deserialized
+INFO in OMWordnet.readOMWfiles(): reading files:
+OMWordnet.loadSerialized(): OMW has been deserialized
 Info in KBmanager.initializeOnce(): initialized is true
 [ColorAttribute]
 \end{lstlisting}
@@ -281,13 +281,13 @@ transformations and indexes as binary can greatly speed loading time.
 \texttt{pythonServer()}, which can be started by invoking \texttt{KBmanager}
 from the command line.
 
-Command line invocation is a useful feature.  Many classes in Sigma include a 
+Command line invocation is a useful feature.  Many classes in Sigma include a
 Unix-style command line interface for testing, or for rare operations that
-shouldn't clutter up the web-based GUI.  Invoking the class with a "-h" 
+shouldn't clutter up the web-based GUI.  Invoking the class with a "-h"
 parameter to signify "help" will provide a list of allowable options.
 
 \begin{lstlisting}[basicstyle=\ttfamily\small\bfseries]
->$ java -classpath $SIGMA_SRC/build/*:$SIGMA_SRC/lib/* 
+>$ java -classpath $SIGMA_SRC/build/*:$SIGMA_SRC/lib/*
   com.articulate.sigma.KBmanager -h
 Sigma Knowledge Engineering Environment
   options:
@@ -332,8 +332,8 @@ The prefix is followed by the argument number in the case of a simple statement 
 then the name of the term.  So for the first statement above we'd see
 
 \begin{lstlisting}[basicstyle=\ttfamily\small\bfseries]
-arg-0-subclass 
-arg-1-Object 
+arg-0-subclass
+arg-1-Object
 arg-2-Physical
 \end{lstlisting}
 
@@ -370,7 +370,7 @@ considerable inefficiency if we need to answer at runtime whether a given class 
 of another.  So instead, we create a table of cached relationship so that if B is a subclass of
 A, and C is a subclass of B etc all the way to Z then we record that Z, Y, X etc are all subclasses
 of A, B, C etc.  There are also more complicated cases in the if N is an instance M and M is
-a subclass of L then, N is also an instance of L.  Worse yet, an \texttt{Attribute} might be a 
+a subclass of L then, N is also an instance of L.  Worse yet, an \texttt{Attribute} might be a
 \texttt{subAttribute} of another term, which in turn is a \texttt{subclass} of another term.
 
 SUMO relies on types for the arguments of relations, as in a modern programming language in which
@@ -379,7 +379,7 @@ types which are allowed for any given relation by recording not just the explici
 its parents.  For example
 
 \begin{lstlisting}[basicstyle=\ttfamily\small\bfseries]
-(domain part 1 Object)	
+(domain part 1 Object)
 (domain part 2 Object)
 \end{lstlisting}
 
@@ -392,11 +392,11 @@ does in the method \texttt{buildCaches()} and then writes out the cached informa
 buildRelationsSet();
 buildTransitiveRelationsSet();
 buildParents();
-buildChildren(); 
+buildChildren();
 collectDomains();
 buildInstTransRels();
 buildDirectInstances();
-buildDisjointRelationsMap(); 
+buildDisjointRelationsMap();
 writeCacheFile();
 \end{lstlisting}
 
@@ -445,7 +445,7 @@ is assumed at least to contain the \texttt{Merge.kif} file, which is the uppermo
 level of SUMO.
 
 \begin{sloppypar}
-Default values for configuration parameters are set in 
+Default values for configuration parameters are set in
 \texttt{KBmanager.setDefaultAttributes()}.
 \end{sloppypar}
 
@@ -484,11 +484,11 @@ This is used by the class \texttt{WSD}\index[classes]{WSD} in word sense
 disambiguation\end{sloppypar}
 
 \item \begin{sloppypar}\textbf{graphDir} - value =
-\texttt{/var/tomcat/apache-tomcat-8.0.41/ webapps/sigma/graph} - the subdirectory
+\texttt{/var/tomcat/apache-tomcat-9.0.96/ webapps/sigma/graph} - the subdirectory
 under which graph images will be placed\end{sloppypar}
 
   \item \textbf{graphVizDir} - value = \texttt{/usr/bin} - The directory in which the
-executable for the open source GraphViz graph drawing software resides 
+executable for the open source GraphViz graph drawing software resides
 \url{https://www.graphviz.org}
 
 \item \textbf{graphWidth} - value = 600 - When a graph rendered by GraphViz is
@@ -514,7 +514,7 @@ prover executable\end{sloppypar}
 tests, which are files with a \texttt{.tq} extension.
 
 \item \textbf{kbDir} - value = \texttt{/home/user/.sigmakee/KBs} - The location
-where \texttt{.kif} files are read from 
+where \texttt{.kif} files are read from
 
 \item \textbf{leoExecutable}  - value = \texttt{/home/user/leo} - The location
 where the LEO-II higher order theorem prover executable is found.  Note that
@@ -551,11 +551,11 @@ number gets put in the hyperlinks in the browser.
 
   \item \textbf{prolog} - Obsolete
 
-  \item \begin{sloppypar}\textbf{semRewrite} - value = \texttt{/home/user/workspace/sumo/ WordNetMappings/SemRewrite.txt} 
-This isn't used by SigmaKEE but is used by SigmaNLP.  It probably should be in a 
+  \item \begin{sloppypar}\textbf{semRewrite} - value = \texttt{/home/user/workspace/sumo/ WordNetMappings/SemRewrite.txt}
+This isn't used by SigmaKEE but is used by SigmaNLP.  It probably should be in a
 separate configuration file.\end{sloppypar}
 
-  \item \textbf{showcached} - value = no - Whether to show cached statement in the browser, or 
+  \item \textbf{showcached} - value = no - Whether to show cached statement in the browser, or
 just show statements that are loaded from \texttt{.kif} files
 
   \item \textbf{sumokbname} - value = SUMO - The name of the SUMO knowledge base.
@@ -564,13 +564,13 @@ just show statements that are loaded from \texttt{.kif} files
 are installed in a local installation of TPTP.  This is not exactly obsolete, but hasn't
 been tested in many years, and most users will not be concerned with it.
 
-  \item \begin{sloppypar}\textbf{testOutputDir} - value = \texttt{/var/tomcat/apache-tomcat-5.5.25/ webapps/sigma/tests} 
+  \item \begin{sloppypar}\textbf{testOutputDir} - value = \texttt{/var/tomcat/apache-tomcat-9.0.96/ webapps/sigma/tests}
 - Where to place the results of running inference test questions.\end{sloppypar}
 
   \item \textbf{TPTPDisplay} - value = no - Whether to display axioms in TPTP format.  This is a bit
 obsolete as it's now possible to do this from the "Formal Language" menu in the Sigma term browser.
 
-  \item \textbf{tptpHomeDir} - value = \texttt{/home/user} 
+  \item \textbf{tptpHomeDir} - value = \texttt{/home/user}
 
   \item \textbf{TPTP} - value = yes - This is where the TPTP framework itself, rather than the
 theorem provers it communicates with, are found. Most users will not be concerned with this.
@@ -600,7 +600,7 @@ non-relational instances and classes are written with initial capital letters.
 \normalsize
 
 \subsection{Predicate Variables}
-\label{chap:KnowRep:subsec:PredVar}  
+\label{chap:KnowRep:subsec:PredVar}
 
 \begin{figure}
 \begin{framed}
@@ -617,7 +617,7 @@ non-relational instances and classes are written with initial capital letters.
 \end{verbatim}
 \caption{Example axioms showing predicate variables}
 \label{fig:PredVarEx}
-\end{framed}   
+\end{framed}
 \end{figure}
 
 \begin{figure}
@@ -635,7 +635,7 @@ non-relational instances and classes are written with initial capital letters.
 \end{verbatim}
 \caption{Example axioms with holds prefixing}
 \label{fig:HoldsPrefix}
-\end{framed} 
+\end{framed}
 \end{figure}
 
 \begin{sloppypar}
@@ -663,7 +663,7 @@ space.
 \end{verbatim}
 \caption{"holds" insertion}
 \label{fig:HoldsInsert}
-\end{framed} 
+\end{framed}
 \end{figure}
 
 An additional issue is that while KIF-Vampire was customized to support
@@ -696,7 +696,7 @@ values for predicates in the knowledge base that meet the type restrictions that
 may be implied by the axiom.  The rule in Figure \ref{fig:PredVarEx} above will
 be duplicated with the variable {\tt ?REL} being instantiated with every {\tt
 TransitiveRelation}\index{TransitiveRelation} as in Figure \ref{fig:ExAxPred}
- 
+
 \begin{figure}
 \begin{framed}
 \begin{verbatim}
@@ -721,7 +721,7 @@ ranging over all possible predicates.
 \begin{sloppypar}
 This transformation is called in \texttt{FormulaPreprocessor. replacePredVarsAndRowVars()}
 \index[classes]{FormulaPreprocessor}
-and \texttt{PredVarInst.instantiatePredVars()}\index[classes]{PredVarInst} 
+and \texttt{PredVarInst.instantiatePredVars()}\index[classes]{PredVarInst}
 does most of the actual work of the
 transformation.
 \end{sloppypar}
@@ -748,7 +748,7 @@ interpretation, as described now, does keep SUO-KIF out of this problem.
 \end{verbatim}
 \caption{Axiom with row variables}
 \label{fig:RowVar}
-\end{framed} 
+\end{framed}
 \end{figure}
 
 \begin{figure}
@@ -768,7 +768,7 @@ interpretation, as described now, does keep SUO-KIF out of this problem.
 \end{verbatim}
 \caption{Row variable expansion}
 \label{fig:RowExpand}
-\end{framed} 
+\end{framed}
 \end{figure}
 
 Sigma treats row variables as "macros", which get expanded
@@ -782,7 +782,7 @@ predicates.  For example, \index{located} \texttt{located} is a
 \index{subrelation} \texttt{subrelation} of \index{partlyLocated} {\tt
 partlyLocated} and both have arity 2.  So, {\tt @ROW} will only be expanded to
 the case of two variables. In the few cases where axioms have two row variables,
-this can result in 49 new axioms.  This work happens in 
+this can result in 49 new axioms.  This work happens in
 \texttt{RowVars.expandRowVars()}\index[classes]{RowVars}.
 
 \subsection{Quoting}
@@ -839,9 +839,9 @@ formulas lose their meaning, so if
 
 \vspace{4pt}
 
-{\tt (believes John 
-  '(and 
-     (likes Mary Jeff) 
+{\tt (believes John
+  '(and
+     (likes Mary Jeff)
      (likes Bill Sue)))}
 
 \vspace{4pt}
@@ -868,7 +868,7 @@ addition, by allowing variables to be any type, search may include finding
 bindings for variables that cannot be part of the eventual successful solution,
 so there is an \index{efficiency}efficiency cost, as well as a problem for
 finding an accurate \index{proof}proof.
- 
+
 \begin{figure}
 \begin{framed}
 \begin{verbatim}
@@ -946,7 +946,7 @@ are not necessary.
 \end{figure}
 
 \begin{sloppypar}
-This processing is handled in 
+This processing is handled in
 \texttt{FormulaPreprocessor. addTypeRestrictions()}\index[classes]{FormulaPreprocessor}.
 \end{sloppypar}
 
@@ -991,9 +991,9 @@ public Formula clausify() {
 \end{lstlisting}
 
 \subsection{Remove implications and equivalences}
-			
-\begin{verbatim}					
-a<=>b is the same as        (<=> A B) is the same as 
+
+\begin{verbatim}
+a<=>b is the same as        (<=> A B) is the same as
 (a=>b)\&(b=>a)              (and (=> A B) (=> B A))
 
 a=>b is the same as -a|b    (=> A B) same as (or (not A) B)
@@ -1002,18 +1002,18 @@ a=>b is the same as -a|b    (=> A B) same as (or (not A) B)
 \subsection{Move negation inwards}
 
 \begin{verbatim}
--(p|q) becomes -p\&-q           (not (or P Q)) becomes 
+-(p|q) becomes -p\&-q           (not (or P Q)) becomes
                                 (and (not P) (not Q))
-                                
--(p\&q) becomes -p|-q           (not (and P Q)) becomes 
+
+-(p\&q) becomes -p|-q           (not (and P Q)) becomes
                                 (or (not P) (not Q))
-                                
--![X]:p becomes ?[X]:-p	        (not (forall (?X) P)) becomes 
+
+-![X]:p becomes ?[X]:-p	        (not (forall (?X) P)) becomes
                                 (exists (?X) (not P))
-                                
--?[X]:p becomes ![X]:-p	        (not (exists (?X) P)) becomes 
+
+-?[X]:p becomes ![X]:-p	        (not (exists (?X) P)) becomes
                                 (forall (?X) (not P))
-                                
+
 --p becomes p                   (not (not P)) becomes P
 \end{verbatim}
 
@@ -1024,17 +1024,17 @@ confusion, variables of the same name but different scope in a formula are
 renamed.
 
 \begin{verbatim}
-![X]:p(X)|?[X]:q(X) becomes          (or 
-![X]:p(X)|?[Y]:q(Y)                    (forall (?X) 
-                                         (p ?X)) 
-                                       (exists (?X) 
+![X]:p(X)|?[X]:q(X) becomes          (or
+![X]:p(X)|?[Y]:q(Y)                    (forall (?X)
+                                         (p ?X))
+                                       (exists (?X)
                                          (q ?X)))
                                      becomes
-                                     
-                                     (or 
-                                       (forall (?X) 
-                                         (p ?X)) 
-                                       (exists (?Y) 
+
+                                     (or
+                                       (forall (?X)
+                                         (p ?X))
+                                       (exists (?Y)
                                          (q ?Y)))
 \end{verbatim}
 
@@ -1060,9 +1060,9 @@ function.
                                        (and
                                          (h ?Y)
                                          (a ?X ?Y)))))
-\end{verbatim}	
+\end{verbatim}
 
-becomes	
+becomes
 
 \begin{verbatim}
 ![X]:p(X) => 	            (forall (?X)
@@ -1330,7 +1330,7 @@ We have the following statements that have been coded to support the
 paraphrasing of statements with the authors relation.
 
 \begin{verbatim}
-(format EnglishLanguage authors 
+(format EnglishLanguage authors
   "\%1 is \%n the \&\%author of \%2")
 (format it authors "\%1 è l' \&\%autore di \%2")
 \end{verbatim}
@@ -1392,11 +1392,11 @@ Figure \ref{fig:Ambulating}.
 \begin{figure}
 \begin{framed}
 \begin{verbatim}
-(=> 
-    (and 
-        (instance ?AMBULATE Ambulating) 
-        (agent ?AMBULATE ?AGENT)) 
-    (attribute ?AGENT Standing)) 
+(=>
+    (and
+        (instance ?AMBULATE Ambulating)
+        (agent ?AMBULATE ?AGENT))
+    (attribute ?AGENT Standing))
 \end{verbatim}
 \caption{An axiom for {\tt Ambulating}}
 \label{fig:Ambulating}
@@ -1425,7 +1425,7 @@ contain a particular term (Figure \ref{fig:SigmaScreen}). Clicking on a term in
 turn gives a hyperlinked display of all the axioms that contain the new term.
 Next to each axiom is given the file and line(s) where the axiom was written.
 Also shown is an automatically generated natural language paraphrase of each
-axiom. 
+axiom.
 
 \begin{figure}
   \centering
@@ -1445,7 +1445,7 @@ SUMO has several hierarchies that can be used to organize and display the
 theory.  These include hierarchies of physical parts, relations, attributes,
 processes and others.  As such, the tree browser allows the user to select any
 \index{transitive binary relation}transitive binary relation as the link by
-which the hierarchy display is created. 
+which the hierarchy display is created.
 
 Images provide an informal visual representation of as many of the concepts in
 SUMO as possible.  Some 12,000 links were made by hand to public domain icons
@@ -1466,7 +1466,7 @@ be formalized in SUO-KIF). Sigma
 therefore provides different tools for quality checking, combining exhaustive
 and terminating special purpose tests with incomplete and generally
 non-terminating general purpose testing based on theorem proving or model
-finding. 
+finding.
 
 There are two special case tests for errors that must be corrected.  We test for
 terms without a root in the subclass hierarchy at the term {\tt Entity}, which
@@ -1607,7 +1607,7 @@ in order to get the second answer, the new query would become as shown in Figure
 \begin{figure}
 \begin{framed}
 \begin{verbatim}
-(and 
+(and
   (instance ?X PrimaryColor)
   (not
     (equals ?X Red)))
@@ -1633,12 +1633,12 @@ a proof. For example, take the knowledge base shown in Figure \ref{fig:ContKB}.
 (fatherOf John Mark)
 (=>
   (fatherOf ?X ?Y)
-  (and 
-    (not  
+  (and
+    (not
       (exists (?Z)
         (and
           (fatherOf ?X ?Z)
-          (not 
+          (not
              (equal ?Y ?Z)))))))
 \end{verbatim}
 \caption{Example contradictory knowledge base}
@@ -1771,7 +1771,7 @@ matches might exist. The principal problem appears to be massive numbers of
 false positive matches. A simple algorithm appears to do as well in practice as
 a more sophisticated one, since the bulk of effort is still spent by a human in
 selecting accurate matches.  Having a simple and easy user interface appears to
-provide more leverage than an incrementally better matching algorithm. 
+provide more leverage than an incrementally better matching algorithm.
 
 
 \section{Working with Sigma and SUMO}
@@ -2011,7 +2011,7 @@ term, as shown in Figure \ref{fig:Alpha}. By entering a word in the type-in area
 labeled "English Word", one can get a list of all the matching English word
 senses in the \index{WordNet}WordNet lexicon and their mappings to terms in SUMO
 \cite{np03}. The result of entering the word "\index{buffalo}buffalo", for
-example, is the page shown in Figure \ref{fig:Buffalo}. 
+example, is the page shown in Figure \ref{fig:Buffalo}.
 
 \begin{figure}
   \centering
@@ -2034,7 +2034,7 @@ labeled "Ask/Tell".  For a trivial inference, we can ask for a subclass of the
 class {\tt Entity} by posing this query:
 
 \begin{verbatim}
-(subclass ?X Entity).  
+(subclass ?X Entity).
 \end{verbatim}
 
 The inference engine returns a very simple proof that the class {\tt Abstract} is a
@@ -2115,14 +2115,14 @@ browser.
 \section{Acknowledgements}
 
 This manual would not be possible without the efforts of all the colleagues with
-whom I have written code and papers over the years. 
+whom I have written code and papers over the years.
 
 \begin{itemize}
 
 \item Professor Christoph Benzmüller co-authored \cite{pb10} and contributed
 the integration of LEO-II with Sigma and wrote the translation to THF.
 
-\item Michal Sevcenko developed the NLG language and a the KIFb SUMO browser that 
+\item Michal Sevcenko developed the NLG language and a the KIFb SUMO browser that
 implemented it.
 
 \item Randy Schulz developed the first version of Sigma
