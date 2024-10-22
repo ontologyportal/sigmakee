@@ -1,6 +1,8 @@
 FROM tomcat:9.0.96-jdk11-temurin-jammy AS builder
 
+# From: https://github.com/vprover/vampire/commit/8d999c1350ea5d7839cb98350371c3e4833b2cb6
 ARG VAMPIRE_GIT=8d999c1350ea5d7839cb98350371c3e4833b2cb6
+# Linked z3 from: https://github.com/Z3Prover/z3/releases/tag/z3-4.12.1
 
 RUN apt update; \
     apt-get install -y --no-install-recommends \
@@ -32,7 +34,7 @@ RUN apt update; \
     cmake .. ; \
     make -j`nproc` ; \
     cd .. ; \
-    cp build/bin/vampire_* vampire ; \
+    cp build/vampire_* vampire ; \
     ./checks/sanity vampire
 
 #################################################
