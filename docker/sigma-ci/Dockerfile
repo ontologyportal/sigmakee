@@ -32,7 +32,7 @@ RUN apt update; \
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.73-jdk8-temurin-jammy AS runtime
+#FROM tomcat:9.0.96-jdk11-temurin-jammy AS builder
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
