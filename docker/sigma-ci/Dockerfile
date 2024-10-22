@@ -1,10 +1,7 @@
 FROM tomcat:9.0.96-jdk11-temurin-jammy AS builder
 
-# From: https://github.com/vprover/vampire/commit/8d999c1350ea5d7839cb98350371c3e4833b2cb6
-ARG VAMPIRE_GIT=8d999c1350ea5d7839cb98350371c3e4833b2cb6
-# Linked z3 from: https://github.com/Z3Prover/z3/releases/tag/z3-4.12.1
-# git checkout $VAMPIRE_GIT ; \ <- not working (tdn) 10/21/24
 # Followed instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
+# for buildling latest vampire w/ latest Z3
 
 RUN apt update; \
     apt-get install -y --no-install-recommends \
@@ -22,8 +19,6 @@ RUN apt update; \
     git clone https://github.com/vprover/vampire ; \
     cd vampire ; \
     git submodule update --init ; \
-    cd .. ;\
-    rm -rf vampire/z3 ; \
     mkdir vampire/z3/build ; \
     mkdir vampire/build ; \
     cd vampire/z3/build ; \
