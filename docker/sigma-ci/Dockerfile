@@ -23,10 +23,7 @@ RUN apt update; \
     cd vampire ; \
     git submodule update --init ; \
     cd .. ;\
-    wget 'https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.1.tar.gz' &&\
-    tar -xzf z3-4.12.1.tar.gz ; \
     rm -rf vampire/z3 ; \
-    mv z3-z3-4.12.1/* vampire/z3 ; \
     mkdir vampire/z3/build ; \
     mkdir vampire/build ; \
     cd vampire/z3/build ; \
