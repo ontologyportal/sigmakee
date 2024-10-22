@@ -19,9 +19,8 @@ RUN apt update; \
     git clone https://github.com/vprover/vampire ; \
     cd vampire ; \
     git submodule update --init ; \
-    mkdir vampire/z3/build ; \
-    mkdir vampire/build ; \
-    cd vampire/z3/build ; \
+    mkdir z3/build ; \
+    mkdir build && cd build ; \
     cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ; \
     make -j`nproc` ; \
     cd ../../build ; \
