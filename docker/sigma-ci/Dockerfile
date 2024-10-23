@@ -8,6 +8,7 @@ RUN apt update; \
             build-essential \
             cmake \
             git \
+            python3 \
     ; \
     wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz' &&\
     tar xf E.tgz ; \
