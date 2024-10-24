@@ -92,6 +92,7 @@ cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
 (SOS) edit the config.xml changing all `wrong paths` to the value of `$HOME` and adapting all variables)
 
 cd ~/workspace/sigmakee
+source ~/.zshrc or ~/.bash_profile
 ant
 
 If you want to support multiple users, follow the steps in section "Account Management" from the
