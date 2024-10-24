@@ -16,7 +16,7 @@ auxiliary.show.customizer.message=<message>
             <properties>
                 <property name="ant.script">nbproject/ide-targets.xml</property>
                 <property-file>nbproject/private/project.properties</property-file>
-                <property-file>build.properties</property-file>
+                <property-file>nbproject/build.properties</property-file>
             </properties>
             <folders>
                 <source-folder>
