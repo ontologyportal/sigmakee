@@ -237,7 +237,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.single.method">
                     <script>${ant.script}</script>
-                    <target>debug-single-test-method</target>
+                    <target>debug-single-test-method-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/integration/java</folder>
@@ -250,7 +250,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.single.method">
                     <script>${ant.script}</script>
-                    <target>debug-single-test-method</target>
+                    <target>debug-single-test-method-in-integration</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/unit/java</folder>
