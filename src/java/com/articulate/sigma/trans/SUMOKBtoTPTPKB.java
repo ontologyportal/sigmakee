@@ -15,6 +15,7 @@ public class SUMOKBtoTPTPKB {
     // flags to support including numbers and HOL in pseudo-FOL for flexible provers
     public static boolean removeHOL = true; // remove higher order expressions
     public static boolean removeNum = true; // remove numbers
+    public static boolean removeStrings = false;
 
     public static boolean debug = false;
 
@@ -453,7 +454,7 @@ public class SUMOKBtoTPTPKB {
             pw.println("% number: " + tptp);
             return removeNum;
         }
-        if (tptp.contains("'") || tptp.indexOf('"') >= 0) {
+        if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
             pw.println("% f: " + form.format("", "", " "));
             pw.println("% quoted thing");
             return true;
