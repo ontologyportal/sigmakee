@@ -183,17 +183,15 @@ cd Programs
 The following command line version may work but you may need to update the name of the jdk zipfile
 
 ```sh
-wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie"
-  https://download.oracle.com/otn-pub/java/jdk/14.0.1+7/664493ef4a6946b186ff29eb326336a2/jdk-14.0.1_linux-x64_bin.tar.gz
-  gunzip jdk-14.0.1_linux-x64_bin.tar.gz
+wget https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37/GPL/openjdk-23_linux-x64_bin.tar.gz
+  gunzip openjdk-23_linux-x64_bin.tar.gz
 ```
 
-but you also may need to go to the web site, accept the license, then copy the download link
-into this command.  Then you need two commands to install the new Java (check that the paths conform
-to the java version you downloaded) -
+Copy the download link into this command.  Then you need two commands to install
+the new Java (check that the paths conform to the java version you downloaded) -
 
 ```sh
-sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk1.8.0_version/bin/java" 1
+sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk-23/bin/java" 1
 sudo update-alternatives --set java /home/theuser/Programs/jdk-11.0.2/bin/java
 ```
 
@@ -205,9 +203,9 @@ java -version
 You should see something like -
 
 ```
-openjdk version "11.0.2" 2019-01-15
-OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
-OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)
+openjdk version "23" 2024-09-17
+OpenJDK Runtime Environment (build 23+37-2369)
+OpenJDK 64-Bit Server VM (build 23+37-2369, mixed mode, sharing)
 ```
 
 Verify that you see the same Java version when you startup Apache Tomcat that you do when you
@@ -301,7 +299,7 @@ startup.sh
 since $CATALINA_HOME/bin is on your PATH
 
 Point your browser at http://localhost:8080/sigma/login.html
-
+Default credentials are: admin/admin
 
 Debugging
 
