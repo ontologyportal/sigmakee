@@ -31,13 +31,13 @@ Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma
 You will need at least Java 11+ to compile SigmaKee and to run Apache Tomcat.
 
 ! For ARM processors download it from here: https://jdk.java.net/archive/
-    Scroll down to 11.0.2
+    Scroll down to 23 GA (build 23+37)
 
-# Check you java 11 path, open a terminal and run:
+# Check your JDK path, open a terminal and run:
 
   /usr/libexec/java_home --verbose
 
-# Find your 11 (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
+# Find your JDK (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
 
   export JAVA_HOME= 'path from before', then make sure "bin" is on our PATH
 
@@ -112,6 +112,7 @@ $CATALINA_HOME/bin/startup.sh or,
 simply: startup.sh since $CATALINA_HOME/bin was export to your PATH
 
 Point your browser at http://localhost:8080/sigma/login.html
+Default credentials are: admin/admin
 
 You may have some error on login or on a term search initially, that's because server may need ~3 min to initialize everything.
 
