@@ -17,11 +17,11 @@ differ, then you may need to edit your config.xml manually. If you are running
 tomcat on vagrant or another VM, you may need to change the port value from 8080.
 If you are running on a server, rather than your localhost you'll need to set
 the hostname parameter in your config.xml file. E will only work if your $TMPDIR
-is set correctly.  No particular version of tomcat is required. If you load a
-different version of tomcat, be sure to change `$CATALINA_HOME` and your paths to
+is set correctly.  No particular version of tomcat is required as long as it is
+under version 10 (preferably lastest Tomcat V9). If you load a different
+version of tomcat, be sure to change `$CATALINA_HOME` and your paths to
 conform to the version. If you use a different mirror or version you'll need to
-change the wget commend below and Oracle Java appears to now have a key embedded
-in their URL that will change every time. Change "theuser" below to your user name.
+change the wget commend below. Change "theuser" below to your user name.
 
 If your installation isn't working and you're getting funny "null"s in your paths
 try opening permissions on your `$SIGMA_HOME`, `$CATALINA_HOME` and `$SIGMA_SRC` directories.
