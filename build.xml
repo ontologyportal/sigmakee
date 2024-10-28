@@ -37,11 +37,6 @@
         </path>
         <taskdef resource="org/apache/ivy/ant/antlib.xml"
                  uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
-        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
-            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
-                <include name="*.jar"/>
-            </fileset>
-        </delete>
         <ivy:retrieve/>
     </target>
 
@@ -51,7 +46,7 @@
     ====
     -->
 
-    <property name="impl.title" value="SigmaKEE"/>
+    <property name="impl.title" value="${ant.project.name}"/>
     <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
     <property name="product.version.major" value="1"/>
     <property name="product.version.minor" value="0"/>
@@ -328,6 +323,11 @@
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete file="${dist.war}"/>
+        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
     </target>
 
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
