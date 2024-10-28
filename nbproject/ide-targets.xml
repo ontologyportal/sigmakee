@@ -543,7 +543,7 @@
     </target>
 
     <!-- Copy customized config files to their respective directories -->
-    <target name="prep.main.config">
+    <target name="prep.main.config" depends="init">
         <!-- Restore main config post integration testing -->
         <copy todir="${sigma_home}/KBs" file="${main.config}" overwrite="true"/>
     </target>
