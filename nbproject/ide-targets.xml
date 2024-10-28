@@ -568,7 +568,7 @@
         <!-- Prune KB after integration tests -->
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${sigma_home}/KBs">
-                <!--<include name="SUMO.tptp"/>-->
+                <include name="*.tptp"/>
                 <include name="*.ser"/>
             </fileset>
         </delete>
