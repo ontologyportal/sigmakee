@@ -50,12 +50,12 @@ Then get the docker image and run it
 
 Pull with
 ```sh
-sudo docker pull apease/sigmakee2018:latest
+sudo docker pull apease/sigmakee:latest
 ```
 
 Run with
 ```sh
-sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee2018:latest "./sigmastart.sh"
+sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest "./sigmastart.sh"
 ```
 Access from a browser with http://localhost:8080/sigma/login.html . Use admin for username and admin for password
 
@@ -72,7 +72,7 @@ Please note that the Docker container version of Sigma is several years out of d
 recommended.
 
 To build a new docker container follow these steps where `$SIGMA_SRC` is your sigmakee git repo path.
-First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+First, download Linux/x64 from https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37/GPL/openjdk-23_linux-x64_bin.tar.gz
 Note that if you don't download that exact version, you'll need to edit sigmastart.sh so that the filename
 matches.  You'll also need to make changes to track the latest Tomcat, in the bashrc and Dockerfile
 
