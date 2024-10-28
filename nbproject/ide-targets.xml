@@ -12,11 +12,11 @@
     <property file="nbproject/build.properties"/>
     <import   file="${catalina.base}/bin/catalina-tasks.xml"/>
 
-    <path id="dcp">
-        <path path="${debug.classpath}"/>
-    </path>
     <path id="rcp">
         <path path="${run.classpath}"/>
+    </path>
+    <path id="dcp">
+        <path path="${debug.classpath}"/>
     </path>
     <path id="tcp">
         <path path="${run.test.classpath}"/>
@@ -343,10 +343,10 @@
     -->
 
     <target name="debug-nb" depends="thorough.clean,prep.main.config,compile">
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
-        <java classname="com.articulate.sigma.KB"
+        <java classname="${main.class}"
               classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
@@ -359,7 +359,7 @@
     </target>
     <target name="debug-selected-file-in-java" depends="thorough.clean,prep.main.config,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
         <java classname="${debug.class}"
@@ -374,7 +374,7 @@
         </java>
     </target>
     <target name="debug.password.service" depends="compile">
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
         <java classname="com.articulate.sigma.PasswordService"
@@ -397,7 +397,7 @@
 
     <target name="debug-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
@@ -423,7 +423,7 @@
     </target>
     <target name="debug-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
@@ -449,7 +449,7 @@
     </target>
     <target name="debug-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
@@ -475,7 +475,7 @@
     </target>
     <target name="debug-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="SigmaKEE" transport="${debug.transport}">
+        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
@@ -557,14 +557,8 @@
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
-            <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete file="${dist_war}"/>
-        <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${basedir}">
-                <include name="junit*.properties"/>
-            </fileset>
-        </delete>
         <!-- Prune KB after integration tests -->
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${sigma_home}/KBs">
