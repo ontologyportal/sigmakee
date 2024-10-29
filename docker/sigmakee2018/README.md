@@ -43,7 +43,7 @@ and redirect the browser to init.jsp. One workaround is to run the container
 without WordNetMappings mounted in the first time and make the login. SigmaKEE
 should update SUMO's KBs and work fine after.
 
-After this first run, the container can be stop and WordNetMappings can be
+After this first run, the container can be stopped and WordNetMappings can be
 mounted inside the container without any problem.
 
 
