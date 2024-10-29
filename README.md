@@ -55,7 +55,7 @@ sudo docker pull apease/sigmakee:latest
 
 Run with
 ```sh
-sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest "./sigmastart.sh"
+sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest
 ```
 Access from a browser with http://localhost:8080/sigma/login.html . Use admin for username and admin for password
 
