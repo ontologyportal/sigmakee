@@ -409,7 +409,7 @@ program, you'll need to set a path in config.xml, for example
 
 ```sh
 java -Xmx8g -cp $SIGMA_CP:\
-  /home/apease/workspace/sigmakee/build/test/classes \
+  $SIGMA_SRC/build/test/classes \
   org.junit.runner.JUnitCore \
   com.articulate.sigma.UnitTestSuite
 ```
@@ -419,7 +419,7 @@ for example
 
 ```sh
 java -Xmx4g -cp $SIGMA_CP:\
-  /home/apease/workspace/sigmakee/build/test/classes \
+  $SIGMA_SRC/build/test/classes \
   com.articulate.sigma.SingleJUnitTestRunner \
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 ```
