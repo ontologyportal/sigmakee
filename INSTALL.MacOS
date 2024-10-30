@@ -38,12 +38,12 @@ these variables created before the next step, and replace /Users/user with your 
 
   ## SUMO/SIGMAKEE
   export SIGMA_HOME=/Users/user/.sigmakee
-  export SIGMA_SRC=/Users/user/workspace/sigmakee
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
+  export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="-Xmx10g"
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.96
   export PATH=$CATALINA_HOME/bin:$PATH
-  export SIGMA_CP=$SIGMA_SRC/build/WEB-INF/classes:$SIGMA_SRC/lib/*
+  export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
@@ -119,7 +119,7 @@ README.txt below to set up accounts.  Please note however this is not working as
 
 To test run
 
-  java -Xmx10g -cp /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/WEB-INF/lib/* \
+  java -Xmx10g -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 
 

@@ -192,7 +192,7 @@ the new Java (check that the paths conform to the java version you downloaded) -
 
 ```sh
 sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk-23/bin/java" 1
-sudo update-alternatives --set java /home/theuser/Programs/jdk-11.0.2/bin/java
+sudo update-alternatives --set java /home/theuser/Programs/jdk-23/bin/java
 ```
 
 Verify that it's installed correctly with
@@ -268,11 +268,12 @@ make install
 cd ~
 sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-echo "export SIGMA_SRC=~/workspace/sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
+echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"-Xmx10g\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
+echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 sudo add-apt-repository universe
@@ -284,7 +285,7 @@ ant
 To test run
 
 ```sh
-java -Xmx10g -cp /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
+java -Xmx10g -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 ```
 
@@ -364,7 +365,7 @@ Open up CMD prompt
     Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000
     mkdir /home/theuser/Programs
     cd Programs
-    sudo apt-get install openjdk-11-jdk
+    sudo apt-get install openjdk-23-jdk
     (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/jre" >> .bashrc
 ```
 
@@ -407,17 +408,19 @@ program, you'll need to set a path in config.xml, for example
 ## jUnit testing on the command line
 
 ```sh
-java -Xmx8g -cp \
-  /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/WEB-INF/lib/* \
-  org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
+java -Xmx8g -cp $SIGMA_CP:\
+  /home/apease/workspace/sigmakee/build/test/classes \
+  org.junit.runner.JUnitCore \
+  com.articulate.sigma.UnitTestSuite
 ```
 
 one test method at a time can be run with help from the SingleJUnitTestRunner class,
 for example
 
 ```sh
-java -Xmx4g -cp /home/apease/workspace/sigmakee/build/WEB-INF/classes: \
-  /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner \
+java -Xmx4g -cp $SIGMA_CP:\
+  /home/apease/workspace/sigmakee/build/test/classes \
+  com.articulate.sigma.SingleJUnitTestRunner \
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 ```
 You will have to edit the resources files that correspond to config.xml to conform to your
@@ -451,7 +454,7 @@ pip3 install py4j
 Compile SigmaKEE then run with
 
 ```sh
-java -Xmx7g -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.KBmanager -p
+java -Xmx7g -cp $SIGMA_CP com.articulate.sigma.KBmanager -p
 ```
 
 then start python
@@ -482,13 +485,13 @@ than just com.articulate.sigma.KB
 Create the account database with
 
 ```sh
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.PasswordService -c
+java -Xmx5G -cp $SIGMA_CP com.articulate.sigma.PasswordService -c
 ```
 
 Then create the administrator account and password
 
 ```sh
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.PasswordService -a
+java -Xmx5G -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
@@ -519,7 +522,7 @@ scheme of access rights driven from a file or database mapping roles to allowed 
 You'll need to start the database server with
 
 ```sh
- java -jar h2-1.4.197.jar -webAllowOthers -tcpAllowOthers
+ java -jar lib/h2-2.3.232.jar -webAllowOthers -tcpAllowOthers
 ```
 and you'll need to change JDBCstring in PasswordService.java to your path instead of /home/apease
 and recompile
