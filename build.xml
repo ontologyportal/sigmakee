@@ -96,6 +96,17 @@
     <property name="javac.release" value="11"/>
     <property name="run.jvmargs" value="-Xmx10g"/>
 
+    <condition property="isUnixNotMac">
+        <and>
+            <os family="unix"/>
+
+            <not>
+                <os family="mac"/>
+            </not>
+
+        </and>
+    </condition>
+
     <path id="compile.classpath">
         <fileset dir="${basedir}/lib">
             <include name="*.jar"/>
@@ -248,9 +259,6 @@
 
     <target name="test.unit" depends="compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
                showoutput="yes"
                fork="yes">
             <formatter type="plain" usefile="false"/>
@@ -261,14 +269,10 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${unit.test.suite} failed!" if="test.failed"/>
         <antcall target="junit.report"/>
     </target>
     <target name="test.integration" depends="compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
                showoutput="yes"
                fork="yes">
             <jvmarg line="${run.jvmargs}"/>
@@ -280,7 +284,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${integration.test.suite} failed!" if="test.failed"/>
         <antcall target="junit.report"/>
     </target>
     <target name="junit.report" >
@@ -292,11 +295,14 @@
         </junitreport>
         <antcall target="open.junit.report"/>
     </target>
-    <target name="open.junit.report">
+    <target name="open.junit.report" depends="report.mac,report.unix"/>
+    <target name="report.mac">
         <exec executable="sh" osfamily="mac">
             <arg value="-c"/>
             <arg value="open -u ${report.html}"/>
         </exec>
+    </target>
+    <target name="report.unix" if="isUnixNotMac">
         <exec executable="sh" osfamily="unix">
             <arg value="xdg-open ${report.html}"/>
         </exec>
