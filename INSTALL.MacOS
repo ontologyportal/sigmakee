@@ -1,3 +1,22 @@
+Running the SigmaKEE docker image on macOS
+==========================================
+
+With homebrew:
+brew install --cask docker <- will install the latest Docker Desktop for macOS
+
+then:
+open -a Docker <- to get the Docker daemon running
+docker pull apease/sigmakee <- will pull the latest image
+docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest <- the name can be anything you like
+
+point a browser to:
+http://localhost:8080/sigma/login.html
+admin/admin
+
+when finished:
+docker stop trial04
+
+===================
 MacOS install notes
 ===================
 
