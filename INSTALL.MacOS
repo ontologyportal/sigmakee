@@ -17,7 +17,7 @@ when finished:
 docker stop trial04
 
 ===================
-MacOS install notes
+macOS install notes
 ===================
 
 - you need curl or wget to download files, you can install both with
