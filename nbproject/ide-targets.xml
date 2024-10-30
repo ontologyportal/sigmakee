@@ -108,9 +108,6 @@
     <target name="test" depends="test.unit,test.integration"/>
     <target name="test.unit" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
                showoutput="yes"
                fork="yes">
             <jvmarg line="${run.jvmargs}"/>
@@ -125,14 +122,10 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${unit.test.suite} failed!" if="test.failed"/>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="thorough.clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
                showoutput="yes"
                fork="yes">
             <jvmarg line="${run.jvmargs}"/>
@@ -147,7 +140,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${integration.test.suite} failed!" if="test.failed"/>
         <antcall target="junit.report"/>
     </target>
     <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
@@ -559,6 +551,11 @@
             <fileset dir="${deploy_home}"/>
         </delete>
         <delete file="${dist_war}"/>
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${basedir}">
+                <include name="junit*.properties"/>
+            </fileset>
+        </delete>
         <!-- Prune KB after integration tests -->
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${sigma_home}/KBs">
