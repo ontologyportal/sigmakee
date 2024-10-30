@@ -17,11 +17,11 @@ differ, then you may need to edit your config.xml manually. If you are running
 tomcat on vagrant or another VM, you may need to change the port value from 8080.
 If you are running on a server, rather than your localhost you'll need to set
 the hostname parameter in your config.xml file. E will only work if your $TMPDIR
-is set correctly.  No particular version of tomcat is required. If you load a
-different version of tomcat, be sure to change `$CATALINA_HOME` and your paths to
+is set correctly.  No particular version of tomcat is required as long as it is
+under version 10 (preferably lastest Tomcat V9). If you load a different
+version of tomcat, be sure to change `$CATALINA_HOME` and your paths to
 conform to the version. If you use a different mirror or version you'll need to
-change the wget commend below and Oracle Java appears to now have a key embedded
-in their URL that will change every time. Change "theuser" below to your user name.
+change the wget commend below. Change "theuser" below to your user name.
 
 If your installation isn't working and you're getting funny "null"s in your paths
 try opening permissions on your `$SIGMA_HOME`, `$CATALINA_HOME` and `$SIGMA_SRC` directories.
@@ -50,12 +50,12 @@ Then get the docker image and run it
 
 Pull with
 ```sh
-sudo docker pull apease/sigmakee2018:latest
+sudo docker pull apease/sigmakee:latest
 ```
 
 Run with
 ```sh
-sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee2018:latest "./sigmastart.sh"
+sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest
 ```
 Access from a browser with http://localhost:8080/sigma/login.html . Use admin for username and admin for password
 
@@ -72,7 +72,7 @@ Please note that the Docker container version of Sigma is several years out of d
 recommended.
 
 To build a new docker container follow these steps where `$SIGMA_SRC` is your sigmakee git repo path.
-First, download jdk-8u171-linux-x64.rpm from http://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html
+First, download Linux/x64 from https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37/GPL/openjdk-23_linux-x64_bin.tar.gz
 Note that if you don't download that exact version, you'll need to edit sigmastart.sh so that the filename
 matches.  You'll also need to make changes to track the latest Tomcat, in the bashrc and Dockerfile
 
@@ -183,18 +183,16 @@ cd Programs
 The following command line version may work but you may need to update the name of the jdk zipfile
 
 ```sh
-wget --no-check-certificate -c --header "Cookie: oraclelicense=accept-securebackup-cookie"
-  https://download.oracle.com/otn-pub/java/jdk/14.0.1+7/664493ef4a6946b186ff29eb326336a2/jdk-14.0.1_linux-x64_bin.tar.gz
-  gunzip jdk-14.0.1_linux-x64_bin.tar.gz
+wget https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37/GPL/openjdk-23_linux-x64_bin.tar.gz
+  gunzip openjdk-23_linux-x64_bin.tar.gz
 ```
 
-but you also may need to go to the web site, accept the license, then copy the download link
-into this command.  Then you need two commands to install the new Java (check that the paths conform
-to the java version you downloaded) -
+Copy the download link into this command.  Then you need two commands to install
+the new Java (check that the paths conform to the java version you downloaded) -
 
 ```sh
-sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk1.8.0_version/bin/java" 1
-sudo update-alternatives --set java /home/theuser/Programs/jdk-11.0.2/bin/java
+sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk-23/bin/java" 1
+sudo update-alternatives --set java /home/theuser/Programs/jdk-23/bin/java
 ```
 
 Verify that it's installed correctly with
@@ -205,9 +203,9 @@ java -version
 You should see something like -
 
 ```
-openjdk version "11.0.2" 2019-01-15
-OpenJDK Runtime Environment 18.9 (build 11.0.2+9)
-OpenJDK 64-Bit Server VM 18.9 (build 11.0.2+9, mixed mode)
+openjdk version "23" 2024-09-17
+OpenJDK Runtime Environment (build 23+37-2369)
+OpenJDK 64-Bit Server VM (build 23+37-2369, mixed mode, sharing)
 ```
 
 Verify that you see the same Java version when you startup Apache Tomcat that you do when you
@@ -270,11 +268,12 @@ make install
 cd ~
 sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-echo "export SIGMA_SRC=~/workspace/sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
+echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"-Xmx10g\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
+echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 sudo add-apt-repository universe
@@ -286,7 +285,7 @@ ant
 To test run
 
 ```sh
-java -Xmx10g -cp /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/lib/* \
+java -Xmx10g -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 ```
 
@@ -301,7 +300,7 @@ startup.sh
 since $CATALINA_HOME/bin is on your PATH
 
 Point your browser at http://localhost:8080/sigma/login.html
-
+Default credentials are: admin/admin
 
 Debugging
 
@@ -366,7 +365,7 @@ Open up CMD prompt
     Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000
     mkdir /home/theuser/Programs
     cd Programs
-    sudo apt-get install openjdk-11-jdk
+    sudo apt-get install openjdk-23-jdk
     (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/jre" >> .bashrc
 ```
 
@@ -409,17 +408,19 @@ program, you'll need to set a path in config.xml, for example
 ## jUnit testing on the command line
 
 ```sh
-java -Xmx8g -cp \
-  /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/WEB-INF/lib/* \
-  org.junit.runner.JUnitCore com.articulate.sigma.UnitTestSuite
+java -Xmx8g -cp $SIGMA_CP:\
+  $SIGMA_SRC/build/test/classes \
+  org.junit.runner.JUnitCore \
+  com.articulate.sigma.UnitTestSuite
 ```
 
 one test method at a time can be run with help from the SingleJUnitTestRunner class,
 for example
 
 ```sh
-java -Xmx4g -cp /home/apease/workspace/sigmakee/build/WEB-INF/classes: \
-  /home/apease/workspace/sigmakee/build/lib/* com.articulate.sigma.SingleJUnitTestRunner \
+java -Xmx4g -cp $SIGMA_CP:\
+  $SIGMA_SRC/build/test/classes \
+  com.articulate.sigma.SingleJUnitTestRunner \
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 ```
 You will have to edit the resources files that correspond to config.xml to conform to your
@@ -453,7 +454,7 @@ pip3 install py4j
 Compile SigmaKEE then run with
 
 ```sh
-java -Xmx7g -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.KBmanager -p
+java -Xmx7g -cp $SIGMA_CP com.articulate.sigma.KBmanager -p
 ```
 
 then start python
@@ -484,13 +485,13 @@ than just com.articulate.sigma.KB
 Create the account database with
 
 ```sh
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.PasswordService -c
+java -Xmx5G -cp $SIGMA_CP com.articulate.sigma.PasswordService -c
 ```
 
 Then create the administrator account and password
 
 ```sh
-java -Xmx5G -cp $SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/* com.articulate.sigma.PasswordService -a
+java -Xmx5G -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
@@ -521,7 +522,7 @@ scheme of access rights driven from a file or database mapping roles to allowed 
 You'll need to start the database server with
 
 ```sh
- java -jar h2-1.4.197.jar -webAllowOthers -tcpAllowOthers
+ java -jar lib/h2-2.3.232.jar -webAllowOthers -tcpAllowOthers
 ```
 and you'll need to change JDBCstring in PasswordService.java to your path instead of /home/apease
 and recompile

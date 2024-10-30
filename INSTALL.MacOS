@@ -1,4 +1,23 @@
-MacOS install notes
+Running the SigmaKEE docker image on macOS
+==========================================
+
+With homebrew:
+brew install --cask docker <- will install the latest Docker Desktop for macOS
+
+then:
+open -a Docker <- to get the Docker daemon running
+docker pull apease/sigmakee <- will pull the latest image
+docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest <- the name can be anything you like
+
+point a browser to:
+http://localhost:8080/sigma/login.html
+admin/admin
+
+when finished:
+docker stop trial04
+
+===================
+macOS install notes
 ===================
 
 - you need curl or wget to download files, you can install both with
@@ -19,25 +38,25 @@ these variables created before the next step, and replace /Users/user with your 
 
   ## SUMO/SIGMAKEE
   export SIGMA_HOME=/Users/user/.sigmakee
-  export SIGMA_SRC=/Users/user/workspace/sigmakee
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
+  export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="-Xmx10g"
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.96
   export PATH=$CATALINA_HOME/bin:$PATH
-  export SIGMA_CP=$SIGMA_SRC/build/classes:$SIGMA_SRC/build/lib/*:$SIGMA_SRC/lib/*
+  export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
 You will need at least Java 11+ to compile SigmaKee and to run Apache Tomcat.
 
 ! For ARM processors download it from here: https://jdk.java.net/archive/
-    Scroll down to 11.0.2
+    Scroll down to 23 GA (build 23+37)
 
-# Check you java 11 path, open a terminal and run:
+# Check your JDK path, open a terminal and run:
 
   /usr/libexec/java_home --verbose
 
-# Find your 11 (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
+# Find your JDK (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
 
   export JAVA_HOME= 'path from before', then make sure "bin" is on our PATH
 
@@ -92,6 +111,7 @@ cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
 (SOS) edit the config.xml changing all `wrong paths` to the value of `$HOME` and adapting all variables)
 
 cd ~/workspace/sigmakee
+source ~/.zshrc or ~/.bash_profile
 ant
 
 If you want to support multiple users, follow the steps in section "Account Management" from the
@@ -99,7 +119,7 @@ README.txt below to set up accounts.  Please note however this is not working as
 
 To test run
 
-  java -Xmx10g -cp /home/theuser/workspace/sigmakee/build/sigmakee.jar:/home/theuser/workspace/sigmakee/build/WEB-INF/lib/* \
+  java -Xmx10g -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 
 
@@ -111,6 +131,7 @@ $CATALINA_HOME/bin/startup.sh or,
 simply: startup.sh since $CATALINA_HOME/bin was export to your PATH
 
 Point your browser at http://localhost:8080/sigma/login.html
+Default credentials are: admin/admin
 
 You may have some error on login or on a term search initially, that's because server may need ~3 min to initialize everything.
 

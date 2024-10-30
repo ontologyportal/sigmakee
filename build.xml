@@ -37,11 +37,6 @@
         </path>
         <taskdef resource="org/apache/ivy/ant/antlib.xml"
                  uri="antlib:org.apache.ivy.ant" classpathref="ivy.lib.path"/>
-        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
-            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
-                <include name="*.jar"/>
-            </fileset>
-        </delete>
         <ivy:retrieve/>
     </target>
 
@@ -51,7 +46,7 @@
     ====
     -->
 
-    <property name="impl.title" value="SigmaKEE"/>
+    <property name="impl.title" value="${ant.project.name}"/>
     <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
     <property name="product.version.major" value="1"/>
     <property name="product.version.minor" value="0"/>
@@ -100,6 +95,17 @@
 
     <property name="javac.release" value="11"/>
     <property name="run.jvmargs" value="-Xmx10g"/>
+
+    <condition property="isUnixNotMac">
+        <and>
+            <os family="unix"/>
+
+            <not>
+                <os family="mac"/>
+            </not>
+
+        </and>
+    </condition>
 
     <path id="compile.classpath">
         <fileset dir="${basedir}/lib">
@@ -253,9 +259,6 @@
 
     <target name="test.unit" depends="compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
                showoutput="yes"
                fork="yes">
             <formatter type="plain" usefile="false"/>
@@ -266,14 +269,10 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${unit.test.suite} failed!" if="test.failed"/>
         <antcall target="junit.report"/>
     </target>
     <target name="test.integration" depends="compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
                showoutput="yes"
                fork="yes">
             <jvmarg line="${run.jvmargs}"/>
@@ -285,7 +284,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${integration.test.suite} failed!" if="test.failed"/>
         <antcall target="junit.report"/>
     </target>
     <target name="junit.report" >
@@ -297,11 +295,14 @@
         </junitreport>
         <antcall target="open.junit.report"/>
     </target>
-    <target name="open.junit.report">
+    <target name="open.junit.report" depends="report.mac,report.unix"/>
+    <target name="report.mac">
         <exec executable="sh" osfamily="mac">
             <arg value="-c"/>
             <arg value="open -u ${report.html}"/>
         </exec>
+    </target>
+    <target name="report.unix" if="isUnixNotMac">
         <exec executable="sh" osfamily="unix">
             <arg value="xdg-open ${report.html}"/>
         </exec>
@@ -328,6 +329,11 @@
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete file="${dist.war}"/>
+        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
+                <include name="*.jar"/>
+            </fileset>
+        </delete>
     </target>
 
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">

@@ -13,7 +13,7 @@ log() {
 }
 
 welcome() {
-	log "Welcom to the installation of:"
+	log "Welcome to the installation of:"
 	log '  _________.___  ________    _____      _____'
 	log ' /   _____/|   |/  _____/   /     \    /  _  \'
 	log ' \_____  \ |   /   \  ___  /  \ /  \  /  /_\  \'
@@ -29,7 +29,7 @@ check_supported_os() {
 	elif [ -n "$(lsb_release -d | grep -i ubuntu)" ]; then
 		PLATFORM="ubuntu"
 	else
-		log fail "Your operating system is not supported. Only Ubuntu and Mac OSX are supported."
+		log fail "Your operating system is not supported. Only Ubuntu and Mac OS X are supported."
 	fi
 }
 
@@ -43,7 +43,7 @@ check_env()
 					JDK_HOME="$(/usr/libexec/java_home)"
 				fi
 				if [ -z "$JDK_HOME" ]; then
-					log fail "No JDK found, please install Java from http://www.oracle.com/technetwork/java/javase/downloads/index.html"
+					log fail "No JDK found, please install OpenJDK from https://jdk.java.net/archive/"
 				fi
 			fi
 			log info "Using existing java installation from: $JDK_HOME"
@@ -66,12 +66,11 @@ check_env()
 			log warn "Ubuntu is going to ask your user's password for missed packages check."
 			sudo add-apt-repository ppa:webupd8team/java
 			sudo apt-get -y update
-			sudo apt-get -y install oracle-java8-installer
-			sudo apt-get -y install oracle-java8-set-default
+			sudo apt-get -y install openjdk-23-jdk
 			sudo apt-get -y install graphviz
 
 			sudo DEBIAN_FRONTEND=noninteractive apt-get install -y cvs ant maven
-			wget http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_1.8/E.tgz
+			wget https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz
 			tar -xzf E.tgz
 			cd E
 			./configure
@@ -117,7 +116,7 @@ sigma_done() {
 	log warn "  » cd ${SIGMA_SRC}/sigmakee"
 	log warn "  » mvn -f pom-old.xml -DskipTests clean install tomcat7:run"
 	echo
-	log warn "After it started you can open: http://localhost:9090/sigma/login.html"
+	log warn "After it starts you can open: http://localhost:8080/sigma/login.html"
 	log warn "Default credentials are: admin/admin"
 }
 
@@ -129,8 +128,8 @@ sigma_start() {
 	#if [[ -z "$sigma_run" || "$sigma_run" =~ [yY] ]]; then
 		cd ${SIGMA_SRC}/sigma
 		export SIGMA_HOME=${SIGMA_HOME}
-		export MAVEN_OPTS="-Xmx1024m"
-		mvn -f pom-old.xml -DskipTests clean install tomcat7:run
+		export MAVEN_OPTS="-Xmx1g"
+		mvn -f pom-old.xml -DskipTests clean install tomcat9:run
 	fi
 }
 
