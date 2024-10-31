@@ -549,6 +549,7 @@
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
+            <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete file="${dist_war}"/>
         <delete includeemptydirs="true" failonerror="false">
