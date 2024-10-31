@@ -1095,14 +1095,14 @@ public class KBmanager implements Serializable {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -p - demo Python interface");
-        System.out.println("  with no arguments show this help screen an execute a test");
+        System.out.println("  with no arguments show this help screen and execute a test");
     }
 
     /** ***************************************************************
      */
     public static void main(String[] args) {
 
-        if (args == null) {
+        if (args == null || args.length == 0) {
             printHelp();
             try {
                 KBmanager.getMgr().initializeOnce();
