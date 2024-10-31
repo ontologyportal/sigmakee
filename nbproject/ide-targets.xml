@@ -85,6 +85,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${sigma_src}"/>
+            <arg line="${run.args}"/>
         </java>
     </target>
     <target name="password.service" depends="compile" description="Performs account management services">
@@ -362,7 +363,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg line="-c Object Transaction"/>
+            <arg line="${run.args}"/>
         </java>
     </target>
     <target name="debug.password.service" depends="compile">
