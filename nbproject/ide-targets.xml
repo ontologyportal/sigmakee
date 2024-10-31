@@ -194,6 +194,7 @@
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
+        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -240,6 +241,7 @@
             </test>
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
+        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -428,6 +430,7 @@
             </test>
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
+        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -482,6 +485,7 @@
             </test>
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
+        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
