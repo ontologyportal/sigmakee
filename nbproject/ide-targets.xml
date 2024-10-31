@@ -591,7 +591,7 @@
             </fileset>
         </delete>
     </target>
-    <target name="all" depends="thorough.clean,dist">
+    <target name="all" depends="clean,dist">
         <echo message="System date/time is: ${TODAY_US}"/>
     </target>
 
