@@ -107,7 +107,7 @@
     -->
 
     <target name="test" depends="test.unit,test.integration"/>
-    <target name="test.unit" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+    <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -125,7 +125,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="thorough.clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -143,7 +143,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -165,7 +165,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -187,7 +187,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -209,7 +209,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="run-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -231,7 +231,7 @@
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                errorProperty="test.failed"
@@ -335,7 +335,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="thorough.clean,prep.main.config,compile">
+    <target name="debug-nb" depends="clean,prep.main.config,compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -350,7 +350,7 @@
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="thorough.clean,prep.main.config,compile">
+    <target name="debug-selected-file-in-java" depends="clean,prep.main.config,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -388,7 +388,7 @@
     =====================
     -->
 
-    <target name="debug-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="debug-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -414,7 +414,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -440,7 +440,7 @@
         </junit>
         <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="debug-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -466,7 +466,7 @@
         </junit>
         <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
