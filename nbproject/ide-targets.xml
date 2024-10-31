@@ -73,6 +73,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="-c Object Transaction"/>
         </java>
     </target>
@@ -85,6 +86,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${sigma_src}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${run.args}"/>
         </java>
     </target>
@@ -96,6 +98,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${pword.props}"/>
         </java>
     </target>
@@ -115,6 +118,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -133,6 +137,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -155,6 +160,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -177,6 +183,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -199,6 +206,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -221,6 +229,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -243,6 +252,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -347,6 +357,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="-c Object Transaction"/>
         </java>
     </target>
@@ -363,6 +374,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${run.args}"/>
         </java>
     </target>
@@ -378,6 +390,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${pword.props}"/>
         </java>
     </target>
@@ -404,6 +417,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -430,6 +444,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -456,6 +471,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -482,6 +498,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
