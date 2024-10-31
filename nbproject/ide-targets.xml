@@ -128,7 +128,6 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
-        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="test.integration" depends="clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
