@@ -84,7 +84,7 @@
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="SIGMA_SRC" value="${sigma_src}"/>
         </java>
     </target>
     <target name="password.service" depends="compile" description="Performs account management services">
@@ -498,7 +498,7 @@
     =====
     -->
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="prep.main.config,compile" description="Prepare and distribute the sigma.war and ${app.name}.jar files and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
