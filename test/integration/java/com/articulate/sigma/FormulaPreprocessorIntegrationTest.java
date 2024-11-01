@@ -30,7 +30,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("Class", "Object+");
@@ -61,7 +61,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(strf);
         FormulaPreprocessor fp = new FormulaPreprocessor();
 
-        HashMap<String, HashSet<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = fp.computeVariableTypes(f, SigmaTestBase.kb);
 
         assertEquals(expected, actualMap);
     }
@@ -107,7 +107,7 @@ public class FormulaPreprocessorIntegrationTest extends IntegrationTestBase {
         f.read(stmt);
 
         FormulaPreprocessor formulaPre = new FormulaPreprocessor();
-        HashMap<String, HashSet<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = formulaPre.computeVariableTypes(f, SigmaTestBase.kb);
 
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         HashSet<String> set1 = Sets.newHashSet("CognitiveAgent");

@@ -317,7 +317,7 @@ public class KBcacheTest extends IntegrationTestBase {
 
         System.out.println("\n============= testPredicates ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
-        HashSet<String> rels = cache.getChildInstances("Relation");
+        Set<String> rels = cache.getChildInstances("Relation");
         for (String rel : rels) {
             if (!rel.endsWith("Fn")) {
                 if (!cache.isInstanceOf(rel, "Predicate")) {

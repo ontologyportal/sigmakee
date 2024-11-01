@@ -1420,7 +1420,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
         Formula f = new Formula();
         f.read(stmt3);
 
-        Map<String, HashSet<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
         System.out.println("testFindPredVarTypesStmt3(): actual: " + actual);
         Map<String, HashSet<String>> expected = Maps.newHashMap();
         expected.put("?ROLE", Sets.newHashSet("CaseRole"));
