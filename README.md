@@ -270,7 +270,7 @@ sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=\"-Xmx10g\"" >> .bashrc
+echo "export CATALINA_OPTS=\"-Xmx10g -Xss1m\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
