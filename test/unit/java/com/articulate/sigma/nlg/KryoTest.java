@@ -46,6 +46,10 @@ public class KryoTest extends Assert {
 
         ob = null;
         kryo = new Kryo();
+
+        // Big help with this setting from:
+        // https://stackoverflow.com/questions/69893294/why-kryo-gives-me-that-error-when-serializing-object
+        kryo.setReferences(true);
         path = Paths.get(SIGMA_SRC, "file.bin");
     }
 
