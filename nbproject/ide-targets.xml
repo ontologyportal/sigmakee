@@ -147,7 +147,7 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
-        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -186,7 +186,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -225,7 +225,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -406,7 +406,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -453,7 +453,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <antcall target="${prep.main.config}"/> <!-- restore the main config -->
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
