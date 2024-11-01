@@ -341,6 +341,9 @@
                 <include name="*.tptp"/>
                 <include name="*.ser"/>
             </fileset>
+<!--            <fileset dir="${sigma.home}/KBs/WordNetMappings">
+                <include name="*.ser"/>
+            </fileset>-->
         </delete>
     </target>
 
