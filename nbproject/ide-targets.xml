@@ -550,6 +550,9 @@
                 <include name="*.tptp"/>
                 <include name="*.ser"/>
             </fileset>
+            <fileset dir="${sigma_home}/KBs/WordNetMappings">
+                <include name="*.ser"/>
+            </fileset>
         </delete>
         <delete>
             <fileset dir="${catalina.logs.dir}">
