@@ -491,7 +491,7 @@ java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -c
 Then create the administrator account and password
 
 ```sh
-java -Xmx4g -Xss1m -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
+java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
