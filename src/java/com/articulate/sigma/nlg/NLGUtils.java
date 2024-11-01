@@ -14,6 +14,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Utilities and variables used by LanguageFormatter and other NLG classes.
@@ -44,6 +46,7 @@ public class NLGUtils implements Serializable {
     private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(false); //No need to pre-register the class
+        kryo.setReferences(true);
         return kryo;
     });
 
@@ -339,16 +342,20 @@ public class NLGUtils implements Serializable {
         if (getKeywordMap() == null)
             setKeywordMap(new HashMap<>());
         int lc = 0;
-        BufferedReader br = null;
         File phrasesFile;
-        try {
-            if (getKeywordMap().isEmpty()) {
-                System.out.println("Filling keywordMap");
 
-                phrasesFile = new File(dirFile, PHRASES_FILENAME);
-                if (!phrasesFile.canRead())
+        if (getKeywordMap().isEmpty()) {
+            System.out.println("Filling keywordMap");
+
+            phrasesFile = new File(dirFile, PHRASES_FILENAME);
+            if (!phrasesFile.canRead()) {
+                try {
                     throw new Exception("Cannot read \"" + phrasesFile.getCanonicalPath() + "\"");
-                br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile),"UTF-8"));
+                } catch (Exception ex) {
+                    Logger.getLogger(NLGUtils.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(phrasesFile), "UTF-8"))) {
                 Map<String, String> phrasesByLang;
                 List<String> phraseList;
                 List<String> languageKeys = null;
@@ -364,41 +371,34 @@ public class NLGUtils implements Serializable {
                     }
                     if (line.contains(delim)) {
                         if (line.startsWith("EnglishLanguage|")) // The language key line.
+                        {
                             languageKeys = Arrays.asList(line.split("\\" + delim));
-                        else {
+                        } else {
                             phraseList = Arrays.asList(line.split("\\" + delim));
                             phrasesByLang = new HashMap<>();
                             key = phraseList.get(0);
                             plLen = phraseList.size();
-                            for (int i = 0; i < plLen; i++)
+                            for (int i = 0; i < plLen; i++) {
                                 phrasesByLang.put(languageKeys.get(i), phraseList.get(i));
+                            }
                             getKeywordMap().put(key.intern(), phrasesByLang);
                         }
-                    }
-                    else {
+                    } else {
                         System.out.println("WARNING in NLGUtils.readKeywordMap(): "
                                 + "Unrecognized line");
                         System.out.println(lc + ": \"" + line + "\"");
                     }
                 }
+            } catch (Exception ex) {
+                System.err.println("ERROR loading " + PHRASES_FILENAME + " at line " + lc + ":");
+                System.err.println(ex.getMessage());
+                ex.printStackTrace();
+            } finally {
+                System.out.println("EXIT NLGUtils.readKeywordMap(" + dir + ") with size " + getKeywordMap().keySet().size());
             }
-        }
-        catch (Exception ex) {
-            System.err.println("ERROR loading " + PHRASES_FILENAME + " at line " + lc + ":");
-            System.err.println(ex.getMessage());
-            ex.printStackTrace();
-        }
-        finally {
-            try {
-                if (br != null) { br.close(); }
-            }
-            catch (IOException ex2) {
-                ex2.printStackTrace();
-            }
-            System.out.println("EXIT NLGUtils.readKeywordMap(" + dir + ") with size " + getKeywordMap().keySet().size());
-        }
 //        serialize(); // old method. Replace w/ Kryo serialization (tdn) 10/15/24
-        encoder(nlg);
+            encoder(nlg);
+        }
     }
 
     /** **************************************************************

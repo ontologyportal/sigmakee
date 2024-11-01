@@ -9,10 +9,7 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,38 +24,38 @@ public class SUMOtoTFAform {
     public static boolean debug = false;
 
     // a Set of types for each variable key
-    public static HashMap<String,HashSet<String>> varmap = null;
+    public static Map<String,Set<String>> varmap = null;
 
     // a map of relation signatures (where function returns are index 0)
     // modified from the original by the constraints of the axiom
-    private static HashMap<String,ArrayList<String>> signatures = null;
+    private static Map<String,List<String>> signatures = null;
 
     public static boolean initialized = false;
 
     public static FormulaPreprocessor fp = new FormulaPreprocessor();
 
     // constraints on numeric types
-    public static HashMap<String,String> numericConstraints = new HashMap<>();
+    public static Map<String,String> numericConstraints = new HashMap<>();
 
     // variable names of constraints on numeric types
-    public static HashMap<String,String> numericVars = new HashMap<>();
+    public static Map<String,String> numericVars = new HashMap<>();
 
     // numeric constraint axioms that need not be processed since
     // their constraints will be substituted into axioms directly
-    public static HashSet<String> numConstAxioms = new HashSet<>();
+    public static Set<String> numConstAxioms = new HashSet<>();
 
     // types like E and Pi
-    public static HashMap<String,String> numericConstantTypes = new HashMap<>();
-    public static HashMap<String,String> numericConstantValues = new HashMap<>();
+    public static Map<String,String> numericConstantTypes = new HashMap<>();
+    public static Map<String,String> numericConstantValues = new HashMap<>();
     public static int numericConstantCount = 0; // to compare with if another constant is found after initialization
 
     // storage for a message why the formula wasn't translated
     public static String filterMessage = "";
 
     // extra sorts determined just for this formula
-    public HashSet<String> sorts = new HashSet<>();
+    public Set<String> sorts = new HashSet<>();
 
-    public static HashSet<String> errors = new HashSet<>();
+    public static Set<String> errors = new HashSet<>();
 
     /** *************************************************************
      * comparison ops are EQUAL, GT, GTET, LT, LTET
@@ -137,7 +134,7 @@ public class SUMOtoTFAform {
      * Fill the indicated elements with "Entity", starting at start and ending
      * at end-1
      */
-    public static void fill (ArrayList<String> ar, int start, int end) {
+    public static void fill (List<String> ar, int start, int end) {
 
         fill(ar,start,end,"Entity");
     }
@@ -160,7 +157,7 @@ public class SUMOtoTFAform {
      * If there's no such element index, fill the previous elements
      * with Entity
      */
-    public static void safeSet (ArrayList<String> ar, int index, String val) {
+    public static void safeSet (List<String> ar, int index, String val) {
 
         if (index > ar.size()-1)
             fill(ar,ar.size(),index+1);
@@ -289,7 +286,7 @@ public class SUMOtoTFAform {
             return "";
         String[] a = new String[] {"In","Re","Ra"};
         Collection typeChars = Arrays.asList(a);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(rel + "__");
         if (kb.isFunction(rel) && typeChars.contains(sig.get(0).substring(0,2))) {
             sb.append("0" + sig.get(0).substring(0,2));
@@ -359,7 +356,7 @@ public class SUMOtoTFAform {
         ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         if (isMathFunction(car.getFormula()) ||
                 (isComparisonOperator(car.getFormula()) && !car.getFormula().equals("equal"))) {
-            StringBuffer argsStr = new StringBuffer();
+            StringBuilder argsStr = new StringBuilder();
             boolean isInt = false;
             boolean isReal = false;
             boolean isRat = false;
@@ -426,7 +423,7 @@ public class SUMOtoTFAform {
             //    constrainVarsFromFunct(args,suffix.substring(0,4));
         }
         else {
-            StringBuffer argsStr = new StringBuffer();
+            StringBuilder argsStr = new StringBuilder();
             ArrayList<String> sig = kb.kbCache.signatures.get(car.toString());
             if (args != null) {
                 for (int i = 0; i < args.size(); i++) {
@@ -461,7 +458,7 @@ public class SUMOtoTFAform {
                 Formula varlist = new Formula(args.get(1));
                 ArrayList<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("SUMOtoTFAform.processRecurse(): valid vars: " + vars);
-                StringBuffer varStr = new StringBuffer();
+                StringBuilder varStr = new StringBuilder();
                 for (String v : vars) {
                     String oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
                     if (varmap.keySet().contains(v) && !StringUtil.emptyString(varmap.get(v))) {
@@ -501,7 +498,7 @@ public class SUMOtoTFAform {
         String tptpOp = "&";
         if (op.equals("or"))
             tptpOp = "|";
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("(" + processRecurse(new Formula(args.get(1)),parentType));
         for (int i = 2; i < args.size(); i++) {
             sb.append(" " + tptpOp + " " + processRecurse(new Formula(args.get(i)),parentType));
@@ -661,7 +658,7 @@ public class SUMOtoTFAform {
         }
         if (SUMOKBtoTFAKB.alreadyExtended(pred))
             return pred;
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append(car.getFormula() + "__");
         if (arityCountStr != null)
             result.append(arityCountStr + "__");
@@ -715,7 +712,7 @@ public class SUMOtoTFAform {
                 System.out.println("Error in SUMOtoTFAform.processNumericSuperArgs(): type list and arg list different size for " + f);
             processedArgs.add(processRecurse(new Formula(args.get(i)), argType));
         }
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("s__" + pred + "(");
         for (String arg : processedArgs)
             result.append(arg + ",");
@@ -747,7 +744,7 @@ public class SUMOtoTFAform {
         ArrayList<String> processedArgs = new ArrayList<>();
         for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
             processedArgs.add(processRecurse(new Formula(args.get(i)),parentType));
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("s__" + pred + "(");
         for (String arg : processedArgs)
             result.append(arg + ",");
@@ -973,7 +970,7 @@ public class SUMOtoTFAform {
         List<String> predTypes = kb.kbCache.getSignature(car.getFormula());
         newArgTypes = bestSignature(predTypes,newArgTypes);
         if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): newArgTypes: " + newArgTypes);
-        StringBuffer argStr = new StringBuffer();
+        StringBuilder argStr = new StringBuilder();
         for (int i = 1; i < args.size(); i++) {  // skip the predicate (0th arg)
             String s = args.get(i);
             String type = "Entity";
@@ -1372,7 +1369,7 @@ public class SUMOtoTFAform {
             String type = argTypes.get(i);
             if (!kb.isSubclass(type,"Quantity"))
                 System.out.println("Error in SUMOtoTFAform.constrainVars(): non numeric type: " + type);
-            HashSet<String> types = varmap.get(t);
+            Set<String> types = varmap.get(t);
             if (debug) System.out.println("SUMOtoTFAform.constrainVars(): checking var " + t + " with type " + types);
             String best = bestSpecificTerm(types);
             if (debug) System.out.println("SUMOtoTFAform.constrainVars(): type " + type + " best " + best);
@@ -1419,7 +1416,7 @@ public class SUMOtoTFAform {
         }
         if (StringUtil.emptyString(least))
             return "";
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         int start = 0;
         if (!kb.isFunction(op))
             start = 1;
@@ -1928,7 +1925,7 @@ public class SUMOtoTFAform {
             return constrainOp(f,op,parentType,args);
         else {
             List<String> sig = kb.kbCache.getSignature(op);
-            StringBuffer resultString = new StringBuffer();
+            StringBuilder resultString = new StringBuilder();
             resultString.append("(" + op);
             ArrayList<String> newargs = new ArrayList<>();
             newargs.addAll(args);
@@ -1937,7 +1934,7 @@ public class SUMOtoTFAform {
                 String t = "Entity";
                 if (sig != null && i < sig.size())
                     t = sig.get(i);
-                resultString.append(" " + constrainFunctVarsRecurse(new Formula(s),t));
+                resultString.append(" ").append(constrainFunctVarsRecurse(new Formula(s),t));
             }
             resultString.append(")");
             //if (debug) System.out.println("SUMOtoTFAform.constrainFunctVarsRecurse(): returning: " + resultString);
@@ -1949,13 +1946,13 @@ public class SUMOtoTFAform {
      * Only constrain the element of the varmap if the new type is more specific
      * @result is the new varmap as a side effect
      */
-    private static void constrainTypeRestriction(HashMap<String,HashSet<String>> newvarmap) {
+    private static void constrainTypeRestriction(Map<String,Set<String>> newvarmap) {
 
         //if (debug) System.out.println("SUMOtoTFAform.constrainTypeRestriction(): varmap: " + varmap);
         for (String k : newvarmap.keySet()) {
-            HashSet<String> newvartypes = newvarmap.get(k);
+            Set<String> newvartypes = newvarmap.get(k);
             String newt = bestSpecificTerm(newvartypes);
-            HashSet<String> oldvartypes = varmap.get(k);
+            Set<String> oldvartypes = varmap.get(k);
             String oldt = bestSpecificTerm(oldvartypes);
             if (StringUtil.emptyString(newt) && StringUtil.emptyString(oldt)) {
                 System.out.println("Error in SUMOtoTFAform.constrainTypeRestriction(): empty variables: " +
@@ -1990,7 +1987,7 @@ public class SUMOtoTFAform {
             oldVarmap = cloneVarmap();
             String newf = constrainFunctVarsRecurse(f,"Entity");
             f = new Formula(newf);
-            HashMap<String,HashSet<String>> types = fp.findAllTypeRestrictions(f, kb);
+            Map<String,Set<String>> types = fp.findAllTypeRestrictions(f, kb);
             constrainTypeRestriction(types);
         } while (!varmap.equals(oldVarmap) && counter < 5);
         return f;
@@ -2016,7 +2013,7 @@ public class SUMOtoTFAform {
                 return result;
             }
         }
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result = result.append("(" + args.get(0));
         for (int i = 1; i < args.size(); i++) {
             result.append(" " + elimUnitaryLogops(new Formula(args.get(i))));
@@ -2103,10 +2100,10 @@ public class SUMOtoTFAform {
             }
             else {
                 ArrayList<String> args = f.complexArgumentsToArrayListString(1);
-                StringBuffer sb = new StringBuffer();
-                sb.append("(" + f.car());
+                StringBuilder sb = new StringBuilder();
+                sb.append("(").append(f.car());
                 for (String a : args)
-                    sb.append(" " + removeNumericInstance(a));
+                    sb.append(" ").append(removeNumericInstance(a));
                 sb.append(")");
                 return sb.toString();
             }
@@ -2120,7 +2117,7 @@ public class SUMOtoTFAform {
     public static boolean inconsistentVarTypes() {
 
         for (String s : varmap.keySet()) {
-            HashSet<String> types = varmap.get(s);
+            Set<String> types = varmap.get(s);
             for (String c1 : types) {
                 for (String c2 : types) {
                     if (!c1.equals(c2)) {
@@ -2164,7 +2161,7 @@ public class SUMOtoTFAform {
      * @param types the set of types to check
      * @param type the type to check against the set
      */
-    private static boolean typeConflict(HashSet<String> types, String type) {
+    private static boolean typeConflict(Set<String> types, String type) {
 
         if (debug) System.out.println("SUMOtoTFAform.typeConflict(types,type): " + types + ", " + type);
         if (types == null) {
@@ -2224,7 +2221,7 @@ public class SUMOtoTFAform {
                 else if (farg.listP() && typeConflict(farg))
                     return true;
                 else if (farg.isVariable()) {
-                    HashSet<String> vars = varmap.get(farg.getFormula());
+                    Set<String> vars = varmap.get(farg.getFormula());
                     if (vars != null && typeConflict(vars, sigType)) {
                         errors.add("error between " + farg + " and argument " + i + " of " + op +
                                 " with type " + sigType + " in file " + f.sourceFile);
@@ -2245,7 +2242,7 @@ public class SUMOtoTFAform {
         List<String> sig = SUMOtoTFAform.relationExtractSigFromName(rel);
         if (sig == null || sig.size() < 1)
             return "";
-        StringBuffer sigBuf = new StringBuffer();
+        StringBuilder sigBuf = new StringBuilder();
         for (String s : sig.subList(1,sig.size())) {
             if (StringUtil.emptyString((s)))
                 sigBuf.append(" " + "$i" + " *");
@@ -2334,13 +2331,13 @@ public class SUMOtoTFAform {
             f = constrainFunctVars(f);
         } while (!f.getFormula().equals(oldf) && counter < 5);
         f = new Formula(removeNumericInstance(f.getFormula()));
-        if (f.getFormula() == "")
+        if ("".equals(f.getFormula()))
             return "";
         f = new Formula(elimUnitaryLogops(f)); // remove empty (and... and (or... and =>...
         if (f != null && f.listP()) {
             HashSet<String> UqVars = f.collectUnquantifiedVariables();
             String result = processRecurse(f, "Entity"); // no enclosing required type
-            StringBuffer qlist = new StringBuffer();
+            StringBuilder qlist = new StringBuilder();
             for (String s : UqVars) {
                 String t = "";
                 String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);

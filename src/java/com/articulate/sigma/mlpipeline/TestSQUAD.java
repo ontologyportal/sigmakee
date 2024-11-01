@@ -8,8 +8,6 @@ import com.articulate.sigma.utils.StringUtil;
 import java.util.Collection;
 import java.util.List;
 
-import static com.articulate.sigma.utils.FileUtil.*;
-
 public class TestSQUAD {
 
     public static void main(String[] args) {
@@ -17,30 +15,35 @@ public class TestSQUAD {
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("KBmutilities.main(): completed init");
-        List<String> lines = readLines(args[0]);
+        List<String> lines = FileUtil.readLines(args[0]);
         int syntaxErrorCount = 0;
         int termErrorCount = 0;
         int typeErrorCount = 0;
         int correctCount = 0;
+        String resp;
+        KIF kif;
+        Formula f;
+        boolean termMissing, typeError;
+        Collection<String> terms;
         for (String s : lines) {
             if (!StringUtil.emptyString(s) && s.startsWith("Response: ")) {
-                String resp = s.substring(9);
+                resp = s.substring(9);
                 resp = resp.replace("</s>","");
-                KIF kif = new KIF();
+                kif = new KIF();
                 kif.parseStatement(resp);
-                if (kif.errorSet != null && kif.errorSet.size() > 0) {
-                    System.out.println("Errors: " + kif.errorSet);
+                if (kif.errorSet != null && !kif.errorSet.isEmpty()) {
+                    System.err.println("Errors: " + kif.errorSet);
                     syntaxErrorCount++;
                 }
                 else {
-                    Formula f = kif.formulaMap.values().iterator().next();
+                    f = kif.formulaMap.values().iterator().next();
                     System.out.println(f);
-                    if (f.errors.size() > 0)
-                        System.out.println("Errors: " + f.errors);
-                    Collection<String> terms = f.collectTerms();
-                    boolean termMissing = false;
+                    if (!f.errors.isEmpty())
+                        System.err.println("Errors: " + f.errors);
+                    terms = f.collectTerms();
+                    termMissing = false;
                     SUMOtoTFAform.errors.clear();
-                    boolean typeError = !KButilities.hasCorrectTypes(kb,f);
+                    typeError = !KButilities.hasCorrectTypes(kb,f);
                     for (String t : terms) {
                         if (!kb.containsTerm(t) && !t.startsWith("?") && !t.equals("You") &&
                                 !t.equals("Now") && !StringUtil.isNumeric(t) && !StringUtil.quoted(t)) {

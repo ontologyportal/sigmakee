@@ -12,6 +12,7 @@ import com.google.common.collect.*;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -132,14 +133,14 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         System.out.println("\n============= testMergeToMap1 ==================");
 //        Set<String> objectSet1 = Sets.newHashSet("Object", "CorpuscularObject");
 //        Set<String> humanSet1 = Sets.newHashSet("Man", "Woman");
-        HashMap<String, HashSet<String>> map1 = Maps.newHashMap();
+        Map<String, Set<String>> map1 = Maps.newHashMap();
         map1.put("?Obj", Sets.newHashSet("Object", "CorpuscularObject"));
         map1.put("?Hum", Sets.newHashSet("Man", "Woman"));
         map1.put("?Time", Sets.newHashSet("Month"));
 
 //        Set<String> objectSet2 = Sets.newHashSet("Object");
 //        Set<String> humanSet2 = Sets.newHashSet("Human");
-        HashMap<String, HashSet<String>> map2 = Maps.newHashMap();
+        Map<String, Set<String>> map2 = Maps.newHashMap();
         map2.put("?Obj", Sets.newHashSet("Object"));
         map2.put("?Hum", Sets.newHashSet("Human"));
 
@@ -148,7 +149,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         expectedMap.put("?Hum", Sets.newHashSet("Man", "Woman"));
         expectedMap.put("?Time", Sets.newHashSet("Month"));
 
-        HashMap<String, HashSet<String>> actualMap = KButilities.mergeToMap(map1, map2, SigmaTestBase.kb);
+        Map<String, Set<String>> actualMap = KButilities.mergeToMap(map1, map2, SigmaTestBase.kb);
 
         System.out.println("testMergeToMap1(): actual: " + actualMap);
         System.out.println("testMergeToMap1(): expected: " + expectedMap);
@@ -311,7 +312,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(strf);
         //FormulaPreprocessor.debug = true;
-        HashMap<String,HashSet<String>> actual = fp.findAllTypeRestrictions(f, kb);
+        Map<String,Set<String>> actual = fp.findAllTypeRestrictions(f, kb);
         String expected = "{?NUMBER1=[RealNumber], ?NUMBER2=[NonnegativeRealNumber]}";
         System.out.println("testAbsolute(): actual: " + actual);
         System.out.println("testAbsolute(): expected: " + expected);
@@ -435,15 +436,11 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         skbtfakb.initOnce();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new FileWriter(filename));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
             //skbtfakb.writeFile(filename, null, false, "", false, pw);
-            pw.flush();
-            pw.close();
         }
-        catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("\n============= testTVRPreprocess ==================");

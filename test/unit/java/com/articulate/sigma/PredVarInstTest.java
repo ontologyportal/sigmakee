@@ -5,7 +5,6 @@ package com.articulate.sigma;
 // Copyright 2019 Infosys, 2020- Articulate Software
 // apease@articulatesoftware.com
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.junit.Test;
 
@@ -305,11 +304,11 @@ public class PredVarInstTest extends UnitTestBase  {
         f.read(stmt);
         System.out.println("\n--------------------");
         System.out.println("PredVarInstTest.testTVRTypes(): formula: " + f);
-        HashMap<String,HashSet<String>> varTypes = PredVarInst.findPredVarTypes(f,kb);
+        Map<String,Set<String>> varTypes = PredVarInst.findPredVarTypes(f,kb);
         System.out.println("PredVarInstTest.testTVRTypes(): types from domains: " + varTypes);
         varTypes = PredVarInst.addExplicitTypes(kb,f,varTypes);
         System.out.println("PredVarInstTest.testTVRTypes(): with explicit types: " + varTypes);
-        HashSet<String> types = varTypes.get("?REL");
+        Set<String> types = varTypes.get("?REL");
         System.out.println("PredVarInstTest.testTVRTypes(): types: " + types);
         System.out.println("PredVarInstTest.testTVRTypes(): expected: TotalValuedRelation and Predicate");
         if (types.contains("TotalValuedRelation") && types.contains("Predicate"))

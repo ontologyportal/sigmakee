@@ -21,10 +21,10 @@ import com.articulate.sigma.utils.StringUtil;
 import java.util.*;
 
 public class PredVarInst {
-    
+
     // The implied arity of a predicate variable from its use in a Formula
     public static HashMap<String,Integer> predVarArity = new HashMap<String,Integer>();
-    
+
     // All predicates that meet that class membership and arity constraints for the given variable
     private static HashMap<String,HashSet<String>> candidatePredicates = new HashMap<String,HashSet<String>>();
 
@@ -61,17 +61,17 @@ public class PredVarInst {
      *
      * @return add explicit type condition into types
      */
-    protected static HashMap<String,HashSet<String>> addExplicitTypes(KB kb, Formula input, HashMap<String,HashSet<String>> types) {
-        
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+    protected static Map<String,Set<String>> addExplicitTypes(KB kb, Formula input, Map<String,Set<String>> types) {
+
+        Map<String,Set<String>> result = new HashMap<>();
         FormulaPreprocessor fp = new FormulaPreprocessor();
-    	HashMap<String,HashSet<String>> explicit = fp.findExplicitTypesInAntecedent(kb,input);
-        if (explicit == null || explicit.keySet() == null || explicit.keySet().size() == 0)
+    	Map<String,Set<String>> explicit = fp.findExplicitTypesInAntecedent(kb,input);
+        if (explicit == null || explicit.keySet() == null || explicit.keySet().isEmpty())
             return types;
-        Iterator<String> it = explicit.keySet().iterator();
-        while (it.hasNext()) {
-            String var = it.next();
-            HashSet<String> hs = new HashSet<String>();
+
+        Set<String> hs;
+        for (String var : explicit.keySet()) {
+            hs = new HashSet<>();
             if (types.containsKey(var)) { // only add keys from 'types' which contains all the pred vars
                 hs = types.get(var);
                 hs.addAll(explicit.get(var));
@@ -237,10 +237,10 @@ public class PredVarInst {
         if (debug) System.out.println("instantiatePredVars(): predVars: " + predVars);
         if (predVars == null )
             return null;
-        if (predVars.size() == 0)   // Return empty if input does not have predicate variables
+        if (predVars.isEmpty())   // Return empty if input does not have predicate variables
             return result;
         // 1. get types for predicate variables from domain definitions
-        HashMap<String,HashSet<String>> varTypes = findPredVarTypes(input,kb);
+        Map<String,Set<String>> varTypes = findPredVarTypes(input,kb);
         // 2. add explicitly defined types for predicate variables
         varTypes = addExplicitTypes(kb,input,varTypes);
         if (debug) System.out.println("instantiatePredVars(): types: " + varTypes);
@@ -309,7 +309,7 @@ public class PredVarInst {
         }
         return result;
     }
-     
+
     /** ***************************************************************
      * @return null if correct arity, otherwise return a message
      */
@@ -383,7 +383,7 @@ public class PredVarInst {
         }
         return null;
     }
-    
+
     /** ***************************************************************
      * If arity is correct, return null, otherwise, return the predicate
      * that has its arity violated in the given formula.
@@ -417,7 +417,7 @@ public class PredVarInst {
       * any possible arity of 1 - maxArity
      */
     protected static HashSet<String> gatherPredVarRecurse(KB kb, Formula f) {
-        
+
         HashSet<String> ans = new HashSet<String>();
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
         if (f == null || f.empty() || Formula.atom(f.getFormula()) || f.isVariable())
@@ -465,16 +465,16 @@ public class PredVarInst {
      * Formula, the HashMap will be empty.  Note that predicate variables
      * must logically be instances (of class Relation).
      */
-    protected static HashMap<String, HashSet<String>> findPredVarTypes(Formula f, KB kb) {
-        
+    protected static Map<String, Set<String>> findPredVarTypes(Formula f, KB kb) {
+
         HashSet<String> predVars = gatherPredVars(kb,f);
         if (debug) System.out.println("findPredVarTypes(): predVars: " + predVars);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         //HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);  // <- this skips explicit types
         //HashMap<String,HashSet<String>> typeMap = fp.findTypeRestrictions(f, kb);  // <- won't get instance relations
-        HashMap<String,HashSet<String>> typeMap = fp.findAllTypeRestrictions(f, kb);
+        Map<String,Set<String>> typeMap = fp.findAllTypeRestrictions(f, kb);
         if (debug) System.out.println("findPredVarTypes(): typeMap: " + typeMap);
-        HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
+        Map<String,Set<String>> result = new HashMap<>();
         for (String var : predVars) {
             if (typeMap.containsKey(var))
                 result.put(var, typeMap.get(var));
@@ -482,7 +482,7 @@ public class PredVarInst {
         if (debug) System.out.println("findPredVarTypes(): " + result);
         return result;
     }
-    
+
     /** ***************************************************************
      * Collect and return all predicate variables for the given formula
      */
@@ -505,7 +505,7 @@ public class PredVarInst {
      /** ***************************************************************
      */
     public static void arityTest() {
-        
+
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("INFO in PredVarInst.test(): completed loading KBs");
@@ -528,11 +528,11 @@ public class PredVarInst {
         System.out.println("INFO in PredVarInst.arityTest(): formula: " + f);
         System.out.println("INFO in PredVarInst.arityTest(): correct arity: " + hasCorrectArity(f,kb));
     }
-    
+
     /** ***************************************************************
      */
     public static void test() {
-        
+
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println("INFO in PredVarInst.test(): completed loading KBs");
@@ -557,7 +557,7 @@ public class PredVarInst {
         System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(kb,f));
         System.out.println("Instantiated: " + instantiatePredVars(f,kb));
         System.out.println();
-        
+
         formStr = "(=> " +
         "(instance ?JURY Jury) " +
         "(holdsRight " +
@@ -570,13 +570,13 @@ public class PredVarInst {
         System.out.println("Formula: " + f);
         System.out.println("Pred vars: " + gatherPredVars(kb,f));
         System.out.println("Instantiated: " + instantiatePredVars(f,kb));
-        
+
     }
-    
+
     /** ***************************************************************
      */
     public static void main(String[] args) {
-        
+
         //arityTest();
         test();
         /*
@@ -594,7 +594,7 @@ public class PredVarInst {
         	formStr = kb.formulas.get("ant-reflexiveOn").get(0);
         	f = kb.formulaMap.get(formStr);
          }
-         
+
          System.out.println(instantiatePredVars(f,kb));
          */
     }

@@ -37,11 +37,11 @@ August 9, Acapulco, Mexico.
     // Interior key of a 9-digit WordNet synset and value of and ArrayList of
     // non-English synset Strings
     public HashMap<String,HashMap<String,ArrayList<String>>> wordnets =
-            new HashMap<String,HashMap<String,ArrayList<String>>>();
+            new HashMap<>();
     public HashMap<String,HashMap<String,ArrayList<String>>> glosses =
-            new HashMap<String,HashMap<String,ArrayList<String>>>();
+            new HashMap<>();
     public HashMap<String,HashMap<String,ArrayList<String>>> examples =
-            new HashMap<String,HashMap<String,ArrayList<String>>>();
+            new HashMap<>();
 
     public static OMWordnet omw = new OMWordnet();
 
@@ -73,41 +73,33 @@ August 9, Acapulco, Mexico.
             FileWriter r = new FileWriter(f);
             PrintWriter pw = new PrintWriter(r);
             pw.println("# SUMO http://www.ontologyportal.org");
-            Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator();
-            while (it.hasNext()) {
-                String key = it.next();
+            for (String key : WordNet.wn.nounSUMOHash.keySet()) {
                 String SUMOterm = WordNet.wn.nounSUMOHash.get(key);
                 String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (SUMOterm.indexOf(" ") < 0)
+                if (!SUMOterm.contains(" "))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
-            it = WordNet.wn.verbSUMOHash.keySet().iterator();
-            while (it.hasNext()) {
-                String key = it.next();
+            for (String key : WordNet.wn.verbSUMOHash.keySet()) {
                 String SUMOterm = WordNet.wn.verbSUMOHash.get(key);
                 String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (SUMOterm.indexOf(" ") < 0)
+                if (!SUMOterm.contains(" "))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
-            it = WordNet.wn.adjectiveSUMOHash.keySet().iterator();
-            while (it.hasNext()) {
-                String key = it.next();
+            for (String key : WordNet.wn.adjectiveSUMOHash.keySet()) {
                 String SUMOterm = WordNet.wn.adjectiveSUMOHash.get(key);
                 String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (SUMOterm.indexOf(" ") < 0)
+                if (!SUMOterm.contains(" "))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
-            it = WordNet.wn.adverbSUMOHash.keySet().iterator();
-            while (it.hasNext()) {
-                String key = it.next();
+            for (String key : WordNet.wn.adverbSUMOHash.keySet()) {
                 String SUMOterm = WordNet.wn.adverbSUMOHash.get(key);
                 String mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (SUMOterm.indexOf(" ") < 0)
+                if (!SUMOterm.contains(" "))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
         }
         catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
             ioe.printStackTrace();
         }
     }
@@ -117,15 +109,15 @@ August 9, Acapulco, Mexico.
     private static void readOMWformat(String inputFileWithPath, String langName) {
 
         //System.out.println("INFO in WordNetUtilities.readOMWformat(): creating table entry for " + langName);
-        HashMap<String,ArrayList<String>> wordnet = new HashMap<String,ArrayList<String>>();
+        HashMap<String,ArrayList<String>> wordnet = new HashMap<>();
         OMWordnet.omw.wordnets.put(langName,wordnet);
-        HashMap<String,ArrayList<String>> gloss = new HashMap<String,ArrayList<String>>();
+        HashMap<String,ArrayList<String>> gloss = new HashMap<>();
         OMWordnet.omw.glosses.put(langName,gloss);
-        HashMap<String,ArrayList<String>> example = new HashMap<String,ArrayList<String>>();
+        HashMap<String,ArrayList<String>> example = new HashMap<>();
         OMWordnet.omw.examples.put(langName,example);
         File inputf = new File(inputFileWithPath);
         if (!inputf.exists()) return;
-        String line = "";
+        String line;
         //System.out.println("INFO in WordNetUtilities.readOMWformat(): read file " + inputFileWithPath);
         try {
             FileReader fr = new FileReader(inputf);
@@ -145,7 +137,7 @@ August 9, Acapulco, Mexico.
                             String value = line.substring(tab2index+1,end);
                             ArrayList<String> val = wordnet.get(id);
                             if (val == null)
-                                val = new ArrayList<String>();
+                                val = new ArrayList<>();
                             val.add(value);
                             wordnet.put(id,val);
                         }
@@ -154,7 +146,7 @@ August 9, Acapulco, Mexico.
                             String value = line.substring(tab2index+1,end);
                             ArrayList<String> val = gloss.get(id);
                             if (val == null)
-                                val = new ArrayList<String>();
+                                val = new ArrayList<>();
                             val.add(value);
                             gloss.put(id,val);
                         }
@@ -163,7 +155,7 @@ August 9, Acapulco, Mexico.
                             String value = line.substring(tab2index+1,end);
                             ArrayList<String> val = example.get(id);
                             if (val == null)
-                                val = new ArrayList<String>();
+                                val = new ArrayList<>();
                             val.add(value);
                             example.put(id,val);
                         }
@@ -172,14 +164,14 @@ August 9, Acapulco, Mexico.
             }
         }
         catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
             ioe.printStackTrace();
         }
     }
 
     /** *************************************************************
      */
-    public static ArrayList<String> lcodes = new ArrayList<String>(Arrays.asList(
+    public static ArrayList<String> lcodes = new ArrayList<>(Arrays.asList(
             "als","arb","bul",
             "cat","cow","dan",
             "ell","eng","eus",
@@ -190,7 +182,7 @@ August 9, Acapulco, Mexico.
             "nob","pol","por",
             "qcn","spa","swe",
             "tha","zsm"));
-    public static ArrayList<String> lnames = new ArrayList<String>(Arrays.asList(
+    public static ArrayList<String> lnames = new ArrayList<>(Arrays.asList(
             "AlbanianLanguage","ArabicLanguage","BulgarianLanguage",
             "CatalanLanguage","ChineseLanguage","DanishLanguage",
             "GreekLanguage","EnglishLanguage","BasqueLanguage",
@@ -256,6 +248,7 @@ August 9, Acapulco, Mexico.
     private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(false); //No need to pre-register the class
+        kryo.setReferences(true);
         return kryo;
     });
 
@@ -336,7 +329,7 @@ August 9, Acapulco, Mexico.
             System.out.println("OMWordnet.loadSerialized(): OMW has been deserialized ");
         }
         catch(Exception ex) {
-            System.out.println("Error in OMWordnet.loadSerialized()");
+            System.err.println("Error in OMWordnet.loadSerialized()");
             ex.printStackTrace();
         }
     }
@@ -358,7 +351,7 @@ August 9, Acapulco, Mexico.
             System.out.println("OMWordnet.serialize(): OMW has been serialized ");
         }
         catch(Exception ex) {
-            System.out.println("Error in OMWordNet.serialize(): IOException is caught");
+            System.err.println("Error in OMWordNet.serialize(): IOException is caught");
             ex.printStackTrace();
         }
     }
@@ -404,12 +397,11 @@ August 9, Acapulco, Mexico.
 
         String line;
         //System.out.println("INFO in WordNetUtilities.generateOMWformat(): writing file ");
-        try {
-            String kbDir = KBmanager.getMgr().getPref("kbDir");
-            File f = new File(kbDir + File.separator + "OMW" +
-                    File.separator + "OMW.owl");
-            FileWriter fw = new FileWriter(f);
-            PrintWriter pw = new PrintWriter(fw);
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
+        File f = new File(kbDir + File.separator + "OMW" +
+                File.separator + "OMW.owl");
+        try (FileWriter fw = new FileWriter(f);
+            PrintWriter pw = new PrintWriter(fw)) {
             pw.println("<rdf:RDF xml:base=\"http://www.ontologyportal.org/SUMO.owl\">");
             pw.println("<owl:Ontology rdf:about=\"http://www.ontologyportal.org/SUMO.owl\">");
             pw.println("<rdfs:comment xml:lang=\"en\">A provisional and necessarily lossy translation to OWL.  Please see");
@@ -421,7 +413,7 @@ August 9, Acapulco, Mexico.
             pw.println("<wnd:equivalenceRelation rdf:resource=\"http://www.ontologyportal.org/WNDefs.owl#WN30-100019613\"/>");
         }
         catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
             ioe.printStackTrace();
         }
     }
@@ -435,20 +427,24 @@ August 9, Acapulco, Mexico.
 
         //System.out.println("INFO in OMWordnet.formatWords(): " + term + " " + lang);
         HashMap<String,ArrayList<String>> wordnet = omw.wordnets.get(languageToCode(lang));
-        if (wordnet == null || wordnet.size() == 0)
+        if (wordnet == null || wordnet.isEmpty())
             return "";
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         ArrayList<String> synsets = WordNet.wn.SUMOHash.get(term);
         int limit = synsets.size();
         if (limit > 50)
             limit = 50;
+
+        String synset;
+        String OMWsynset;
+        ArrayList<String> words;
         for (int i = 0; i < limit; i++) {
-            String synset = synsets.get(i);
-            String OMWsynset = toOMWsynset(synset);
-            ArrayList<String> words = wordnet.get(OMWsynset);
+            synset = synsets.get(i);
+            OMWsynset = toOMWsynset(synset);
+            words = wordnet.get(OMWsynset);
             if (words != null) {
                 for (int j = 0; j < words.size(); j++) {
-                    result.append("<a href=\"" + href + "OMW.jsp?kb=" + kbName + "&synset=" + OMWsynset + "\">");
+                    result.append("<a href=\"").append(href).append("OMW.jsp?kb=").append(kbName).append("&synset=").append(OMWsynset).append("\">");
                     result.append(words.get(j));
                     result.append("</a>");
                     if (j < words.size() - 1)
@@ -468,7 +464,7 @@ August 9, Acapulco, Mexico.
     private static String formatArrayList(ArrayList<String> al) {
 
         if (al == null) return "";
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < al.size(); i++) {
             sb.append(al.get(i));
             if (i<al.size()-1) sb.append(", ");
@@ -480,13 +476,13 @@ August 9, Acapulco, Mexico.
      */
     public static String displaySynset(String kbName, String synset, String params) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("<table>");
-        String name = "";
-        String id = "";
-        ArrayList<String> words = null;
-        ArrayList<String> exams = null;
-        ArrayList<String> defs = null;
+        String name;
+        String id;
+        ArrayList<String> words;
+        ArrayList<String> exams;
+        ArrayList<String> defs;
         for (int i = 0; i < lnames.size(); i++) {
             name = lnames.get(i);
             id = lcodes.get(i);
@@ -494,14 +490,14 @@ August 9, Acapulco, Mexico.
             exams = omw.examples.get(id).get(synset);
             defs = omw.glosses.get(id).get(synset);
             if (words != null || exams != null || defs != null) {
-                sb.append("<tr><td><strong>" + name.substring(0,name.length()-8) + "</strong></td>\n");
+                sb.append("<tr><td><strong>").append(name.substring(0,name.length()-8)).append("</strong></td>\n");
                 sb.append("<td>");
                 if (words != null)
-                    sb.append(formatArrayList(words) + "<br>\n");
+                    sb.append(formatArrayList(words)).append("<br>\n");
                 if (defs != null)
-                    sb.append("<i>" + formatArrayList(defs) + "</i><br>\n");
+                    sb.append("<i>").append(formatArrayList(defs)).append("</i><br>\n");
                 if (exams != null)
-                    sb.append("<small>" + formatArrayList(exams) + "</small>\n");
+                    sb.append("<small>").append(formatArrayList(exams)).append("</small>\n");
                 sb.append("</td></tr>\n");
             }
         }
@@ -522,7 +518,7 @@ August 9, Acapulco, Mexico.
             generateOMWformat("wn-data-smo.tab");
         }
         catch (Exception e) {
-            System.out.println("Error in OMWordnet.main(): Exception: " + e.getMessage());
+            System.err.println("Error in OMWordnet.main(): Exception: " + e.getMessage());
             e.printStackTrace();
         }
 

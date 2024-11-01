@@ -65,7 +65,7 @@
     =================
     -->
 
-    <target name="run" depends="prep.main.config,compile" description="Performs a test run of SigmaKEE using default arguments">
+    <target name="run" depends="compile" description="Performs a test run of SigmaKEE using default arguments">
         <java classname="${main.class}"
               classpath="${run.classpath}"
               fork="true">
@@ -73,10 +73,11 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="run-selected-file-in-java" depends="prep.main.config,compile">
+    <target name="run-selected-file-in-java" depends="compile">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <java classname="${run.class}"
               classpathref="rcp"
@@ -84,7 +85,9 @@
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="SIGMA_SRC" value="${sigma_src}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <arg line="${run.args}"/>
         </java>
     </target>
     <target name="password.service" depends="compile" description="Performs account management services">
@@ -95,6 +98,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${pword.props}"/>
         </java>
     </target>
@@ -106,7 +110,7 @@
     -->
 
     <target name="test" depends="test.unit,test.integration"/>
-    <target name="test.unit" depends="thorough.clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+    <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -114,6 +118,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -124,7 +129,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="thorough.clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -132,6 +137,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -141,116 +147,104 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="run-selected-test-in-corpus" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="run-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="run-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="run-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="run-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
 
     <!--
@@ -334,7 +328,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="thorough.clean,prep.main.config,compile">
+    <target name="debug-nb" depends="clean,compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -346,10 +340,11 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="-c Object Transaction"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="thorough.clean,prep.main.config,compile">
+    <target name="debug-selected-file-in-java" depends="clean,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -362,7 +357,8 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
-            <arg line="-c Object Transaction"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <arg line="${run.args}"/>
         </java>
     </target>
     <target name="debug.password.service" depends="compile">
@@ -377,6 +373,7 @@
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${pword.props}"/>
         </java>
     </target>
@@ -387,109 +384,99 @@
     =====================
     -->
 
-    <target name="debug-selected-test-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="debug-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="debug-selected-test-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
     </target>
-    <target name="debug-single-test-method-in-integration" depends="thorough.clean,prep.integration.config,compile.test">
+    <target name="debug-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="debug-single-test-method-in-unit" depends="thorough.clean,prep.unit.config,compile.test">
+    <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
 
     <!--
@@ -498,7 +485,7 @@
     =====
     -->
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile" description="Prepare and distribute the sigma.war and ${app.name}.jar files and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
@@ -549,6 +536,7 @@
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
+            <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
         </delete>
         <delete file="${dist_war}"/>
         <delete includeemptydirs="true" failonerror="false">
@@ -569,10 +557,11 @@
             </fileset>
             <fileset dir="${basedir}">
                 <include name="*.owl"/>
+                <include name="*.tab"/>
             </fileset>
         </delete>
     </target>
-    <target name="all" depends="thorough.clean,dist">
+    <target name="all" depends="clean,dist">
         <echo message="System date/time is: ${TODAY_US}"/>
     </target>
 

@@ -49,9 +49,9 @@ public class LanguageFormatter {
     private static KB kb;
     private final String language;
 
-    private final Map<String, HashSet<String>> variableTypes;
+    private final Map<String, Set<String>> variableTypes;
 
-    private final Map<String, HashSet<String>> variableToInstanceMap;
+    private final Map<String, Set<String>> variableToInstanceMap;
 
     // Modifiable versions of variableTypes and variableToInstanceMap for informal NLG.
     private Map<String, Set<String>> variableTypesNLG;
@@ -148,7 +148,7 @@ public class LanguageFormatter {
 
         // variableTypes should map variables to the correct surface form of the SUMO term, but we want it to contain
         // only those terms not in variableToInstanceMapNLG
-        for (Map.Entry<String, HashSet<String>> entry : variableTypes.entrySet()) {
+        for (Map.Entry<String, Set<String>> entry : variableTypes.entrySet()) {
             variable = entry.getKey();
             if (! variableToInstanceMapNLG.containsKey(variable)) {
                 origInstances = entry.getValue();
@@ -202,7 +202,7 @@ public class LanguageFormatter {
                 //HashMap varMap = fp.computeVariableTypes(kb);
                 Map<String, Set<String>> instanceMap = new HashMap<>();
                 Map<String, Set<String>> classMap = new HashMap<>();
-                Map<String, HashSet<String>> types = fp.computeVariableTypes(f, kb);
+                Map<String, Set<String>> types = fp.computeVariableTypes(f, kb);
                 Iterator<String> it = types.keySet().iterator();
                 String var;
                 Set<String> typeList;

@@ -17,7 +17,7 @@ public class THFnew {
      */
     private static String processQuant(Formula f, String op,
                                        ArrayList<String> args,
-                                       HashMap<String, HashSet<String>> typeMap) {
+                                       Map<String, Set<String>> typeMap) {
 
         if (debug) System.out.println("THFnew.processQuant(): quantifier");
         if (debug) System.out.println("THFnew.processQuant(): typeMap: " + typeMap);
@@ -32,7 +32,7 @@ public class THFnew {
                 Formula varlist = new Formula(args.get(0));
                 ArrayList<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("THFnew.processRecurse(): valid vars: " + vars);
-                StringBuffer varStr = new StringBuffer();
+                StringBuilder varStr = new StringBuilder();
                 varStr.append(generateQList(f,typeMap,new HashSet(vars)));
                 if (debug) System.out.println("THFnew.processQuant(): valid vars: " + varStr);
                 String opStr = " ! ";
@@ -53,7 +53,7 @@ public class THFnew {
      */
     private static String processConjDisj(Formula f, Formula car,
                                           ArrayList<String> args,
-                                          HashMap<String, HashSet<String>> typeMap) {
+                                          Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
         if (args.size() < 2) {
@@ -63,10 +63,10 @@ public class THFnew {
         String tptpOp = "&";
         if (op.equals("or"))
             tptpOp = "|";
-        StringBuffer sb = new StringBuffer();
-        sb.append("(" + processRecurse(new Formula(args.get(0)),typeMap));
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(processRecurse(new Formula(args.get(0)),typeMap));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(" " + tptpOp + " " + processRecurse(new Formula(args.get(i)),typeMap));
+            sb.append(" ").append(tptpOp).append(" ").append(processRecurse(new Formula(args.get(i)),typeMap));
         }
         sb.append(")");
         return sb.toString();
@@ -75,7 +75,7 @@ public class THFnew {
     /** *************************************************************
      */
     public static String processLogOp(Formula f, Formula car, ArrayList<String> args,
-                                      HashMap<String, HashSet<String>> typeMap) {
+                                      Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
         if (debug) System.out.println("processLogOp(): op: " + op);
@@ -127,7 +127,7 @@ public class THFnew {
     /** *************************************************************
      */
     public static String processEquals(Formula f, Formula car, ArrayList<String> args,
-                                       HashMap<String, HashSet<String>> typeMap) {
+                                       Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
         if (args.size() != 2) {
@@ -144,7 +144,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String processRecurse(Formula f, HashMap<String, HashSet<String>> typeMap) {
+    public static String processRecurse(Formula f, Map<String, Set<String>> typeMap) {
 
         if (debug) System.out.println("THFnew.processRecurse(): " + f);
         if (debug) System.out.println("THFnew.processRecurse(): typeMap: " + typeMap);
@@ -173,7 +173,7 @@ public class THFnew {
             return processEquals(f,car,args,typeMap);
         else {
             if (debug) System.out.println("THFnew.processRecurse(): not math or comparison op: " + car);
-            StringBuffer argStr = new StringBuffer();
+            StringBuilder argStr = new StringBuilder();
             for (String s : args) {
                 if (car.getFormula().equals("instance")) {
                     int ttype = f.getFormula().charAt(0);
@@ -198,7 +198,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String getTHFtype(String v, HashMap<String, HashSet<String>> typeMap) {
+    public static String getTHFtype(String v, Map<String, Set<String>> typeMap) {
 
         if (debug) System.out.println("THFnew.getTHFtype(): typeMap: "  + typeMap);
         if (debug) System.out.println("THFnew.getTHFtype(): typeMap(v): " + v + ":" + typeMap.get(v));
@@ -215,11 +215,11 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String generateQList(Formula f, HashMap<String,
-            HashSet<String>> typeMap, HashSet<String> vars) {
+    public static String generateQList(Formula f, Map<String,
+            Set<String>> typeMap, Set<String> vars) {
 
         if (debug) System.out.println("THFnew.generateQList(): typeMap: " + typeMap);
-        StringBuffer qlist = new StringBuffer();
+        StringBuilder qlist = new StringBuilder();
         for (String s : vars) {
             String thftype = getTHFtype(s,typeMap);
             String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
@@ -234,7 +234,7 @@ public class THFnew {
      * This is the primary method of the class.  It takes a SUO-KIF
      * formula and returns a THF formula.
      */
-    public static String process(Formula f, HashMap<String, HashSet<String>> typeMap, boolean query) {
+    public static String process(Formula f, Map<String, Set<String>> typeMap, boolean query) {
 
         if (debug) System.out.println("THFnew.process(): typeMap: " + typeMap);
         if (f == null) {
@@ -327,7 +327,7 @@ public class THFnew {
             if (debug) System.out.println("THFnew.oneTrans(): processed: " + processed);
             if (debug) System.out.println("THFnew.oneTrans(): accreln sig: " + kb.kbCache.getSignature("accreln"));
             res.varTypeCache.clear(); // clear so it really computes the types instead of just returning the type cache
-            HashMap<String, HashSet<String>> typeMap = fp.findAllTypeRestrictions(res, kb);
+            Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(res, kb);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(1): " + typeMap);
             typeMap.putAll(res.varTypeCache);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
@@ -467,7 +467,7 @@ public class THFnew {
     public static String sigString(List<String> sig, KB kb, boolean function) {
 
         if (debug) System.out.println("sigString(): sig: " + sig);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         boolean first = false;
         String range = "";
         if (function)

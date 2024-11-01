@@ -28,17 +28,17 @@ public class Infrastructure {
 
     public static int funcIdCounter = 0;
 
-    public HashMap<String, HashSet<String>> relsForType = new HashMap<>();
+    public Map<String, Set<String>> relsForType = new HashMap<>();
 
     // exterior key of product type, interior key of relation, interior set of allowed values
     public HashMap<String, HashMap<String, HashSet<String>>> allowableValues = new HashMap<>();
 
     public HashMap<String,String> productTypes = new HashMap<>();  // id, name
-    public HashMap<String,HashSet<String>> productsByTypeNames = new HashMap<>();
+    public Map<String,Set<String>> productsByTypeNames = new HashMap<>();
 
     public HashMap<String,Product> products = new HashMap<>(); //id, product
     public HashMap<String,Category> categories = new HashMap<>(); //id, category
-    public HashMap<String, HashSet<String>> parents = new HashMap<>(); //parent name, list of categories
+    public Map<String, Set<String>> parents = new HashMap<>(); //parent name, list of categories
 
     /** *************************************************************
      */
@@ -407,7 +407,7 @@ public class Infrastructure {
             //System.out.println("(applicableRelation " + SUMO + " " + newR + ")");
             //System.out.println("(allowableValue " + SUMO + " " + newR + " \"" + attrib.get(r) + "\")");
             for (String ptype : relsForType.keySet()) {
-                HashSet<String> rels = relsForType.get(ptype);
+                Set<String> rels = relsForType.get(ptype);
                 for (String rel : rels) {
                     System.out.println("(applicableRelation " + StringUtil.stringToKIFid(ptype) + " " + StringUtil.stringToKIFid(rel) + ")");
                     PreparedStatement st = conn.prepareStatement("INSERT  INTO edges (rel, source, target) " +
@@ -565,7 +565,7 @@ public class Infrastructure {
 
     /** *************************************************************
      */
-    public HashSet<String> getAllowedRelations(String subCategory) {
+    public Set<String> getAllowedRelations(String subCategory) {
 
         if (StringUtil.emptyString(subCategory) )
             return null;

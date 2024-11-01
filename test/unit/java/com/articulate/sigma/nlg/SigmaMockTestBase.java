@@ -23,7 +23,7 @@ public class SigmaMockTestBase {
 
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     private static final String KB_PATH = (new File(SIGMA_HOME, "KBs")).getAbsolutePath();
-    private static HashMap<String, HashSet<String>> oldWordNetSynSetTable;
+    private static Map<String, Set<String>> oldWordNetSynSetTable;
 
     protected final KB kbMock = new KBMock("dummyString");
 
@@ -201,7 +201,7 @@ public class SigmaMockTestBase {
 
         NLGUtils.readKeywordMap(KB_PATH);
 
-        HashMap<String,HashSet<String>> hash = new HashMap<>();
+        Map<String,Set<String>> hash = new HashMap<>();
         hash.put("drink", null);
         hash.put("drive", null);
         hash.put("eat", null);
