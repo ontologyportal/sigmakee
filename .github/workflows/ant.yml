@@ -28,14 +28,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: 'ontologyportal/TPTP-ANTLR'
-#          repository: 'terry-norbraten/TPTP-ANTLR'
           path: TPTP-ANTLR
 
       - name: checkout SigmaUtils
         uses: actions/checkout@v4
         with:
           repository: 'ontologyportal/SigmaUtils'
-#          repository: 'terry-norbraten/SigmaUtils'
           path: SigmaUtils
 
       - name: checkout sumo
