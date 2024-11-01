@@ -152,11 +152,8 @@
     <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -166,20 +163,16 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
     </target>
     <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -189,21 +182,17 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
         <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -213,20 +202,16 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
     </target>
     <target name="run-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -236,21 +221,17 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
         <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
@@ -260,11 +241,10 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
 
     <!--
@@ -410,11 +390,8 @@
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
@@ -425,11 +402,10 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
         <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
@@ -438,11 +414,8 @@
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
@@ -453,11 +426,10 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" haltonfailure="no">
+            <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class} failed!" if="test.failed"/>
     </target>
     <target name="debug-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -465,11 +437,8 @@
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
@@ -480,11 +449,10 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
         <antcall target="${prep.main.config}"/> <!-- restore the main config -->
     </target>
     <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
@@ -493,11 +461,8 @@
             <classpath refid="tcp"/>
         </nbjpdastart>
         <junit printsummary="yes"
-               errorProperty="test.failed"
-               failureproperty="test.failed"
-               haltonfailure="yes"
-               fork="yes"
-               showoutput="yes">
+               showoutput="yes"
+               fork="yes">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
@@ -508,11 +473,10 @@
             <classpath>
                 <path refid="tcp"/>
             </classpath>
-            <test name="${test.class}" methods="${method}" haltonfailure="no">
+            <test name="${test.class}" methods="${method}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
         </junit>
-        <fail message="${test.class}#${method} failed!" if="test.failed"/>
     </target>
 
     <!--

@@ -5,9 +5,6 @@
 /target
 /examples/target
 
-# JUnit output
-/TEST*.xml
-
 # Emacs temp files
 *~
 
@@ -19,6 +16,5 @@
 lib
 /nbproject/private/
 /MANIFEST.MF
-/test.result.xml
 .DS_Store
 /file.bin
