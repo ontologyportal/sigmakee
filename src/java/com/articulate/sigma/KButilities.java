@@ -9,8 +9,8 @@ cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. see also 
-http://sigmakee.sourceforge.net 
+August 9, Acapulco, Mexico. see also
+http://sigmakee.sourceforge.net
 */
 
 /*************************************************************************************************/
@@ -50,16 +50,16 @@ public class KButilities {
     /** *************************************************************
      */
     public static boolean isRelation(KB kb, String term) {
-        
+
         return kb.isInstanceOf(term,"Relation");
     }
 
     /** *************************************************************
      */
     public static boolean isFunction(KB kb, String term) {
-        return kb.isInstanceOf(term,"Function");        
+        return kb.isInstanceOf(term,"Function");
     }
-    
+
     /** *************************************************************
      */
     public static boolean isAttribute(KB kb, String term) {
@@ -79,7 +79,7 @@ public class KButilities {
         SUMOtoTFAform.initOnce();
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
         if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
-        HashMap<String, HashSet<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
+        Map<String, Set<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
         KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         if (SUMOtoTFAform.inconsistentVarTypes()) {
@@ -137,7 +137,7 @@ public class KButilities {
 
         return kb.isInstanceOf(term,"Class");
     }
-    
+
     /** *************************************************************
      */
     public static boolean isInstance(KB kb, String term) {
@@ -260,10 +260,10 @@ public class KButilities {
     }
 
     /** *************************************************************
-     * Get all formulas that contain both terms. 
+     * Get all formulas that contain both terms.
      */
     public static ArrayList<Formula> termIntersection(KB kb, String term1, String term2) {
-  	
+
     	ArrayList<Formula> ant1 = kb.ask("ant",0,term1);
     	ArrayList<Formula> ant2 = kb.ask("ant",0,term2);
         ArrayList<Formula> cons1 = kb.ask("cons",0,term1);
@@ -365,7 +365,7 @@ public class KButilities {
         for (int i = 0; i < results.size(); i++) {
             Formula f = (Formula) results.get(i);
             String url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
-            if (!uRLexists(url)) 
+            if (!uRLexists(url))
                 System.out.println(f + " doesn't exist");
         }
     }
@@ -374,13 +374,13 @@ public class KButilities {
      */
     public static void validatePictureList() {
 
-        // (externalImage WaterVehicle "http://upload.wikimedia.org/wikipedia/commons/1/12/2003_LWGO_ubt.JPG") 
+        // (externalImage WaterVehicle "http://upload.wikimedia.org/wikipedia/commons/1/12/2003_LWGO_ubt.JPG")
         // http://commons.wikimedia.org/wiki/File:2003_LWGO_ubt.JPG
         // http://upload.wikimedia.org/wikipedia/commons/f/ff/Fishing_boat_ORL-3_Gdynia_Poland_2003_ubt.JPG
         // http://en.wikipedia.org/wiki/File:Reef.jpg
-        // (externalImage Reef "http://upload.wikimedia.org/wikipedia/en/3/33/Reef.jpg") 
+        // (externalImage Reef "http://upload.wikimedia.org/wikipedia/en/3/33/Reef.jpg")
         // http://upload.wikimedia.org/wikipedia/commons/3/33/Reef.jpg
-        // 
+        //
         URL u = null;
         String line = null;
 
@@ -396,7 +396,7 @@ public class KButilities {
                 if (m.matches()) {
                     String url = StringUtil.removeEnclosingQuotes(m.group(3));
                     //System.out.println("the url: " + url);
-                    if (!uRLexists(url)) 
+                    if (!uRLexists(url))
                         System.out.println(";; " + line);
                     else
                         System.out.println(line);
@@ -410,10 +410,10 @@ public class KButilities {
         }
         finally {
             try {
-                if (lr != null) 
-                    lr.close();            
-                if (fr != null) 
-                    fr.close(); 
+                if (lr != null)
+                    lr.close();
+                if (fr != null)
+                    fr.close();
             }
             catch (Exception ex) {
             }
@@ -584,10 +584,10 @@ public class KButilities {
                 Set<String> terms = f.collectTerms();
                 for (String term1 : terms) {
                     if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
-                        continue;                
+                        continue;
                     for (String term2 : terms) {
                         if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
-                            continue;  
+                            continue;
                         //resultSet.add("(link " + term1 + " " + term2 + ")");
                         if (!term1.equals(term2) && !StringUtil.isNumeric(term1) && !StringUtil.isNumeric(term2))
                             resultSet.add(term1 + " link " +  term2);
@@ -899,38 +899,38 @@ public class KButilities {
 
     /** *************************************************************
      */
-    public static void writeDisplayText(KB kb, String displayFormatPredicate, String displayTermPredicate, 
+    public static void writeDisplayText(KB kb, String displayFormatPredicate, String displayTermPredicate,
             String language, String fname) throws IOException {
-        
+
         PrintWriter pr = null;
         try {
-            pr = new PrintWriter(new FileWriter(fname, false));            
-            //get all formulas that have the display predicate as the predicate           
+            pr = new PrintWriter(new FileWriter(fname, false));
+            //get all formulas that have the display predicate as the predicate
             ArrayList<Formula> formats = kb.askWithRestriction(0, displayFormatPredicate, 1, language);
-            ArrayList<Formula> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);            
-            HashMap<String,String> termMap = new HashMap<String,String>();            
+            ArrayList<Formula> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);
+            HashMap<String,String> termMap = new HashMap<String,String>();
             for (int i = 0; i < terms.size(); i++) {
-                Formula term = terms.get(i);                
+                Formula term = terms.get(i);
                 String key = term.getStringArgument(2);
                 String value = term.getStringArgument(3);
-                if (key != "" && value != "") 
-                    termMap.put(key, value);                
-            }            
+                if (key != "" && value != "")
+                    termMap.put(key, value);
+            }
             for (int i = 0; i < formats.size(); i++) {
-                Formula format = formats.get(i);                
-                // This is the current predicate whose format we are keeping track of. 
+                Formula format = formats.get(i);
+                // This is the current predicate whose format we are keeping track of.
                 String key = format.getStringArgument(2);
                 String value = format.getStringArgument(3);
-                if (key != "" && value != "") {                
+                if (key != "" && value != "") {
                     // This basically gets all statements that use the current predicate in the 0 position
-                    ArrayList<Formula> predInstances = kb.ask("arg", 0, key);                    
+                    ArrayList<Formula> predInstances = kb.ask("arg", 0, key);
                     for(int j=0; j < predInstances.size(); j++) {
                         StringBuilder sb = new StringBuilder();
-                        String displayText = String.copyValueOf(value.toCharArray());                        
+                        String displayText = String.copyValueOf(value.toCharArray());
                         Formula f = predInstances.get(j);
                         ArrayList arguments = f.complexArgumentsToArrayList(0);
                         sb.append(key);
-                        sb.append(",");           
+                        sb.append(",");
                         // check if each of the arguments for the statements is to be replaced in its
                         // format statement.
                         for (int k = 1; k < arguments.size(); k++) {
@@ -938,24 +938,24 @@ public class KButilities {
                             String term = (String) termMap.get(argName);
                             term = StringUtil.removeEnclosingQuotes(term);
                             String argNum = "%" + String.valueOf(k);
-                        
+
                             // also, add the SUMO Concept that is replaced in the format
                             if (displayText.contains(argNum)) {
                                 sb.append(argName);
                                 sb.append(",");
-                                displayText = displayText.replace(argNum, term);                                
-                            }                                                                
-                        }                                             
-                        sb.append(displayText);                                               
+                                displayText = displayText.replace(argNum, term);
+                            }
+                        }
+                        sb.append(displayText);
                         // resulting line will be something like:
                         // <predicate>, <argument_0>, ..., <argument_n>, <display_text>
-                        // note: argument_0 to argument_n is only placed there if their 
+                        // note: argument_0 to argument_n is only placed there if their
                         // termFormat is used in the display_text.
-                        pr.println(sb.toString());                        
-                    }                    
+                        pr.println(sb.toString());
+                    }
                 }
-            }            
-            
+            }
+
         }
         catch (java.io.IOException e) {
             System.out.println(e.getMessage());
@@ -966,15 +966,15 @@ public class KButilities {
             e.printStackTrace();
         }
         finally {
-            if (pr != null) 
-                pr.close();            
+            if (pr != null)
+                pr.close();
         }
     }
 
     /** *************************************************************
      */
     public static void generateTPTPTestAssertions() {
-        
+
         try {
             int counter = 0;
             System.out.println("INFO in KB.generateTPTPTestAssertions()");
@@ -1000,20 +1000,20 @@ public class KButilities {
                         System.out.print("fof(local_" + counter++ + ",axiom,(s__" + term + "(s__Foo,s__Bar))).|");
                         System.out.print("fof(local_" + counter++ + ",axiom,(s__instance(s__Foo,s__" + argType1 + "))).|");
                         System.out.println("fof(local_" + counter++ + ",axiom,(s__instance(s__Bar,s__" + argType2 + "))).");
-                    }                    
+                    }
                 }
             }
-        } 
+        }
         catch (Exception e) {
             System.out.println(e.getMessage());
         }
     }
-    
+
     /** *************************************************************
      * Note this simply assumes that initial lower case terms are relations.
      */
     public static void generateRelationList() {
-        
+
         try {
             System.out.println("INFO in KB.generateRelationList()");
             KBmanager.getMgr().initializeOnce();
@@ -1075,12 +1075,12 @@ public class KButilities {
     }
 
     /** *************************************************************
-     *  Find all formulas in which the SUMO term is involved.  
+     *  Find all formulas in which the SUMO term is involved.
      */
     public static Set<Formula> getAllFormulasOfTerm(KB kb, String term) {
 
 		HashSet<Formula> result = new HashSet<>();
-		Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");		
+		Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");
 		for (String f : kb.formulaMap.keySet()){
 			Matcher matcher = pattern.matcher(f);
 			if (matcher.find()) {
@@ -1369,10 +1369,10 @@ public class KButilities {
      * of an HashSet of Strings.  Note that parent classes in the set of
      * classes will be removed
      */
-    public static HashMap<String, HashSet<String>> mergeToMap(HashMap<String, HashSet<String>> map1,
-                                                              HashMap<String, HashSet<String>> map2, KB kb) {
+    public static Map<String, Set<String>> mergeToMap(Map<String, Set<String>> map1,
+                                                              Map<String, Set<String>> map2, KB kb) {
 
-        HashMap<String, HashSet<String>> result = new HashMap<String,HashSet<String>>(map1);
+        Map<String, Set<String>> result = new HashMap<>(map1);
 
         for (String key : map2.keySet()) {
             Set<String> value = new HashSet<String>();

@@ -59,6 +59,7 @@ public class KBmanager implements Serializable {
                     "englishPCFG");
 
     protected static final String CONFIG_FILE = "config.xml";
+    protected static final String KB_MANAGER_SER = "kbmanager.ser";
 
     private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
 
@@ -217,6 +218,7 @@ public class KBmanager implements Serializable {
     private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
         kryo.setRegistrationRequired(false); //No need to pre-register the class
+        kryo.setReferences(true);
         return kryo;
     });
 
@@ -225,7 +227,7 @@ public class KBmanager implements Serializable {
     public static void encoder(Object object) {
 
         String kbDir = SIGMA_HOME + File.separator + "KBs";
-        Path path = Paths.get(kbDir, "kbmanager.ser");
+        Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Output output = new Output(Files.newOutputStream(path))) {
             kryoLocal.get().writeObject(output, object);
         }
@@ -240,7 +242,7 @@ public class KBmanager implements Serializable {
 
         KBmanager ob = null;
         String kbDir = SIGMA_HOME + File.separator + "KBs";
-        Path path = Paths.get(kbDir, "kbmanager.ser");
+        Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Input input = new Input(Files.newInputStream(path))) {
             ob = kryoLocal.get().readObject(input,KBmanager.class);
         }

@@ -570,17 +570,14 @@ public class WordNetUtilities {
      *  was found in the hashtable.
      */
     public static boolean substTest(String result, String match, String subst,
-                                    HashMap<String,HashSet<String>> hash) {
+                                    Map<String,Set<String>> hash) {
 
         Pattern p = Pattern.compile(match);
         Matcher m = p.matcher(result);
         if (m.find()) {
             result = m.replaceFirst(subst);
             //System.out.println("Info in WordNetUtilities.substTest(): replacement result: " + result);
-            if (hash.containsKey(result)) {
-                return true;
-            }
-            return false;
+            return hash.containsKey(result);
         }
         else
             return false;
@@ -590,10 +587,7 @@ public class WordNetUtilities {
      */
     private static boolean isVowel(char c) {
 
-        if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u')
-            return true;
-        else
-            return false;
+        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
     }
 
     /** ***************************************************************
@@ -1530,7 +1524,7 @@ public class WordNetUtilities {
      */
     private static void writeTPTPWordNetSynset(PrintWriter pw, String synset) {
 
-        //if (synset.startsWith("WN30-")) 
+        //if (synset.startsWith("WN30-"))
         //    synset = synset.substring(5);
         ArrayList<String> al = WordNet.wn.synsetsToWords.get(synset);
         if (al != null) {
@@ -1557,8 +1551,8 @@ public class WordNetUtilities {
               case '4': doc = (String) WordNet.wn.adverbDocumentationHash.get(synset.substring(1)); break;
             }
 
-            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30_" + 
-            //        synset + ",s__EnglishLanguage,\"" + StringUtil.escapeQuoteChars(doc) + "\")))."); 
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30_" +
+            //        synset + ",s__EnglishLanguage,\"" + StringUtil.escapeQuoteChars(doc) + "\"))).");
             ArrayList<AVPair> al2 = WordNet.wn.relations.get(synset);
             if (al2 != null) {
                 for (int i = 0; i < al2.size(); i++) {
@@ -1583,8 +1577,8 @@ public class WordNetUtilities {
                     StringUtil.StringToPrologID(singular) + ",s__Word))).\n");
             pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__singular(s__" +
                     StringUtil.StringToPrologID(singular) + ",s__" + StringUtil.StringToPrologID(plural) + "))).\n");
-            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
-            //        StringUtil.StringToPrologID(singular) + ",s__EnglishLanguage,\"'" + 
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" +
+            //        StringUtil.StringToPrologID(singular) + ",s__EnglishLanguage,\"'" +
             //        singular + "', is the singular form" +
             //           " of the irregular plural '" + plural + "'\"))).\n");
         }
@@ -1596,8 +1590,8 @@ public class WordNetUtilities {
                     StringUtil.StringToPrologID(infinitive) + ",s__Word))).\n");
             pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__past(s__" +
                     StringUtil.StringToPrologID(infinitive) + ",s__" + StringUtil.StringToPrologID(past) + "))).\n");
-            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
-            //        StringUtil.StringToPrologID(past) + ",s__EnglishLanguage,\"'" + 
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" +
+            //        StringUtil.StringToPrologID(past) + ",s__EnglishLanguage,\"'" +
             //        past + "', is the irregular past tense form" +
             //           " of the infinitive '" + infinitive + "'\"))).\n");
         }
@@ -1612,7 +1606,7 @@ public class WordNetUtilities {
         String wordOrPhrase = "word";
         if (word.indexOf("_") != -1)
             wordOrPhrase = "phrase";
-        //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30Word_" + 
+        //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__WN30Word_" +
         //        wordAsID + ",s__EnglishLanguage,\"The English " + wordOrPhrase + " '" + word + "'\"))).\n");
         ArrayList<String> senses = WordNet.wn.wordsToSenseKeys.get(word);
         if (senses != null) {
@@ -1647,8 +1641,8 @@ public class WordNetUtilities {
             String synset = StringUtil.StringToPrologID(WordNet.wn.senseIndex.get(sense));
             pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" +
                     StringUtil.StringToPrologID(sense) + ",s__WordSense))).\n");
-            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" + 
-            //        StringUtil.StringToPrologID(sense) + ",s__EnglishLanguage,\"The WordNet word sense '" + 
+            //pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__documentation(s__" +
+            //        StringUtil.StringToPrologID(sense) + ",s__EnglishLanguage,\"The WordNet word sense '" +
             //       sense + "'\"))).\n");
             String pos = WordNetUtilities.getPOSfromKey(sense);
             String word = WordNetUtilities.getWordFromKey(sense);
@@ -2582,11 +2576,11 @@ public class WordNetUtilities {
                                           HashSet<String> synwords) {
 
         System.out.println();
-        ArrayList<ArrayList<String>> lieversFile = readFileIntoArray(System.getenv("CORPORA") +
+        List<List<String>> lieversFile = readFileIntoArray(System.getenv("CORPORA") +
                 File.separator + "LieversLexiconList.txt");
         TreeSet<String> lievers = new TreeSet<>();
         TreeSet<String> lieversRoots = new TreeSet<>();
-        for (ArrayList<String> al : lieversFile) {
+        for (List<String> al : lieversFile) {
             lievers.addAll(al);
         }
         for (String s : lievers) {
