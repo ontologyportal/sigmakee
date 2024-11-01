@@ -9,9 +9,11 @@ import org.junit.runners.Parameterized;
 
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.ListIterator;
+import org.json.simple.parser.ParseException;
 
 import static org.junit.Assert.assertTrue;
 
@@ -46,7 +48,7 @@ public class FormulaUnificationTest extends UnitTestBase {
                 result.add(new Object[]{f1, f2});
             }
         }
-        catch (Exception e) {
+        catch (IOException | ParseException e) {
             e.printStackTrace();
         }
         return result;

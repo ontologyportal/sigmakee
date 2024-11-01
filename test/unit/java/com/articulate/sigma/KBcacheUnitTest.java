@@ -21,7 +21,6 @@ package com.articulate.sigma;
  TransitiveRelation
  Relation
  */
-import com.google.common.collect.Sets;
 import org.junit.Test;
 import org.junit.BeforeClass;
 
@@ -265,7 +264,7 @@ public class KBcacheUnitTest {
         HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
                 "var", "subclass", "rel", "CitizenryFn", "ResidentFn", "relsub",
                 "subrelation"));
-        HashSet<String> actual = kb.kbCache.getInstancesForType("Relation");
+        Set<String> actual = kb.kbCache.getInstancesForType("Relation");
         assertEquals(expected,actual);
     }
 
