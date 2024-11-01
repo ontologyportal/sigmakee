@@ -557,6 +557,7 @@
             </fileset>
             <fileset dir="${basedir}">
                 <include name="*.owl"/>
+                <include name="*.tab"/>
             </fileset>
         </delete>
     </target>
