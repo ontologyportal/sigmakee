@@ -119,7 +119,7 @@ README.txt below to set up accounts.  Please note however this is not working as
 
 To test run
 
-  java -Xmx10g -cp $SIGMA_CP \
+  java -Xmx10g -Xss1m -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 
 
