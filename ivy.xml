@@ -1,6 +1,6 @@
 <!--https://ant.apache.org/ivy/history/2.5.1/tutorial/conf.html-->
 <ivy-module version="2.0">
-    <info organisation="org.ontologyportal" module="sigmakee"/>
+    <info organisation="org.ontologyportal" module="SigmaKEE"/>
     <configurations>
         <conf name="api" description="Provide API"/>
         <conf name="test" extends="api" visibility="private" description="For testing our API"/>
