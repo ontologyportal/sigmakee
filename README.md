@@ -285,7 +285,7 @@ ant
 To test run
 
 ```sh
-java -Xmx10g -cp $SIGMA_CP \
+java -Xmx10g -Xss1m -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 ```
 
@@ -408,7 +408,7 @@ program, you'll need to set a path in config.xml, for example
 ## jUnit testing on the command line
 
 ```sh
-java -Xmx8g -cp $SIGMA_CP:\
+java -Xmx10g -Xss1m -cp $SIGMA_CP:\
   $SIGMA_SRC/build/test/classes \
   org.junit.runner.JUnitCore \
   com.articulate.sigma.UnitTestSuite
@@ -418,7 +418,7 @@ one test method at a time can be run with help from the SingleJUnitTestRunner cl
 for example
 
 ```sh
-java -Xmx4g -cp $SIGMA_CP:\
+java -Xmx10g -Xss1m -cp $SIGMA_CP:\
   $SIGMA_SRC/build/test/classes \
   com.articulate.sigma.SingleJUnitTestRunner \
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
@@ -454,7 +454,7 @@ pip3 install py4j
 Compile SigmaKEE then run with
 
 ```sh
-java -Xmx7g -cp $SIGMA_CP com.articulate.sigma.KBmanager -p
+java -Xmx10g -Xss1m -cp $SIGMA_CP com.articulate.sigma.KBmanager -p
 ```
 
 then start python
@@ -485,13 +485,13 @@ than just com.articulate.sigma.KB
 Create the account database with
 
 ```sh
-java -Xmx5G -cp $SIGMA_CP com.articulate.sigma.PasswordService -c
+java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -c
 ```
 
 Then create the administrator account and password
 
 ```sh
-java -Xmx5G -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
+java -Xmx4g -Xss1m -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
