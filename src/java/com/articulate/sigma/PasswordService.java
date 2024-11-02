@@ -6,8 +6,6 @@ other representations of any software which incorporates, builds on, or uses thi
 code.  */
 package com.articulate.sigma;
 
-//import org.h2.tools.Server;
-
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.UnsupportedEncodingException;
@@ -18,17 +16,22 @@ import java.sql.*;
 import java.util.*;
 import java.io.*;
 
+import static java.lang.System.exit;
+
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
-import static java.lang.System.exit;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
 
 /** *****************************************************************
  * A class that encrypts a string and checks it against another stored
  * encrypted string, in order to validate a user login.
  */
-public final class PasswordService {
+@WebListener
+public final class PasswordService implements ServletContextListener {
 
     private static PasswordService instance;
 
@@ -38,21 +41,43 @@ public final class PasswordService {
     public static final String INITIAL_ADMIN_USER = "sumo"; // <- initial user when creating DB
     public Connection conn = null; // <- for JSP
 
+    private static final String H2_DRIVER = "org.h2.Driver";
+
     /** *****************************************************************
      * Create an instance of PasswordService
      */
-    private PasswordService() {
+    public PasswordService() {
 
         System.out.println("PasswordService()");
         try {
-            Class.forName("org.h2.Driver"); // <- redundant for local invocation, but the JSPs need this
+            Class.forName(H2_DRIVER); // <- redundant for local invocation, but the JSPs need this
             conn = DriverManager.getConnection(JDBC_ACCESS_DB, INITIAL_ADMIN_USER, "");
-            System.out.println("init(): Opened DB via: " + JDBC_ACCESS_DB);
+            System.out.println("init(): Opened PASSWD DB via: " + JDBC_ACCESS_DB);
         }
         catch (ClassNotFoundException | SQLException e) {
             System.err.println("Error in PasswordService(): " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        System.out.println("Creating Sigma Context...");
+    }
+
+    // H2 shutdown guidance from: https://github.com/spring-projects/spring-boot/issues/21221
+    //                       and: https://stackoverflow.com/questions/9972372/what-is-the-proper-way-to-close-h2
+    // Fix for issue #35
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        System.out.println("Destroying Sigma Context...");
+        org.h2.Driver.unload();
+        System.out.println("Deregistering and shutting down: " + H2_DRIVER);
+
+        try (Statement stmt = conn.createStatement()) {
+            stmt.execute("SHUTDOWN");
+        }
+        catch (SQLException e) {}
     }
 
     /** *****************************************************************
@@ -442,7 +467,6 @@ public final class PasswordService {
                 if (ps != null && ps.conn != null)
                     ps.conn.close();
                 System.out.println("PasswordService.main(): Closed DB");
-                //Server.shutdownTcpServer(JDBCString,"", true, true);
             }
             catch(SQLException se){
                 se.printStackTrace();
