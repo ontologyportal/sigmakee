@@ -479,9 +479,6 @@ than just com.articulate.sigma.KB
 
 ## Account Management
 
-> **Warning**
-> Please note this is not working as of Apr, 2020.
-
 Create the account database with
 
 ```sh
