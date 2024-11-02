@@ -20,6 +20,8 @@
         <dependency org="com.servlets" name="cos" rev="09May2002" transitive="false" conf="api->default"/>
         <dependency org="edu.stanford.nlp" name="stanford-corenlp" rev="4.5.4" transitive="false" conf="api->default"/>
         <dependency org="javax.mail" name="mail" rev="1.4" transitive="false" conf="api->default"/>
+        <!-- https://mvnrepository.com/artifact/org.apache.tomcat/tomcat-servlet-api -->
+        <dependency org="org.apache.tomcat" name="tomcat-servlet-api" rev="9.0.96" transitive="false" conf="api->default"/>
         <dependency org="net.sf.py4j" name="py4j" rev="0.10.6" transitive="false" conf="api->default"/>
         <dependency org="org.antlr" name="antlr4-runtime" rev="4.9.3" transitive="false" conf="api->default"/>
         <dependency org="org.apache.commons" name="commons-lang3" rev="3.12.0" transitive="false" conf="api->default"/>
