@@ -161,7 +161,7 @@ handy to add stuff to .bashrc
 ```sh
 echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
 echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
-echo "export JAVA_HOME=/home/theuser/Programs/jdk-11.0.2" >> .bashrc
+echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
 ```
 
 load the definitions into your environment
@@ -366,7 +366,7 @@ Open up CMD prompt
     mkdir /home/theuser/Programs
     cd Programs
     sudo apt-get install openjdk-23-jdk
-    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/jre" >> .bashrc
+    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-23-openjdk-amd64/jre" >> .bashrc
 ```
 
 Follow Linux install instructions on:
