@@ -1,3 +1,7 @@
+# Notice
+
+2024 November 2 - We're making some improvements to clean up the configuration and code of Sigma and its associated projects. For existing installations, some changes are needed to stay in sync. OpenJDK is now supported, eliminating the dependency on Oracle JDK. Tomcat 9 is now required. A new environment variable SIGMA_CP is now required in your .bashrc (or similar for non-Linux). Please let us know if you have any issues!
+
 # Introduction
 
 Sigma is an integrated development environment for logical theories that
@@ -17,9 +21,7 @@ differ, then you may need to edit your config.xml manually. If you are running
 tomcat on vagrant or another VM, you may need to change the port value from 8080.
 If you are running on a server, rather than your localhost you'll need to set
 the hostname parameter in your config.xml file. E will only work if your $TMPDIR
-is set correctly.  No particular version of tomcat is required as long as it is
-under version 10 (preferably lastest Tomcat V9). If you load a different
-version of tomcat, be sure to change `$CATALINA_HOME` and your paths to
+is set correctly.  Tomcat V9 or later is required. Be sure to change `$CATALINA_HOME` and your paths to
 conform to the version. If you use a different mirror or version you'll need to
 change the wget commend below. Change "theuser" below to your user name.
 
