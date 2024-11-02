@@ -354,7 +354,7 @@ auxiliary.show.customizer.message=<message>
             </compilation-unit>
             <compilation-unit>
                 <package-root>src/java</package-root>
-                <classpath mode="compile">lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <classpath mode="compile">lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tomcat-servlet-api-9.0.96.jar:lib/tptp.jar</classpath>
                 <built-to>build/WEB-INF/classes</built-to>
                 <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>11</source-level>
