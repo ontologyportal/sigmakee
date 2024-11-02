@@ -89,7 +89,7 @@
     <property name="build.test.classes.dir" value="${build.home}/test/classes"/>
     <property name="dist.dir" value="dist"/>
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
-    <property name="dist.javadoc.dir" value="${dist.dir}/doc/api"/>
+    <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
     <property name="reports.dir" value="${build.home}/reports"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
@@ -367,8 +367,6 @@
     </target>
 
     <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
-        <delete dir="${dist.javadoc.dir}"/>
-        <mkdir dir="${dist.javadoc.dir}"/>
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
             <classpath path="${run.classpath}"/>
