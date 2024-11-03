@@ -34,19 +34,17 @@
   String status = "";
 
   if (role == null || !role.equalsIgnoreCase("admin")) {
-       response.sendRedirect("KBs.jsp");     
+       response.sendRedirect("KBs.jsp");
   }
   else {
       namespace = request.getParameter("namespace");
-      if (namespace == null) 
+      if (namespace == null)
           namespace = "";
       if (StringUtil.emptyString(kbName) || (KBmanager.getMgr().getKB(kbName) == null)) {
           System.out.println(" no such knowledge base " + kbName);
-          Set names = KBmanager.getMgr().getKBnames();
-          if (names != null && names.size() > 0) {
-              Iterator it = names.iterator();
-              if (it.hasNext()) {
-                  kbName = (String) it.next();
+          Set<String> names = KBmanager.getMgr().getKBnames();
+          if (names != null && !names.isEmpty()) {
+              for (String kbName : names) {
                   System.out.println("kbName == " + kbName);
               }
           }
@@ -59,16 +57,16 @@
       filename = request.getParameter("filename");
       action = request.getParameter("action");
       String writeOWL = request.getParameter("writeOWL");
-      
-      if (StringUtil.emptyString(action) || action.equalsIgnoreCase("null")) 
+
+      if (StringUtil.emptyString(action) || action.equalsIgnoreCase("null"))
           action = "";
-      if (writeOWL != null) 
+      if (writeOWL != null)
           OMWordnet.generateOMWOWLformat(kb);
       if (StringUtil.isNonEmptyString(action)) {
           if (kb != null) {
               if (action.equals("dotGraph")) {
                   Graph g = new Graph();
-                  g.createDotGraph(kb, term, relation, 2,2,filename);
+                  g.createDotGraph(kb, term, relation, 2, 2, 100, filename, "");
 
               }
           }
@@ -87,13 +85,13 @@
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
 
 <%
-               if (action.equalsIgnoreCase("generateDocs") 
+               if (action.equalsIgnoreCase("generateDocs")
                    || action.equalsIgnoreCase("generateSingle")) {
                    if (StringUtil.isNonEmptyString(status)) {
-                       if (!status.trim().startsWith("Error")) 
-                           out.println("HTML files have been written to " + status);                       
-                       else 
-                           out.println(status);                       
+                       if (!status.trim().startsWith("Error"))
+                           out.println("HTML files have been written to " + status);
+                       else
+                           out.println(status);
                        out.println("<br><br>");
                    }
                }
@@ -108,9 +106,9 @@
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
     <img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
-    
+
     Write OMW in OWL: <INPUT type="submit" NAME="writeOWL" VALUE="writeOWL">
-    
+
 </form><p>
 
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
