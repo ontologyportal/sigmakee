@@ -67,7 +67,7 @@ public final class PasswordService implements ServletContextListener {
 
     // H2 shutdown guidance from: https://github.com/spring-projects/spring-boot/issues/21221
     //                       and: https://stackoverflow.com/questions/9972372/what-is-the-proper-way-to-close-h2
-    // Fix for issue #35
+    // Fix for issue #135
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         System.out.println("Destroying Sigma Context...");
