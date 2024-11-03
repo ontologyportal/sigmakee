@@ -55,7 +55,12 @@
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
         <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
         <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <path refid="compile.classpath"/>
+            <fileset dir="${lib.dir}">
+                <include name="*.jar"/>
+                <exclude name="junit*"/>
+                <exclude name="hamcrest*"/>
+                <exclude name="tomcat-servlet-api*"/>
+            </fileset>
         </copy>
     </target>
 
@@ -548,6 +553,9 @@
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.tptp"/>
+                <include name="*.ser"/>
+            </fileset>
+            <fileset dir="${sigma_home}/KBs/WordNetMappings">
                 <include name="*.ser"/>
             </fileset>
         </delete>

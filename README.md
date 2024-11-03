@@ -21,9 +21,10 @@ differ, then you may need to edit your config.xml manually. If you are running
 tomcat on vagrant or another VM, you may need to change the port value from 8080.
 If you are running on a server, rather than your localhost you'll need to set
 the hostname parameter in your config.xml file. E will only work if your $TMPDIR
-is set correctly.  Tomcat V9 or later is required. Be sure to change `$CATALINA_HOME` and your paths to
-conform to the version. If you use a different mirror or version you'll need to
-change the wget commend below. Change "theuser" below to your user name.
+is set correctly.  Tomcat V9 is required. Later versions of Tomcat are not yet
+supported. Be sure to change `$CATALINA_HOME` and your paths to conform to the
+version. If you use a different mirror or version you'll need to change the wget
+commend below. Change "theuser" below to your user name.
 
 If your installation isn't working and you're getting funny "null"s in your paths
 try opening permissions on your `$SIGMA_HOME`, `$CATALINA_HOME` and `$SIGMA_SRC` directories.
@@ -163,7 +164,7 @@ handy to add stuff to .bashrc
 ```sh
 echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
 echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
-echo "export JAVA_HOME=/home/theuser/Programs/jdk-11.0.2" >> .bashrc
+echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
 ```
 
 load the definitions into your environment
@@ -272,7 +273,7 @@ sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=\"-Xmx10g\"" >> .bashrc
+echo "export CATALINA_OPTS=\"-Xmx10g -Xss1m\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
@@ -368,7 +369,7 @@ Open up CMD prompt
     mkdir /home/theuser/Programs
     cd Programs
     sudo apt-get install openjdk-23-jdk
-    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64/jre" >> .bashrc
+    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-23-openjdk-amd64/jre" >> .bashrc
 ```
 
 Follow Linux install instructions on:
@@ -481,9 +482,6 @@ than just com.articulate.sigma.KB
 
 ## Account Management
 
-> **Warning**
-> Please note this is not working as of Apr, 2020.
-
 Create the account database with
 
 ```sh
@@ -493,7 +491,7 @@ java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -c
 Then create the administrator account and password
 
 ```sh
-java -Xmx4g -Xss1m -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
+java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
 You can use Sigma without being administrator, but you'll have limited use of its functionality.

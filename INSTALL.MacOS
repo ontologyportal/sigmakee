@@ -1,7 +1,7 @@
 Running the SigmaKEE docker image on macOS
 ==========================================
 
-With homebrew:
+With Homebrew:
 brew install --cask docker <- will install the latest Docker Desktop for macOS
 
 then:
@@ -24,7 +24,7 @@ macOS install notes
   Homebrew.
 - java will be installed in /usr/libexec/java_home
 - get git from the xcode tools with "xcode-select --install”
-- instead of .bashrc edit .bash_profile
+- instead of ~/.bash_profile edit ~/.zshrc
 - install Homebrew from http://brew.sh and the packages:
 
 brew install make
@@ -33,14 +33,15 @@ brew install git
 brew install graphviz
 brew install ant
 
-Add the following lines in your .profile and make sure to have all
-these variables created before the next step, and replace /Users/user with your home directory:
+Add the following lines in your ~/.zshrc and make sure to have all
+these variables created before the next step, and replace
+/Users/user with your home directory:
 
   ## SUMO/SIGMAKEE
   export SIGMA_HOME=/Users/user/.sigmakee
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
-  export CATALINA_OPTS="-Xmx10g"
+  export CATALINA_OPTS="-Xmx10g -Xss1m"
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.96
   export PATH=$CATALINA_HOME/bin:$PATH
   export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*
@@ -56,11 +57,11 @@ You will need at least Java 11+ to compile SigmaKee and to run Apache Tomcat.
 
   /usr/libexec/java_home --verbose
 
-# Find your JDK (arm64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
+# Find your JDK (arm64 or x64) path and copy it (choose the one with the /JavaVirtualMachines/ instead of /Internet Plug-Ins/)
 
   export JAVA_HOME= 'path from before', then make sure "bin" is on our PATH
 
-  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-11.0.2.jdk/Contents/Home
+  export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
   export PATH=$JAVA_HOME/bin:$PATH
 
 cd ~
@@ -109,6 +110,9 @@ May have to precede the last command with "sudo"
 
 cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
 (SOS) edit the config.xml changing all `wrong paths` to the value of `$HOME` and adapting all variables)
+
+For Homebrew installations of GraphViz, change the path in config.xml for
+graphVizDir to: /usr/local/bin
 
 cd ~/workspace/sigmakee
 source ~/.zshrc or ~/.bash_profile

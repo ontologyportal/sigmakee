@@ -43,8 +43,8 @@ function setWidth(id) {
   // If the request parameter can appear more than once in the query string, get all values
   String[] values = request.getParameterValues("columns");
   //if (values != null) {
-  //    for (int i = 0; i < values.length; i++) 
-  //        System.out.println("  value[" + i + "] == " + values[i]);      
+  //    for (int i = 0; i < values.length; i++)
+  //        System.out.println("  value[" + i + "] == " + values[i]);
   //}
 
   Graph g = new Graph();
@@ -70,12 +70,12 @@ function setWidth(id) {
   String up = request.getParameter("up");
   if (up == null) up = "1";
   int upint = Integer.parseInt(up);
-  if (upint > 10) 
+  if (upint > 10)
       upint = 1;
   String down = request.getParameter("down");
   if (down == null) down = "1";
   int downint = Integer.parseInt(down);
-  if (downint > 10) 
+  if (downint > 10)
       downint = 1;
   int limitInt = 100;
   String limit = request.getParameter("limit");
@@ -83,7 +83,7 @@ function setWidth(id) {
       limitInt = Integer.parseInt(limit);
       if (limitInt > 100 || limitInt < 10)
           limitInt = 100;
-  } 
+  }
   catch (NumberFormatException nfe) {
       limit = "";
   }
@@ -97,7 +97,7 @@ function setWidth(id) {
       for (int i = 0; i < items.length; i++)
           g.columnList.put(items[i],"yes");
   }
-  
+
 %>
 
 <form action="Graph.jsp">
@@ -115,7 +115,7 @@ function setWidth(id) {
       <%
           /* Present the text layout (graph layout is in the else) */
           if (view.equals("text")) {
-              LinkedHashSet<String> result = null;
+              Set<String> result = null;
               boolean instBool = false;
               if (!StringUtil.emptyString(inst) && inst.equals("inst"))
                   instBool = true;
@@ -124,11 +124,11 @@ function setWidth(id) {
               else
                   result = g.createGraph(kb,term,relation,Integer.parseInt(up),
                                          Integer.parseInt(down),limitInt,instBool,language);
-              out.println("<table>\n");
+              out.println("<p><table>\n");
               for (String element : result) {
                   out.println(element);
               }
-              out.println("</table><P>\n");
+              out.println("</table></p>\n");
           }
           else { // it is a graph
               int width = 500;
@@ -139,30 +139,31 @@ function setWidth(id) {
               if (!StringUtil.emptyString(scrWidth))
                   width = Integer.parseInt(scrWidth);
               String edges = "";
-   			  String fname = null;
-   			  boolean graphAvailable = false;
-   			  
-   			  if (term != null && relation != null && kb != null && role.equalsIgnoreCase("admin")) {
-   			      fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
-   			      try {
-   			          if (!StringUtil.emptyString(all))
-   			              relation = "all";
-   			          System.out.println("Graph.jsp: creating graph with limitInt=" + limitInt +
-   			              " and fileRestrict=" + fileRestrict);
-   			          graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
-   			                                            Integer.parseInt(down),limitInt,fname,fileRestrict);
-   			      }
-   			      catch (Exception ex) {
-   			          graphAvailable = false;
-   			      }	  	  		
-   			  }
-   			  if (graphAvailable) {
-   			      out.println("<img width=" + width + " src='graph/" + fname + ".gif'></img><P>");
-   			  }
-   			  else {
-   			      out.println("<p><b>Error producing graph.</b></p>");
-   			      out.println(HTMLformatter.formatErrorsWarnings(g.errors,kb));
-   			  }
+              String fname = null;
+              boolean graphAvailable = false;
+
+              if (term != null && relation != null && kb != null && role.equalsIgnoreCase("admin")) {
+                  fname = "GRAPH_" + kbName + "-" + term + "-" + relation;
+                  try {
+                      if (!StringUtil.emptyString(all))
+                          relation = "all";
+                      System.out.println("Graph.jsp: creating graph with limitInt=" + limitInt +
+                          " and fileRestrict=" + fileRestrict);
+                      graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
+                                                        Integer.parseInt(down),limitInt,fname,fileRestrict);
+                      Thread.sleep(500); // give some time for the image to write to disc
+                  }
+                  catch (Exception ex) {
+                      graphAvailable = false;
+                  }
+              }
+              if (graphAvailable) {
+                  out.println("<img src='graph/" + fname + ".dot.png'/>");
+              }
+              else {
+                  out.println("<p><b>Error producing graph.</b></p>");
+                  out.println(HTMLformatter.formatErrorsWarnings(g.errors,kb));
+              }
           }
   %>
 
