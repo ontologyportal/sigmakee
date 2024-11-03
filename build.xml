@@ -337,15 +337,12 @@
             </fileset>
         </delete>
         <!-- Prune KB after integration tests -->
-        <delete includeemptydirs="true" failonerror="false">
+        <!--delete includeemptydirs="true" failonerror="false">
             <fileset dir="${sigma.home}/KBs">
                 <include name="*.tptp"/>
                 <include name="*.ser"/>
             </fileset>
-<!--            <fileset dir="${sigma.home}/KBs/WordNetMappings">
-                <include name="*.ser"/>
-            </fileset>-->
-        </delete>
+        </delete-->
     </target>
 
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">

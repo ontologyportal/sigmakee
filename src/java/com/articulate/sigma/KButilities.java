@@ -104,8 +104,8 @@ public class KButilities {
 
         SUMOtoTFAform.initOnce();
         String result = "";
+        KIF kif = new KIF();
         try {
-            KIF kif = new KIF();
             result = kif.parseStatement(form);
         }
         catch (Exception e) {
@@ -113,7 +113,8 @@ public class KButilities {
             result = "";
         }
         if (!StringUtil.emptyString(result)) {
-            System.out.println("isValidFormula(): Error: " + result);
+            errors.addAll(kif.errorSet);
+            if (debug) System.out.println("isValidFormula(): Error: " + result);
             return false;
         }
         Formula f = new Formula(form);
