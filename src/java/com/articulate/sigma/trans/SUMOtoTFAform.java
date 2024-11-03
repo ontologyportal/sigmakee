@@ -2124,7 +2124,7 @@ public class SUMOtoTFAform {
                         if (kb.kbCache.checkDisjoint(kb, c1, c2)) {
                             String msg = "SUMOtoTFAform.inconsistentVarTypes(): rejected inconsistent variable types: " +
                                     c1 + ", " + c2 + " for var " + s;
-                            System.out.println(msg);
+                            if (debug) System.out.println(msg);
                             errors.add(msg);
                             return true;
                         }
