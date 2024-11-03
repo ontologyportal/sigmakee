@@ -152,7 +152,7 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
-        <antcall target="prep.main.config"/> <!-- restore the main config -->
+        <antcall target="thorough.clean"/> <!-- restores the main config -->
     </target>
     <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -537,7 +537,7 @@
     <target name="prep.integration.config">
         <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
-    <target name="thorough.clean" depends="clean">
+    <target name="thorough.clean" depends="clean,prep.main.config">
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
