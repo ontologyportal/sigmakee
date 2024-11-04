@@ -2,7 +2,7 @@
          name="SigmaKEE" default="all" basedir=".">
     <description>
         This build file is meant to be invoked only from the command line. It's
-        purpose is for building/testing in CI environment
+        purpose is for building/testing in a CI/CD environment
     </description>
 
     <!--
