@@ -20,8 +20,9 @@ auxiliary.show.customizer.message=<message>
             </properties>
             <folders>
                 <source-folder>
-                    <label>${app.name}</label>
-                    <location>.</location>
+                    <label>Source Packages</label>
+                    <type>java</type>
+                    <location>src/java</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
@@ -40,12 +41,6 @@ auxiliary.show.customizer.message=<message>
                     <label>Test Unit</label>
                     <type>java</type>
                     <location>test/unit/java</location>
-                    <encoding>UTF-8</encoding>
-                </source-folder>
-                <source-folder>
-                    <label>Source Packages</label>
-                    <type>java</type>
-                    <location>src/java</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
             </folders>
@@ -297,6 +292,10 @@ auxiliary.show.customizer.message=<message>
             <view>
                 <items>
                     <source-folder style="packages">
+                        <label>Source Packages</label>
+                        <location>src/java</location>
+                    </source-folder>
+                    <source-folder style="packages">
                         <label>Test Corpus</label>
                         <location>test/corpus/java</location>
                     </source-folder>
@@ -307,10 +306,6 @@ auxiliary.show.customizer.message=<message>
                     <source-folder style="packages">
                         <label>Test Unit</label>
                         <location>test/unit/java</location>
-                    </source-folder>
-                    <source-folder style="packages">
-                        <label>Source Packages</label>
-                        <location>src/java</location>
                     </source-folder>
                     <source-file>
                         <location>${ant.script}</location>
