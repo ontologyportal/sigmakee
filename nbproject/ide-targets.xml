@@ -516,17 +516,17 @@
             <attribute name="Main-Class"
                        value="${main.class}"/>
         </manifest>
-        <jar destfile="${dist.jar}"
-             basedir="${build.classes.dir}"
-             manifest="${manifest.mf}">
-            <metainf file="${project.license}"/>
-        </jar>
         <war destfile="${dist.dir}/${web.app.name}.war"
              basedir="${build.home}"
              webxml="${web.dir}/web.xml"
              manifest="${manifest.mf}">
             <metainf file="${project.license}"/>
         </war>
+        <jar destfile="${dist.jar}"
+             basedir="${build.classes.dir}"
+             manifest="${manifest.mf}">
+            <metainf file="${project.license}"/>
+        </jar>
         <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
     </target>
 
