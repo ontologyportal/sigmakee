@@ -62,6 +62,11 @@ auxiliary.show.customizer.message=<message>
                     <script>${ant.script}</script>
                     <target>thorough.clean</target>
                 </action>
+                <action name="rebuild">
+                    <script>${ant.script}</script>
+                    <target>thorough.clean</target>
+                    <target>dist</target>
+                </action>
                 <action name="run">
                     <script>${ant.script}</script>
                     <target>run</target>
@@ -69,11 +74,6 @@ auxiliary.show.customizer.message=<message>
                 <action name="test">
                     <script>${ant.script}</script>
                     <target>test</target>
-                </action>
-                <action name="rebuild">
-                    <script>${ant.script}</script>
-                    <target>thorough.clean</target>
-                    <target>dist</target>
                 </action>
                 <action name="debug">
                     <script>${ant.script}</script>
@@ -332,6 +332,13 @@ auxiliary.show.customizer.message=<message>
         </general-data>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/5">
             <compilation-unit>
+                <package-root>src/java</package-root>
+                <classpath mode="compile">lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.7.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/tomcat-servlet-api-9.0.96.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
+                <built-to>build/WEB-INF/classes</built-to>
+                <javadoc-built-to>doc</javadoc-built-to>
+                <source-level>11</source-level>
+            </compilation-unit>
+            <compilation-unit>
                 <package-root>test/corpus/java</package-root>
                 <unit-tests/>
                 <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
@@ -350,13 +357,6 @@ auxiliary.show.customizer.message=<message>
                 <unit-tests/>
                 <classpath mode="compile">build/WEB-INF/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
                 <built-to>build/test/classes</built-to>
-                <source-level>11</source-level>
-            </compilation-unit>
-            <compilation-unit>
-                <package-root>src/java</package-root>
-                <classpath mode="compile">lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.7.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/tomcat-servlet-api-9.0.96.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
-                <built-to>build/WEB-INF/classes</built-to>
-                <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>11</source-level>
             </compilation-unit>
         </java-data>

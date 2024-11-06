@@ -153,7 +153,7 @@
         </tstamp>
     </target>
 
-    <target name="prepare" depends="init" description="Prepare for deploying code to sigma.war">
+    <target name="deploy_prepare" depends="init" description="Prepare for deploying code to sigma.war">
         <mkdir dir="${build.classes.dir}"/>
 
         <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
@@ -172,7 +172,7 @@
     ============
     -->
 
-    <target name="TPTP" depends="prepare">
+    <target name="TPTP" depends="deploy_prepare">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
@@ -368,7 +368,7 @@
     <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
-            <classpath path="${run.classpath}"/>
+            <classpath refed="compile.classpath"/>
             <doctitle>Sigma API Specification</doctitle>
             <header><![CDATA[<b>Sigma API Specification</b>]]></header>
             <group title="Sigma" packages="com.articulate.sigma.*"/>

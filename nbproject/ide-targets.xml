@@ -46,7 +46,7 @@
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
-    <target name="TPTP" depends="prepare">
+    <target name="TPTP" depends="deploy_prepare">
         <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
