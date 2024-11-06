@@ -91,7 +91,7 @@
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
-    <property name="reports.dir" value="${build.home}/reports"/>
+    <property name="reports.dir" value="${build.home}/test/results"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
     <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
     <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
