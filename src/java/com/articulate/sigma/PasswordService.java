@@ -73,11 +73,12 @@ public final class PasswordService implements ServletContextListener {
         System.out.println("Destroying Sigma Context...");
         org.h2.Driver.unload();
         System.out.println("Deregistering and shutting down: " + H2_DRIVER);
-
         try (Statement stmt = conn.createStatement()) {
             stmt.execute("SHUTDOWN");
         }
-        catch (SQLException e) {}
+        catch (SQLException e) {
+            System.err.println(H2_DRIVER + " shutdown issues: " + e.getLocalizedMessage());
+        }
     }
 
     /** *****************************************************************
