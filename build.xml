@@ -98,6 +98,9 @@
 
     <property environment="env"/>
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+    <property name="dist.home" value="${tomcat.home}/webapps"/>
+    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
+    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
     <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
     <property name="sigma.src" value="${git.home}/${app.name}"/>
     <property name="basedir" value="${sigma.src}"/>
@@ -106,9 +109,6 @@
     <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
     <property name="sigma.utils.home" value="../SigmaUtils"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
-    <property name="dist.home" value="${tomcat.home}/webapps"/>
-    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
-    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
 
     <property name="javac.release" value="11"/>
     <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
@@ -332,7 +332,7 @@
     <!-- Works only from the CLI -->
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${build.home}"/>  <!-- avoid problems with package name changes by deleting everything -->
+            <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
             <fileset dir="${dist.dir}"/>
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
@@ -365,7 +365,7 @@
         </copy>
     </target>
 
-    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
+    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
             <classpath refed="compile.classpath"/>
