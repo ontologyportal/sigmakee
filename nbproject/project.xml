@@ -146,7 +146,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="run.single.method">
                     <script>${ant.script}</script>
-                    <target>run-single-test-method-in-unit</target>
+                    <target>run-single-test-method-in-corpus</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/coprus/java</folder>
@@ -172,7 +172,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="run.single.method">
                     <script>${ant.script}</script>
-                    <target>run-single-test-method</target>
+                    <target>run-single-test-method-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/unit/java</folder>
