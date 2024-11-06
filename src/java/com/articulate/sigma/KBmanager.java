@@ -675,7 +675,7 @@ public class KBmanager implements Serializable {
                 else
                     writeConfiguration();
             }
-            try (BufferedReader br = new BufferedReader(new FileReader(configFile))) {
+            try (Reader br = new BufferedReader(new FileReader(configFile))) {
                 SimpleDOMParser sdp = new SimpleDOMParser();
                 configuration = sdp.parse(br);
             }
