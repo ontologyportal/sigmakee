@@ -152,7 +152,7 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
-        <antcall target="thorough.clean"/> <!-- restores the main config -->
+        <!-- Now, manually run thorough.clean to purge KBs/*.ser, KBs/*.tptp & restore the main config -->
     </target>
     <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -172,6 +172,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
