@@ -286,6 +286,9 @@
         <!--<antcall target="monitor.catalina.out"/>-->
     </target>
 
+    <!-- For debugging the running web app in the NB IDE, attach a debugger
+         with the running Tomcat PID found from the activity monitor. -->
+
     <available file="${catalina.out}" property="catalina.out.present"/>
     <target name="monitor.catalina.out" if="catalina.out.present">
         <exec executable="tail" dir="${catalina.logs.dir}">
