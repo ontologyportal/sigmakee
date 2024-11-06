@@ -10,7 +10,6 @@ import static org.junit.Assert.fail;
 /**
  * Base class for fast-running true unit tests.
  */
-
 public class UnitTestBase extends SigmaTestBase {
 
     private static final String SIGMA_SRC = System.getenv("SIGMA_SRC");
@@ -27,7 +26,7 @@ public class UnitTestBase extends SigmaTestBase {
     /***************************************************************
      * Write out a meaningful error message if the config file path is bad.
      * */
-    private static final BufferedReader xmlReader;
+    private static final Reader xmlReader;
 
     static  {
         xmlReader = SigmaTestBase.getXmlReader(CONFIG_FILE_PATH, CLASS);
