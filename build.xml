@@ -151,10 +151,11 @@
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
+
+        <mkdir dir="${build.classes.dir}"/>
     </target>
 
     <target name="deploy_prepare" depends="init" description="Prepare for deploying code to sigma.war">
-        <mkdir dir="${build.classes.dir}"/>
 
         <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
         <copy todir="${build.home}" overwrite="yes">
