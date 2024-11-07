@@ -550,7 +550,7 @@ javaapis.dir=${user.home}/javaapis\
 workspace=${javaapis.dir}/INSAFE
 
 \# The default installation space is: ~/workspace. However, it can be anywhere on\
-\# you system as long as you define the "workspace" key above.
+\# your system as long as you define the "workspace" key above.
 
 catalina.home=${path.to.your.tomcat9}
 
