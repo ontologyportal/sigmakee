@@ -542,7 +542,7 @@ https://sourceforge.net/p/sigmakee/wiki/required_data_files/
 Mac instructions - https://sourceforge.net/p/sigmakee/wiki/Sigma%20Setup%20on%20Mac/
 Ubuntu - https://sourceforge.net/p/sigmakee/wiki/Setting%20up%20Sigma%20on%20Ubuntu/
 
-## To build/run/debug using the NetBeans IDE
+## To build/run/debug/test using the NetBeans IDE
 Define a nbproject/private/private.properties file with these keys:
 
 \# private properties\
