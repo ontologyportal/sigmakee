@@ -542,6 +542,35 @@ https://sourceforge.net/p/sigmakee/wiki/required_data_files/
 Mac instructions - https://sourceforge.net/p/sigmakee/wiki/Sigma%20Setup%20on%20Mac/
 Ubuntu - https://sourceforge.net/p/sigmakee/wiki/Setting%20up%20Sigma%20on%20Ubuntu/
 
+## To build/run/debug using the NetBeans IDE
+Define a nbproject/private/private.properties file with these keys:
+
+\# private properties\
+javaapis.dir=${user.home}/javaapis\
+workspace=${javaapis.dir}/INSAFE
+
+\# The default installation space is: ~/workspace. However, it can be anywhere on\
+\# you system as long as you define the "workspace" key above.
+
+catalina.home=${path.to.your.tomcat9}
+
+private.resources.dir=nbproject/private/resources\
+main.config=${private.resources.dir}/config.xml\
+integration.config=${private.resources.dir}/config_topAndMid.xml\
+unit.config=${private.resources.dir}/config_topOnly.xml
+
+\# The above properties allow you to keep and restore the various forms of\
+\# config.xml that get overwritten when running Unit Tests. Copy these files\
+\# to the respective "resources" directory complete with your personal system\
+\# paths replacing the "/home/theuser/" pseudos. config.xml is found in the\
+\# base directory and the other two are found in test/*/resources directories
+
+\# JavaMail properties\
+user=${your.email.user.name}\
+my.email=${user}@${your.email.domain}\
+my.name=${your.name}
+
+
 ## User Interface
 
 There's not enough documentation on Sigma so I'm starting a bit here in preparation for a real
