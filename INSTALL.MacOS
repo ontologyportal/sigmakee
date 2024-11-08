@@ -41,7 +41,7 @@ these variables created before the next step, and replace
   export SIGMA_HOME=/Users/user/.sigmakee
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
-  export CATALINA_OPTS=$CATALINA_OPTS -Xmx10g -Xss1m
+  export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.96
   export PATH=$CATALINA_HOME/bin:$PATH
   export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*

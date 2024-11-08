@@ -26,7 +26,7 @@ echo "export PATH=$PATH:$JAVA_HOME/bin" >> ~/.bashrc && source ~/.bashrc
 #echo "export CATALINA_HOME=/usr/share/tomcat9" >> ~/.bashrc && source ~/.bashrc
 echo "export CATALINA_HOME=/var/lib/tomcat9" >> ~/.bashrc && source ~/.bashrc
 
-echo "export CATALINA_OPTS=$CATALINA_OPTS -Xmx10g -Xss1m" >> ~/.bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> ~/.bashrc
 
 source ~/.bashrc
 
