@@ -1620,7 +1620,9 @@ public class KBcache implements Serializable {
                 }
             }
         }
-        kif.parse(new StringReader(sb.toString()));
+        try (StringReader r = new StringReader(sb.toString())) {
+            kif.parse(r);
+        }
         if (KBmanager.getMgr().getPref("cache").equals("yes"))
             kb.addConstituentInfo(kif);
 

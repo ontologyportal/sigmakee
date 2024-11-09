@@ -20,8 +20,14 @@ auxiliary.show.customizer.message=<message>
             </properties>
             <folders>
                 <source-folder>
-                    <label>${app.name}</label>
+                    <label>SigmaKEE</label>
                     <location>.</location>
+                    <encoding>UTF-8</encoding>
+                </source-folder>
+                <source-folder>
+                    <label>Source Packages</label>
+                    <type>java</type>
+                    <location>src/java</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
                 <source-folder>
@@ -42,12 +48,6 @@ auxiliary.show.customizer.message=<message>
                     <location>test/unit/java</location>
                     <encoding>UTF-8</encoding>
                 </source-folder>
-                <source-folder>
-                    <label>Source Packages</label>
-                    <type>java</type>
-                    <location>src/java</location>
-                    <encoding>UTF-8</encoding>
-                </source-folder>
             </folders>
             <ide-actions>
                 <action name="build">
@@ -62,6 +62,11 @@ auxiliary.show.customizer.message=<message>
                     <script>${ant.script}</script>
                     <target>thorough.clean</target>
                 </action>
+                <action name="rebuild">
+                    <script>${ant.script}</script>
+                    <target>thorough.clean</target>
+                    <target>dist</target>
+                </action>
                 <action name="run">
                     <script>${ant.script}</script>
                     <target>run</target>
@@ -69,11 +74,6 @@ auxiliary.show.customizer.message=<message>
                 <action name="test">
                     <script>${ant.script}</script>
                     <target>test</target>
-                </action>
-                <action name="rebuild">
-                    <script>${ant.script}</script>
-                    <target>thorough.clean</target>
-                    <target>dist</target>
                 </action>
                 <action name="debug">
                     <script>${ant.script}</script>
@@ -146,7 +146,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="run.single.method">
                     <script>${ant.script}</script>
-                    <target>run-single-test-method-in-unit</target>
+                    <target>run-single-test-method-in-corpus</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/coprus/java</folder>
@@ -172,7 +172,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="run.single.method">
                     <script>${ant.script}</script>
-                    <target>run-single-test-method</target>
+                    <target>run-single-test-method-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/unit/java</folder>
@@ -185,7 +185,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.test.single">
                     <script>${ant.script}</script>
-                    <target>debug-selected-file-in-test</target>
+                    <target>debug-selected-file-in-corpus</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/corpus/java</folder>
@@ -224,7 +224,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.single.method">
                     <script>${ant.script}</script>
-                    <target>debug-single-test-method</target>
+                    <target>debug-single-test-method-in-corpus</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/corpus/java</folder>
@@ -237,7 +237,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.single.method">
                     <script>${ant.script}</script>
-                    <target>debug-single-test-method-in-unit</target>
+                    <target>debug-single-test-method-in-integration</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/integration/java</folder>
@@ -250,7 +250,7 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="debug.single.method">
                     <script>${ant.script}</script>
-                    <target>debug-single-test-method-in-integration</target>
+                    <target>debug-single-test-method-in-unit</target>
                     <context>
                         <property>test.class</property>
                         <folder>test/unit/java</folder>
@@ -297,6 +297,10 @@ auxiliary.show.customizer.message=<message>
             <view>
                 <items>
                     <source-folder style="packages">
+                        <label>Source Packages</label>
+                        <location>src/java</location>
+                    </source-folder>
+                    <source-folder style="packages">
                         <label>Test Corpus</label>
                         <location>test/corpus/java</location>
                     </source-folder>
@@ -307,10 +311,6 @@ auxiliary.show.customizer.message=<message>
                     <source-folder style="packages">
                         <label>Test Unit</label>
                         <location>test/unit/java</location>
-                    </source-folder>
-                    <source-folder style="packages">
-                        <label>Source Packages</label>
-                        <location>src/java</location>
                     </source-folder>
                     <source-file>
                         <location>${ant.script}</location>
@@ -332,31 +332,31 @@ auxiliary.show.customizer.message=<message>
         </general-data>
         <java-data xmlns="http://www.netbeans.org/ns/freeform-project-java/5">
             <compilation-unit>
+                <package-root>src/java</package-root>
+                <classpath mode="compile">lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.7.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/tomcat-servlet-api-9.0.96.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
+                <built-to>build/WEB-INF/classes</built-to>
+                <javadoc-built-to>doc</javadoc-built-to>
+                <source-level>11</source-level>
+            </compilation-unit>
+            <compilation-unit>
                 <package-root>test/corpus/java</package-root>
                 <unit-tests/>
-                <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/hamcrest-core-1.3.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
                 <built-to>build/test/classes</built-to>
                 <source-level>11</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>test/integration/java</package-root>
                 <unit-tests/>
-                <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/hamcrest-core-1.3.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <classpath mode="compile">build/WEB-INF/classes:build/test/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
                 <built-to>build/test/classes</built-to>
                 <source-level>11</source-level>
             </compilation-unit>
             <compilation-unit>
                 <package-root>test/unit/java</package-root>
                 <unit-tests/>
-                <classpath mode="compile">build/WEB-INF/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/hamcrest-core-1.3.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tptp.jar</classpath>
+                <classpath mode="compile">build/WEB-INF/classes:lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/junit-4.13.2.jar:lib/kryo-5.6.2.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.7.jar:lib/tptp.jar</classpath>
                 <built-to>build/test/classes</built-to>
-                <source-level>11</source-level>
-            </compilation-unit>
-            <compilation-unit>
-                <package-root>src/java</package-root>
-                <classpath mode="compile">lib/commons-lang3-3.12.0.jar:lib/cos-09May2002.jar:lib/guava-19.0.jar:lib/h2-2.3.232.jar:lib/java-prolog-parser-2.0.2.jar:lib/json-simple-1.1.1.jar:lib/kryo-5.6.2.jar:lib/mail-1.4.jar:lib/py4j-0.10.6.jar:lib/sigmaUtils.jar:lib/stanford-corenlp-4.5.4.jar:lib/tomcat-servlet-api-9.0.96.jar:lib/tptp.jar</classpath>
-                <built-to>build/WEB-INF/classes</built-to>
-                <javadoc-built-to>doc</javadoc-built-to>
                 <source-level>11</source-level>
             </compilation-unit>
         </java-data>

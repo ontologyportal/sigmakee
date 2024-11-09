@@ -10,18 +10,14 @@
  * Pease, A., (2003). The Sigma Ontology Development Environment,
  * in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  * August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforget.net
- * 
+ *
  * Authors:
  * Adam Pease
  * Infosys LTD.
  */
 package com.articulate.sigma;
 
-import com.articulate.sigma.tp.EProver;
-import com.articulate.sigma.tp.Vampire;
-import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
-import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
@@ -100,9 +96,9 @@ public class KIF {
 
         long size = getKIFFileSize(fname);
         if (size != 0) {
-            termFrequency = new HashMap<String, Integer>((int) size/25, (float) 0.75);
-            formulas = new HashMap<String, ArrayList<String>>((int) size/3, (float) 0.75);
-            formulaMap = new HashMap<String, Formula>((int) size/3, (float) 0.75);
+            termFrequency = new HashMap<>((int) size/25, (float) 0.75);
+            formulas = new HashMap<>((int) size/3, (float) 0.75);
+            formulaMap = new HashMap<>((int) size/3, (float) 0.75);
             //formulasOrdered = new TreeMap<Integer, Formula>((int) size/3, (float) 0.75);
         }
         filename = fname;
@@ -122,7 +118,7 @@ public class KIF {
             return f.length();
         }
         catch (Exception ex) {
-            System.out.println("KIF.getKIFFileSize(): error file " + ex.getMessage());
+            System.err.println("KIF.getKIFFileSize(): error file " + ex.getMessage());
             ex.printStackTrace();
         }
         return 0;
@@ -136,7 +132,7 @@ public class KIF {
         return this.parseMode;
     }
 
-    /***************************************************************** 
+    /*****************************************************************
      * Sets the current parse mode to the input value mode.
      *
      * @param mode
@@ -235,9 +231,11 @@ public class KIF {
             int argumentNum = -1;
             boolean inAntecedent = false;
             boolean inConsequent = false;
-            HashSet<String> keySet = new HashSet<String>();
+            HashSet<String> keySet = new HashSet<>();
             // int lineStart = 0;
             boolean isEOL = false;
+            ArrayList<String> list;
+            String key, fstr;
             do {
                 lastVal = st.ttype;
                 st.nextToken();
@@ -292,7 +290,7 @@ public class KIF {
                     parenLevel--;
                     expression.append(")");
                     if (parenLevel == 0) { // The end of the statement...
-                        String fstr = StringUtil.normalizeSpaceChars(expression.toString());
+                        fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.read(fstr.intern());
                         if (formulaMap.keySet().contains(f.getFormula()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
                             String warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
@@ -303,7 +301,7 @@ public class KIF {
                         }
                         if (mode == NORMAL_PARSE_MODE) { // Check arg validity ONLY in NORMAL_PARSE_MODE
                             String validArgs = f.validArgs((file != null ? file.getName() : null),
-                                    (file != null ? Integer.valueOf(f.startLine) : null));
+                                    (file != null ? f.startLine : null));
                             if (StringUtil.emptyString(validArgs))
                                 validArgs = f.badQuantification();
                             if (StringUtil.isNonEmptyString(validArgs)) {
@@ -316,12 +314,11 @@ public class KIF {
                         keySet.add(f.getFormula()); // Make the formula itself a key
                         keySet.add(f.createID());
                         f.endLine = st.lineno() + totalLinesForComments;
-                        Iterator<String> it = keySet.iterator();
-                        while (it.hasNext()) { // Add the expression but ...
-                            String fkey = it.next();
+                        for (String fkey : keySet) {
+                            // Add the expression but ...
                             if (formulas.containsKey(fkey)) {
                                 if (!formulaMap.keySet().contains(f.getFormula())) { // don't add keys if formula is already present
-                                    ArrayList<String> list = formulas.get(fkey);
+                                    list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.getFormula())) {
                                         System.out.println("Error in KIF.parse(): Storing empty formula from line: "
                                                 + f.startLine);
@@ -330,9 +327,8 @@ public class KIF {
                                     else if (!list.contains(f.getFormula()))
                                         list.add(f.getFormula());
                                 }
-                            }
-                            else {
-                                ArrayList<String> list = new ArrayList<String>();
+                            } else {
+                                list = new ArrayList<>();
                                 if (StringUtil.emptyString(f.getFormula())) {
                                     System.out.println(
                                             "Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
@@ -402,8 +398,8 @@ public class KIF {
                             termFrequency.put(st.sval, 0);
                         }
                         termFrequency.put(st.sval, termFrequency.get(st.sval) + 1);
-                        
-                        String key = createKey(st.sval, inAntecedent, inConsequent, argumentNum, parenLevel);
+
+                        key = createKey(st.sval, inAntecedent, inConsequent, argumentNum, parenLevel);
                         keySet.add(key); // Collect all the keys until the end of the statement is reached.
                     }
                 }
@@ -424,7 +420,7 @@ public class KIF {
                 throw new ParseException(errStr, f.startLine);
             }
         }
-        catch (Exception ex) {
+        catch (IOException | ParseException ex) {
             String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors depends on :
             warningSet.add("Warning in KIF.parse() " + message);
             ex.printStackTrace();
@@ -466,7 +462,7 @@ public class KIF {
         if (sval == null) {
             sval = "null";
         }
-        String key = new String("");
+        String key = "";
         if (inAntecedent) {
             key = key.concat("ant-");
             key = key.concat(sval);
@@ -498,19 +494,17 @@ public class KIF {
      */
     public void readFile(String fname) throws Exception {
 
-        FileReader fr = null;
         Exception exThr = null;
-        try {
-            this.file = new File(fname);
-            if (!this.file.exists()) {
-                String errString =  " error file " + fname + "does not exist";
-                KBmanager.getMgr()
-                        .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
-                System.out.println("Error in KIF.readFile(): " + errString);
-                return;
-            }
-            this.filename = file.getCanonicalPath();
-            fr = new FileReader(file);
+        this.file = new File(fname);
+        if (!this.file.exists()) {
+            String errString =  " error file " + fname + "does not exist";
+            KBmanager.getMgr()
+                    .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
+            System.out.println("Error in KIF.readFile(): " + errString);
+            return;
+        }
+        this.filename = file.getCanonicalPath();
+        try (FileReader fr = new FileReader(file)) {
             parse(new BufferedReader(fr));
         }
         catch (Exception ex) {
@@ -520,18 +514,8 @@ public class KIF {
             KBmanager.getMgr()
                     .setError(KBmanager.getMgr().getError() + "\n<br/>" + er + " in file " + fname + "\n<br/>");
         }
-        finally {
-            if (fr != null) {
-                try {
-                    fr.close();
-                }
-                catch (Exception ex2) {
-                }
-            }
-        }
         if (exThr != null)
             throw exThr;
-        return;
     }
 
     /****************************************************************
@@ -541,11 +525,8 @@ public class KIF {
      */
     public void writeFile(String fname) {
 
-        FileWriter fr = null;
-        PrintWriter pr = null;
-        try {
-            fr = new FileWriter(fname);
-            pr = new PrintWriter(fr);
+        try (FileWriter fr = new FileWriter(fname);
+            PrintWriter pr = new PrintWriter(fr)) {
             Iterator<Formula> it = formulaMap.values().iterator();
             while (it.hasNext())
                 pr.println(it.next().getFormula());
@@ -554,17 +535,6 @@ public class KIF {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
-        finally {
-            try {
-                if (pr != null)
-                    pr.close();
-                if (fr != null)
-                    fr.close();
-            }
-            catch (Exception ex2) {
-            }
-        }
-        return;
     }
 
     /*****************************************************************
@@ -584,9 +554,8 @@ public class KIF {
      */
     public String parseStatement(String formula) {
 
-        StringReader r = new StringReader(formula);
-        boolean isError = false;
-        try {
+        boolean isError;
+        try (StringReader r = new StringReader(formula)) {
             isError = !parse(r).isEmpty();
             if (isError) {
                 String msg = "Error parsing " + formula;
@@ -594,7 +563,7 @@ public class KIF {
             }
         }
         catch (Exception e) {
-            System.out.println("Error parsing " + formula);
+            System.err.println("Error parsing " + formula);
             e.printStackTrace();
             return e.getMessage();
         }
@@ -616,16 +585,14 @@ public class KIF {
             if (e1 instanceof ParseException)
                 msg = msg + (" in statement starting at line " + ((ParseException) e1).getErrorOffset());
         }
-        FileWriter fw = null;
-        PrintWriter pw = null;
         File outfile = new File(filename + ".tptp");
-        try {
-            fw = new FileWriter(outfile);
-            pw = new PrintWriter(fw);
+        try (FileWriter fw = new FileWriter(outfile);
+            PrintWriter pw = new PrintWriter(fw)) {
             Iterator<String> it = kifp.formulaMap.keySet().iterator();
+            String form;
             while (it.hasNext()) {
                 axiomCount++;
-                String form = it.next();
+                form = it.next();
                 form = SUMOformulaToTPTPformula.tptpParseSUOKIFString(form, false); // not
                 // a
                 // query
@@ -635,20 +602,8 @@ public class KIF {
             }
         }
         catch (Exception ex) {
-            System.out.println("Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage());
+            System.err.println("Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage());
             ex.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null)
-                    pw.close();
-                if (fw != null)
-                    fw.close();
-            }
-            catch (IOException ioe) {
-                ioe.printStackTrace();
-                System.out.println(ioe.getMessage());
-            }
         }
     }
 
@@ -661,8 +616,11 @@ public class KIF {
         String exp = "(documentation foo \"(written by John Smith).\")";
         System.out.println(exp);
         KIF kif = new KIF();
-        Reader r = new StringReader(exp);
-        kif.parse(r);
+        try (Reader r = new StringReader(exp)) {
+            kif.parse(r);
+        } catch (IOException ioe) {
+            System.err.println(ioe);
+        }
         System.out.println(kif.formulaMap);
         ArrayList<String> al = kif.formulas.get("arg-0-documentation");
         String fstr = al.get(0);
@@ -696,8 +654,9 @@ public class KIF {
         else {
             if (args != null && args.length > 1 && args[0].contains("p")) {
                 KIF kif = new KIF();
-                Reader r = new StringReader(args[1]);
-                kif.parse(r);
+                try (Reader r = new StringReader(args[1])) {
+                    kif.parse(r);
+                }
                 System.out.println("formulaMap: " + kif.formulaMap);
                 System.out.println("formulas: " + kif.formulas);
             }

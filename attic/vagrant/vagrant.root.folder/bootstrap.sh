@@ -3,7 +3,7 @@
 #install packages from apt
 apt update
 apt upgrade -y -qq
-apt install -y -qq tomcat8 ant git make gcc graphviz openjdk-8-jdk-headless glances
+apt install -y -qq tomcat9 ant git make gcc graphviz openjdk-23-jdk-headless glances
 apt clean -y -qq
 apt autoclean -y -qq
 
@@ -23,10 +23,10 @@ echo "export PATH=$PATH:$JAVA_HOME/bin" >> ~/.bashrc && source ~/.bashrc
 # in a different location. Instead of changing the ant build script, we can
 # change the CATALINA_HOME var for the user
 
-#echo "export CATALINA_HOME=/usr/share/tomcat8" >> ~/.bashrc && source ~/.bashrc
-echo "export CATALINA_HOME=/var/lib/tomcat8" >> ~/.bashrc && source ~/.bashrc
+#echo "export CATALINA_HOME=/usr/share/tomcat9" >> ~/.bashrc && source ~/.bashrc
+echo "export CATALINA_HOME=/var/lib/tomcat9" >> ~/.bashrc && source ~/.bashrc
 
-echo "export CATALINA_OPTS=\"-Xmx10g\"" >> ~/.bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> ~/.bashrc
 
 source ~/.bashrc
 

@@ -2,7 +2,7 @@
          name="SigmaKEE" default="all" basedir=".">
     <description>
         This build file is meant to be invoked only from the command line. It's
-        purpose is for building/testing in CI environment
+        purpose is for building/testing in a CI/CD environment
     </description>
 
     <!--
@@ -91,13 +91,16 @@
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
-    <property name="reports.dir" value="${build.home}/reports"/>
+    <property name="reports.dir" value="${build.home}/test/results"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
     <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
     <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
 
     <property environment="env"/>
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+    <property name="dist.home" value="${tomcat.home}/webapps"/>
+    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
+    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
     <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
     <property name="sigma.src" value="${git.home}/${app.name}"/>
     <property name="basedir" value="${sigma.src}"/>
@@ -106,12 +109,9 @@
     <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
     <property name="sigma.utils.home" value="../SigmaUtils"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
-    <property name="dist.home" value="${tomcat.home}/webapps"/>
-    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
-    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
 
     <property name="javac.release" value="11"/>
-    <property name="run.jvmargs" value="-Xmx10g"/>
+    <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
 
     <condition property="isUnixNotMac">
         <and>
@@ -153,7 +153,7 @@
         </tstamp>
     </target>
 
-    <target name="prepare" depends="init" description="Prepare for deploying code to sigma.war">
+    <target name="deploy_prepare" depends="init" description="Prepare for deploying code to sigma.war">
         <mkdir dir="${build.classes.dir}"/>
 
         <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
@@ -172,7 +172,7 @@
     ============
     -->
 
-    <target name="TPTP" depends="prepare">
+    <target name="TPTP" depends="deploy_prepare">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
@@ -263,6 +263,7 @@
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
+            <jvmarg line="${run.jvmargs}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="run.test.classpath"/>
@@ -287,6 +288,13 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
+        <!-- Prune KB after integration tests -->
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${sigma.home}/KBs">
+                <include name="*.tptp"/>
+                <include name="*.ser"/>
+            </fileset>
+        </delete>
     </target>
     <target name="junit.report" >
         <junitreport todir="${reports.dir}">
@@ -324,7 +332,7 @@
     <!-- Works only from the CLI -->
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${build.home}"/>  <!-- avoid problems with package name changes by deleting everything -->
+            <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
             <fileset dir="${dist.dir}"/>
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
@@ -336,13 +344,6 @@
                 <include name="*.jar"/>
             </fileset>
         </delete>
-        <!-- Prune KB after integration tests -->
-        <!-- delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${sigma.home}/KBs">
-                <include name="*.tptp"/>
-                <include name="*.ser"/>
-            </fileset>
-        </delete -->
     </target>
 
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
@@ -364,10 +365,10 @@
         </copy>
     </target>
 
-    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
+    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
-            <classpath path="${run.classpath}"/>
+            <classpath refed="compile.classpath"/>
             <doctitle>Sigma API Specification</doctitle>
             <header><![CDATA[<b>Sigma API Specification</b>]]></header>
             <group title="Sigma" packages="com.articulate.sigma.*"/>

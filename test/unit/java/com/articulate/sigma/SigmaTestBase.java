@@ -19,7 +19,7 @@ public class SigmaTestBase {
      * Performs the KB load.
      * @param reader
      */
-    protected static void doSetUp(BufferedReader reader) {
+    protected static void doSetUp(Reader reader) {
 
         SimpleElement configuration = null;
         if (!KBmanager.initialized) {
