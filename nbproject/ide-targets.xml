@@ -546,17 +546,13 @@
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
             <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
-        </delete>
-        <delete file="${dist_war}"/>
-        <delete includeemptydirs="true" failonerror="false">
+            <!-- JUnit generated products -->
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>
                 <include name="*.owl"/>
                 <include name="*.tab"/>
             </fileset>
-        </delete>
-        <!-- Prune KB after integration tests -->
-        <delete includeemptydirs="true" failonerror="false">
+            <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.tptp"/>
                 <include name="*.ser"/>
@@ -565,6 +561,7 @@
                 <include name="*.ser"/>
             </fileset>
         </delete>
+        <delete file="${dist_war}"/>
         <antcall target="delete.catalina.logs"/>
     </target>
     <target name="delete.catalina.logs" depends="init">
