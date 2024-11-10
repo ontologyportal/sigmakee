@@ -337,13 +337,12 @@
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
-        </delete>
-        <delete file="${dist.war}"/>
-        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <!-- Prune out of date dependencies -->
             <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
             </fileset>
         </delete>
+        <delete file="${dist.war}"/>
     </target>
 
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
