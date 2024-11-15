@@ -22,6 +22,12 @@ update CATALINA_HOME in your ~/.bashrc file
 ```
 CATALINA_HOME=~/Programs/apache-tomcat-9.0.96
 ```
+Recompile sigmakee
+
+```
+cd ~/workspace/sigmakee/
+ant
+```
 
 # Introduction
 
