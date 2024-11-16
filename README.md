@@ -2,6 +2,33 @@
 
 2024 November 2 - We're making some improvements to clean up the configuration and code of Sigma and its associated projects. For existing installations, some changes are needed to stay in sync. OpenJDK is now supported, eliminating the dependency on Oracle JDK. Tomcat 9 is now required. A new environment variable SIGMA_CP is now required in your .bashrc (or similar for non-Linux). Please let us know if you have any issues!
 
+To upgrade to Tomcat 9 and add the SIGMA_CP:
+
+```sh
+cd ~
+echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
+cd Programs
+rm -r apache-tomcat-8.5.23/
+wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip'
+unzip apache-tomcat-9.0.96.zip
+rm apache-tomcat-9.0.96.zip
+cd ~/Programs/apache-tomcat-9.0.96/bin
+chmod 777 *
+cd ../webapps
+chmod 777 *
+```
+
+update CATALINA_HOME in your ~/.bashrc file
+```
+CATALINA_HOME=~/Programs/apache-tomcat-9.0.96
+```
+Recompile sigmakee
+
+```
+cd ~/workspace/sigmakee/
+ant
+```
+
 # Introduction
 
 Sigma is an integrated development environment for logical theories that
