@@ -48,7 +48,8 @@ these variables created before the next step, and replace
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
-You will need at least Java 11+ to compile SigmaKee and to run Apache Tomcat.
+You will need at least Java 11+ (avoid JDK 17) to compile SigmaKee and to run
+Apache Tomcat.
 
 ! For ARM processors download it from here: https://jdk.java.net/archive/
     Scroll down to 23 GA (build 23+37)
