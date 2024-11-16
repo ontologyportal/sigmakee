@@ -135,6 +135,10 @@
     </path>
 
     <target name="init" depends="init-ivy">
+        <available property="jdk11+" classname="java.net.http.HttpClient"/>
+        <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 11 or greater, but avoid JDK 17."
+              unless="jdk11+">
+        </fail>
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
         <echo message="Specification Vendor:     ${spec.vendor}"/>
         <echo message=""/>
