@@ -177,9 +177,41 @@ make sure you're running bash (and answer /bin/bash)
 ```sh
 chsh
 ```
-install unzip
+
+Install unzip
 ```sh
 sudo apt-get install unzip
+sudo apt-get update
+```
+
+Install git
+```sh
+sudo apt-get install git
+```
+
+Install ant
+```sh
+sudo apt-get install ant
+```
+
+Install make
+```sh
+sudo apt-get install make
+```
+
+Install gcc
+```sh
+sudo apt-get install gcc
+```
+
+Install graphViz
+```sh
+sudo apt-get install graphviz
+```
+
+Update apt-get
+```sh
+sudo add-apt-repository universe
 sudo apt-get update
 ```
 
@@ -209,6 +241,9 @@ source .bashrc
 mkdir /home/theuser/Programs
 cd Programs
 ```
+
+Install a Java Development Kit (JDK), at least version 11 or greater.
+** Avoid JDK 17 **
 
 The following command line version may work but you may need to update the name of the jdk zipfile
 
@@ -272,7 +307,6 @@ chmod 777 *
 cd ../webapps
 chmod 777 *
 cd ~/workspace/
-sudo apt-get install git
 git clone https://github.com/ontologyportal/sigmakee
 git clone https://github.com/ontologyportal/sumo
 git clone https://github.com/ontologyportal/TPTP-ANTLR
@@ -290,13 +324,10 @@ gunzip WordNet-3.0.tar.gz
 tar -xvf WordNet-3.0.tar
 cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
 cd ~/Programs/E
-sudo apt-get install make
-sudo apt-get install gcc
 ./configure
 make
 make install
 cd ~
-sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
@@ -306,9 +337,6 @@ echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
-sudo add-apt-repository universe
-sudo apt-get update
-sudo apt-get install ant
 ant
 ```
 
