@@ -7,9 +7,6 @@ import com.articulate.sigma.KBmanager;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-
 import static junit.framework.TestCase.assertTrue;
 
 //This software is released under the GNU Public License

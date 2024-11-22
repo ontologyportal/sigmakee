@@ -2,7 +2,7 @@
          name="SigmaKEE" default="all" basedir=".">
     <description>
         This build file is meant to be invoked only from the command line. It's
-        purpose is for building/testing in CI environment
+        purpose is for building/testing in a CI/CD environment
     </description>
 
     <!--
@@ -91,13 +91,16 @@
     <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
-    <property name="reports.dir" value="${build.home}/reports"/>
+    <property name="reports.dir" value="${build.home}/test/results"/>
     <property name="unit.test.suite" value="com.articulate.sigma.UnitTestSuite"/>
     <property name="integration.test.suite" value="com.articulate.sigma.IntegrationTestSuite"/>
     <property name="report.html" value="file:${basedir}/${reports.dir}/html/index.html"/>
 
     <property environment="env"/>
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
+    <property name="dist.home" value="${tomcat.home}/webapps"/>
+    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
+    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
     <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
     <property name="sigma.src" value="${git.home}/${app.name}"/>
     <property name="basedir" value="${sigma.src}"/>
@@ -106,12 +109,9 @@
     <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
     <property name="sigma.utils.home" value="../SigmaUtils"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
-    <property name="dist.home" value="${tomcat.home}/webapps"/>
-    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
-    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
 
     <property name="javac.release" value="11"/>
-    <property name="run.jvmargs" value="-Xmx10g"/>
+    <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
 
     <condition property="isUnixNotMac">
         <and>
@@ -135,6 +135,10 @@
     </path>
 
     <target name="init" depends="init-ivy">
+        <available property="jdk11+" classname="java.net.http.HttpClient"/>
+        <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 11 or greater, but avoid JDK 17."
+              unless="jdk11+">
+        </fail>
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
         <echo message="Specification Vendor:     ${spec.vendor}"/>
         <echo message=""/>
@@ -153,7 +157,7 @@
         </tstamp>
     </target>
 
-    <target name="prepare" depends="init" description="Prepare for deploying code to sigma.war">
+    <target name="deploy_prepare" depends="init" description="Prepare for deploying code to sigma.war">
         <mkdir dir="${build.classes.dir}"/>
 
         <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
@@ -172,7 +176,7 @@
     ============
     -->
 
-    <target name="TPTP" depends="prepare">
+    <target name="TPTP" depends="deploy_prepare">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
@@ -263,6 +267,7 @@
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
+            <jvmarg line="${run.jvmargs}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="run.test.classpath"/>
@@ -287,6 +292,13 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
+        <!-- Prune KB after integration tests -->
+        <delete includeemptydirs="true" failonerror="false">
+            <fileset dir="${sigma.home}/KBs">
+                <include name="*.tptp"/>
+                <include name="*.ser"/>
+            </fileset>
+        </delete>
     </target>
     <target name="junit.report" >
         <junitreport todir="${reports.dir}">
@@ -306,6 +318,7 @@
     </target>
     <target name="report.unix" if="isUnixNotMac">
         <exec executable="sh" osfamily="unix">
+            <arg value="-c"/>
             <arg value="xdg-open ${report.html}"/>
         </exec>
     </target>
@@ -324,50 +337,143 @@
     <!-- Works only from the CLI -->
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${build.home}"/>  <!-- avoid problems with package name changes by deleting everything -->
+            <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
             <fileset dir="${dist.dir}"/>
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
-        </delete>
-        <delete file="${dist.war}"/>
-        <delete includeemptydirs="true" failonerror="false"> <!-- keep local ivy lib up to date -->
+            <!-- Prune out of date dependencies -->
             <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
             </fileset>
         </delete>
-        <!-- Prune KB after integration tests -->
-        <!-- delete includeemptydirs="true" failonerror="false">
-            <fileset dir="${sigma.home}/KBs">
-                <include name="*.tptp"/>
-                <include name="*.ser"/>
-            </fileset>
-        </delete -->
+        <delete file="${dist.war}"/>
     </target>
 
+    <!-- At this point we will assume you have already complied with the
+         README.md under the heading "System preparation on Linux." This task
+         will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
-        <fail message="SIGMA_HOME needs to be set" unless="sigma.home"/>
-        <copy todir="${sigma.home}/KBs">
-            <fileset dir="${kbs.home}"/>
+        <!-- Define the sigma user spaces -->
+        <property name="workspace.dir" value="${user.home}/workspace"/>
+        <property name="programs.dir" value="${user.home}/Programs"/>
+        <mkdir dir="${workspace.dir}"/>
+        <mkdir dir="${programs.dir}"/>
+
+        <!-- Install Tomcat -->
+        <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <unzip src="${programs.dir}/apache-tomcat-9.0.96.zip" dest="${programs.dir}"/>
+        <chmod dir="${programs.dir}/apache-tomcat-9.0.96/bin" perm="ugo+rx" includes="**/*.sh"/>
+        <chmod dir="${programs.dir}/apache-tomcat-9.0.96/webapps" perm="ugo+rx" includes="**/*.sh"/>
+        <delete file="${programs.dir}/apache-tomcat-9.0.96.zip"/>
+
+        <!-- Retrieve WordNet -->
+        <get src="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
+        <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
+
+        <!-- Retrieve E prover -->
+        <get src="https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
+        <delete file="${programs.dir}/E.tgz"/>
+
+        <!-- Clone the sigma tools -->
+        <antcall target="clone.sumo"/>
+        <antcall target="clone.tptpantlr"/>
+        <antcall target="clone.sigmautils"/>
+
+        <!-- Copy sumo and WordNet files to ${sigma.home} -->
+        <mkdir dir="${user.home}/.sigmakee"/>
+        <mkdir dir="${user.home}/.sigmakee/KBs"/>
+        <copy todir="${user.home}/.sigmakee/KBs">
+            <fileset dir="${workspace.dir}/sumo"/>
         </copy>
-        <copy todir="${sigma.home}/KBs/WordNetMappings" file="${kbs.home}/Translations/language.txt"/>
-        <copy todir="${sigma.home}/KBs/WordNetMappings">
-            <fileset dir="${kbs.home}/WordNetMappings"/>
+        <copy todir="${user.home}/.sigmakee/KBs">
+            <fileset file="${workspace.dir}/sigmakee/config.xml"/>
+        </copy>
+        <replace file="${user.home}/.sigmakee/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
+        <copy todir="${user.home}/.sigmakee/KBs/WordNetMappings">
+            <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
 
-        <!-- copy wordnet -->
-        <untar dest="${sigma.install.downloads}" compression="gzip">
-            <url url="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"/>
-        </untar>
-        <copy todir="${sigma.home}/KBs/WordNetMappings">
-            <fileset dir="${sigma.install.downloads}/WordNet-3.0/dict"/>
-        </copy>
+        <!-- Build E prover -->
+        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="./configure"/>
+        </exec>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="make"/>
+        </exec>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="make install"/>  <!-- Optional: will copy files to /usr/local/bin-->
+        </exec>
+        <replace file="${user.home}/.sigmakee/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${user.home}/Programs/E/PROVER/e_ltb_runner"/>
+
+        <!-- Configure ~/.bashrc -->
+        <echo file="${user.home}/.bashrc" append="true">
+
+# For SIGMA
+export SIGMA_HOME=~/.sigmakee
+export ONTOLOGYPORTAL_GIT=${workspace.dir}
+export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
+export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
+export CATALINA_HOME=${programs.dir}/apache-tomcat-9.0.96
+export PATH=$CATALINA_HOME/bin:$PATH
+export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*</echo>
     </target>
 
-    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${build.javadoc}.">
+    <target name="clone.sumo">
+        <git command="clone">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/ontologyportal/sumo"/>
+                <arg value="${workspace.dir}/sumo"/>
+            </args>
+        </git>
+    </target>
+    <target name="clone.tptpantlr">
+        <git command="clone">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/ontologyportal/TPTP-ANTLR"/>
+                <arg value="${workspace.dir}/TPTP-ANTLR"/>
+            </args>
+        </git>
+    </target>
+    <target name="clone.sigmautils">
+        <git command="clone">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/ontologyportal/SigmaUtils"/>
+                <arg value="${workspace.dir}/SigmaUtils"/>
+            </args>
+        </git>
+    </target>
+
+    <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
+    <macrodef name="git">
+        <attribute name="command"/>
+        <attribute name="dir" default="${workspace.dir}"/>
+        <element name="args" optional="true"/>
+        <sequential>
+            <echo message="git @{command}"/>
+            <exec executable="git" dir="@{dir}">
+                <arg value="@{command}"/>
+                <args/>
+            </exec>
+        </sequential>
+    </macrodef>
+
+    <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
-            <classpath path="${run.classpath}"/>
+            <classpath refed="compile.classpath"/>
             <doctitle>Sigma API Specification</doctitle>
             <header><![CDATA[<b>Sigma API Specification</b>]]></header>
             <group title="Sigma" packages="com.articulate.sigma.*"/>

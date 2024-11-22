@@ -2,6 +2,33 @@
 
 2024 November 2 - We're making some improvements to clean up the configuration and code of Sigma and its associated projects. For existing installations, some changes are needed to stay in sync. OpenJDK is now supported, eliminating the dependency on Oracle JDK. Tomcat 9 is now required. A new environment variable SIGMA_CP is now required in your .bashrc (or similar for non-Linux). Please let us know if you have any issues!
 
+To upgrade to Tomcat 9 and add the SIGMA_CP:
+
+```sh
+cd ~
+echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
+cd Programs
+rm -r apache-tomcat-8.5.23/
+wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip'
+unzip apache-tomcat-9.0.96.zip
+rm apache-tomcat-9.0.96.zip
+cd ~/Programs/apache-tomcat-9.0.96/bin
+chmod 777 *
+cd ../webapps
+chmod 777 *
+```
+
+update CATALINA_HOME in your ~/.bashrc file
+```
+CATALINA_HOME=~/Programs/apache-tomcat-9.0.96
+```
+Recompile sigmakee
+
+```
+cd ~/workspace/sigmakee/
+ant
+```
+
 # Introduction
 
 Sigma is an integrated development environment for logical theories that
@@ -150,9 +177,41 @@ make sure you're running bash (and answer /bin/bash)
 ```sh
 chsh
 ```
-install unzip
+
+Install unzip
 ```sh
 sudo apt-get install unzip
+sudo apt-get update
+```
+
+Install git
+```sh
+sudo apt-get install git
+```
+
+Install ant
+```sh
+sudo apt-get install ant
+```
+
+Install make
+```sh
+sudo apt-get install make
+```
+
+Install gcc
+```sh
+sudo apt-get install gcc
+```
+
+Install graphViz
+```sh
+sudo apt-get install graphviz
+```
+
+Update apt-get
+```sh
+sudo add-apt-repository universe
 sudo apt-get update
 ```
 
@@ -182,6 +241,9 @@ source .bashrc
 mkdir /home/theuser/Programs
 cd Programs
 ```
+
+Install a Java Development Kit (JDK), at least version 11 or greater.
+** Avoid JDK 17 **
 
 The following command line version may work but you may need to update the name of the jdk zipfile
 
@@ -245,7 +307,6 @@ chmod 777 *
 cd ../webapps
 chmod 777 *
 cd ~/workspace/
-sudo apt-get install git
 git clone https://github.com/ontologyportal/sigmakee
 git clone https://github.com/ontologyportal/sumo
 git clone https://github.com/ontologyportal/TPTP-ANTLR
@@ -263,25 +324,19 @@ gunzip WordNet-3.0.tar.gz
 tar -xvf WordNet-3.0.tar
 cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
 cd ~/Programs/E
-sudo apt-get install make
-sudo apt-get install gcc
 ./configure
 make
 make install
 cd ~
-sudo apt-get install graphviz
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=\"-Xmx10g -Xss1m\"" >> .bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
-sudo add-apt-repository universe
-sudo apt-get update
-sudo apt-get install ant
 ant
 ```
 
@@ -541,6 +596,35 @@ Users should also see
 https://sourceforge.net/p/sigmakee/wiki/required_data_files/
 Mac instructions - https://sourceforge.net/p/sigmakee/wiki/Sigma%20Setup%20on%20Mac/
 Ubuntu - https://sourceforge.net/p/sigmakee/wiki/Setting%20up%20Sigma%20on%20Ubuntu/
+
+## To build/run/debug/test using the NetBeans IDE
+Define a nbproject/private/private.properties file with these keys:
+
+\# private properties\
+javaapis.dir=${user.home}/javaapis\
+workspace=${javaapis.dir}/INSAFE
+
+\# The default installation space is: ~/workspace. However, it can be anywhere on\
+\# your system as long as you define the "workspace" key above.
+
+catalina.home=${path.to.your.tomcat9}
+
+private.resources.dir=nbproject/private/resources\
+main.config=${private.resources.dir}/config.xml\
+integration.config=${private.resources.dir}/config_topAndMid.xml\
+unit.config=${private.resources.dir}/config_topOnly.xml
+
+\# The above properties allow you to keep and restore the various forms of\
+\# config.xml that get overwritten when running Unit Tests. Copy these files\
+\# to the respective "resources" directory complete with your personal system\
+\# paths replacing the "/home/theuser/" pseudos. config.xml is found in the\
+\# base directory and the other two are found in test/*/resources directories
+
+\# JavaMail properties\
+user=${your.email.user.name}\
+my.email=${user}@${your.email.domain}\
+my.name=${your.name}
+
 
 ## User Interface
 

@@ -6,7 +6,7 @@ ENV PATH=$PATH:$JAVA_HOME/bin \
     WORKSPACE=$SIGMADIR/workspace \
     PROGRAMS=$SIGMADIR/Programs \
     SIGMA_HOME=$SIGMADIR/sigmakee \
-    CATALINA_OPTS="-Xmx10g"\
+    CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m" \
     ME=root
 
 ENV KBDIR=$SIGMA_HOME/KBs \

@@ -46,7 +46,7 @@
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
-    <target name="TPTP" depends="prepare">
+    <target name="TPTP" depends="deploy_prepare">
         <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
@@ -152,7 +152,7 @@
             </test>
         </junit>
         <antcall target="junit.report"/>
-        <antcall target="prep.main.config"/> <!-- restore the main config -->
+        <!-- Now, manually run thorough.clean to purge KBs/*.ser, KBs/*.tptp & restore the main config -->
     </target>
     <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -172,6 +172,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
+        <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
     <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -284,6 +285,9 @@
         </exec>
         <!--<antcall target="monitor.catalina.out"/>-->
     </target>
+
+    <!-- For debugging the running web app in the NB IDE, attach a debugger
+         with the running Tomcat PID found from the activity monitor. -->
 
     <available file="${catalina.out}" property="catalina.out.present"/>
     <target name="monitor.catalina.out" if="catalina.out.present">
@@ -512,17 +516,17 @@
             <attribute name="Main-Class"
                        value="${main.class}"/>
         </manifest>
-        <jar destfile="${dist.jar}"
-             basedir="${build.classes.dir}"
-             manifest="${manifest.mf}">
-            <metainf file="${project.license}"/>
-        </jar>
         <war destfile="${dist.dir}/${web.app.name}.war"
              basedir="${build.home}"
              webxml="${web.dir}/web.xml"
              manifest="${manifest.mf}">
             <metainf file="${project.license}"/>
         </war>
+        <jar destfile="${dist.jar}"
+             basedir="${build.classes.dir}"
+             manifest="${manifest.mf}">
+            <metainf file="${project.license}"/>
+        </jar>
         <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
     </target>
 
@@ -537,20 +541,18 @@
     <target name="prep.integration.config">
         <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
-    <target name="thorough.clean" depends="clean">
+    <target name="thorough.clean" depends="clean,prep.main.config">
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
             <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
-        </delete>
-        <delete file="${dist_war}"/>
-        <delete includeemptydirs="true" failonerror="false">
+            <!-- JUnit generated products -->
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>
+                <include name="*.owl"/>
+                <include name="*.tab"/>
             </fileset>
-        </delete>
-        <!-- Prune KB after integration tests -->
-        <delete includeemptydirs="true" failonerror="false">
+            <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.tptp"/>
                 <include name="*.ser"/>
@@ -559,13 +561,13 @@
                 <include name="*.ser"/>
             </fileset>
         </delete>
+        <delete file="${dist_war}"/>
+        <antcall target="delete.catalina.logs"/>
+    </target>
+    <target name="delete.catalina.logs" depends="init">
         <delete>
             <fileset dir="${catalina.logs.dir}">
                 <include name="*.*"/>
-            </fileset>
-            <fileset dir="${basedir}">
-                <include name="*.owl"/>
-                <include name="*.tab"/>
             </fileset>
         </delete>
     </target>
