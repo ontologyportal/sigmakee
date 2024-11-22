@@ -124,8 +124,11 @@ public class SUMOformulaToTPTPformula {
             mentionSuffix = "";
 
         //----Places single quotes around strings, and replace \n by space
+        //if (type == 34)
+        //    return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+        //---- replace \n by space
         if (type == 34)
-            return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+            return(st.replaceAll("[\n\t\r\f]"," ").replaceAll("'",""));
         //----Fix variables to have leading V_
         char ch0 = ((st.length() > 0)
                     ? st.charAt(0)
@@ -576,7 +579,6 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse4() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         String teststr = "(=> (and (instance ?CELL HexaploidCell) (part ?N ?CELL) " +
                 "(instance ?N CellNucleus) (located ?COLL ?N) (instance ?COLL Collection) " +
@@ -589,9 +591,31 @@ public class SUMOformulaToTPTPformula {
     }
 
     /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("TPTP translation ");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -t - run test");
+        System.out.println("  -g \"<formula>\" - generate TPTP from formula");
+    }
+
+    /** ***************************************************************
      * A test method.
      */
     public static void main(String[] args) {
-        testTptpParse4();
+
+        System.out.println("INFO in Graph.main()");
+        if (args != null && args.length > 1 && args[0].equals("-h")) {
+            showHelp();
+        } else if (args.length > 1 && args[0].equals("-g")) {
+            KBmanager.getMgr().initializeOnce();
+            Formula f = new Formula(args[1]);
+            String actual = StringUtil.removeEnclosingQuotes(args[1]);
+            System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(actual, false));
+        } else {
+            testTptpParse4();
+        }
     }
 }
