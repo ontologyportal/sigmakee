@@ -124,8 +124,11 @@ public class SUMOformulaToTPTPformula {
             mentionSuffix = "";
 
         //----Places single quotes around strings, and replace \n by space
+        //if (type == 34)
+        //    return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+        //---- replace \n by space
         if (type == 34)
-            return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+            return(st.replaceAll("[\n\t\r\f]"," ").replaceAll("'",""));
         //----Fix variables to have leading V_
         char ch0 = ((st.length() > 0)
                     ? st.charAt(0)
