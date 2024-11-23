@@ -3941,8 +3941,8 @@ public class KB implements Serializable {
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
-            KBmanager.prefOverride.put("loadLexicons","false");
-            System.out.println("KB.main(): Note! Not loading lexicons.");
+            //KBmanager.prefOverride.put("loadLexicons","false");
+            //System.out.println("KB.main(): Note! Not loading lexicons.");
             KBmanager.getMgr().initializeOnce();
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);
