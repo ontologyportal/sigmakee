@@ -140,10 +140,13 @@
     </path>
 
     <target name="init" depends="init-ivy">
-        <available property="jdk11+" classname="java.net.http.HttpClient"/>
-        <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 11 or greater, but avoid JDK 17."
-              unless="jdk11+">
+        <condition property="jdk21+">
+            <javavesion atleast="21"/>
+        </condition>
+        <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 21 or greater."
+              unless="jdk21+">
         </fail>
+        
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
         <echo message="Specification Vendor:     ${spec.vendor}"/>
         <echo message=""/>
@@ -358,7 +361,7 @@
     <!-- At this point we will assume you have already complied with the
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
-    <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
+    <target name="install" depends="init" description="Clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
         <mkdir dir="${workspace.dir}"/>
         <mkdir dir="${programs.dir}"/>
 
