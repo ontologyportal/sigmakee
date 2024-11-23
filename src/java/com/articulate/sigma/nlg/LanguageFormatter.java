@@ -1328,6 +1328,13 @@ public class LanguageFormatter {
     }
 
     /** ***************************************************************
+     */
+    public static void setKB(KB kbin) {
+
+        kb = kbin;
+    }
+
+    /** ***************************************************************
      * generate English paraphrase
      */
     public static String toEnglish(String form) {
