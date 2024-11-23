@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.igormaznitsa.prologparser.DefaultParserContext;
@@ -123,7 +124,7 @@ public class TPTP3ProofProcessor {
 					commentsAfter.add(s);
 				sb = new StringBuffer();
 			}
-			else if (s.trim().endsWith(").")) {
+			else if (s.trim().endsWith(").") || s.trim().endsWith("]")) {
 				before = false;
 				sb.append(s);
 				outputs.add(sb.toString());
@@ -688,6 +689,10 @@ public class TPTP3ProofProcessor {
                         inProof = false;
                     }
                     else {
+						if (line.matches("^\\d+\\..*")) {  // strip proof step number
+							int period = line.indexOf('.');
+							line = line.substring(period + 2);
+						}
 						TPTPVisitor sv = new TPTPVisitor();
 						if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): line: " + line);
 						sv.parseString(line);
@@ -1008,6 +1013,30 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Print proof removing some steps based on proof level
+	 * 1 = full proof
+	 * 2 = remove steps with single support
+	 * 3 = show only axioms from the KB
+	 */
+	public ArrayList<TPTPFormula> simplifyProof(int level) {
+
+		ArrayList<TPTPFormula> result = new ArrayList<TPTPFormula>();
+		for (TPTPFormula ps : proof) {
+			switch (level) {
+				case 1 :
+					result.add(ps); break;
+				case 2 :
+					if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps))
+						result.add(ps); break;
+				case 3 :
+					if (TPTPutil.sourceAxiom(ps))
+						result.add(ps); break;
+			}
+		}
+		return result;
+	}
+
+	/** ***************************************************************
 	 */
 	private void testPrologParser () {
 
@@ -1040,6 +1069,8 @@ public class TPTP3ProofProcessor {
 		System.out.println("TPTP3ProofProcessor class");
 		System.out.println("  options (with a leading '-'):");
 		System.out.println("  f <file> - parse a TPTP3 proof file");
+		System.out.println("    e - parse proof as an E proof (forward style)");
+		System.out.println("  s <file> - parse, simplify and paraphrase a TPTP3 proof file");
 		System.out.println("    e - parse proof as an E proof (forward style)");
 		System.out.println("  t - run test");
 		System.out.println("  h - show this help");
@@ -1079,6 +1110,35 @@ public class TPTP3ProofProcessor {
 						System.out.println(":: " + step);
 						Formula f = new Formula(step.sumo);
 						System.out.println(f.format("","  ","\n"));
+					}
+					System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
+					System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
+					//String link = tpp.createProofDotGraph();
+					//System.out.println("Dot graph at: " + link);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else if (args != null && args.length > 1 && args[0].contains("s")) {
+				try {
+					if (args[0].contains("e"))
+						KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+					else
+						KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+					LanguageFormatter.setKB(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+					List<String> lines = FileUtil.readLines(args[1],false);
+					String query = "";
+					StringBuffer answerVars = new StringBuffer("");
+					System.out.println("input: " + lines + "\n");
+					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
+					//tpp.createProofDotGraph();
+					System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
+					ArrayList<TPTPFormula> result = tpp.simplifyProof(2);
+					for (TPTPFormula step : result) {
+						//System.out.println(step);
+						Formula f = new Formula(step.sumo);
+						System.out.println(StringUtil.filterHtml(LanguageFormatter.toEnglish(f.getFormula())));
 					}
 					System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
 					System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
