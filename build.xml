@@ -112,6 +112,11 @@
 
     <property name="javac.release" value="11"/>
     <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
+    <property name="tomcat.version" value="9.0.97"/>
+
+    <!-- Define the sigma user spaces -->
+    <property name="workspace.dir" value="${git.home}/workspace"/>
+    <property name="programs.dir" value="${user.home}/Programs"/>
 
     <condition property="isUnixNotMac">
         <and>
@@ -310,7 +315,7 @@
         <antcall target="open.junit.report"/>
     </target>
     <target name="open.junit.report" depends="report.mac,report.unix"/>
-    <target name="report.mac">
+    <target name="report.mac" unless="isUnixNotMac">
         <exec executable="sh" osfamily="mac">
             <arg value="-c"/>
             <arg value="open -u ${report.html}"/>
@@ -354,28 +359,17 @@
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
-        <!-- Define the sigma user spaces -->
-        <property name="workspace.dir" value="${user.home}/workspace"/>
-        <property name="programs.dir" value="${user.home}/Programs"/>
         <mkdir dir="${workspace.dir}"/>
         <mkdir dir="${programs.dir}"/>
 
         <!-- Install Tomcat -->
-        <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <unzip src="${programs.dir}/apache-tomcat-9.0.96.zip" dest="${programs.dir}"/>
-        <chmod dir="${programs.dir}/apache-tomcat-9.0.96/bin" perm="ugo+rx" includes="**/*.sh"/>
-        <chmod dir="${programs.dir}/apache-tomcat-9.0.96/webapps" perm="ugo+rx" includes="**/*.sh"/>
-        <delete file="${programs.dir}/apache-tomcat-9.0.96.zip"/>
+        <antcall target="install.tomcat"/>
 
         <!-- Retrieve WordNet -->
-        <get src="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
-        <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
+        <antcall target="retrieve.wordnet"/>
 
         <!-- Retrieve E prover -->
-        <get src="https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
-        <delete file="${programs.dir}/E.tgz"/>
+        <antcall tareget="retrieve.E"/>
 
         <!-- Clone the sigma tools -->
         <antcall target="clone.sumo"/>
@@ -383,46 +377,47 @@
         <antcall target="clone.sigmautils"/>
 
         <!-- Copy sumo and WordNet files to ${sigma.home} -->
-        <mkdir dir="${user.home}/.sigmakee"/>
-        <mkdir dir="${user.home}/.sigmakee/KBs"/>
-        <copy todir="${user.home}/.sigmakee/KBs">
-            <fileset dir="${workspace.dir}/sumo"/>
+        <antcall target="copy.to.sigma.home"/>
+
+        <!-- Build E theorem prover -->
+        <antcall target="build.E"/>
+
+        <!-- Clone and build Vampire theorem prover w/ Z3 -->
+        <antcall target="clone.vampire"/>
+        <antcall target="clone.z3"/>
+        <antcall target="build.z3"/>
+        <antcall target="build.vampire"/>
+
+        <!-- Configure ~/.bashrc ~/.zshrc -->
+        <antcall target="append.bashrc"/>
+        <antcall target="append.zshrc"/>
+    </target>
+
+    <target name="retrieve.wordnet">
+        <get src="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
+        <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
+    </target>
+
+    <target name="retrieve.E">
+        <get src="https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
+        <delete file="${programs.dir}/E.tgz"/>
+    </target>
+
+    <target name="copy.to.sigma.home">
+        <mkdir dir="${user.home}/.${app.name}"/>
+        <mkdir dir="${user.home}/.${app.name}/KBs"/>
+        <copy todir="${user.home}/.${app.name}/KBs">
+            <fileset dir="${kbs.home}"/>
         </copy>
-        <copy todir="${user.home}/.sigmakee/KBs">
-            <fileset file="${workspace.dir}/sigmakee/config.xml"/>
+        <copy todir="${user.home}/.${app.name}/KBs">
+            <fileset file="${sigma.src}/config.xml"/>
         </copy>
-        <replace file="${user.home}/.sigmakee/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
-        <copy todir="${user.home}/.sigmakee/KBs/WordNetMappings">
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
+        <copy todir="${user.home}/.${app.name}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
-
-        <!-- Build E prover -->
-        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="./configure"/>
-        </exec>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="make"/>
-        </exec>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="make install"/>  <!-- Optional: will copy files to /usr/local/bin-->
-        </exec>
-        <replace file="${user.home}/.sigmakee/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${user.home}/Programs/E/PROVER/e_ltb_runner"/>
-
-        <!-- Configure ~/.bashrc -->
-        <echo file="${user.home}/.bashrc" append="true">
-
-# For SIGMA
-export SIGMA_HOME=~/.sigmakee
-export ONTOLOGYPORTAL_GIT=${workspace.dir}
-export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
-export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
-export CATALINA_HOME=${programs.dir}/apache-tomcat-9.0.96
-export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*</echo>
     </target>
 
     <target name="clone.sumo">
@@ -455,6 +450,25 @@ export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*</echo>
             </args>
         </git>
     </target>
+    <target name="clone.vampire">
+        <mkdir dir="${programs.dir}/vampire"/>
+        <git command="clone" dir="${programs.dir}/vampire">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/vprover/vampire.git"/>
+                <arg value="${programs.dir}/vampire"/>
+            </args>
+        </git>
+    </target>
+    <target name="clone.z3">
+        <git command="submodule" dir="${programs.dir}/vampire">
+            <args>
+                <arg value="update"/>
+                <arg value="--init"/>
+            </args>
+        </git>
+    </target>
 
     <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
     <macrodef name="git">
@@ -470,6 +484,76 @@ export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*</echo>
         </sequential>
     </macrodef>
 
+    <target name="install.tomcat">
+        <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
+        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>
+        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/webapps" perm="ugo+rx" includes="**/*.sh"/>
+        <delete file="${programs.dir}/apache-tomcat-${tomcat.version}.zip"/>
+    </target>
+
+    <target name="build.E">
+        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="./configure"/>
+        </exec>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="make"/>
+        </exec>
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
+    </target>
+
+    <target name="build.z3">
+        <mkdir dir="${programs.dir}/vampire/z3/build"/>
+        <exec executable="cmake" dir="${programs.dir}/vampire/z3/build">
+            <arg value=".."/>
+            <arg value="-DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release"/>
+        </exec>
+        <exec executable="sh" dir="${programs.dir}/vampire/z3/build">
+            <arg value="-c"/>
+            <arg value="make"/>
+        </exec>
+    </target>
+
+    <target name="build.vampire">
+        <mkdir dir="${programs.dir}/vampire/build"/>
+        <exec executable="cmake" dir="${programs.dir}/vampire/build">
+            <arg value=".."/>
+        </exec>
+        <exec executable="sh" dir="${programs.dir}/vampire/build">
+            <arg value="-c"/>
+            <arg value="make"/>
+        </exec>
+    </target>
+
+    <target name="append.bashrc" if="isUnixNotMac">
+        <echo file="${user.home}/.bashrc" append="true">
+
+# For SIGMA
+export SIGMA_HOME=${user.home}/.${app.name}
+export ONTOLOGYPORTAL_GIT=${workspace.dir}
+export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
+export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
+export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
+export PATH=$CATALINA_HOME/bin:$PATH
+export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
+    </target>
+
+    <target name="append.zshrc" unless="isUnixNotMac">
+        <echo file="${user.home}/.zshrc" append="true">
+
+# For SIGMA
+export SIGMA_HOME=${user.home}/.${app.name}
+export ONTOLOGYPORTAL_GIT=${workspace.dir}
+export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
+export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
+export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
+export PATH=$CATALINA_HOME/bin:$PATH
+export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
+    </target>
+
     <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
         <javadoc sourcepath="${src.dir}" destdir="${dist.javadoc.dir}" author="true" version="true" use="true"
                  windowtitle="Sigma API Specification" splitindex="true" packagenames="com.articulate.sigma.*">
@@ -483,4 +567,3 @@ export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*</echo>
     </target>
 
 </project>
-

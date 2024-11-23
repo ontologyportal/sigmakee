@@ -28,6 +28,7 @@ macOS install notes
 - install Homebrew from http://brew.sh and the packages:
 
 brew install make
+brew install cmake
 brew install gcc
 brew install git
 brew install graphviz
@@ -37,18 +38,18 @@ Add the following lines in your ~/.zshrc and make sure to have all
 these variables created before the next step, and replace
 /Users/user with your home directory:
 
-  ## SUMO/SIGMAKEE
+  # For SIGMA
   export SIGMA_HOME=/Users/user/.sigmakee
   export ONTOLOGYPORTAL_GIT=/Users/user/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
-  export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.96
+  export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.97
   export PATH=$CATALINA_HOME/bin:$PATH
   export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
-You will need at least Java 11+ (avoid JDK 17) to compile SigmaKee and to run
+You will need at least Java 11+ (avoid JDK 17) to compile SigmaKEE and to run
 Apache Tomcat.
 
 ! For ARM processors download it from here: https://jdk.java.net/archive/
@@ -65,16 +66,20 @@ Apache Tomcat.
   export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
   export PATH=$JAVA_HOME/bin:$PATH
 
+Install (ensure the above preparation have been performed)
+> ant install
+
+*** Legacy install steps now taken care of by the above command "ant install"
 cd ~
 mkdir workspace
 mkdir .sigmakee
 mkdir Programs
 
 cd Programs
-curl -O 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip'
-unzip apache-tomcat-9.0.96.zip
-rm apache-tomcat-9.0.96.zip
-chmod 777 apache-tomcat-9.0.96/bin/*
+curl -O 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip'
+unzip apache-tomcat-9.0.97.zip
+rm apache-tomcat-9.0.97.zip
+chmod 777 apache-tomcat-9.0.97/bin/*
 
 cd ../workspace
 git clone https://github.com/ontologyportal/sigmakee
@@ -118,6 +123,7 @@ graphVizDir to: /usr/local/bin
 cd ~/workspace/sigmakee
 source ~/.zshrc or ~/.bash_profile
 ant
+*** End legacy install steps
 
 If you want to support multiple users, follow the steps in section "Account Management" from the
 README.txt below to set up accounts.  Please note however this is not working as of Apr, 2020.

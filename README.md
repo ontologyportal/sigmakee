@@ -9,10 +9,10 @@ cd ~
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
 cd Programs
 rm -r apache-tomcat-8.5.23/
-wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip'
-unzip apache-tomcat-9.0.96.zip
-rm apache-tomcat-9.0.96.zip
-cd ~/Programs/apache-tomcat-9.0.96/bin
+wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip'
+unzip apache-tomcat-9.0.97.zip
+rm apache-tomcat-9.0.97.zip
+cd ~/Programs/apache-tomcat-9.0.97/bin
 chmod 777 *
 cd ../webapps
 chmod 777 *
@@ -20,7 +20,7 @@ chmod 777 *
 
 update CATALINA_HOME in your ~/.bashrc file
 ```
-CATALINA_HOME=~/Programs/apache-tomcat-9.0.96
+CATALINA_HOME=~/Programs/apache-tomcat-9.0.97
 ```
 Recompile sigmakee
 
@@ -199,6 +199,11 @@ Install make
 sudo apt-get install make
 ```
 
+Install cmake
+```sh
+sudo apt-get install cmake
+```
+
 Install gcc
 ```sh
 sudo apt-get install gcc
@@ -242,7 +247,7 @@ mkdir /home/theuser/Programs
 cd Programs
 ```
 
-Install a Java Development Kit (JDK), at least version 11 or greater.
+Install a Java Development Kit (JDK) from OpenJDK, at least version 11 or greater.
 ** Avoid JDK 17 **
 
 The following command line version may work but you may need to update the name of the jdk zipfile
@@ -292,17 +297,24 @@ PS1=Vagrant:$PS1
 ## Linux Installation
 
 ```sh
+ant install
+```
+
+The following steps are now legacy. The call to ant install above will perform\
+these steps more efficiently.
+
+```sh
 cd ~
 mkdir workspace
 mkdir Programs
 cd Programs
-wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip'
+wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip'
 wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 wget 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
 tar -xvzf E.tgz
-unzip apache-tomcat-9.0.96.zip
-rm apache-tomcat-9.0.96.zip
-cd ~/Programs/apache-tomcat-9.0.96/bin
+unzip apache-tomcat-9.0.97.zip
+rm apache-tomcat-9.0.97.zip
+cd ~/Programs/apache-tomcat-9.0.97/bin
 chmod 777 *
 cd ../webapps
 chmod 777 *
@@ -332,13 +344,14 @@ echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.96" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
 source .bashrc
 cd ~/workspace/sigmakee
 ant
 ```
+End legacy Linux install
 
 To test run
 
@@ -370,8 +383,14 @@ from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
 # Vampire
 
-If you want to use Vampire instead of or in addition to E, follow the instructions
-at https://github.com/vprover/vampire/wiki/Source-Build-for-Users
+If you want to use Vampire instead of or in addition to E, follow these
+[instructions](https://github.com/vprover/vampire/wiki/Source-Build-for-Users).
+Please note that the command:
+```sh
+ant install
+```
+will also install Vampire
+
 
 ## Older instructions
 You may need to install the Zlib library if you don't have it already installed
