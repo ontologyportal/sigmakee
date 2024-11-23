@@ -34,6 +34,7 @@ public class NLGUtils implements Serializable {
      */
     public static void init(String kbDir) {
 
+        System.out.println("NLGUtils.init(): ");
         if (KBmanager.getMgr().getPref("loadLexicons").equals("false"))
             return;
         System.out.println("NLGUtils.init(): initializing with " + kbDir);
