@@ -1,7 +1,10 @@
 package com.articulate.sigma;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.BiPredicate;
+
+import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.*;
 
 /**
@@ -219,6 +222,20 @@ public class FormulaUtil {
     /** ********************************************************************************************
      * Factory method for the memo map
      */
+    public static String removeAnswerClause(Formula f) {
+
+        String s = f.getFormula();
+        String result = s.replaceAll("(not)?\\s*\\(ans\\d[^\\)]*\\)", "");
+        result = result.replaceAll("\\(\\s*\\)","");
+        Formula fnew = new Formula(result);
+        result = SUMOtoTFAform.elimUnitaryLogops(fnew);
+        result = result.replaceAll("\\(\\s*\\)","");
+        return result;
+    }
+
+    /** ********************************************************************************************
+     * Factory method for the memo map
+     */
     public static FormulaMatchMemoMapKey createFormulaMatchMemoMapKey(String s1, String s2) {
 
         return new FormulaMatchMemoMapKey(s1,s2);
@@ -270,6 +287,43 @@ public class FormulaUtil {
                     "f1='" + f1 + '\'' +
                     ", f2='" + f2 + '\'' +
                     '}';
+        }
+    }  // end interior class FormulaMatchMemoMapKey
+
+    /** ***************************************************************
+     */
+    public static void runTest() {
+
+        String s = "(or\n" +
+                "  (not  \n" +
+                "    (ans0 sK2)) spl6_1)";
+        System.out.println(removeAnswerClause(new Formula(s)));
+    }
+
+    /** ***************************************************************
+     */
+    public static void showHelp() {
+
+        System.out.println("Formulautil class");
+        System.out.println("  options (with a leading '-'):");
+        System.out.println("  t - run test");
+        System.out.println("  h - show this help");
+    }
+
+    /** ***************************************************************
+     */
+    public static void main(String[] args) throws IOException {
+
+        System.out.println("INFO in Formulautil.main()");
+        if (args == null)
+            System.out.println("no command given");
+        else
+            System.out.println(args.length + " : " + Arrays.toString(args));
+        if (args != null && args.length > 0 && args[0].equals("-h"))
+            showHelp();
+        else {
+            if (args != null && args.length > 0 && args[0].equals("-t"))
+                runTest();
         }
     }
 }
