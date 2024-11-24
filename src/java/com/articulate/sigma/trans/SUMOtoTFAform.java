@@ -1994,7 +1994,8 @@ public class SUMOtoTFAform {
     }
 
     /** *************************************************************
-     * Recursive routine to eliminate occurrences of '=>', 'and' and 'or' that
+     * Recursive routine to eliminate occurrences of 'forall', 'exists',
+     * '<=>', '=>', '=>', 'and' and 'or' that
      * have only one or zero arguments
      * @return the corrected formula as a string
      */
@@ -2004,7 +2005,8 @@ public class SUMOtoTFAform {
             return f.getFormula();
         ArrayList<String> args = f.complexArgumentsToArrayListString(0);
         if (args == null) return "";
-        if (f.car().equals("and") || f.car().equals("or") || f.car().equals("=>")) {
+        if (f.car().equals("and") || f.car().equals("or") || f.car().equals("=>") ||
+                f.car().equals("<=>") || f.car().equals("exists") || f.car().equals("forall")) {
             if (args.size() == 1) {  // meaning that the one "argument" is the predicate
                 return "";
             }
