@@ -28,6 +28,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import tptp_parser.*;
 
@@ -1093,6 +1094,14 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * just replace skolem terms with "something" for now
+	 */
+	public String replaceSkolems(String s) {
+
+		return s.replaceAll("sK\\d","something");
+	}
+
+	/** ***************************************************************
 	 * simplify and paraphrase a proof
 	 */
 	public void simpPara() {
@@ -1103,29 +1112,34 @@ public class TPTP3ProofProcessor {
 		for (TPTPFormula step : result) {
 			if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): step: " + step);
 			if (debug)  System.out.println("TPTP3ProofProcessor.simpPara(): step sumo : " + step.sumo);
-			if (!step.sumo.contains("(ans0") && !step.sumo.contains("(ans1")) {
-				System.out.print(step.name + ".  ");
-				if (step.supports.size() > 1) {
-					StringBuffer list = new StringBuffer();
-					System.out.print("Because of ");
-					for (String s : step.supports)
-						list.append(s + ", ");
-					list.delete(list.length()-2,list.length());
-					String listStr = list.toString();
-					System.out.print(list.substring(0, list.lastIndexOf(",")) + " and" +
-							list.substring(list.lastIndexOf(",") + 1,list.length()) + ", ");
-					System.out.println(LanguageFormatter.toEnglish(step.sumo));
-				}
-				else {
-					String s = LanguageFormatter.toEnglish(step.sumo);
-					if (step.role.equals("conjecture")) {
-						System.out.println("Our conjecture is that " + s);
-					}
-					else
-						System.out.println(Character.toUpperCase(s.charAt(0)) + s.substring(1));
-				}
-				System.out.println();
+			if (Pattern.compile("\\(ans\\d").matcher(step.sumo).find()) {
+				step.sumo = FormulaUtil.removeAnswerClause(new Formula(step.sumo));
+				if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): after remove answer : " + step.sumo);
 			}
+			System.out.print(step.name + ".  ");
+			if (step.supports.size() > 1) {
+				StringBuffer list = new StringBuffer();
+				System.out.print("Because of ");
+				for (String s : step.supports)
+					list.append(s + ", ");
+				list.delete(list.length()-2,list.length());
+				String listStr = list.toString();
+				System.out.print(list.substring(0, list.lastIndexOf(",")) + " and" +
+						list.substring(list.lastIndexOf(",") + 1,list.length()) + ", ");
+				String english = LanguageFormatter.toEnglish(step.sumo);
+				english = replaceSkolems(english);
+				System.out.println(english);
+			}
+			else {
+				String s = LanguageFormatter.toEnglish(step.sumo);
+				s = replaceSkolems(s);
+				if (step.role.equals("conjecture")) {
+					System.out.println("Our conjecture is that " + s);
+				}
+				else
+					System.out.println(Character.toUpperCase(s.charAt(0)) + s.substring(1));
+			}
+			System.out.println();
 		}
 		//System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
 		//System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
@@ -1224,6 +1238,8 @@ public class TPTP3ProofProcessor {
 						KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
 					else
 						KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+					String skolems = tpp.findTypesForSkolemTerms(kb);
+					System.out.println("skolems: " + skolems);
 					LanguageFormatter.setKB(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
 					List<String> lines = FileUtil.readLines(args[1],false);
 					String query = "";
