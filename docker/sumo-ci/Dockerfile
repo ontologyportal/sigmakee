@@ -3,7 +3,7 @@ FROM $IMAGE_ACCOUNT/sigma-ci:latest AS builder
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.96-jdk11-temurin-jammy AS runtime
+FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
 
 RUN apt update; \
     apt-get install -y --no-install-recommends \
