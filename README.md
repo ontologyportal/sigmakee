@@ -247,7 +247,7 @@ mkdir /home/theuser/Programs
 cd Programs
 ```
 
-Install a Java Development Kit (JDK) from OpenJDK, at least version 11 or greater.
+Install a Java Development Kit (JDK) from OpenJDK, at least version 21 or greater.
 ** Avoid JDK 17 **
 
 The following command line version may work but you may need to update the name of the jdk zipfile
@@ -296,6 +296,17 @@ PS1=Vagrant:$PS1
 
 ## Linux Installation
 
+First, comply with System preparation on Linux above
+
+Clone SigmaKEE
+```sh
+git clone https://github.com/ontologyportal/sigmakee
+```
+
+Then,
+```sh
+cd sigmakee
+```
 ```sh
 ant install
 ```
