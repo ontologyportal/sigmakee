@@ -288,7 +288,8 @@ public class TPTPutil {
             showHelp();
         else {
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            KBmanager.prefOverride.put("loadLexicons","false");
+            // need lexicons to paraphrase proofs!
+            //KBmanager.prefOverride.put("loadLexicons","false");
             KBmanager.getMgr().initializeOnce();
             String kbName = KBmanager.getMgr().getPref("sumokbname");
             KB kb = KBmanager.getMgr().getKB(kbName);

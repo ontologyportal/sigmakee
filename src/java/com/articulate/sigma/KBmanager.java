@@ -723,6 +723,8 @@ public class KBmanager implements Serializable {
         try {
             System.out.println("Info in KBmanager.initializeOnce(): initializing with " + configFileDir);
             SimpleElement configuration = readConfiguration(configFileDir);
+            if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
+                    preferences.keySet().size());
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
             if (serializedExists() && !serializedOld(configuration)) {
@@ -731,8 +733,11 @@ public class KBmanager implements Serializable {
                 if (loaded) {
                     if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
                     if (!prefEquals("loadLexicons","false")) {
+                        if (debug) System.out.println("KBmanager.initializeOnce(): here 1");
                         WordNet.initOnce();
+                        if (debug) System.out.println("KBmanager.initializeOnce(): here 2");
                         NLGUtils.init(configFileDir);
+                        if (debug) System.out.println("KBmanager.initializeOnce(): here 3");
                         OMWordnet.readOMWfiles();
                         if (!VerbNet.disable) {
                             VerbNet.initOnce();

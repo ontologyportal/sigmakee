@@ -1327,13 +1327,42 @@ public class LanguageFormatter {
         System.out.println();
     }
 
+    /** **************************************************************
+     */
+    public static void test4() {
+
+        try {
+            KBmanager.getMgr().initializeOnce();
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        debug = true;
+        // INFO in LanguageFormatter.paraphraseLogicalOperator(): bad result for
+        String stmt = "(or (not (subclass Human Object)) (not (instance Human Class)) spl6_2)";
+        Formula f = new Formula(stmt);
+        System.out.println("Formula: " + f.getFormula());
+        System.out.println("result: " +
+                StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"),
+                        kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
+        System.out.println(NLGUtils.outputMap);
+        System.out.println();
+    }
+
+    /** ***************************************************************
+     */
+    public static void setKB(KB kbin) {
+
+        kb = kbin;
+    }
+
     /** ***************************************************************
      * generate English paraphrase
      */
     public static String toEnglish(String form) {
 
-        return NLGUtils.htmlParaphrase("", form, kb.getFormatMap("EnglishLanguage"),
-                kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage") + "\n";
+        return StringUtil.filterHtml(NLGUtils.htmlParaphrase("", form, kb.getFormatMap("EnglishLanguage"),
+                kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage"));
     }
 
     /** ***************************************************************
@@ -1365,7 +1394,7 @@ public class LanguageFormatter {
             System.out.println(StringUtil.filterHtml(actual));
         }
         else {
-            test3();
+            test4();
         }
     }
 }

@@ -14,6 +14,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
+import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.igormaznitsa.prologparser.DefaultParserContext;
@@ -27,6 +28,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 import tptp_parser.*;
 
@@ -123,7 +125,7 @@ public class TPTP3ProofProcessor {
 					commentsAfter.add(s);
 				sb = new StringBuffer();
 			}
-			else if (s.trim().endsWith(").")) {
+			else if (s.trim().endsWith(").") || s.trim().endsWith("]")) {
 				before = false;
 				sb.append(s);
 				outputs.add(sb.toString());
@@ -688,6 +690,10 @@ public class TPTP3ProofProcessor {
                         inProof = false;
                     }
                     else {
+						if (line.matches("^\\d+\\..*")) {  // strip proof step number
+							int period = line.indexOf('.');
+							line = line.substring(period + 2);
+						}
 						TPTPVisitor sv = new TPTPVisitor();
 						if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): line: " + line);
 						sv.parseString(line);
@@ -1008,6 +1014,140 @@ public class TPTP3ProofProcessor {
 	}
 
 	/** ***************************************************************
+	 * Look through the chain of supporting steps for a source axiom
+	 * or an axiom with more than one premise.
+	 */
+	private String renumberOneSupport(HashMap<String,TPTPFormula> ftable,
+								String sup) {
+
+		if (debug) System.out.println("renumberOneSupport(): get formula for: " + sup);
+		TPTPFormula f = ftable.get(sup);
+		if (debug) System.out.println("renumberOneSupport(): formula: " + f);
+		if (f.supports.size() == 0)
+			return sup;
+		String newsup = f.supports.get(0);
+		while ((f.supports.size() < 2) && !TPTPutil.sourceAxiom(f) && f.supports.size() != 0) {
+			newsup = f.supports.get(0);
+			if (debug) System.out.println("renumberOneSupport(): first support: " + newsup);
+			f = ftable.get(newsup);
+			if (f == null)
+				System.out.println("renumberOneSupport(): Error no formula: " + newsup);
+		}
+		if (debug) System.out.println("renumberOneSupport(): returning: " + newsup);
+		return newsup;
+	}
+
+	/** ***************************************************************
+	 * Look through the chain of supporting steps for a source axiom
+	 * or an axiom with more than one premise.
+	 */
+	public void renumberSupport(HashMap<String,TPTPFormula> ftable,
+								TPTPFormula ps) {
+
+		if (debug) System.out.println("renumberSupport(): renumbering formula " + ps + " with supports " + ps.supports);
+		ArrayList<String> newsup = new ArrayList<>();
+		for (String sup : ps.supports)
+			newsup.add(renumberOneSupport(ftable,sup));
+		if (debug) System.out.println("renumberSupport(): new supports for formula " + ps + " is " + newsup);
+		ps.supports = newsup;
+	}
+
+	/** ***************************************************************
+	 * Simplify proof to remove steps with single support
+	 * other than axioms from the KB
+	 */
+	public ArrayList<TPTPFormula> simplifyProof(int level) {
+
+		HashMap<String,TPTPFormula> ftable = new HashMap<>();
+		for (TPTPFormula ps : proof)
+			ftable.put(ps.name,ps);
+		for (TPTPFormula ps : proof)
+ 			renumberSupport(ftable,ps);
+		ArrayList<TPTPFormula> result = new ArrayList<TPTPFormula>();
+		for (TPTPFormula ps : proof) {
+			if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps))
+				result.add(ps);
+		}
+		return result;
+	}
+
+	/** ***************************************************************
+	 * renumber a proof after simplification
+	 */
+	public ArrayList<TPTPFormula> renumberProof(ArrayList<TPTPFormula> proof) {
+
+		ArrayList<TPTPFormula> result = new ArrayList<TPTPFormula>();
+		HashMap<String,String> table = new HashMap<>();
+		int num = 1;
+		for (TPTPFormula ps : proof)
+			table.put(ps.name,Integer.toString(num++));
+		if (debug) System.out.println("renumberProof(): table: " + table);
+		for (TPTPFormula ps : proof) {
+			ps.name = table.get(ps.name);
+			ArrayList<String> newSupports = new ArrayList<>();
+ 			for (String s : ps.supports)
+				 newSupports.add(table.get(s));
+			ps.supports = newSupports;
+			result.add(ps);
+		}
+		return result;
+	}
+
+	/** ***************************************************************
+	 * just replace skolem terms with "something" for now
+	 */
+	public String replaceSkolems(String s) {
+
+		return s.replaceAll("sK\\d","something");
+	}
+
+	/** ***************************************************************
+	 * simplify and paraphrase a proof
+	 */
+	public void simpPara() {
+
+		ArrayList<TPTPFormula> result = simplifyProof(2);
+		if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): reduced to " + result.size() + " steps ");
+		result = renumberProof(result);
+		for (TPTPFormula step : result) {
+			if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): step: " + step);
+			if (debug)  System.out.println("TPTP3ProofProcessor.simpPara(): step sumo : " + step.sumo);
+			if (Pattern.compile("\\(ans\\d").matcher(step.sumo).find()) {
+				step.sumo = FormulaUtil.removeAnswerClause(new Formula(step.sumo));
+				if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): after remove answer : " + step.sumo);
+			}
+			System.out.print(step.name + ".  ");
+			if (step.supports.size() > 1) {
+				StringBuffer list = new StringBuffer();
+				System.out.print("Because of ");
+				for (String s : step.supports)
+					list.append(s + ", ");
+				list.delete(list.length()-2,list.length());
+				String listStr = list.toString();
+				System.out.print(list.substring(0, list.lastIndexOf(",")) + " and" +
+						list.substring(list.lastIndexOf(",") + 1,list.length()) + ", ");
+				String english = LanguageFormatter.toEnglish(step.sumo);
+				english = replaceSkolems(english);
+				System.out.println(english);
+			}
+			else {
+				String s = LanguageFormatter.toEnglish(step.sumo);
+				s = replaceSkolems(s);
+				if (step.role.equals("conjecture")) {
+					System.out.println("Our conjecture is that " + s);
+				}
+				else
+					System.out.println(Character.toUpperCase(s.charAt(0)) + s.substring(1));
+			}
+			System.out.println();
+		}
+		//System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
+		//System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
+		//String link = tpp.createProofDotGraph();
+		//System.out.println("Dot graph at: " + link);
+	}
+
+	/** ***************************************************************
 	 */
 	private void testPrologParser () {
 
@@ -1041,6 +1181,8 @@ public class TPTP3ProofProcessor {
 		System.out.println("  options (with a leading '-'):");
 		System.out.println("  f <file> - parse a TPTP3 proof file");
 		System.out.println("    e - parse proof as an E proof (forward style)");
+		System.out.println("  s <file> - parse, simplify and paraphrase a TPTP3 proof file");
+		System.out.println("    e - parse proof as an E proof (forward style)");
 		System.out.println("  t - run test");
 		System.out.println("  h - show this help");
 	}
@@ -1058,7 +1200,8 @@ public class TPTP3ProofProcessor {
 			showHelp();
 		else {
 			TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-			KBmanager.prefOverride.put("loadLexicons","false");
+			// need lexicons to paraphrase proofs!
+			//KBmanager.prefOverride.put("loadLexicons","false");
 			KBmanager.getMgr().initializeOnce();
 			String kbName = KBmanager.getMgr().getPref("sumokbname");
 			KB kb = KBmanager.getMgr().getKB(kbName);
@@ -1084,6 +1227,29 @@ public class TPTP3ProofProcessor {
 					System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
 					//String link = tpp.createProofDotGraph();
 					//System.out.println("Dot graph at: " + link);
+				}
+				catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			else if (args != null && args.length > 1 && args[0].contains("s")) {
+				try {
+					if (args[0].contains("e"))
+						KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+					else
+						KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+					String skolems = tpp.findTypesForSkolemTerms(kb);
+					System.out.println("skolems: " + skolems);
+					LanguageFormatter.setKB(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")));
+					List<String> lines = FileUtil.readLines(args[1],false);
+					String query = "";
+					StringBuffer answerVars = new StringBuffer("");
+					//System.out.println("input: " + lines + "\n");
+					tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
+					//tpp.printProof(1);
+					//tpp.createProofDotGraph();
+					//System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
+					tpp.simpPara();
 				}
 				catch (Exception e) {
 					e.printStackTrace();
