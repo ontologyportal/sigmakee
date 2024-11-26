@@ -141,7 +141,7 @@
 
     <target name="init" depends="init-ivy">
         <condition property="jdk21+">
-            <javavesion atleast="21"/>
+            <javaversion atleast="21"/>
         </condition>
         <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 21 or greater."
               unless="jdk21+">
