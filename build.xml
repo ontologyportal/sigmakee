@@ -146,7 +146,7 @@
         <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 21 or greater."
               unless="jdk21+">
         </fail>
-        
+
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
         <echo message="Specification Vendor:     ${spec.vendor}"/>
         <echo message=""/>
@@ -372,7 +372,7 @@
         <antcall target="retrieve.wordnet"/>
 
         <!-- Retrieve E prover -->
-        <antcall tareget="retrieve.E"/>
+        <antcall target="retrieve.E"/>
 
         <!-- Clone the sigma tools -->
         <antcall target="clone.sumo"/>
