@@ -112,7 +112,7 @@ public class KIF {
         try {
             File f = new File(filename);
             if (!f.exists()) {
-                System.out.println("KIF.getKIFFileSize(): error file " + filename + "does not exist");
+                System.err.println("KIF.getKIFFileSize(): error file " + filename + "does not exist");
                 return 0;
             }
             return f.length();
