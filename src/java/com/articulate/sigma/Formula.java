@@ -23,6 +23,7 @@ about individual SUO-KIF formulas.
 package com.articulate.sigma;
 
 import com.articulate.sigma.utils.StringUtil;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
@@ -144,10 +145,10 @@ public class Formula implements Comparable, Serializable {
 
     // An ArrayList of String messages with a message that has a reserved character of ':'
     // dividing the message from a formula or term that will be hyperlinked and formmated
-	public TreeSet<String> errors = new TreeSet<String>();
+    public TreeSet<String> errors = new TreeSet<>();
 
     /** Warnings found during execution. */
-    public TreeSet<String> warnings = new TreeSet<String>();
+    public TreeSet<String> warnings = new TreeSet<>();
 
     /** The formula in textual forms. */
     private String theFormula;
@@ -189,7 +190,7 @@ public class Formula implements Comparable, Serializable {
      * explicitly quantified variables in the Formula.  The second
      * contains all variables in Formula that are not within the scope
      * of some explicit quantifier. */
-    public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<HashSet<String>>();
+    public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<>();
 
     public HashSet<String> quantVarsCache = new HashSet<>();
     public HashSet<String> unquantVarsCache = new HashSet<>();
@@ -225,7 +226,7 @@ public class Formula implements Comparable, Serializable {
      * a complete deepCopy() since it leaves out the errors and warnings
      * variables
      */
-	public Formula(Formula f) {
+    public Formula(Formula f) {
 
 		this.endLine = f.endLine;
 		this.startLine = f.startLine;
@@ -409,7 +410,7 @@ public class Formula implements Comparable, Serializable {
 
         theFormula = s;
         allVarsCache = new HashSet<>();
-        allVarsPairCache = new ArrayList<HashSet<String>>();
+        allVarsPairCache = new ArrayList<>();
         quantVarsCache = new HashSet<>();
         unquantVarsCache = new HashSet<>();
         existVarsCache = new HashSet<>();
@@ -429,7 +430,7 @@ public class Formula implements Comparable, Serializable {
         if (!StringUtil.emptyString(fname) && fname.lastIndexOf(File.separator) > -1)
             fname = fname.substring(fname.lastIndexOf(File.separator) + 1);
         int hc = theFormula.hashCode();
-        String result = null;
+        String result;
         if (hc < 0)
             result = "N" + (Integer.valueOf(hc)).toString().substring(1) + fname;
         else
@@ -456,6 +457,7 @@ public class Formula implements Comparable, Serializable {
      * Implement the Comparable interface by defining the compareTo
      * method.  Formulas are equal if their formula strings are equal.
      */
+    @Override
     public int compareTo(Object f) throws ClassCastException {
 
     	if (f == null) {
@@ -473,6 +475,7 @@ public class Formula implements Comparable, Serializable {
      */
     static class SortByLine implements Comparator<Formula> {
 
+        @Override
         public int compare(Formula a, Formula b) {
             return a.startLine - b.startLine;
         }
@@ -499,7 +502,7 @@ public class Formula implements Comparable, Serializable {
                 int pLevel = 0;
                 int qLevel = 0;
                 char prev = '0';
-                char ch = prev;
+                char ch;
                 boolean insideQuote = false;
                 char quoteCharInForce = '0';
                 while (i < len) {
@@ -559,7 +562,7 @@ public class Formula implements Comparable, Serializable {
                 int end = len - 1;
                 int level = 0;
                 char prev = '0';
-                char ch = prev;
+                char ch;
                 boolean insideQuote = false;
                 char quoteCharInForce = '0';
                 while (i < end) {
@@ -626,7 +629,7 @@ public class Formula implements Comparable, Serializable {
                 int end = len - 1;
                 int level = 0;
                 char prev = '0';
-                char ch = prev;
+                char ch;
                 boolean insideQuote = false;
                 char quoteCharInForce = '0';
                 int carCount = 0;
@@ -700,7 +703,7 @@ public class Formula implements Comparable, Serializable {
         Formula ans = this;
         String fStr = this.theFormula;
         if (!StringUtil.emptyString(obj) && !StringUtil.emptyString(fStr)) {
-            String theNewFormula = null;
+            String theNewFormula;
             if (this.listP()) {
                 if (this.empty())
                     theNewFormula = ("(" + obj + ")");
@@ -836,7 +839,7 @@ public class Formula implements Comparable, Serializable {
             System.out.println("Error in KB.append(): attempt to append to non-list: " + theFormula);
             return this;
         }
-        if (f == null || f.theFormula == null || f.theFormula == "" || f.theFormula.equals("()"))
+        if (f == null || f.theFormula == null || "".equals(f.theFormula) || f.theFormula.equals("()"))
             return newFormula;
         f.theFormula = f.theFormula.trim();
         if (!f.atom())
@@ -914,20 +917,22 @@ public class Formula implements Comparable, Serializable {
      */
     private String validArgsRecurse(Formula f, String filename, Integer lineNo) {
 
-		if (f.theFormula == "" || !f.listP() || f.atom() || f.empty())
+		if ("".equals(f.theFormula) || !f.listP() || f.atom() || f.empty())
 			return "";
         String pred = f.car();
         String rest = f.cdr();
         Formula restF = new Formula();
         restF.read(rest);
         int argCount = 0;
+        String arg, result;
+        Formula argF;
         while (!restF.empty()) {
             argCount++;
-            String arg = restF.car();
-            Formula argF = new Formula();
+            arg = restF.car();
+            argF = new Formula();
             argF.read(arg);
-            String result = validArgsRecurse(argF, filename, lineNo);
-            if (result != "")
+            result = validArgsRecurse(argF, filename, lineNo);
+            if (!"".equals(result))
                 return result;
             restF.theFormula = restF.cdr();
         }
@@ -1000,7 +1005,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String validArgs(String filename, Integer lineNo) {
 
-        if (theFormula == null || theFormula == "")
+        if (theFormula == null || "".equals(theFormula))
             return "";
         Formula f = new Formula();
         f.read(theFormula);
@@ -1042,15 +1047,17 @@ public class Formula implements Comparable, Serializable {
      */
     private ArrayList<Formula> parseList(String s) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        ArrayList<Formula> result = new ArrayList<>();
         Formula f = new Formula();
         f.read("(" + s + ")");
         if (f.empty())
             return result;
+        String car;
+        Formula newForm;
         while (!f.empty()) {
-            String car = f.car();
+            car = f.car();
             f.read(f.cdr());
-            Formula newForm = new Formula();
+            newForm = new Formula();
             newForm.read(car);
             result.add(newForm);
         }
@@ -1081,7 +1088,7 @@ public class Formula implements Comparable, Serializable {
                 }
             }
         }
-        return sList.size() == 0;
+        return sList.isEmpty();
     }
 
     /** ***************************************************************
@@ -1105,8 +1112,8 @@ public class Formula implements Comparable, Serializable {
         Formula sform = new Formula();
         sform.read(s);
 
-        if (form.car().intern() == "and" || form.car().intern() == "or") {
-            if (sform.car().intern() != sform.car().intern())
+        if ("and".equals(form.car().intern()) || "or".equals(form.car().intern())) {
+            if (sform.car().intern() == null ? sform.car().intern() != null : !sform.car().intern().equals(sform.car().intern()))
                 return false;
             form.read(form.cdr());
             sform.read(sform.cdr());
@@ -1126,6 +1133,7 @@ public class Formula implements Comparable, Serializable {
      * If equals is overridden, hashCode must use the same
      * "significant" fields.
      */
+    @Override
     public int hashCode() {
 
         String thisString = Clausifier.normalizeVariables(this.theFormula).trim();
@@ -1138,7 +1146,7 @@ public class Formula implements Comparable, Serializable {
      * independent of their variable names, which have no semantics.
      */
     @Override
-	public boolean equals(Object o) {
+    public boolean equals(Object o) {
 
         if (o == null ) {
             return false;
@@ -1243,7 +1251,7 @@ public class Formula implements Comparable, Serializable {
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>> memoMap =
-                new HashMap<FormulaUtil.FormulaMatchMemoMapKey, List<Set<VariableMapping>>>();
+                new HashMap<>();
         List<Set<VariableMapping>> result = mapFormulaVariables(f1, f2, kb, memoMap);
 
         if (debug) System.out.println("Formula.unifyWith(): variable mapping : " + result);
@@ -1289,8 +1297,8 @@ public class Formula implements Comparable, Serializable {
         //not memo hit, carrying on the actual computations
         //null tests first
         if (f1 == null && f2 == null) {
-            ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
-            result.add(new HashSet<VariableMapping>());
+            ArrayList<Set<VariableMapping>> result = new ArrayList<>();
+            result.add(new HashSet<>());
             return result;
         }
         else if (f1 == null || f2 == null) {
@@ -1300,16 +1308,16 @@ public class Formula implements Comparable, Serializable {
         //checking formulas are simple tokens
         if (f1.atom() && f2.atom()) {
             if ((f1.isVariable() && f2.isVariable()) || (Formula.isSkolemTerm(f1.theFormula) && Formula.isSkolemTerm(f2.theFormula))) {
-                ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
-                Set<VariableMapping> set = new HashSet<VariableMapping>();
+                ArrayList<Set<VariableMapping>> result = new ArrayList<>();
+                Set<VariableMapping> set = new HashSet<>();
                 set.add(new VariableMapping(f1.theFormula, f2.theFormula));
                 result.add(set);
                 return result;
             }
             else {
                 if (f1.theFormula.equals(f2.theFormula)) {
-                    ArrayList<Set<VariableMapping>> result = new ArrayList<Set<VariableMapping>>();
-                    result.add(new HashSet<VariableMapping>());
+                    ArrayList<Set<VariableMapping>> result = new ArrayList<>();
+                    result.add(new HashSet<>());
                     return result;
                 } else {
                     return null;
@@ -1343,12 +1351,14 @@ public class Formula implements Comparable, Serializable {
         if (!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
             //non commutative relation; comparing parameters in order
             List<Set<VariableMapping>> runningMaps = headMaps;
+            List<Set<VariableMapping>> parameterMaps;
+            Formula parameter1, parameter2;
             for (int i = 0; i < args1.size(); i++) {
-                Formula parameter1 = new Formula();
+                parameter1 = new Formula();
                 parameter1.read(args1.get(i));
-                Formula parameter2 = new Formula();
+                parameter2 = new Formula();
                 parameter2.read(args2.get(i));
-                List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
+                parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
                 memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.theFormula, parameter2.theFormula), parameterMaps);
                 runningMaps = VariableMapping.intersect(runningMaps, parameterMaps);
                 if (runningMaps == null) {
@@ -1359,18 +1369,21 @@ public class Formula implements Comparable, Serializable {
         }
         else {
             //commutative relation; going through all possible parameter permutations and comparing
-            List<Set<VariableMapping>> unionMaps = new ArrayList<Set<VariableMapping>>();
+            List<Set<VariableMapping>> unionMaps = new ArrayList<>();
             List<int[]> permutations = FormulaUtil.getPermutations(args1.size(),
                     (a,b)-> mapFormulaVariables(new Formula(args1.get(a)), new Formula(args2.get(b)), kb, memoMap) != null);
+            List<Set<VariableMapping>> currentMaps, parameterMaps;
+            boolean currentPairingValid;
+            Formula parameter1, parameter2;
             for (int[] perm:permutations) {
-                List<Set<VariableMapping>> currentMaps = headMaps;
-                boolean currentPairingValid = true;
+                currentMaps = headMaps;
+                currentPairingValid = true;
                 for (int i = 0; i < args1.size(); i++) {
-                    Formula parameter1 = new Formula();
+                    parameter1 = new Formula();
                     parameter1.read(args1.get(i));
-                    Formula parameter2 = new Formula();
+                    parameter2 = new Formula();
                     parameter2.read(args2.get(perm[i]));
-                    List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
+                    parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
                     memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.theFormula, parameter2.theFormula), parameterMaps);
                     currentMaps = VariableMapping.intersect(currentMaps, parameterMaps);
                     if (currentMaps == null) {
@@ -1464,10 +1477,10 @@ public class Formula implements Comparable, Serializable {
 
         //normalizing parameters
         ArrayList<String> args = f.complexArgumentsToArrayListString(1);
-        if (args == null || args.size() == 0) {
+        if (args == null || args.isEmpty()) {
             return formula;
         }
-        List<String> orderedArgs = new ArrayList<String>();
+        List<String> orderedArgs = new ArrayList<>();
         for (String arg:args) {
             orderedArgs.add(Formula.normalizeParameterOrder(arg, kb, varPlaceholders));
         }
@@ -1552,7 +1565,7 @@ public class Formula implements Comparable, Serializable {
         while (form.listP() && !form.empty()) {
             ans = form.carAsFormula();
             if (args == null)
-                args = new ArrayList<Formula>();
+                args = new ArrayList<>();
             if (i >= args.size()) { // opportunistically fill the cache
                 args.add(ans);
                 if (debug) System.out.println("Formula.getArgument(): adding: " + ans.theFormula + " to " + stringArgs);
@@ -1606,7 +1619,7 @@ public class Formula implements Comparable, Serializable {
         if (debug) System.out.println("Formula.argumentsToArrayListString(): formula: " + getFormula());
         if (debug) System.out.println("Formula.argumentsToArrayListString(): stringArgs: " + stringArgs);
         ArrayList<String> result = new ArrayList<>();
-        if (args != null && args.size() > 0) {
+        if (args != null && !args.isEmpty()) {
             if (start == 0)
                 return stringArgs;
             if (start > stringArgs.size()) {
@@ -1631,7 +1644,7 @@ public class Formula implements Comparable, Serializable {
         int index = start;
 
         String arg = getStringArgument(index);
-        while (arg != null && arg != "" && arg.length() > 0) {
+        while (arg != null && !"".equals(arg) && arg.length() > 0) {
             result.add(arg.intern());
             index++;
             arg = getStringArgument(index);
@@ -1726,15 +1739,15 @@ public class Formula implements Comparable, Serializable {
      */
     public ArrayList<HashSet<String>> collectVariables() {
 
-        if (allVarsPairCache.size() > 0 && KBmanager.initialized)
+        if (!allVarsPairCache.isEmpty() && KBmanager.initialized)
             return allVarsPairCache;
-        ArrayList<HashSet<String>> ans = new ArrayList<HashSet<String>>();
+        ArrayList<HashSet<String>> ans = new ArrayList<>();
         ans.add(new HashSet());
         ans.add(new HashSet());
         allVarsPairCache.add(new HashSet());
         allVarsPairCache.add(new HashSet());
-    	HashSet<String> quantified = new HashSet<String>();
-    	HashSet<String> unquantified = new HashSet<String>();
+    	HashSet<String> quantified = new HashSet<>();
+    	HashSet<String> unquantified = new HashSet<>();
         unquantified.addAll(collectAllVariables());
         quantified.addAll(collectQuantifiedVariables());
         unquantified.removeAll(quantified);
@@ -1756,12 +1769,10 @@ public class Formula implements Comparable, Serializable {
 
         String carstr = f.car();
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
-            if (carstr.equals(f.EQUANT) || carstr.equals(f.UQUANT)) {
+            if (carstr.equals(Formula.EQUANT) || carstr.equals(Formula.UQUANT)) {
                 String varString = f.getStringArgument(1);
                 String[] varArray = (varString.substring(1, varString.length()-1)).split(" ");
-                for (String var : varArray) {
-                    quantifiedVariables.add(var);
-                }
+                quantifiedVariables.addAll(Arrays.asList(varArray));
 
                 for (int i = 2 ; i < f.listLength(); i++) {
                     collectQuantifiedUnquantifiedVariablesRecurse(new Formula(f.getArgument(i)),
@@ -1777,8 +1788,9 @@ public class Formula implements Comparable, Serializable {
 
         }
         else {
+            String arg;
             for (int i = 0; i < f.listLength(); i++) {
-                String arg = f.getStringArgument(i);
+                arg = f.getStringArgument(i);
                 if (arg.startsWith("?") || arg.startsWith("@")) {
                     if (!varFlag.containsKey(arg) && !quantifiedVariables.contains(arg)) {
                         unquantifiedVariables.add(arg);
@@ -1796,8 +1808,6 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Collects all String terms from one Collection and adds them
      * to another, without duplication
-     *
-     * @return An Collection of Strings with no duplicates
      */
     public void addAllNoDup (Collection<String> thisCol, Collection<String> arg) {
 
@@ -1844,12 +1854,12 @@ public class Formula implements Comparable, Serializable {
      */
     public Set<String> collectAllVariables() {
 
-        if (allVarsCache.size() > 0)
+        if (!allVarsCache.isEmpty())
             return allVarsCache;
     	//ArrayList<String> result = new ArrayList<String>();
-    	HashSet<String> resultSet = new HashSet<String>();
+    	HashSet<String> resultSet = new HashSet<>();
     	if (listLength() < 1)
-    		return resultSet;
+    	    return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
     	if (fcar.isVariable())
@@ -1883,7 +1893,7 @@ public class Formula implements Comparable, Serializable {
      */
     public ArrayList<String> collectAllVariablesOrdered() {
 
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         if (listLength() < 1)
             return result;
         Formula fcar = new Formula();
@@ -1951,29 +1961,29 @@ public class Formula implements Comparable, Serializable {
      */
     public Set<String> collectQuantifiedVariables() {
 
-        if (quantVarsCache.size() > 0)
+        if (!quantVarsCache.isEmpty())
             return quantVarsCache;
-    	HashSet<String> resultSet = new HashSet<String>();
+    	HashSet<String> resultSet = new HashSet<>();
     	if (empty())
-    		return resultSet;
+    	    return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
     	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
-        	Formula remainder = new Formula();
-        	remainder.read(this.cdr());
-        	if (!remainder.listP()) {
-        		System.out.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
-        		return resultSet;
-        	}
-        	Formula varlist = new Formula();
-        	varlist.read(remainder.car());
-        	resultSet.addAll(varlist.collectAllVariables());
-    		resultSet.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
+            Formula remainder = new Formula();
+            remainder.read(this.cdr());
+            if (!remainder.listP()) {
+                System.out.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
+                return resultSet;
+            }
+            Formula varlist = new Formula();
+            varlist.read(remainder.car());
+            resultSet.addAll(varlist.collectAllVariables());
+            resultSet.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
     	}
     	else {
-    		if (fcar.listP())
-    			resultSet.addAll(fcar.collectQuantifiedVariables());
-    		resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
+            if (fcar.listP())
+                    resultSet.addAll(fcar.collectQuantifiedVariables());
+            resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
     	}
         quantVarsCache.addAll(resultSet);
     	return resultSet;
@@ -1991,9 +2001,9 @@ public class Formula implements Comparable, Serializable {
      */
     public Set<String> collectTerms() {
 
-        HashSet<String> resultSet = new HashSet<String>();
+        HashSet<String> resultSet = new HashSet<>();
 
-        if (this.theFormula == null || this.theFormula == "") {
+        if (this.theFormula == null || "".equals(this.theFormula)) {
 			System.out.println("Error in Formula.collectTerms(): " +
 					"No formula to collect terms from: " + this);
             return null;
@@ -2005,12 +2015,13 @@ public class Formula implements Comparable, Serializable {
             resultSet.add(theFormula);
         }
         else {
-            if (termCache.size() > 0)
-            return termCache;
+            if (!termCache.isEmpty())
+                return termCache;
             Formula f = new Formula();
             f.read(theFormula);
-            while (!f.empty() && f.theFormula != null && f.theFormula != "") {
-                Formula f2 = new Formula();
+            Formula f2;
+            while (!f.empty() && f.theFormula != null && !"".equals(f.theFormula)) {
+                f2 = new Formula();
                 f2.read(f.car());
                 resultSet.addAll(f2.collectTerms());
                 f.read(f.cdr());
@@ -2104,7 +2115,7 @@ public class Formula implements Comparable, Serializable {
             f.read(this.theFormula);
             int flen = f.listLength();
             String suffix = ("__" + (flen - 1));
-            String arg = null;
+            String arg;
             sb.append("(");
             for (int i = 0 ; i < flen ; i++) {
                 arg = f.getStringArgument(i);
@@ -2155,11 +2166,13 @@ public class Formula implements Comparable, Serializable {
      */
     public HashMap<String, ArrayList> gatherRelationsWithArgTypes(KB kb) {
 
-        HashMap<String, ArrayList> argtypemap = new HashMap<String, ArrayList>();
+        HashMap<String, ArrayList> argtypemap = new HashMap<>();
         Set<String> relations = gatherRelationConstants();
+        int atlen;
+        ArrayList argtypes;
         for (String r : relations) {
-            int atlen = (Formula.MAX_PREDICATE_ARITY + 1);
-            ArrayList argtypes = new ArrayList();
+            atlen = (Formula.MAX_PREDICATE_ARITY + 1);
+            argtypes = new ArrayList();
             for (int i = 0; i < atlen; i++)
                 argtypes.add(kb.getArgType(r, i));
             argtypemap.put(r, argtypes);
@@ -2177,24 +2190,24 @@ public class Formula implements Comparable, Serializable {
      */
     public HashSet<String> gatherRelationConstants() {
 
-        HashSet<String> relations = new HashSet<String>();
-        Set<String> accumulator = new HashSet<String>();
+        HashSet<String> relations = new HashSet<>();
+        Set<String> accumulator = new HashSet<>();
         if (this.listP() && !this.empty())
             accumulator.add(this.theFormula);
-        List<String> kifLists = new ArrayList<String>();
-        Formula f = null;
+        List<String> kifLists = new ArrayList<>();
+        Formula f;
+        String klist, arg;
         while (!accumulator.isEmpty()) {
             kifLists.clear();
             kifLists.addAll(accumulator);
             accumulator.clear();
-            String klist = null;
             for (Iterator<String> it = kifLists.iterator(); it.hasNext();) {
                 klist = it.next();
                 if (listP(klist)) {
                     f = new Formula();
                     f.read(klist);
                     for (int i = 0; !f.empty(); i++) {
-                        String arg = f.car();
+                        arg = f.car();
                         if (listP(arg)) {
                             if (!empty(arg)) accumulator.add(arg);
                         }
@@ -2255,11 +2268,11 @@ public class Formula implements Comparable, Serializable {
     public boolean isHigherOrder(KB kb) {
 
         if (debug) System.out.println("Formula.isHigherOrder(): " + this);
-        if (varTypeCache == null || varTypeCache.keySet().size() == 0) {
+        if (varTypeCache == null || varTypeCache.keySet().isEmpty()) {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             varTypeCache = fp.findAllTypeRestrictions(this,kb);
         }
-        if (!KBmanager.getMgr().initialized)
+        if (!KBmanager.initialized)
             return false;
         //if (higherOrder) {
         //    if (debug) if (debug) System.out.println("Formula.isHigherOrder(): cached as higher order: " + this);
@@ -2274,8 +2287,9 @@ public class Formula implements Comparable, Serializable {
             boolean logop = isLogicalOperator(pred);
             if (debug) System.out.println("Formula.isHigherOrder(): logop: " + logop);
             ArrayList<String> al = literalToArrayList();
+            Formula f;
             for (String arg : al) {
-                Formula f = new Formula();
+                f = new Formula();
                 f.read(arg);
                 f.varTypeCache = this.varTypeCache;
                 if (debug) System.out.println("Formula.isHigherOrder(): varTypeCache: " + varTypeCache);
@@ -2387,9 +2401,7 @@ public class Formula implements Comparable, Serializable {
         if (!antecedent.isSimpleClause(kb) && !antecedent.car().equals("and"))
             return false;
         Formula consequent = cdrAsFormula().cdrAsFormula().carAsFormula();
-        if (!consequent.isSimpleClause(kb) && !consequent.car().equals("and"))
-            return false;
-        return true;
+        return !(!consequent.isSimpleClause(kb) && !consequent.car().equals("and"));
     }
 
     /** ***************************************************************
@@ -2411,7 +2423,7 @@ public class Formula implements Comparable, Serializable {
         	return false;
         if (!atom(this.car()))
         	return false;
-        String arg = null;
+        String arg;
         int argnum = 1;
         do {
         	arg = this.getStringArgument(argnum);
@@ -2498,7 +2510,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String findType(KB kb) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (this.isBinary()) sb.append ("binary, ");
         if (this.isExistentiallyQuantified()) sb.append ("existential, ");
         if (this.isFunctionalTerm()) sb.append ("functional, ");
@@ -2532,8 +2544,11 @@ public class Formula implements Comparable, Serializable {
                                  { LOG_TRUE,  LOG_FALSE  },
                                  { LOG_FALSE, LOG_TRUE   }
             };
-            for (int i = 0; i < duals.length; i++)
-                if (op.equals(duals[i][0])) ans = duals[i][1];
+            for (String[] dual : duals) {
+                if (op.equals(dual[0])) {
+                    ans = dual[1];
+                }
+            }
         }
         return ans;
     }
@@ -2628,8 +2643,8 @@ public class Formula implements Comparable, Serializable {
 
         if (StringUtil.emptyString(form))
             return false;
-        if (form.indexOf("\"") < 0)
-            return (form.indexOf("?") < 0 && form.indexOf("@") < 0);
+        if (!form.contains("\""))
+            return (!form.contains("?") && !form.contains("@"));
         boolean inQuote = false;
         for (int i = 0; i < form.length(); i++) {
             if (form.charAt(i) == '"')
@@ -2691,7 +2706,7 @@ public class Formula implements Comparable, Serializable {
      */
     public ArrayList<String> literalToArrayList() {
 
-        ArrayList<String> tuple = new ArrayList<String>();
+        ArrayList<String> tuple = new ArrayList<>();
         Formula f = this;
         if (f.listP()) {
             while (!f.empty()) {
@@ -2774,7 +2789,7 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean isQuery(String query, String formula) {
 
-        boolean result = false;
+        boolean result;
 
         Formula f = new Formula();
         f.read(formula);
@@ -2844,7 +2859,7 @@ public class Formula implements Comparable, Serializable {
 
         int flen = this.theFormula.length();
         char pch = '0';  // char at (i-1)
-        char ch = '0';   // char at i
+        char ch;         // char at i
         for (int i = 0; i < flen; i++) {
 			// logger.finest("formatted string = " + formatted.toString());
             ch = this.theFormula.charAt(i);
@@ -2869,7 +2884,7 @@ public class Formula implements Comparable, Serializable {
                 if ((i == 0) && (indentLevel == 0) && (ch == '('))
                     formatted.append(ch);
                 if (!inToken && !inVariable && Character.isJavaIdentifierStart(ch)) {
-                    token = new StringBuilder(ch);
+                    token = new StringBuilder();
                     inToken = true;
                 }
                 if (inToken && (Character.isJavaIdentifierPart(ch)
@@ -2984,7 +2999,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String htmlFormat(KB kb, String href) {
 
-        String fKbHref = "";
+        String fKbHref;
         String kbHref = (href + "/sigma/Browse.jsp?kb=" + kb.name);
         fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
         return fKbHref;
@@ -3014,11 +3029,12 @@ public class Formula implements Comparable, Serializable {
         	System.out.println("Error in Formula.toProlog(): Relation not an atom: " + relation);
             return null;
         }
-        result.append(relation + "(");
+        result.append(relation).append("(");
         System.out.println("INFO in Formula.toProlog(): result so far: " + result.toString());
         System.out.println("INFO in Formula.toProlog(): remaining formula: " + f);
+        String arg, newVar;
         while (!f.empty()) {
-            String arg = f.car();
+            arg = f.car();
             System.out.println("INFO in Formula.toProlog(): argForm: " + arg);
             f.theFormula = f.cdr();
             if (!Formula.atom(arg)) {
@@ -3026,13 +3042,13 @@ public class Formula implements Comparable, Serializable {
                 return null;
             }
             if (Formula.isVariable(arg)) {
-                String newVar = Character.toUpperCase(arg.charAt(1)) + arg.substring(2);
+                newVar = Character.toUpperCase(arg.charAt(1)) + arg.substring(2);
                 result.append(newVar);
             }
             else if (StringUtil.isQuotedString(arg))
                 result.append(arg);
             else
-                result.append("'" + arg + "'");
+                result.append("'").append(arg).append("'");
             if (!f.empty())
                 result.append(",");
             else
@@ -3108,7 +3124,7 @@ public class Formula implements Comparable, Serializable {
                             bw.close();
                             bw = null;
                         }
-                        catch (Exception bwe) {
+                        catch (IOException bwe) {
                             bwe.printStackTrace();
                         }
                     }
@@ -3125,11 +3141,10 @@ public class Formula implements Comparable, Serializable {
                 try {
                     bw.close();
                 }
-                catch (Exception e2) {
+                catch (IOException e2) {
                 }
             }
         }
-        return;
     }
 
     /** ***************************************************************
