@@ -457,6 +457,7 @@ public class Formula implements Comparable, Serializable {
      * Implement the Comparable interface by defining the compareTo
      * method.  Formulas are equal if their formula strings are equal.
      */
+    @Override
     public int compareTo(Object f) throws ClassCastException {
 
     	if (f == null) {
@@ -2858,7 +2859,7 @@ public class Formula implements Comparable, Serializable {
 
         int flen = this.theFormula.length();
         char pch = '0';  // char at (i-1)
-        char ch = '0';   // char at i
+        char ch;         // char at i
         for (int i = 0; i < flen; i++) {
 			// logger.finest("formatted string = " + formatted.toString());
             ch = this.theFormula.charAt(i);
@@ -2883,7 +2884,7 @@ public class Formula implements Comparable, Serializable {
                 if ((i == 0) && (indentLevel == 0) && (ch == '('))
                     formatted.append(ch);
                 if (!inToken && !inVariable && Character.isJavaIdentifierStart(ch)) {
-                    token = new StringBuilder().append(ch);
+                    token = new StringBuilder();
                     inToken = true;
                 }
                 if (inToken && (Character.isJavaIdentifierPart(ch)
