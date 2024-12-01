@@ -115,7 +115,7 @@
     <property name="tomcat.version" value="9.0.97"/>
 
     <!-- Define the sigma user spaces -->
-    <property name="workspace.dir" value="${git.home}/workspace"/>
+    <property name="workspace.dir" value="${user.home}/workspace"/>
     <property name="programs.dir" value="${user.home}/Programs"/>
 
     <condition property="isUnixNotMac">
@@ -424,7 +424,8 @@
     </target>
 
     <target name="clone.sumo">
-        <git command="clone">
+        <mkdir dir="${workspace.dir}/sumo"/>
+        <git command="clone" dir="${workspace.dir}/sumo">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
@@ -434,7 +435,8 @@
         </git>
     </target>
     <target name="clone.tptpantlr">
-        <git command="clone">
+        <mkdir dir="${workspace.dir}/TPTP-ANTLR"/>
+        <git command="clone" dir="${workspace.dir}/TPTP-ANTLR">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
@@ -444,7 +446,8 @@
         </git>
     </target>
     <target name="clone.sigmautils">
-        <git command="clone">
+        <mkdir dir="${workspace.dir}/SigmaUtils"/>
+        <git command="clone" dir="${workspace.dir}/SigmaUtils">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
@@ -533,7 +536,6 @@
 
     <target name="append.bashrc" if="isUnixNotMac">
         <echo file="${user.home}/.bashrc" append="true">
-
 # For SIGMA
 export SIGMA_HOME=${user.home}/.${app.name}
 export ONTOLOGYPORTAL_GIT=${workspace.dir}
@@ -546,7 +548,6 @@ export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
 
     <target name="append.zshrc" unless="isUnixNotMac">
         <echo file="${user.home}/.zshrc" append="true">
-
 # For SIGMA
 export SIGMA_HOME=${user.home}/.${app.name}
 export ONTOLOGYPORTAL_GIT=${workspace.dir}
