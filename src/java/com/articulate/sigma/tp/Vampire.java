@@ -2,11 +2,11 @@
 portions copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
@@ -28,7 +28,7 @@ import java.util.*;
  * A previous version invoked the KIF version of Vampire from Java
  * but that's 15 years old now.  The current Vampire does TPTP3 output
  * instead of XML.
- 
+
  * @author Andrei Voronkov
  * @since 14/08/2003, Acapulco
  * @author apease
@@ -36,7 +36,7 @@ import java.util.*;
 
 public class Vampire {
 
-    public StringBuffer qlist = null; // quantifier list in order for answer extraction
+    public StringBuilder qlist = null; // quantifier list in order for answer extraction
     public ArrayList<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
@@ -46,11 +46,12 @@ public class Vampire {
 
     /** *************************************************************
      */
+    @Override
     public String toString() {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (String s : output)
-            sb.append(s + "\n");
+            sb.append(s).append("\n");
         return sb.toString();
     }
 
@@ -68,8 +69,7 @@ public class Vampire {
         String[] optar = opts.split(" ");
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();
-        for (int i = 0; i < optar.length; i++)
-            cmds[i+1] = optar[i];
+        System.arraycopy(optar, 0, cmds, 1, optar.length);
         cmds[optar.length+1] = Integer.toString(timeout);
         cmds[optar.length+2] = kbFile.toString();
         return cmds;
@@ -92,23 +92,23 @@ public class Vampire {
 
         if (debug) System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
+        FormulaPreprocessor fp;
+        Set<String> tptpFormulas;
+        String tptpStr;
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
             HashSet<Formula> processedFormulas = new HashSet();
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                FormulaPreprocessor fp = new FormulaPreprocessor();
+                fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP/TFF.
-                    Set<String> tptpFormulas = new HashSet<>();
+                    tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
                         for (Formula p : processedFormulas) {
                             if (!p.isHigherOrder(kb)) {
-                                String tptpStr = stptp.tptpParseSUOKIFString(p.getFormula(), false);
+                                tptpStr = SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(), false);
                                 if (debug) System.out.println("INFO in Vampire.assertFormula(2): formula " + tptpStr);
                                 tptpFormulas.add(tptpStr);
                             }
@@ -118,9 +118,9 @@ public class Vampire {
                     for (String theTPTPFormula : tptpFormulas) {
                         pw.print(SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        String tptpstring = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
+                        tptpStr = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
                                 "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                        if (debug) System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpstring);
+                        if (debug) System.out.println("INFO in Vampire.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
                     pw.flush();
                 }
@@ -128,14 +128,6 @@ public class Vampire {
         }
         catch (IOException e) {
             e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) pw.close();
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-            }
         }
         return allAdded;
     }
@@ -168,15 +160,16 @@ public class Vampire {
         Process _vampire = _builder.start();
         //System.out.println("Vampire.run(): process: " + _vampire);
 
-        BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()));
-        String line = null;
-        while ((line = _reader.readLine()) != null) {
-            output.add(line);
+        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
+            String line;
+            while ((line = _reader.readLine()) != null) {
+                output.add(line);
+            }
         }
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
-            System.out.println("Vampire.run(): Abnormal process termination");
-            System.out.println(output);
+            System.err.println("Vampire.run(): Abnormal process termination");
+            System.err.println(output);
         }
         System.out.println("Vampire.run() done executing");
     }
@@ -186,33 +179,18 @@ public class Vampire {
      */
     public void writeStatements(HashSet<String> stmts, String type) {
 
-        FileWriter fw = null;
-        PrintWriter pw = null;
         String dir = KBmanager.getMgr().getPref("kbDir");
         String fname = "temp-stmt." + type;
 
-        try {
-            fw = new FileWriter(dir + File.separator + fname);
-            pw = new PrintWriter(fw);
+        try (FileWriter fw = new FileWriter(dir + File.separator + fname);
+            PrintWriter pw = new PrintWriter(fw)) {
             for (String s : stmts)
                 pw.println(s);
         }
-        catch (Exception e) {
-            System.out.println("Error in writeStatements(): " + e.getMessage());
-            System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
+        catch (IOException e) {
+            System.err.println("Error in writeStatements(): " + e.getMessage());
+            System.err.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) {
-                    pw.close();
-                }
-                if (fw != null) {
-                    fw.close();
-                }
-            }
-            catch (Exception ex) {
-            }
         }
     }
 
@@ -225,26 +203,26 @@ public class Vampire {
         File f1file = new File(f1);
         File f2file = new File(f2);
         if (!f1file.exists())
-            System.out.println("ERROR in concatFiles(): " + f1 + " does not exist");
+            System.err.println("ERROR in concatFiles(): " + f1 + " does not exist");
         if (!f2file.exists())
-            System.out.println("ERROR in concatFiles(): " + f2 + " does not exist");
-        PrintWriter pw = new PrintWriter(fout);
-        BufferedReader br = new BufferedReader(new FileReader(f1));
-        String line = br.readLine();
-        while (line != null) {
-            pw.println(line);
-            line = br.readLine();
-        }
+            System.err.println("ERROR in concatFiles(): " + f2 + " does not exist");
+        try (PrintWriter pw = new PrintWriter(fout)) {
+            BufferedReader br = new BufferedReader(new FileReader(f1));
+            String line = br.readLine();
+            while (line != null) {
+                pw.println(line);
+                line = br.readLine();
+            }
 
-        br = new BufferedReader(new FileReader(f2));
-        line = br.readLine();
-        while (line != null) {
-            pw.println(line);
+            br = new BufferedReader(new FileReader(f2));
             line = br.readLine();
+            while (line != null) {
+                pw.println(line);
+                line = br.readLine();
+            }
+            pw.flush();
+            br.close();
         }
-        pw.flush();
-        br.close();
-        pw.close();
     }
 
     /** *************************************************************
@@ -260,7 +238,7 @@ public class Vampire {
         if (ufile.exists())
             return FileUtil.readLines(dir + File.separator + userAssertionTPTP,false);
         else
-            return new ArrayList<String>();
+            return new ArrayList<>();
     }
 
     /** *************************************************************

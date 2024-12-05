@@ -2,11 +2,11 @@
 portions copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
 */
@@ -17,7 +17,6 @@ import com.articulate.sigma.Formula;
 import com.articulate.sigma.FormulaPreprocessor;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOformulaToTPTPformula;
 import com.articulate.sigma.trans.THF;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
@@ -37,18 +36,19 @@ import java.util.*;
 
 public class LEO {
 
-    public StringBuffer qlist = null; // quantifier list in order for answer extraction
+    public StringBuilder qlist = null; // quantifier list in order for answer extraction
     public ArrayList<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
     public static boolean debug = false;
 
     /** *************************************************************
      */
+    @Override
     public String toString() {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (String s : output)
-            sb.append(s + "\n");
+            sb.append(s).append("\n");
         return sb.toString();
     }
 
@@ -56,8 +56,7 @@ public class LEO {
      */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
-        String opts = "";
-        opts = executable.toString() + " " + kbFile.toString() + " -t " + Integer.toString(timeout) + " -p";
+        String opts = executable.toString() + " " + kbFile.toString() + " -t " + Integer.toString(timeout) + " -p";
         String[] optar = opts.split(" ");
         return optar;
     }
@@ -79,22 +78,24 @@ public class LEO {
 
         if (debug) System.out.println("INFO in Leo.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
             HashSet<Formula> processedFormulas = new HashSet();
+            FormulaPreprocessor fp;
+            Set<String> tptpFormulas;
+            THF thf;
+            String tptpStr;
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                FormulaPreprocessor fp = new FormulaPreprocessor();
+                fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to THF.
-                    Set<String> tptpFormulas = new HashSet<>();
+                    tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        THF thf = new THF();
+                        thf = new THF();
                         for (Formula p : processedFormulas) {
-                            String tptpStr = thf.oneKIF2THF(p,false,kb);
+                            tptpStr = thf.oneKIF2THF(p,false,kb);
                             if (debug) System.out.println("INFO in LEO.assertFormula(2): formula " + tptpStr);
                             tptpFormulas.add(tptpStr);
                         }
@@ -103,9 +104,9 @@ public class LEO {
                     for (String theTPTPFormula : tptpFormulas) {
                         pw.print(SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                         pw.println(",axiom,(" + theTPTPFormula + ")).");
-                        String tptpstring = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
+                        tptpStr = SUMOformulaToTPTPformula.lang + "(kb_" + kb.name + "_UserAssertion" +
                                 "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
-                        if (debug) System.out.println("INFO in LEO.assertFormula(2): TPTP for user assertion = " + tptpstring);
+                        if (debug) System.out.println("INFO in LEO.assertFormula(2): TPTP for user assertion = " + tptpStr);
                     }
                     pw.flush();
                 }
@@ -113,14 +114,6 @@ public class LEO {
         }
         catch (IOException e) {
             e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) pw.close();
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-            }
         }
         return allAdded;
     }
@@ -154,14 +147,14 @@ public class LEO {
         //System.out.println("Leo.run(): process: " + _vampire);
 
         BufferedReader _reader = new BufferedReader(new InputStreamReader(_leo.getInputStream()));
-        String line = null;
+        String line;
         while ((line = _reader.readLine()) != null) {
             output.add(line);
         }
         int exitValue = _leo.waitFor();
         if (exitValue != 0) {
-            System.out.println("Leo.run(): Abnormal process termination");
-            System.out.println(output);
+            System.err.println("Leo.run(): Abnormal process termination");
+            System.err.println(output);
         }
         System.out.println("Leo.run() done executing");
     }
@@ -171,33 +164,17 @@ public class LEO {
      */
     public void writeStatements(HashSet<String> stmts, String type) {
 
-        FileWriter fw = null;
-        PrintWriter pw = null;
         String dir = KBmanager.getMgr().getPref("kbDir");
         String fname = "temp-stmt." + type;
 
-        try {
-            fw = new FileWriter(dir + File.separator + fname);
-            pw = new PrintWriter(fw);
+        try (FileWriter fw = new FileWriter(dir + File.separator + fname); PrintWriter pw = new PrintWriter(fw)) {
             for (String s : stmts)
                 pw.println(s);
         }
         catch (Exception e) {
-            System.out.println("Error in Leo.writeStatements(): " + e.getMessage());
-            System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
+            System.err.println("Error in Leo.writeStatements(): " + e.getMessage());
+            System.err.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) {
-                    pw.close();
-                }
-                if (fw != null) {
-                    fw.close();
-                }
-            }
-            catch (Exception ex) {
-            }
         }
     }
 
@@ -206,23 +183,22 @@ public class LEO {
     public void catFiles(String f1, String f2, String fout) throws Exception {
 
         System.out.println("catFiles(): concatenating " + f1 + " and " + f2 + " into " + fout);
-        PrintWriter pw = new PrintWriter(fout);
-        BufferedReader br = new BufferedReader(new FileReader(f1));
-        String line = br.readLine();
-        while (line != null) {
-            pw.println(line);
+        String line;
+        try (PrintWriter pw = new PrintWriter(fout); BufferedReader br = new BufferedReader(new FileReader(f1))) {
             line = br.readLine();
-        }
+            while (line != null) {
+                pw.println(line);
+                line = br.readLine();
+            }
 
-        br = new BufferedReader(new FileReader(f2));
-        line = br.readLine();
-        while (line != null) {
-            pw.println(line);
-            line = br.readLine();
+            try (BufferedReader bufr = new BufferedReader(new FileReader(f2))) {
+                line = bufr.readLine();
+                while (line != null) {
+                    pw.println(line);
+                    line = bufr.readLine();
+                }
+            }
         }
-        pw.flush();
-        br.close();
-        pw.close();
     }
 
     /** *************************************************************
@@ -236,7 +212,7 @@ public class LEO {
         if (ufile.exists())
             return FileUtil.readLines(dir + File.separator + userAssertionTPTP,false);
         else
-            return new ArrayList<String>();
+            return new ArrayList<>();
     }
 
     /** *************************************************************

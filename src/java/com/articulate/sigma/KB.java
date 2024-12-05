@@ -1121,7 +1121,7 @@ public class KB implements Serializable {
      */
     public ArrayList<Formula> ask(String kind, int argnum, String term) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        ArrayList<Formula> result = new ArrayList<>();
         String msg;
         if (StringUtil.emptyString(term)) {
             msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), "
@@ -1968,7 +1968,7 @@ public class KB implements Serializable {
             }
             catch (IOException ioe) {
                 ioe.printStackTrace();
-                String message = ioe.getMessage().replaceAll(":", "&58;");
+                String message = ioe.getMessage().replaceAll(":", "&#58;");
                 errors.add(message);
                 result = ioe.getMessage();
             }
@@ -2002,7 +2002,7 @@ public class KB implements Serializable {
         }
         catch (IOException ioe) {
             ioe.printStackTrace();
-            String message = ioe.getMessage().replaceAll(":", "&58;");
+            String message = ioe.getMessage().replaceAll(":", "&#58;");
             errors.add(message);
             result = ioe.getMessage();
         }
@@ -2743,7 +2743,7 @@ public class KB implements Serializable {
                 error.append(" at line ").append(((ParseException) ex1).getErrorOffset());
             error.append(" in file ").append(canonicalPath);
             errors.add(error.toString());
-            System.out.println("Error in KB.addConstituent(): " + error.toString());
+            System.err.println("Error in KB.addConstituent(): " + error.toString());
             ex1.printStackTrace();
         }
         file.filename = filename;
@@ -3388,10 +3388,9 @@ public class KB implements Serializable {
         String formatted = documentation;
         if (StringUtil.isNonEmptyString(formatted)) {
             StringBuilder sb = new StringBuilder(formatted);
-            int i;
-            int j;
-            int start = 0;
+            int i, j, start = 0;
             String term = "";
+            StringBuilder hsb;
             while ((start < sb.length()) && ((i = sb.indexOf("&%", start)) != -1)) {
                 sb.delete(i, (i + 2));
                 j = i;
@@ -3404,7 +3403,7 @@ public class KB implements Serializable {
                     j--;
                 }
                 if (j > i) {
-                    StringBuilder hsb = new StringBuilder("<a href=\"");
+                    hsb = new StringBuilder("<a href=\"");
                     if (!onePage)
                         hsb.append(term.charAt(0) );
                     hsb.append("dict.html#");
@@ -3736,7 +3735,7 @@ public class KB implements Serializable {
      */
     public void addTermFormat(String lang, String term, String format) {
 
-        HashMap<String, String> forLang = null;
+        HashMap<String, String> forLang;
         if (termFormatMap.containsKey(lang))
             forLang = termFormatMap.get(lang);
         else {
@@ -3898,6 +3897,7 @@ public class KB implements Serializable {
 
     /** ***************************************************************
      */
+    @Override
     public String toString() {
 
         StringBuilder sb = new StringBuilder();

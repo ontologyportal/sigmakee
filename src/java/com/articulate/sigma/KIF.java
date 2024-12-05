@@ -421,7 +421,7 @@ public class KIF {
             }
         }
         catch (IOException | ParseException ex) {
-            String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors depends on :
+            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             warningSet.add("Warning in KIF.parse() " + message);
             ex.printStackTrace();
         }
