@@ -534,6 +534,12 @@
         </exec>
     </target>
 
+    <!-- Vampire is currently failing to build on Hamming. Here is a alternate source of the binary -->
+    <target name="alternate.vampire">
+        <get src="https://github.com/vprover/vampire/releases/download/v4.9casc2024/vampire" dest="${programs.dir}/vampire/build" tryGzipEncoding="true"/>
+        <chmod dir="${programs.dir}/${programs.dir}/vampire/build" perm="ugo+rx" includes="vampire"/>
+    </target>
+
     <target name="append.bashrc" if="isUnixNotMac">
         <echo file="${user.home}/.bashrc" append="true">
 # For SIGMA
