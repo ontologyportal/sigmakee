@@ -5,7 +5,6 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
 import java.io.StreamTokenizer;
-import java.io.StringReader;
 import java.text.ParseException;
 import java.util.*;
 
@@ -15,7 +14,7 @@ public class SUMOformulaToTPTPformula {
     public static boolean debug = false;
     public static boolean hideNumbers = true;
     public static String lang = "fof"; // or "tff"
-    public static StringBuffer qlist;
+    public static StringBuilder qlist;
 
     /** ***************************************************************
      */
@@ -51,21 +50,21 @@ public class SUMOformulaToTPTPformula {
             if (result.equals("$true" + Formula.termMentionSuffix) || result.equals("$false" + Formula.termMentionSuffix))
                 result = "'" + result + "'";
             if (StringUtil.isNumeric(result) && hideNumbers && !lang.equals("tff")) {
-                if (result.indexOf(".") > -1)
+                if (result.contains("."))
                     result = result.replace('.','_');
-                if (result.indexOf("-") > -1)
+                if (result.contains("-"))
                     result = result.replace('-','_');
                 result = "n__" + result;
             }
             if (!StringUtil.isNumeric(result)) {
-                if (result.indexOf(".") > -1)
+                if (result.contains("."))
                     result = result.replace('.','_');
-                if (result.indexOf("-") > -1)
+                if (result.contains("-"))
                     result = result.replace('-','_');
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in SUMOformulaToTPTPformula.translateWord(): " + ex.getMessage());
+            System.err.println("Error in SUMOformulaToTPTPformula.translateWord(): " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -87,8 +86,8 @@ public class SUMOformulaToTPTPformula {
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): hasArguments: " + hasArguments);
         int translateIndex;
 
-        List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT, 
-                Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF, 
+        List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT,
+                Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF,
                 Formula.EQUAL);
         List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
 
@@ -102,11 +101,11 @@ public class SUMOformulaToTPTPformula {
                 Arrays.asList(Formula.LOG_TRUE, Formula.LOG_FALSE);
         List<String> tptpConstants = Arrays.asList("$true","$false");
 
-        List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN, 
+        List<String> kifFunctions = Arrays.asList(Formula.TIMESFN, Formula.DIVIDEFN,
                 Formula.PLUSFN, Formula.MINUSFN);
         List<String> tptpFunctions = Arrays.asList("product","quotient","sum","difference");
 
-        List<String> kifRelations = new ArrayList<String>();
+        List<String> kifRelations = new ArrayList<>();
         kifRelations.addAll(kifPredicates);
         kifRelations.addAll(kifFunctions);
 
@@ -115,11 +114,9 @@ public class SUMOformulaToTPTPformula {
         // turned on, or not.  If it is on, then we do not want to add
         // the "mentions" suffix to relation names used as arguments
         // to other relations.
-        KBmanager mgr = null;
-        boolean holdsPrefixInUse = false;
         String mentionSuffix = Formula.termMentionSuffix;
-        mgr = KBmanager.getMgr();
-        holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
+        KBmanager mgr = KBmanager.getMgr();
+        boolean holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
         if (holdsPrefixInUse && !kifRelations.contains(st))
             mentionSuffix = "";
 
@@ -190,20 +187,20 @@ public class SUMOformulaToTPTPformula {
     private static int operatorArity(StreamTokenizer_s st) {
 
         int translateIndex;
-        String kifOps[] = {Formula.UQUANT, Formula.EQUANT, Formula.NOT, 
+        String kifOps[] = {Formula.UQUANT, Formula.EQUANT, Formula.NOT,
                 Formula.AND, Formula.OR, Formula.IF, Formula.IFF};
 
         translateIndex = 0;
         while (translateIndex < kifOps.length &&
-               !st.sval.equals(kifOps[translateIndex])) 
-            translateIndex++;        
-        if (translateIndex <= 2) 
-            return(1);        
+               !st.sval.equals(kifOps[translateIndex]))
+            translateIndex++;
+        if (translateIndex <= 2)
+            return(1);
         else {
-            if (translateIndex < kifOps.length) 
+            if (translateIndex < kifOps.length)
                 return(2);
-            else 
-                return(-1);            
+            else
+                return(-1);
         }
     }
 
@@ -211,7 +208,7 @@ public class SUMOformulaToTPTPformula {
      */
     private static void incrementTOS(Stack<Integer> countStack) {
 
-        countStack.push(Integer.valueOf((Integer) countStack.pop() + 1));
+        countStack.push(countStack.pop() + 1);
     }
 
     /** ***************************************************************
@@ -222,8 +219,8 @@ public class SUMOformulaToTPTPformula {
 
         if (st.sval.charAt(0) == '?' || st.sval.charAt(0) == '@') {
             String tptpVariable = translateWord(st.sval,st.ttype,false);
-            if (variables.indexOf(tptpVariable) == -1) 
-                variables.add(tptpVariable);            
+            if (variables.indexOf(tptpVariable) == -1)
+                variables.add(tptpVariable);
         }
     }
 
@@ -244,10 +241,10 @@ public class SUMOformulaToTPTPformula {
                 Formula varlist = new Formula(args.get(0));
                 ArrayList<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): valid vars: " + vars);
-                StringBuffer varStr = new StringBuffer();
+                StringBuilder varStr = new StringBuilder();
                 for (String v : vars) {
                     String oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
-                    varStr.append(oneVar + ", ");
+                    varStr.append(oneVar).append(", ");
                 }
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): valid vars: " + varStr);
                 String opStr = " ! ";
@@ -277,10 +274,10 @@ public class SUMOformulaToTPTPformula {
         String tptpOp = "&";
         if (op.equals("or"))
             tptpOp = "|";
-        StringBuffer sb = new StringBuffer();
-        sb.append("(" + processRecurse(new Formula(args.get(0))));
+        StringBuilder sb = new StringBuilder();
+        sb.append("(").append(processRecurse(new Formula(args.get(0))));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(" " + tptpOp + " " + processRecurse(new Formula(args.get(i))));
+            sb.append(" ").append(tptpOp).append(" ").append(processRecurse(new Formula(args.get(i))));
         }
         sb.append(")");
         return sb.toString();
@@ -380,19 +377,19 @@ public class SUMOformulaToTPTPformula {
             return processEquals(f,car,args);
         else {
             if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): not math or comparison op: " + car);
-            StringBuffer argStr = new StringBuffer();
+            StringBuilder argStr = new StringBuilder();
             for (String s : args) {
                 if (car.getFormula().equals("instance")) {
                     int ttype = f.getFormula().charAt(0);
                     if (Character.isDigit(ttype))
                         ttype = StreamTokenizer_s.TT_NUMBER;
                     if (Formula.atom(s))
-                        argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false) + ",");
+                        argStr.append(SUMOformulaToTPTPformula.translateWord(s,ttype,false)).append(",");
                     else
-                        argStr.append(processRecurse(new Formula(s)) + ",");
+                        argStr.append(processRecurse(new Formula(s))).append(",");
                 }
                 else
-                    argStr.append(processRecurse(new Formula(s)) + ",");
+                    argStr.append(processRecurse(new Formula(s))).append(",");
             }
             String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true) + "(" + argStr.substring(0,argStr.length()-1) + ")";
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): result: " + result);
@@ -405,10 +402,10 @@ public class SUMOformulaToTPTPformula {
     public static void generateQList(Formula f) {
 
         HashSet<String> UqVars = f.collectUnquantifiedVariables();
-        qlist = new StringBuffer();
+        qlist = new StringBuilder();
         for (String s : UqVars) {
             String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-            qlist.append(oneVar + ",");
+            qlist.append(oneVar).append(",");
         }
         if (qlist.length() > 1)
             qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
@@ -425,8 +422,8 @@ public class SUMOformulaToTPTPformula {
             return "( " + SUMOtoTFAform.process(suoString,query) + " )";
         if (SUMOKBtoTPTPKB.lang.equals("thf")) {
             THF thf = new THF();
-            Collection<Formula> stmts = new ArrayList<Formula>();
-            Collection<Formula> queries = new ArrayList<Formula>();
+            Collection<Formula> stmts = new ArrayList<>();
+            Collection<Formula> queries = new ArrayList<>();
             if (query)
                 queries.add(new Formula(suoString));
             else
@@ -498,19 +495,19 @@ public class SUMOformulaToTPTPformula {
             if (debug)
                 System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
             if (processed != null) {
-                _f.theTptpFormulas = new HashSet<String>();
+                _f.theTptpFormulas = new HashSet<>();
                 //----Performs function on each current processed axiom
                 for (Formula f : processed) {
                     if (!f.getFormula().contains("@") && !f.higherOrder) {
                         String tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
-                        if (StringUtil.isNonEmptyString(tptpStr)) 
+                        if (StringUtil.isNonEmptyString(tptpStr))
                             _f.theTptpFormulas.add(tptpStr);
                     }
                 }
             }
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
             if (ex instanceof ParseException)
                 throw (ParseException) ex;
@@ -518,7 +515,6 @@ public class SUMOformulaToTPTPformula {
                 throw (IOException) ex;
         }
         if (query || debug) System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): result: " + _f.theTptpFormulas);
-        return;
     }
 
     /** ***************************************************************
@@ -530,15 +526,15 @@ public class SUMOformulaToTPTPformula {
         tptpParse(input,query, kb, null);
         return _f.theTptpFormulas;
     }
-    
+
     /** ***************************************************************
      * A test method.
      */
     public static void testTptpParse() {
-        
+
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        
+
         String teststr = "(=> (forall (?ELEMENT) (<=> (element ?ELEMENT ?SET1) " +
                 "(element ?ELEMENT ?SET2))) (equal ?SET1 ?SET2))";
         System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr,false));
@@ -550,7 +546,7 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse2() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         String teststr = "\n" +
                 "(<=>\n" +
@@ -567,7 +563,7 @@ public class SUMOformulaToTPTPformula {
     public static void testTptpParse3() {
 
         KBmanager.getMgr().initializeOnce();
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 
         String teststr = "(instance equal BinaryPredicate)";
         System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(teststr, false));
