@@ -543,7 +543,8 @@ export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
+export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
+</echo>
     </target>
 
     <target name="append.zshrc" unless="isUnixNotMac">
@@ -555,7 +556,8 @@ export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
+export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
+</echo>
     </target>
 
     <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">
