@@ -234,9 +234,9 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String query = "(instance ?X Relation)";
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        StringBuffer sb = new StringBuffer("X0");
+        StringBuilder sb = new StringBuilder("X0");
         tpp.parseProofOutput(input,query,kb,sb);
-        tpp.processAnswersFromProof(new StringBuffer("X"),query);
+        tpp.processAnswersFromProof(new StringBuilder("X"),query);
         String actual = tpp.bindingMap.toString();
         String expected = "{X=TransitFn}";
         System.out.println("Actual: " + actual);

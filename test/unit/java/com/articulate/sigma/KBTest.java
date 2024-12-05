@@ -72,7 +72,7 @@ public class KBTest extends UnitTestBase {
             System.out.println("testDeleteUserAssVamp(): results: " + null);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         if (vamp != null)
-            tpp.parseProofOutput(vamp.output,query,kb,new StringBuffer());
+            tpp.parseProofOutput(vamp.output,query,kb,new StringBuilder());
         if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
             System.out.println("testDeleteUserAssVamp(1): success");
         else
@@ -80,7 +80,7 @@ public class KBTest extends UnitTestBase {
         assertTrue(tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")));
         SigmaTestBase.kb.deleteUserAssertionsAndReload();
         vamp = SigmaTestBase.kb.askVampire(query,10,1);
-        tpp.parseProofOutput(vamp.output, query, kb, new StringBuffer());
+        tpp.parseProofOutput(vamp.output, query, kb, new StringBuilder());
         System.out.println("User assertions deleted");
         System.out.println("testDeleteUserAssVamp(): results after delete: " + vamp);
         if (tpp.proof == null || tpp.status.equals("Timeout"))
