@@ -475,6 +475,16 @@
             </args>
         </git>
     </target>
+    <target name="update.sigmakee">
+        <git command="pull" dir=".">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/ontologyportal/https://github.com/ontologyportal/${app.name}"/>
+                <arg value="."/>
+            </args>
+        </git>
+    </target>
 
     <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
     <macrodef name="git">
