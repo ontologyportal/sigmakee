@@ -300,15 +300,21 @@ First, comply with System preparation on Linux above
 
 Clone SigmaKEE
 ```sh
+cd ~
+mkdir workspace
+cd workspace
 git clone https://github.com/ontologyportal/sigmakee
 ```
 
 Then,
 ```sh
 cd sigmakee
-```
-```sh
 ant install
+```
+
+To keep this repository updated
+```sh
+ant update.sigmakee
 ```
 
 The following steps are now legacy. The call to ant install above will perform\
