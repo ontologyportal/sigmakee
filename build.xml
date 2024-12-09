@@ -476,12 +476,12 @@
         </git>
     </target>
     <target name="update.sigmakee">
-        <git command="pull" dir=".">
+        <git command="pull" dir="${user.dir}">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/https://github.com/ontologyportal/${app.name}"/>
-                <arg value="."/>
+                <arg value="https://github.com/ontologyportal/${app.name}"/>
+                <arg value="${user.dir}"/>
             </args>
         </git>
     </target>
