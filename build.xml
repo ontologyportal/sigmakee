@@ -480,8 +480,6 @@
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/${app.name}"/>
-                <arg value="${user.dir}"/>
             </args>
         </git>
     </target>
