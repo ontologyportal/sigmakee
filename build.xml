@@ -361,7 +361,12 @@
     <!-- At this point we will assume you have already complied with the
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
-    <target name="install" depends="init" description="Clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
+    <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
+
+        <!-- Configure ~/.bashrc ~/.zshrc for SigmaKEE -->
+        <antcall target="append.bashrc"/>
+        <antcall target="append.zshrc"/>
+
         <mkdir dir="${workspace.dir}"/>
         <mkdir dir="${programs.dir}"/>
 
@@ -390,10 +395,6 @@
         <antcall target="clone.z3"/>
         <antcall target="build.z3"/>
         <antcall target="build.vampire"/>
-
-        <!-- Configure ~/.bashrc ~/.zshrc -->
-        <antcall target="append.bashrc"/>
-        <antcall target="append.zshrc"/>
     </target>
 
     <target name="retrieve.wordnet">
