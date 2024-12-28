@@ -1,12 +1,12 @@
-/* This code is copyright Articulate Software (c) 2003.  
+/* This code is copyright Articulate Software (c) 2003.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code are also requested, to credit Articulate Software in any
-writings, briefings, publications, presentations, or 
+writings, briefings, publications, presentations, or
 other representations of any software which incorporates,
 builds on, or uses this code. Please cite the following
 article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
@@ -19,13 +19,14 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
-import tptp_parser.TPTPFormula;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+
+import tptp_parser.TPTPFormula;
 
 public class TPTPutil {
 
@@ -53,10 +54,10 @@ public class TPTPutil {
      */
     private static String returnAndIndent(int level) {
 
-    	StringBuffer result = new StringBuffer();
+    	StringBuilder result = new StringBuilder();
         result.append("<br>\n");
         for (int i = 0; i < level; i++)
-        	result.append("&nbsp;&nbsp;");
+            result.append("&nbsp;&nbsp;");
         return result.toString();
     }
 
@@ -70,14 +71,19 @@ public class TPTPutil {
      */
     public static String htmlTPTPFormat(Formula f, String hyperlink, boolean traditionalLogic) {
 
-        String indentChars = "  ";
-        String eolChars = "\n";
+//        String indentChars = "  ";
+//        String eolChars = "\n";
 
         //System.out.println("INFO in Formula.htmlTPTPFormat(): " + f.toString());
         //System.out.println("INFO in Formula.htmlTPTPFormat(): theTptpFormulas.size()" + f.theTptpFormulas.size());
-        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1) 
-            return "No TPTP formula.  May not be expressible in strict first order.";        
-        StringBuffer result = new StringBuffer();
+        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1)
+            return "No TPTP formula.  May not be expressible in strict first order.";
+        StringBuilder result = new StringBuilder();
+        boolean inComment, inToken, inQuantifier;
+        StringBuilder token;
+        int level, tokenNum, flen;
+        char ch;
+        String tokenNoSuffix;
         for (String formString : f.theTptpFormulas) {
             if (!StringUtil.emptyString(formString)) {
                 //System.out.println("INFO in Formula.htmlTPTPFormat(): TPTP formula: " + formString);
@@ -88,30 +94,29 @@ public class TPTPutil {
                 continue;
             }
             formString = extractTPTPaxiom(formString);
-            boolean inComment = false;
-            boolean inToken = false;
-            StringBuffer token = new StringBuffer();
-            int level = 0;
-            int tokenNum = 0;
-            boolean inQuantifier = false;
+            inComment = false;
+            inToken = false;
+            token = new StringBuilder();
+            level = 0;
+            tokenNum = 0;
+            inQuantifier = false;
 
-            int flen = formString.length();
-            char ch = '0';   // char at i
+            flen = formString.length();
             for (int i = 0; i < flen; i++) {
                 // System.out.println("INFO in format(): " + formatted.toString());
                 ch = formString.charAt(i);
                 if (inComment) {     // In a comment
                     result.append(ch);
-                    if (ch == '\'') 
+                    if (ch == '\'')
                         inComment = false;
                 }
                 else {
                     if (inToken) {
                         if (!Character.isJavaIdentifierPart(ch)) {
                             inToken = false;
-                            String tokenNoSuffix = removeTPTPSuffix(token.toString());
-                            result.append("<a href=\"" + hyperlink + "&term=" + tokenNoSuffix + "\">s__" + token.toString() + "</a>");
-                            token = new StringBuffer();
+                            tokenNoSuffix = removeTPTPSuffix(token.toString());
+                            result.append("<a href=\"").append(hyperlink).append("&term=").append(tokenNoSuffix).append("\">s__").append(token.toString()).append("</a>");
+                            token = new StringBuilder();
                             result.append(ch);
                             tokenNum++;
                         }
@@ -188,7 +193,7 @@ public class TPTPutil {
                     }
                 }
             }
-            result.append("<P>\n");                
+            result.append("<P>\n");
         }
         return result.toString();
     }
@@ -202,7 +207,7 @@ public class TPTPutil {
 
         //System.out.println("sourceAxiom() supports: " + ps.supports.size());
         //System.out.println("sourceAxiom() ps.infRule: " + ps.infRule);
-        return ps.supports.size() == 0 && !ps.infRule.startsWith("introduced");
+        return ps.supports.isEmpty() && !ps.infRule.startsWith("introduced");
     }
 
     /** ***************************************************************
@@ -215,8 +220,9 @@ public class TPTPutil {
         //System.out.println("TPTPutil.citation: stepName: " + stepName);
         ArrayList<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.citation: formulas: " + ciAxioms);
+        Formula arg;
         for (Formula f : ciAxioms) {
-            Formula arg = f.getArgument(2);
+            arg = f.getArgument(2);
             //System.out.println("TPTPutil.citation: formula arg: " + arg);
             if (arg != null && arg.listP()) {
                 if (arg.equals(new Formula(sumoStep))) {
@@ -236,14 +242,17 @@ public class TPTPutil {
         ArrayList<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.getCitationString: stepName: " + stepName);
         //System.out.println("TPTPutil.getCitationString: sumo: " + sumoStep);
+        Formula arg;
+        String term;
+        List<Formula> comments;
         for (Formula f : ciAxioms) {
-            Formula arg = f.getArgument(2);
+            arg = f.getArgument(2);
             if (arg != null && arg.listP()) {
                 if (arg.equals(new Formula(sumoStep))) {
                     //System.out.println("TPTPutil.getCitationString: formula arg: " + arg);
-                    String term = f.getStringArgument(1);
-                    ArrayList<Formula> comments = kb.askWithRestriction(0,"comment",1,term);
-                    if (comments != null && comments.size() > 0)
+                    term = f.getStringArgument(1);
+                    comments = kb.askWithRestriction(0,"comment",1,term);
+                    if (comments != null && !comments.isEmpty())
                         return comments.get(0).getStringArgument(2);
                 }
             }
@@ -297,7 +306,7 @@ public class TPTPutil {
                 try {
                     List<String> lines = FileUtil.readLines(args[1],false);
                     String query = "(";
-                    StringBuffer answerVars = new StringBuffer("");
+                    StringBuilder answerVars = new StringBuilder("");
                     System.out.println("input: " + lines + "\n");
                     tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
                     System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
@@ -325,22 +334,23 @@ public class TPTPutil {
                     //System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
                     //System.out.println("TPTPutil.main(): showing only source axioms ");
                     //System.out.println("TPTPutil.main(): axiomKey: " + KB.axiomKey);
+                    String id, str;
+                    int firstParen, firstComma, secondParen;
                     for (TPTPFormula step : tpp.proof) {
                         //System.out.println("TPTPutil.main(): step: " + step);
                         if (TPTPutil.sourceAxiom(step)) {
                             Formula f = new Formula(step.sumo);
                             String name = step.infRule;
                             //System.out.println("TPTPutil.main(): name: " + name);
-                            String id = "";
                             if (name.startsWith("file(")) {
-                                int firstParen = name.indexOf("(");
-                                int firstComma = name.indexOf(",");
-                                int secondParen = name.indexOf(")", firstComma + 1);
+                                firstParen = name.indexOf("(");
+                                firstComma = name.indexOf(",");
+                                secondParen = name.indexOf(")", firstComma + 1);
                                 id = name.substring(firstComma + 1, secondParen);
                                 //System.out.println("TPTPutil.main(): id: " + id);
                                 if (KB.axiomKey.keySet().contains(id)) {
                                     //System.out.println("TPTPutil.main(): formula: " + KB.axiomKey.get(id));
-                                    String str = getCitationString(KB.axiomKey.get(id).toString(), name, kb);
+                                    str = getCitationString(KB.axiomKey.get(id).toString(), name, kb);
                                     if (!StringUtil.emptyString(str))
                                         System.out.println("\n" + str);
                                 }
