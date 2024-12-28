@@ -214,6 +214,11 @@ Install graphViz
 sudo apt-get install graphviz
 ```
 
+You may need to install build-essential to compile Vampire
+```sh
+sudo apt-get install build-essential
+```
+
 Update apt-get
 ```sh
 sudo add-apt-repository universe
