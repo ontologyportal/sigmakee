@@ -301,8 +301,25 @@ PS1=Vagrant:$PS1
 
 ## Linux Installation
 
+First, comply with System preparation on Linux above
+
+Clone SigmaKEE
 ```sh
+cd ~
+mkdir workspace
+cd workspace
+git clone https://github.com/ontologyportal/sigmakee
+```
+
+Then,
+```sh
+cd sigmakee
 ant install
+```
+
+To keep this repository updated
+```sh
+ant update.sigmakee
 ```
 
 The following steps are now legacy. The call to ant install above will perform\
@@ -458,12 +475,13 @@ https://github.com/ontologyportal/sigmakee
 
 Modify the following files, replace "theuser" with your username
 ```
-~/workspace/sigmakee/config.xml
-~/workspace/sigmakee/test/unit/java/resources/config_all.xml
-~/workspace/sigmakee/test/unit/java/resources/config_topAndMid.xml
-~/workspace/sigmakee/test/integration/java/resources/config_all.xml
-~/workspace/sigmakee/test/integration/java/resources/config_topAndMid.xml
-~/workspace/sigmakee/test/integration/java/resources/config_topOnly.xml
+me="$(whoami)"
+sed -i "s/theuser/$me/g" ~/workspace/sigmakee/config.xml
+sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/unit/java/resources/config_all.xml
+sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/unit/java/resources/config_topAndMid.xml
+sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/config_all.xml
+sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/config_topAndMid.xml
+sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/config_topOnly.xml
 ```
 
 
