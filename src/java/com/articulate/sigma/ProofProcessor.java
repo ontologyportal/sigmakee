@@ -4,11 +4,11 @@ package com.articulate.sigma;
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
@@ -43,10 +43,10 @@ public class ProofProcessor {
 
     	xml = new ArrayList<BasicXMLelement>(xmlInput);
     }
-    
+
     /** ***************************************************************
      * Compare the answer with the expected answer.  Note that this method
-     * is very unforgiving in that it requires the exact same format for the 
+     * is very unforgiving in that it requires the exact same format for the
      * expected answer, including the order of variables.
      */
     public boolean equalsAnswer(int answerNum, String expectedAnswer) {
@@ -54,24 +54,26 @@ public class ProofProcessor {
     	StringBuffer result = new StringBuffer();
     	ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
     	BasicXMLelement answer = queryResponseElements.get(answerNum);
-    	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no")) 
+    	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no"))
     		return false;
     	if (((String) answer.attributes.get("result")).equalsIgnoreCase("yes") &&
-    			(expectedAnswer.equalsIgnoreCase("yes"))) 
+    			(expectedAnswer.equalsIgnoreCase("yes")))
     		return true;
     	BasicXMLelement bindingSet = (BasicXMLelement) answer.subelements.get(0);
     	if ( bindingSet != null ) {
     		String attr =  (String) bindingSet.attributes.get("type");
-    		if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) ) 
-    			return false;    
-    		BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0); 
+    		if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) )
+    			return false;
+    		BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0);
+                BasicXMLelement variableBinding;
+                String variable, value;
     		// The bindingSet element should just have one subelement, since non-definite answers are rejected.
     		for (int j = 0; j < binding.subelements.size(); j++) {
-    			BasicXMLelement variableBinding = (BasicXMLelement) binding.subelements.get(j);
-    			String variable = (String) variableBinding.attributes.get("name");
-    			String value = (String) variableBinding.attributes.get("value");
-    			result = result.append("(" + variable + " " + value + ")");
-    			if (j < binding.subelements.size()-1) 
+    			variableBinding = (BasicXMLelement) binding.subelements.get(j);
+    			variable = (String) variableBinding.attributes.get("name");
+    			value = (String) variableBinding.attributes.get("value");
+    			result = result.append("(").append(variable).append(" ").append(value).append(")");
+    			if (j < binding.subelements.size()-1)
     				result = result.append(" ");
     		}
     	}
@@ -87,13 +89,13 @@ public class ProofProcessor {
      */
     public static ArrayList<String> returnSkolemStmt(String skolem, ArrayList<TPTPFormula> proofSteps) {
 
-    	if (skolem.startsWith("(") && skolem.endsWith(")")) 
+    	if (skolem.startsWith("(") && skolem.endsWith(")"))
     		skolem = skolem.substring(1, skolem.length()-1);
     	skolem = skolem.split(" ")[0];
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
 
-    	ArrayList<String> matches = new ArrayList<String>();
+    	ArrayList<String> matches = new ArrayList<>();
     	for (int i = 0; i < proofSteps.size(); i++) {
 			TPTPFormula step = proofSteps.get(i);
     		match = pattern.matcher(step.sumo);
@@ -103,8 +105,8 @@ public class ProofProcessor {
     					matches.add(match.group(j));
     			}
     		}
-    	}        
-    	if (matches.size()>0)
+    	}
+    	if (!matches.isEmpty())
     		return matches;
     	return null;
     }
@@ -116,10 +118,10 @@ public class ProofProcessor {
 
     	if (StringUtil.emptyString(f.getFormula().trim()))
     		return null;
-    	if (f.getFormula().indexOf("answer") == -1)
+    	if (!f.getFormula().contains("answer"))
     		return f;
-    	String relation = f.car(); 
-    	if (relation.equals("answer")) 
+    	String relation = f.car();
+    	if (relation.equals("answer"))
     		return null;
     	if (relation.equals("not")) {
     		Formula fcdar = f.cdrAsFormula().carAsFormula();
@@ -139,16 +141,17 @@ public class ProofProcessor {
     	boolean connective = false;
     	if (relation.equals("or") || relation.equals("and"))
     		connective = true;
-    	ArrayList<Formula> arglist = new ArrayList<Formula>();
+//    	ArrayList<Formula> arglist = new ArrayList<>();
     	int arg = 1;
     	boolean foundAnswer = false;
     	String strArgs = "";
+        Formula argForm, argRes;
     	while (!StringUtil.emptyString(f.getArgument(arg))) {
-    		Formula argForm = new Formula();
+    		argForm = new Formula();
     		argForm.read(f.getStringArgument(arg));
-    		Formula argRes = removeNestedAnswerClauseRecurse(argForm);
-    		if (argRes == null) 
-    			foundAnswer = true;    
+    		argRes = removeNestedAnswerClauseRecurse(argForm);
+    		if (argRes == null)
+    			foundAnswer = true;
     		else {
     			if (arg > 1)
     				strArgs = strArgs + " ";
@@ -160,17 +163,17 @@ public class ProofProcessor {
     	if (connective && foundAnswer && arg < 4)
     		result.read(strArgs);
     	else
-    		result.read("(" + relation + " " + strArgs + ")");    
+    		result.read("(" + relation + " " + strArgs + ")");
     	return result;
     }
-    
+
     /** ***************************************************************
      * Remove the $answer clause that eProver returns, including any
      * surrounding connective.
      */
     public static String removeNestedAnswerClause(String st) {
 
-    	if (st == null || st.indexOf("answer") == -1)
+    	if (st == null || !st.contains("answer"))
     		return st;
     	// clean the substring with "answer" in it
     	Formula f = new Formula();
@@ -189,11 +192,11 @@ public class ProofProcessor {
      */
     public int numAnswers() {
 
-    	if (xml == null || xml.size() == 0) 
+    	if (xml == null || xml.isEmpty())
     		return 0;
     	BasicXMLelement queryResponse = (BasicXMLelement) xml.get(0);
-    	if (queryResponse.tagname.equalsIgnoreCase("queryResponse")) 
-    		return queryResponse.subelements.size()-1;   
+    	if (queryResponse.tagname.equalsIgnoreCase("queryResponse"))
+    		return queryResponse.subelements.size()-1;
     	// Note that there is a <summary> element under the queryResponse element that shouldn't be counted, hence the -1
     	else
     		System.out.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
@@ -205,27 +208,29 @@ public class ProofProcessor {
      */
     public static String tptpProof(ArrayList<ProofStep> proofSteps) {
 
-    	StringBuffer result = new StringBuffer();
+    	StringBuilder result = new StringBuilder();
     	try {
+            ProofStep step;
+            boolean isLeaf;
     		for (int j = 0; j < proofSteps.size(); j++) {
-    			ProofStep step = (ProofStep) proofSteps.get(j);
-    			boolean isLeaf = step.premises.isEmpty() || 
-    					(step.premises.size() == 1 && ((Integer)(step.premises.get(0))).intValue() == 0);
+    			step = (ProofStep) proofSteps.get(j);
+    			isLeaf = step.premises.isEmpty() ||
+    					(step.premises.size() == 1 && (step.premises.get(0)) == 0);
     			//----All are fof because the conversion from SUO-KIF quantifies the variables
     			result.append("fof(");
     			result.append(step.number);
     			result.append(",");
-    			if (isLeaf) 
-    				result.append("axiom");                
-    			else 
-    				result.append("plain");                
+    			if (isLeaf)
+    				result.append("axiom");
+    			else
+    				result.append("plain");
     			result.append(",");
     			result.append(SUMOformulaToTPTPformula.tptpParseSUOKIFString(step.axiom,false));
 
     			if (!isLeaf) {
-    				result.append(",inference(rule,[],[" + step.premises.get(0));
-    				for (int parent = 1; parent < step.premises.size(); parent++) 
-    					result.append("," + step.premises.get(parent));                    
+    				result.append(",inference(rule,[],[").append(step.premises.get(0));
+    				for (int parent = 1; parent < step.premises.size(); parent++)
+    					result.append(",").append(step.premises.get(parent));
     				result.append("])");
     			}
     			result.append("  ).\n");
@@ -251,7 +256,7 @@ public class ProofProcessor {
 
 	 /****************************************************************
       * Tally the number of appearances of a particular axiom label in
-      * a file.  This is intended to be used to analyse E output that
+      * a file.  This is intended to be used to analyze E output that
       * looks for contradictions, with the intuition that axioms that
       * appear in most or all of the contractions found are the source
       * of the problem.
@@ -260,7 +265,7 @@ public class ProofProcessor {
 
          HashMap<String,String> axioms = new HashMap<>();
          HashMap<String,Integer> counts = new HashMap<>();
-		 LineNumberReader lr = null;
+		 LineNumberReader lr;
 		 try {
 			 String line;
 			 File f = new File(file);
@@ -281,7 +286,7 @@ public class ProofProcessor {
 					 axioms.put(m.group(1),line);
                      Integer i = counts.get(m.group(1));
                      if (i == null)
-                         counts.put(m.group(1),Integer.valueOf(1));
+                         counts.put(m.group(1), 1);
                      else {
                          i++;
                          counts.put(m.group(1), i);
@@ -289,26 +294,21 @@ public class ProofProcessor {
 				 }
 			 }
 		 }
-		 catch (Exception ex) {
+		 catch (IOException ex) {
 			 ex.printStackTrace();
 		 }
 
-         Iterator<String> it = axioms.keySet().iterator();
-         while (it.hasNext()) {
-             String key = it.next();
-             String val = axioms.get(key);
-             System.out.println(key + "\t" + val);
-         }
+        for (String key : axioms.keySet()) {
+            String val = axioms.get(key);
+            System.out.println(key + "\t" + val);
+        }
 
          System.out.println();
-         it = counts.keySet().iterator();
-         while (it.hasNext()) {
-             String key = it.next();
-             Integer val = counts.get(key);
-             System.out.println(key + "\t" + val);
-         }
-         return;
-	 }
+        for (String key : counts.keySet()) {
+            Integer val = counts.get(key);
+            System.out.println(key + "\t" + val);
+        }
+      }
 
 	  /** ***************************************************************
        */
@@ -319,16 +319,16 @@ public class ProofProcessor {
     		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     		  String stmt = "(subclass ?X Entity)";
     		  String result = kb.askEProver(stmt, 30, 3) + " ";
-			  TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-			  StringBuffer qlist = new StringBuffer();
-			  qlist.append("?X");
-			  tpp.parseProofOutput(result,kb);
+                  TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                  StringBuilder qlist = new StringBuilder();
+                  qlist.append("?X");
+                  tpp.parseProofOutput(result,kb);
     		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
 					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");
     		  System.out.println(result);
-    	  } 
+    	  }
     	  catch (Exception ex) {
-    		  System.out.println(ex.getMessage());
+    		  System.err.println(ex.getMessage());
     	  }
       }
 
@@ -341,7 +341,7 @@ public class ProofProcessor {
 			KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
 			List<String> lines = TPTP3ProofProcessor.joinLines((ArrayList<String>) FileUtil.readLines(filename,false));
 			String query = "";
-			StringBuffer answerVars = new StringBuffer("");
+			StringBuilder answerVars = new StringBuilder("");
 			TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 			tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
 			String result = HTMLformatter.formatTPTP3ProofResult(tpp,"","<hr>\n",
@@ -349,7 +349,7 @@ public class ProofProcessor {
 			System.out.println(result);
 		}
 		catch (Exception ex) {
-			System.out.println(ex.getMessage());
+			System.err.println(ex.getMessage());
 		}
 	}
 
