@@ -1,12 +1,12 @@
 package com.articulate.sigma.tp;
-/** This code is copyright Articulate Software (c) 2014.  
+/** This code is copyright Articulate Software (c) 2014.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 
@@ -26,20 +26,21 @@ public class EProver {
 
     private ProcessBuilder _builder;
     private Process _eprover;
-    private BufferedReader _reader; 
-    private BufferedWriter _writer;
+    private final BufferedReader _reader;
+    private final Writer _writer;
     private static String kbdir;
     private static int axiomIndex = 0;
     public ArrayList<String> output = new ArrayList<>();
-    public StringBuffer qlist = null;
+    public StringBuilder qlist = null;
 
     /** *************************************************************
      */
+    @Override
     public String toString() {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (String s : output)
-            sb.append(s + "\n");
+            sb.append(s).append("\n");
         return sb.toString();
     }
 
@@ -60,7 +61,7 @@ public class EProver {
             System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
             File initFile = new File(kbdir, "EBatchConfig.txt");
             PrintWriter pw = new PrintWriter(initFile);
-    
+
             pw.println("% SZS start BatchConfiguration");
             pw.println("division.category LTB.SMO");
             pw.println("output.required Assurance");
@@ -115,7 +116,7 @@ public class EProver {
             fis.close();
             isr.close();
             in.close();
-        } 
+        }
         catch (Exception e) {
             e.printStackTrace();
             System.out.println("Error in EProver.addBatchConfig()");
@@ -139,14 +140,14 @@ public class EProver {
             pw.println("% SZS start BatchProblems");
             pw.println("% SZS end BatchProblems");
             pw.close();
-        } 
+        }
         catch (FileNotFoundException e) {
             e.printStackTrace();
             System.out.println("Error in EProver.addBatchConfig()");
             System.out.println(e.getMessage());
         }
     }
-    
+
     /** *************************************************************
      * Create a new batch specification file, and create a new running
      * instance of EProver.
@@ -157,7 +158,7 @@ public class EProver {
      * to be loaded by the EProver executable.
      * @throws IOException should not normally be thrown unless either
      *         EProver executable or database file name are incorrect
-     *         
+     *
      * e_ltb_runner -- interactive LTBSampleInput-AP.txt
      */
     public EProver (String executable, String kbFile) throws IOException {
@@ -173,8 +174,8 @@ public class EProver {
             KB kb = KBmanager.getMgr().getKB(kbFile);
 
         }
-        // To make sigma work on windows. 
-        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".  
+        // To make sigma work on windows.
+        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
@@ -212,10 +213,10 @@ public class EProver {
 
         // To make sigma work on windows
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
-               
+
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
-        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
         	eproverPath=KBmanager.getMgr().getPref("eproverPath");
         }
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
@@ -232,8 +233,8 @@ public class EProver {
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
-    
-    
+
+
     /** *************************************************************
      * Create a running instance of EProver based on existing batch
      * specification file.
@@ -252,7 +253,7 @@ public class EProver {
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
-        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){                    
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
         	eproverPath = KBmanager.getMgr().getPref("eproverPath");
         }
 		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
@@ -278,13 +279,12 @@ public class EProver {
      *
      * @param formula asserted formula in the KIF syntax
      * @return answer to the assertion
-     * @throws IOException should not normally be thrown
      */
     public String assertFormula(String formula) {
 
         System.out.println("EProver.assertFormula(1): process: " + _eprover);
         String result = "";
-        output = new ArrayList<String>();
+        output = new ArrayList<>();
         try {
             String assertion = "";
             _writer.write(assertion);
@@ -294,18 +294,18 @@ public class EProver {
             do {
                 line = _reader.readLine();
                 System.out.println("\nINFO in EProver.assertFormula(1) read: " + line);
-                if (line.indexOf("Error:") != -1)
+                if (line.contains("Error:"))
                     throw new IOException(line);
                 System.out.println("INFO EProver(): Response: " + line);
                 result += line + "\n";
                 output.add(line);
-                if (line.indexOf("# Processing finished") != -1)
+                if (line.contains("# Processing finished"))
                     break;
             } while (line != null);
         }
-        catch (Exception ex) {
-            System.out.println("Error in EProver.assertFormula(" + formula + ")");
-            System.out.println(ex.getMessage());
+        catch (IOException ex) {
+            System.err.println("Error in EProver.assertFormula(" + formula + ")");
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -329,32 +329,30 @@ public class EProver {
 
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (eprover != null);
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)));
-            HashSet<Formula> processedFormulas = new HashSet<Formula>();
+        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
+            HashSet<Formula> processedFormulas = new HashSet<>();
+            FormulaPreprocessor fp;
+            Set<String> tptpFormulas;
+            String tptpstring;
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                FormulaPreprocessor fp = new FormulaPreprocessor();
+                fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP.
-                    Set<String> tptpFormulas = new HashSet<>();
+                    tptpFormulas = new HashSet<>();
                     if (tptp) {
-                        SUMOformulaToTPTPformula stptp = new SUMOformulaToTPTPformula();
                         for (Formula p : processedFormulas)
                             if (!p.isHigherOrder(kb))
-                                tptpFormulas.add(stptp.tptpParseSUOKIFString(p.getFormula(),false));
+                                tptpFormulas.add(SUMOformulaToTPTPformula.tptpParseSUOKIFString(p.getFormula(),false));
                     }
                     // 3. Write to new tptp file
                     if (eprover != null) {
-                        Iterator<String> tptpIt = tptpFormulas.iterator();
-                        while (tptpIt.hasNext()) {
-                            String theTPTPFormula = tptpIt.next();
+                        for (String theTPTPFormula : tptpFormulas) {
                             pw.print("fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex++);
                             pw.println(",axiom,(" + theTPTPFormula + ")).");
-                            String tptpstring = "fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
+                            tptpstring = "fof(kb_" + kb.name + "_UserAssertion" + "_" + axiomIndex + ",axiom,(" + theTPTPFormula + ")).";
                             System.out.println("INFO in EProver.assertFormula(2): TPTP for user assertion = " + tptpstring);
                         }
                         pw.flush();
@@ -364,14 +362,6 @@ public class EProver {
         }
         catch (IOException e) {
             e.printStackTrace();
-        } 
-        finally {
-            try {
-                if (pw != null) pw.close();
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-            }
         }
         return allAdded;
     }
@@ -390,16 +380,16 @@ public class EProver {
         System.out.println();
         System.out.println("TERMINATING " + this);
         try {
-            _writer.write("quit.\n");
-            _writer.write("go.\n");
-            _writer.flush();
-            _writer.close();
-            _reader.close();
+            try (_reader; _writer) {
+                _writer.write("quit.\n");
+                _writer.write("go.\n");
+                _writer.flush();
+            }
             System.out.println("DESTROYING the Process " + _eprover);
             System.out.println();
             _eprover.destroy();
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -409,8 +399,7 @@ public class EProver {
      *
      * @param formula query in the KIF syntax
      * @param kb current knowledge base
-     * @return answer to the query 
-     * @throws IOException should not normally be thrown
+     * @return answer to the query
      */
     public String submitQuery(String formula, KB kb) {
 
@@ -433,10 +422,10 @@ public class EProver {
             boolean inProof = false;
             while (line != null) {
                 output.add(line);
-                if (line.indexOf("# SZS status") != -1)
+                if (line.contains("# SZS status"))
                     inProof = true;
                 if (inProof) {
-                    if (line.indexOf("# Enter job") != -1)
+                    if (line.contains("# Enter job"))
                         break;
                     result += line + "\n";
                 }
@@ -446,16 +435,16 @@ public class EProver {
                     result += line + "\n";
             }
         }
-        catch (Exception ex) {
-            System.out.println("Error in EProver.submitQuery(): " + ex.getMessage());
-            System.out.println("Error might be from EProver constructor, please check your EBatchConfig.txt and TPTP files ...");
+        catch (IOException ex) {
+            System.err.println("Error in EProver.submitQuery(): " + ex.getMessage());
+            System.err.println("Error might be from EProver constructor, please check your EBatchConfig.txt and TPTP files ...");
             ex.printStackTrace();
         }
         return result;
     }
 
     /** *************************************************************
-     * A simple test. Works as follows: 
+     * A simple test. Works as follows:
      * <ol>
      *   <li>start E;</li>
      *   <li>make an assertion;</li>
@@ -482,9 +471,9 @@ public class EProver {
             System.out.println("------------- INFO in EProver.main() completed init of E --------");
             System.out.println("Result: " + eprover.submitQuery("(subclass ?X Object)",kb));
             eprover.terminate();
-        } 
-        catch (Exception e) {
-            System.out.println(e.getMessage());
+        }
+        catch (IOException e) {
+            System.err.println(e.getMessage());
         }
 
         // System.out.print(eprover.assertFormula("(human Socrates)"));
