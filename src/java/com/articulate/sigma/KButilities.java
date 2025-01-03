@@ -1128,6 +1128,27 @@ public class KButilities {
     }
 
     /** *************************************************************
+     * Generate a textual list of all documentation strings and write to
+     * a file.
+     */
+    public static void genAllDoc(KB kb, String fname) {
+
+        PrintWriter pr = null;
+        ArrayList<Formula> al = kb.ask("arg",0,"documentation");
+        try {
+            pr = new PrintWriter(new FileWriter(fname, false));
+            for (Formula form : al) {
+                String arg = form.getArgument(3).toString();
+                arg = arg.replace("&%", "");
+                pr.println(form.getArgument(1) + "\t" + arg);
+            }
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /** *************************************************************
      * Generate a textual list of terms and their documentation strings
      * from a file.
      */
@@ -1407,7 +1428,7 @@ public class KButilities {
         System.out.println("  -a \"<formula>\" - show all attributes of a SUO-KIF formula");
         System.out.println("  -t - generate a table of termFormat(s)");
         System.out.println("  -l - list all terms in the KB");
-        System.out.println("  -doc <file> - list terms with doc strings for all terms in a file");
+        System.out.println("  -doc <file> - list doc strings for all terms to a file");
         System.out.println("  -odoc <file> - list terms with doc strings for all terms in a file one per line");
         System.out.println("  -adoc - list terms with doc strings for all terms in a KB");
     }
@@ -1433,8 +1454,8 @@ public class KButilities {
                 genSynLinks(args[1]);
             }
             else if (args != null && args.length > 1 && args[0].equals("-doc")) {
-                System.out.println("KBmutilities.main(): writing documentation");
-                genDoc(kb,args[1]);
+                System.out.println("KBmutilities.main(): writing all documentation string");
+                genAllDoc(kb,args[1]);
             }
             else if (args != null && args.length > 0 && args[0].equals("-adoc")) {
                 System.out.println("KBmutilities.main(): writing documentation");
