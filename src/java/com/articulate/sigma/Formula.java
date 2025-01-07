@@ -628,7 +628,7 @@ public class Formula implements Comparable, Serializable {
                 int end = len - 1;
                 int level = 0;
                 char prev = '0';
-                char ch = null;
+                char ch;
                 boolean insideQuote = false;
                 char quoteCharInForce = '0';
                 int carCount = 0;
