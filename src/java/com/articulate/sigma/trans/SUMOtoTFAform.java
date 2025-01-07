@@ -886,11 +886,11 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): f: " + f);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): sig: " + sig);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): best: " + best);
-        if (!op.startsWith("FloorFn") && args.size() != 3) {
+        if (!op.startsWith("FloorFn") && !op.startsWith("CeilingFn") && args.size() != 3) {
             System.out.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
-        if (op.startsWith("FloorFn") && args.size() != 2) {
+        if (op.startsWith("FloorFn") && op.startsWith("CeilingFn") && args.size() != 2) {
             System.out.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
