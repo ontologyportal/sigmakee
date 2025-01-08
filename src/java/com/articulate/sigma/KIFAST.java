@@ -15,10 +15,10 @@ public class KIFAST {
     public static int count = 0;
 
     /** The set of all terms in the knowledge base. This is a set of Strings. */
-    public TreeSet<String> terms = new TreeSet<String>();
+    public TreeSet<String> terms = new TreeSet<>();
 
     /** A hashMap to store term frequencies for each term in knowledge base */
-    public Map<String, Integer> termFrequency = new HashMap<String, Integer>();
+    public Map<String, Integer> termFrequency = new HashMap<>();
 
     /**
      * A HashMap of ArrayLists of Formulas. Each String key points to a list of
@@ -35,16 +35,16 @@ public class KIFAST {
      * Formula that is that string, along with information about at what line
      * number and in what file it appears.
      */
-    public HashMap<String, FormulaAST> formulaMap = new HashMap<String, FormulaAST>();
+    public HashMap<String, FormulaAST> formulaMap = new HashMap<>();
 
     public String filename;
     private File file;
     private int totalLinesForComments = 0;
 
     /** warnings generated during parsing */
-    public TreeSet<String> warningSet = new TreeSet<String>();
+    public TreeSet<String> warningSet = new TreeSet<>();
     /** errors generated during parsing */
-    public TreeSet<String> errorSet = new TreeSet<String>();
+    public TreeSet<String> errorSet = new TreeSet<>();
 
     /****************************************************************
      * Read a KIF file.
@@ -54,20 +54,18 @@ public class KIFAST {
     public TreeSet<String> readFile(String fname) throws Exception {
 
         TreeSet<String> warnings = new TreeSet<>();
-        FileReader fr = null;
         Exception exThr = null;
-        try {
-            this.file = new File(fname);
-            if (!this.file.exists()) {
-                String errString =  " error file " + fname + "does not exist";
-                KBmanager.getMgr()
-                        .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
-                System.out.println("Error in KIF.readFile(): " + errString);
-                return null;
-            }
-            this.filename = file.getCanonicalPath();
-            fr = new FileReader(file);
-            BufferedReader br = new BufferedReader(fr);
+        this.file = new File(fname);
+        if (!this.file.exists()) {
+            String errString =  " error file " + fname + "does not exist";
+            KBmanager.getMgr()
+                    .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
+            System.out.println("Error in KIF.readFile(): " + errString);
+            return null;
+        }
+        this.filename = file.getCanonicalPath();
+        try (FileReader fr = new FileReader(file);
+            BufferedReader br = new BufferedReader(fr)) {
             if (br == null) {
                 String errStr = "No Input Reader Specified";
                 warningSet.add(errStr);
@@ -86,15 +84,6 @@ public class KIFAST {
             KBmanager.getMgr()
                     .setError(KBmanager.getMgr().getError() + "\n<br/>" + er + " in file " + fname + "\n<br/>");
         }
-        finally {
-            if (fr != null) {
-                try {
-                    fr.close();
-                }
-                catch (Exception ex2) {
-                }
-            }
-        }
         if (exThr != null)
             throw exThr;
         return warnings;
@@ -107,11 +96,11 @@ public class KIFAST {
     public TreeSet<String> parseBody(String s, int startLine, int endLine) {
 
         int lastVal;
-        String errStr = null;
+        String errStr;
         int parenLevel = 0;
         String errStart = "Parsing error in " + filename;
         StringBuffer sb = new StringBuffer();
-        FormulaAST fast = new FormulaAST();
+//        FormulaAST fast = new FormulaAST();
         System.out.println("parseBody: " + s);
         Reader r = new StringReader(s);
         StreamTokenizer_s st = new StreamTokenizer_s(r);
@@ -120,52 +109,57 @@ public class KIFAST {
             do {
                 lastVal = st.ttype;
                 st.nextToken();
-                if (st.ttype == 40) { // Open paren
-                    parenLevel++;
-                    if ((parenLevel != 0) && (lastVal != 40) && (sb.length() > 0))
-                        sb.append(" "); // add back whitespace that ST removes
-                    sb.append("(");
-                }
-                else if (st.ttype == 41) { // ) - close paren
-                    parenLevel--;
-                    sb.append(")");
-                    if (parenLevel == 0) { // The end of the statement...
-                        if (formulaMap.keySet().contains(sb.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
-                            String warning = ("Duplicate axiom at line: " + startLine + " of " + filename + ": " + sb);
-                            warningSet.add(warning);
-                            System.out.println(warning);
+                switch (st.ttype) {
+                    case 40:
+                        // Open paren
+                        parenLevel++;
+                        if ((parenLevel != 0) && (lastVal != 40) && (sb.length() > 0))
+                            sb.append(" "); // add back whitespace that ST removes
+                        sb.append("(");
+                        break;
+                    case 41:
+                        // ) - close paren
+                        parenLevel--;
+                        sb.append(")");
+                        if (parenLevel == 0) { // The end of the statement...
+                            if (formulaMap.keySet().contains(sb.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
+                                String warning = ("Duplicate axiom at line: " + startLine + " of " + filename + ": " + sb);
+                                warningSet.add(warning);
+                                System.out.println(warning);
+                            }
+                            warningSet.addAll(parseBody(sb.toString(),startLine,endLine));  // <--- call parseBody()
+                            sb = new StringBuffer();
                         }
-                        warningSet.addAll(parseBody(sb.toString(),startLine,endLine));  // <--- call parseBody()
-                        sb = new StringBuffer();
-                    }
-                    else if (parenLevel < 0) {
-                        errStr = (errStart + ": Extra closing parenthesis found near line: " + startLine);
-                        errorSet.add(errStr);
-                        throw new ParseException(errStr, startLine);
-                    }
-                }
-                else if (st.ttype == 34) { // " - it's a string
-                    st.sval = StringUtil.escapeQuoteChars(st.sval);
-                    if (lastVal != 40) // add back whitespace that ST removes
-                        sb.append(" ");
-                    sb.append("\"");
-                    String com = st.sval;
-                    sb.append(com);
-                    sb.append("\"");
-                }
-                else {
-                    if (lastVal != 40) // add back whitespace that ST removes
-                        sb.append(" ");
-                    sb.append(st.sval);
+                        else if (parenLevel < 0) {
+                            errStr = (errStart + ": Extra closing parenthesis found near line: " + startLine);
+                            errorSet.add(errStr);
+                            throw new ParseException(errStr, startLine);
+                        }
+                        break;
+                    case 34:
+                        // " - it's a string
+                        st.sval = StringUtil.escapeQuoteChars(st.sval);
+                        if (lastVal != 40) // add back whitespace that ST removes
+                            sb.append(" ");
+                        sb.append("\"");
+                        String com = st.sval;
+                        sb.append(com);
+                        sb.append("\"");
+                        break;
+                    default:
+                        if (lastVal != 40) // add back whitespace that ST removes
+                            sb.append(" ");
+                        sb.append(st.sval);
+                        break;
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
         }
-        catch (Exception ex) {
-            String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors depends on :
+        catch (IOException | ParseException ex) {
+            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             warningSet.add("Warning in KIFAST.parseBody() " + message);
             ex.printStackTrace();
         }
-        return new TreeSet<String>();
+        return new TreeSet<>();
     }
 
     /*****************************************************************
@@ -178,12 +172,12 @@ public class KIFAST {
 
         String errStr = null;
         TreeSet<String> warnings = new TreeSet<>();
-        char ch;
+//        char ch;
         boolean isEOL = false;
         int lastVal;
-        int lineNum = 0;
+//        int lineNum = 0;
         int startLine = 0;
-        int endLine = 0;
+        int endLine;
         int parenLevel = 0;
         int duplicateCount = 0;
         String errStart = "Parsing error in " + filename;
@@ -211,53 +205,58 @@ public class KIFAST {
                 }
                 else if (isEOL)
                     isEOL = false; // Turn off isEOL if a non-EOL token encountered
-                if (st.ttype == 40) { // Open paren
-                    if (parenLevel == 0)
-                        startLine = st.lineno();
-                    parenLevel++;
-                    if ((parenLevel != 0) && (lastVal != 40) && (sb.length() > 0))
-                        sb.append(" "); // add back whitespace that ST removes
-                    sb.append("(");
-                }
-                else if (st.ttype == 41) { // ) - close paren
-                    parenLevel--;
-                    sb.append(")");
-                    if (parenLevel == 0) { // The end of the statement...
-                        if (formulaMap.keySet().contains(sb.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
-                            String warning = ("Duplicate axiom at line: " + startLine + " of " + filename + ": " + sb);
-                            warningSet.add(warning);
-                            System.out.println(warning);
-                            duplicateCount++;
+                switch (st.ttype) {
+                    case 40:
+                        // Open paren
+                        if (parenLevel == 0)
+                            startLine = st.lineno();
+                        parenLevel++;
+                        if ((parenLevel != 0) && (lastVal != 40) && (sb.length() > 0))
+                            sb.append(" "); // add back whitespace that ST removes
+                        sb.append("(");
+                        break;
+                    case 41:
+                        // ) - close paren
+                        parenLevel--;
+                        sb.append(")");
+                        if (parenLevel == 0) { // The end of the statement...
+                            if (formulaMap.keySet().contains(sb.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
+                                String warning = ("Duplicate axiom at line: " + startLine + " of " + filename + ": " + sb);
+                                warningSet.add(warning);
+                                System.out.println(warning);
+                                duplicateCount++;
+                            }
+                            endLine = st.lineno() + totalLinesForComments;
+                            warningSet.addAll(parseBody(sb.toString(),startLine,endLine));  // <--- call parseBody()
+                            sb = new StringBuffer();
                         }
-                        endLine = st.lineno() + totalLinesForComments;
-                        warningSet.addAll(parseBody(sb.toString(),startLine,endLine));  // <--- call parseBody()
-                        sb = new StringBuffer();
-                    }
-                    else if (parenLevel < 0) {
-                        errStr = (errStart + ": Extra closing parenthesis found near line: " + startLine);
-                        errorSet.add(errStr);
-                        throw new ParseException(errStr, startLine);
-                    }
-                }
-                else if (st.ttype == 34) { // " - it's a string
-                    st.sval = StringUtil.escapeQuoteChars(st.sval);
-                    if (lastVal != 40) // add back whitespace that ST removes
-                        sb.append(" ");
-                    sb.append("\"");
-                    String com = st.sval;
-                    totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
-                    sb.append(com);
-                    sb.append("\"");
-                }
-                else {
-                    if (lastVal != 40) // add back whitespace that ST removes
-                        sb.append(" ");
-                    sb.append(st.sval);
+                        else if (parenLevel < 0) {
+                            errStr = (errStart + ": Extra closing parenthesis found near line: " + startLine);
+                            errorSet.add(errStr);
+                            throw new ParseException(errStr, startLine);
+                        }
+                        break;
+                    case 34:
+                        // " - it's a string
+                        st.sval = StringUtil.escapeQuoteChars(st.sval);
+                        if (lastVal != 40) // add back whitespace that ST removes
+                            sb.append(" ");
+                        sb.append("\"");
+                        String com = st.sval;
+                        totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
+                        sb.append(com);
+                        sb.append("\"");
+                        break;
+                    default:
+                        if (lastVal != 40) // add back whitespace that ST removes
+                            sb.append(" ");
+                        sb.append(st.sval);
+                        break;
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
         }
-        catch (Exception ex) {
-            String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors depends on :
+        catch (IOException | ParseException ex) {
+            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             warningSet.add("Warning in KIFAST.parse() " + message);
             ex.printStackTrace();
         }
@@ -281,7 +280,7 @@ public class KIFAST {
      */
     public TreeSet<String> parse(Reader r) {
 
-        Stack<FormulaAST.Term> stack = new Stack<>();
+//        Stack<FormulaAST.Term> stack = new Stack<>();
         StringBuilder expression = new StringBuilder();
         int lastVal;
         FormulaAST f = new FormulaAST();
@@ -304,9 +303,11 @@ public class KIFAST {
             int argumentNum = -1;
             boolean inAntecedent = false;
             boolean inConsequent = false;
-            HashSet<String> keySet = new HashSet<String>();
+            HashSet<String> keySet = new HashSet<>();
             // int lineStart = 0;
             boolean isEOL = false;
+            String fstr, warning, validArgs;
+            ArrayList<FormulaAST> list;
             do {
                 lastVal = st.ttype;
                 st.nextToken();
@@ -358,17 +359,17 @@ public class KIFAST {
                     parenLevel--;
                     expression.append(")");
                     if (parenLevel == 0) { // The end of the statement...
-                        String fstr = StringUtil.normalizeSpaceChars(expression.toString());
+                        fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.read(fstr.intern());
                         if (formulaMap.keySet().contains(f.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
-                            String warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
+                            warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
-                            System.out.println(warning);
+                            System.err.println(warning);
                             duplicateCount++;
                         }
-                        String validArgs = f.validArgs((file != null ? file.getName() : null),
-                                (file != null ? Integer.valueOf(f.startLine) : null));
+                        validArgs = f.validArgs((file != null ? file.getName() : null),
+                                (file != null ? f.startLine : null));
                         if (StringUtil.emptyString(validArgs))
                             validArgs = f.badQuantification();
                         if (StringUtil.isNonEmptyString(validArgs)) {
@@ -380,23 +381,21 @@ public class KIFAST {
                         keySet.add(f.toString()); // Make the formula itself a key
                         keySet.add(f.createID());
                         f.endLine = st.lineno() + totalLinesForComments;
-                        Iterator<String> it = keySet.iterator();
-                        while (it.hasNext()) { // Add the expression but ...
-                            String fkey = it.next();
+                        for (String fkey : keySet) {
+                            // Add the expression but ...
                             if (formulas.containsKey(fkey)) {
                                 if (!formulaMap.keySet().contains(f.toString())) { // don't add keys if formula is already present
-                                    ArrayList<FormulaAST> list = formulas.get(fkey);
+                                    list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.toString())) {
                                         System.out.println("Error in KIF.parse(): Storing empty formula from line: "
                                                 + f.startLine);
                                         errorSet.add(errStr);
                                     }
-                                    else if (!list.contains(f.toString()))
+                                    else if (!list.contains(f))
                                         list.add(f);
                                 }
-                            }
-                            else {
-                                ArrayList<FormulaAST> list = new ArrayList<>();
+                            } else {
+                                list = new ArrayList<>();
                                 if (StringUtil.emptyString(f.toString())) {
                                     System.out.println(
                                             "Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
@@ -485,8 +484,8 @@ public class KIFAST {
                 throw new ParseException(errStr, f.startLine);
             }
         }
-        catch (Exception ex) {
-            String message = ex.getMessage().replaceAll(":", "&58;"); // HTMLformatter.formatErrors depends on :
+        catch (IOException | ParseException ex) {
+            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             warningSet.add("Warning in KIF.parse() " + message);
             ex.printStackTrace();
         }

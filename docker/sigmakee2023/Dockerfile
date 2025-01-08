@@ -34,7 +34,7 @@ RUN cd /root \
     && echo "export SIGMA_SRC=/root/workspace/sigmakee" >> .bashrc \
     && echo "export ONTOLOGYPORTAL_GIT=/root/workspace" >> .bashrc \
     && echo 'export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"' >> .bashrc \
-    && echo "export CATALINA_HOME=/root/Programs/apache-tomcat-9.0.96" >> .bashrc \
+    && echo "export CATALINA_HOME=/root/Programs/apache-tomcat-9.0.97" >> .bashrc \
     && source .bashrc
 
 # Setup Vampire

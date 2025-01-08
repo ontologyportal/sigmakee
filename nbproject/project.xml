@@ -272,7 +272,7 @@ auxiliary.show.customizer.message=<message>
             </ide-actions>
             <export>
                 <type>folder</type>
-                <location>build/test/classes</location>
+                <location>build/WEB-INF/classes</location>
                 <script>${ant.script}</script>
                 <build-target>dist</build-target>
             </export>

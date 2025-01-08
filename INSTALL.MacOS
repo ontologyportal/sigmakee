@@ -49,7 +49,7 @@ these variables created before the next step, and replace
 
 Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
 
-You will need at least Java 11+ (avoid JDK 17) to compile SigmaKEE and to run
+You will need at least Java 21+ (avoid JDK 17) to compile SigmaKEE and to run
 Apache Tomcat.
 
 ! For ARM processors download it from here: https://jdk.java.net/archive/
@@ -66,7 +66,7 @@ Apache Tomcat.
   export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
   export PATH=$JAVA_HOME/bin:$PATH
 
-Install (ensure the above preparation have been performed)
+Install (ensure the above preparations have been performed)
 > ant install
 
 *** Legacy install steps now taken care of by the above command "ant install"
