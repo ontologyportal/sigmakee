@@ -143,8 +143,14 @@
         <condition property="jdk21+">
             <javaversion atleast="21"/>
         </condition>
-        <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 21 or greater."
+        <fail message="Unsupported JDK version: ${ant.java.version}. Please use a Java Development Kit (JDK) version 21 or greater."
               unless="jdk21+">
+        </fail>
+        <condition property="nojdk">
+            <contains string="${java.home}" substring="jdk"/>
+        </condition>
+        <fail message="Please install a Java Development Kit (JDK) version 21 or greater."
+              unless="nojdk">
         </fail>
 
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
@@ -159,6 +165,7 @@
         <echo message="classpath:                ${env.SIGMA_CP}"/>
         <echo message="Java Version via Ant:     ${ant.java.version}"/>
         <echo message="Java Version System Prop: ${java.version}"/>
+        <echo message="JDK HOM:      is set to:  ${java.home}"/>
 
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
