@@ -36,14 +36,14 @@ brew install ant
 
 Add the following lines in your ~/.zshrc and make sure to have all
 these variables created before the next step, and replace
-/Users/${user} with your home directory:
+/Users/user with your home directory:
 
   # For SIGMA
-  export SIGMA_HOME=/Users/${user}/.sigmakee
-  export ONTOLOGYPORTAL_GIT=/${user}/user/workspace
+  export SIGMA_HOME=/Users/user/.sigmakee
+  export ONTOLOGYPORTAL_GIT=/Users/user/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
-  export CATALINA_HOME=/Users/${user}/Programs/apache-tomcat-9.0.97
+  export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.97
   export PATH=$CATALINA_HOME/bin:$PATH
   export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*
 
@@ -66,7 +66,7 @@ Apache Tomcat.
   export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
   export PATH=$JAVA_HOME/bin:$PATH
 
-Install (ensure the above preparations have been performed)
+Install (ensure the above preparation have been performed)
 > ant install
 
 *** Legacy install steps now taken care of by the above command "ant install"

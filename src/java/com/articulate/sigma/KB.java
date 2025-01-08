@@ -1121,7 +1121,7 @@ public class KB implements Serializable {
      */
     public ArrayList<Formula> ask(String kind, int argnum, String term) {
 
-        ArrayList<Formula> result = new ArrayList<>();
+        ArrayList<Formula> result = new ArrayList<Formula>();
         String msg;
         if (StringUtil.emptyString(term)) {
             msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), "

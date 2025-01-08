@@ -19,7 +19,7 @@ WORKDIR $SIGMADIR
 
 # Install packages from apt
 RUN apt update &&\
-    apt -qq install -y ant git make gcc graphviz openjdk-21-jdk-headless &&\
+    apt -qq install -y ant git make gcc graphviz openjdk-11-jdk-headless &&\
     rm -rf /var/lib/apt/lists/* && \
     apt clean -y &&\
     apt autoclean -y &&\

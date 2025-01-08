@@ -1,4 +1,4 @@
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
+FROM tomcat:9.0.96-jdk11-temurin-jammy AS builder
 
 # Followed instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling latest vampire w/ latest Z3
@@ -33,7 +33,7 @@ RUN apt update; \
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
+FROM tomcat:9.0.96-jdk11-temurin-jammy AS runtime
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner

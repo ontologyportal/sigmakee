@@ -1871,6 +1871,15 @@ public class KBcache implements Serializable {
 
     /** *************************************************************
      */
+    public static void showChildrenOf(KBcache nkbc, String term) {
+
+        Set<String> classes = nkbc.getChildClasses(term);
+        System.out.println("KBcache.showChildren(): children of " + term + ": " +
+                classes);
+    }
+
+    /** *************************************************************
+     */
     public static void showChildren(KBcache nkbc) {
 
         String term = "Integer";
@@ -1949,7 +1958,7 @@ public class KBcache implements Serializable {
         System.out.println("  -h - show this help screen");
         System.out.println("  -a - show All cache contents");
         System.out.println("  -s - show size of cache elements");
-        System.out.println("  -c - show children");
+        System.out.println("  -c term - show children of term");
         System.out.println("  -t - show complete sTate of cache");
     }
 
@@ -1977,8 +1986,8 @@ public class KBcache implements Serializable {
             else if (args.length > 0 && args[0].equals("-s")) {
                 showSizes(nkbc);
             }
-            else if (args.length > 0 && args[0].equals("-c")) {
-                showChildren(nkbc);
+            else if (args.length > 1 && args[0].equals("-c")) {
+                showChildrenOf(nkbc,args[1]);
             }
             else if (args.length > 0 && args[0].equals("-t")) {
                 showState(nkbc);

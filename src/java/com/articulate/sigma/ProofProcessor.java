@@ -41,7 +41,7 @@ public class ProofProcessor {
      */
     public ProofProcessor(ArrayList<BasicXMLelement> xmlInput) {
 
-    	xml = new ArrayList<>(xmlInput);
+    	xml = new ArrayList<BasicXMLelement>(xmlInput);
     }
 
     /** ***************************************************************
