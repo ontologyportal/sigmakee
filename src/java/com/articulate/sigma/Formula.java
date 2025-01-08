@@ -1970,6 +1970,10 @@ public class Formula implements Comparable, Serializable {
     	    return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
+        if (fcar.empty())
+            return resultSet;
+        if (debug)
+            System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
     	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
