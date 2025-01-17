@@ -369,11 +369,6 @@
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
-
-        <!-- Configure ~/.bashrc ~/.zshrc for SigmaKEE -->
-        <antcall target="append.bashrc"/>
-        <antcall target="append.zshrc"/>
-
         <mkdir dir="${workspace.dir}"/>
         <chmod dir="${workspace.dir}" perm="777" includeemptydirs="true">
             <include name="**/*"/>
