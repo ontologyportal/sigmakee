@@ -17,7 +17,9 @@ COPY --from=builder \
 
 COPY --from=builder \
     /usr/local/bin/vampire /usr/local/bin/vampire
-    /usr/local/bin/vampire/z3/build/libz3.* /usr/local/bin/
+
+COPY --from=builder \
+    /usr/local/tomcat/vampire/z3/build/libz3.* /usr/local/bin/
 
 COPY ./sigmakee-runtime /root/sigmakee-runtime/
 
