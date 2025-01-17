@@ -170,7 +170,8 @@ public class SUMOtoTFAform {
     protected static List<String> relationExtractNonNumericSig(String rel) {
 
         if (debug) System.out.println("relationExtractNonNumericSig(): rel " + rel);
-        if (debug) System.out.println("relationExtractNonNumericSig(): sig " + kb.kbCache.signatures);
+        if (debug) System.out.println("relationExtractNonNumericSig(): sig " +
+                StringUtil.wordWrap(kb.kbCache.signatures.toString()));
         String bareRel = rel.substring(0,rel.length() - 3);
         int size = Integer.parseInt(rel.substring(rel.length()-1,rel.length()));
         List<String> sig = kb.kbCache.signatures.get(bareRel);
@@ -1889,10 +1890,15 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): newsig: " + newsig);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): sig: " + sig);
         String makePred = op;
-        if (!equalTFFsig(newsig,sig,op) || KButilities.isVariableArity(kb,op))  // only add the suffix if arg types are different from the original sort of the predicate
+        if (!equalTFFsig(newsig,sig,op) || KButilities.isVariableArity(kb,withoutSuffix(op)))  // only add the suffix if arg types are different from the original sort of the predicate
             makePred = makePredFromArgTypes(new Formula(withoutSuffix(op)),newsig);
+        if (makePred.equals(withoutSuffix(op))) // if no signature needs to be added then don't change the predicate
+            makePred = op;
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): makePred: " + makePred);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): op: " + op);
+        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): op without suffix: " + withoutSuffix(op));
+        if (debug) System.out.println("SUMOtoTFAform.constrainOp(): is variable arity: " +
+                KButilities.isVariableArity(kb,withoutSuffix(op)));
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): suffix: " + suffix);
         //if (isComparisonOperator(op) || op.startsWith("ListFn")  || isMathFunction(op))
         //    composed = composeSuffix(op, suffix);
@@ -2082,8 +2088,11 @@ public class SUMOtoTFAform {
                     String var = al.get(1);
                     if (var.equals("NumberE") || var.equals("Pi"))
                         return "";
-                    if (arg.equals("RealNumber") || arg.equals("RationalNumber") || arg.equals("Integer"))
-                        return "";
+                    if (arg.equals("RealNumber") || arg.equals("RationalNumber") || arg.equals("Integer")) {
+                        Set<String> types = varmap.get(var);
+                        types.add(arg);
+                        return ""; // if we remove this, make sure the variables is constrained by TFF's sorts
+                    }
                     if (varmap.get(var) != null)
                         if (varmap.get(var).contains("RealNumber") || varmap.get(var).contains("RationalNumber") || varmap.get(var).contains("Integer"))
                             return "";
@@ -2304,7 +2313,7 @@ public class SUMOtoTFAform {
             return "";
         }
         if (debug) System.out.println("\nSUMOtoTFAform.process(): =======================");
-        if (debug) System.out.println("SUMOtoTFAform.process(): f: " + f);
+        //System.out.println("SUMOtoTFAform.process(): f: " + f);
         SUMOformulaToTPTPformula.generateQList(f);
         f = instantiateNumericConstants(f);
         f = new Formula(modifyPrecond(f));

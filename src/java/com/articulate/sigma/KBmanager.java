@@ -342,7 +342,7 @@ public class KBmanager implements Serializable {
             preferences.put("leoExecutable",leoExecFile.getCanonicalPath());
             preferences.put("loadCELT","no");
             preferences.put("showcached","yes");
-            preferences.put("typePrefix","no");
+            preferences.put("typePrefix","yes");
 
             // If no then instantiate variables in predicate position.
             preferences.put("holdsPrefix","no");

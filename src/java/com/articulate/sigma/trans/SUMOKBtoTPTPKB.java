@@ -15,7 +15,7 @@ public class SUMOKBtoTPTPKB {
     // flags to support including numbers and HOL in pseudo-FOL for flexible provers
     public static boolean removeHOL = true; // remove higher order expressions
     public static boolean removeNum = true; // remove numbers
-    public static boolean removeStrings = false;
+    public static boolean removeStrings = true;
 
     public static boolean debug = false;
 

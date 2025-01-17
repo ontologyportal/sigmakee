@@ -214,6 +214,30 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Write sort for a term
+     */
+    public void writeSort(String t, PrintWriter pw) {
+
+        String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type,s__" + t +
+                " : $i  ).";
+        pw.println(output);
+    }
+
+    /** *************************************************************
+     * Get the numerical suffix on a variable arity predicate for how
+     * many arguments it has (in a particular case of use)
+     */
+    public int getVariableAritySuffix(String t) {
+
+        if (t == null || t.isEmpty())
+            return 0;
+        int index = t.indexOf("__");
+        if (index == -1)
+            return 0;
+        return Integer.parseInt(t.substring(index+2,index+3));
+    }
+
+    /** *************************************************************
      * Write signatures for relations
      */
     public void writeRelationSort(String t, PrintWriter pw) {
@@ -224,6 +248,17 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t))
             return;
         List<String> sig = kb.kbCache.signatures.get(t);
+        int endIndex = sig.size();
+        if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
+            endIndex = getVariableAritySuffix(t) + 1;
+        if (endIndex > 6)
+            return;
+        if (endIndex < 1) {
+            System.out.println("Error SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
+            endIndex = sig.size();
+        }
+        if (endIndex > sig.size())
+            endIndex = sig.size();
         if (sig == null || sig.isEmpty()) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
             System.out.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
@@ -234,7 +269,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         StringBuilder sigBuf = new StringBuilder();
         //if (kb.isFunction(t))
         //    sigBuf.append(" " + translateSort(sig.get(0)) + " *");
-        for (String s : sig.subList(1,sig.size()))
+        for (String s : sig.subList(1,endIndex))
             sigBuf.append(" ").append(translateSort(kb,s)).append(" *");
         if (sigBuf.length() == 0) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): " + t);
@@ -332,7 +367,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             allsig.addAll(toExtend.get(t));
         }
         toExtend.put(t,allsig);
-        if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): allsig: " + allsig);
+        if (debug) System.out.println("SUMOKBtoTFAKB.processRelationSort(): t, allsig: " + t + ", " + allsig);
     }
 
     /** *************************************************************
@@ -381,8 +416,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             MapUtils.addToMap(toExtend, t, "1Ra2Ra");
             MapUtils.addToMap(toExtend, t, "1In2In");
         }
-        for (String t : Formula.MATH_FUNCTIONS) {  // PLUSFN,MINUSFN,TIMESFN,DIVIDEFN,FLOORFN
-            if (t.equals(Formula.FLOORFN))
+        for (String t : Formula.MATH_FUNCTIONS) {  // PLUSFN,MINUSFN,TIMESFN,DIVIDEFN,FLOORFN,CEILINGFN,ROUNDFN
+            if (t.equals(Formula.FLOORFN) || t.equals(Formula.CEILINGFN) || t.equals(Formula.ROUNDFN))
                 MapUtils.addToMap(toExtend, t, "0In1Re");
             else {
                 MapUtils.addToMap(toExtend, t, "0Re1Re2Re");
@@ -464,11 +499,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         StringBuilder inStr, reStr, raStr, enStr;
         int size;
         String fnSuffix, newInStr, newReStr, newRaStr, newEnStr;
-        for (String r : rels) {
+        for (String r : rels) {  // loop through all variable arity relations
             if (r.equals("ListFn"))
                 continue;
             sig = kb.kbCache.getSignature(r);
             size = sig.size();
+            System.out.println("SUMOKBtoTFAKB.handleVariableArity(): r,sig,size: " + r + " " + sig + " size " + size);
             if (size > 1)
                 size = size - 1;  // first sig element is range, some sig elements before variable arity element may be fixed and explicit
             inStr = new StringBuilder();
@@ -524,27 +560,41 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String fnSuffix;
         for (String t : kb.getTerms()) {
             pw.println("% SUMOKBtoTFAKB.writeSorts(): " + t);
+            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): " + t);
+            if (debug) System.out.println("kb.isRelation(t) " + kb.isRelation(t));
+            if (debug) System.out.println("!alreadyExtended(t): " + !alreadyExtended(t));
+            if (debug) System.out.println("!Formula.isComparisonOperator(t)): " + !Formula.isComparisonOperator(t));
+            if (debug) System.out.println("!Formula.isMathFunction(t)): " + !Formula.isMathFunction(t));
+            if (!Character.isLetter(t.charAt(0)))
+                continue;
             if (kb.isFunction(t)) {
                 if (Formula.isLogicalOperator(t) || t.equals("equal")) {
                     continue;
                 }
+                else {
+                    writeRelationSort(t, pw);
+                    if (!alreadyExtended(t))
+                        processRelationSort(toExtend, t);
+                }
             }
-            if (kb.isRelation(t) && !alreadyExtended(t) && !t.equals("ListFn")
+            else if (kb.isRelation(t) && !alreadyExtended(t) && !t.equals("ListFn")
                     && !Formula.isComparisonOperator(t) && !Formula.isMathFunction(t)) {
                 if (hasNumericSuperArg(t) || listOperator(t)) {
                     writeRelationSort(t, pw);
                     processRelationSort(toExtend, t);
-                } else {
-                    writeRelationSort(t, pw);
                 }
+                else
+                    writeRelationSort(t, pw);
             }
+            else
+                writeSort(t,pw);
         }
         Set<String> vals;
         String sep, newTerm;
         for (String k : toExtend.keySet()) {
             vals = toExtend.get(k);
             fnSuffix = "";
-            if (kb.isFunction(k) || k.endsWith("Fn"))  // variable arity relations with numerical suffixes not in kb yet
+            if (kb.isFunction(k) || k.endsWith("Fn"))  // variable arity functions with numerical suffixes not in kb yet
                 fnSuffix = "Fn";
             for (String e : vals) {
                 kb.kbCache.extendInstance(k, e + fnSuffix);

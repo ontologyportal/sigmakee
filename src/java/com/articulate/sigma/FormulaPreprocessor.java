@@ -1076,7 +1076,7 @@ public class FormulaPreprocessor {
      */
     public Set<Formula> preProcess(Formula form, boolean isQuery, KB kb) {
 
-        //System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + form);
+        if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + form);
         HashSet<Formula> results = new HashSet<Formula>();
         if (!StringUtil.emptyString(form.getFormula())) {
             KBmanager mgr = KBmanager.getMgr();
@@ -1125,7 +1125,8 @@ public class FormulaPreprocessor {
         // If typePrefix==yes and isQuery==false, add a "sortal" antecedent to every axiom
         KBmanager mgr = KBmanager.getMgr();
         boolean typePrefix = mgr.getPref("typePrefix").equalsIgnoreCase("yes");
-        if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): type prefix: " + typePrefix);
+        //System.out.println("INFO in FormulaPreprocessor.preProcess(): type prefix: " + typePrefix);
+        //System.out.println("INFO in FormulaPreprocessor.preProcess(): !isQuery: " + !isQuery);
         if (typePrefix && !isQuery) {
             for (Formula f : results) {
                 if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + f);
