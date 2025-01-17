@@ -375,7 +375,13 @@
         <antcall target="append.zshrc"/>
 
         <mkdir dir="${workspace.dir}"/>
+        <chmod dir="${workspace.dir}" perm="777" includeemptydirs="true">
+            <include name="**/*"/>
+        </chmod>
         <mkdir dir="${programs.dir}"/>
+        <chmod dir="${programs.dir}" perm="777" includeemptydirs="true">
+            <include name="**/*"/>
+        </chmod>
 
         <!-- Install Tomcat -->
         <antcall target="install.tomcat"/>
@@ -418,6 +424,9 @@
 
     <target name="copy.to.sigma.home">
         <mkdir dir="${user.home}/.${app.name}"/>
+        <chmod dir="${user.home}/.${app.name}" perm="777" includeemptydirs="true">
+            <include name="**/*"/>
+        </chmod>
         <mkdir dir="${user.home}/.${app.name}/KBs"/>
         <copy todir="${user.home}/.${app.name}/KBs">
             <fileset dir="${kbs.home}"/>
