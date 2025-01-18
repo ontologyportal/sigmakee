@@ -556,6 +556,7 @@
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.tptp"/>
                 <include name="*.ser"/>
+                <include name="vamp-out.txt"/>
             </fileset>
             <fileset dir="${sigma_home}/KBs/WordNetMappings">
                 <include name="*.ser"/>

@@ -18,6 +18,9 @@ COPY --from=builder \
 COPY --from=builder \
     /usr/local/bin/vampire /usr/local/bin/vampire
 
+COPY --from=builder \
+    /usr/local/bin/libz3.* /usr/local/bin/
+
 COPY ./sigmakee-runtime /root/sigmakee-runtime/
 
 COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
