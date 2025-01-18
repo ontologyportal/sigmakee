@@ -218,7 +218,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeSort(String t, PrintWriter pw) {
 
-        String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type,s__" + t +
+        String output = "tff(" + translateName(t) + "_sig,type,s__" + t +
                 " : $i  ).";
         pw.println(output);
     }
@@ -284,7 +284,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             relname = relname.substring(0,relname.length()-3);
         if (kb.isFunction(t)) {
             String range = sig.get(0);
-            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname +
+            String output = "tff(" + translateName(t) + "_sig,type," + relname +
                     " : ( " + sigStr + " ) > " + translateSort(kb,range) + " ).";
             pw.println(output);
         }
@@ -565,10 +565,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (debug) System.out.println("!alreadyExtended(t): " + !alreadyExtended(t));
             if (debug) System.out.println("!Formula.isComparisonOperator(t)): " + !Formula.isComparisonOperator(t));
             if (debug) System.out.println("!Formula.isMathFunction(t)): " + !Formula.isMathFunction(t));
-            if (!Character.isLetter(t.charAt(0)))
+            if (!Character.isLetter(t.charAt(0)) || Formula.isTrueFalse(t))
                 continue;
             if (kb.isFunction(t)) {
-                if (Formula.isLogicalOperator(t) || t.equals("equal")) {
+                if (Formula.isLogicalOperator(t) || t.equals("equal") ) {
                     continue;
                 }
                 else {

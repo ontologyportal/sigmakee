@@ -2565,6 +2565,17 @@ public class Formula implements Comparable, Serializable {
      *
      * @param term A String, assumed to be an atomic SUO-KIF term.
      */
+    public static boolean isTrueFalse(String term) {
+
+        return (!term.isEmpty() && (term.equals("True") || term.equals("False")));
+    }
+
+    /** ***************************************************************
+     * Returns true if term the constant true or constant false, else
+     * returns false.
+     *
+     * @param term A String, assumed to be an atomic SUO-KIF term.
+     */
     public static boolean isLogicalOperator(String term) {
 
         return (!StringUtil.emptyString(term) && LOGICAL_OPERATORS.contains(term));
