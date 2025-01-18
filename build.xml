@@ -370,13 +370,9 @@
          will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
         <mkdir dir="${workspace.dir}"/>
-        <chmod dir="${workspace.dir}" perm="777" includeemptydirs="true">
-            <include name="**/*"/>
-        </chmod>
+        <chmod dir="${workspace.dir}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${programs.dir}"/>
-        <chmod dir="${programs.dir}" perm="777" includeemptydirs="true">
-            <include name="**/*"/>
-        </chmod>
+        <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/>
 
         <!-- Install Tomcat -->
         <antcall target="install.tomcat"/>
@@ -418,20 +414,23 @@
     </target>
 
     <target name="copy.to.sigma.home">
-        <mkdir dir="${user.home}/.${app.name}"/>
-        <chmod dir="${user.home}/.${app.name}" perm="777" includeemptydirs="true">
-            <include name="**/*"/>
-        </chmod>
-        <mkdir dir="${user.home}/.${app.name}/KBs"/>
-        <copy todir="${user.home}/.${app.name}/KBs">
-            <fileset dir="${kbs.home}"/>
-        </copy>
+        <antcall target="refresh.KBs"/>
         <copy todir="${user.home}/.${app.name}/KBs">
             <fileset file="${sigma.src}/config.xml"/>
         </copy>
         <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
         <copy todir="${user.home}/.${app.name}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
+        </copy>
+    </target>
+
+    <!-- When the SUMO KB files get updated, do this frequently -->
+    <target name="refresh.KBs">
+        <mkdir dir="${user.home}/.${app.name}"/>
+        <chmod dir="${user.home}/.${app.name}" perm="ugo+rw" includes="**/*"/>
+        <mkdir dir="${user.home}/.${app.name}/KBs"/>
+        <copy todir="${user.home}/.${app.name}/KBs">
+            <fileset dir="${kbs.home}"/>
         </copy>
     </target>
 
