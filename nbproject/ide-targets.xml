@@ -539,7 +539,8 @@
         <copy todir="${test.unit.resources.dir}" file="${unit.config}" overwrite="true"/>
     </target>
     <target name="prep.integration.config">
-        <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
+        <!-- Commented out to conduct tests with all KB files listed in config.xml -->
+        <!--<copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>-->
     </target>
     <target name="thorough.clean" depends="clean,prep.main.config">
         <delete includeemptydirs="true" failonerror="false">
