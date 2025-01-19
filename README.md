@@ -236,6 +236,17 @@ echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
 echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
 ```
 
+mandtory additions to .bashrc
+```sh
+echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
+echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
+echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
+echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
+echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
+```
+
 load the definitions into your environment
 ```sh
 source .bashrc
@@ -303,9 +314,18 @@ PS1=Vagrant:$PS1
 
 First, comply with System preparation on Linux above
 
-Clone SigmaKEE
+Clone SigmaKEE. First, ensure the below exports are contained in your ~/.bashrc.
+If not, then perform the exports before cloning SigmaKEE.
 ```sh
 cd ~
+echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
+echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
+echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
+echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
+echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
+echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
+echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
+source .bashrc
 mkdir workspace
 cd workspace
 git clone https://github.com/ontologyportal/sigmakee
@@ -458,7 +478,7 @@ See INSTALL.MacOS
 Open up CMD prompt
 
 ```
-    wsl –install
+    wsl –-install
     .bashrc already existed in home directory. Did not update path.
     echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
     Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000

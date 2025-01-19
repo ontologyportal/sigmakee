@@ -112,7 +112,7 @@ public class KIF {
         try {
             File f = new File(filename);
             if (!f.exists()) {
-                System.out.println("KIF.getKIFFileSize(): error file " + filename + " does not exist");
+                System.err.println("KIF.getKIFFileSize(): error file " + filename + " does not exist");
                 return 0;
             }
             return f.length();
@@ -137,7 +137,6 @@ public class KIF {
      *
      * @param mode
      *            An integer value denoting a parsing mode.
-     * @return void
      */
     public void setParseMode(int mode) {
 
@@ -235,7 +234,7 @@ public class KIF {
             // int lineStart = 0;
             boolean isEOL = false;
             ArrayList<String> list;
-            String key, fstr;
+            String key, fstr, validArgs;
             do {
                 lastVal = st.ttype;
                 st.nextToken();
@@ -300,7 +299,7 @@ public class KIF {
                             duplicateCount++;
                         }
                         if (mode == NORMAL_PARSE_MODE) { // Check arg validity ONLY in NORMAL_PARSE_MODE
-                            String validArgs = f.validArgs((file != null ? file.getName() : null),
+                            validArgs = f.validArgs((file != null ? file.getName() : null),
                                     (file != null ? f.startLine : null));
                             if (StringUtil.emptyString(validArgs))
                                 validArgs = f.badQuantification();
@@ -532,7 +531,7 @@ public class KIF {
                 pr.println(it.next().getFormula());
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
     }

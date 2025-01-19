@@ -633,6 +633,10 @@ public class KB implements Serializable {
      */
     public boolean isRelation(String i) {
 
+        //System.out.println("KB.isRelation(): term: " + i);
+        //System.out.println("KB.isRelation(): kbCache != null: " + kbCache != null);
+        //System.out.println("KB.isRelation(): kbCache .relations != nullL " + kbCache.relations != null);
+        //System.out.println("KB.isRelation(): kbCache.relations.contains(i): " + kbCache.relations.contains(i));
         return kbCache != null && kbCache.relations != null && kbCache.relations.contains(i);
     }
 
@@ -1121,7 +1125,7 @@ public class KB implements Serializable {
      */
     public ArrayList<Formula> ask(String kind, int argnum, String term) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        ArrayList<Formula> result = new ArrayList<>();
         String msg;
         if (StringUtil.emptyString(term)) {
             msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), "

@@ -41,7 +41,7 @@ public class ProofProcessor {
      */
     public ProofProcessor(ArrayList<BasicXMLelement> xmlInput) {
 
-    	xml = new ArrayList<BasicXMLelement>(xmlInput);
+    	xml = new ArrayList<>(xmlInput);
     }
 
     /** ***************************************************************
@@ -51,7 +51,7 @@ public class ProofProcessor {
      */
     public boolean equalsAnswer(int answerNum, String expectedAnswer) {
 
-    	StringBuffer result = new StringBuffer();
+    	StringBuilder result = new StringBuilder();
     	ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
     	BasicXMLelement answer = queryResponseElements.get(answerNum);
     	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no"))

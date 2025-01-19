@@ -450,10 +450,8 @@ public class InferenceTestSuite {
         System.out.println("INFO in InferenceTestSuite.test(): Note that any prior user assertions will be deleted.");
         System.out.println("INFO in InferenceTestSuite.test(): Prover: " + KBmanager.getMgr().prover);
         StringBuilder result = new StringBuilder();
-        FileWriter fw = null;
         int fail = 0;
         int pass = 0;
-        PrintWriter pw = null;
         String proof = null;
 
         String language = "EnglishLanguage";
@@ -537,9 +535,8 @@ public class InferenceTestSuite {
             resultsFilename = rfn.substring(0,rfn.length()-3) + "-res.html";
             resultsFile = new File(outputDir, resultsFilename);
             tpp = new TPTP3ProofProcessor();
-            try {
-                fw = new FileWriter(resultsFile);
-                pw = new PrintWriter(fw);
+            try (FileWriter fw = new FileWriter(resultsFile); PrintWriter pw = new PrintWriter(fw)) {
+
                 tpp.parseProofOutput(proof, kb);
                 System.out.println("InferenceTestSuite.test() proof status: " + tpp.status + " for " + itd.note);
                 itd.SZSstatus = tpp.status;
@@ -553,15 +550,6 @@ public class InferenceTestSuite {
             }
             catch (IOException e) {
                 throw new IOException("Error writing file " + resultsFile.getCanonicalPath());
-            }
-            finally {
-                try {
-                    if (pw != null) { pw.close(); }
-                    if (fw != null) { fw.close(); }
-                }
-                catch (IOException ex) {
-                    ex.printStackTrace();
-                }
             }
             if (tpp.inconsistency) {
                 result.append("<h1>InferenceTestSuite.inferenceUnitTest(): Danger! possible inconsistency!</h1>");

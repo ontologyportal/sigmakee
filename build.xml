@@ -115,7 +115,7 @@
     <property name="tomcat.version" value="9.0.97"/>
 
     <!-- Define the sigma user spaces -->
-    <property name="workspace.dir" value="${git.home}/workspace"/>
+    <property name="workspace.dir" value="${user.home}/workspace"/>
     <property name="programs.dir" value="${user.home}/Programs"/>
 
     <condition property="isUnixNotMac">
@@ -140,10 +140,19 @@
     </path>
 
     <target name="init" depends="init-ivy">
-        <available property="jdk11+" classname="java.net.http.HttpClient"/>
-        <fail message="Unsupported JDK version: ${ant.java.version}. Please use JDK version 11 or greater, but avoid JDK 17."
-              unless="jdk11+">
+        <condition property="jdk21+">
+            <javaversion atleast="21"/>
+        </condition>
+        <fail message="Unsupported JDK version: ${ant.java.version}. Please use a Java Development Kit (JDK) version 21 or greater."
+              unless="jdk21+">
         </fail>
+        <condition property="nojdk">
+            <contains string="${java.home}" substring="jdk"/>
+        </condition>
+        <fail message="Please install a Java Development Kit (JDK) version 21 or greater."
+              unless="nojdk">
+        </fail>
+
         <echo message="Welcome to the ${product.Name} v${product.Version}"/>
         <echo message="Specification Vendor:     ${spec.vendor}"/>
         <echo message=""/>
@@ -156,6 +165,7 @@
         <echo message="classpath:                ${env.SIGMA_CP}"/>
         <echo message="Java Version via Ant:     ${ant.java.version}"/>
         <echo message="Java Version System Prop: ${java.version}"/>
+        <echo message="JDK HOME:     is set to:  ${java.home}"/>
 
         <tstamp>
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
@@ -359,9 +369,15 @@
     <!-- At this point we will assume you have already complied with the
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
-    <target name="install" depends="init" description="Installs WordNetMappings and SUMO to ${sigma.home}/KBs">
+    <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
         <mkdir dir="${workspace.dir}"/>
+        <chmod dir="${workspace.dir}" perm="777" includeemptydirs="true">
+            <include name="**/*"/>
+        </chmod>
         <mkdir dir="${programs.dir}"/>
+        <chmod dir="${programs.dir}" perm="777" includeemptydirs="true">
+            <include name="**/*"/>
+        </chmod>
 
         <!-- Install Tomcat -->
         <antcall target="install.tomcat"/>
@@ -370,7 +386,7 @@
         <antcall target="retrieve.wordnet"/>
 
         <!-- Retrieve E prover -->
-        <antcall tareget="retrieve.E"/>
+        <antcall target="retrieve.E"/>
 
         <!-- Clone the sigma tools -->
         <antcall target="clone.sumo"/>
@@ -388,10 +404,6 @@
         <antcall target="clone.z3"/>
         <antcall target="build.z3"/>
         <antcall target="build.vampire"/>
-
-        <!-- Configure ~/.bashrc ~/.zshrc -->
-        <antcall target="append.bashrc"/>
-        <antcall target="append.zshrc"/>
     </target>
 
     <target name="retrieve.wordnet">
@@ -408,6 +420,9 @@
 
     <target name="copy.to.sigma.home">
         <mkdir dir="${user.home}/.${app.name}"/>
+        <chmod dir="${user.home}/.${app.name}" perm="777" includeemptydirs="true">
+            <include name="**/*"/>
+        </chmod>
         <mkdir dir="${user.home}/.${app.name}/KBs"/>
         <copy todir="${user.home}/.${app.name}/KBs">
             <fileset dir="${kbs.home}"/>
@@ -422,7 +437,8 @@
     </target>
 
     <target name="clone.sumo">
-        <git command="clone">
+        <mkdir dir="${workspace.dir}/sumo"/>
+        <git command="clone" dir="${workspace.dir}/sumo">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
@@ -432,7 +448,8 @@
         </git>
     </target>
     <target name="clone.tptpantlr">
-        <git command="clone">
+        <mkdir dir="${workspace.dir}/TPTP-ANTLR"/>
+        <git command="clone" dir="${workspace.dir}/TPTP-ANTLR">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
@@ -442,7 +459,8 @@
         </git>
     </target>
     <target name="clone.sigmautils">
-        <git command="clone">
+        <mkdir dir="${workspace.dir}/SigmaUtils"/>
+        <git command="clone" dir="${workspace.dir}/SigmaUtils">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
@@ -467,6 +485,14 @@
             <args>
                 <arg value="update"/>
                 <arg value="--init"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sigmakee">
+        <git command="pull" dir="${user.dir}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
             </args>
         </git>
     </target>
@@ -529,9 +555,14 @@
         </exec>
     </target>
 
+    <!-- If Vampire fails to build on Hamming, here is a alternate source of the binary -->
+    <target name="alternate.vampire">
+        <get src="https://github.com/vprover/vampire/releases/download/v4.9casc2024/vampire" dest="${programs.dir}/vampire/build" tryGzipEncoding="true"/>
+        <chmod dir="${programs.dir}/${programs.dir}/vampire/build" perm="ugo+rx" includes="vampire"/>
+    </target>
+
     <target name="append.bashrc" if="isUnixNotMac">
         <echo file="${user.home}/.bashrc" append="true">
-
 # For SIGMA
 export SIGMA_HOME=${user.home}/.${app.name}
 export ONTOLOGYPORTAL_GIT=${workspace.dir}
@@ -539,12 +570,12 @@ export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
+export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
+</echo>
     </target>
 
     <target name="append.zshrc" unless="isUnixNotMac">
         <echo file="${user.home}/.zshrc" append="true">
-
 # For SIGMA
 export SIGMA_HOME=${user.home}/.${app.name}
 export ONTOLOGYPORTAL_GIT=${workspace.dir}
@@ -552,7 +583,8 @@ export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*</echo>
+export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
+</echo>
     </target>
 
     <target name="api_doc" depends="init" description="Build the JavaDocs and place in ${dist.javadoc.dir}.">

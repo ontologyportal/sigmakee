@@ -15,6 +15,7 @@ http://sigmakee.sourceforge.net
 
 /*************************************************************************************************/
 package com.articulate.sigma;
+
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -23,14 +24,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.articulate.sigma.dataProc.Infrastructure;
-import com.articulate.sigma.nlg.LanguageFormatter;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
+
 import com.google.common.collect.Sets;
+
 import org.json.simple.JSONAware;
 import org.json.simple.JSONValue;
 
@@ -42,7 +44,7 @@ public class KButilities {
     public static boolean debug = false;
 
     /** Errors found during processing formulas */
-    public static TreeSet<String> errors = new TreeSet<String>();
+    public static TreeSet<String> errors = new TreeSet<>();
 
     /** Warnings found during processing formulas */
     public static TreeSet<String> warnings = new TreeSet<String>();
@@ -82,14 +84,15 @@ public class KButilities {
         Map<String, Set<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
         KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+        String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
-            String error = "inconsistent types in " + SUMOtoTFAform.varmap;
+            error = "inconsistent types in " + SUMOtoTFAform.varmap;
             System.out.println("hasCorrectTypes(): " + SUMOtoTFAform.errors);
             errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
-            String error = "Type conflict: " + SUMOtoTFAform.errors;
+            error = "Type conflict: " + SUMOtoTFAform.errors;
             System.out.println("hasCorrectTypes(): " + SUMOtoTFAform.errors);
             errors.addAll(SUMOtoTFAform.errors);
             return false;
@@ -103,7 +106,7 @@ public class KButilities {
     public static boolean isValidFormula(KB kb, String form) {
 
         SUMOtoTFAform.initOnce();
-        String result = "";
+        String result;
         KIF kif = new KIF();
         try {
             result = kif.parseStatement(form);
@@ -158,7 +161,7 @@ public class KButilities {
     public static String getDocumentation(KB kb, String term) {
 
         ArrayList<Formula> forms = kb.askWithRestriction(0,"documentation",1,term);
-        if (forms == null || forms.size() == 0)
+        if (forms == null || forms.isEmpty())
             return null;
         Formula form = forms.get(0);
         if (form == null)
@@ -186,8 +189,9 @@ public class KButilities {
 
         ArrayList<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
         HashSet<String> terms = new HashSet<>();
+        String s;
         for (Formula f : forms) {
-            String s = f.getStringArgument(2);
+            s = f.getStringArgument(2);
             terms.add(s);
         }
         return terms.size();
@@ -239,9 +243,10 @@ public class KButilities {
         int termcol = 0;
         ArrayList<ArrayList<String>> spread = new ArrayList<>();
         spread = DB.readSpreadsheet(fname,null,false,'\t');
+        String label;
         for (ArrayList<String> row : spread) {
             if (row != null && row.size() > 1) {
-                String label = row.get(termcol);
+                label = row.get(termcol);
                 System.out.println("(synonymousExternalConcept \"" + label + "\" Entity Taxonomy)");
             }
         }
@@ -269,23 +274,24 @@ public class KButilities {
     	ArrayList<Formula> ant2 = kb.ask("ant",0,term2);
         ArrayList<Formula> cons1 = kb.ask("cons",0,term1);
         ArrayList<Formula> cons2 = kb.ask("cons",0,term2);
-        HashSet<Formula> hrule1 = new HashSet<Formula>();
+        HashSet<Formula> hrule1 = new HashSet<>();
         hrule1.addAll(ant1);
         hrule1.addAll(cons1);
-        HashSet<Formula> hrule2 = new HashSet<Formula>();
+        HashSet<Formula> hrule2 = new HashSet<>();
         hrule2.addAll(ant2);
         hrule2.addAll(cons2);
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        ArrayList<Formula> result = new ArrayList<>();
         result.addAll(hrule1);
         result.retainAll(hrule2);
         ArrayList<Formula> stmt1 = kb.ask("stmt",0,term1);
         ArrayList<Formula> stmt2 = kb.ask("stmt",0,term2);
         stmt1.retainAll(stmt2);
         result.addAll(stmt1);
+        ArrayList<Formula> stmt;
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
             	if (j != i) {
-                    ArrayList<Formula> stmt = kb.askWithRestriction(i,term1,j,term2);
+                    stmt = kb.askWithRestriction(i,term1,j,term2);
                     result.addAll(stmt);
             	}
             }
@@ -299,10 +305,12 @@ public class KButilities {
 
         System.out.println("Relations: " + kb.getCountRelations());
         Iterator it = kb.terms.iterator();
+        String term;
+        ArrayList al;
         while (it.hasNext()) {
-            String term = (String) it.next();
-            ArrayList al = kb.ask("arg",0,term);
-            if (al != null && al.size() > 0) {
+            term = (String) it.next();
+            al = kb.ask("arg",0,term);
+            if (al != null && !al.isEmpty()) {
                 System.out.println(term + " " + al.size());
             }
         }
@@ -314,10 +322,7 @@ public class KButilities {
 
         if (StringUtil.emptyString(filename))
             return false;
-        if (filename.endsWith("_Cache.kif"))
-            return true;
-        else
-            return false;
+        return filename.endsWith("_Cache.kif");
     }
 
     /** *************************************************************
@@ -326,9 +331,7 @@ public class KButilities {
 
         int count = 0;
         int wncount = 0;
-        Iterator it = kb.terms.iterator();
-        while (it.hasNext()) {
-            String term = (String) it.next();
+        for (String term : kb.terms) {
             if (kb.isSubclass(term,"Process")) {
                 count++;
                 if (WordNet.wn.SUMOHash.containsKey(term))
@@ -351,7 +354,7 @@ public class KButilities {
                 (HttpURLConnection) new URL(URLName).openConnection();
             con.setRequestMethod("HEAD");
             return(con.getResponseCode() == HttpURLConnection.HTTP_OK);
-        } catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
@@ -363,9 +366,11 @@ public class KButilities {
 
         URL u = null;
         ArrayList<Formula> results = kb.ask("arg",0,"externalImage");
+        Formula f;
+        String url;
         for (int i = 0; i < results.size(); i++) {
-            Formula f = (Formula) results.get(i);
-            String url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
+            f = (Formula) results.get(i);
+            url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
             if (!uRLexists(url))
                 System.out.println(f + " doesn't exist");
         }
@@ -383,19 +388,16 @@ public class KButilities {
         // http://upload.wikimedia.org/wikipedia/commons/3/33/Reef.jpg
         //
         URL u = null;
-        String line = null;
+        String line;
 
-        FileReader fr = null;
-        LineNumberReader lr = null;
-
-        try {
-            fr = new FileReader("pictureList.kif");
-            lr = new LineNumberReader(fr);
+        try (FileReader fr = new FileReader("pictureList.kif"); LineNumberReader lr = new LineNumberReader(fr)) {
             Pattern p = Pattern.compile("([^ ]+) ([^ ]+) \"([^\"]+)\"\\)");
+            Matcher m;
+            String url;
             while ((line = lr.readLine()) != null) {
-                Matcher m = p.matcher(line);
+                m = p.matcher(line);
                 if (m.matches()) {
-                    String url = StringUtil.removeEnclosingQuotes(m.group(3));
+                    url = StringUtil.removeEnclosingQuotes(m.group(3));
                     //System.out.println("the url: " + url);
                     if (!uRLexists(url))
                         System.out.println(";; " + line);
@@ -406,18 +408,8 @@ public class KButilities {
                     System.out.println(line);
             }
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error reading pictureList.kif\n" + e.getMessage());
-        }
-        finally {
-            try {
-                if (lr != null)
-                    lr.close();
-                if (fr != null)
-                    fr.close();
-            }
-            catch (Exception ex) {
-            }
+        catch (IOException e) {
+            System.err.println("Error reading pictureList.kif\n" + e.getMessage());
         }
     }
 
@@ -434,6 +426,7 @@ public class KButilities {
         public String rel = "";
         public String target = "";
 
+        @Override
         public int compareTo(Object o) {
 
             if (o.getClass().toString().endsWith("GraphArc")) {
@@ -447,6 +440,7 @@ public class KButilities {
             }
         }
 
+        @Override
         public boolean equals(Object o) {
             if (o.getClass().toString().endsWith("GraphArc")) {
                 GraphArc ga2 = (GraphArc) o;
@@ -457,13 +451,15 @@ public class KButilities {
             else throw new ClassCastException();
         }
 
+        @Override
         public String toString() {
 
-            StringBuffer sb = new StringBuffer();
-            sb.append("{\"source\":\"" + source + "\",\"rel\":\"" + rel + "\",\"target\":\"" + target + "\"}");
+            StringBuilder sb = new StringBuilder();
+            sb.append("{\"source\":\"").append(source).append("\",\"rel\":\"").append(rel).append("\",\"target\":\"").append(target).append("\"}");
             return sb.toString();
         }
 
+        @Override
         public String toJSONString() {
             return toString();
         }
@@ -480,7 +476,7 @@ public class KButilities {
             GraphArc ga = this.new GraphArc(sp[0],sp[1],sp[2]);
             al.add(ga);
         }
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append(JSONValue.toJSONString(al));
         return sb.toString();
     }
@@ -492,6 +488,10 @@ public class KButilities {
         if (debug) System.out.println("generateSemNetNeighbors(): term: " + term + " count: " + count);
         TreeSet<GraphArc> resultSet = new TreeSet<>();
         TreeSet<String> targets = new TreeSet<>();
+        Set<String> terms;
+        GraphArc ga;
+        String predicate, arg1, arg2;
+        ArrayList<String> args;
         for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
             //if (debug) System.out.println("generateSemNetNeighbors(): check formula: " + f);
             if (isCacheFile(f.sourceFile)  && !cached) {
@@ -500,7 +500,7 @@ public class KButilities {
             }
             if ((!f.isSimpleClause(kb) || !f.isGround()) && links) {
                 if (debug) System.out.println("generateSemNetNeighbors(): not simple");
-                Set<String> terms = f.collectTerms();
+                terms = f.collectTerms();
                 for (String term1 : terms) {
                     if (!term1.equals(term))
                         continue;
@@ -510,31 +510,31 @@ public class KButilities {
                         if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
                             continue;
                         if (!term1.equals(term2)) {
-                            GraphArc ga = new GraphArc(term1,"link",term2);
+                            ga = new GraphArc(term1,"link",term2);
                             resultSet.add(ga);
                             targets.add(term2);
                         }
                     }
-                    GraphArc ga = new GraphArc(term1,"inAxiom", "\"" + f.getFormula() + "\"");
+                    ga = new GraphArc(term1,"inAxiom", "\"" + f.getFormula() + "\"");
                     resultSet.add(ga);
                 }
             }
             else {
-                String predicate = f.getStringArgument(0);
+                predicate = f.getStringArgument(0);
                 if (debug) System.out.println("generateSemNetNeighbors(): simple");
-                ArrayList<String> args = f.argumentsToArrayListString(0);
+                args = f.argumentsToArrayListString(0);
                 if ((args != null && args.size() == 3) || args.get(0).equals("documentation")) { // could have a function which would return null
-                    String arg1 = f.getStringArgument(1);
+                    arg1 = f.getStringArgument(1);
                     if (arg1.equals(term)) {
                         if (debug) System.out.println("generateSemNetNeighbors(): check ground formula: " + f);
-                        String arg2 = f.getStringArgument(2);
+                        arg2 = f.getStringArgument(2);
                         if (args.get(0).equals("documentation"))
                             arg2 = f.getStringArgument(3);
                         if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
                                 (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
                             if (StringUtil.isQuotedString(arg2))
                                 arg2 = StringUtil.removeEnclosingQuotes(arg2);
-                            GraphArc ga = new GraphArc(arg1, predicate, arg2);
+                            ga = new GraphArc(arg1, predicate, arg2);
                             resultSet.add(ga);
                             targets.add(arg2);
                         }
@@ -542,12 +542,12 @@ public class KButilities {
                     arg1 = f.getStringArgument(2);
                     if (arg1.equals(term)) {
                         if (debug) System.out.println("generateSemNetNeighbors(): check ground formula: " + f);
-                        String arg2 = f.getStringArgument(1);
+                        arg2 = f.getStringArgument(1);
                         if (!Formula.isVariable(arg1) && !Formula.isVariable(arg2) &&
                                 (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2))) {
                             if (StringUtil.isQuotedString(arg1))
                                 arg2 = StringUtil.removeEnclosingQuotes(arg1);
-                            GraphArc ga = new GraphArc(arg2, predicate, arg1);
+                            ga = new GraphArc(arg2, predicate, arg1);
                             resultSet.add(ga);
                             targets.add(arg2);
                         }
@@ -577,12 +577,15 @@ public class KButilities {
      */
     private static Set<String> generateSemanticNetwork(KB kb, boolean cached, boolean strings) {
 
-        TreeSet<String> resultSet = new TreeSet<String>();
+        TreeSet<String> resultSet = new TreeSet<>();
+        Set<String> terms;
+        String predicate, arg1, arg2;
+        ArrayList<String> args;
         for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
             if (isCacheFile(f.sourceFile))
                 continue;
             if (!f.isSimpleClause(kb) || !f.isGround()) {
-                Set<String> terms = f.collectTerms();
+                terms = f.collectTerms();
                 for (String term1 : terms) {
                     if (Formula.isLogicalOperator(term1) || Formula.isVariable(term1) || (!strings && StringUtil.isQuotedString(term1)))
                         continue;
@@ -599,11 +602,11 @@ public class KButilities {
                 }
             }
             else {
-                String predicate = f.getStringArgument(0);
-                ArrayList<String> args = f.argumentsToArrayListString(1);
+                predicate = f.getStringArgument(0);
+                args = f.argumentsToArrayListString(1);
                 if (args != null && args.size() == 2) { // could have a function which would return null
-                    String arg1 = f.getStringArgument(1);
-                    String arg2 = f.getStringArgument(2);
+                    arg1 = f.getStringArgument(1);
+                    arg2 = f.getStringArgument(2);
                     if (arg1.contains("(") || arg1.contains(")") || arg2.contains("(") || arg2.contains(")"))
                         System.out.println("error in generateSemanticNetwork(): for formula: " + f);
                     else if (!Formula.isLogicalOperator(arg1) && !Formula.isLogicalOperator(arg2) &&
@@ -620,11 +623,12 @@ public class KButilities {
      */
     private static String semnetAsDot(Set<String> triples) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("graph G {");
+        String[] tuple;
         for (String s : triples) {
-            String[] tuple = s.split(" ");
-            sb.append("  \"" + tuple[0] + "\" -- \"" + tuple[2] + "\" [ label=\"" + tuple[1] + "\" ];\n");
+            tuple = s.split(" ");
+            sb.append("  \"").append(tuple[0]).append("\" -- \"").append(tuple[2]).append("\" [ label=\"").append(tuple[1]).append("\" ];\n");
         }
         sb.append("}");
         return sb.toString();
@@ -637,22 +641,25 @@ public class KButilities {
 
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("{\n");
         sb.append("    \"graphs\" : [ \n");
         sb.append("        {\n");
-        sb.append("            \"id\": \"" + kb.name + "\",\n");
+        sb.append("            \"id\": \"").append(kb.name).append("\",\n");
         sb.append("            \"type\": \"SUMO-graph\",\n");
-        sb.append("            \"label\": \"" + kb.name + "\",\n");
+        sb.append("            \"label\": \"").append(kb.name).append("\",\n");
         sb.append("            \"nodes\": {\n");
+        ArrayList<Formula> forms;
+        String formStr;
+        Formula form;
         for (String s : kb.getTerms()) {
             if (Formula.isLogicalOperator(s))
                 continue;
-            sb.append("                \"" + s + "\": {\n");
-            ArrayList<Formula> forms = kb.askWithTwoRestrictions(0,"termFormat",1,language,2,s);
-            String formStr = "";
-            if (forms != null && forms.size() > 0) {
-                Formula form = forms.iterator().next().getArgument(3);
+            sb.append("                \"").append(s).append("\": {\n");
+            forms = kb.askWithTwoRestrictions(0,"termFormat",1,language,2,s);
+            formStr = "";
+            if (forms != null && !forms.isEmpty()) {
+                form = forms.iterator().next().getArgument(3);
                 if (form != null && form.atom())
                     formStr = form.getFormula();
                 if (!StringUtil.emptyString(formStr))
@@ -660,18 +667,19 @@ public class KButilities {
             }
             else
                 formStr = s;
-            sb.append("                    \"label\" : \"" + formStr + "\"\n");
+            sb.append("                    \"label\" : \"").append(formStr).append("\"\n");
             sb.append("                },\n");
         }
         sb.deleteCharAt(sb.length()-2);
         sb.append("            },\n");
         sb.append("            \"edges\": [\n");
+        String[] tuple;
         for (String s : triples) {
-            String[] tuple = s.split(" ");
+            tuple = s.split(" ");
             sb.append("                {\n");
-            sb.append("                    \"source\": \"" + tuple[0] + "\",\n");
-            sb.append("                    \"relation\": \"" + tuple[1] + "\",\n");
-            sb.append("                    \"target\": \"" + tuple[2] + "\"\n");
+            sb.append("                    \"source\": \"").append(tuple[0]).append("\",\n");
+            sb.append("                    \"relation\": \"").append(tuple[1]).append("\",\n");
+            sb.append("                    \"target\": \"").append(tuple[2]).append("\"\n");
             sb.append("                },\n");
         }
         sb.deleteCharAt(sb.length()-2);
@@ -692,21 +700,20 @@ public class KButilities {
         String edgeFileStr = kbDir + File.separator + "edges.json";
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
-        StringBuffer sb = new StringBuffer();
-        PrintWriter nodepw = null;
-        PrintWriter edgepw = null;
-        try {
-            nodepw = new PrintWriter(new FileWriter(nodeFileStr, false));
-            edgepw = new PrintWriter(new FileWriter(edgeFileStr, false));
+        StringBuilder sb = new StringBuilder();
+        ArrayList<Formula> forms;
+        String formStr;
+        Formula form;
+        try (PrintWriter nodepw = new PrintWriter(new FileWriter(nodeFileStr, false)); PrintWriter edgepw = new PrintWriter(new FileWriter(edgeFileStr, false))) {
             sb.append("[\n");
             for (String s : kb.getTerms()) {
                 if (Formula.isLogicalOperator(s))
                     continue;
-                sb.append("    { \"id\" : \"" + s + "\",\n");
-                ArrayList<Formula> forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
-                String formStr = "";
-                if (forms != null && forms.size() > 0) {
-                    Formula form = forms.iterator().next().getArgument(3);
+                sb.append("    { \"id\" : \"").append(s).append("\",\n");
+                forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
+                formStr = "";
+                if (forms != null && !forms.isEmpty()) {
+                    form = forms.iterator().next().getArgument(3);
                     if (form != null && form.atom())
                         formStr = form.getFormula();
                     if (!StringUtil.emptyString(formStr))
@@ -714,36 +721,31 @@ public class KButilities {
                 }
                 else
                     formStr = s;
-                sb.append("        \"label\" : \"" + formStr + "\"\n");
+                sb.append("        \"label\" : \"").append(formStr).append("\"\n");
                 sb.append("    },\n");
             }
             sb.deleteCharAt(sb.length() - 2);
             sb.append("]\n");
             nodepw.print(sb.toString());
 
-            sb = new StringBuffer();
+            sb = new StringBuilder();
             sb.append("[\n");
+            String[] tuple;
             for (String s : triples) {
-                String[] tuple = s.split(" ");
+                tuple = s.split(" ");
                 sb.append("    {\n");
-                sb.append("        \"source\" : \"" + tuple[0] + "\",\n");
-                sb.append("        \"relation\" : \"" + tuple[1] + "\",\n");
-                sb.append("        \"target\" : \"" + tuple[2] + "\"\n");
+                sb.append("        \"source\" : \"").append(tuple[0]).append("\",\n");
+                sb.append("        \"relation\" : \"").append(tuple[1]).append("\",\n");
+                sb.append("        \"target\" : \"").append(tuple[2]).append("\"\n");
                 sb.append("    },\n");
             }
             sb.deleteCharAt(sb.length() - 2);
             sb.append("]\n");
             edgepw.print(sb.toString());
         }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
+        catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            if (nodepw != null)
-                nodepw.close();
-            if (edgepw != null)
-                edgepw.close();
         }
     }
 
@@ -756,17 +758,18 @@ public class KButilities {
         String fileStr = kbDir + File.separator + "triples.txt";
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
-        StringBuffer sb = new StringBuffer();
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new FileWriter(fileStr, false));
+        String formStr, doc;
+        ArrayList<Formula> forms;
+        Formula form;
+        String[] tuple;
+        try (PrintWriter pw = new PrintWriter(new FileWriter(fileStr, false))) {
             for (String s : kb.getTerms()) {
                 if (Formula.isLogicalOperator(s))
                     continue;
-                ArrayList<Formula> forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
-                String formStr = "";
-                if (forms != null && forms.size() > 0) {
-                    Formula form = forms.iterator().next().getArgument(3);
+                forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
+                formStr = "";
+                if (forms != null && !forms.isEmpty()) {
+                    form = forms.iterator().next().getArgument(3);
                     if (form != null && form.atom())
                         formStr = form.getFormula();
                     if (!StringUtil.emptyString(formStr))
@@ -775,22 +778,18 @@ public class KButilities {
                 else
                     formStr = s;
                 pw.println(s + "|" + formStr);
-                String doc = KButilities.getDocumentation(kb,s);
+                doc = KButilities.getDocumentation(kb,s);
                 if (!StringUtil.emptyString(doc))
                     pw.println(s + "|documentation|" + doc);
             }
             for (String s : triples) {
-                String[] tuple = s.split(" ");
+                tuple = s.split(" ");
                 pw.println(tuple[0] + "|" + tuple[1] + "|" + tuple[2]);
             }
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            if (pw != null)
-                pw.close();
         }
     }
 
@@ -804,20 +803,20 @@ public class KButilities {
         String edgeFileStr = kbDir + File.separator + "edges.sql";
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
-        StringBuffer sb = new StringBuffer();
-        PrintWriter nodepw = null;
-        PrintWriter edgepw = null;
-        try {
-            nodepw = new PrintWriter(new FileWriter(nodeFileStr, false));
-            edgepw = new PrintWriter(new FileWriter(edgeFileStr, false));
+        StringBuilder sb = new StringBuilder();
+        ArrayList<Formula> forms;
+        String formStr;
+        Formula form;
+        String[] tuple;
+        try (PrintWriter nodepw = new PrintWriter(new FileWriter(nodeFileStr, false)); PrintWriter edgepw = new PrintWriter(new FileWriter(edgeFileStr, false))) {
             for (String s : kb.getTerms()) {
                 if (Formula.isLogicalOperator(s))
                     continue;
-                sb.append("INSERT INTO nodes (id, label) values ('" + s + "',");
-                ArrayList<Formula> forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
-                String formStr = "";
-                if (forms != null && forms.size() > 0) {
-                    Formula form = forms.iterator().next().getArgument(3);
+                sb.append("INSERT INTO nodes (id, label) values ('").append(s).append("',");
+                forms = kb.askWithTwoRestrictions(0, "termFormat", 1, language, 2, s);
+                formStr = "";
+                if (forms != null && !forms.isEmpty()) {
+                    form = forms.iterator().next().getArgument(3);
                     if (form != null && form.atom())
                         formStr = form.getFormula();
                     if (!StringUtil.emptyString(formStr))
@@ -825,27 +824,21 @@ public class KButilities {
                 }
                 else
                     formStr = s;
-                sb.append("'" + formStr + "');\n");
+                sb.append("'").append(formStr).append("');\n");
             }
             nodepw.print(sb.toString());
 
-            sb = new StringBuffer();
+            sb = new StringBuilder();
             for (String s : triples) {
-                String[] tuple = s.split(" ");
-                sb.append(" INSERT INTO edges (source, rel, target) values ('" + tuple[0] + "'");
-                sb.append(", '" + tuple[1] + "', '" + tuple[2] + "');\n");
+                tuple = s.split(" ");
+                sb.append(" INSERT INTO edges (source, rel, target) values ('").append(tuple[0]).append("'");
+                sb.append(", '").append(tuple[1]).append("', '").append(tuple[2]).append("');\n");
             }
             edgepw.print(sb.toString());
         }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
+        catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            if (nodepw != null)
-                nodepw.close();
-            if (edgepw != null)
-                edgepw.close();
         }
     }
 
@@ -854,11 +847,11 @@ public class KButilities {
      */
     public static String generateAllNL(KB kb) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (String f : kb.formulaMap.keySet()) {
             if (!f.startsWith("(documentation") && !f.startsWith("(format") && !f.startsWith("(termFormat"))
-                result.append(f + "\n" + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", f,
-                    kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")) + "\n");
+                result.append(f).append("\n").append(StringUtil.filterHtml(NLGUtils.htmlParaphrase("", f,
+                        kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage"))).append("\n");
         }
         return result.toString();
     }
@@ -872,23 +865,26 @@ public class KButilities {
     public static boolean instanceOfInstanceP(KB kb) {
 
         boolean result = false;
+        ArrayList<Formula> al, al2, al3;
+        Formula f, f2, f3;
+        String term2, term3, term4;
         for (String term : kb.terms) {
-            ArrayList<Formula> al = kb.askWithRestriction(0,"instance",1,term);
+            al = kb.askWithRestriction(0,"instance",1,term);
             for (int i = 0; i < al.size(); i++) {
-                Formula f = (Formula) al.get(i);
-                String term2 = f.getStringArgument(2);
+                f = (Formula) al.get(i);
+                term2 = f.getStringArgument(2);
                 if (Formula.atom(term2)) {
-                    ArrayList<Formula> al2 = kb.askWithRestriction(0,"instance",1,term2);
-                    if (al2.size() > 0)
+                    al2 = kb.askWithRestriction(0,"instance",1,term2);
+                    if (!al2.isEmpty())
                         result = true;
                     for (int j = 0; j < al2.size(); j++) {
-                        Formula f2 = (Formula) al2.get(j);
-                        String term3 = f2.getStringArgument(2);
+                        f2 = (Formula) al2.get(j);
+                        term3 = f2.getStringArgument(2);
                         if (Formula.atom(term3)) {
-                            ArrayList<Formula> al3 = kb.askWithRestriction(0,"instance",1,term3);
+                            al3 = kb.askWithRestriction(0,"instance",1,term3);
                             for (int k = 0; k < al3.size(); k++) {
-                                Formula f3 = (Formula) al3.get(k);
-                                String term4 = f3.getStringArgument(2);
+                                f3 = (Formula) al3.get(k);
+                                term4 = f3.getStringArgument(2);
                             }
                         }
                     }
@@ -903,48 +899,52 @@ public class KButilities {
     public static void writeDisplayText(KB kb, String displayFormatPredicate, String displayTermPredicate,
             String language, String fname) throws IOException {
 
-        PrintWriter pr = null;
-        try {
-            pr = new PrintWriter(new FileWriter(fname, false));
+        try (PrintWriter pr = new PrintWriter(new FileWriter(fname, false))) {
             //get all formulas that have the display predicate as the predicate
             ArrayList<Formula> formats = kb.askWithRestriction(0, displayFormatPredicate, 1, language);
             ArrayList<Formula> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);
-            HashMap<String,String> termMap = new HashMap<String,String>();
+            HashMap<String,String> termMap = new HashMap<>();
+            Formula term;
+            String key, value, argName, argNum;
             for (int i = 0; i < terms.size(); i++) {
-                Formula term = terms.get(i);
-                String key = term.getStringArgument(2);
-                String value = term.getStringArgument(3);
-                if (key != "" && value != "")
+                term = terms.get(i);
+                key = term.getStringArgument(2);
+                value = term.getStringArgument(3);
+                if (!"".equals(key) && !"".equals(value))
                     termMap.put(key, value);
             }
+            Formula format, f;
+            String sTerm, displayText;
+            StringBuilder sb;
+            ArrayList<Formula> predInstances, arguments;
             for (int i = 0; i < formats.size(); i++) {
-                Formula format = formats.get(i);
+                format = formats.get(i);
                 // This is the current predicate whose format we are keeping track of.
-                String key = format.getStringArgument(2);
-                String value = format.getStringArgument(3);
-                if (key != "" && value != "") {
+                key = format.getStringArgument(2);
+                value = format.getStringArgument(3);
+                if (!"".equals(key) && !"".equals(value)) {
                     // This basically gets all statements that use the current predicate in the 0 position
-                    ArrayList<Formula> predInstances = kb.ask("arg", 0, key);
+                    predInstances = kb.ask("arg", 0, key);
                     for(int j=0; j < predInstances.size(); j++) {
-                        StringBuilder sb = new StringBuilder();
-                        String displayText = String.copyValueOf(value.toCharArray());
-                        Formula f = predInstances.get(j);
-                        ArrayList arguments = f.complexArgumentsToArrayList(0);
+                        sb = new StringBuilder();
+                        displayText = String.copyValueOf(value.toCharArray());
+                        f = predInstances.get(j);
+                        arguments = f.complexArgumentsToArrayList(0);
                         sb.append(key);
                         sb.append(",");
                         // check if each of the arguments for the statements is to be replaced in its
                         // format statement.
                         for (int k = 1; k < arguments.size(); k++) {
-                            String argName = f.getStringArgument(k);
-                            String term = (String) termMap.get(argName);
-                            term = StringUtil.removeEnclosingQuotes(term);
-                            String argNum = "%" + String.valueOf(k);
+                            argName = f.getStringArgument(k);
+                            sTerm = (String) termMap.get(argName);
+                            sTerm = StringUtil.removeEnclosingQuotes(sTerm);
+                            argNum = "%" + String.valueOf(k);
 
                             // also, add the SUMO Concept that is replaced in the format
                             if (displayText.contains(argNum)) {
                                 sb.append(argName);
                                 sb.append(",");
-                                displayText = displayText.replace(argNum, term);
+                                displayText = displayText.replace(argNum, sTerm);
                             }
                         }
                         sb.append(displayText);
@@ -956,19 +956,10 @@ public class KButilities {
                     }
                 }
             }
-
         }
-        catch (java.io.IOException e) {
-            System.out.println(e.getMessage());
+        catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
-        }
-        finally {
-            if (pr != null)
-                pr.close();
         }
     }
 
@@ -982,6 +973,7 @@ public class KButilities {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("INFO in KB.generateTPTPTestAssertions(): printing predicates");
+            String argType1, argType2;
             for (String term : kb.terms) {
                 if (Character.isLowerCase(term.charAt(0)) && kb.kbCache.valences.get(term) <= 2) {
                     /*
@@ -995,8 +987,8 @@ public class KButilities {
                             System.out.print("(instance Bar " + type + ")");
                     }
                     */
-                    String argType1 = kb.getArgType(term,1);
-                    String argType2 = kb.getArgType(term,2);
+                    argType1 = kb.getArgType(term,1);
+                    argType2 = kb.getArgType(term,2);
                     if (argType1 != null && argType2 != null) {
                         System.out.print("fof(local_" + counter++ + ",axiom,(s__" + term + "(s__Foo,s__Bar))).|");
                         System.out.print("fof(local_" + counter++ + ",axiom,(s__instance(s__Foo,s__" + argType1 + "))).|");
@@ -1006,7 +998,7 @@ public class KButilities {
             }
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 
@@ -1026,7 +1018,7 @@ public class KButilities {
             }
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 
@@ -1042,7 +1034,7 @@ public class KButilities {
         HashSet<Formula> forms = new HashSet<>();
         forms.addAll(kb.formulaMap.values());
         for (Formula f : forms) {
-            if (!rels.contains(f.getArgument(0)))
+            if (!rels.contains(f.getArgument(0).toString()))
                 counter++;
         }
         return counter;
@@ -1055,15 +1047,18 @@ public class KButilities {
 
         int total = 0;
         System.out.println("INFO in KB.countStringWords(): counting words");
-        Iterator<String> it = kb.formulas.keySet().iterator();
-        while (it.hasNext()) {
-            String s = it.next();
-            Pattern p = Pattern.compile("\"(.+)\"");
-            Matcher m = p.matcher(s);
-            boolean b = m.find();
+        Pattern p;
+        Matcher m;
+        boolean b;
+        String quoted;
+        String[] ar;
+        for (String s : kb.formulas.keySet()) {
+            p = Pattern.compile("\"(.+)\"");
+            m = p.matcher(s);
+            b = m.find();
             if (b) {
-                String quoted = m.group(1);
-                String[] ar = quoted.split(" ");
+                quoted = m.group(1);
+                ar = quoted.split(" ");
                 for (int i = 0; i < ar.length-1; i++) {
                     if (ar[i].matches("\\w+"))
                         total++;
@@ -1080,31 +1075,33 @@ public class KButilities {
      */
     public static Set<Formula> getAllFormulasOfTerm(KB kb, String term) {
 
-		HashSet<Formula> result = new HashSet<>();
-		Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");
-		for (String f : kb.formulaMap.keySet()){
-			Matcher matcher = pattern.matcher(f);
-			if (matcher.find()) {
-				result.add(kb.formulaMap.get(f));
-			}
-		}
-		return result;
-	}
+        HashSet<Formula> result = new HashSet<>();
+        Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");
+        for (String f : kb.formulaMap.keySet()){
+                Matcher matcher = pattern.matcher(f);
+                if (matcher.find()) {
+                        result.add(kb.formulaMap.get(f));
+                }
+        }
+        return result;
+    }
 
     /** *************************************************************
      *  Find all formulas in which the SUMO term is involved.
      */
     public static String generateFormulasAndDoc(KB kb) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
+        String doc;
+        Set<Formula> allForms;
         for (String t : kb.terms) {
-            String doc = getDocumentation(kb,t);
+            doc = getDocumentation(kb,t);
             if (!StringUtil.emptyString(doc)) {
-                Set<Formula> allForms = getAllFormulasOfTerm(kb,t);
-                sb.append("!!doc " + doc + "\n");
+                allForms = getAllFormulasOfTerm(kb,t);
+                sb.append("!!doc ").append(doc).append("\n");
                 for (Formula f : allForms) {
                     if (!FormulaUtil.isDoc(f))
-                        sb.append(f.toString() + "\n");
+                        sb.append(f.toString()).append("\n");
                 }
             }
         }
@@ -1116,13 +1113,14 @@ public class KButilities {
      */
     public static String termFormatIndex(KB kb) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
+        String term, str;
         for (Formula f : forms) {
-            String term = f.getStringArgument(2);
-            String str = f.getStringArgument(3);
+            term = f.getStringArgument(2);
+            str = f.getStringArgument(3);
             if (!StringUtil.emptyString(term) && ! StringUtil.emptyString((str)))
-                sb.append(term + "\t" + str + "\n");
+                sb.append(term).append("\t").append(str).append("\n");
         }
         return sb.toString();
     }
@@ -1133,12 +1131,11 @@ public class KButilities {
      */
     public static void genAllDoc(KB kb, String fname) {
 
-        PrintWriter pr = null;
         ArrayList<Formula> al = kb.ask("arg",0,"documentation");
-        try {
-            pr = new PrintWriter(new FileWriter(fname, false));
+        try (PrintWriter pr = new PrintWriter(new FileWriter(fname, false))) {
+            String arg;
             for (Formula form : al) {
-                String arg = form.getArgument(3).toString();
+                arg = form.getArgument(3).toString();
                 arg = arg.replace("&%", "");
                 pr.println(form.getArgument(1) + "\t" + arg);
             }
@@ -1157,8 +1154,9 @@ public class KButilities {
         System.out.println(genDocHeader(true));
         ArrayList<Formula> al = kb.ask("arg",0,"documentation");
         for (Formula form : al) {
+            String arg;
             if (form.sourceFile.endsWith(fname)) {
-                String arg = form.getArgument(3).toString();
+                arg = form.getArgument(3).toString();
                 arg = arg.replace("&%","");
                 System.out.println(form.getArgument(1) + "\t" + arg);
             }
@@ -1181,16 +1179,16 @@ public class KButilities {
      */
     private static String genDocHeader(boolean onePage) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         sb.append("<h2>Data Dictionary</h2>");
         ArrayList<String> ascii = genAscii();
         if (onePage) {
             for (String s : ascii)
-                sb.append("<a href=\"dict.html#" + s + "\">" + s + "</a>&nbsp;&nbsp;");
+                sb.append("<a href=\"dict.html#").append(s).append("\">").append(s).append("</a>&nbsp;&nbsp;");
         }
         else
             for (String s : ascii) {
-                sb.append("<a href=\"" + s + "dict.html\">" + s + "</a>&nbsp;&nbsp;");
+                sb.append("<a href=\"").append(s).append("dict.html\">").append(s).append("</a>&nbsp;&nbsp;");
         }
         sb.append("<P>\n");
         sb.append("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
@@ -1204,17 +1202,13 @@ public class KButilities {
         String head = genDocHeader(false);
         TreeMap<String,PrintWriter> files = new TreeMap<>();
         ArrayList<String> ascii = genAscii();
-        FileWriter fw = null;
-        PrintWriter pw = null;
         for (String s : ascii) {
-            try {
-                fw = new FileWriter(s + "dict.html");
-                pw = new PrintWriter(fw);
+            try (FileWriter fw = new FileWriter(s + "dict.html"); PrintWriter pw = new PrintWriter(fw)) {
                 pw.println(head + "\n");
                 files.put(s,pw);
             }
             catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -1228,9 +1222,10 @@ public class KButilities {
 
         ArrayList<Formula> al = kb.ask("arg",0,"documentation");
         TreeMap<String,String> map = new TreeMap<>();
+        String arg2;
         for (Formula form : al) {
             if (form.getArgument(2).toString().equals("EnglishLanguage")) {
-                String arg2 = form.getArgument(3).toString();
+                arg2 = form.getArgument(3).toString();
                 //arg = arg.replace("&%","");
                 String arg1 = form.getArgument(1).toString();
                 arg2 = StringUtil.removeEnclosingQuotes(kb.formatStaticDocumentation(arg2, "EnglishLanguage", true));
@@ -1247,10 +1242,9 @@ public class KButilities {
     private static void closeDocList(TreeMap<String,PrintWriter> files) {
 
         for (String term : files.keySet()) {
-            PrintWriter pw = files.get(term);
-            pw.println("</table>\n");
-            pw.flush();
-            pw.close();
+            try (PrintWriter pw = files.get(term)) {
+                pw.println("</table>\n");
+            }
         }
     }
 
@@ -1273,10 +1267,10 @@ public class KButilities {
     private static String htmlForDoc(KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
 
         List<String> labels = getLabelsForTerm(kb,term,lang);
-        StringBuffer sb = new StringBuffer();
-        sb.append("<a name=\"" + term + "\">" + term + "</a></td><td>");
+        StringBuilder sb = new StringBuilder();
+        sb.append("<a name=\"").append(term).append("\">").append(term).append("</a></td><td>");
         for (String s : labels)
-            sb.append(s + ", ");
+            sb.append(s).append(", ");
         sb.delete(sb.length()-2,sb.length());
         sb.append("</td><td>");
         if (coreTerm)
@@ -1287,7 +1281,7 @@ public class KButilities {
         sb.append(doc);
         if (!noSUMO) {
             sb.append("[and <a href=\"https://sigma.ontologyportal.org:8443/sigma/Browse.jsp?term=");
-            sb.append(term + "\">full SUMO definition</a>]");
+            sb.append(term).append("\">full SUMO definition</a>]");
         }
         sb.append("</td></tr>\n");
         return sb.toString();
@@ -1298,7 +1292,7 @@ public class KButilities {
      */
     private static String genDocLine(boolean shade, KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (shade)
             sb.append("<tr bgcolor=\"#ddd\"><td>");
         else
@@ -1336,15 +1330,16 @@ public class KButilities {
         System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
         TreeMap<String,String> map = genDocList(kb);
         boolean shade = false;
+        String arg2;
         for (String term : map.keySet()) {
-            String arg2 = map.get(term);
+            arg2 = map.get(term);
             if (shade)
                 System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
                 System.out.println("<tr><td>");
             // (KB kb, String term, String lang, String doc, boolean noSUMO, boolean coreTerm)
             System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,false));
-            shade = ! shade;
+            shade = !shade;
         }
         System.out.println("</table>\n");
     }
@@ -1370,18 +1365,20 @@ public class KButilities {
         System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
         TreeMap<String,String> map = genDocList(kb);
         boolean shade = false;
+        List<String> links;
+        String arg2;
         for (String term : map.keySet()) {
             if (!lines.contains(term))
                 continue;
-            List<String> links = getLinkedTermsInDoc(kb,term); // empty list if none
+            links = getLinkedTermsInDoc(kb,term); // empty list if none
             aux.addAll(links);
-            String arg2 = map.get(term);
+            arg2 = map.get(term);
             if (shade)
                 System.out.println("<tr bgcolor=\"#ddd\"><td>");
             else
                 System.out.println("<tr><td>");
             System.out.println(htmlForDoc(kb,term,"EnglishLanguage",arg2,false,true));
-            shade = ! shade;
+            shade = !shade;
         }
         System.out.println("</table>\n");
     }
@@ -1395,9 +1392,9 @@ public class KButilities {
                                                               Map<String, Set<String>> map2, KB kb) {
 
         Map<String, Set<String>> result = new HashMap<>(map1);
-
+        Set<String> value;
         for (String key : map2.keySet()) {
-            Set<String> value = new HashSet<String>();
+            value = new HashSet<>();
             if (result.containsKey(key)) {
                 value = result.get(key);
             }
@@ -1510,9 +1507,9 @@ public class KButilities {
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();
                 Formula f = new Formula(StringUtil.removeEnclosingQuotes(args[1]));
-                f.debug = true;
+                Formula.debug = true;
                 System.out.println("higherOrder : " + f.isHigherOrder(kb));
-                f.debug = false;
+                Formula.debug = false;
                 System.out.println("isFunctional : " + f.isFunctional);
                 System.out.println("isGround : " + f.isGround);
                 System.out.println("termCache : " + f.termCache);

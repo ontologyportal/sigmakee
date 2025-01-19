@@ -23,6 +23,7 @@ about individual SUO-KIF formulas.
 package com.articulate.sigma;
 
 import com.articulate.sigma.utils.StringUtil;
+
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.*;
@@ -409,7 +410,7 @@ public class Formula implements Comparable, Serializable {
 
         theFormula = s;
         allVarsCache = new HashSet<>();
-        allVarsPairCache = new ArrayList<HashSet<String>>();
+        allVarsPairCache = new ArrayList<>();
         quantVarsCache = new HashSet<>();
         unquantVarsCache = new HashSet<>();
         existVarsCache = new HashSet<>();
@@ -429,7 +430,7 @@ public class Formula implements Comparable, Serializable {
         if (!StringUtil.emptyString(fname) && fname.lastIndexOf(File.separator) > -1)
             fname = fname.substring(fname.lastIndexOf(File.separator) + 1);
         int hc = theFormula.hashCode();
-        String result = null;
+        String result;
         if (hc < 0)
             result = "N" + (Integer.valueOf(hc)).toString().substring(1) + fname;
         else
@@ -702,7 +703,7 @@ public class Formula implements Comparable, Serializable {
         Formula ans = this;
         String fStr = this.theFormula;
         if (!StringUtil.emptyString(obj) && !StringUtil.emptyString(fStr)) {
-            String theNewFormula = null;
+            String theNewFormula;
             if (this.listP()) {
                 if (this.empty())
                     theNewFormula = ("(" + obj + ")");
@@ -838,7 +839,7 @@ public class Formula implements Comparable, Serializable {
             System.out.println("Error in KB.append(): attempt to append to non-list: " + theFormula);
             return this;
         }
-        if (f == null || f.theFormula == null || f.theFormula == "" || f.theFormula.equals("()"))
+        if (f == null || f.theFormula == null || "".equals(f.theFormula) || f.theFormula.equals("()"))
             return newFormula;
         f.theFormula = f.theFormula.trim();
         if (!f.atom())
@@ -916,20 +917,22 @@ public class Formula implements Comparable, Serializable {
      */
     private String validArgsRecurse(Formula f, String filename, Integer lineNo) {
 
-		if (f.theFormula == "" || !f.listP() || f.atom() || f.empty())
+		if ("".equals(f.theFormula) || !f.listP() || f.atom() || f.empty())
 			return "";
         String pred = f.car();
         String rest = f.cdr();
         Formula restF = new Formula();
         restF.read(rest);
         int argCount = 0;
+        String arg, result;
+        Formula argF;
         while (!restF.empty()) {
             argCount++;
-            String arg = restF.car();
-            Formula argF = new Formula();
+            arg = restF.car();
+            argF = new Formula();
             argF.read(arg);
-            String result = validArgsRecurse(argF, filename, lineNo);
-            if (result != "")
+            result = validArgsRecurse(argF, filename, lineNo);
+            if (!"".equals(result))
                 return result;
             restF.theFormula = restF.cdr();
         }
@@ -1002,7 +1005,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String validArgs(String filename, Integer lineNo) {
 
-        if (theFormula == null || theFormula == "")
+        if (theFormula == null || "".equals(theFormula))
             return "";
         Formula f = new Formula();
         f.read(theFormula);
@@ -1049,10 +1052,12 @@ public class Formula implements Comparable, Serializable {
         f.read("(" + s + ")");
         if (f.empty())
             return result;
+        String car;
+        Formula newForm;
         while (!f.empty()) {
-            String car = f.car();
+            car = f.car();
             f.read(f.cdr());
-            Formula newForm = new Formula();
+            newForm = new Formula();
             newForm.read(car);
             result.add(newForm);
         }
@@ -1346,12 +1351,14 @@ public class Formula implements Comparable, Serializable {
         if (!Formula.isCommutative(head1.theFormula) && !(kb != null && kb.isInstanceOf(head1.theFormula, "SymmetricRelation"))) {
             //non commutative relation; comparing parameters in order
             List<Set<VariableMapping>> runningMaps = headMaps;
+            List<Set<VariableMapping>> parameterMaps;
+            Formula parameter1, parameter2;
             for (int i = 0; i < args1.size(); i++) {
-                Formula parameter1 = new Formula();
+                parameter1 = new Formula();
                 parameter1.read(args1.get(i));
-                Formula parameter2 = new Formula();
+                parameter2 = new Formula();
                 parameter2.read(args2.get(i));
-                List<Set<VariableMapping>> parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
+                parameterMaps = mapFormulaVariables(parameter1, parameter2, kb, memoMap);
                 memoMap.put(FormulaUtil.createFormulaMatchMemoMapKey(parameter1.theFormula, parameter2.theFormula), parameterMaps);
                 runningMaps = VariableMapping.intersect(runningMaps, parameterMaps);
                 if (runningMaps == null) {
@@ -1781,8 +1788,9 @@ public class Formula implements Comparable, Serializable {
 
         }
         else {
+            String arg;
             for (int i = 0; i < f.listLength(); i++) {
-                String arg = f.getStringArgument(i);
+                arg = f.getStringArgument(i);
                 if (arg.startsWith("?") || arg.startsWith("@")) {
                     if (!varFlag.containsKey(arg) && !quantifiedVariables.contains(arg)) {
                         unquantifiedVariables.add(arg);
@@ -1800,8 +1808,6 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Collects all String terms from one Collection and adds them
      * to another, without duplication
-     *
-     * @return An Collection of Strings with no duplicates
      */
     public void addAllNoDup (Collection<String> thisCol, Collection<String> arg) {
 
@@ -1850,25 +1856,27 @@ public class Formula implements Comparable, Serializable {
 
         if (!allVarsCache.isEmpty())
             return allVarsCache;
+
     	//ArrayList<String> result = new ArrayList<String>();
     	HashSet<String> resultSet = new HashSet<>();
+
     	if (listLength() < 1)
     	    return resultSet;
     	Formula fcar = new Formula();
     	fcar.read(this.car());
     	if (fcar.isVariable())
-    		resultSet.add(fcar.theFormula);
+            resultSet.add(fcar.theFormula);
     	else {
-    		if (fcar.listP())
-    			resultSet.addAll(fcar.collectAllVariables());
+            if (fcar.listP())
+                resultSet.addAll(fcar.collectAllVariables());
     	}
     	Formula fcdr = new Formula();
     	fcdr.read(this.cdr());
     	if (fcdr.isVariable())
-    		resultSet.add(fcdr.theFormula);
+            resultSet.add(fcdr.theFormula);
     	else {
-    		if (fcdr.listP())
-    			resultSet.addAll(fcdr.collectAllVariables());
+            if (fcdr.listP())
+    		resultSet.addAll(fcdr.collectAllVariables());
     	}
     	//result.addAll(resultSet);
         allVarsCache.addAll(resultSet);
@@ -2001,7 +2009,7 @@ public class Formula implements Comparable, Serializable {
 
         HashSet<String> resultSet = new HashSet<>();
 
-        if (this.theFormula == null || this.theFormula == "") {
+        if (this.theFormula == null || "".equals(this.theFormula)) {
 			System.out.println("Error in Formula.collectTerms(): " +
 					"No formula to collect terms from: " + this);
             return null;
@@ -2113,7 +2121,7 @@ public class Formula implements Comparable, Serializable {
             f.read(this.theFormula);
             int flen = f.listLength();
             String suffix = ("__" + (flen - 1));
-            String arg = null;
+            String arg;
             sb.append("(");
             for (int i = 0 ; i < flen ; i++) {
                 arg = f.getStringArgument(i);
@@ -2421,7 +2429,7 @@ public class Formula implements Comparable, Serializable {
         	return false;
         if (!atom(this.car()))
         	return false;
-        String arg = null;
+        String arg;
         int argnum = 1;
         do {
         	arg = this.getStringArgument(argnum);
@@ -2553,6 +2561,17 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      * Returns true if term is a standard FOL logical operator, else
+     * returns false.
+     *
+     * @param term A String, assumed to be an atomic SUO-KIF term.
+     */
+    public static boolean isTrueFalse(String term) {
+
+        return (!term.isEmpty() && (term.equals("True") || term.equals("False")));
+    }
+
+    /** ***************************************************************
+     * Returns true if term the constant true or constant false, else
      * returns false.
      *
      * @param term A String, assumed to be an atomic SUO-KIF term.
@@ -2787,7 +2806,7 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean isQuery(String query, String formula) {
 
-        boolean result = false;
+        boolean result;
 
         Formula f = new Formula();
         f.read(formula);
@@ -2857,7 +2876,7 @@ public class Formula implements Comparable, Serializable {
 
         int flen = this.theFormula.length();
         char pch = '0';  // char at (i-1)
-        char ch = '0';   // char at i
+        char ch;         // char at i
         for (int i = 0; i < flen; i++) {
 			// logger.finest("formatted string = " + formatted.toString());
             ch = this.theFormula.charAt(i);
@@ -2970,6 +2989,7 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Format a formula for text presentation.
      */
+    @Override
     public String toString() {
 
         return format("", "  ", Character.valueOf((char) 10).toString());
@@ -2997,7 +3017,7 @@ public class Formula implements Comparable, Serializable {
      */
     public String htmlFormat(KB kb, String href) {
 
-        String fKbHref = "";
+        String fKbHref;
         String kbHref = (href + "/sigma/Browse.jsp?kb=" + kb.name);
         fKbHref = format(kbHref,"&nbsp;&nbsp;&nbsp;&nbsp;","<br>\n");
         return fKbHref;
@@ -3131,7 +3151,7 @@ public class Formula implements Comparable, Serializable {
             long dur = (System.currentTimeMillis() - t1);
         }
         catch (Exception ex) {
-			System.out.println(ex.getMessage());
+	    System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
         finally {
@@ -3300,4 +3320,3 @@ public class Formula implements Comparable, Serializable {
         }
     }
 }
-
