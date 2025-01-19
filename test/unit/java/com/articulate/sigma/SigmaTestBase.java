@@ -65,7 +65,7 @@ public class SigmaTestBase {
             problemList.add("KB missing one or more files. Expected: " + kbnames +
                     " actual:" + KBmanager.getMgr().getKBnames());
         }
-        if (! problemList.isEmpty()) {
+        if (!problemList.isEmpty()) {
             StringBuilder sBuild = new StringBuilder();
             final String NEWLINE_AND_SPACES = "\n   ";
             for (String problem : problemList) {
