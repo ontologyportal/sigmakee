@@ -12,7 +12,7 @@ import java.io.IOException;
 public class IntegrationTestBase extends SigmaTestBase {
 
     //private static final String CONFIG_FILE_PATH = "resources/config_all.xml";
-    private static final Class CLASS = IntegrationTestBase.class;
+//    private static final Class CLASS = IntegrationTestBase.class;
     static Long totalKbMgrInitTime = Long.MAX_VALUE;
     protected static KB kbBackup;
 
