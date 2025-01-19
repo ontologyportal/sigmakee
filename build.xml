@@ -219,7 +219,7 @@
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile,compile.test" description="Create the *.war file and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
@@ -259,6 +259,7 @@
              manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <fileset dir="${build.classes.dir}"/>
+            <fileset dir="${build.test.classes.dir}"/>
         </jar>
     </target>
 
