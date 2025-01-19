@@ -17,9 +17,10 @@ public class UnitTestBase extends SigmaTestBase {
             "test/unit/java/resources";
     private static final String CONFIG_FILE_PATH = CONFIG_FILE_DIR + File.separator +
             "config_topOnly.xml";
-    //private static final String CONFIG_FILE_PATH = System.getenv("SIGMA_HOME") + "/KBs/config.xml";
+//    private static final String CONFIG_FILE_PATH = System.getenv("SIGMA_HOME") + "/KBs/config.xml";
     private static final Class CLASS = UnitTestBase.class;
-    public static final int NUM_KIF_FILES = 3;
+    public static final int NUM_KIF_FILES = 3; // config_topOnly.xml
+//    public static final int NUM_KIF_FILES = 45; // full config.xml
 
     static Long totalKbMgrInitTime = Long.MAX_VALUE;
 
@@ -39,6 +40,7 @@ public class UnitTestBase extends SigmaTestBase {
 
         System.out.println("UnitTestBase.setup(): reading test config file: " + CONFIG_FILE_PATH);
         System.out.println("***** UnitTestBase.setup(): warning! Note that only KB files in the test config file will be loaded! ***** ");
+//        System.out.println("***** UnitTestBase.setup(): Note that all KB files will be loaded! ***** "); // full config.xml
         long startTime = System.currentTimeMillis();
         SigmaTestBase.doSetUp(xmlReader);
         long endTime = System.currentTimeMillis();
