@@ -46,6 +46,14 @@
                 <exclude name="hamcrest*"/>
             </fileset>
         </path>
+        <path id="runtime.classpath">
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+                <exclude name="junit*"/>
+                <exclude name="hamcrest*"/>
+                <exclude name="tomcat-servlet-api*"/>
+            </fileset>
+        </path>
         <path id="compile.test.classpath">
             <path refid="compile.classpath"/>
             <pathelement location="${build.classes.dir}"/>
@@ -200,7 +208,7 @@
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
         <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
         <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <path refid="compile.classpath"/>
+            <path refid="runtime.classpath"/>
         </copy>
     </target>
 
