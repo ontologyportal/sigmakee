@@ -544,7 +544,20 @@ java -Xmx10g -Xss1m -cp $SIGMA_CP:\
   com.articulate.sigma.KbIntegrationTest#testIsChildOf3
 ```
 You will have to edit the resources files that correspond to config.xml to conform to your
-paths.  They are in test/integration/java/resources/config*.xml and test/unit/java/resources/config*.xml
+paths. They are in test/integration/java/resources/config*.xml and test/unit/java/resources/config*.xml
+
+An alternative, and possibly easier way for command line invocation of unit
+tests are to run these Ant tasks:
+
+```sh
+ant test.unit
+ant test.integration
+```
+
+To run both of these in sequence with a single command
+```sh
+ant test
+```
 
 ## RESTful Interface
 
