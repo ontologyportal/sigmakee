@@ -1,7 +1,5 @@
 package com.articulate.sigma;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
 import org.junit.Test;
 
 import java.util.*;
@@ -29,7 +27,7 @@ public class RowVarTest extends UnitTestBase  {
 
         //RowVars.DEBUG = true;
         HashSet<String> vars = RowVars.findRowVars(f);
-        assertTrue(vars != null && vars.size() > 0);
+        assertTrue(vars != null && !vars.isEmpty());
         if (vars.contains("@ARGS") && vars.size() == 1)
             System.out.println("testFindRowVars(): success!");
         else
@@ -57,7 +55,7 @@ public class RowVarTest extends UnitTestBase  {
 
         //RowVars.DEBUG = true;
         HashMap<String, HashSet<String>> rels = RowVars.getRowVarRelations(f);
-        assertTrue(rels != null && rels.keySet().size() > 0);
+        assertTrue(rels != null && !rels.keySet().isEmpty());
         System.out.println("testRowVarRels(): rels: " + rels);
         if (rels.get("@ARGS").contains("links"))
             System.out.println("testRowVarRels(): success!");
@@ -87,16 +85,16 @@ public class RowVarTest extends UnitTestBase  {
         //RowVars.DEBUG = true;
         HashMap<String,HashSet<String>> rels = RowVars.getRowVarRelations(f);
         HashMap<String,Integer> rowVarMaxArities = RowVars.getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
-        int arity = kb.kbCache.valences.get("links").intValue();
+        int arity = kb.kbCache.valences.get("links");
         System.out.println("testLinks(): arity of 'links': " + arity);
         System.out.println("testLinks(): rels: " + rels);
         System.out.println("testLinks(): rowVarMaxArities: " + rowVarMaxArities);
-        System.out.println("testLinks(): result: " + rowVarMaxArities.get("@ARGS").intValue());
+        System.out.println("testLinks(): result: " + rowVarMaxArities.get("@ARGS"));
         System.out.println("testLinks(): expected: " + 3);
-        if (3 == rowVarMaxArities.get("@ARGS").intValue())
+        if (3 == rowVarMaxArities.get("@ARGS"))
             System.out.println("testLinks(): success!");
         else
-            System.out.println("testLinks(): failure");
+            System.err.println("testLinks(): failure");
         assertEquals(3, rowVarMaxArities.get("@ARGS").intValue());
     }
 
