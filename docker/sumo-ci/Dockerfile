@@ -28,4 +28,4 @@ COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
 COPY ./sigmakee/build/sigmakee.jar /root/sigmakee/
 
 ENV SIGMA_HOME=/root/sigmakee-runtime
-ENV LD_LIBRARY_PATH=/usr/local/bin/:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
