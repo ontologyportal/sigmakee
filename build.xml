@@ -46,6 +46,14 @@
                 <exclude name="hamcrest*"/>
             </fileset>
         </path>
+        <path id="runtime.classpath">
+            <fileset dir="${basedir}/lib">
+                <include name="*.jar"/>
+                <exclude name="junit*"/>
+                <exclude name="hamcrest*"/>
+                <exclude name="tomcat-servlet-api*"/>
+            </fileset>
+        </path>
         <path id="compile.test.classpath">
             <path refid="compile.classpath"/>
             <pathelement location="${build.classes.dir}"/>
@@ -200,7 +208,7 @@
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
         <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
         <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <path refid="compile.classpath"/>
+            <path refid="runtime.classpath"/>
         </copy>
     </target>
 
@@ -229,7 +237,7 @@
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="dist" depends="compile,compile.test" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
@@ -269,7 +277,6 @@
              manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <fileset dir="${build.classes.dir}"/>
-            <fileset dir="${build.test.classes.dir}"/>
         </jar>
     </target>
 
@@ -279,6 +286,7 @@
     ==========
     -->
 
+    <target name="test" depends="test.unit,test.integration"/>
     <target name="test.unit" depends="compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
@@ -431,7 +439,9 @@
         <chmod dir="${user.home}/.${app.name}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${user.home}/.${app.name}/KBs"/>
         <copy todir="${user.home}/.${app.name}/KBs">
-            <fileset dir="${kbs.home}"/>
+            <fileset dir="${kbs.home}">
+                <exclude name=".github/**"/>
+            </fileset>
         </copy>
     </target>
 
