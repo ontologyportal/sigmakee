@@ -3,13 +3,11 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
 # Followed instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling latest vampire w/ latest z3
 
-RUN apt update; \
-    apt-get install -y --no-install-recommends \
+RUN apt update && apt-get install -y --no-install-recommends \
             build-essential \
             cmake \
             git \
-            python3 \
-    ;\
+            python3 ;\
     wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz' &&\
     tar xf E.tgz ;\
     cd E ;\
