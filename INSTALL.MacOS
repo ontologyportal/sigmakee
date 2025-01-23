@@ -66,6 +66,9 @@ Apache Tomcat.
   export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
   export PATH=$JAVA_HOME/bin:$PATH
 
+cd ../workspace
+git clone https://github.com/ontologyportal/sigmakee
+
 Install (ensure the above preparations have been performed)
 > ant install
 
