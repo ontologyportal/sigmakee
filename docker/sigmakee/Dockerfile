@@ -5,15 +5,12 @@ FROM $IMAGE_ACCOUNT/sigma-ci:latest AS builder
 # runtime image.
 FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
 
-# Switch to root user
-USER root
+RUN apt-get update && \
+    apt-get install -y sudo && \
+    sudo sysctl -w kernel.perf_event_paranoid=-1
 
-RUN apt update && apt-get install -y --no-install-recommends \
-            sudo \
-            graphviz
-
-# Set kernel parameter
-RUN sysctl -w kernel.perf_event_paranoid=-1
+RUN apt-get install -y --no-install-recommends \
+        graphviz
 
 COPY --from=builder \
     /usr/local/bin/e_ltb_runner /usr/local/bin/e_ltb_runner
