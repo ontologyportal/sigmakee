@@ -95,8 +95,6 @@
     <property name="build.classes.dir" value="${build.home}/WEB-INF/classes"/>
     <property name="build.lib" value="${build.home}/lib"/>
     <property name="build.test.classes.dir" value="${build.home}/test/classes"/>
-    <property name="dist.dir" value="dist"/>
-    <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
     <property name="reports.dir" value="${build.home}/test/results"/>
@@ -235,7 +233,7 @@
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile,compile.test" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
@@ -360,7 +358,6 @@
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
-            <fileset dir="${dist.dir}"/>
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
