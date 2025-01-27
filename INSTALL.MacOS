@@ -70,9 +70,11 @@ cd ~
 mkdir workspace
 cd workspace
 git clone https://github.com/ontologyportal/sigmakee
+cd sigmakee
 
 Install (ensure the above preparations have been performed)
 > ant install
+> ant
 
 *** Legacy install steps now taken care of by the above command "ant install"
 cd ~

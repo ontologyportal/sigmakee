@@ -335,6 +335,7 @@ Then,
 ```sh
 cd sigmakee
 ant install
+ant
 ```
 
 To keep this repository updated
