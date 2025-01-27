@@ -7,9 +7,7 @@
 <body BGCOLOR=#FFFFFF>
 
 <%
-/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
-    Infosys (c) 2017-present.
-
+/**
     This software is released under the GNU Public License
     <http://www.gnu.org/copyleft/gpl.html>.
 
@@ -29,7 +27,7 @@
   String namespace = "";
   String relation = "";
   String ontology = "";
-  String filename = "";
+ // String filename = "";
   String action = "";
   String status = "";
 
@@ -44,8 +42,8 @@
           System.out.println(" no such knowledge base " + kbName);
           Set<String> names = KBmanager.getMgr().getKBnames();
           if (names != null && !names.isEmpty()) {
-              for (String kbName : names) {
-                  System.out.println("kbName == " + kbName);
+              for (String kbStr : names) {
+                  System.out.println("kbName == " + kbStr);
               }
           }
       }
