@@ -3,7 +3,7 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
 # Followed instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling latest vampire w/ latest z3
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     git \
@@ -45,7 +45,7 @@ COPY --from=builder \
 COPY --from=builder \
     /usr/local/tomcat/vampire/z3/build/libz3.* /usr/local/bin/
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt-get install -y --no-install-recommends \
     ant \
     ant-optional \
     git \
