@@ -32,7 +32,7 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
 RUN add-apt-repository ppa:ubuntu-toolchain-r/ppa -y \
     apt-get update \
     apt-get install -y --no-install-recommends \
-    apt-get install g++-10 gcc-10
+    apt-get install g++-10 gcc-10 \
     make \
     cmake \
     git \
