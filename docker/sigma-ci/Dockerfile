@@ -3,8 +3,8 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling latest vampire w/ latest z3
 
-ARG=VAMPIRE_GIT=5ad494e781908ce0661b28c9ca39d8c1e7f0918c
-ARG=Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
+ARG VAMPIRE_GIT=5ad494e781908ce0661b28c9ca39d8c1e7f0918c
+ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
