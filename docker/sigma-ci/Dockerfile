@@ -19,10 +19,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' &&\
     tar xf WordNet-3.0.tar.gz ;\
 #    git clone https://github.com/vprover/vampire ;\
-    wget $VAMPIRE_GIT &&\
-    mkdir -p vampire && tar -xzf 4.9casc2024.tar.gz -C vampire --strip-components=1 ;\
+    wget $VAMPIRE_GIT ;\
+    mkdir -p vampire && tar -xzf v4.9casc2024.tar.gz -C vampire --strip-components=1 ;\
 #    git submodule update --init ;\
-    wget $Z3_GIT &&\
+    wget $Z3_GIT ;\
     mkdir -p z3 && tar -xzf z3-4.12.3.tar.gz -C z3 --strip-components=1 ;\
     rm -rf vampire/z3 ; \
     mv z3/* vampire/z3 ;\
