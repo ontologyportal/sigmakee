@@ -3,7 +3,7 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling latest vampire w/ latest z3
 
-ARG VAMPIRE_GIT=5ad494e781908ce0661b28c9ca39d8c1e7f0918c
+ARG VAMPIRE_GIT='https://github.com/vprover/vampire/archive/refs/tags/v4.9casc2024.tar.gz'
 ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -16,14 +16,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cd E ;\
     ./configure && make ;\
     cd .. ;\
-    wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' ;\
+    wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' &&\
     tar xf WordNet-3.0.tar.gz ;\
 #    git clone https://github.com/vprover/vampire ;\
-    git clone --depth 1 https://github.com/vprover/vampire ;\
-    cd vampire ;\
-    git checkout $VAMPIRE_GIT ;\
+    wget $VAMPIRE_GIT &&\
+    tar -xzf v4.9casc2024.tar.gz ;\
 #    git submodule update --init ;\
-    cd .. ;\
     wget $Z3_GIT &&\
     tar -xzf z3-4.12.3.tar.gz ;\
     rm -rf vampire/z3 ; \
