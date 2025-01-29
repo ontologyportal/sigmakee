@@ -75,11 +75,17 @@ COPY --from=builder \
 COPY --from=builder \
     /usr/local/tomcat/WordNet-3.0 /opt/WordNet-3.0
 
-COPY --from=builder \
-    /usr/local/tomcat/vampire-4.9casc2024/vampire /usr/local/bin/vampire
+#COPY --from=builder \
+#    /usr/local/tomcat/vampire-4.9casc2024/vampire /usr/local/bin/vampire
+#
+#COPY --from=builder \
+#    /usr/local/tomcat/vampire-4.9casc2024/z3/build/libz3.* /usr/local/bin/
 
 COPY --from=builder \
-    /usr/local/tomcat/vampire-4.9casc2024/z3/build/libz3.* /usr/local/bin/
+    /usr/local/tomcat/vampire/vampire /usr/local/bin/vampire
+
+COPY --from=builder \
+    /usr/local/tomcat/vampire/z3/build/libz3.* /usr/local/bin/
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ant \
