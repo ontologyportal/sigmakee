@@ -8,37 +8,62 @@ ARG VAMPIRE_GIT='https://github.com/vprover/vampire/archive/refs/tags/v4.9casc20
 ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
 # Latest E Theorem Prover (2024-05-01)
 ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
+ARG WORD_NET='https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 
 # We're in /usr/local/tomcat
-RUN apt update && apt install -y --install-recommends \
+RUN apt-get update && apt-get install -y --install-recommends \
     build-essential \
-    clang \
     cmake \
     git \
     python3 ;\
-    wget $E_PROVER &&\
-    tar xf E.tgz ;\
+    wget $E_PROVER && tar xf E.tgz ;\
     cd E ;\
-    ./configure && make CC="clang" CXX="clang++" ;\
+    ./configure && make -j2 ;\
     cd .. ;\
-    wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' &&\
-    tar xf WordNet-3.0.tar.gz ;\
-    wget $VAMPIRE_GIT &&\
-    tar -xzf v4.9casc2024.tar.gz ;\
-    wget $Z3_GIT &&\
-    tar -xzf z3-4.12.3.tar.gz ;\
-    mv z3-z3-4.12.3/* vampire-4.9casc2024/z3 ;\
-    cd vampire-4.9casc2024 ;\
+    wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
+    git clone https://github.com/vprover/vampire ;\
+    cd vampire ;\
+    git submodule update --init ;\
     mkdir build ;\
     mkdir -p z3/build && cd z3/build ;\
-    CC=clang CXX=clang++ cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
-    make -j`nproc` ;\
+    cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
+    make -j2 ;\
     cd ../../build ;\
-    CC=clang CXX=clang++ cmake .. ;\
-    make -j`nproc` ;\
+    cmake .. ;\
+    make -j2 ;\
     cd .. ;\
-    cp build/bin/vampire_* vampire ;\
+    cp build/vampire vampire ;\
     ./checks/sanity vampire
+
+#RUN apt update && apt install -y --install-recommends \
+#    build-essential \
+#    clang \
+#    cmake \
+#    git \
+#    python3 ;\
+#    wget $E_PROVER &&\
+#    tar xf E.tgz ;\
+#    cd E ;\
+#    ./configure && make CC="clang" CXX="clang++" ;\
+#    cd .. ;\
+#    wget $WORD_NET &&\
+#    tar xf WordNet-3.0.tar.gz ;\
+#    wget $VAMPIRE_GIT &&\
+#    tar -xzf v4.9casc2024.tar.gz ;\
+#    wget $Z3_GIT &&\
+#    tar -xzf z3-4.12.3.tar.gz ;\
+#    mv z3-z3-4.12.3/* vampire-4.9casc2024/z3 ;\
+#    cd vampire-4.9casc2024 ;\
+#    mkdir build ;\
+#    mkdir -p z3/build && cd z3/build ;\
+#    CC=clang CXX=clang++ cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
+#    make -j`nproc` ;\
+#    cd ../../build ;\
+#    CC=clang CXX=clang++ cmake .. ;\
+#    make -j`nproc` ;\
+#    cd .. ;\
+#    cp build/bin/vampire_* vampire ;\
+#    ./checks/sanity vampire
 
 #################################################
 # runtime image.
