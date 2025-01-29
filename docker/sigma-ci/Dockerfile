@@ -10,7 +10,7 @@ ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
 ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 
 # We're in /usr/local/tomcat
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt update && apt install -y --install-recommends \
     build-essential \
     clang \
     cmake \
@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     CC=clang CXX=clang++ cmake .. ;\
     make -j`nproc` ;\
     cd .. ;\
-    cp build/bin/vampire_z3_rel vampire ;\
+    cp build/bin/vampire_* vampire ;\
     ./checks/sanity vampire
 
 #################################################
