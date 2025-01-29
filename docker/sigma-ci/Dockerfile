@@ -6,17 +6,20 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
 # Here, we are utilizing a known Vampire build w/ Z3 matched to that build
 ARG VAMPIRE_GIT='https://github.com/vprover/vampire/archive/refs/tags/v4.9casc2024.tar.gz'
 ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
+# Latest E Theorem Prover (2024-05-01)
+ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 
 # We're in /usr/local/tomcat
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    clang \
     cmake \
     git \
     python3 ;\
-    wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz' &&\
+    wget $E_PROVER &&\
     tar xf E.tgz ;\
     cd E ;\
-    ./configure && make ;\
+    ./configure && make CC="clang" CXX="clang++" ;\
     cd .. ;\
     wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' &&\
     tar xf WordNet-3.0.tar.gz ;\
@@ -28,13 +31,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cd vampire-4.9casc2024 ;\
     mkdir build ;\
     mkdir -p z3/build && cd z3/build ;\
-    cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
+    CC=clang CXX=clang++ cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
     make -j`nproc` ;\
     cd ../../build ;\
-    cmake .. ;\
+    CC=clang CXX=clang++ cmake .. ;\
     make -j`nproc` ;\
     cd .. ;\
-    cp build/bin/vampire_z3_rel vampire ;\
+    cp build/bin/vampire_* vampire ;\
     ./checks/sanity vampire
 
 #################################################
