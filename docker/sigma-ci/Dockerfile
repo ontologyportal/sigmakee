@@ -37,7 +37,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     CC=clang CXX=clang++ cmake .. ;\
     make -j`nproc` ;\
     cd .. ;\
-    cp build/bin/vampire_* vampire ;\
+    cp build/bin/vampire_z3_rel vampire ;\
     ./checks/sanity vampire
 
 #################################################
