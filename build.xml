@@ -559,7 +559,7 @@
         </exec>
     </target>
 
-    <!-- If Vampire fails to build on Hamming, here is a alternate source of the binary -->
+    <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary -->
     <target name="alternate.vampire">
         <get src="https://github.com/vprover/vampire/releases/download/v4.9casc2024/vampire" dest="${programs.dir}/vampire/build" tryGzipEncoding="true"/>
         <chmod dir="${programs.dir}/${programs.dir}/vampire/build" perm="ugo+rx" includes="vampire"/>
