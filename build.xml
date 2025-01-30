@@ -412,7 +412,7 @@
     </target>
 
     <target name="retrieve.E">
-        <get src="https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
         <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
         <delete file="${programs.dir}/E.tgz"/>
     </target>
