@@ -70,9 +70,11 @@ cd ~
 mkdir workspace
 cd workspace
 git clone https://github.com/ontologyportal/sigmakee
+cd sigmakee
 
 Install (ensure the above preparations have been performed)
 > ant install
+> ant
 
 *** Legacy install steps now taken care of by the above command "ant install"
 cd ~
@@ -104,7 +106,7 @@ and try to uncompress again:
 cp -iav WordNet-3.0/dict/* ~/workspace/sumo/WordNetMappings/
 rm WordNet-3.0.tar.gz
 
-curl -O 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
+curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 tar xvzf E.tgz
 rm E.tgz
 cd E
