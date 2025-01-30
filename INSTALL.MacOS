@@ -106,7 +106,7 @@ and try to uncompress again:
 cp -iav WordNet-3.0/dict/* ~/workspace/sumo/WordNetMappings/
 rm WordNet-3.0.tar.gz
 
-curl -O 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
+curl -O 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 tar xvzf E.tgz
 rm E.tgz
 cd E
