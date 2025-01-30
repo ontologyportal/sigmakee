@@ -625,12 +625,15 @@ Then create the administrator account and password
 java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
+Default user/pw: admin/admin
+
 You can use Sigma without being administrator, but you'll have limited use of its functionality.
 
-You'll also need to set a few parameters in your config.xml file
+You'll also need to set a few parameters in your config.xml file. If you chose
+user "admin", then your config.xml will have these 2 new lines added.
 
 ```xml
-  <preference name="dbUser" value="sa" />
+  <preference name="dbUser" value="admin" />
   <preference name="loadFresh" value="false" />
 ```
 
