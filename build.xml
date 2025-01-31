@@ -95,8 +95,6 @@
     <property name="build.classes.dir" value="${build.home}/WEB-INF/classes"/>
     <property name="build.lib" value="${build.home}/lib"/>
     <property name="build.test.classes.dir" value="${build.home}/test/classes"/>
-    <property name="dist.dir" value="dist"/>
-    <property name="dist.jar" value="${dist.dir}/${app.name}.jar"/>
     <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
     <property name="reports.dir" value="${build.home}/test/results"/>
@@ -129,11 +127,9 @@
     <condition property="isUnixNotMac">
         <and>
             <os family="unix"/>
-
             <not>
                 <os family="mac"/>
             </not>
-
         </and>
     </condition>
 
@@ -237,7 +233,7 @@
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="dist" depends="compile" description="Create the *.war file and place in ${dist.dir}.">
+    <target name="dist" depends="compile,compile.test" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
@@ -362,7 +358,6 @@
     <target name="clean" description="Delete old build, lib, dist and deployed web aritifacts">
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
-            <fileset dir="${dist.dir}"/>
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
             <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
@@ -417,7 +412,7 @@
     </target>
 
     <target name="retrieve.E">
-        <get src="https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
         <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
         <delete file="${programs.dir}/E.tgz"/>
     </target>
@@ -564,7 +559,7 @@
         </exec>
     </target>
 
-    <!-- If Vampire fails to build on Hamming, here is a alternate source of the binary -->
+    <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary -->
     <target name="alternate.vampire">
         <get src="https://github.com/vprover/vampire/releases/download/v4.9casc2024/vampire" dest="${programs.dir}/vampire/build" tryGzipEncoding="true"/>
         <chmod dir="${programs.dir}/${programs.dir}/vampire/build" perm="ugo+rx" includes="vampire"/>

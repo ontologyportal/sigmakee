@@ -335,6 +335,7 @@ Then,
 ```sh
 cd sigmakee
 ant install
+ant
 ```
 
 To keep this repository updated
@@ -352,7 +353,7 @@ mkdir Programs
 cd Programs
 wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip'
 wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-wget 'https://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz'
+wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 tar -xvzf E.tgz
 unzip apache-tomcat-9.0.97.zip
 rm apache-tomcat-9.0.97.zip
