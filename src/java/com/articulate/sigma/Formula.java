@@ -2567,7 +2567,7 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean isTrueFalse(String term) {
 
-        return (!term.isEmpty() && (term.equals("True") || term.equals("False")));
+        return (!term.isEmpty() && (term.equals("true") || term.equals("false")));
     }
 
     /** ***************************************************************

@@ -40,6 +40,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static final String TFF_RAT = "$rat";
     public static final String TFF_ENTITY = "$i";
 
+    public HashSet<String> sortLabels = new HashSet<>();
+
     /** *************************************************************
      */
     public void initOnce() {
@@ -218,8 +220,21 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeSort(String t, PrintWriter pw) {
 
-        String output = "tff(" + translateName(t) + "_sig,type,s__" + t +
-                " : $i  ).";
+        String label = translateName(t) + "_sig";
+        if (sortLabels.contains(label)) {
+            pw.println("% duplicate label " + label + " for " + t);
+            return;
+        }
+        else {
+            pw.println("% add label " + label);
+            sortLabels.add(label);
+        }
+        String output = "tff(" + label + ",type,s__" + t;
+        if (Formula.isLogicalOperator(SUMOtoTFAform.getBareTerm(t)) ||
+                SUMOtoTFAform.getBareTerm(t).equals("equal") ||
+                kb.isRelation(SUMOtoTFAform.getBareTerm(t)))
+            output = output + "__m";
+        output = output + " : $i  ).";
         pw.println(output);
     }
 
@@ -282,17 +297,32 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String relname = translateName(t);
         if (relname.endsWith(Formula.termMentionSuffix))
             relname = relname.substring(0,relname.length()-3);
+        String range = sig.get(0);
+        String label = translateName(t);
+        if (label.endsWith("_m"))
+            label = label.substring(0,label.length()-2);
+        label = label + "_sig_rel";
+        if (sortLabels.contains(label)) {
+            pw.println("% duplicate label " + label + " for " + relname);
+            return;
+        }
+        else {
+            pw.println("% add label " + label);
+            sortLabels.add(label);
+        }
         if (kb.isFunction(t)) {
-            String range = sig.get(0);
-            String output = "tff(" + translateName(t) + "_sig,type," + relname +
+            String output = "tff(" + label + ",type," + relname +
                     " : ( " + sigStr + " ) > " + translateSort(kb,range) + " ).";
             pw.println(output);
         }
         else {
-            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname +
+            String output = "tff(" + label + ",type," + relname +
                     " : ( " + sigStr + " ) > $o ).";
             pw.println(output);
         }
+        String output = "tff(" + label + "_m,type," + relname + "_m" +
+                " : $i ).";
+        pw.println(output);
     }
 
     /** *************************************************************
@@ -591,6 +621,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         Set<String> vals;
         String sep, newTerm;
+        pw.println("% SUMOKBtoTFAKB.writeSorts(): starting on toExtend sorts");
         for (String k : toExtend.keySet()) {
             vals = toExtend.get(k);
             fnSuffix = "";
