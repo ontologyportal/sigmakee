@@ -627,10 +627,11 @@ java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 
 Default user/pw: admin/admin
 
-You can use Sigma without being administrator, but you'll have limited use of its functionality.
+You can use Sigma without being administrator, but you'll have limited use of
+its functionality.
 
 You'll also need to set a few parameters in your config.xml file. If you chose
-user "admin", then your config.xml will have these 2 new lines added.
+user "admin", then your config.xml will need these 2 new lines added.
 
 ```xml
   <preference name="dbUser" value="admin" />
@@ -639,7 +640,7 @@ user "admin", then your config.xml will have these 2 new lines added.
 
 To handle the account registration feature, you'll need to have an email account and supply the
 password in the .bashrc file where your Sigma installation is runnning.  Gmail might be convenient
-for this.  Change the password "my_pass" to your password on Gmail (or other service that you specify)
+for this. Change the password "my_pass" to your password on Gmail (or other service that you specify)
 
 ```sh
 export SIGMA_EMAIL_PASS="my_pass"
@@ -647,10 +648,10 @@ export SIGMA_EMAIL_SERVER="smtp.gmail.com"
 ```
 
 There are three types of user roles: "guest", "user" and "admin".  Guests are users who have not
-registered.  They can access read-only functions that are not computationally expensive.
-Registered users are granted access to computationally more expensive features.  Admin users
-have access to all Sigma functions.  Currently, this control is hard coded into the JSP pages
-that will check for user roles.  At some point in the future this may be changed to a more flexible
+registered. They can access read-only functions that are not computationally expensive.
+Registered users are granted access to computationally more expensive features. Admin users
+have access to all Sigma functions. Currently, this control is hard coded into the JSP pages
+that will check for user roles. At some point in the future this may be changed to a more flexible
 scheme of access rights driven from a file or database mapping roles to allowed functions.
 
 You'll need to start the database server with
