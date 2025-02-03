@@ -838,10 +838,11 @@ public class SUMOtoTFAform {
     public static String getBareTerm(String s) {
 
         String result = s;
-        result = result.replaceFirst(Formula.termSymbolPrefix, "");
-        Pattern p = Pattern.compile("(.*)__.*");
+        if (result.startsWith(Formula.termSymbolPrefix))
+            result = result.substring(3);
+        Pattern p = Pattern.compile("^(.+)__.*");
         Matcher m = p.matcher(result);
-        while (m.matches()) {
+        while (m.lookingAt()) {
             result = m.group(1);
             m = p.matcher(result);
         }
@@ -1183,10 +1184,14 @@ public class SUMOtoTFAform {
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             String promotion = numTypePromotion(f,parentType);
+            String result = null;
+            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
             if (promotion != null)
-                return promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
+                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
             else
-                return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+                result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): result: " + result);
+            return result;
         }
         Formula car = f.carAsFormula();
         String op = car.getFormula();
@@ -2391,6 +2396,10 @@ public class SUMOtoTFAform {
      */
     public static String process(String s, boolean query) {
 
+        if (s.startsWith("(domain greaterThan")) {
+            SUMOtoTFAform.debug = true;
+            SUMOformulaToTPTPformula.debug = true;
+        }
         filterMessage = "";
         if (s.contains("ListFn"))
             filterMessage = "SUMOtoTFAform.process(): Formula contains a list operator";
@@ -2398,7 +2407,12 @@ public class SUMOtoTFAform {
         if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
             return "";
         Formula f = new Formula(s);
-        return process(f,query);
+        String res = process(f,query);
+        if (s.startsWith("(domain greaterThan")) {
+            SUMOtoTFAform.debug = false;
+            SUMOformulaToTPTPformula.debug = false;
+        }
+        return res;
     }
 
     /** *************************************************************
@@ -2862,6 +2876,7 @@ public class SUMOtoTFAform {
             }
             else if (args != null && args.length > 1 && args[0].equals("-f")) {
                 debug = true;
+                SUMOformulaToTPTPformula.debug = true;
                 Formula f = new Formula(args[1]);
                 System.out.println("in TFA: " + process(f,false));
             }
@@ -2869,6 +2884,9 @@ public class SUMOtoTFAform {
                 String bare = getBareTerm("s__refers__1En2In");
                 System.out.println(bare);
                 KB kb = KBmanager.getMgr().getKB("SUMO");
+                System.out.println(kb.isRelation(bare));
+                bare = getBareTerm("refers__1En2In");
+                System.out.println(bare);
                 System.out.println(kb.isRelation(bare));
                 /**
                  if (debug) System.out.println("SUMOtoTFAform.main(): contains ListFn__1Fn: " + kb.terms.contains("ListFn__1Fn"));

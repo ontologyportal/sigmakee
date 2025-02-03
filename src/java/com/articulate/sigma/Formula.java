@@ -2613,6 +2613,16 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
+     * Returns true if term is a SUO-KIF inequality, else returns false.
+     *
+     * @param term A String.
+     */
+    public static boolean isInequality(String term) {
+
+        return (!StringUtil.emptyString(term) && INEQUALITIES.contains(term));
+    }
+
+    /** ***************************************************************
      * Returns true if term is a SUO-KIF mathematical function, else
      * returns false.
      * @param term A String.
