@@ -2396,10 +2396,6 @@ public class SUMOtoTFAform {
      */
     public static String process(String s, boolean query) {
 
-        if (s.startsWith("(domain greaterThan")) {
-            SUMOtoTFAform.debug = true;
-            SUMOformulaToTPTPformula.debug = true;
-        }
         filterMessage = "";
         if (s.contains("ListFn"))
             filterMessage = "SUMOtoTFAform.process(): Formula contains a list operator";
@@ -2408,10 +2404,6 @@ public class SUMOtoTFAform {
             return "";
         Formula f = new Formula(s);
         String res = process(f,query);
-        if (s.startsWith("(domain greaterThan")) {
-            SUMOtoTFAform.debug = false;
-            SUMOformulaToTPTPformula.debug = false;
-        }
         return res;
     }
 
