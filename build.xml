@@ -125,7 +125,6 @@
     <!-- The above property can be overriden on the command line with:
          -Dinstall.home=/data/fsg, or any other path the user deems necessary
     -->
-    <property name="workspace.dir" value="${install.home}/workspace"/>
     <property name="programs.dir" value="${install.home}/Programs"/>
 
     <condition property="isUnixNotMac">
@@ -377,8 +376,8 @@
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
-        <mkdir dir="${workspace.dir}"/>
-        <chmod dir="${workspace.dir}" perm="ugo+rw" includes="**/*"/>
+        <mkdir dir="${git.home}"/>
+        <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${programs.dir}"/>
         <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/>
 
@@ -427,7 +426,7 @@
             <fileset file="${sigma.src}/config.xml"/>
         </copy>
         <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}" excludes="/home/theuser/workspace/sumo"/>
-        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${install.home}/workspace/sumo"/>
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
         <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
         <copy todir="${user.home}/.${app.name}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
@@ -447,35 +446,35 @@
     </target>
 
     <target name="clone.sumo">
-        <mkdir dir="${workspace.dir}/sumo"/>
-        <git command="clone" dir="${workspace.dir}/sumo">
+        <mkdir dir="${kbs.home}"/>
+        <git command="clone" dir="${kbs.home}">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/sumo"/>
-                <arg value="${workspace.dir}/sumo"/>
+                <arg value="${kbs.home}"/>
             </args>
         </git>
     </target>
     <target name="clone.tptpantlr">
-        <mkdir dir="${workspace.dir}/TPTP-ANTLR"/>
-        <git command="clone" dir="${workspace.dir}/TPTP-ANTLR">
+        <mkdir dir="${git.home}/TPTP-ANTLR"/>
+        <git command="clone" dir="${git.home}/TPTP-ANTLR">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/TPTP-ANTLR"/>
-                <arg value="${workspace.dir}/TPTP-ANTLR"/>
+                <arg value="${git.home}/TPTP-ANTLR"/>
             </args>
         </git>
     </target>
     <target name="clone.sigmautils">
-        <mkdir dir="${workspace.dir}/SigmaUtils"/>
-        <git command="clone" dir="${workspace.dir}/SigmaUtils">
+        <mkdir dir="${git.home}/SigmaUtils"/>
+        <git command="clone" dir="${git.home}/SigmaUtils">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/SigmaUtils"/>
-                <arg value="${workspace.dir}/SigmaUtils"/>
+                <arg value="${git.home}/SigmaUtils"/>
             </args>
         </git>
     </target>
@@ -510,7 +509,7 @@
     <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
     <macrodef name="git">
         <attribute name="command"/>
-        <attribute name="dir" default="${workspace.dir}"/>
+        <attribute name="dir" default="${git.home}"/>
         <element name="args" optional="true"/>
         <sequential>
             <echo message="git @{command}"/>
@@ -576,7 +575,7 @@
         <echo file="${user.home}/.bashrc" append="true">
 # For SIGMA
 export SIGMA_HOME=${user.home}/.${app.name}
-export ONTOLOGYPORTAL_GIT=${workspace.dir}
+export ONTOLOGYPORTAL_GIT=${git.home}
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
@@ -589,7 +588,7 @@ export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
         <echo file="${user.home}/.zshrc" append="true">
 # For SIGMA
 export SIGMA_HOME=${user.home}/.${app.name}
-export ONTOLOGYPORTAL_GIT=${workspace.dir}
+export ONTOLOGYPORTAL_GIT=${git.home}
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}

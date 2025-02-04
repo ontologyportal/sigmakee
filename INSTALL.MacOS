@@ -40,7 +40,9 @@ these variables created before the next step, and replace
 
   # For SIGMA
   export SIGMA_HOME=/Users/user/.sigmakee
-  export ONTOLOGYPORTAL_GIT=/Users/user/workspace
+  NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
+       ~/workspace is just a default suggestion
+  export ONTOLOGYPORTAL_GIT=~/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
   export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.97
