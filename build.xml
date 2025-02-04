@@ -120,9 +120,13 @@
     <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
     <property name="tomcat.version" value="9.0.97"/>
 
-    <!-- Define the sigma user spaces -->
-    <property name="workspace.dir" value="${user.home}/workspace"/>
-    <property name="programs.dir" value="${user.home}/Programs"/>
+    <!-- Define the sigma installation space -->
+    <property name="install.home" value="${user.home}"/>
+    <!-- The above property can be overriden on the command line with:
+         -Dinstall.home=/data/fsg, or any other path the user deems necessary
+    -->
+    <property name="workspace.dir" value="${install.home}/workspace"/>
+    <property name="programs.dir" value="${install.home}/Programs"/>
 
     <condition property="isUnixNotMac">
         <and>
@@ -422,7 +426,9 @@
         <copy todir="${user.home}/.${app.name}/KBs">
             <fileset file="${sigma.src}/config.xml"/>
         </copy>
-        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}" excludes="/home/theuser/workspace/sumo"/>
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${install.home}/workspace/sumo"/>
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
         <copy todir="${user.home}/.${app.name}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
@@ -557,6 +563,7 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
+        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser/workspace/vampire/vampire" value="${programs.dir}/vampire/build/vampire"/>
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary -->
