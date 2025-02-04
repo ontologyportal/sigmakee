@@ -417,7 +417,7 @@
         <delete file="${programs.dir}/E.tgz"/>
     </target>
 
-    <target name="copy.to.sigma.home">
+    <target name="copy.to.sigma.home" description="Copy WordNetMappings and config.xml to ~/.sigmakee -> ($SIGMA_HOME)">
         <antcall target="refresh.KBs"/>
         <copy todir="${user.home}/.${app.name}/KBs">
             <fileset file="${sigma.src}/config.xml"/>
@@ -429,7 +429,7 @@
     </target>
 
     <!-- When the SUMO KB files get updated, do this frequently -->
-    <target name="refresh.KBs">
+    <target name="refresh.KBs" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
         <mkdir dir="${user.home}/.${app.name}"/>
         <chmod dir="${user.home}/.${app.name}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${user.home}/.${app.name}/KBs"/>
