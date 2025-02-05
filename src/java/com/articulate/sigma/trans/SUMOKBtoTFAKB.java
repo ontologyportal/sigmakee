@@ -72,9 +72,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             else
                 lChildren = new HashSet<>();
             qNotL.add("RealNumber");
-            String lang = KBmanager.getMgr().getPref("TPTPlang");
-            if (!StringUtil.emptyString(lang))
-                SUMOKBtoTFAKB.lang = lang;
+            String tLang = KBmanager.getMgr().getPref("TPTPlang");
+            if (!StringUtil.emptyString(tLang))
+                SUMOKBtoTFAKB.lang = tLang;
             SUMOtoTFAform.initOnce();
         }
         initialized = true;
@@ -261,7 +261,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             endIndex = sig.size();
         if (sig == null || sig.isEmpty()) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
-            System.out.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
+            System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): no sig for " + t);
             pw.flush();
             Thread.dumpStack();
             return;
@@ -386,7 +386,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return;
         List<String> sig = kb.kbCache.signatures.get(t);
         if (sig == null || sig.isEmpty()) {
-            System.out.println("Error in SUMOKBtoTFAKB.extendRelationSig(): t: " + t);
+            System.err.println("Error in SUMOKBtoTFAKB.extendRelationSig(): t: " + t);
             Thread.dumpStack();
             return;
         }
