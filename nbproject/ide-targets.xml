@@ -432,9 +432,7 @@
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
-            <classpath>
-                <path refid="tcp"/>
-            </classpath>
+            <classpath refid="tcp"/>
             <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
