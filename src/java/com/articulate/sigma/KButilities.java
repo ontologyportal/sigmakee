@@ -47,7 +47,7 @@ public class KButilities {
     public static TreeSet<String> errors = new TreeSet<>();
 
     /** Warnings found during processing formulas */
-    public static TreeSet<String> warnings = new TreeSet<String>();
+    public static TreeSet<String> warnings = new TreeSet<>();
 
     /** *************************************************************
      */
@@ -364,7 +364,7 @@ public class KButilities {
      */
     public static void checkURLs(KB kb) {
 
-        URL u = null;
+        URL u;
         ArrayList<Formula> results = kb.ask("arg",0,"externalImage");
         Formula f;
         String url;
@@ -387,7 +387,7 @@ public class KButilities {
         // (externalImage Reef "http://upload.wikimedia.org/wikipedia/en/3/33/Reef.jpg")
         // http://upload.wikimedia.org/wikipedia/commons/3/33/Reef.jpg
         //
-        URL u = null;
+        URL u;
         String line;
 
         try (FileReader fr = new FileReader("pictureList.kif"); LineNumberReader lr = new LineNumberReader(fr)) {
