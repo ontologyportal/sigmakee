@@ -8,8 +8,8 @@ cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment, in Working
 Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico. see also 
-http://sigmakee.sourceforge.net 
+August 9, Acapulco, Mexico. see also
+http://sigmakee.sourceforge.net
 */
 
 /*************************************************************************************************/
@@ -17,8 +17,9 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
+
 import tptp_parser.*;
-import java.io.FileReader;
+
 import java.util.*;
 
 public class TPTP2SUMO {
@@ -32,42 +33,43 @@ public class TPTP2SUMO {
    */
   public static Formula collapseConnectives(Formula form) {
 
-      if (form.getFormula().indexOf("(and ") ==  -1 && form.getFormula().indexOf("(or ") ==  -1)
+      if (!form.getFormula().contains("(and ") && !form.getFormula().contains("(or "))
           return form;
       if (!form.isBalancedList())
           return form;
       if (debug) System.out.println("collapseConnectives(): input: " + form);
-      ArrayList<Formula> args = form.complexArgumentsToArrayList(1);
+      List<Formula> args = form.complexArgumentsToArrayList(1);
       if (args == null)
           return form;
-      StringBuffer sb = new StringBuffer();
+      StringBuilder sb = new StringBuilder();
       String pred = form.car();
-      sb.append("(" + pred + " ");
-      ArrayList<Formula> newargs = new ArrayList<>();
+      sb.append("(").append(pred).append(" ");
+      List<Formula> newargs = new ArrayList<>();
       if (debug) System.out.println("collapseConnectives(): args: " + args);
       for (Formula f : args)
           newargs.add(collapseConnectives(f));
       if (debug) System.out.println("collapseConnectives(): newargs: " + newargs);
       if (pred.equals("or") || pred.equals("and")) {
+          List<Formula> subargs;
           for (Formula f : newargs) {
               if (f.car() != null && f.car().equals(pred)) {
                   if (debug) System.out.println("collapseConnectives(): matching connectives in " + f);
-                  ArrayList<Formula> subargs = f.complexArgumentsToArrayList(1);
+                  subargs = f.complexArgumentsToArrayList(1);
                   if (debug) System.out.println("collapseConnectives(): subargs " + subargs);
                   for (Formula f2 : subargs)
-                      sb.append(f2.toString() + " ");
+                      sb.append(f2.toString()).append(" ");
                   if (debug) System.out.println("collapseConnectives(): after adding to " + f + " result is " + sb);
               }
               else {
                   if (debug) System.out.println("collapseConnectives(): not matching connective in " + f);
                   if (debug) System.out.println("collapseConnectives(): adding to " + sb);
-                  sb.append(f.toString() + " ");
+                  sb.append(f.toString()).append(" ");
               }
           }
       }
       else {
           for (Formula f : newargs)
-            sb.append(f.toString() + " ");
+            sb.append(f.toString()).append(" ");
       }
       sb.deleteCharAt(sb.length()-1);
       sb.append(")");
@@ -81,9 +83,9 @@ public class TPTP2SUMO {
   private static String addIndent (int indent, int indented) {
 
       String res = "";
-      for (int i = indented+1; i <= indent; i++) 
-          res += " ";      
-      return res;    
+      for (int i = indented+1; i <= indent; i++)
+          res += " ";
+      return res;
   }
 
   /** ***************************************************************
@@ -92,21 +94,21 @@ public class TPTP2SUMO {
   private static String removeDollarSign (String argument) {
 
       if (argument.length() > 0) {
-          if (argument.charAt(0) == '$') 
+          if (argument.charAt(0) == '$')
               return argument.substring(1,argument.length());
           else
-              return argument;          
+              return argument;
       }
       return "";
   }
-  
+
   /** ***************************************************************
    * remove termVariablePrefix
    */
   private static String transformVariable (String variable) {
 
       return variable.replace(Formula.termVariablePrefix, "");
-  } 
+  }
 
   /** ***************************************************************
    * remove termSymbolPrefix and termMentionSuffix
@@ -130,7 +132,7 @@ public class TPTP2SUMO {
         if (debug) System.out.println("formToSUMO() " + clause);
         TPTPVisitor sv = new TPTPVisitor();
         sv.parseString(clause);
-        HashMap<String, TPTPFormula> hm = sv.result;
+        Map<String, TPTPFormula> hm = sv.result;
         if (debug) {
             for (String s : hm.keySet()) {
                 System.out.println(hm.get(s));
@@ -151,7 +153,7 @@ public class TPTP2SUMO {
         if (debug) System.out.println("toSUMO() " + clause);
         TPTPVisitor sv = new TPTPVisitor();
         sv.parseString(clause);
-        HashMap<String, TPTPFormula> hm = sv.result;
+        Map<String, TPTPFormula> hm = sv.result;
         if (debug) {
             for (String s : hm.keySet()) {
                 System.out.println(hm.get(s));
@@ -206,7 +208,7 @@ public class TPTP2SUMO {
                   tptp_parser.TPTPVisitor sv = new TPTPVisitor();
                   System.out.println("main parse file " + args[1]);
                   sv.parseFile(args[1]);
-                  HashMap<String, TPTPFormula> hm = sv.result;
+                  Map<String, TPTPFormula> hm = sv.result;
                   for (String s : hm.keySet()) {
                       System.out.println(hm.get(s));
                       System.out.println("\t" + hm.get(s).sumo + "\n");
@@ -219,4 +221,4 @@ public class TPTP2SUMO {
       }
   }
 }
- 
+
