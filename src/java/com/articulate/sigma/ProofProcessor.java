@@ -33,13 +33,13 @@ import tptp_parser.*;
 public class ProofProcessor {
 
      /** An ArrayList of BasicXMLelement (s). */
-    private ArrayList<BasicXMLelement> xml = null;
+    private List<BasicXMLelement> xml = null;
 
     /** ***************************************************************
      * Take an ArrayList of BasicXMLelement (s) and process them as
      * needed
      */
-    public ProofProcessor(ArrayList<BasicXMLelement> xmlInput) {
+    public ProofProcessor(List<BasicXMLelement> xmlInput) {
 
     	xml = new ArrayList<>(xmlInput);
     }
@@ -52,7 +52,7 @@ public class ProofProcessor {
     public boolean equalsAnswer(int answerNum, String expectedAnswer) {
 
     	StringBuilder result = new StringBuilder();
-    	ArrayList<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
+    	List<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
     	BasicXMLelement answer = queryResponseElements.get(answerNum);
     	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no"))
     		return false;
@@ -87,7 +87,7 @@ public class ProofProcessor {
      * one without, for example: sk2
      * We need to find either of these in the proofs to see what relationship it goes into
      */
-    public static ArrayList<String> returnSkolemStmt(String skolem, ArrayList<TPTPFormula> proofSteps) {
+    public static List<String> returnSkolemStmt(String skolem, List<TPTPFormula> proofSteps) {
 
     	if (skolem.startsWith("(") && skolem.endsWith(")"))
     		skolem = skolem.substring(1, skolem.length()-1);
@@ -95,7 +95,7 @@ public class ProofProcessor {
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
 
-    	ArrayList<String> matches = new ArrayList<>();
+    	List<String> matches = new ArrayList<>();
     	for (int i = 0; i < proofSteps.size(); i++) {
 			TPTPFormula step = proofSteps.get(i);
     		match = pattern.matcher(step.sumo);
@@ -206,7 +206,7 @@ public class ProofProcessor {
     /** ***************************************************************
      * Convert XML proof to TPTP format
      */
-    public static String tptpProof(ArrayList<ProofStep> proofSteps) {
+    public static String tptpProof(List<ProofStep> proofSteps) {
 
     	StringBuilder result = new StringBuilder();
     	try {
@@ -254,63 +254,64 @@ public class ProofProcessor {
     	 System.out.println(removeNestedAnswerClause(stmt));
      }
 
-	 /****************************************************************
-      * Tally the number of appearances of a particular axiom label in
-      * a file.  This is intended to be used to analyze E output that
-      * looks for contradictions, with the intuition that axioms that
-      * appear in most or all of the contractions found are the source
-      * of the problem.
-	 */
-	 public static void tallyAxioms(String file) {
+	   /**
+     * **************************************************************
+     * Tally the number of appearances of a particular axiom label in a file.
+     * This is intended to be used to analyze E output that looks for
+     * contradictions, with the intuition that axioms that appear in most or all
+     * of the contractions found are the source of the problem.
+     */
+    public static void tallyAxioms(String file) {
 
-         HashMap<String,String> axioms = new HashMap<>();
-         HashMap<String,Integer> counts = new HashMap<>();
-		 LineNumberReader lr;
-		 try {
-			 String line;
-			 File f = new File(file);
-			 if (f == null) {
-				 System.out.println("Error in ProofProcessor.tallyAxioms(): The file does not exist " + file);
-				 return;
-			 }
-			 FileReader r = new FileReader(f);
-			 // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
-			 lr = new LineNumberReader(r);
-			 String kbName = KBmanager.getMgr().getPref("sumokbname");
-			 while ((line = lr.readLine()) != null) {
-				 if (lr.getLineNumber() % 1000 == 0)
-					 System.out.print('.');
-                 Pattern p = Pattern.compile("fof\\((kb_" + kbName + "_\\d+)");
-				 Matcher m = p.matcher(line);
-				 if (m.find()) {
-					 axioms.put(m.group(1),line);
-                     Integer i = counts.get(m.group(1));
-                     if (i == null)
-                         counts.put(m.group(1), 1);
-                     else {
-                         i++;
-                         counts.put(m.group(1), i);
-                     }
-				 }
-			 }
-		 }
-		 catch (IOException ex) {
-			 ex.printStackTrace();
-		 }
+        Map<String, String> axioms = new HashMap<>();
+        Map<String, Integer> counts = new HashMap<>();
+
+        String line;
+        File f = new File(file);
+        if (f == null) {
+            System.err.println("Error in ProofProcessor.tallyAxioms(): The file does not exist " + file);
+            return;
+        }
+        try (FileReader r = new FileReader(f); // System.out.println( "INFO in WordNet.readNouns(): Reading file " + nounFile.getCanonicalPath() );
+                 LineNumberReader lr = new LineNumberReader(r)) {
+            String kbName = KBmanager.getMgr().getPref("sumokbname");
+            Pattern p;
+            Matcher m;
+            Integer i;
+            while ((line = lr.readLine()) != null) {
+                if (lr.getLineNumber() % 1000 == 0) {
+                    System.out.print('.');
+                }
+                p = Pattern.compile("fof\\((kb_" + kbName + "_\\d+)");
+                m = p.matcher(line);
+                if (m.find()) {
+                    axioms.put(m.group(1), line);
+                    i = counts.get(m.group(1));
+                    if (i == null) {
+                        counts.put(m.group(1), 1);
+                    } else {
+                        i++;
+                        counts.put(m.group(1), i);
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
 
         for (String key : axioms.keySet()) {
             String val = axioms.get(key);
             System.out.println(key + "\t" + val);
         }
 
-         System.out.println();
+        System.out.println();
         for (String key : counts.keySet()) {
             Integer val = counts.get(key);
             System.out.println(key + "\t" + val);
         }
-      }
+    }
 
-	  /** ***************************************************************
+       /** ***************************************************************
        */
       public static void testFormatProof() {
 
