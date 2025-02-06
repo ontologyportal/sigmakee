@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.dataProc.Infrastructure;
+//import com.articulate.sigma.dataProc.Infrastructure;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
@@ -126,7 +126,7 @@ public class KButilities {
             String error = "Formula rejected due to arity error of predicate " + term
                     + " in formula: \n" + f.getFormula();
             errors.add(error);
-            System.out.println("isValidFormula(): Error: " + error);
+            System.err.println("isValidFormula(): Error: " + error);
             return false;
         }
         if (!hasCorrectTypes(kb,f))
@@ -372,7 +372,7 @@ public class KButilities {
             f = (Formula) results.get(i);
             url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
             if (!uRLexists(url))
-                System.out.println(f + " doesn't exist");
+                System.err.println(f + " doesn't exist");
         }
     }
 
@@ -1446,7 +1446,7 @@ public class KButilities {
             //for (String s : generateSemanticNetwork(kb))
             //    System.out.println(s);
             KButilities kbu = new KButilities();
-            Infrastructure infra = new Infrastructure();
+//            Infrastructure infra = new Infrastructure();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
             }
