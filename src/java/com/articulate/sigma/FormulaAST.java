@@ -3,9 +3,12 @@ package com.articulate.sigma;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class FormulaAST {
@@ -21,14 +24,14 @@ public class FormulaAST {
 
     // An ArrayList of String messages with a message that has a reserved character of ':'
     // dividing the message from a formula or term that will be hyperlinked and formmated
-    public TreeSet<String> errors = new TreeSet<String>();
+    public TreeSet<String> errors = new TreeSet<>();
 
     /** Warnings found during execution. */
-    public TreeSet<String> warnings = new TreeSet<String>();
+    public TreeSet<String> warnings = new TreeSet<>();
 
     // caches of frequently computed sets of variables in the formula
     public HashSet<String> allVarsCache = new HashSet<>();
-    public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<HashSet<String>>();
+    public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<>();
     public HashSet<String> quantVarsCache = new HashSet<>();
     public HashSet<String> unquantVarsCache = new HashSet<>();
     public HashSet<String> existVarsCache = new HashSet<>();
@@ -62,18 +65,14 @@ public class FormulaAST {
      */
     public boolean atom() {
 
-        if (formula.getClass() != ListTerm.class)
-            return true;
-        return false;
+        return formula.getClass() != ListTerm.class;
     }
 
     /*****************************************************************
      */
     public boolean listP() {
 
-        if (formula.getClass() == ListTerm.class)
-            return true;
-        return false;
+        return formula.getClass() == ListTerm.class;
     }
     /*****************************************************************
      */
@@ -81,9 +80,7 @@ public class FormulaAST {
 
         if (this.formula == null)
             return false;
-        if (this.formula.getClass() != Variable.class)
-            return false;
-        return true;
+        return this.formula.getClass() == Variable.class;
     }
 
     /*****************************************************************
@@ -95,14 +92,12 @@ public class FormulaAST {
         ListTerm elements = (ListTerm) formula;
         if (elements == null || elements.listElements == null)
             return false;
-        if (elements.listElements.size() != 0)
-            return false;
-        return true;
+        return elements.listElements.isEmpty();
     }
 
     /*****************************************************************
      * This is a non-destructive operation that creates just a new FormulaAST
-     * with the Term member, but no caches or auxilliary information,
+     * with the Term member, but no caches or auxiliary information,
      * which likely wouldn't be accurate if it were copied.
      */
     public FormulaAST car() {
@@ -119,7 +114,7 @@ public class FormulaAST {
 
     /*****************************************************************
      * This is a non-destructive operation that creates just a new FormulaAST
-     * with the Term member, but no caches or auxilliary information,
+     * with the Term member, but no caches or auxiliary information,
      * which likely wouldn't be accurate if it were copied.
      */
     public FormulaAST cdr() {
@@ -141,11 +136,12 @@ public class FormulaAST {
 
     /*****************************************************************
      */
+    @Override
     public String toString() {
 
         if (asString != null)
             return asString;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (formula == null)
             return null;
         if (formula.getClass().equals(Constant.class) || formula.getClass().equals(Variable.class))
@@ -177,7 +173,7 @@ public class FormulaAST {
         if (!StringUtil.emptyString(fname) && fname.lastIndexOf(File.separator) > -1)
             fname = fname.substring(fname.lastIndexOf(File.separator) + 1);
         int hc = formula.hashCode();
-        String result = null;
+        String result;
         if (hc < 0)
             result = "N" + (Integer.valueOf(hc)).toString().substring(1) + fname;
         else
@@ -193,7 +189,7 @@ public class FormulaAST {
         if (f.formula == null || !f.listP() || f.atom() || f.empty())
             return "";
         FormulaAST predForm = f.car();
-        String pred = "";
+        String pred;
         if (predForm.atom() && predForm.formula.getClass() == Logop.class) {
             pred = predForm.formula.value;
         }
@@ -209,7 +205,7 @@ public class FormulaAST {
             FormulaAST argF = new FormulaAST();
             argF.read(arg);
             String result = validArgsRecurse(argF, filename, lineNo);
-            if (result != "")
+            if (!"".equals(result))
                 return result;
             restF.formula = restF.cdr().formula;
         }
@@ -327,14 +323,16 @@ public class FormulaAST {
      */
     public void read(String input) {
 
-        StringReader sr = new StringReader(input);
-        KIFAST kif = new KIFAST();
-        TreeSet<String> errors = kif.parse(sr);
-        if (kif.formulaMap == null || kif.formulaMap.size() == 0 || kif.formulaMap.size() > 0) {
-            System.out.println("Error in FormulaAST.read(): no or multiple formulas in " + input);
-        }
-        else {
-            formula = kif.formulaMap.values().iterator().next().formula;
+        try (Reader sr = new StringReader(input)) {
+            KIFAST kif = new KIFAST();
+            Set<String> errors = kif.parse(sr);
+            if (kif.formulaMap == null || kif.formulaMap.isEmpty() || !kif.formulaMap.isEmpty()) {
+                System.err.println("Error in FormulaAST.read(): no or multiple formulas in " + input);
+            } else {
+                formula = kif.formulaMap.values().iterator().next().formula;
+            }
+        } catch (IOException ex) {
+            System.err.println("Error in FormulaAST.read(): " + ex);
         }
     }
 }
