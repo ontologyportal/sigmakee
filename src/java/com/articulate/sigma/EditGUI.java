@@ -14,6 +14,9 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
 
 /*************************************************************************************************/
 package com.articulate.sigma;
+
+import com.articulate.sigma.wordNet.WordNet;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
@@ -22,15 +25,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.TreeMap;
-import java.util.TreeSet;
-
-import com.articulate.sigma.wordNet.WordNet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /** A class that generates a GUI for elements of the ontology. */
 public class EditGUI {
 
-    public static ArrayList<String> allowedTerms = new ArrayList<String>();
+    public static List<String> allowedTerms = new ArrayList<>();
     public static boolean initOnce = false;
 
     /** *************************************************************
@@ -47,7 +49,7 @@ public class EditGUI {
             FileReader fr = new FileReader(fin);
             if (fr != null) {
                 lnr = new LineNumberReader(fr);
-                String line = null;
+                String line;
                 while ((line = lnr.readLine()) != null) {
                     line = line.trim();
                     allowedTerms.add(line);
@@ -55,14 +57,14 @@ public class EditGUI {
             }
         }
         catch (IOException ioe) {
-            System.out.println("Error in EditGUI.readConfig() reading file: " + kbDir + File.separator + fname);
+            System.err.println("Error in EditGUI.readConfig() reading file: " + kbDir + File.separator + fname);
             System.out.println(ioe.getMessage());
         }
         finally {
             try {
                 if (lnr != null) lnr.close();
             }
-            catch (Exception e) {
+            catch (IOException e) {
                 System.out.println("Exception in EditGUI.readConfig()");
             }
         }
@@ -73,7 +75,7 @@ public class EditGUI {
      */
     public String genRelPage(KB kb, String rel) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         // get classes or instances that apply for each argument
         return sb.toString();
@@ -84,12 +86,13 @@ public class EditGUI {
      */
     public static String printInstances(KB kb, String className) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
-        TreeSet ts = kb.getAllInstances(className);
+        Set ts = kb.getAllInstances(className);
         Iterator it = ts.iterator();
+        String term;
         while (it.hasNext()) {
-            String term = (String) it.next();
+            term = (String) it.next();
             sb.append(term);
             if (it.hasNext()) sb.append(", ");
         }
@@ -102,18 +105,19 @@ public class EditGUI {
      * to the root term of the hierarchy.
      * @return an ArrayList of term strings
      */
-    public static ArrayList<String> genAllParentList(KB kb, String term) {
+    public static List<String> genAllParentList(KB kb, String term) {
 
-        ArrayList<String> parents = new ArrayList<String>();
-        HashSet<String> immedParents = new HashSet<String>();
-        ArrayList<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+        List<String> parents = new ArrayList<>();
+        Set<String> immedParents = new HashSet<>();
+        List<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+        Formula f;
         for (int i = 0; i < res.size(); i++) {
-            Formula f = res.get(i);
+            f = res.get(i);
             immedParents.add(f.getStringArgument(2));
         }
         res = kb.askWithRestriction(0,"subclass",1,term);
         for (int i = 0; i < res.size(); i++) {
-            Formula f = res.get(i);
+            f = res.get(i);
             immedParents.add(f.getStringArgument(2));
         }
         parents.addAll(kb.getAllSuperClasses(immedParents));
@@ -124,17 +128,18 @@ public class EditGUI {
      * Get the just the immediate parent classes of a term
      * @return an ArrayList of term strings
      */
-    public static ArrayList<String> genImmedParentList(KB kb, String term) {
+    public static List<String> genImmedParentList(KB kb, String term) {
 
-        ArrayList<String> parents = new ArrayList<String>();
-        ArrayList<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+        List<String> parents = new ArrayList<>();
+        List<Formula> res = kb.askWithRestriction(0,"instance",1,term);
+        Formula f;
         for (int i = 0; i < res.size(); i++) {
-            Formula f = res.get(i);
+            f = res.get(i);
             parents.add(f.getStringArgument(2));
         }
         res = kb.askWithRestriction(0,"subclass",1,term);
         for (int i = 0; i < res.size(); i++) {
-            Formula f = res.get(i);
+            f = res.get(i);
             parents.add(f.getStringArgument(2));
         }
         return parents;
@@ -147,40 +152,47 @@ public class EditGUI {
      * the array is a particular argument, and consists of an array of possible
      * string values.
      */
-    public static HashMap<String,ArrayList<ArrayList<String>>> genInstList(KB kb, String term) {
+    public static Map<String,List<List<String>>> genInstList(KB kb, String term) {
 
-        HashMap<String,ArrayList<ArrayList<String>>> result = new HashMap<String,ArrayList<ArrayList<String>>>();
+        Map<String,List<List<String>>> result = new HashMap<>();
 
-        ArrayList<String> parents = genAllParentList(kb,term);
+        List<String> parents = genAllParentList(kb,term);
         // get relations that apply
-        ArrayList<String> relations = new ArrayList<String>();
+        List<String> relations = new ArrayList<>();
+        String parent;
+        List<Formula> res;
+        Formula f;
         for (int i = 0; i < parents.size(); i++) {
-            String parent = parents.get(i);
-            ArrayList<Formula> res = kb.askWithRestriction(0,"domain",3,parent);
+            parent = parents.get(i);
+            res = kb.askWithRestriction(0,"domain",3,parent);
             //sb.append(";; res = " + Integer.toString(res.size()) + " for " +
             //		  "(domain ?X ?Y " + parent + ")");
             for (int k = 0; k < res.size(); k++) {
-                Formula f = res.get(k);
+                f = res.get(k);
                 relations.add(f.getStringArgument(1));
             }
         }
 
         // get the arity of each relation
-        HashMap<String,Integer> arity = new HashMap<String,Integer>();
+        Map<String,Integer> arity = new HashMap<>();
+        String r;
+        int a;
         for (int i = 0; i < relations.size(); i++) {
-            String r = relations.get(i);
-            int a = kb.kbCache.valences.get(r);
-            arity.put(r,Integer.valueOf(a));
+            r = relations.get(i);
+            a = kb.kbCache.valences.get(r);
+            arity.put(r, a);
         }
 
+        List al, al2;
+        String className;
         for (int i = 0; i < relations.size(); i++) {
-            String r = relations.get(i);
-            ArrayList al = new ArrayList();
+            r = relations.get(i);
+            al = new ArrayList();
             result.put(r,al);
-            int a = arity.get(r).intValue();
+            a = arity.get(r);
             for (int j = 1; j <= a; j++) {
-                ArrayList al2 = new ArrayList();
-                String className = kb.getArgTypeClass(r,j);
+                al2 = new ArrayList();
+                className = kb.getArgTypeClass(r,j);
                 if (className.endsWith("+"))
                     al2.addAll(kb.kbCache.getChildClasses(className.substring(0,className.length()-1)));
                 else
@@ -198,40 +210,47 @@ public class EditGUI {
      * the array is a particular argument, and consists of an array of possible
      * string values.
      */
-    public static HashMap<String,ArrayList<ArrayList<String>>> genClassList(KB kb, String term) {
+    public static Map<String,List<List<String>>> genClassList(KB kb, String term) {
 
-        HashMap<String,ArrayList<ArrayList<String>>> result = new HashMap<String,ArrayList<ArrayList<String>>>();
+        Map<String,List<List<String>>> result = new HashMap<>();
 
-        ArrayList<String> parents = genAllParentList(kb,term);
+        List<String> parents = genAllParentList(kb,term);
         // get relations that apply
-        ArrayList<String> relations = new ArrayList<String>();
+        List<String> relations = new ArrayList<>();
+        List<Formula> res;
+        String parent;
+        Formula f;
         for (int i = 0; i < parents.size(); i++) {
-            String parent = parents.get(i);
-            ArrayList<Formula> res = kb.askWithRestriction(0,"domainSubclass",3,parent);
+            parent = parents.get(i);
+            res = kb.askWithRestriction(0,"domainSubclass",3,parent);
             //sb.append(";; res = " + Integer.toString(res.size()) + " for " +
             //		  "(domain ?X ?Y " + parent + ")");
             for (int k = 0; k < res.size(); k++) {
-                Formula f = res.get(k);
+                f = res.get(k);
                 relations.add(f.getStringArgument(1));
             }
         }
 
         // get the arity of each relation
-        HashMap<String,Integer> arity = new HashMap<String,Integer>();
+        Map<String,Integer> arity = new HashMap<>();
+        String r;
+        int a;
         for (int i = 0; i < relations.size(); i++) {
-            String r = relations.get(i);
-            int a = kb.kbCache.valences.get(r);
-            arity.put(r,Integer.valueOf(a));
+            r = relations.get(i);
+            a = kb.kbCache.valences.get(r);
+            arity.put(r, a);
         }
 
+        List al, al2;
+        String className;
         for (int i = 0; i < relations.size(); i++) {
-            String r = relations.get(i);
-            ArrayList al = new ArrayList();
+            r = relations.get(i);
+            al = new ArrayList();
             result.put(r,al);
-            int a = arity.get(r).intValue();
+            a = arity.get(r);
             for (int j = 1; j <= a; j++) {
-                ArrayList al2 = new ArrayList();
-                String className = kb.getArgTypeClass(r,j);
+                al2 = new ArrayList();
+                className = kb.getArgTypeClass(r,j);
                 if (className.endsWith("+"))
                     al2.addAll(kb.kbCache.getChildClasses(className.substring(0,className.length()-1)));
                 else
@@ -250,36 +269,35 @@ public class EditGUI {
     public static String genInstPage(KB kb, String term, String kbHref) {
 
         initOnce();
-        StringBuffer sb = new StringBuffer();
-        HashMap<String,ArrayList<ArrayList<String>>> instList = EditGUI.genInstList(kb,term);
-        ArrayList<String> parents = genAllParentList(kb,term);
+        StringBuilder sb = new StringBuilder();
+        Map<String,List<List<String>>> instList = EditGUI.genInstList(kb,term);
+        List<String> parents = genAllParentList(kb,term);
 
         // show the instance and its class
-        sb.append("Instance relations for: <font size=+3><a href=\"" + kbHref + term + "\">" + term + "</a></font>:");
+        sb.append("Instance relations for: <font size=+3><a href=\"").append(kbHref).append(term).append("\">").append(term).append("</a></font>:");
+        String parent;
         for (int i = 0; i < parents.size(); i++) {
-            String parent = parents.get(i);
-            sb.append("<a href=\"" + kbHref + parent + "\">" + parent + "</a>,");
+            parent = parents.get(i);
+            sb.append("<a href=\"").append(kbHref).append(parent).append("\">").append(parent).append("</a>,");
         }
         sb.append("<P>\n");
-
         sb.append("<table>\n");
         sb.append("<tr><td><b>relation</b></td><td><b>arguments</b></td><td><b>assert?</b></td></tr>\n");
         // get relevant relations and their argument types
-        Iterator it = instList.keySet().iterator();
-        while (it.hasNext()) {
-            String relation = (String) it.next();
+        List<List<String>> arguments;
+        List<String> fillers;
+        for (String relation : instList.keySet()) {
             if (allowedTerms.size() < 1 || allowedTerms.contains(relation)) {
-                sb.append("<tr><td><a href=\"" + kbHref + relation + "\">" + relation + "</a>:</td><td>");
-                ArrayList<ArrayList<String>> arguments = instList.get(relation);
+                sb.append("<tr><td><a href=\"").append(kbHref).append(relation).append("\">").append(relation).append("</a>:</td><td>");
+                arguments = instList.get(relation);
                 for (int i = 0; i < arguments.size(); i++) {
-                    ArrayList<String> fillers = arguments.get(i);
+                    fillers = arguments.get(i);
                     if (fillers.size() < 1)
-                        sb.append("<input type=\"text\" name=\"" + relation + "--" + Integer.toString(i) + "\" >");
+                        sb.append("<input type=\"text\" name=\"").append(relation).append("--").append(Integer.toString(i)).append("\" >");
                     else
                         sb.append(HTMLformatter.createMenu(relation + "--" + Integer.toString(i),"", fillers, ""));
                 }
-                sb.append("</td><td><input type=\"checkbox\" name=\"checkbox-" + relation +
-                        "\" value=\"checkbox-" + relation + "\" /></td></tr>\n");
+                sb.append("</td><td><input type=\"checkbox\" name=\"checkbox-").append(relation).append("\" value=\"checkbox-").append(relation).append("\" /></td></tr>\n");
             }
         }
         sb.append("</table>\n");
@@ -296,36 +314,35 @@ public class EditGUI {
     public static String genClassPage(KB kb, String term, String kbHref) {
 
         initOnce();
-        StringBuffer sb = new StringBuffer();
-        HashMap<String,ArrayList<ArrayList<String>>> instList = EditGUI.genClassList(kb,term);
-        ArrayList<String> parents = genAllParentList(kb,term);
+        StringBuilder sb = new StringBuilder();
+        Map<String,List<List<String>>> instList = EditGUI.genClassList(kb,term);
+        List<String> parents = genAllParentList(kb,term);
 
         // show the instance and its class
-        sb.append("Class relations for: <font size=+3><a href=\"" + kbHref + term + "\">" + term + "</a></font>:");
+        sb.append("Class relations for: <font size=+3><a href=\"").append(kbHref).append(term).append("\">").append(term).append("</a></font>:");
+        String parent;
         for (int i = 0; i < parents.size(); i++) {
-            String parent = parents.get(i);
-            sb.append("<a href=\"" + kbHref + parent + "\">" + parent + "</a>,");
+            parent = parents.get(i);
+            sb.append("<a href=\"").append(kbHref).append(parent).append("\">").append(parent).append("</a>,");
         }
         sb.append("<P>\n");
-
         sb.append("<table>\n");
         sb.append("<tr><td><b>relation</td><td>arguments</b></td><td><b>assert?</b></td></tr>\n");
         // get relevant relations and their argument types
-        Iterator it = instList.keySet().iterator();
-        while (it.hasNext()) {
-            String relation = (String) it.next();
+        List<List<String>> arguments;
+        List<String> fillers;
+        for (String relation : instList.keySet()) {
             if (allowedTerms.size() < 1 || allowedTerms.contains(relation)) {
-                sb.append("<tr><td><a href=\"" + kbHref + relation + "\">" + relation + "</a>:</td><td>");
-                ArrayList<ArrayList<String>> arguments = instList.get(relation);
+                sb.append("<tr><td><a href=\"").append(kbHref).append(relation).append("\">").append(relation).append("</a>:</td><td>");
+                arguments = instList.get(relation);
                 for (int i = 0; i < arguments.size(); i++) {
-                    ArrayList<String> fillers = arguments.get(i);
+                    fillers = arguments.get(i);
                     if (fillers.size() < 1)
-                        sb.append("<input type=\"text\" name=\"" + relation + "--" + Integer.toString(i) + "\" >");
+                        sb.append("<input type=\"text\" name=\"").append(relation).append("--").append(Integer.toString(i)).append("\" >");
                     else
                         sb.append(HTMLformatter.createMenu(relation + "--" + Integer.toString(i),"", fillers, ""));
                 }
-                sb.append("</td><td><input type=\"checkbox\" name=\"checkbox-" + relation +
-                        "\" value=\"checkbox-" + relation + "\" /></td></tr>\n");
+                sb.append("</td><td><input type=\"checkbox\" name=\"checkbox-").append(relation).append("\" value=\"checkbox-").append(relation).append("\" /></td></tr>\n");
             }
         }
         sb.append("</table>\n");
@@ -338,25 +355,27 @@ public class EditGUI {
      * @return a String status message that includes a hyperlinked presentation of each
      * formula that is successfully asserted.
      */
-    public static String assertFacts(KB kb, TreeMap<String, ArrayList<String>> cbset, String kbHref) {
+    public static String assertFacts(KB kb, Map<String, List<String>> cbset, String kbHref) {
 
         System.out.println("INFO in EditGUI.assertFacts(): cbset: "+ cbset);
-        StringBuffer status = new StringBuffer();
-        Iterator it = cbset.keySet().iterator();
-        while (it.hasNext()) {
-            String rel = (String) it.next();
-            StringBuffer sb = new StringBuffer();
-            sb.append("(" + rel);
-            ArrayList<String> al = cbset.get(rel);
+        StringBuilder status = new StringBuilder();
+        StringBuilder sb;
+        List<String> al;
+        String val;
+        Formula f;
+        for (String rel : cbset.keySet()) {
+            sb = new StringBuilder();
+            sb.append("(").append(rel);
+            al = cbset.get(rel);
             for (int i = 0; i < al.size(); i++) {
-                String val = al.get(i);
-                sb.append(" " + val);
+                val = al.get(i);
+                sb.append(" ").append(val);
             }
             sb.append(")");
-            Formula f = new Formula();
+            f = new Formula();
             f.read(sb.toString());
-            status.append(f.htmlFormat(kbHref) + "<P>\n");
-            status.append(kb.tell(sb.toString())  + "<P>\n");
+            status.append(f.htmlFormat(kbHref)).append("<P>\n");
+            status.append(kb.tell(sb.toString())).append("<P>\n");
         }
         return status.toString();
     }
@@ -369,9 +388,9 @@ public class EditGUI {
         try {
             KBmanager.getMgr().initializeOnce();
             WordNet.initOnce();
-        } 
+        }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         System.out.println(genInstPage(kb,"UnitedStates",""));
