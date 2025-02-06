@@ -133,30 +133,37 @@ public class SUMOformulaToTPTPformula {
         char ch1 = ((st.length() > 1)
                     ? st.charAt(1)
                     : 'x');
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here1: ");
         if (ch0 == '?' || ch0 == '@')
             return(Formula.termVariablePrefix + st.substring(1).replace('-','_'));
-
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here2: ");
         //----Translate special predicates
         if (lang.equals("tff")) {
+            if (Formula.isInequality(st) && !hasArguments)
+                return Formula.termSymbolPrefix + st + Formula.termMentionSuffix;
             translateIndex = kifPredicates.indexOf(st);
             if (translateIndex != -1)
                 return (tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         }
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here3: ");
         //----Translate special constants
         translateIndex = kifConstants.indexOf(st);
         if (translateIndex != -1)
             return(tptpConstants.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here4: ");
         //----Translate special functions
         if (lang.equals("tff")) {
             translateIndex = kifFunctions.indexOf(st);
             if (translateIndex != -1)
                 return (tptpFunctions.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
         }
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here5: ");
         //----Translate operators
         translateIndex = kifOps.indexOf(st);
         if (translateIndex != -1 && hasArguments) {
             return (tptpOps.get(translateIndex));
         }
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here6: ");
         //----Do nothing to numbers
         if (type == StreamTokenizer.TT_NUMBER ||
             (st != null && (Character.isDigit(ch0) ||
@@ -164,15 +171,22 @@ public class SUMOformulaToTPTPformula {
             return(st);
         }
         String term = st;
-
+        if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here7: ");
         if (!hasArguments) {
-            if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
-                   || term.endsWith("Fn")
-                     || KB.isRelationInAnyKB(term)) {
-                term += mentionSuffix;
+            if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): no arguments: " + term);
+            if (!Formula.isInequality(term)) {
+                if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
+                        || term.endsWith("Fn")
+                        || KB.isRelationInAnyKB(term)) {
+                    term += mentionSuffix;
+                }
             }
+            else {
+                return (Formula.termSymbolPrefix + st.substring(1).replace('-','_'));
+            }
+
         }
-        if (kifOps.contains(term))
+        if (kifOps.contains(term) && hasArguments)
             return(term);
         else
             return(Formula.termSymbolPrefix + term);

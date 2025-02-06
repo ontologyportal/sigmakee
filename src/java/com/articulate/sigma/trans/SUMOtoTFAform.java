@@ -824,8 +824,25 @@ public class SUMOtoTFAform {
             comparator = "$lesseq(";
         else if (op.startsWith("lessThan"))
             comparator = "$less(";
-        result = comparator + lhsResult + "," + rhsResult + ")";
+        result = "(" + comparator + lhsResult + "," + rhsResult + "))";
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
+        return result;
+    }
+
+    /** *************************************************************
+     * Get just the bare SUMO term without prefixes or suffixes
+     */
+    public static String getBareTerm(String s) {
+
+        String result = s;
+        if (result.startsWith(Formula.termSymbolPrefix))
+            result = result.substring(3);
+        Pattern p = Pattern.compile("^(.+)__.*");
+        Matcher m = p.matcher(result);
+        while (m.lookingAt()) {
+            result = m.group(1);
+            m = p.matcher(result);
+        }
         return result;
     }
 
@@ -1161,10 +1178,14 @@ public class SUMOtoTFAform {
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             String promotion = numTypePromotion(f,parentType);
+            String result = null;
+            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
             if (promotion != null)
-                return promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
+                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
             else
-                return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+                result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
+            if (debug) System.out.println("SUMOtoTFAform.processRecurse(): result: " + result);
+            return result;
         }
         Formula car = f.carAsFormula();
         String op = car.getFormula();
@@ -2395,7 +2416,8 @@ public class SUMOtoTFAform {
         if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
             return "";
         Formula f = new Formula(s);
-        return process(f,query);
+        String res = process(f,query);
+        return res;
     }
 
     /** *************************************************************
@@ -2866,10 +2888,18 @@ public class SUMOtoTFAform {
             }
             else if (args != null && args.length > 1 && args[0].equals("-f")) {
                 debug = true;
+                SUMOformulaToTPTPformula.debug = true;
                 Formula f = new Formula(args[1]);
                 System.out.println("in TFA: " + process(f,false));
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
+                String bare = getBareTerm("s__refers__1En2In");
+                System.out.println(bare);
+                KB kb = KBmanager.getMgr().getKB("SUMO");
+                System.out.println(kb.isRelation(bare));
+                bare = getBareTerm("refers__1En2In");
+                System.out.println(bare);
+                System.out.println(kb.isRelation(bare));
                 /**
                  if (debug) System.out.println("SUMOtoTFAform.main(): contains ListFn__1Fn: " + kb.terms.contains("ListFn__1Fn"));
                  String kbName = KBmanager.getMgr().getPref("sumokbname");
@@ -2890,7 +2920,7 @@ public class SUMOtoTFAform {
                 System.out.println(numericVars);
                  **/
                 //test7();
-                testCourse();
+                //testCourse();
             }
             else
                 showHelp();

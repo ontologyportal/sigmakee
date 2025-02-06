@@ -2567,7 +2567,7 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean isTrueFalse(String term) {
 
-        return (!term.isEmpty() && (term.equals("True") || term.equals("False")));
+        return (!term.isEmpty() && (term.equals("true") || term.equals("false")));
     }
 
     /** ***************************************************************
@@ -2610,6 +2610,16 @@ public class Formula implements Comparable, Serializable {
     public static boolean isComparisonOperator(String term) {
 
         return (!StringUtil.emptyString(term) && COMPARISON_OPERATORS.contains(term));
+    }
+
+    /** ***************************************************************
+     * Returns true if term is a SUO-KIF inequality, else returns false.
+     *
+     * @param term A String.
+     */
+    public static boolean isInequality(String term) {
+
+        return (!StringUtil.emptyString(term) && INEQUALITIES.contains(term));
     }
 
     /** ***************************************************************

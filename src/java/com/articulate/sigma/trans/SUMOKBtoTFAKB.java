@@ -40,6 +40,8 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static final String TFF_RAT = "$rat";
     public static final String TFF_ENTITY = "$i";
 
+    public HashSet<String> sortLabels = new HashSet<>();
+
     /** *************************************************************
      */
     public void initOnce() {
@@ -218,8 +220,39 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeSort(String t, PrintWriter pw) {
 
-        String output = "tff(" + translateName(t) + "_sig,type,s__" + t +
-                " : $i  ).";
+        String label;
+        label = translateName(t) + "_sig";
+        pw.println("% writeSort(): term: " + t);
+        String bareTerm = SUMOtoTFAform.getBareTerm(t);
+        pw.println("% bare term: " + bareTerm);
+        if (sortLabels.contains(label)) {
+            pw.println("% duplicate label " + label + " for " + t);
+            return;
+        }
+        else {
+            pw.println("% add label (writeSort) " + label);
+            sortLabels.add(label);
+        }
+        String output;
+        if (Formula.isInequality(bareTerm))
+            t = translateName(t);
+        if (!t.startsWith(Formula.termSymbolPrefix))
+            t = Formula.termSymbolPrefix + t;
+        output = "tff(" + label + ",type," + t;
+        //if (Formula.isLogicalOperator(bareTerm) ||
+        if (kb.isRelation(bareTerm) ||
+                bareTerm.equals("equal")) {
+          //  ||
+        //        (kb.isRelation(bareTerm) && !Formula.isMathFunction(bareTerm))) {
+//                       && !Formula.isInequality(bareTerm))) {
+            pw.println("% logop: " + Formula.isLogicalOperator(bareTerm));
+            pw.println("% is relation: " + kb.isRelation(bareTerm));
+            pw.println("% is inequality: " + Formula.isInequality(bareTerm));
+            pw.println("% is math: " + Formula.isMathFunction(bareTerm));
+            if (!output.endsWith(Formula.termMentionSuffix))
+                output = output + Formula.termMentionSuffix;
+        }
+        output = output + " : $i  ).";
         pw.println(output);
     }
 
@@ -242,11 +275,16 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
      */
     public void writeRelationSort(String t, PrintWriter pw) {
 
-        if (debug) System.out.println("SUMOKBtoTFAKB.writeRelationSort(): " + t);
+        pw.println("% SUMOKBtoTFAKB.writeRelationSort(): " + t);
         if (t.endsWith("Fn") != kb.isFunction(t))
             System.out.println("ERROR in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
-        if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t))
+        if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t)  || Formula.isComparisonOperator(t)) {
+            String label = translateName(t);
+            String output = "tff(" + label + ",type," + label +
+                    " : $i ).";
+            pw.println(output);
             return;
+        }
         List<String> sig = kb.kbCache.signatures.get(t);
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
@@ -274,6 +312,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (sigBuf.length() == 0) {
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): " + t);
             pw.println("% Error in SUMOKBtoTFAKB.writeRelationSort(): signature: " + sig);
+            String label = translateName(t);
+            String output = "tff(" + label + ",type," + label +
+                    " : $i ).";
+            pw.println(output);
             pw.flush();
             return;
             //Thread.dumpStack();
@@ -282,17 +324,32 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String relname = translateName(t);
         if (relname.endsWith(Formula.termMentionSuffix))
             relname = relname.substring(0,relname.length()-3);
+        String range = sig.get(0);
+        String label = translateName(t);
+        if (label.endsWith(Formula.termMentionSuffix))
+            label = label.substring(0,label.length()-2);
+        label = label + "_sig_rel";
+        if (sortLabels.contains(label)) {
+            pw.println("% duplicate label " + label + " for " + relname);
+            return;
+        }
+        else {
+            pw.println("% add label (relation sort) " + label);
+            sortLabels.add(label);
+        }
         if (kb.isFunction(t)) {
-            String range = sig.get(0);
-            String output = "tff(" + translateName(t) + "_sig,type," + relname +
+            String output = "tff(" + label + ",type," + relname +
                     " : ( " + sigStr + " ) > " + translateSort(kb,range) + " ).";
             pw.println(output);
         }
         else {
-            String output = "tff(" + StringUtil.initialLowerCase(t) + "_sig,type," + relname +
+            String output = "tff(" + label + ",type," + relname +
                     " : ( " + sigStr + " ) > $o ).";
             pw.println(output);
         }
+        String output = "tff(" + label + Formula.termMentionSuffix + ",type," + relname + Formula.termMentionSuffix +
+                " : $i ).";
+        pw.println(output);
     }
 
     /** *************************************************************
@@ -559,16 +616,18 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         handleListFn(toExtend);
         String fnSuffix;
         for (String t : kb.getTerms()) {
+            String bareTerm = SUMOtoTFAform.getBareTerm(t);
             pw.println("% SUMOKBtoTFAKB.writeSorts(): " + t);
-            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): " + t);
+            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): t: " + t);
+            if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): bareTerm: " + bareTerm);
             if (debug) System.out.println("kb.isRelation(t) " + kb.isRelation(t));
             if (debug) System.out.println("!alreadyExtended(t): " + !alreadyExtended(t));
             if (debug) System.out.println("!Formula.isComparisonOperator(t)): " + !Formula.isComparisonOperator(t));
             if (debug) System.out.println("!Formula.isMathFunction(t)): " + !Formula.isMathFunction(t));
             if (!Character.isLetter(t.charAt(0)) || Formula.isTrueFalse(t))
                 continue;
-            if (kb.isFunction(t)) {
-                if (Formula.isLogicalOperator(t) || t.equals("equal") ) {
+            if (kb.isFunction(bareTerm)) {
+                if (Formula.isLogicalOperator(bareTerm) || t.equals("equal") ) {
                     continue;
                 }
                 else {
@@ -577,9 +636,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                         processRelationSort(toExtend, t);
                 }
             }
-            else if (kb.isRelation(t) && !alreadyExtended(t) && !t.equals("ListFn")
-                    && !Formula.isComparisonOperator(t) && !Formula.isMathFunction(t)) {
-                if (hasNumericSuperArg(t) || listOperator(t)) {
+            else if (kb.isRelation(bareTerm) && !alreadyExtended(t) && !bareTerm.equals("ListFn")
+                    && !Formula.isComparisonOperator(bareTerm) && !Formula.isMathFunction(bareTerm)) {
+                if (hasNumericSuperArg(bareTerm) || listOperator(bareTerm)) {
                     writeRelationSort(t, pw);
                     processRelationSort(toExtend, t);
                 }
@@ -591,10 +650,12 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         }
         Set<String> vals;
         String sep, newTerm;
+        pw.println("% SUMOKBtoTFAKB.writeSorts(): starting on toExtend sorts");
         for (String k : toExtend.keySet()) {
-            vals = toExtend.get(k);
+            String bareTerm = SUMOtoTFAform.getBareTerm(k);
+            vals = toExtend.get(bareTerm);
             fnSuffix = "";
-            if (kb.isFunction(k) || k.endsWith("Fn"))  // variable arity functions with numerical suffixes not in kb yet
+            if (kb.isFunction(bareTerm) || bareTerm.endsWith("Fn"))  // variable arity functions with numerical suffixes not in kb yet
                 fnSuffix = "Fn";
             for (String e : vals) {
                 kb.kbCache.extendInstance(k, e + fnSuffix);
