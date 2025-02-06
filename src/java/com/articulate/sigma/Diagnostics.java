@@ -1,13 +1,13 @@
 package com.articulate.sigma;
 
-/** This code is copyright Articulate Software (c) 2003.  
+/** This code is copyright Articulate Software (c) 2003.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
@@ -33,26 +33,26 @@ public class Diagnostics {
     private static int resultLimit = 100;
 
     /** *****************************************************************
-     * Return a list of terms (for a given argument position) that do not 
+     * Return a list of terms (for a given argument position) that do not
      * have a specified relation.
      * @param kb the knowledge base
      * @param rel the relation name
      * @param argnum the argument position of the term
      * @param letter the first letter of the term name
      */
-    public static ArrayList<String> termsWithoutRelation(KB kb, String rel, int argnum, 
+    public static ArrayList<String> termsWithoutRelation(KB kb, String rel, int argnum,
                                                          char letter) {
 
         ArrayList<String> result = new ArrayList<String>();
         Iterator<String> it = kb.getTerms().iterator();
         while (it.hasNext()) {
-            String term = it.next();                
+            String term = it.next();
             if (LOG_OPS.contains(term) || StringUtil.isNumeric(term))  // Exclude the logical operators and numbers
-                continue;                
-        	ArrayList<Formula> forms = kb.ask("arg",argnum,term);
+                continue;
+        	List<Formula> forms = kb.ask("arg",argnum,term);
             if (forms == null || forms.isEmpty()) {
-                if (letter < 'A' || term.charAt(0) == letter) 
-                    result.add(term);                
+                if (letter < 'A' || term.charAt(0) == letter)
+                    result.add(term);
             }
             else {
                 boolean found = false;
@@ -70,8 +70,8 @@ public class Diagnostics {
                 		System.out.println("Error in Diagnostics.termsWithoutRelation(): null formula for: " + term);
                 }
                 if (!found) {
-                    if (letter < 'A' || term.charAt(0) == letter) 
-                        result.add(term);                    
+                    if (letter < 'A' || term.charAt(0) == letter)
+                        result.add(term);
                 }
             }
             if (resultLimit > 0 && result.size() > resultLimit) {
@@ -87,7 +87,7 @@ public class Diagnostics {
      */
     public static ArrayList termsWithoutDoc(KB kb) {
 
-        System.out.println("INFO in Diagnostics.termsWithoutDoc(): "); 
+        System.out.println("INFO in Diagnostics.termsWithoutDoc(): ");
         return termsWithoutRelation(kb,"documentation",1,' ');
     }
 
@@ -95,15 +95,15 @@ public class Diagnostics {
      * Return a list of terms that have more than one documentation string.
      */
     public static ArrayList<String> termsWithMultipleDoc(KB kb) {
- 
+
         Set<String> result = new HashSet();
         Set<String> withDoc = new HashSet();
-        ArrayList<Formula> forms = kb.ask("arg", 0, "documentation");
+        List<Formula> forms = kb.ask("arg", 0, "documentation");
         if (!forms.isEmpty()) {
             boolean isNaN = true;
             Iterator<Formula> it = forms.iterator();
             while (it.hasNext()) {
-            	Formula f = it.next();                
+            	Formula f = it.next();
                 String term = f.getStringArgument(1);   // Append term and language to make a key.
                 isNaN = true;
                 try {
@@ -114,9 +114,9 @@ public class Diagnostics {
                 }
                 if (isNaN) {
                     String key = (term + f.getArgument(2));
-                    if (withDoc.contains(key)) 
-                        result.add(term);                
-                    else 
+                    if (withDoc.contains(key))
+                        result.add(term);
+                    else
                         withDoc.add(key);
                 }
                 if (resultLimit > 0 && result.size() > resultLimit) {
@@ -132,17 +132,17 @@ public class Diagnostics {
      * Returns true if term has an explicitly stated parent, or a
      * parent can be inferred from the transitive relation caches,
      * else returns false.
-     
+
     private static boolean hasParent(KB kb, String term) {
-        
+
         Iterator<String> it = preds.iterator();
         while (it.hasNext()) {
         	String pred = it.next();
         	HashMap<String,HashSet<String>> predvals = kb.kbCache.parents.get(term);
             if (predvals != null) {
                 HashSet<String> cached = predvals.get(term);
-                if ((cached != null) && !cached.isEmpty()) 
-                    return true;                
+                if ((cached != null) && !cached.isEmpty())
+                    return true;
             }
         }
         return false;
@@ -165,7 +165,7 @@ public class Diagnostics {
      */
     public static ArrayList<String> termsNotBelowEntity(KB kb) {
 
-        System.out.println("INFO in Diagnostics.termsNotBelowEntity(): "); 
+        System.out.println("INFO in Diagnostics.termsNotBelowEntity(): ");
         ArrayList<String> result = new ArrayList<String>();
         int count = 0;
         Iterator<String> it = kb.getTerms().iterator();
@@ -174,12 +174,12 @@ public class Diagnostics {
             if (!termNotBelowEntity(term,kb))
                 continue;
             else {
-                    result.add(term); 
+                    result.add(term);
                     count++;
             }
             if (resultLimit > 0 && count > resultLimit)
-                result.add("limited to 100 results");            
-        }        
+                result.add("limited to 100 results");
+        }
         return result;
     }
 
@@ -189,7 +189,7 @@ public class Diagnostics {
     public static ArrayList<String> childrenOfDisjointParents(KB kb) {
 
         ArrayList<String> result = new ArrayList<String>();
-        
+
         /*
         int count = 0;
         Iterator<String> it = kb.getTerms().iterator();
@@ -244,17 +244,17 @@ public class Diagnostics {
      * instance of B, C, or D.
      */
     public static ArrayList<String> membersNotInAnyPartitionClass(KB kb) {
-        
+
         ArrayList<String> result = new ArrayList<String>();
         try {
             TreeSet<String> reduce = new TreeSet<String>();
             // Use all partition statements and all
             // exhaustiveDecomposition statements.
-            ArrayList<Formula> forms = kb.ask("arg",0,"partition");
-            if (forms == null) 
+            List<Formula> forms = kb.ask("arg",0,"partition");
+            if (forms == null)
                 forms = new ArrayList<Formula>();
-            ArrayList<Formula> forms2 = kb.ask("arg",0,"exhaustiveDecomposition");
-            if (forms2 != null) 
+            List<Formula> forms2 = kb.ask("arg",0,"exhaustiveDecomposition");
+            if (forms2 != null)
                 forms.addAll(forms2);
             boolean go = true;
             Iterator<Formula> it = forms.iterator();
@@ -271,7 +271,7 @@ public class Diagnostics {
                     while (go && it2.hasNext()) {
                         isInstanceSubsumed = false;
                         isNaN = true;
-                        inst = it2.next();                        
+                        inst = it2.next();
                         try {   // For diagnostics, try to avoid treating numbers as bonafide terms.
                             double dval = Double.parseDouble(inst);
                             isNaN = Double.isNaN(dval);
@@ -287,19 +287,19 @@ public class Diagnostics {
                                     break;
                                 }
                             }
-                            if (isInstanceSubsumed) 
-                                continue;                            
-                            else 
-                                reduce.add(inst);                            
+                            if (isInstanceSubsumed)
+                                continue;
+                            else
+                                reduce.add(inst);
                         }
                         if (resultLimit < 1 || reduce.size() > resultLimit)
-                            go = false;                        
+                            go = false;
                     }
                 }
             }
             result.addAll(reduce);
             if (resultLimit > 0 && result.size() > resultLimit)
-                result.add("limited to 100 results");            
+                result.add("limited to 100 results");
         }
         catch (Exception ex) {
             ex.printStackTrace();
@@ -314,7 +314,7 @@ public class Diagnostics {
 
         ArrayList<String> result = new ArrayList<>();
         for (String rel : kb.kbCache.relations) {
-            ArrayList<Formula> forms = kb.askWithRestriction(0,"format",2,rel);
+            List<Formula> forms = kb.askWithRestriction(0,"format",2,rel);
             if (forms == null || forms.size() == 0)
                 result.add(rel);
         }
@@ -334,8 +334,8 @@ public class Diagnostics {
         catch (Exception nex) {
         }
         if (isNaN) {
-            ArrayList<Formula> forms = kb.ask("ant",0,term);
-            ArrayList<Formula> forms2 = kb.ask("cons",0,term);
+            List<Formula> forms = kb.ask("ant",0,term);
+            List<Formula> forms2 = kb.ask("cons",0,term);
             if (((forms == null) || forms.isEmpty())
                     && ((forms2 == null) || forms2.isEmpty()))
                 return true;
@@ -453,7 +453,7 @@ public class Diagnostics {
                 Formula restForm = new Formula();
                 restForm.read(rest);
                 restForm.read(restForm.cdr());
-                if (quantifierNotInStatement(restForm)) 
+                if (quantifierNotInStatement(restForm))
                     return true;
             }
             if (qList != null) {
@@ -502,15 +502,15 @@ public class Diagnostics {
 
         ArrayList<Formula> result = new ArrayList<Formula>();
 		Iterator<Formula> it = kb.formulaMap.values().iterator();
-		while (it.hasNext()) { 
+		while (it.hasNext()) {
 			Formula form = (Formula) it.next();
 			if ((form.getFormula().indexOf("forall") != -1)
 					|| (form.getFormula().indexOf("exists") != -1)) {
-				if (quantifierNotInStatement(form)) 
-					result.add(form);					
+				if (quantifierNotInStatement(form))
+					result.add(form);
 			}
             if (resultLimit > 0 && result.size() > resultLimit)
-				return result;				
+				return result;
 		}
         return result;
     }
@@ -526,7 +526,7 @@ public class Diagnostics {
             al = new ArrayList();
             m.put(key,al);
         }
-        if (!al.contains(value)) 
+        if (!al.contains(value))
             al.add(value);
     }
 
@@ -549,13 +549,13 @@ public class Diagnostics {
      * their appearance in definitionalRelations
      */
     private static void termLinks(KB kb, TreeMap termsUsed, TreeMap termsDefined) {
-        
+
         List definitionalRelations = Arrays.asList("instance", "subclass",
                 "subAttribute", "domain", "domainSubclass", "range",
                 "rangeSubclass", "documentation", "subrelation");
 
         for (String term : kb.getTerms()) {
-            ArrayList<Formula> forms = kb.ask("arg",1,term);
+            List<Formula> forms = kb.ask("arg",1,term);
             // Get every formula with the term as arg 1
             // Only definitional uses are in the arg 1 position
             if (forms != null && forms.size() > 0) {
@@ -569,7 +569,7 @@ public class Diagnostics {
                 }
             }
             forms = kb.ask("arg",2,term);
-            ArrayList<Formula> newform;
+            List<Formula> newform;
             for (int i = 3; i < 7; i++) {
                 newform = kb.ask("arg",i,term);
                 if (newform != null)
@@ -597,7 +597,7 @@ public class Diagnostics {
 
     /** *****************************************************************
      */
-    private static void fileLinks(KB kb, TreeMap fileDefines, TreeMap fileUses, 
+    private static void fileLinks(KB kb, TreeMap fileDefines, TreeMap fileUses,
                                   TreeMap termsUsed, TreeMap termsDefined) {
 
         Iterator it = termsUsed.keySet().iterator();
@@ -642,7 +642,7 @@ public class Diagnostics {
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is defined (meaning appearance in an
         // instance, subclass, domain, subrelation, or documentation statement).
-        // 
+        //
         TreeMap<String,ArrayList<String>> termsDefined = new TreeMap();
 
         // A map of file names and ArrayList values listing term names defined
@@ -670,7 +670,7 @@ public class Diagnostics {
                     String fileDepend = null;
                     for (int j = 0; j < fileDependencies.size(); j++) {
                         fileDepend = (String) fileDependencies.get(j);
-                        if (!fileDepend.equals(fileUsesName)) 
+                        if (!fileDepend.equals(fileUsesName))
                             addToDoubleMapList(fileDepends,fileUsesName,fileDepend,term);
                     }
                 }
@@ -692,9 +692,9 @@ public class Diagnostics {
         TreeMap tm = (TreeMap) depend.get(f2);
         if (tm != null) {
             ArrayList al = (ArrayList) tm.get(f);
-            if (al != null) 
-                return al.size();            
-        } 
+            if (al != null)
+                return al.size();
+        }
 		return 0;
     }
 
@@ -722,7 +722,7 @@ public class Diagnostics {
             TreeMap tm = (TreeMap) fileDepends.get(f);
             Iterator it2 = tm.keySet().iterator();
             while (it2.hasNext()) {
-                String f2 = (String) it2.next();                
+                String f2 = (String) it2.next();
                 ArrayList al = (ArrayList) tm.get(f2);
 
 				if (al != null && al.size() < 40) {
@@ -781,7 +781,7 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
-     * Make an empty KB for use in Diagnostics. 
+     * Make an empty KB for use in Diagnostics.
      */
     private static KB makeEmptyKB(String kbName) {
 
@@ -792,7 +792,7 @@ public class Diagnostics {
         File dir = new File( kbDir );
         File emptyCFile = new File( dir, "emptyConstituent.txt" );
         String emptyCFilename = emptyCFile.getAbsolutePath();
-        FileWriter fw = null; 
+        FileWriter fw = null;
         PrintWriter pw = null;
         KBmanager.getMgr().addKB(kbName);
         KB empty = KBmanager.getMgr().getKB(kbName);
@@ -800,7 +800,7 @@ public class Diagnostics {
 
         try { // Fails elsewhere if no constituents, or empty constituent, thus...
             fw = new FileWriter( emptyCFile );
-            pw = new PrintWriter(fw);   
+            pw = new PrintWriter(fw);
             pw.println("(instance instance BinaryPredicate)\n");
             if (pw != null) pw.close();
             if (fw != null) fw.close();
@@ -814,7 +814,7 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
-     * Returns "" if answer is OK, otherwise reports it. 
+     * Returns "" if answer is OK, otherwise reports it.
      */
     private static String reportAnswer(KB kb, String proof, Formula query, String pQuery, String testType) {
 
@@ -840,7 +840,7 @@ public class Diagnostics {
             html = html.append(result);
             return html.toString();
         }
-            
+
         BasicXMLparser res = new BasicXMLparser(proof);
         ProofProcessor pp = new ProofProcessor(res.elements);
         String ansstr = null;
@@ -858,7 +858,7 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
-     * Iterating through all formulas, return a proof of an inconsistent 
+     * Iterating through all formulas, return a proof of an inconsistent
      * or redundant one, if such a thing exists.
      */
     public static String kbConsistencyCheck(KB kb) {
@@ -930,7 +930,7 @@ public class Diagnostics {
                 if (KButilities.isCacheFile(fname) || alreadyCounted.contains(t))
                     continue;
                 alreadyCounted.add(t);
-                ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
+                List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
                 HashSet<String> tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
                     String str = f.getStringArgument(3);
@@ -1000,7 +1000,7 @@ public class Diagnostics {
                 alreadyCounted.add(term);
                 if (debug) if (term.equals("AppleComputerCorporation"))
                     System.out.println("termDefsByGivenFile(): added to already counted (2): " + term);
-                ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+                List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
                 HashSet<String> tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
                     String str = f.getStringArgument(3);
@@ -1024,7 +1024,7 @@ public class Diagnostics {
     public static void addLabels(KB kb, HashSet<String> file) {
 
         for (String term : file) {
-            ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+            List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
             HashSet<String> tformstrs = new HashSet<>();
             for (Formula f : tforms) {
                 String str = f.getStringArgument(3);
@@ -1076,7 +1076,7 @@ public class Diagnostics {
         big.addAll(FileUtil.readLines(f2,false));
         big.removeAll(small);
         for (String term : big) {
-            ArrayList<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+            List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
             HashSet<String> tformstrs = new HashSet<>();
             for (Formula f : tforms) {
                 String str = f.getStringArgument(3);
