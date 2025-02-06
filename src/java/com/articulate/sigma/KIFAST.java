@@ -99,7 +99,7 @@ public class KIFAST {
         String errStr;
         int parenLevel = 0;
         String errStart = "Parsing error in " + filename;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 //        FormulaAST fast = new FormulaAST();
         System.out.println("parseBody: " + s);
         Reader r = new StringReader(s);
@@ -128,7 +128,7 @@ public class KIFAST {
                                 System.out.println(warning);
                             }
                             warningSet.addAll(parseBody(sb.toString(),startLine,endLine));  // <--- call parseBody()
-                            sb = new StringBuffer();
+                            sb = new StringBuilder();
                         }
                         else if (parenLevel < 0) {
                             errStr = (errStart + ": Extra closing parenthesis found near line: " + startLine);
@@ -170,7 +170,7 @@ public class KIFAST {
      */
     public TreeSet<String> parseNew(StreamTokenizer_s st) {
 
-        String errStr = null;
+        String errStr;
         TreeSet<String> warnings = new TreeSet<>();
 //        char ch;
         boolean isEOL = false;
@@ -181,7 +181,7 @@ public class KIFAST {
         int parenLevel = 0;
         int duplicateCount = 0;
         String errStart = "Parsing error in " + filename;
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
 
         try {
             do {
@@ -228,7 +228,7 @@ public class KIFAST {
                             }
                             endLine = st.lineno() + totalLinesForComments;
                             warningSet.addAll(parseBody(sb.toString(),startLine,endLine));  // <--- call parseBody()
-                            sb = new StringBuffer();
+                            sb = new StringBuilder();
                         }
                         else if (parenLevel < 0) {
                             errStr = (errStart + ": Extra closing parenthesis found near line: " + startLine);
@@ -499,9 +499,9 @@ public class KIFAST {
     }
 
     /*****************************************************************
-     * Test method for this class.
+     * Test method for this class. TODO: Currently throws a stack overflow. 2/4/25 tdn
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         String exp = "(documentation foo \"(written by John Smith).\")" +
                 "(instance Foo Bar)\n" +
@@ -510,18 +510,19 @@ public class KIFAST {
                 "  (attribute ?X Mortal))";
         System.out.println(exp);
         KIFAST kif = new KIFAST();
-        Reader r = new StringReader(exp);
-        StreamTokenizer_s st = new StreamTokenizer_s(r);
-        KIF.setupStreamTokenizer(st);
-        kif.parseNew(st);
-        System.out.println(kif.formulaMap);
-        ArrayList<FormulaAST> al = new ArrayList<>();
-        al.addAll(kif.formulaMap.values());
-        FormulaAST f = al.get(0);
-        System.out.println(f);
-        f.read(f.cdr());
-        f.read(f.cdr());
-        System.out.println(f);
-        System.out.println(f.car());
+        try (Reader r = new StringReader(exp)) {
+            StreamTokenizer_s st = new StreamTokenizer_s(r);
+            KIF.setupStreamTokenizer(st);
+            kif.parseNew(st);
+            System.out.println(kif.formulaMap);
+            List<FormulaAST> al = new ArrayList<>();
+            al.addAll(kif.formulaMap.values());
+            FormulaAST f = al.get(0);
+            System.out.println(f);
+            f.read(f.cdr());
+            f.read(f.cdr());
+            System.out.println(f);
+            System.out.println(f.car());
+        }
     }
 }
