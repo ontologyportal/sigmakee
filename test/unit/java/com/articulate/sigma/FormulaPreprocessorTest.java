@@ -340,7 +340,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         //FormulaPreprocessor.debug = true;
-        ArrayList<Formula> actual = fp.replacePredVarsAndRowVars(f, kb, false);
+        List<Formula> actual = fp.replacePredVarsAndRowVars(f, kb, false);
         System.out.println("testInstantiatePredStmt4(): actual: " + actual);
         Set<Formula> expected = Sets.newHashSet();
         int expectedSize = 100;
