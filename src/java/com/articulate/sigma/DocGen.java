@@ -65,7 +65,7 @@ public class DocGen {
         try {
             int idx = getControlTokens().indexOf(token);
             if (idx > -1) {
-                bitValue = Double.valueOf(Math.pow(2.0d, 
+                bitValue = Double.valueOf(Math.pow(2.0d,
                                                    Integer.valueOf(idx).doubleValue())).intValue();
             }
         }
@@ -116,16 +116,16 @@ public class DocGen {
                 inst = new DocGen();
                 inst.setLineSeparator(StringUtil.getLineSeparator());
                 int idx = interned.indexOf("-");
-                KB kb = ((idx > -1) 
+                KB kb = ((idx > -1)
                          ? mgr.getKB(interned.substring(0, idx).trim())
                          : mgr.getKB(interned));
                 if (kb instanceof KB)
                     inst.setKB(kb);
                 String ontology = null;
-                if ((idx > 0) && (idx < (interned.length() - 1))) 
-                    ontology = interned.substring(idx + 1).trim();                
-                if (StringUtil.emptyString(ontology)) 
-                    ontology = inst.getOntology(kb);                
+                if ((idx > 0) && (idx < (interned.length() - 1)))
+                    ontology = interned.substring(idx + 1).trim();
+                if (StringUtil.emptyString(ontology))
+                    ontology = inst.getOntology(kb);
                 if (StringUtil.isNonEmptyString(ontology)) {
                     inst.setOntology(ontology);
                     inst.setDefaultNamespace(inst.getDefaultNamespace());
@@ -285,11 +285,11 @@ public class DocGen {
         try {
             String tkn = null;
             if (StringUtil.isNonEmptyString(ontology)) {
-                for (Iterator it = kb.getTermsViaAskWithRestriction(0, 
-                                                                    "docGenOutputFormat", 
-                                                                    1, 
+                for (Iterator it = kb.getTermsViaAskWithRestriction(0,
+                                                                    "docGenOutputFormat",
+                                                                    1,
                                                                     ontology,
-                                                                    2).iterator(); 
+                                                                    2).iterator();
                      it.hasNext();) {
                     tkn = StringUtil.removeEnclosingQuotes(it.next().toString().toLowerCase());
                     if (!tokens.contains(tkn)) tokens.add(tkn);
@@ -376,7 +376,7 @@ public class DocGen {
             if (StringUtil.emptyString(this.defaultPredicateNamespace)) {
                 KB kb = getKB();
                 String onto = getOntology();
-                String dpn = 
+                String dpn =
                     (StringUtil.isNonEmptyString(onto)
                      ? kb.getFirstTermViaAskWithRestriction(0,
                                                             "docGenDefaultPredicateNamespace",
@@ -458,7 +458,7 @@ public class DocGen {
             else {
                 Set<String> candidates = new HashSet<String>();
                 if (kb == null)
-                    kb = this.getKB();                
+                    kb = this.getKB();
                 Iterator it = null;
                 // First, we try to find any obvious instances of
                 // Ontology, using predicate subsumption to take
@@ -508,9 +508,9 @@ public class DocGen {
                         // candidates is not empty, we just grab a
                         // candidate and try it.
                         it = candidates.iterator();
-                        if (it.hasNext()) 
-                            onto = (String) it.next();                            
-                    }                    
+                        if (it.hasNext())
+                            onto = (String) it.next();
+                    }
                 }
                 if (StringUtil.isNonEmptyString(onto))
                     this.setOntology(onto);
@@ -550,7 +550,7 @@ public class DocGen {
     /** **************************************************************
      * Collects and returns the Set containing all known coded
      * identifiers in kb, including ISO code values stated to be such.
-     * 
+     *
      * @param kb The KB in which to gather terms defined as coded
      * identifiers
      *
@@ -643,7 +643,7 @@ public class DocGen {
      *
      * @param filename A String that is a base filename plus a
      * filename suffix
-     * 
+     *
      */
     public void setStyleSheet(String filename) {
         styleSheet = filename;
@@ -671,7 +671,7 @@ public class DocGen {
      *
      * @param filename A String that is a base filename plus a
      * filename suffix
-     * 
+     *
      */
     public void setDefaultImageFile(String filename) {
 
@@ -701,7 +701,7 @@ public class DocGen {
      * @param markup A String that includes the image file pathname
      * plus any additional markup required for proper display of the
      * image
-     * 
+     *
      */
     public void setDefaultImageFileMarkup(String markup) {
         defaultImageFileMarkup = markup;
@@ -727,7 +727,7 @@ public class DocGen {
      * which output files will be (are being) saved.
      *
      * @param pathname A canonical pathname String
-     * 
+     *
      */
     public void setOutputDirectoryPath(String pathname) {
         outputDirectoryPath = pathname;
@@ -751,7 +751,7 @@ public class DocGen {
      */
     protected Map stringReplacementMap = null;
     /** *************************************************************
-     * Sets the Map to be used for HTML character entity to ASCII 
+     * Sets the Map to be used for HTML character entity to ASCII
      * replacements.
      */
     public void setStringReplacementMap(Map keyValPairs) {
@@ -855,9 +855,9 @@ public class DocGen {
                 String ontology = getOntology();
                 Set idr = new TreeSet();
                 if ((kb != null) && StringUtil.isNonEmptyString(ontology)) {
-                    idr.addAll(kb.getTermsViaAskWithRestriction(0, 
-                                                                "docGenInhibitDisplayRelation", 
-                                                                1, 
+                    idr.addAll(kb.getTermsViaAskWithRestriction(0,
+                                                                "docGenInhibitDisplayRelation",
+                                                                1,
                                                                 ontology,
                                                                 2));
                 }
@@ -994,7 +994,7 @@ public class DocGen {
      * @param obj A File object representing a directory
      */
     public void setOutputParentDir(File obj) {
-        
+
         try {
             if (obj != null) {
                 if (!obj.exists() || !obj.isDirectory() || !obj.canWrite()) {
@@ -1006,8 +1006,8 @@ public class DocGen {
                         obj.mkdirs();
                     }
                 }
-                if (obj.isDirectory() && obj.canWrite()) 
-                    this.outputParentDir = obj;                
+                if (obj.isDirectory() && obj.canWrite())
+                    this.outputParentDir = obj;
                 else {
                     System.out.println("WARNING in DocGen.setOutputParentDir(" + obj + "):");
                     System.out.println("  Could not set outputParentDir");
@@ -1217,7 +1217,7 @@ public class DocGen {
                 PresentationNameComparator pnc = (PresentationNameComparator) obj;
                 KB eKB = getKB();
                 DocGen dg = getDocGen();
-                ans = ((dg != null) 
+                ans = ((dg != null)
                        && (pnc instanceof PresentationNameComparator)
                        && (pnc.getDocGen().equals(dg)));
                 if (ans) {
@@ -1226,15 +1226,15 @@ public class DocGen {
             }
             return ans;
         }
-        
+
         /** ***************************************************************
          * should never be called so throw an error.
-         */   
+         */
         public int hashCode() {
             assert false : "DocGen.hashCode not designed";
             return 0;
         }
-        
+
     } // end of PresentationNameComparator
 
     /** *************************************************************
@@ -1260,8 +1260,8 @@ public class DocGen {
             ex.printStackTrace();
         }
         System.out.println("EXIT DocGen.resortKbTerms(" + kb.name + ")");
-        System.out.println("    " 
-                           + kb.getTerms().size() 
+        System.out.println("    "
+                           + kb.getTerms().size()
                            + " KB terms sorted in "
                            + ((System.currentTimeMillis() - t1) / 1000.0)
                            + " seconds");
@@ -1276,7 +1276,7 @@ public class DocGen {
      *  that if "simplified" is false actual term names will be used
      *  instead of term formats or headwords and the interior map will
      *  have keys that are the same as their values.
-     * 
+     *
      *  Pictorially:
      *
      *      letter->    formattedTerm1->term11,term12...term1N
@@ -1293,7 +1293,7 @@ public class DocGen {
      *          is false actual term names will be used instead of
      *          term formats or headwords and the interior map will
      *          have keys that are the same as their values.
-     * 
+     *
      *          Pictorially:
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
@@ -1338,7 +1338,7 @@ public class DocGen {
      *          is false actual term names will be used instead of
      *          term formats or headwords and the interior map will
      *          have keys that are the same as their values.
-     * 
+     *
      *          Pictorially:
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
@@ -1348,7 +1348,7 @@ public class DocGen {
           long t1 = System.currentTimeMillis();
           System.out.println("ENTER DocGen.createAlphaList("
           + kb.name // + ", "
-          // + "[map with " + stringMap.size() + " entries]" 
+          // + "[map with " + stringMap.size() + " entries]"
           + ")");
         */
         try {
@@ -1369,15 +1369,15 @@ public class DocGen {
                                 formattedTerm = stripNamespacePrefix(kb, smterm);
                             }
                         }
-                        if (StringUtil.isNonEmptyString(formattedTerm)) {                
-                            String firstLetter = 
+                        if (StringUtil.isNonEmptyString(formattedTerm)) {
+                            String firstLetter =
                                 Character.toString(Character.toUpperCase(formattedTerm.charAt(0)));
                             Set alset = alphaList.keySet();
                             if ((alset != null) && alset.contains(firstLetter)) {
                                 TreeMap map = (TreeMap) alphaList.get(firstLetter);
                                 ArrayList al = (ArrayList) map.get(formattedTerm);
                                 if (al == null) {
-                                    al = new ArrayList();                    
+                                    al = new ArrayList();
                                     map.put(formattedTerm,al);
                                 }
                                 al.add(term);
@@ -1406,7 +1406,7 @@ public class DocGen {
         /*
           System.out.println("EXIT DocGen.createAlphaList("
           + kb.name // + ", "
-          // + "[map with " + stringMap.size() + " entries]" 
+          // + "[map with " + stringMap.size() + " entries]"
           + ")");
           System.out.println("  "
           + ((System.currentTimeMillis() - t1) / 1000.0)
@@ -1501,7 +1501,7 @@ public class DocGen {
                                                     "docGenTitleText",
                                                     "docGenFooterText");
             for (String pred : predicates) {
-                String val = 
+                String val =
                     kb.getFirstTermViaAskWithRestriction(0,
                                                          pred,
                                                          1,
@@ -1520,7 +1520,7 @@ public class DocGen {
                         setDefaultImageFileMarkup(val);
                     else if (pred.equals("docGenStyleSheet"))
                         setStyleSheet(val);
-                    else if (pred.equals("docGenTitleText") 
+                    else if (pred.equals("docGenTitleText")
                              && StringUtil.emptyString(getTitleText()))
                         setTitleText(val);
                     else if (pred.equals("docGenFooterText")
@@ -1540,21 +1540,21 @@ public class DocGen {
                         }
                         else if (ans && (dg != null)) {
                             KB dgkb = dg.getKB();
-                            String dgonto = 
+                            String dgonto =
                                 StringUtil.removeEnclosingQuotes(dg.getOntology());
-                            if ((dgkb != null) 
+                            if ((dgkb != null)
                                 && StringUtil.isNonEmptyString(dgonto)) {
                                 String nsd = StringUtil.getW3cNamespaceDelimiter();
                                 ans = (getClientOntologyNames().contains(dgonto)
                                        && term.matches("^\\w+" + nsd + ".+")
                                        && !StringUtil.isLocalTermReference(term));
                                 if (ans) {
-                                    String namespace = 
+                                    String namespace =
                                         dg.getTermNamespace(dgkb, term);
-                                    List ontoNamespaces = 
+                                    List ontoNamespaces =
                                         // dg.getOntologyNamespaces(dgkb, dgonto);
                                         dg.getNamespaces(dgkb, dgonto, false);
-                                    ans = 
+                                    ans =
                                         (ontoNamespaces.contains(namespace)
                                          || ontoNamespaces.contains(term));
                                 }
@@ -1601,14 +1601,14 @@ public class DocGen {
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    public String createCompositePage(KB kb, 
-                                      String kbHref, 
-                                      String term, 
-                                      TreeMap alphaList, 
-                                      int limit, 
+    public String createCompositePage(KB kb,
+                                      String kbHref,
+                                      String term,
+                                      TreeMap alphaList,
+                                      int limit,
                                       String language,
                                       String formatToken) {
-        /*             
+        /*
                        System.out.println("ENTER DocGen.createCompositePage("
                        + kb.name + ", "
                        + kbHref + ", "
@@ -1628,11 +1628,11 @@ public class DocGen {
                   else {
                 */
                 StringBuilder result = new StringBuilder();
-                if (StringUtil.isNonEmptyString(kbHref)) 
+                if (StringUtil.isNonEmptyString(kbHref))
                     result.append(generateDynamicTOCHeader(kbHref));
                 else
-                    result.append(generateTocHeader(kb, 
-                                                    alphaList, 
+                    result.append(generateTocHeader(kb,
+                                                    alphaList,
                                                     INDEX_FILE_NAME
                                                     ));
                 result.append("<table width=\"100%\">");
@@ -1670,11 +1670,11 @@ public class DocGen {
                 result.append(StringUtil.getLineSeparator());
                 result.append(createSynonyms(kb, kbHref, term, formatToken));
                 result.append(StringUtil.getLineSeparator());
-                ArrayList superComposites = findContainingComposites(kb, term); 
+                ArrayList superComposites = findContainingComposites(kb, term);
                 Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
                 StringBuilder sb1 = new StringBuilder();
                 sb1.append(createHasSameComponents(kb, kbHref, term, language));
-                if ((sb1.length() > 0) 
+                if ((sb1.length() > 0)
                     || !superComposites.isEmpty()
                     || hasSubComponents(kb, term)) {
                     result.append("<tr class=\"title_cell\">");
@@ -1708,14 +1708,14 @@ public class DocGen {
                         result.append(StringUtil.getLineSeparator());
                         result.append("</tr>");
                         result.append(StringUtil.getLineSeparator());
-                
+
                         ArrayList attrs = new ArrayList();
                         ArrayList elems = new ArrayList();
                         // If there are shared components, add them first.
-                        ArrayList accumulator = 
+                        ArrayList accumulator =
                             new ArrayList(getSyntacticExtensionTerms(kb, term, 2, false));
                         ArrayList sharesComponentsWith = new ArrayList();
-                    
+
                         // System.out.println("  term == " + term);
                         // System.out.println("  accumulator == " + accumulator);
                         while (!accumulator.isEmpty()) {
@@ -1733,16 +1733,16 @@ public class DocGen {
                                     nextElems.remove(0);
                                     elems.addAll(0, nextElems);
                                 }
-                                accumulator.addAll(getSyntacticExtensionTerms(kb, 
-                                                                              nextTerm, 
-                                                                              2, 
+                                accumulator.addAll(getSyntacticExtensionTerms(kb,
+                                                                              nextTerm,
+                                                                              2,
                                                                               false));
                                 // System.out.println("  nextTerm == " + nextTerm);
                                 // System.out.println("  accumulator == " + accumulator);
                             }
                         }
                         // Now add the components that pertain to only this
-                        // term.  
+                        // term.
                         ArrayList localPair = createCompositeRecurse(kb, term, false, 0);
                         // No need to show the composite itself.
                         ArrayList localAttrs = ((ArrayList) localPair.get(0));
@@ -1822,7 +1822,7 @@ public class DocGen {
                 result.append(generateHtmlFooter(""));
                 result.append("  </body>");
                 result.append(StringUtil.getLineSeparator());
-                result.append("</html>"); 
+                result.append("</html>");
                 result.append(StringUtil.getLineSeparator());
                 markup = result.toString();
                 // }
@@ -1831,7 +1831,7 @@ public class DocGen {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        /*              
+        /*
                         System.out.println("EXIT DocGen.createCompositePage("
                         + kb.name + ", "
                         + kbHref + ", "
@@ -1849,14 +1849,14 @@ public class DocGen {
      * Create an HTML page that lists information about a particular term,
      * with a limit on how many statements of each type should be
      * displayed.
-     * 
+     *
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.
      */
-    public String createPage(KB kb, 
-                             String kbHref, 
-                             String term, 
+    public String createPage(KB kb,
+                             String kbHref,
+                             String term,
                              TreeMap alphaList,
-                             int limit, 
+                             int limit,
                              String language,
                              String formatToken) {
 
@@ -1873,8 +1873,8 @@ public class DocGen {
                 result.append(generateDynamicTOCHeader(kbHref));
             }
             else {
-                result.append(generateTocHeader(kb, 
-                                                alphaList, 
+                result.append(generateTocHeader(kb,
+                                                alphaList,
                                                 INDEX_FILE_NAME
                                                 ));
             }
@@ -1921,14 +1921,14 @@ public class DocGen {
                 result.append(sb2.toString());
                 sb2.setLength(0);
             }
-            ArrayList superComposites = findContainingComposites(kb, term); 
+            ArrayList superComposites = findContainingComposites(kb, term);
             Collections.sort(superComposites, String.CASE_INSENSITIVE_ORDER);
             result.append(createInstances(kb, kbHref, term, language, superComposites)+ sep);
             result.append(createRelations(kb, kbHref, term, language, formatToken)+ sep);
             result.append(createUsingSameComponents(kb, kbHref, term, language)+ sep);
             result.append(createBelongsToClass(kb, kbHref, term, language, parents)+ sep);
             if (!superComposites.isEmpty()) {
-                String formattedContainingComposites = 
+                String formattedContainingComposites =
                     formatContainingComposites(kb,
                                                kbHref,
                                                superComposites,
@@ -2136,9 +2136,9 @@ public class DocGen {
         ArrayList<String> ans = new ArrayList<String>();
         try {
             if (StringUtil.isNonEmptyString(ontology)) {
-                ans.addAll(new HashSet<String>(kb.getTermsViaAskWithRestriction(0, 
-                                                                                "ontologyNamespace", 
-                                                                                1, 
+                ans.addAll(new HashSet<String>(kb.getTermsViaAskWithRestriction(0,
+                                                                                "ontologyNamespace",
+                                                                                1,
                                                                                 ontology,
                                                                                 2)));
             }
@@ -2148,7 +2148,7 @@ public class DocGen {
         }
         return ans;
     }
-                
+
     /** **************************************************************
      * Returns a List of all Strings used as namespace delimiters in
      * terms defined or referred to in ontology, as specified by
@@ -2169,9 +2169,9 @@ public class DocGen {
         ArrayList<String> ans = new ArrayList<String>();
         try {
             if (StringUtil.isNonEmptyString(ontology)) {
-                List<String> delims = kb.getTermsViaAskWithRestriction(0, 
-                                                                       "docGenNamespaceDelimiter", 
-                                                                       1, 
+                List<String> delims = kb.getTermsViaAskWithRestriction(0,
+                                                                       "docGenNamespaceDelimiter",
+                                                                       1,
                                                                        ontology,
                                                                        2);
                 ans.addAll(new HashSet<String>(delims));
@@ -2242,7 +2242,7 @@ public class DocGen {
      * A List of currently known namespaces.
      */
     protected ArrayList<String> namespaces = new ArrayList<String>();
-                
+
     /** **************************************************************
      * Returns a List of all SUO-KIF terms that denote namespaces in
      * any loaded KB, obtained by gathering statements formed with the
@@ -2265,7 +2265,7 @@ public class DocGen {
                         reduce.addAll(kb.getTermsViaAsk(0,"ontologyNamespace",2));
                         reduce.addAll(kb.kbCache.instanceOf.get("Namespace"));
                     }
-                    if (!reduce.isEmpty()) 
+                    if (!reduce.isEmpty())
                         namespaces.addAll(reduce);
                     if (namespaces.size() > 1)
                         sortByTermLength(namespaces);
@@ -2321,7 +2321,7 @@ public class DocGen {
                         sortByTermLength(namespaces);
                     if (!namespaces.isEmpty()) {
                         Set<String> delims = new HashSet<String>(getAllNamespaceDelimiters());
-                        delims.addAll(Arrays.asList(StringUtil.getKifNamespaceDelimiter(), 
+                        delims.addAll(Arrays.asList(StringUtil.getKifNamespaceDelimiter(),
                                                     StringUtil.getW3cNamespaceDelimiter(),
                                                     StringUtil.getSafeNamespaceDelimiter()));
                         ArrayList<String> nsprefs = new ArrayList<String>();
@@ -2430,7 +2430,7 @@ public class DocGen {
                 String ns = null;
                 String ontology = getOntology();
                 if (StringUtil.isNonEmptyString(ontology)) {
-                    for (Iterator it = getNamespaces(kb,ontology,false).iterator(); 
+                    for (Iterator it = getNamespaces(kb,ontology,false).iterator();
                          it.hasNext();) {
                         ns = (String) it.next();
                         if (ns.equalsIgnoreCase(kifTerm)) {
@@ -2455,7 +2455,7 @@ public class DocGen {
      *
      * @param text The String in which all linkable SUO-KIF terms are
      * to be transformed
-     * 
+     *
      * @return A String with all linkable SUO-KIF terms have had their
      * namespace prefixes removed
      */
@@ -2616,7 +2616,7 @@ public class DocGen {
      * @param kb The KB in which term is defined
      *
      * @param term A String denoting a SUO-KIF constant name
-     * 
+     *
      * @return true or false
      */
     protected boolean hasSubComponents(KB kb, String term) {
@@ -2640,7 +2640,7 @@ public class DocGen {
      * @param kb The KB in which term is defined
      *
      * @param term A String that is a SUO-KIF constant
-     * 
+     *
      * @return A List of Strings that denote SUO-KIF constants, or an
      * empty List
      */
@@ -2669,7 +2669,7 @@ public class DocGen {
      * @param kb The KB in which term is defined
      *
      * @param term A String, a SUO-KIF constant
-     * 
+     *
      * @return A List of Strings that denote SUO-KIF constants, or an
      * empty List
      */
@@ -2690,7 +2690,7 @@ public class DocGen {
         }
         return ans;
     }
- 
+
     /** *************************************************************
      * Returns a String that is the first termFormat value obtained
      * for term in kb, else returns null if no termFormat value
@@ -2699,10 +2699,10 @@ public class DocGen {
      * @param kb The KB in which term is defined
      *
      * @param term A String that is a SUO-KIF constant
-     * 
+     *
      * @param contexts A List of namespaces or other terms that index
      * context-specific termFormat statements
-     * 
+     *
      * @return A List of Strings that denote SUO-KIF constants, or an
      * empty List
      */
@@ -2750,19 +2750,19 @@ public class DocGen {
      * Returns the first documentation String obtained for term in kb,
      * using the List of namespaces or other contextualizing terms in
      * contexts.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that is a SUO-KIF constant
-     * 
+     *
      * @param contexts A List of namespaces or other terms that index
      * context-specific documentation or comment statements
-     * 
+     *
      * @return A documentation String, or an empty String if no
      * documentation String can be found
      */
     protected String getContextualDocumentation(KB kb, String term, List contexts) {
-        
+
         String ans = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -2774,14 +2774,14 @@ public class DocGen {
                         ans = f.getStringArgument(3);
                     }
                     else {
-                        if (contexts == null) 
-                            contexts = new ArrayList();                        
+                        if (contexts == null)
+                            contexts = new ArrayList();
                         List supers = getSuperComponents(kb, term);
                         contexts.addAll(supers);
                         contexts.add(0, term);
                         contexts.add(getDefaultNamespace());
-                        if (!contexts.contains("EnglishLanguage")) 
-                            contexts.add("EnglishLanguage");                        
+                        if (!contexts.contains("EnglishLanguage"))
+                            contexts.add("EnglishLanguage");
                         String ctx = null;
                         Iterator itf = null;
                         for (Iterator itc = contexts.iterator(); itc.hasNext();) {
@@ -2814,11 +2814,11 @@ public class DocGen {
     /** *************************************************************
      * Returns the first containing Class that can be found for term
      * in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that is a SUO-KIF constant
-     * 
+     *
      * @return A SUO-KIF term denoting a Class, or null if no Class
      * can be found
      */
@@ -2886,11 +2886,11 @@ public class DocGen {
      * Returns the first purely "subsuming" entity that can be found
      * for term in kb, assuming that term denotes a Class or a
      * Relation.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF Class or Relation
-     * 
+     *
      * @return A SUO-KIF term, or null if no subsuming term can be
      * found
      */
@@ -2923,11 +2923,11 @@ public class DocGen {
     /** *************************************************************
      * Returns the first containing, subsuming, or superordinate
      * entity that can be found for term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that is a SUO-KIF constant
-     * 
+     *
      * @return A SUO-KIF term, or null if no more general term can be
      * found
      */
@@ -2936,7 +2936,7 @@ public class DocGen {
         String ans = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                List<String> preds = Arrays.asList("instance", 
+                List<String> preds = Arrays.asList("instance",
                                                    // "subclass",
                                                    "datatype",
                                                    "syntacticExtension",
@@ -2966,11 +2966,11 @@ public class DocGen {
     /** *************************************************************
      * Returns a List of the first containing, subsuming, or
      * superordinate entities found for term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A List of SUO-KIF terms, or an empty List if no
      * generalizations of term can be found
      */
@@ -2979,7 +2979,7 @@ public class DocGen {
         ArrayList<String> ans = new ArrayList<String>();
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                List<String> preds = Arrays.asList("instance", 
+                List<String> preds = Arrays.asList("instance",
                                                    // "subclass",
                                                    "datatype",
                                                    "syntacticExtension",
@@ -3006,13 +3006,13 @@ public class DocGen {
     /** *************************************************************
      * Returns a List of the first instances or syntactic subordinate
      * entities that can be found for term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A List of SUO-KIF terms, or an empty List
-     * 
+     *
      */
     protected ArrayList<String> getFirstSpecificTerms(KB kb, String term) {
 
@@ -3020,7 +3020,7 @@ public class DocGen {
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
-                List<String> preds = Arrays.asList("instance", 
+                List<String> preds = Arrays.asList("instance",
                                                    // "datatype",
                                                    "syntacticExtension",
                                                    "syntacticComposite"
@@ -3045,13 +3045,13 @@ public class DocGen {
     /** *************************************************************
      * Returns a List of the entities that are immediate syntactic
      * subordinates of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A List of SUO-KIF terms, or an empty List
-     * 
+     *
      */
     protected ArrayList<String> getSyntacticSubordinateTerms(KB kb, String term) {
 
@@ -3089,13 +3089,13 @@ public class DocGen {
     /** *************************************************************
      * Returns a List of the entities that are immediate instances of
      * term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF Class
-     * 
+     *
      * @return A List of SUO-KIF terms, or an empty List
-     * 
+     *
      */
     protected ArrayList getFirstInstances(KB kb, String term) {
 
@@ -3122,13 +3122,13 @@ public class DocGen {
     /** *************************************************************
      * Returns a SUO-KIF constant that denotes the first containing
      * Class of term obtained in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A String that denotes a SUO-KIF Class, or null
-     * 
+     *
      */
     protected String getFirstContainingClass(KB kb, String term) {
 
@@ -3141,13 +3141,13 @@ public class DocGen {
     /** *************************************************************
      * Returns a List containing the immediate SUO-KIF subclasses of
      * term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A List of SUO-KIF Classes, or an empty List
-     * 
+     *
      */
     protected ArrayList getFirstSubClasses(KB kb, String term) {
 
@@ -3174,21 +3174,21 @@ public class DocGen {
     /** *************************************************************
      * Returns a String consisting of HTML markup for a documentation
      * String for term obtained from kb and indexed by language.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * documentation Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
     protected String createDocs(KB kb, String kbHref, String term, String language) {
 
@@ -3207,10 +3207,10 @@ public class DocGen {
                 result.append("    ");
                 result.append(docString);
                 result.append(StringUtil.getLineSeparator());
-                result.append("  </td>"); 
+                result.append("  </td>");
                 result.append(StringUtil.getLineSeparator());
                 result.append("</tr>");
-                
+
                 markup = result.toString();
             }
         }
@@ -3223,21 +3223,21 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing the HTML markup for the Comment
      * field in a page displaying the definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * comment Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
     protected String createComments(KB kb, String kbHref, String term, String language) {
 
@@ -3284,17 +3284,17 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing HTML markup for the synonym field
      * of an HTML page displaying the definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
     protected String createSynonyms(KB kb, String kbHref, String term, String formatToken) {
 
@@ -3395,17 +3395,17 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing HTML markup for the Display Labels
      * field of an HTML page displaying statements about term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param formatToken A String token that partly determines the
      * format of the output
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
      */
@@ -3418,7 +3418,7 @@ public class DocGen {
                 if (StringUtil.isNonEmptyString(term)) {
                     String defaultNamespace = getDefaultNamespace();
                     if (StringUtil.isNonEmptyString(defaultNamespace)) {
-                        labels.addAll(kb.getTermsViaAWTR(2, term, 
+                        labels.addAll(kb.getTermsViaAWTR(2, term,
                                                          0, "displayName",
                                                          1, defaultNamespace,
                                                          3));
@@ -3494,25 +3494,25 @@ public class DocGen {
      * Returns a String containing HTML markup for the Has Same
      * Components As field of an HTML page displaying the definition
      * of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
-    protected String createHasSameComponents(KB kb, 
-                                             String kbHref, 
-                                             String term, 
+    protected String createHasSameComponents(KB kb,
+                                             String kbHref,
+                                             String term,
                                              String language) {
 
         StringBuilder result = new StringBuilder();
@@ -3520,7 +3520,7 @@ public class DocGen {
             String suffix = (StringUtil.emptyString(kbHref)
                              ? ".html"
                              : "");
-            ArrayList<String> extensionOfs = getSyntacticExtensionTerms(kb, term, 2, true);
+            List<String> extensionOfs = getSyntacticExtensionTerms(kb, term, 2, true);
             if (!extensionOfs.isEmpty()) {
                 result.append("<tr>");
                 result.append(StringUtil.getLineSeparator());
@@ -3564,25 +3564,25 @@ public class DocGen {
      * Returns a String containing HTML markup for the Composites
      * Using Same Components field of an HTML page displaying the
      * definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
-    protected String createUsingSameComponents(KB kb, 
-                                               String kbHref, 
-                                               String term, 
+    protected String createUsingSameComponents(KB kb,
+                                               String kbHref,
+                                               String term,
                                                String language) {
 
         StringBuilder result = new StringBuilder();
@@ -3590,9 +3590,9 @@ public class DocGen {
             if (StringUtil.isNonEmptyString(term)) {
                 if (isLegalForDisplay(term)) {
                     String suffix = "";
-                    if (StringUtil.emptyString(kbHref)) 
+                    if (StringUtil.emptyString(kbHref))
                         suffix = ".html";
-                    ArrayList extensions = getSyntacticExtensionTerms(kb, term, 1, true);
+                    List extensions = getSyntacticExtensionTerms(kb, term, 1, true);
                     /*
                       kb.getTransitiveClosureViaPredicateSubsumption("syntacticExtension",
                       2,
@@ -3650,42 +3650,42 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing HTML markup for the Parents field
      * of an HTML page displaying the definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @param parentsSet A Set for accumulating the parent terms of
      * term
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
-    protected String createParents(KB kb, 
-                                   String kbHref, 
-                                   String term, 
-                                   String language, 
+    protected String createParents(KB kb,
+                                   String kbHref,
+                                   String term,
+                                   String language,
                                    Set parentsSet) {
 
         String result = "";
         try {
             String suffix = "";
-            if (StringUtil.emptyString(kbHref)) 
+            if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             // System.out.println("4. forms == " + forms);
             ArrayList forms = new ArrayList();
             Set<String> parents = new HashSet<String>();
-            List<String> relations = Arrays.asList("subclass", 
-                                                   "subrelation", 
-                                                   "subAttribute", 
+            List<String> relations = Arrays.asList("subclass",
+                                                   "subrelation",
+                                                   "subAttribute",
                                                    "subentity");
             if (StringUtil.isNonEmptyString(term)) {
                 for (String pred : relations) {
@@ -3725,7 +3725,7 @@ public class DocGen {
                         if (!isFirst) {
                             sb.append("<tr>");
                             sb.append(StringUtil.getLineSeparator());
-                            sb.append("  <td>&nbsp;</td>");                
+                            sb.append("  <td>&nbsp;</td>");
                             sb.append(StringUtil.getLineSeparator());
                         }
                         isFirst = false;
@@ -3737,9 +3737,9 @@ public class DocGen {
                         sb.append("  <td valign=\"top\" class=\"cell\">");
                         sb.append(StringUtil.getLineSeparator());
                         sb.append("    ");
-                        sb.append(processDocString(kb, 
-                                                   kbHref, 
-                                                   language, 
+                        sb.append(processDocString(kb,
+                                                   kbHref,
+                                                   language,
                                                    docStr,
                                                    false,
                                                    true));
@@ -3762,26 +3762,26 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing HTML markup for the Children field
      * of an HTML page displaying the definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
     protected String createChildren(KB kb, String kbHref, String term, String language) {
 
         String suffix = "";
-        if (StringUtil.emptyString(kbHref)) 
+        if (StringUtil.emptyString(kbHref))
             suffix = ".html";
         StringBuilder result = new StringBuilder();
         String[] relns = {"subclass", "subrelation", "subAttribute", "subentity"};
@@ -3818,14 +3818,14 @@ public class DocGen {
                 boolean isFirst = true;
                 for (Iterator ik = kids.iterator(); ik.hasNext();) {
                     s = (String) ik.next();
-                    String termHref = ("<a href=\"" 
-                                       + kbHref 
+                    String termHref = ("<a href=\""
+                                       + kbHref
                                        + StringUtil.toSafeNamespaceDelimiter(kbHref, s)
-                                       + suffix 
-                                       + "\">" 
-                                       + showTermName(kb, s, language) 
+                                       + suffix
+                                       + "\">"
+                                       + showTermName(kb, s, language)
                                        + "</a>");
-                    if (!isFirst) result.append("<tr><td>&nbsp;</td>");                
+                    if (!isFirst) result.append("<tr><td>&nbsp;</td>");
                     result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
                     String docString = getContextualDocumentation(kb, s, null);
                     docString = processDocString(kb, kbHref, language, docString, false, true);
@@ -3842,35 +3842,35 @@ public class DocGen {
      * Returns a String containing HTML markup for the Instances
      * section of an HTML page displaying the definition of term in
      * kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @param excluded A List of terms to be excluded from the display
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
-    protected String createInstances(KB kb, 
-                                     String kbHref, 
-                                     String term, 
-                                     String language, 
+    protected String createInstances(KB kb,
+                                     String kbHref,
+                                     String term,
+                                     String language,
                                      List excluded) {
 
         String markup = "";
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 String suffix = "";
-                if (StringUtil.emptyString(kbHref)) 
+                if (StringUtil.emptyString(kbHref))
                     suffix = ".html";
                 StringBuilder result = new StringBuilder();
                 List working = new ArrayList();
@@ -3935,25 +3935,25 @@ public class DocGen {
                         displayName = showTermName(kb, inst, language);
                         if (displayName.contains(inst)) {
                             xmlName = showTermName(kb, inst, "XMLLabel");
-                            if (!StringUtil.emptyString(xmlName)) 
+                            if (!StringUtil.emptyString(xmlName))
                                 displayName = xmlName;
                         }
-                        termHref = ("<a href=\"" 
-                                    + kbHref 
+                        termHref = ("<a href=\""
+                                    + kbHref
                                     + StringUtil.toSafeNamespaceDelimiter(kbHref, inst)
-                                    + suffix 
-                                    + "\">" 
-                                    + displayName 
+                                    + suffix
+                                    + "\">"
+                                    + displayName
                                     + "</a>");
                         result.append("<td valign=\"top\" class=\"cell\">" + termHref + "</td>");
                         ArrayList clist = new ArrayList();
                         clist.add(language);
                         String docString = getContextualDocumentation(kb, inst, clist);
-                        docString = processDocString(kb, 
-                                                     kbHref, 
-                                                     language, 
-                                                     docString, 
-                                                     false, 
+                        docString = processDocString(kb,
+                                                     kbHref,
+                                                     language,
+                                                     docString,
+                                                     false,
                                                      true);
                         result.append("<td valign=\"top\" class=\"cell\">");
                         result.append(docString);
@@ -3973,7 +3973,7 @@ public class DocGen {
 
     /** *************************************************************
      * Returns a String containing HTML markup for a SUO-KIF Formula.
-     * 
+     *
      * @param kb The KB in which formula occurs
      *
      * @param kbHref A String containing the constant parts of the
@@ -3988,31 +3988,31 @@ public class DocGen {
      * before currentTerm in the same level of nesting.  The value of
      * previousTerm aids in determining how a given Formula should be
      * formatted, and could be null.
-     * 
+     *
      * @param currentTerm A String denoting a SUO-KIF Formula or part
      * of a Formula
-     * 
+     *
      * @param context A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * formula cannot be processed
-     * 
+     *
      */
-    protected String createFormula(KB kb, 
-                                   String kbHref, 
-                                   String indentSeq, 
+    protected String createFormula(KB kb,
+                                   String kbHref,
+                                   String indentSeq,
                                    int level,
                                    String previousTerm,
-                                   String currentTerm, 
+                                   String currentTerm,
                                    String context) {
 
         String result = "";
         try {
             StringBuilder sb = new StringBuilder();
             String suffix = "";
-            if (StringUtil.emptyString(kbHref)) 
+            if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             if (StringUtil.isNonEmptyString(previousTerm) && previousTerm.matches(".*\\w+.*"))
                 previousTerm = previousTerm.trim();
@@ -4085,25 +4085,25 @@ public class DocGen {
      * Returns a String containing HTML markup for the Relations
      * section of an HTML page displaying the definition of term in
      * kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
-    protected String createRelations(KB kb, 
-                                     String kbHref, 
-                                     String term, 
+    protected String createRelations(KB kb,
+                                     String kbHref,
+                                     String term,
                                      String language,
                                      String formatToken) {
         /*
@@ -4124,24 +4124,25 @@ public class DocGen {
             */
             if (isLegalForDisplay(term)) {
                 String suffix = "";
-                if (StringUtil.emptyString(kbHref)) 
+                if (StringUtil.emptyString(kbHref))
                     suffix = ".html";
                 ArrayList relations = getPredicates(kb,!formatToken.equalsIgnoreCase(F_SI));
-                // System.out.println(StringUtil.getLineSeparator() + "relations == " 
+                // System.out.println(StringUtil.getLineSeparator() + "relations == "
                 // + relations + StringUtil.getLineSeparator());
                 if (relations != null && !relations.isEmpty()) {
                     StringBuilder sb = new StringBuilder();
                     Set avoid = getInhibitDisplayRelations();
                     Map map = new HashMap();
-                    String relation = null;
-                    Iterator itr = null;
+                    String relation;
+                    Iterator itr;
+                    List statements;
                     for (itr = relations.iterator(); itr.hasNext();) {
                         relation = (String) itr.next();
                         // boolean isFormula = relation.matches(".*(?i)kif.*");
                         if (!avoid.contains(relation)) {
-                            ArrayList statements = kb.askWithPredicateSubsumption(relation, 
-                                                                                  1, 
-                                                                                  term);
+                            statements = kb.askWithPredicateSubsumption(relation,
+                                                                          1,
+                                                                          term);
                             // if (isFormula) {
                             //     System.out.println("\n" + "statements == " + statements + "\n");
                             // }
@@ -4169,23 +4170,23 @@ public class DocGen {
                             relation = (String) itr.next();
                             vals = (ArrayList) map.get(relation);
                             if ((vals != null) && !vals.isEmpty()) {
-                                String relnHref = 
-                                    ("<a href=\"" 
-                                     + kbHref 
+                                String relnHref =
+                                    ("<a href=\""
+                                     + kbHref
                                      + StringUtil.toSafeNamespaceDelimiter(kbHref, relation)
-                                     + suffix 
-                                     + "\">" 
-                                     + showTermName(kb,relation,language) 
+                                     + suffix
+                                     + "\">"
+                                     + showTermName(kb,relation,language)
                                      + "</a>");
                                 int m = 0;
                                 for (Iterator itv = vals.iterator(); itv.hasNext(); m++) {
                                     s = (String) itv.next();
-                                    String termHref = createFormula(kb, 
-                                                                    kbHref, 
+                                    String termHref = createFormula(kb,
+                                                                    kbHref,
                                                                     "&nbsp;&nbsp;&nbsp;&nbsp;",
                                                                     0,
                                                                     null,
-                                                                    s, 
+                                                                    s,
                                                                     language);
                                     if (firstLine) {
                                         sb.append("<tr><td valign=\"top\" class=\"label\">"
@@ -4199,20 +4200,20 @@ public class DocGen {
                                     // System.out.println( relnHref );
                                     // System.out.println( termHref );
                                     if (m == 0) {
-                                        sb.append("<td valign=\"top\" class=\"cell\">" 
-                                                  + relnHref 
+                                        sb.append("<td valign=\"top\" class=\"cell\">"
+                                                  + relnHref
                                                   + "</td>");
                                     }
                                     else {
                                         sb.append("<td valign=\"top\" class=\"cell\">&nbsp;</td>");
                                     }
-                                    sb.append("<td valign=\"top\" class=\"cell\">" 
+                                    sb.append("<td valign=\"top\" class=\"cell\">"
                                               + termHref
                                               + "</td></tr>"
                                               + StringUtil.getLineSeparator());
                                 }
                             }
-                        }                
+                        }
                     }
                     result = sb.toString();
                 }
@@ -4236,22 +4237,22 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing HTML markup for the Cardinality
      * field of an HTML page displaying the definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param context A String denoting a SUO-KIF namespace, a natural
      * language, or other type of entity that indexes termFormat
      * Strings in kb -- this parameter is currently ignored, since
      * LocalInstance terms are already highly specific
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
-     * 
+     *
      */
     protected String showCardinalityCell(KB kb, String kbHref, String term, String context) {
 
@@ -4264,11 +4265,11 @@ public class DocGen {
         */
         String cardVal = "";
         try {
-            ArrayList cardForms = kb.askWithPredicateSubsumption("hasExactCardinality", 1, term);
+            List cardForms = kb.askWithPredicateSubsumption("hasExactCardinality", 1, term);
             // kb.askWithRestriction(0,"exactCardinality",2,term);
             if (cardForms != null && !cardForms.isEmpty()) {
                 Formula f = (Formula) cardForms.get(0);
-                // if (context.equals("") || context.equals(f.getArgument(1)))             
+                // if (context.equals("") || context.equals(f.getArgument(1)))
                 //     return f.getArgument(3);
                 cardVal = f.getStringArgument(2);
             }
@@ -4277,17 +4278,17 @@ public class DocGen {
                 String maxCard = "n";
                 cardForms = kb.askWithPredicateSubsumption("hasMinCardinality", 1, term);
                 // kb.askWithRestriction(0,"minCardinality",2,term);
-                if (cardForms != null && cardForms.size() > 0) {
+                if (cardForms != null && !cardForms.isEmpty()) {
                     Formula f = (Formula) cardForms.get(0);
-                    // if (context == "" || context.equals(f.getArgument(1)))             
+                    // if (context == "" || context.equals(f.getArgument(1)))
                     //     minCard = f.getArgument(3);
                     minCard = f.getStringArgument(2);
                 }
                 cardForms = kb.askWithPredicateSubsumption("hasMaxCardinality", 1, term);
                 // kb.askWithRestriction(0,"maxCardinality",2,term);
-                if (cardForms != null && cardForms.size() > 0) {
+                if (cardForms != null && !cardForms.isEmpty()) {
                     Formula f = (Formula) cardForms.get(0);
-                    // if (context.equals("") || context.equals(f.getArgument(1)))             
+                    // if (context.equals("") || context.equals(f.getArgument(1)))
                     //     maxCard = f.getArgument(3);
                     maxCard = f.getStringArgument(2);
                 }
@@ -4312,36 +4313,36 @@ public class DocGen {
      * Returns a String containing HTML markup for a single table row
      * in the Composite Component section of an HTML page displaying
      * the partial definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param indent A int value that determines the depth to which
      * term will be indented when displayed
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * term is supposed to be suppressed for display
-     * 
+     *
      */
-    protected String createCompositeComponentLine(KB kb, 
-                                                  String kbHref, 
-                                                  String term, 
-                                                  int indent, 
+    protected String createCompositeComponentLine(KB kb,
+                                                  String kbHref,
+                                                  String term,
+                                                  int indent,
                                                   String language) {
 
         String result = "";
         try {
             StringBuilder sb = new StringBuilder();
             String suffix = "";
-            if (StringUtil.emptyString(kbHref)) 
+            if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             sb.append("<tr>");
             sb.append(StringUtil.getLineSeparator());
@@ -4350,32 +4351,32 @@ public class DocGen {
             sb.append("  <td valign=\"top\" class=\"cell\">");
             sb.append(StringUtil.getLineSeparator());
             String parentClass = "";
-            ArrayList instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
+            List instanceForms = kb.askWithPredicateSubsumption("instance", 1, term);
             // System.out.println("1. instanceForms == " + instanceForms);
             if (instanceForms != null && instanceForms.size() > 0) {
                 Formula f = (Formula) instanceForms.get(0);
                 parentClass = f.getStringArgument(2);
             }
-            ArrayList termForms = null;
+            List termForms = null;
             if (StringUtil.isNonEmptyString(term)) {
                 termForms = kb.askWithTwoRestrictions(0, "termFormat", 1, "XMLLabel", 2, term);
             }
             if (termForms != null) {
                 boolean isAttribute = isXmlAttribute(kb, term);
                 if (!isAttribute) isAttribute = isXmlAttribute(kb, parentClass);
-                for (Iterator ita = termForms.iterator(); ita.hasNext();) {               
+                for (Iterator ita = termForms.iterator(); ita.hasNext();) {
                     Formula f = (Formula) ita.next();
                     sb.append(indentChars("&nbsp;&nbsp;",indent));
                     String termFormat = StringUtil.removeEnclosingQuotes(f.getStringArgument(3));
                     sb.append("<a href=\"");
-                    sb.append(kbHref); 
+                    sb.append(kbHref);
                     sb.append(StringUtil.toSafeNamespaceDelimiter(kbHref, parentClass));
                     sb.append(suffix);
                     sb.append("\">");
                     if (isAttribute) sb.append("<span class=\"attribute\">");
                     sb.append(termFormat);
                     if (isAttribute) sb.append("</span>");
-                    sb.append("</a>");                      
+                    sb.append("</a>");
                 }
             }
             sb.append("  </td>");
@@ -4387,19 +4388,19 @@ public class DocGen {
             String docString = getContextualDocumentation(kb, term, clist);
             docString = processDocString(kb, kbHref, language, docString, false, true);
             sb.append("    ");
-            sb.append(docString); 
+            sb.append(docString);
             sb.append(StringUtil.getLineSeparator());
             sb.append("  </td>");
             sb.append(StringUtil.getLineSeparator());
             sb.append("  <td valign=\"top\" class=\"card\">");
-            if (indent > 0)        
+            if (indent > 0)
                 sb.append(showCardinalityCell(kb, kbHref, term, ""));
             sb.append("  </td>");
             sb.append(StringUtil.getLineSeparator());
             sb.append("  <td valign=\"top\" class=\"cell\">");
             String dataTypeName = getFirstDatatype(kb, term);
             if (StringUtil.isNonEmptyString(dataTypeName)) {
-                String dtToPrint = showTermName(kb, dataTypeName, language);                
+                String dtToPrint = showTermName(kb, dataTypeName, language);
                 sb.append("<a href=\"");
                 sb.append(kbHref);
                 sb.append(StringUtil.toSafeNamespaceDelimiter(kbHref, dataTypeName));
@@ -4431,23 +4432,23 @@ public class DocGen {
      * Returns the termFormat entry for term in kb and language,
      * otherwise returns the termFormat entry for term in English,
      * otherwise just returns the term name.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or another type of entity that contextualizes
      * or indexes termFormat Strings in kb
-     * 
+     *
      * @return A String providing a context-specific name for term,
      * possibly including HTML markup, or just term if no
      * context-specific form can be found or produced
-     * 
+     *
      */
     public String showTermName(KB kb, String term, String language) {
 
-    	//, boolean withSpanTags) {    
+    	//, boolean withSpanTags) {
         String ans = term;
         ans = StringUtil.removeEnclosingQuotes(ans);
         String termFormat = getFirstTermFormat(kb, term, Arrays.asList(language));
@@ -4467,19 +4468,19 @@ public class DocGen {
      * Returns the termFormat entry for term in kb and language,
      * otherwise returns the termFormat entry for term in English,
      * otherwise just returns the term name.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String providing a context-specific name for term,
      * possibly including HTML markup, or just term
-     * 
-     
+     *
+
     public String showTermName(KB kb, String term, String language) {
         return showTermName(kb, term, language, false);
     }
@@ -4487,7 +4488,7 @@ public class DocGen {
     /** *************************************************************
      * Returns a String containing HTML markup for a hierarchy or tree
      * display of terms that denote nested composite components.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
@@ -4495,18 +4496,18 @@ public class DocGen {
      *
      * @param hier A List containing term names and representing one
      * sub-branch in a tree
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
-     * 
+     *
      */
-    protected String formatCompositeHierarchy(KB kb, 
-                                              String kbHref, 
-                                              List hier, 
+    protected String formatCompositeHierarchy(KB kb,
+                                              String kbHref,
+                                              List hier,
                                               String language) {
 
         String markup = "";
@@ -4524,7 +4525,7 @@ public class DocGen {
             }
             markup = result.toString();
         }
-        catch (Exception ex) {
+        catch (NumberFormatException ex) {
             ex.printStackTrace();
         }
         return markup;
@@ -4534,25 +4535,25 @@ public class DocGen {
      * Recursively computes and then returns a List that constitutes
      * the graph containing those XML elements and attributes
      * syntactically subordinate to term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param isAttribute If true, this parameter indicates that term
      * denotes an XML attribute
-     * 
+     *
      * @param indent An integer indicating the depth or level to which
      * term should be indented when displayed
-     * 
+     *
      * @return A List containing two Lists, the first of which is a
      * List of terms that denote XML attributes, and the second of
      * which is a list of terms that denote XML elements
-     * 
+     *
      */
-    protected ArrayList createCompositeRecurse(KB kb, 
-                                               String term, 
-                                               boolean isAttribute, 
+    protected ArrayList createCompositeRecurse(KB kb,
+                                               String term,
+                                               boolean isAttribute,
                                                int indent) {
 
         ArrayList pair = new ArrayList();
@@ -4579,7 +4580,7 @@ public class DocGen {
                     // This should return without children for
                     // subordinateXmlAttribute, since attributes
                     // don't have child elements.
-                    ArrayList newPair = 
+                    ArrayList newPair =
                         createCompositeRecurse(kb, nextTerm, isAttributeList, (indent + 1));
                     attrs.addAll((ArrayList) newPair.get(0));
                     elems.addAll((ArrayList) newPair.get(1));
@@ -4596,14 +4597,14 @@ public class DocGen {
      * Returns a List that constitutes the graph containing those XML
      * elements and attributes syntactically subordinate to term in
      * kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
-     * 
+     *
      */
     protected boolean isXmlAttribute(KB kb, String term) {
 
@@ -4638,7 +4639,7 @@ public class DocGen {
      * Returns a String containing HTML markup for a row displaying a
      * contained component in an HTML page displaying the partial
      * definition of instance in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
@@ -4646,26 +4647,26 @@ public class DocGen {
      *
      * @param containingComp A String that denotes the term that
      * contains, or is syntactically superordinate to, instance
-     * 
+     *
      * @param instance A String that denotes a SUO-KIF term
-     * 
+     *
      * @param indent An int value that determines the depth to which
      * instance will be indented when displayed
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
-     * 
+     *
      */
-    protected String createContainingCompositeComponentLine(KB kb, 
-                                                            String kbHref, 
+    protected String createContainingCompositeComponentLine(KB kb,
+                                                            String kbHref,
                                                             String containingComp,
                                                             // List containerData,
-                                                            String instance, 
-                                                            int indent, 
+                                                            String instance,
+                                                            int indent,
                                                             String language) {
         /*
           System.out.println("DocGen.createContainingCompositeCompoentLine("
@@ -4681,7 +4682,7 @@ public class DocGen {
             if (StringUtil.isNonEmptyString(instance)) {
                 StringBuilder sb = new StringBuilder();
                 String suffix = (StringUtil.emptyString(kbHref) ? ".html" : "");
-                ArrayList docForms = kb.askWithRestriction(0,"documentation",1,instance);
+                List docForms = kb.askWithRestriction(0,"documentation",1,instance);
                 Formula f = null;
                 String context = null;
                 for (Iterator it = docForms.iterator(); it.hasNext();) {
@@ -4705,11 +4706,11 @@ public class DocGen {
                         sb.append("  <td valign=\"top\" class=\"cell\">");
                         sb.append(StringUtil.getLineSeparator());
                         sb.append("    ");
-                        sb.append(processDocString(kb, 
-                                                   kbHref, 
-                                                   language, 
+                        sb.append(processDocString(kb,
+                                                   kbHref,
+                                                   language,
                                                    f.getStringArgument(3),
-                                                   false, 
+                                                   false,
                                                    true));
                         sb.append(StringUtil.getLineSeparator());
                         sb.append("  </td>");
@@ -4736,20 +4737,20 @@ public class DocGen {
 
     /** *************************************************************
      *  Given the SUO-KIF statements:
-     * 
+     *
      * (hasXmlElement PartyDescriptor LocalInstance_2_459)
      * (datatype LocalInstance_2_459 PartyId)
      * (documentation LocalInstance_2_459
      * PartyDescriptor "A Composite containing details...")
-     * 
+     *
      * show PartyDescriptor as one of the "containing
      * composites" of PartyId, and show the documentation for
      * the instance node next to the parent composite.
      */
-    protected String formatContainingComposites(KB kb, 
-                                                String kbHref, 
-                                                ArrayList containing, 
-                                                String composite, 
+    protected String formatContainingComposites(KB kb,
+                                                String kbHref,
+                                                ArrayList containing,
+                                                String composite,
                                                 String language) {
         /*
           System.out.println("ENTER DocGen.formatContainingComposites("
@@ -4772,7 +4773,7 @@ public class DocGen {
                     inst = (String) it2.next();
                     result.append(createContainingCompositeComponentLine(kb,
                                                                          kbHref,
-                                                                         ccomp, 
+                                                                         ccomp,
                                                                          inst,
                                                                          0,
                                                                          language));
@@ -4842,39 +4843,39 @@ public class DocGen {
      * Returns a String containing HTML markup for the Belongs to Class
      * section of an HTML page displaying the partial
      * definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @param parents A Set containing the terms displayed in the
      * Parent field for term, to avoid duplication between the Parents
      * field and the Belongs to Class field
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
-     * 
+     *
      */
-    protected String createBelongsToClass(KB kb, 
-                                          String kbHref, 
-                                          String term, 
+    protected String createBelongsToClass(KB kb,
+                                          String kbHref,
+                                          String term,
                                           String language,
                                           Set<String> parents) {
 
         String markup = "";
         try {
             String suffix = "";
-            if (StringUtil.emptyString(kbHref)) 
+            if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             String className = getNearestContainingClass(kb, term);
-            if (StringUtil.isNonEmptyString(className) 
+            if (StringUtil.isNonEmptyString(className)
                 && isLegalForDisplay(className)
                 && ((parents == null)
                     || !parents.contains(className))) {
@@ -4889,18 +4890,18 @@ public class DocGen {
                 result.append(StringUtil.getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"cell\">");
                 result.append(StringUtil.getLineSeparator());
-                result.append("<a href=\""); 
+                result.append("<a href=\"");
                 result.append(kbHref);
                 result.append(StringUtil.toSafeNamespaceDelimiter(kbHref, className));
-                result.append(suffix); 
+                result.append(suffix);
                 result.append("\">");
                 result.append(showTermName(kb, className, language));
-                result.append("</a>");        
+                result.append("</a>");
                 result.append("  </td>");
                 result.append(StringUtil.getLineSeparator());
                 result.append("  <td></td><td></td><td></td>");
                 result.append(StringUtil.getLineSeparator());
-                result.append("</tr>"); 
+                result.append("</tr>");
                 result.append(StringUtil.getLineSeparator());
                 markup = result.toString();
             }
@@ -4915,25 +4916,25 @@ public class DocGen {
      * Returns a String containing HTML markup for the Belongs to Class
      * section of an HTML page displaying the partial
      * definition of term in kb.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param kbHref A String containing the constant parts of the
      * href link for term, or an empty String
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @param language A String denoting a SUO-KIF namespace, a
      * natural language, or other type of entity that indexes
      * termFormat Strings in kb
-     * 
+     *
      * @return A String containing HTML markup, or an empty String if
      * no markup can be generated
-     * 
+     *
      */
-    protected String createBelongsToClass(KB kb, 
-                                          String kbHref, 
-                                          String term, 
+    protected String createBelongsToClass(KB kb,
+                                          String kbHref,
+                                          String term,
                                           String language) {
 
         return createBelongsToClass(kb, kbHref, term, language, null);
@@ -4942,14 +4943,14 @@ public class DocGen {
     /** *************************************************************
      * Returns an ArrayList holding the composite entities (Elements)
      * that contain term, or returns an empty ArrayList.
-     * 
+     *
      * @param kb The KB in which term is defined
      *
      * @param term A String that denotes a SUO-KIF term
-     * 
+     *
      * @return An ArrayList containing the names of the Elements that
      * contain term.
-     * 
+     *
      */
     protected ArrayList findContainingComposites(KB kb, String term) {
 
@@ -4995,9 +4996,9 @@ public class DocGen {
      * with a limit on how many statements of each type should be
      * displayed.
      */
-    public String createAllStatements(KB kb, 
-                                      String kbHref, 
-                                      String term, 
+    public String createAllStatements(KB kb,
+                                      String kbHref,
+                                      String term,
                                       int limit) {
 
         StringBuilder result = new StringBuilder();
@@ -5005,16 +5006,16 @@ public class DocGen {
             String language = "EnglishLanguage";
             int localLimit = limit;
             String limitString = "";
-            ArrayList forms = null;
+            List forms;
             for (int argnum = 2; argnum < 7; argnum++) {
                 localLimit = limit;
                 limitString = "";
                 forms = kb.ask("arg",argnum,term);
                 if (forms != null) {
-                    if (forms.size() < localLimit) 
+                    if (forms.size() < localLimit)
                         localLimit = forms.size();
                     else
-                        limitString = ("<br>Display limited to " 
+                        limitString = ("<br>Display limited to "
                                        + localLimit
                                        + " statements of each type.<p>"
                                        + StringUtil.getLineSeparator());
@@ -5025,9 +5026,7 @@ public class DocGen {
                                 kb.getFormatMap(language),
                                 kb.getTermFormatMap(language),
                                 kb,
-                                language)
-                                      + "<br>"
-                                      + StringUtil.getLineSeparator());
+                                language)).append("<br>").append(StringUtil.getLineSeparator());
                     }
                 }
                 result.append(limitString);
@@ -5036,10 +5035,10 @@ public class DocGen {
             limitString = "";
             forms = kb.ask("ant",0,term);
             if (forms != null) {
-                if (forms.size() < localLimit) 
+                if (forms.size() < localLimit)
                     localLimit = forms.size();
                 else
-                    limitString = ("<br>Display limited to " 
+                    limitString = ("<br>Display limited to "
                                    + localLimit
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
@@ -5050,8 +5049,7 @@ public class DocGen {
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
-                            language)
-                                  + StringUtil.getLineSeparator());
+                            language)).append(StringUtil.getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -5059,10 +5057,10 @@ public class DocGen {
             limitString = "";
             forms = kb.ask("cons",0,term);
             if (forms != null) {
-                if (forms.size() < localLimit) 
+                if (forms.size() < localLimit)
                     localLimit = forms.size();
                 else
-                    limitString = ("<br>Display limited to " 
+                    limitString = ("<br>Display limited to "
                                    + localLimit
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
@@ -5073,8 +5071,7 @@ public class DocGen {
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
-                            language)
-                                  + StringUtil.getLineSeparator());
+                            language)).append(StringUtil.getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -5082,10 +5079,10 @@ public class DocGen {
             limitString = "";
             forms = kb.ask("stmt",0,term);
             if (forms != null) {
-                if (forms.size() < localLimit) 
+                if (forms.size() < localLimit)
                     localLimit = forms.size();
                 else
-                    limitString = ("<br>Display limited to " 
+                    limitString = ("<br>Display limited to "
                                    + localLimit
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
@@ -5096,9 +5093,7 @@ public class DocGen {
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
-                            language)
-                                  + "<br>" 
-                                  + StringUtil.getLineSeparator());
+                            language)).append("<br>").append(StringUtil.getLineSeparator());
                 }
             }
             result.append(limitString);
@@ -5106,10 +5101,10 @@ public class DocGen {
             limitString = "";
             forms = kb.ask("arg",0,term);
             if (forms != null) {
-                if (forms.size() < localLimit) 
+                if (forms.size() < localLimit)
                     localLimit = forms.size();
                 else
-                    limitString = ("<br>Display limited to " 
+                    limitString = ("<br>Display limited to "
                                    + localLimit
                                    + " statements of each type.<p>"
                                    + StringUtil.getLineSeparator());
@@ -5120,13 +5115,11 @@ public class DocGen {
                             kb.getFormatMap(language),
                             kb.getTermFormatMap(language),
                             kb,
-                            language)
-                                  + "<br>"
-                                  + StringUtil.getLineSeparator());
+                            language)).append("<br>").append(StringUtil.getLineSeparator());
                 }
             }
             result.append(limitString);
-            if (result.length() > 0) { 
+            if (result.length() > 0) {
                 // note that the following 3 lines are inserted in reverse order
                 result.insert(0,"</td></tr></table><p>");
                 result.insert(0, ("<tr><td valign=\"top\" class=\"cell\">"
@@ -5160,10 +5153,10 @@ public class DocGen {
             result.append("  <tr>");
             for (char c = 65; c < 91; c++) {
                 result.append(StringUtil.getLineSeparator());
-                String cString = Character.toString(c);   
+                String cString = Character.toString(c);
                 result.append("    <td valign=\"top\"><a href=\"");
                 result.append(kbHref);
-                if (StringUtil.isNonEmptyString(kbHref) 
+                if (StringUtil.isNonEmptyString(kbHref)
                     && !kbHref.endsWith("&term=")) {
                     result.append("&term=");
                 }
@@ -5189,7 +5182,7 @@ public class DocGen {
      *  Generate an alphabetic HTML list that points to the
      *  individual index pages (which collect all terms or term
      *  formats) starting with a particular letter.
-     * 
+     *
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
@@ -5219,9 +5212,9 @@ public class DocGen {
                     cString = (String) keyList.get(i);  //Character.toString(c);
                     if (Character.isDigit(cString.charAt(0))) {
                         colNum++;
-                        String filelink = "number-" + cString + ".html";      
-                        sb2.append("    <td><a href=\""); 
-                        sb2.append(filelink); 
+                        String filelink = "number-" + cString + ".html";
+                        sb2.append("    <td><a href=\"");
+                        sb2.append(filelink);
                         sb2.append("\">");
                         sb2.append(cString);
                         sb2.append("</a></td>");
@@ -5233,9 +5226,9 @@ public class DocGen {
                     cString = (String) keyList.get(i);
                     if (!Character.isDigit(cString.charAt(0))) {
                         colNum++;
-                        String filelink = "letter-" + cString + ".html";      
-                        sb2.append("    <td><a href=\""); 
-                        sb2.append(filelink); 
+                        String filelink = "letter-" + cString + ".html";
+                        sb2.append("    <td><a href=\"");
+                        sb2.append(filelink);
                         sb2.append("\">");
                         sb2.append(cString);
                         sb2.append("</a></td>");
@@ -5261,14 +5254,14 @@ public class DocGen {
                 sb1.append(StringUtil.getLineSeparator());
                 sb1.append("  </tr>");
                 sb1.append(StringUtil.getLineSeparator());
-                sb1.append("  <tr class=\"letter\">"); 
+                sb1.append("  <tr class=\"letter\">");
                 sb1.append(StringUtil.getLineSeparator());
                 // Assemble everything in the correct order.
                 result.append(sb1);
                 result.append(sb2);
-                result.append("    <td><a href=\""); 
-                result.append(allname); 
-                result.append("\">All</a></td>"); 
+                result.append("    <td><a href=\"");
+                result.append(allname);
+                result.append("\">All</a></td>");
                 result.append(StringUtil.getLineSeparator());
                 result.append("  </tr>");
                 result.append(StringUtil.getLineSeparator());
@@ -5286,18 +5279,18 @@ public class DocGen {
     /** *************************************************************
      *  Generate an HTML page that lists term name and its
      *  documentation
-     * 
+     *
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    protected String generateTOCPage(KB kb, 
-                                     String firstLetter, 
-                                     TreeMap alphaList, 
+    protected String generateTOCPage(KB kb,
+                                     String firstLetter,
+                                     TreeMap alphaList,
                                      String language) {
         /*
-          System.out.println("INFO in generateTOCPage(" + kb 
+          System.out.println("INFO in generateTOCPage(" + kb
           + ", \"" + firstLetter + "\", "
-          + "alphaList" 
+          + "alphaList"
           + " \"" + language + "\")");
         */
         String result = "";
@@ -5331,8 +5324,8 @@ public class DocGen {
                     // Term Name
                     sb.append("    <td valign=\"top\" class=\"cell\">");
                     sb.append(StringUtil.getLineSeparator());
-                    sb.append("      <a href=\""); 
-                    sb.append(StringUtil.toSafeNamespaceDelimiter(realTermName)); 
+                    sb.append("      <a href=\"");
+                    sb.append(StringUtil.toSafeNamespaceDelimiter(realTermName));
                     sb.append(".html\">");
                     sb.append(StringUtil.getLineSeparator());
                     sb.append("        ");
@@ -5363,7 +5356,7 @@ public class DocGen {
                     sb.append(StringUtil.getLineSeparator());
                     sb.append("    </td>");
                     sb.append(StringUtil.getLineSeparator());
-                    sb.append("  </tr>"); 
+                    sb.append("  </tr>");
                     sb.append(StringUtil.getLineSeparator());
                 }
             }
@@ -5382,13 +5375,13 @@ public class DocGen {
      * individual term pages.
      *
      * @param dir is the directory in which to save the pages
-     * 
+     *
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    protected void saveIndexPages(KB kb, 
-                                  TreeMap alphaList, 
-                                  String dir, 
+    protected void saveIndexPages(KB kb,
+                                  TreeMap alphaList,
+                                  String dir,
                                   String language) {
 
         long t1 = System.currentTimeMillis();
@@ -5397,12 +5390,12 @@ public class DocGen {
                            + "[map with " + alphaList.size() + " entries}, "
                            + dir + ", "
                            + language + ")");
-        PrintWriter pw = null; 
+        PrintWriter pw = null;
         File outfile = null;
         String outpath = null;
         try {
-            String tocheader = generateTocHeader(kb, 
-                                                 alphaList, 
+            String tocheader = generateTocHeader(kb,
+                                                 alphaList,
                                                  INDEX_FILE_NAME);
             File parentDir = new File(dir);
             int count = 0;
@@ -5417,18 +5410,18 @@ public class DocGen {
                 String page = generateTOCPage(kb, letter, alphaList, language);
                 pw.println(tocheader);
                 pw.println(page);
-                pw.println(generateHtmlFooter("")); 
+                pw.println(generateHtmlFooter(""));
                 try {
                     pw.close();
                 }
                 catch (Exception pwex) {
-                    System.out.println("Error writing \"" 
-                                       + outpath + "\": " 
+                    System.out.println("Error writing \""
+                                       + outpath + "\": "
                                        + pwex.getMessage());
                     pwex.printStackTrace();
                 }
                 if ((count++ % 100) == 1) System.out.print(".");
-            }   
+            }
             System.out.println("x");
         }
         catch (Exception ex) {
@@ -5487,7 +5480,7 @@ public class DocGen {
                     System.out.println("ERROR in DocGen.printHTMLPages("
                                        + "[map with " + pageList.keySet().size() + " keys], "
                                        + dirpath + ")");
-                    System.out.println("Error writing file " 
+                    System.out.println("Error writing file "
                                        + filename
                                        + StringUtil.getLineSeparator() + ": "
                                        + e.getMessage());
@@ -5533,19 +5526,19 @@ public class DocGen {
         File outdir = null;
         try {
             File parentDir = this.getOutputParentDir();
-            for (int i = 0; (((parentDir == null) 
-                              || !parentDir.isDirectory() 
+            for (int i = 0; (((parentDir == null)
+                              || !parentDir.isDirectory()
                               || !parentDir.canWrite())
                              && (i < 3)); i++) {
                 String dirpath = "";
                 switch (i) {
-                case 0 : 
+                case 0 :
                     dirpath = System.getenv("SIGMA_HOME");
                     break;
                 case 1 :
                     dirpath = KBmanager.getMgr().getPref("baseDir");
                     break;
-                case 2 : 
+                case 2 :
                     dirpath = System.getProperty("user.dir");
                     break;
                 }
@@ -5553,7 +5546,7 @@ public class DocGen {
                     dirpath = StringUtil.removeEnclosingQuotes(dirpath);
                     parentDir = new File(dirpath);
                     ArrayList<String> components =
-                        new ArrayList<String>(Arrays.asList("files", 
+                        new ArrayList<String>(Arrays.asList("files",
                                                             this.getKB().name.toLowerCase()));
                     String component = null;
                     for (Iterator it = components.iterator();
@@ -5567,7 +5560,7 @@ public class DocGen {
                 }
             }
             String leafBasePath = (this.getKB().name.toUpperCase()
-                                   + "_" 
+                                   + "_"
                                    + StringUtil.removeEnclosingQuotes(token)
                                    + "_"
                                    + StringUtil.getDateTime("yyyyMMdd"));
@@ -5590,7 +5583,7 @@ public class DocGen {
                     leafBaseDir = new File(leafBasePlusCount);
             }
             leafBaseDir.mkdirs();
-            if (leafBaseDir.isDirectory() && leafBaseDir.canWrite()) 
+            if (leafBaseDir.isDirectory() && leafBaseDir.canWrite())
                 outdir = leafBaseDir;
         }
         catch (Exception ex) {
@@ -5607,7 +5600,7 @@ public class DocGen {
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    protected TreeMap generateHTMLPages(KB kb, 
+    protected TreeMap generateHTMLPages(KB kb,
                                         TreeMap alphaList,
                                         String language,
                                         String formatToken) {
@@ -5628,7 +5621,7 @@ public class DocGen {
             int count = 0;
             synchronized (kb.getTerms()) {
                 for (Iterator it = kb.getTerms().iterator();
-                     // inverseHeadwordMap.keySet().iterator(); 
+                     // inverseHeadwordMap.keySet().iterator();
                      it.hasNext();) {
                     // formattedTerm = (String) it.next();
                     // termNames = (List) inverseHeadwordMap.get(formattedTerm);
@@ -5675,7 +5668,7 @@ public class DocGen {
                            + language + ", "
                            + formatToken + ")");
         System.out.println("  " + rejectedTerms.size() + " terms rejected");
-        System.out.println("  " 
+        System.out.println("  "
                            + ((System.currentTimeMillis() - t1) / 1000.0)
                            + " seconds elapsed time");
         return pageList;
@@ -5685,7 +5678,7 @@ public class DocGen {
      * Generate simplified HTML pages for all terms.  Output is a
      * set of HTML files sent to the directory specified in
      * makeOutputDir()
-     * 
+     *
      * @param simplified Indicates whether to present a "simplified"
      * view of terms, meaning using a termFormat or headword, rather
      * than the term name itself
@@ -5704,7 +5697,7 @@ public class DocGen {
             // A HashMap where the keys are the term names and the values
             // are "headwords" (with quotes removed).
             /*
-              HashMap headwordMap = createHeadwordMap(kb); 
+              HashMap headwordMap = createHeadwordMap(kb);
               System.out.println("headwordMap == ");
               String key = null;
               String val = null;
@@ -5721,7 +5714,7 @@ public class DocGen {
             TreeMap alphaList = getAlphaList(kb); // headwordMap
             // Headword keys and ArrayList values (since the same headword can
             // be found in more than one term)
-            // HashMap inverseHeadwordMap = createInverseHeadwordMap(kb, headwordMap);  
+            // HashMap inverseHeadwordMap = createInverseHeadwordMap(kb, headwordMap);
             /*
               System.out.println("inverseHeadwordMap == ");
               key = null;
@@ -5738,10 +5731,10 @@ public class DocGen {
             saveIndexPages(kb, alphaList, dir, context);
             // System.out.println("  INFO in DocGen.generateHTML(): generating HTML pages");
             // Keys are formatted term names, values are HTML pages
-            TreeMap pageList = generateHTMLPages(kb, 
-                                                 alphaList, 
-                                                 // inverseHeadwordMap, 
-                                                 context, 
+            TreeMap pageList = generateHTMLPages(kb,
+                                                 alphaList,
+                                                 // inverseHeadwordMap,
+                                                 context,
                                                  formatToken);
             printHTMLPages(pageList, dir);
             // System.out.println("  INFO in DocGen.generateHTML(): creating single index page");
@@ -5767,15 +5760,15 @@ public class DocGen {
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
-     * 
+     *
      * @param simplified Indicates whether to present a "simplified"
      * view of terms, meaning using a termFormat or headword, rather
      * than the term name itself
      */
-    public void generateSingleHTML(KB kb, 
-                                   String dir, 
+    public void generateSingleHTML(KB kb,
+                                   String dir,
                                    TreeMap alphaList,
-                                   String language, 
+                                   String language,
                                    boolean simplified) {
 
         long t1 = System.currentTimeMillis();
@@ -5785,7 +5778,7 @@ public class DocGen {
                            + "[map with " + alphaList.size() + " entries], "
                            + language + ", "
                            + simplified + ")");
-        PrintWriter pw = null; 
+        PrintWriter pw = null;
         try {
             File filedir = new File(dir);
             File outfile = new File(filedir, INDEX_FILE_NAME);
@@ -5821,14 +5814,14 @@ public class DocGen {
                             docs = kb.askWithRestriction(0, "documentation", 1, term);
                             if ((docs != null) && !docs.isEmpty()) {
                                 f = (Formula) docs.get(0);
-                                docStr = processDocString(kb, 
-                                                          "", 
-                                                          language, 
+                                docStr = processDocString(kb,
+                                                          "",
+                                                          language,
                                                           f.getStringArgument(3),
-                                                          false, 
+                                                          false,
                                                           true);
                             }
-                            if (StringUtil.isLocalTermReference(term) 
+                            if (StringUtil.isLocalTermReference(term)
                                 || StringUtil.emptyString(docStr))
                                 continue;
                             pw.println("  <tr>");
@@ -5897,10 +5890,10 @@ public class DocGen {
 
     /** *************************************************************
      */
-    public void generateSingleHTML(KB kb, String language, boolean simplified) 
+    public void generateSingleHTML(KB kb, String language, boolean simplified)
         throws IOException {
 
-        // HashMap headwordMap = createHeadwordMap(kb); 
+        // HashMap headwordMap = createHeadwordMap(kb);
         String dirpath = getOutputDirectoryPath();
         TreeMap alphaList = getAlphaList(kb); // headwordMap
         generateSingleHTML(kb, dirpath, alphaList, language, simplified);
@@ -5990,14 +5983,14 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
-    protected ArrayList getSyntacticExtensionTerms(KB kb, 
-                                                   String term, 
+    protected List getSyntacticExtensionTerms(KB kb,
+                                                   String term,
                                                    int targetArgnum,
                                                    boolean computeClosure) {
 
-        ArrayList result = null;
+        List result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
@@ -6019,7 +6012,7 @@ public class DocGen {
                     String gt = getFirstGeneralTerm(kb, term);
                     if (StringUtil.isNonEmptyString(gt)) {
                         if (computeClosure) {
-                            result = 
+                            result =
                                 kb.getTransitiveClosureViaPredicateSubsumption("syntacticExtension",
                                                                                idxArgnum,
                                                                                gt,
@@ -6027,7 +6020,7 @@ public class DocGen {
                                                                                true);
                         }
                         else {
-                            result = 
+                            result =
                                 kb.getTermsViaPredicateSubsumption("syntacticExtension",
                                                                    idxArgnum,
                                                                    gt,
@@ -6054,11 +6047,11 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
-    protected ArrayList getSyntacticUnionTerms(KB kb, String term, int targetArgnum) {
+    protected List getSyntacticUnionTerms(KB kb, String term, int targetArgnum) {
 
-        ArrayList result = null;
+        List result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
@@ -6085,11 +6078,11 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
-    protected ArrayList getSyntacticCompositeTerms(KB kb, String term, int targetArgnum) {
+    protected List getSyntacticCompositeTerms(KB kb, String term, int targetArgnum) {
 
-        ArrayList result = null;
+        List result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
@@ -6116,7 +6109,7 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
     protected String getClosestXmlDataType(KB kb, String term) {
 
@@ -6155,7 +6148,7 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
     protected String getFirstDatatype(KB kb, String term) {
 
@@ -6175,11 +6168,11 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
-    protected ArrayList getDatatypeTerms(KB kb, String term, int targetArgnum) {
+    protected List getDatatypeTerms(KB kb, String term, int targetArgnum) {
 
-        ArrayList result = null;
+        List result = null;
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 int idxArgnum = ((targetArgnum == 2) ? 1 : 2);
@@ -6199,7 +6192,7 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
     protected boolean isDataType(KB kb, String term) {
 
@@ -6224,7 +6217,7 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
     public String getTermPresentationName(KB kb, String term) {
 
@@ -6243,19 +6236,19 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
-    public String getTermPresentationName(KB kb, 
-                                          String namespace, 
+    public String getTermPresentationName(KB kb,
+                                          String namespace,
                                           String term) {
         return getTermPresentationName(kb, namespace, term, false);
     }
 
     /** *************************************************************
-     * 
+     *
      */
-    public String getTermPresentationName(KB kb, 
-                                          String namespace, 
+    public String getTermPresentationName(KB kb,
+                                          String namespace,
                                           String term,
                                           boolean withSpanTags) {
 
@@ -6402,7 +6395,7 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
     public String getTermNamespace(KB kb, String term) {
 
@@ -6411,7 +6404,7 @@ public class DocGen {
             if (StringUtil.isNonEmptyString(term)) {
                 String prefix = getNamespacePrefix(kb, term);
                 if (StringUtil.isNonEmptyString(prefix)) {
-                    List<String> delims = Arrays.asList(StringUtil.getW3cNamespaceDelimiter(), 
+                    List<String> delims = Arrays.asList(StringUtil.getW3cNamespaceDelimiter(),
                                                         StringUtil.getKifNamespaceDelimiter());
                     for (String delim : delims) {
                         if (prefix.endsWith(delim)) {
@@ -6432,8 +6425,8 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
-     * 
+     *
+     *
      * @param isXmlDoc If true, HTML character entities will be
      *                 replaced with their ASCII equivalents, when
      *                 possible
@@ -6442,9 +6435,9 @@ public class DocGen {
      *                 for recognized terms
      *
      */
-    protected String processDocString(KB kb, 
-                                      String kbHref, 
-                                      String namespace, 
+    protected String processDocString(KB kb,
+                                      String kbHref,
+                                      String namespace,
                                       String docString,
                                       boolean isXmlDoc,
                                       boolean addHrefs) {
@@ -6622,7 +6615,7 @@ public class DocGen {
      * @return An ArrayList of ArrayLists
      */
     public ArrayList<ArrayList<String>> readSpreadsheetFile(String inpath,
-                                         char delimiter, 
+                                         char delimiter,
                                          int delimitersPerRow,
                                          List<String> rowFlags) {
 
@@ -6674,7 +6667,7 @@ public class DocGen {
                 // (delimiters) in each row will be constant.
                 if (useDelimitersPerRow) {
                     if (!useRowFlags && rows.isEmpty()) {
-                        rows.add(line); 
+                        rows.add(line);
                         continue;
                     }
                     prevDelimCount = countDelimiters(prevLine, delimiter);
@@ -6689,7 +6682,7 @@ public class DocGen {
                         }
                     }
                     if (countDelimiters(line, delimiter) > delimitersPerRow) {
-                        System.out.println("WARNING in DocGen.readSpreadsheetFile(" 
+                        System.out.println("WARNING in DocGen.readSpreadsheetFile("
                                            + inpath + ", " + delimiter + ", "
                                            + delimitersPerRow + ", " + rowFlags + ")");
                         System.out.println("  Too many delimiters read near line "
@@ -6713,14 +6706,14 @@ public class DocGen {
         }
         catch (Exception ex) {
             ex.printStackTrace();
-        } 
+        }
         return result;
     }
 
     /** *******************************************************************
      * Converts a List of char-delimited Strings to a List of Lists
      * (i.e., an array) representing a spreadsheet.
-     * 
+     *
      * @param rows A List of char-delimited Strings.  The list is
      * processed in place, and will contain only Lists when
      * processing is finished.
@@ -6738,8 +6731,8 @@ public class DocGen {
             boolean inString = false;
             char ch = '0';
             int rowCount = rows.size();
-            System.out.println("INFO in DocGen.convertRowStringsToLists(" 
-                               + "[" + rowCount + " rows], " 
+            System.out.println("INFO in DocGen.convertRowStringsToLists("
+                               + "[" + rowCount + " rows], "
                                + delimiter + ")");
             System.out.println("  Converting " + rowCount + " Strings to Lists");
             for (int c = 0; c < rowCount; c++) {
@@ -6779,7 +6772,7 @@ public class DocGen {
     /** *******************************************************************
      * Counts the number of field delimiters in line and returns the
      * count, ignoring delimiters that are inside Strings.
-     * 
+     *
      * @param line A line of data fields that are separated by
      * occurrences of a delimiter char.
      *
@@ -6798,7 +6791,7 @@ public class DocGen {
                 ch = line.charAt(i);
                 if (ch == delimiter && !inString) {
                     count++;
-                } 
+                }
                 else if (ch == '"' && (i == 0 || line.charAt(i-1) != '\\')) {
                     inString = !inString;
                 }
@@ -6811,7 +6804,7 @@ public class DocGen {
     }
 
     /** *************************************************************
-     * 
+     *
      */
     public static void main (String[] args) {
 
@@ -6822,9 +6815,8 @@ public class DocGen {
         }
         catch (Throwable th) {
             System.out.println(status);
-            System.out.println(th.getMessage());
+            System.err.println(th.getMessage());
             th.printStackTrace();
         }
-        return;
     }
 } // DocGen.java
