@@ -152,8 +152,9 @@ If you want to monitor the server's condition and if it started successfully you
 tail -f $CATALINA_HOME/logs/catalina.out
 
 To start Tomcat execute:
-$CATALINA_HOME/bin/startup.sh or,
-simply: startup.sh since $CATALINA_HOME/bin was export to your PATH
+$CATALINA_HOME/bin/startup.sh
+or simply: startup.sh
+since $CATALINA_HOME/bin was exported to your PATH
 
 Point your browser at http://localhost:8080/sigma/login.html
 Default credentials are: admin/admin
