@@ -44,10 +44,10 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt);
 
-        HashMap<String, ArrayList> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
+        Map<String, List> actualMap = f.gatherRelationsWithArgTypes(SigmaTestBase.kb);
 
-        ArrayList<String> expectedList = Lists.newArrayList(null, "Process", "AutonomousAgent", null, null, null, null, null);
-        HashMap<String, ArrayList> expectedMap = Maps.newHashMap();
+        List<String> expectedList = Lists.newArrayList(null, "Process", "AutonomousAgent", null, null, null, null, null);
+        Map<String, List> expectedMap = Maps.newHashMap();
         expectedMap.put("agent", expectedList);
 
         System.out.println("testGatherRelationships(): actual: " + actualMap);
@@ -439,8 +439,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
             //skbtfakb.writeFile(filename, null, false, "", false, pw);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
         System.out.println("\n============= testTVRPreprocess ==================");
@@ -483,7 +482,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (actual.size() > expectedSize)
             System.out.println("testTVRPreprocess(): pass");
         else
-            System.out.println("testTVRPreprocess(): fail");
+            System.err.println("testTVRPreprocess(): fail");
         assertTrue(actual.size() > expectedSize);
     }
 
