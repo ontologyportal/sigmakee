@@ -88,7 +88,7 @@ public class Vampire {
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
     public static boolean assertFormula(String userAssertionTPTP, KB kb,
-                                        List<Formula> parsedFormulas, boolean tptp) {
+                                 List<Formula> parsedFormulas, boolean tptp) {
 
         if (debug) System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
@@ -197,7 +197,7 @@ public class Vampire {
     /** ***************************************************************
      * Read in two files and write their contents to a new file
      */
-    public void concatFiles(String f1, String f2, String fout) throws Exception {
+    public void concatFiles(String f1, String f2, String fout) throws IOException {
 
         System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
         File f1file = new File(f1);
@@ -218,7 +218,7 @@ public class Vampire {
                 line = bufr.readLine();
                 while (line != null) {
                     pw.println(line);
-                    line = br.readLine();
+                    line = bufr.readLine();
                 }
             }
         }

@@ -292,7 +292,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (endIndex > 6)
             return;
         if (endIndex < 1) {
-            System.out.println("Error SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
+            System.err.println("Error SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
             endIndex = sig.size();
         }
         if (endIndex > sig.size())
@@ -615,8 +615,9 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         handleVariableArity(toExtend); // special case
         handleListFn(toExtend);
         String fnSuffix;
+        String bareTerm;
         for (String t : kb.getTerms()) {
-            String bareTerm = SUMOtoTFAform.getBareTerm(t);
+            bareTerm = SUMOtoTFAform.getBareTerm(t);
             pw.println("% SUMOKBtoTFAKB.writeSorts(): " + t);
             if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): t: " + t);
             if (debug) System.out.println("SUMOKBtoTFAKB.writeSorts(): bareTerm: " + bareTerm);
@@ -652,7 +653,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String sep, newTerm;
         pw.println("% SUMOKBtoTFAKB.writeSorts(): starting on toExtend sorts");
         for (String k : toExtend.keySet()) {
-            String bareTerm = SUMOtoTFAform.getBareTerm(k);
+            bareTerm = SUMOtoTFAform.getBareTerm(k);
             vals = toExtend.get(bareTerm);
             fnSuffix = "";
             if (kb.isFunction(bareTerm) || bareTerm.endsWith("Fn"))  // variable arity functions with numerical suffixes not in kb yet

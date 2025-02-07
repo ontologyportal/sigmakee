@@ -69,12 +69,12 @@ Articulate Software
 
         StringBuilder sb = new StringBuilder();
         String pred = f.getStringArgument(0);
-        ArrayList<String> l = f.complexArgumentsToArrayListString(1);
-        if (l == null || l.size() == 0)
-            System.out.println("Error in KIF2SQL.createNewFunction(): null argument list for: " + f);
-        sb.append("(" + pred +  " " + funcID);
+        List<String> l = f.complexArgumentsToArrayListString(1);
+        if (l == null || l.isEmpty())
+            System.err.println("Error in KIF2SQL.createNewFunction(): null argument list for: " + f);
+        sb.append("(").append(pred).append(" ").append(funcID);
         for (String s : l)
-            sb.append(" " + s);
+            sb.append(" ").append(s);
         sb.append(")");
         return new Formula(sb.toString());
     }
@@ -238,8 +238,8 @@ Articulate Software
      */
     private void writeDocumentation(String term) {
 
-        ArrayList doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
-        if (doc.size() > 0) {
+        List doc = kb.askWithRestriction(0,"documentation",1,term);    // Class expressions for term.
+        if (!doc.isEmpty()) {
             for (int i = 0; i < doc.size(); i++) {
                 Formula form = (Formula) doc.get(i);
                 String lang = form.getStringArgument(2);
@@ -505,7 +505,7 @@ Articulate Software
                     ot.writeKB();
                 }
                 catch (Exception e) {
-                    System.out.println(e.getMessage());
+                    System.err.println(e.getMessage());
                     e.printStackTrace();
                 }
             }

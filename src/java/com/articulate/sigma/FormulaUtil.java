@@ -37,19 +37,20 @@ public class FormulaUtil {
      */
     public static String toProlog(Formula f) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         String car = f.car();
-        sb.append(car + "(");
+        sb.append(car).append("(");
         if (Formula.listP(car)) {
-            System.out.println("Error in FormulaUtil.toProlog(): not a simple clause: " + car);
+            System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + car);
             return "";
         }
+        String arg;
         for (int i = 1; i < f.argumentsToArrayListString(0).size(); i ++) {
             if (i != 1)
                 sb.append(",");
-            String arg = f.getStringArgument(i);
+            arg = f.getStringArgument(i);
             if (Formula.listP(arg)) {
-                System.out.println("Error in FormulaUtil.toProlog(): not a simple clause: " + arg);
+                System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + arg);
                 return "";
             }
             sb.append(arg);
@@ -62,9 +63,9 @@ public class FormulaUtil {
      */
     public static String formatCollection(Collection<Formula> c) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (Formula f : c)
-            sb.append(f.toString() + "\n\n");
+            sb.append(f.toString()).append("\n\n");
         return sb.toString();
     }
 
@@ -77,11 +78,12 @@ public class FormulaUtil {
         //System.out.println("getLiteralWithPredAndRowVar(): pred,f: " + pred + ", " + f);
         if (f == null || !f.listP())
             return null;
-        if (f.car().equals(pred) && f.getFormula().indexOf("@") != -1)
+        if (f.car().equals(pred) && f.getFormula().contains("@"))
             return f.getFormula();
-        ArrayList<Formula> lits = f.complexArgumentsToArrayList(0);
+        List<Formula> lits = f.complexArgumentsToArrayList(0);
+        String result;
         for (Formula form : lits) {
-            String result = getLiteralWithPredAndRowVar(pred,form);
+            result = getLiteralWithPredAndRowVar(pred,form);
             if (result != null)
                 return result;
         }
@@ -99,11 +101,8 @@ public class FormulaUtil {
         if (!f.isGround())
             return false;
         String pred = f.getStringArgument(0);
-        if (pred.equals("documentation") || pred.equals("format") ||
-            pred.equals("termFormat") || pred.equals("externalImage"))
-            return true;
-        else
-            return false;
+        return pred.equals("documentation") || pred.equals("format") ||
+                pred.equals("termFormat") || pred.equals("externalImage");
     }
 
     /*******************************************************************************************
@@ -115,7 +114,7 @@ public class FormulaUtil {
         for( int i = 0; i< size; i++) {
             array[i] = i;
         }
-        List<int[]> result = new LinkedList<int[]>();
+        List<int[]> result = new LinkedList<>();
         permutation(new int[0], array, result, validateFn);
         return result;
     }
@@ -128,7 +127,6 @@ public class FormulaUtil {
         int n = array.length;
         if (n == 0) {
             permutations.add(prefix);
-            return;
         }
         else {
             for (int i = 0; i < n; i++) {
@@ -136,9 +134,7 @@ public class FormulaUtil {
                     int[] newPrefix = Arrays.copyOf(prefix, prefix.length + 1);
                     newPrefix[prefix.length] = array[i];
                     int[] leftovers = new int[n - 1];
-                    for (int j = 0; j < i; j++) {
-                        leftovers[j] = array[j];
-                    }
+                    System.arraycopy(array, 0, leftovers, 0, i);
                     for (int j = i + 1; j < n; j++) {
                         leftovers[j - 1] = array[j];
                     }
@@ -156,9 +152,9 @@ public class FormulaUtil {
      * @param kifListAsString A SUO-KIF list represented as a String
      * @return ArrayList
      */
-    public static ArrayList kifListToArrayList(String kifListAsString) {
+    public static List<String> kifListToArrayList(String kifListAsString) {
 
-        ArrayList ans = new ArrayList();
+        List<String> ans = new ArrayList<>();
         try {
             if (!StringUtil.emptyString(kifListAsString)) {
                 Formula f = new Formula();
@@ -263,9 +259,7 @@ public class FormulaUtil {
             FormulaMatchMemoMapKey that = (FormulaMatchMemoMapKey) o;
 
             if (f1 != null ? !f1.equals(that.f1) : that.f1 != null) return false;
-            if (f2 != null ? !f2.equals(that.f2) : that.f2 != null) return false;
-
-            return true;
+            return !(f2 != null ? !f2.equals(that.f2) : that.f2 != null);
         }
 
         /** ******************************************************************************************

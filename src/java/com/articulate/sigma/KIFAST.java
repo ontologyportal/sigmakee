@@ -15,7 +15,7 @@ public class KIFAST {
     public static int count = 0;
 
     /** The set of all terms in the knowledge base. This is a set of Strings. */
-    public TreeSet<String> terms = new TreeSet<>();
+    public Set<String> terms = new TreeSet<>();
 
     /** A hashMap to store term frequencies for each term in knowledge base */
     public Map<String, Integer> termFrequency = new HashMap<>();
@@ -27,7 +27,7 @@ public class KIFAST {
      *
      * see #createKey(String, boolean, boolean, int, int) for key format.
      */
-    public HashMap<String, ArrayList<FormulaAST>> formulas = new HashMap<>();
+    public Map<String, List<FormulaAST>> formulas = new HashMap<>();
 
     /**
      * A HashMap of String keys representing the formula, and Formula values.
@@ -35,32 +35,32 @@ public class KIFAST {
      * Formula that is that string, along with information about at what line
      * number and in what file it appears.
      */
-    public HashMap<String, FormulaAST> formulaMap = new HashMap<>();
+    public Map<String, FormulaAST> formulaMap = new HashMap<>();
 
     public String filename;
     private File file;
     private int totalLinesForComments = 0;
 
     /** warnings generated during parsing */
-    public TreeSet<String> warningSet = new TreeSet<>();
+    public Set<String> warningSet = new TreeSet<>();
     /** errors generated during parsing */
-    public TreeSet<String> errorSet = new TreeSet<>();
+    public Set<String> errorSet = new TreeSet<>();
 
     /****************************************************************
      * Read a KIF file.
      *
      * @param fname - the full pathname of the file.
      */
-    public TreeSet<String> readFile(String fname) throws Exception {
+    public Set<String> readFile(String fname) throws Exception {
 
-        TreeSet<String> warnings = new TreeSet<>();
+        Set<String> warnings = new TreeSet<>();
         Exception exThr = null;
         this.file = new File(fname);
         if (!this.file.exists()) {
             String errString =  " error file " + fname + "does not exist";
             KBmanager.getMgr()
                     .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
-            System.out.println("Error in KIF.readFile(): " + errString);
+            System.err.println("Error in KIF.readFile(): " + errString);
             return null;
         }
         this.filename = file.getCanonicalPath();
@@ -93,7 +93,7 @@ public class KIFAST {
      * @return a Set of warnings that may indicate syntax errors, but not fatal
      *         parse errors.
      */
-    public TreeSet<String> parseBody(String s, int startLine, int endLine) {
+    public Set<String> parseBody(String s, int startLine, int endLine) {
 
         int lastVal;
         String errStr;
@@ -168,10 +168,10 @@ public class KIFAST {
      * @return a Set of warnings that may indicate syntax errors, but not fatal
      *         parse errors.
      */
-    public TreeSet<String> parseNew(StreamTokenizer_s st) {
+    public Set<String> parseNew(StreamTokenizer_s st) {
 
         String errStr;
-        TreeSet<String> warnings = new TreeSet<>();
+        Set<String> warnings = new TreeSet<>();
 //        char ch;
         boolean isEOL = false;
         int lastVal;
@@ -257,11 +257,11 @@ public class KIFAST {
         }
         catch (IOException | ParseException ex) {
             String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
-            warningSet.add("Warning in KIFAST.parse() " + message);
+            warningSet.add("Warning in KIFAST.parseNew(StreamTokenizer_s) " + message);
             ex.printStackTrace();
         }
         if (duplicateCount > 0) {
-            String warning = "WARNING in KIF.parse(Reader), " + duplicateCount + " duplicate statement"
+            String warning = "WARNING in KIFAST.parse(StreamTokenizer_s), " + duplicateCount + " duplicate statement"
                     + ((duplicateCount > 1) ? "s " : " ") + "detected in "
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);
@@ -278,7 +278,7 @@ public class KIFAST {
      * @return a Set of warnings that may indicate syntax errors, but not fatal
      *         parse errors.
      */
-    public TreeSet<String> parse(Reader r) {
+    public Set<String> parse(Reader r) {
 
 //        Stack<FormulaAST.Term> stack = new Stack<>();
         StringBuilder expression = new StringBuilder();
@@ -303,11 +303,11 @@ public class KIFAST {
             int argumentNum = -1;
             boolean inAntecedent = false;
             boolean inConsequent = false;
-            HashSet<String> keySet = new HashSet<>();
+            Set<String> keySet = new HashSet<>();
             // int lineStart = 0;
             boolean isEOL = false;
             String fstr, warning, validArgs;
-            ArrayList<FormulaAST> list;
+            List<FormulaAST> list;
             do {
                 lastVal = st.ttype;
                 st.nextToken();
@@ -387,7 +387,7 @@ public class KIFAST {
                                 if (!formulaMap.keySet().contains(f.toString())) { // don't add keys if formula is already present
                                     list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.toString())) {
-                                        System.out.println("Error in KIF.parse(): Storing empty formula from line: "
+                                        System.err.println("Error in KIF.parse(): Storing empty formula from line: "
                                                 + f.startLine);
                                         errorSet.add(errStr);
                                     }
@@ -486,11 +486,11 @@ public class KIFAST {
         }
         catch (IOException | ParseException ex) {
             String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
-            warningSet.add("Warning in KIF.parse() " + message);
+            warningSet.add("Warning in KIFAST.parse(Reader) " + message);
             ex.printStackTrace();
         }
         if (duplicateCount > 0) {
-            String warning = "WARNING in KIF.parse(Reader), " + duplicateCount + " duplicate statement"
+            String warning = "WARNING in KIFAST.parse(Reader), " + duplicateCount + " duplicate statement"
                     + ((duplicateCount > 1) ? "s " : " ") + "detected in "
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);

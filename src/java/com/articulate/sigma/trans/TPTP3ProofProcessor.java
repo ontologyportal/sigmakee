@@ -1472,7 +1472,7 @@ public class TPTP3ProofProcessor {
                     String query = "(maximumPayloadCapacity ?X (MeasureFn ?Y ?Z))";
                     StringBuilder answerVars = new StringBuilder("?X ?Y ?Z");
                     System.out.println("input: " + lines + "\n");
-                    tpp.parseProofOutput((ArrayList<String>) lines, query, kb, answerVars);
+                    tpp.parseProofOutput(lines, query, kb, answerVars);
                     tpp.createProofDotGraph();
                     System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
                     Formula f;
@@ -1502,7 +1502,7 @@ public class TPTP3ProofProcessor {
                     String query = "";
                     StringBuilder answerVars = new StringBuilder("");
                     //System.out.println("input: " + lines + "\n");
-                    tpp.parseProofOutput((ArrayList<String>) lines, query, kb, answerVars);
+                    tpp.parseProofOutput(lines, query, kb, answerVars);
                     //tpp.printProof(1);
                     //tpp.createProofDotGraph();
                     //System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");

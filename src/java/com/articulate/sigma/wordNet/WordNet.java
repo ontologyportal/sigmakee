@@ -93,7 +93,7 @@ public class WordNet implements Serializable {
     /** Keys are SUMO terms, values are ArrayLists(s) of
      * POS-prefixed 9-digit synset String(s) meaning that the part of speech code is
      * prepended to the synset number. */
-    public Hashtable<String,ArrayList<String>> SUMOHash = new Hashtable<>();
+    public Hashtable<String,List<String>> SUMOHash = new Hashtable<>();
 
     /** Keys are String POS-prefixed synsets.  Values
      * are ArrayList(s) of String(s) which are words. Note
@@ -389,7 +389,7 @@ public class WordNet implements Serializable {
         //System.out.println("INFO in WordNet.addSUMOHash(): SUMO term: " + key);
         //System.out.println("INFO in WordNet.addSUMOHash(): synset: " + value);
         term = term.substring(2,term.length()-1);
-        ArrayList<String> synsets = SUMOHash.get(term);
+        List<String> synsets = SUMOHash.get(term);
         if (synsets == null) {
             synsets = new ArrayList<>();
             SUMOHash.put(term,synsets);
@@ -2375,7 +2375,7 @@ public class WordNet implements Serializable {
     public TreeMap<String,String> getWordsFromTerm(String SUMOterm) {
 
         TreeMap<String,String> result = new TreeMap<String,String>();
-        ArrayList<String> synsets = SUMOHash.get(SUMOterm);
+        List<String> synsets = SUMOHash.get(SUMOterm);
         if (synsets == null) {
             System.out.println("INFO in WordNet.getWordsFromTerm(): No synsets for term : " + SUMOterm);
             return null;
@@ -2968,19 +2968,17 @@ public class WordNet implements Serializable {
             boolean uppercase = false;
             if (Character.isUpperCase(word.charAt(0)))
                 uppercase = true;
-            if (word.indexOf("_") > -1)
+            if (word.contains("_"))
                 word = processMultiWord(word);
             else {
                 word = word.replace("'","\\'");
-                if ((word.indexOf("-") > -1) || (word.indexOf(".") > -1) || (word.indexOf("/") > -1)
-                        || (word.indexOf("\\'") > -1) || uppercase || Character.isDigit(word.charAt(0)))
+                if ((word.contains("-")) || (word.contains(".")) || (word.contains("/"))
+                        || (word.contains("\\'")) || uppercase || Character.isDigit(word.charAt(0)))
                     word = "'" + word + "'";
             }
-            Iterator<String> it2 = stringSynsets.iterator();
-            while (it2.hasNext()) {
-                String synset = it2.next();
+            for (String synset : stringSynsets) {
                 String sumoTerm = (String) nounSUMOHash.get(synset);
-                if (sumoTerm != null && sumoTerm != "") {
+                if (sumoTerm != null && !"".equals(sumoTerm)) {
                     String bareSumoTerm = WordNetUtilities.getBareSUMOTerm(sumoTerm);
                     char mapping = WordNetUtilities.getSUMOMappingSuffix(sumoTerm);
                     String type = "object";
@@ -2995,14 +2993,14 @@ public class WordNet implements Serializable {
                     if (uppercase && mapping == '@')
                         instance = true;
                     if (mapping == '=') {
-                        ArrayList<Formula> al = kb.instancesOf(bareSumoTerm);
-                        if (al.size() > 0)
+                        List<Formula> al = kb.instancesOf(bareSumoTerm);
+                        if (!al.isEmpty())
                             instance = true;
                     }
                     if (instance && uppercase) {
-                        ArrayList<Formula> al = kb.askWithRestriction(1,bareSumoTerm,0,"instance");
+                        List<Formula> al = kb.askWithRestriction(1,bareSumoTerm,0,"instance");
                         String parentTerm = "";
-                        if (al != null && al.size() > 0) {
+                        if (al != null && !al.isEmpty()) {
                             parentTerm = al.get(0).getStringArgument(2);
                         }
                         else
@@ -3255,14 +3253,11 @@ public class WordNet implements Serializable {
      */
     public void writeWordNetG() {
 
-        FileWriter fw = null;
-        PrintWriter pw = null;
         String dir = WordNet.baseDir;
         String fname = "Wn_g.pl";
 
-        try {
-            fw = new FileWriter(dir + File.separator + fname);
-            pw = new PrintWriter(fw);
+        try (Writer fw = new FileWriter(dir + File.separator + fname);
+             PrintWriter pw = new PrintWriter(fw)) {
             Iterator<String> it = nounDocumentationHash.keySet().iterator();
             while (it.hasNext()) {
                 String synset = (String) it.next();
@@ -3292,20 +3287,10 @@ public class WordNet implements Serializable {
                 pw.println("g(" + "4" + synset + ",'(" + doc + ")').");
             }
         }
-        catch (Exception e) {
-            System.out.println("Error in WordNet.writeWordNetG(): ");
-            System.out.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
+        catch (IOException e) {
+            System.err.println("Error in WordNet.writeWordNetG(): ");
+            System.err.println("Error writing file " + dir + File.separator + fname + "\n" + e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null)
-                    pw.close();
-                if (fw != null)
-                    fw.close();
-            }
-            catch (Exception ex) {
-            }
         }
     }
 
@@ -3323,7 +3308,7 @@ public class WordNet implements Serializable {
      */
     public String generateSynsetID(String l) {
 
-        Integer intval = Integer.parseInt(l);
+        Integer intval = Integer.valueOf(l);
         intval++;
         return StringUtil.integerToPaddedString(intval);
     }
@@ -3352,8 +3337,8 @@ public class WordNet implements Serializable {
     public String nounSynsetFromTermFormat(String tf, String SUMOterm, KB kb) {
 
         String synsetID = generateNounSynsetID();
-        ArrayList<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
-        if (forms.size() > 0) {
+        List<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
+        if (!forms.isEmpty()) {
             Formula f = forms.get(0);
             String doc = f.getStringArgument(3);
             if (StringUtil.emptyString(doc))
@@ -3375,7 +3360,7 @@ public class WordNet implements Serializable {
     public String verbSynsetFromTermFormat(String tf, String SUMOterm, KB kb) {
 
         String synsetID = generateVerbSynsetID();
-        ArrayList<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
+        List<Formula> forms = kb.askWithRestriction(0, "documentation", 1, SUMOterm);
         if (!forms.isEmpty()) {
             Formula f = forms.get(0);
             String doc = f.getStringArgument(3);
@@ -3430,9 +3415,9 @@ public class WordNet implements Serializable {
         MapUtils.addToMap(ignoreCaseSynsetHash,tf.toUpperCase(),synsetID);
         //System.out.println("INFO in WordNet.synsetFromTermFormat(): " + tf.toUpperCase() + "," + synsetID);
 
-        ArrayList<String> al = SUMOHash.get(SUMOterm);
+        List<String> al = SUMOHash.get(SUMOterm);
         if (al == null)
-            al = new ArrayList<String>();
+            al = new ArrayList<>();
         al.add(synsetID);
         SUMOHash.put(SUMOterm, al);
 
@@ -3496,12 +3481,12 @@ public class WordNet implements Serializable {
         int totalcount = 0;
         //System.out.println("INFO in WordNet.termFormatsToSynsets()");
         long millis2 = System.currentTimeMillis();
-        ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
+        List<Formula> forms = kb.ask("arg", 0, "termFormat");
         System.out.println("WordNet.termFormatsToSynsets(): just the ask in seconds: " + (System.currentTimeMillis() - millis) / 1000);
         System.out.println("WordNet.termFormatsToSynsets(): termFormats: " + forms.size());
         for (Formula form : forms) {
             //System.out.println("WordNet.termFormatsToSynsets(): form: " + form);
-            ArrayList<String> args = form.argumentsToArrayListString(0);
+            List<String> args = form.argumentsToArrayListString(0);
             //System.out.println("WordNet.termFormatsToSynsets(): args: " + args);
             if (args == null || args.size() < 2)
                 continue;

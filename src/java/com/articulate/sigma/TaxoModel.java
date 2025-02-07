@@ -1,17 +1,18 @@
 package com.articulate.sigma;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.articulate.sigma.KB;
+import java.util.List;
 
-/** This code is copyright Articulate Software (c) 2003.  
+/** This code is copyright Articulate Software (c) 2003.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 */
@@ -26,8 +27,8 @@ public class TaxoModel {
     public static String kbName = "";
     public static String defaultTerm = "Entity";
     public static String termPage = "SimpleBrowse.jsp";
-    public static HashMap<String,TaxoNode> nodeMap = new HashMap<String,TaxoNode>();
-    public static HashMap<String,TaxoNode> rootList = new HashMap<String,TaxoNode>();
+    public static HashMap<String,TaxoNode> nodeMap = new HashMap<>();
+    public static HashMap<String,TaxoNode> rootList = new HashMap<>();
 
     /** ***************************************************************
      * Remove the old tree and start over from termName.
@@ -45,9 +46,9 @@ public class TaxoModel {
     /** ***************************************************************
      * Remove any cached formulas from a list.
      */
-    public static ArrayList<Formula> removeCached (ArrayList<Formula> forms) {
+    public static List<Formula> removeCached (List<Formula> forms) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        List<Formula> result = new ArrayList<>();
         for (int i = 0; i < forms.size(); i++) {
             Formula f = (Formula) forms.get(i);
             //if (f == null || f.sourceFile == null) {
@@ -77,10 +78,10 @@ public class TaxoModel {
             collapseParentNodes(parent.name);
             String parentKey = kbName + ":" + parent.name;
             nodeMap.remove(parentKey);
-            if (rootList.containsKey(parentKey)) 
+            if (rootList.containsKey(parentKey))
                 rootList.remove(parentKey);
         }
-        n.parents = new ArrayList<TaxoNode>();
+        n.parents = new ArrayList<>();
         rootList.put(key,n);
     }
 
@@ -96,22 +97,22 @@ public class TaxoModel {
             System.out.println("Error in TaxoModel.expandParentNodes(): Bad key: " + key);
             return;
         }
-        n.parents = new ArrayList<TaxoNode>();
+        n.parents = new ArrayList<>();
         rootList.clear();  // = new HashMap();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        ArrayList<Formula> forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
+        List<Formula> forms = kb.askWithPredicateSubsumption(relation,1,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
             Formula form = (Formula) forms.get(i);
             TaxoNode parent = new TaxoNode();
             parent.name = form.getStringArgument(2);
-            if (parent.name.equals(n.name)) 
+            if (parent.name.equals(n.name))
                 return;
             parent.childrenExpanded = false;
             parent.oneChild = n;
             n.parents.add(parent);
             String parentKey = kbName + ":" + parent.name;
-            if (!nodeMap.containsKey(parentKey)) 
+            if (!nodeMap.containsKey(parentKey))
                 nodeMap.put(parentKey,parent);
             rootList.put(parentKey,parent);
         }
@@ -162,7 +163,7 @@ public class TaxoModel {
         n.oneChild = null;
         n.children = new ArrayList();
         KB kb = KBmanager.getMgr().getKB(kbName);
-        ArrayList forms = kb.askWithPredicateSubsumption(relation,2,nodeName);
+        List forms = kb.askWithPredicateSubsumption(relation,2,nodeName);
         // kb.askWithRestriction(0,relation,2,nodeName);
         forms = removeCached(forms);
         for (int i = 0; i < forms.size(); i++) {
@@ -196,10 +197,10 @@ public class TaxoModel {
      */
     public static String toHTML(String kbHref) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Object[] objArr = rootList.values().toArray();
-        for (int i = 0; i < objArr.length; i++) {
-            TaxoNode n = (TaxoNode) objArr[i];
+        for (Object objArr1 : objArr) {
+            TaxoNode n = (TaxoNode) objArr1;
             sb.append(n.toHTML(kbHref,0));
         }
         return sb.toString();

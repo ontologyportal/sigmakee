@@ -700,8 +700,7 @@ public class DB {
 
         ArrayList relations = new ArrayList();
         synchronized (kb.getTerms()) {
-            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
-                String term = (String) it.next();
+            for (String term : kb.getTerms()) {
                 if (kb.isInstanceOf(term, "Predicate"))
                     relations.add(term.intern());
             }

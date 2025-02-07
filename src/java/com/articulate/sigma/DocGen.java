@@ -1242,7 +1242,7 @@ public class DocGen {
      *  the new TreeSet to sort according to each term's presentation
      *  name.
      */
-    public SortedSet<String> resortKbTerms(KB kb) {
+    public Set<String> resortKbTerms(KB kb) {
 
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.resortKbTerms(" + kb.name + ")");
@@ -1250,11 +1250,11 @@ public class DocGen {
             PresentationNameComparator pnc = new PresentationNameComparator();
             pnc.setKB(kb);
             pnc.setDocGen(this);
-            TreeSet<String> ts = new TreeSet<String>(pnc);
+            Set<String> ts = new TreeSet<>(pnc);
             synchronized (kb.getTerms()) {
                 ts.addAll(kb.getTerms());
             }
-            kb.setTerms((SortedSet) ts);
+            kb.setTerms(ts);
         }
         catch (Exception ex) {
             ex.printStackTrace();

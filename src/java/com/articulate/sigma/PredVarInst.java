@@ -212,8 +212,8 @@ public class PredVarInst {
     public static Set<Formula> instantiatePredVars(Formula input, KB kb) {
 
         if (debug) System.out.println("instantiatePredVars(): input: " + input);
-        Set<Formula> result = new HashSet<Formula>();
-        HashSet<String> predVars = gatherPredVars(kb,input);
+        Set<Formula> result = new HashSet<>();
+        Set<String> predVars = gatherPredVars(kb,input);
         if (predVars.size() > 1) {
             if (rejectDoubles) {
                 SUMOtoTFAform.filterMessage = "reject axioms with more than one predicate variable";
@@ -322,8 +322,8 @@ public class PredVarInst {
                 Formula.atom(f.getFormula()) || f.isVariable())
             return null;
         String rel = f.getStringArgument(0);
-        ArrayList<Formula> argList = f.complexArgumentsToArrayList(1);
-        if (argList == null || argList.size() == 0) {
+        List<Formula> argList = f.complexArgumentsToArrayList(1);
+        if (argList == null || argList.isEmpty()) {
             return null;
         }
         //System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): args" + l);
@@ -404,7 +404,7 @@ public class PredVarInst {
 
     /** ***************************************************************
      */
-    private static boolean containsRowVariable(ArrayList<Formula> arglist) {
+    private static boolean containsRowVariable(List<Formula> arglist) {
 
         for (Formula s : arglist)
             if (s.isRowVar())
@@ -417,9 +417,9 @@ public class PredVarInst {
       * the argument list has a row variable, return 0 as the value, meaning
       * any possible arity of 1 - maxArity
      */
-    protected static HashSet<String> gatherPredVarRecurse(KB kb, Formula f) {
+    protected static Set<String> gatherPredVarRecurse(KB kb, Formula f) {
 
-        HashSet<String> ans = new HashSet<String>();
+        Set<String> ans = new HashSet<>();
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): " + f);
         if (f == null || f.empty() || Formula.atom(f.getFormula()) || f.isVariable())
             return ans;
@@ -427,8 +427,8 @@ public class PredVarInst {
             Formula arg0 = f.getArgument(0);
             if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): simple clause with: " + arg0);
             if (arg0.isRegularVariable()) {
-                ArrayList<Formula> arglist = f.complexArgumentsToArrayList(1);
-                if (arglist != null && arglist.size() > 0) {// a variable could be an argument to a higher-order formula
+                List<Formula> arglist = f.complexArgumentsToArrayList(1);
+                if (arglist != null && !arglist.isEmpty()) {// a variable could be an argument to a higher-order formula
                     if (debug) System.out.println("INFO in PredVarInst.gatherPredVarRecurse(): adding: " + arg0 +
                             " with arglist: " + arglist);
                     ans.add(arg0.getFormula());
@@ -468,7 +468,7 @@ public class PredVarInst {
      */
     protected static Map<String, Set<String>> findPredVarTypes(Formula f, KB kb) {
 
-        HashSet<String> predVars = gatherPredVars(kb,f);
+        Set<String> predVars = gatherPredVars(kb,f);
         if (debug) System.out.println("findPredVarTypes(): predVars: " + predVars);
         FormulaPreprocessor fp = new FormulaPreprocessor();
         //HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);  // <- this skips explicit types
@@ -487,15 +487,15 @@ public class PredVarInst {
     /** ***************************************************************
      * Collect and return all predicate variables for the given formula
      */
-    public static HashSet<String> gatherPredVars(KB kb, Formula f) {
+    public static Set<String> gatherPredVars(KB kb, Formula f) {
 
         if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): " + f);
         if (f.predVarCache != null) {
             if (debug) System.out.println("INFO in PredVarInst.gatherPredVars(): returning cache " + f.predVarCache);
             return f.predVarCache;
         }
-        HashSet<String> varlist = null;
-        HashMap<String,HashSet<String>> ans = new HashMap<String,HashSet<String>>();
+        Set<String> varlist = null;
+        Map<String,Set<String>> ans = new HashMap<>();
         if (!StringUtil.emptyString(f.getFormula())) {
             varlist = gatherPredVarRecurse(kb,f);
         }
