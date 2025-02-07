@@ -148,7 +148,7 @@ To test run
     com.articulate.sigma.KB -c Object Transaction
 
 
-If you want to monitor the servers condition and if it started successfully you can run:
+If you want to monitor the server's condition and if it started successfully you can run:
 tail -f $CATALINA_HOME/logs/catalina.out
 
 To start Tomcat execute:
