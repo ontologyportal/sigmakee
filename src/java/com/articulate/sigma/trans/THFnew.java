@@ -16,7 +16,7 @@ public class THFnew {
     /** *************************************************************
      */
     private static String processQuant(Formula f, String op,
-                                       ArrayList<String> args,
+                                       List<String> args,
                                        Map<String, Set<String>> typeMap) {
 
         if (debug) System.out.println("THFnew.processQuant(): quantifier");
@@ -30,7 +30,7 @@ public class THFnew {
             if (args.get(0) != null) {
                 if (debug) System.out.println("THFnew.processQuant(): valid varlist: " + args.get(0));
                 Formula varlist = new Formula(args.get(0));
-                ArrayList<String> vars = varlist.argumentsToArrayListString(0);
+                List<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("THFnew.processRecurse(): valid vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
                 varStr.append(generateQList(f,typeMap,new HashSet(vars)));
@@ -52,7 +52,7 @@ public class THFnew {
     /** *************************************************************
      */
     private static String processConjDisj(Formula f, Formula car,
-                                          ArrayList<String> args,
+                                          List<String> args,
                                           Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
@@ -74,7 +74,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String processLogOp(Formula f, Formula car, ArrayList<String> args,
+    public static String processLogOp(Formula f, Formula car, List<String> args,
                                       Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
@@ -126,7 +126,7 @@ public class THFnew {
 
     /** *************************************************************
      */
-    public static String processEquals(Formula f, Formula car, ArrayList<String> args,
+    public static String processEquals(Formula f, Formula car, List<String> args,
                                        Map<String, Set<String>> typeMap) {
 
         String op = car.getFormula();
@@ -162,7 +162,7 @@ public class THFnew {
         Formula car = f.carAsFormula();
         //System.out.println("THFnew.processRecurse(): car: " + car);
         //System.out.println("THFnew.processRecurse(): car: " + car.theFormula);
-        ArrayList<String> args = f.complexArgumentsToArrayListString(1);
+        List<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
             System.out.println("Error in THFnew.processRecurse(): formula " + f);
             return "";
@@ -246,8 +246,8 @@ public class THFnew {
         if (f != null && f.listP()) {
             String result = processRecurse(f,typeMap);
             if (debug) System.out.println("THFnew.process(): result 1: " + result);
-            HashSet<String> UqVars = f.collectUnquantifiedVariables();
-            HashSet<String> types = new HashSet<>();
+            Set<String> UqVars = f.collectUnquantifiedVariables();
+            Set<String> types = new HashSet<>();
             //types.add("World");
             //typeMap.put("?W1",types);
             String qlist = generateQList(f,typeMap,UqVars);
@@ -384,7 +384,7 @@ public class THFnew {
         }
         if (f.isGround()) {
             if (debug) System.out.println("exclude(): is ground: " + f);
-            ArrayList<String> ar = f.complexArgumentsToArrayListString(0);
+            List<String> ar = f.complexArgumentsToArrayListString(0);
             if (protectedRelation(ar.get(0)) && Modals.modalAttributes.contains(ar.get(1))) {
                 out.write("% exclude(): modal attribute in protected relation: " + ar.get(0) +
                         " " + ar.get(1) + "\n");
@@ -635,7 +635,7 @@ public class THFnew {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("THFnew.main(): KB loaded");
-            if (kb.errors.size() > 0) {
+            if (!kb.errors.isEmpty()) {
                 System.out.println("Errors: " + kb.errors);
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {

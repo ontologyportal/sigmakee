@@ -27,10 +27,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import tptp_parser.*;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
+
+import tptp_parser.*;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
 public class HTMLformatter {
@@ -171,8 +171,9 @@ public class HTMLformatter {
                 result.append("[Negated Query]");
             }
             else {
+                Integer stepNum;
                 for (int i = 0; i < step.premises.size(); i++) {
-                    Integer stepNum = step.premises.get(i);
+                    stepNum = step.premises.get(i);
                     result.append(stepNum.toString()).append(" ");
                 }
                 if (step.premises.isEmpty()) {
@@ -331,7 +332,7 @@ public class HTMLformatter {
         show.append("<tr><td>non-linguistic axioms: </td><td align=right>").append(KButilities.getCountNonLinguisticAxioms(kb)).append("</td></tr>\n");
         show.append("</table>\n");
 
-        HashMap<String, Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
+        Map<String, Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
         show.append("<P><table><tr><td>Ground tuples: </td><td align=right>").append(stats.get("ground")).append("</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>").append(stats.get("binary")).append("</td></tr>\n");
         show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>").append(stats.get("higher-arity")).append("</td></tr>\n");
@@ -365,8 +366,8 @@ public class HTMLformatter {
      */
     public static String showMap(KB kb, String term) {
 
-        ArrayList<Formula> lats = kb.askWithRestriction(0, "latitude", 1, term);
-        ArrayList<Formula> lons = kb.askWithRestriction(0, "longitude", 1, term);
+        List<Formula> lats = kb.askWithRestriction(0, "latitude", 1, term);
+        List<Formula> lons = kb.askWithRestriction(0, "longitude", 1, term);
         String result = "";
         int zoom = 12;
         if (lats != null && !lats.isEmpty() && lons != null && !lons.isEmpty()) {
@@ -402,7 +403,7 @@ public class HTMLformatter {
     public static String showNumberPictures(KB kb, String term, int count) {
 
         StringBuilder show = new StringBuilder();
-        ArrayList<Formula> pictures = kb.askWithRestriction(0, "externalImage", 1, term);   // Handle picture display
+        List<Formula> pictures = kb.askWithRestriction(0, "externalImage", 1, term);   // Handle picture display
         if (pictures != null && !pictures.isEmpty()) {
             show.append("<br>");
             int numPictures = pictures.size();
@@ -452,8 +453,8 @@ public class HTMLformatter {
         String markup = "";
         try {
             StringBuilder show = new StringBuilder();
-            ArrayList<String> relations = kb.getNearestRelations(relTerm);
-            ArrayList<String> nonRelations = kb.getNearestNonRelations(nonRelTerm);
+            List<String> relations = kb.getNearestRelations(relTerm);
+            List<String> nonRelations = kb.getNearestNonRelations(nonRelTerm);
             String lowcaseTerm = Character.toLowerCase(nonRelTerm.charAt(0)) + nonRelTerm.substring(1);
             String uppercaseTerm = Character.toUpperCase(relTerm.charAt(0)) + relTerm.substring(1);
             show.append("<table><tr><td>");
@@ -494,9 +495,9 @@ public class HTMLformatter {
 
     /******************************************************
      */
-    public static ArrayList<String> getAllRelTerms(KB kb, ArrayList<String> matchesList) {
+    public static List<String> getAllRelTerms(KB kb, List<String> matchesList) {
 
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (int i = 0; i < matchesList.size(); i++)
             if (kb.kbCache.relations.contains(matchesList.get(i)))
                 result.add(matchesList.get(i));
@@ -505,9 +506,9 @@ public class HTMLformatter {
 
     /******************************************************
      */
-    public static ArrayList<String> getAllNonRelTerms(KB kb, ArrayList<String> matchesList) {
+    public static List<String> getAllNonRelTerms(KB kb, List<String> matchesList) {
 
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (int i = 0; i < matchesList.size(); i++)
             if (!kb.kbCache.relations.contains(matchesList.get(i)))
                 result.add(matchesList.get(i));
@@ -524,11 +525,11 @@ public class HTMLformatter {
         String markup = "";
         try {
             StringBuilder show = new StringBuilder();
-            ArrayList<String> matchesList = kb.getREMatch(term, true);
-            ArrayList<String> relTermsList = getAllRelTerms(kb, matchesList);
-            ArrayList<String> nonRelTermsList = getAllNonRelTerms(kb, matchesList);
-            ArrayList<String> largerList = (relTermsList.size() > nonRelTermsList.size()) ? relTermsList : nonRelTermsList;
-            ArrayList<String> smallerList = (relTermsList.size() > nonRelTermsList.size()) ? nonRelTermsList : relTermsList;
+            List<String> matchesList = kb.getREMatch(term, true);
+            List<String> relTermsList = getAllRelTerms(kb, matchesList);
+            List<String> nonRelTermsList = getAllNonRelTerms(kb, matchesList);
+            List<String> largerList = (relTermsList.size() > nonRelTermsList.size()) ? relTermsList : nonRelTermsList;
+            List<String> smallerList = (relTermsList.size() > nonRelTermsList.size()) ? nonRelTermsList : relTermsList;
             int sizeDiff = largerList.size() - smallerList.size();
             for (int i = 0; i < sizeDiff; i++) {                //buffer smaller list
                 smallerList.add("");
@@ -614,8 +615,9 @@ public class HTMLformatter {
     public static String synsetList(ArrayList<String> synsets, String kbHref) {
 
         StringBuilder show = new StringBuilder();
+        String synset;
         for (int i = 0; i < synsets.size(); i++) {
-            String synset = (String) synsets.get(i);
+            synset = (String) synsets.get(i);
             if (Character.isDigit(synset.charAt(0)))
                 show.append("<a href=\"").append(kbHref).append("&synset=").append(synset).append("\">").append(synset).append("</a>");
             else
@@ -635,7 +637,7 @@ public class HTMLformatter {
     public static String formatFormulaList(List<Formula> forms, String header, KB kb,
                                            String language, String flang, int start, int localLimit, String limitString) {
 
-        HashSet<String> printedForms = new HashSet<>();
+        Set<String> printedForms = new HashSet<>();
         boolean traditionalLogic = false;
         if (flang.equals("traditionalLogic"))
             traditionalLogic = true;
@@ -726,7 +728,7 @@ public class HTMLformatter {
             if (!StringUtil.emptyString(jeditconfig))
                 jeditcmd = jeditconfig;
         }
-        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+        List<String> commands = new ArrayList<>(Arrays.asList(
                 jeditcmd, editDir + File.separator + file, " +line:" + line,
                 "-norestore", "-reuseview"));
         System.out.println("EProver(): command: " + commands);
@@ -749,7 +751,7 @@ public class HTMLformatter {
                                                    String language, String flang, int start, int limit,
                                                    int arg, String type) {
 
-        ArrayList<Formula> forms = kb.ask(type, arg, term);
+        List<Formula> forms = kb.ask(type, arg, term);
         StringBuilder show = new StringBuilder();
         String limitString = "";
         int localLimit = start + limit;
@@ -847,9 +849,10 @@ public class HTMLformatter {
         String menuNameProcessed = encodeForURL(menuName);
         result.append("<select name=").append(menuNameProcessed);
         result.append(">\n  ");
+        String menuItem;
         for (int i = 0; i < options.size(); i++) {
             result.append("<option value='");
-            String menuItem = (String) options.get(i);
+            menuItem = (String) options.get(i);
             result.append(Integer.toString(i));
             if (selectedOption != null && selectedOption.equalsIgnoreCase(Integer.toString(i)))
                 result.append("' selected='yes'>\n");
@@ -876,7 +879,7 @@ public class HTMLformatter {
      */
     public static String createKBMenu(String kbName) {
 
-        ArrayList<String> kbnames = new ArrayList<>();
+        List<String> kbnames = new ArrayList<>();
         kbnames.addAll(KBmanager.getMgr().getKBnames());
         return (HTMLformatter.createMenu("kb", kbName, kbnames));
     }
@@ -961,7 +964,7 @@ public class HTMLformatter {
         if (options == null)
             return "";
         StringBuilder result = new StringBuilder();
-        TreeSet<String> menuOptions = new TreeSet<>();
+        Set<String> menuOptions = new TreeSet<>();
         menuOptions.addAll(options);
 
         String menuNameProcessed = encodeForURL(menuName);
@@ -1066,11 +1069,11 @@ public class HTMLformatter {
             String kbName = null;
             try {
                 if (res != null) {
-                    ArrayList elements = res.elements;
-                    ArrayList subElements = ((BasicXMLelement) elements.get(0)).subelements;
+                    List elements = res.elements;
+                    List subElements = ((BasicXMLelement) elements.get(0)).subelements;
 
                     BasicXMLelement item, entryItem;
-                    ArrayList entries, entry;
+                    List entries, entry;
                     String pagelink, query = null, type = null, sourceFile = null, processedQ, proof = null;
                     for (int i = 0; i < subElements.size(); i++) {
                         item = (BasicXMLelement) subElements.get(i);

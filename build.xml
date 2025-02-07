@@ -89,8 +89,8 @@
     <property name="test.corpus.dir" value="test/corpus/java"/>
     <property name="test.integration.dir" value="test/integration/java"/>
     <property name="test.unit.dir" value="test/unit/java"/>
-    <property name="web.app.name" value="sigma"/>
-    <property name="app.name" value="${web.app.name}kee"/>
+    <property name="app.name" value="sigma"/>
+    <property name="web.app.name" value="${app.name}kee"/>
     <property name="build.home" value="build"/>
     <property name="build.classes.dir" value="${build.home}/WEB-INF/classes"/>
     <property name="build.lib" value="${build.home}/lib"/>
@@ -105,10 +105,10 @@
     <property environment="env"/>
     <property name="tomcat.home" value="${env.CATALINA_HOME}"/>
     <property name="dist.home" value="${tomcat.home}/webapps"/>
-    <property name="dist.war" value="${dist.home}/${web.app.name}.war"/>
-    <property name="deploy.home" value="${dist.home}/${web.app.name}"/>
+    <property name="dist.war" value="${dist.home}/${app.name}.war"/>
+    <property name="deploy.home" value="${dist.home}/${app.name}"/>
     <property name="git.home" value="${env.ONTOLOGYPORTAL_GIT}"/>
-    <property name="sigma.src" value="${git.home}/${app.name}"/>
+    <property name="sigma.src" value="${git.home}/${web.app.name}"/>
     <property name="basedir" value="${sigma.src}"/>
     <property name="sigma.home" value="${env.SIGMA_HOME}"/>
     <property name="tptp.home" value="../TPTP-ANTLR"/>
@@ -120,9 +120,12 @@
     <property name="run.jvmargs" value="-Xmx10g -Xss1m"/>
     <property name="tomcat.version" value="9.0.97"/>
 
-    <!-- Define the sigma user spaces -->
-    <property name="workspace.dir" value="${user.home}/workspace"/>
-    <property name="programs.dir" value="${user.home}/Programs"/>
+    <!-- Define the sigma installation space -->
+    <property name="install.home" value="${user.home}"/>
+    <!-- The above property can be overriden on the command line with:
+         -Dinstall.home=/data/fsg, or any other path the user deems necessary
+    -->
+    <property name="programs.dir" value="${install.home}/Programs"/>
 
     <condition property="isUnixNotMac">
         <and>
@@ -269,7 +272,7 @@
             </lib>
             <classes dir="${build.classes.dir}"/>
         </war>
-        <jar destfile="${build.home}/${app.name}.jar"
+        <jar destfile="${build.home}/${web.app.name}.jar"
              manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
             <fileset dir="${build.classes.dir}"/>
@@ -278,7 +281,7 @@
 
     <!--
     ==========
-    UNIT TESTS <- These are only meant to be run within the CI environment
+    UNIT TESTS
     ==========
     -->
 
@@ -360,7 +363,7 @@
             <fileset dir="${build.home}"/> <!-- avoid problems with package name changes by deleting everything -->
             <!-- Delete the old web code -->
             <fileset dir="${deploy.home}"/>
-            <fileset dir="${tomcat.home}/work/Catalina/localhost/${web.app.name}"/>
+            <fileset dir="${tomcat.home}/work/Catalina/localhost/${app.name}"/>
             <!-- Prune out of date dependencies -->
             <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
@@ -373,8 +376,8 @@
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
     <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
-        <mkdir dir="${workspace.dir}"/>
-        <chmod dir="${workspace.dir}" perm="ugo+rw" includes="**/*"/>
+        <mkdir dir="${git.home}"/>
+        <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${programs.dir}"/>
         <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/>
 
@@ -417,23 +420,25 @@
         <delete file="${programs.dir}/E.tgz"/>
     </target>
 
-    <target name="copy.to.sigma.home">
+    <target name="copy.to.sigma.home" description="Copy WordNetMappings and config.xml to ~/.sigmakee -> ($SIGMA_HOME)">
         <antcall target="refresh.KBs"/>
-        <copy todir="${user.home}/.${app.name}/KBs">
+        <copy todir="${user.home}/.${web.app.name}/KBs">
             <fileset file="${sigma.src}/config.xml"/>
         </copy>
-        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
-        <copy todir="${user.home}/.${app.name}/KBs/WordNetMappings">
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser" value="${user.home}" excludes="/home/theuser/workspace/sumo"/>
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
+        <copy todir="${user.home}/.${web.app.name}/KBs/WordNetMappings">
             <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
         </copy>
     </target>
 
     <!-- When the SUMO KB files get updated, do this frequently -->
-    <target name="refresh.KBs">
-        <mkdir dir="${user.home}/.${app.name}"/>
-        <chmod dir="${user.home}/.${app.name}" perm="ugo+rw" includes="**/*"/>
-        <mkdir dir="${user.home}/.${app.name}/KBs"/>
-        <copy todir="${user.home}/.${app.name}/KBs">
+    <target name="refresh.KBs" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
+        <mkdir dir="${user.home}/.${web.app.name}"/>
+        <chmod dir="${user.home}/.${web.app.name}" perm="ugo+rw" includes="**/*"/>
+        <mkdir dir="${user.home}/.${web.app.name}/KBs"/>
+        <copy todir="${user.home}/.${web.app.name}/KBs">
             <fileset dir="${kbs.home}">
                 <exclude name=".github/**"/>
             </fileset>
@@ -441,35 +446,35 @@
     </target>
 
     <target name="clone.sumo">
-        <mkdir dir="${workspace.dir}/sumo"/>
-        <git command="clone" dir="${workspace.dir}/sumo">
+        <mkdir dir="${kbs.home}"/>
+        <git command="clone" dir="${kbs.home}">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/sumo"/>
-                <arg value="${workspace.dir}/sumo"/>
+                <arg value="${kbs.home}"/>
             </args>
         </git>
     </target>
     <target name="clone.tptpantlr">
-        <mkdir dir="${workspace.dir}/TPTP-ANTLR"/>
-        <git command="clone" dir="${workspace.dir}/TPTP-ANTLR">
+        <mkdir dir="${git.home}/TPTP-ANTLR"/>
+        <git command="clone" dir="${git.home}/TPTP-ANTLR">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/TPTP-ANTLR"/>
-                <arg value="${workspace.dir}/TPTP-ANTLR"/>
+                <arg value="${git.home}/TPTP-ANTLR"/>
             </args>
         </git>
     </target>
     <target name="clone.sigmautils">
-        <mkdir dir="${workspace.dir}/SigmaUtils"/>
-        <git command="clone" dir="${workspace.dir}/SigmaUtils">
+        <mkdir dir="${git.home}/SigmaUtils"/>
+        <git command="clone" dir="${git.home}/SigmaUtils">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/SigmaUtils"/>
-                <arg value="${workspace.dir}/SigmaUtils"/>
+                <arg value="${git.home}/SigmaUtils"/>
             </args>
         </git>
     </target>
@@ -504,7 +509,7 @@
     <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
     <macrodef name="git">
         <attribute name="command"/>
-        <attribute name="dir" default="${workspace.dir}"/>
+        <attribute name="dir" default="${git.home}"/>
         <element name="args" optional="true"/>
         <sequential>
             <echo message="git @{command}"/>
@@ -533,7 +538,7 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
-        <replace file="${user.home}/.${app.name}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
     </target>
 
     <target name="build.z3">
@@ -557,6 +562,7 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser/workspace/vampire/vampire" value="${programs.dir}/vampire/build/vampire"/>
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary -->
@@ -568,26 +574,26 @@
     <target name="append.bashrc" if="isUnixNotMac">
         <echo file="${user.home}/.bashrc" append="true">
 # For SIGMA
-export SIGMA_HOME=${user.home}/.${app.name}
-export ONTOLOGYPORTAL_GIT=${workspace.dir}
-export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
+export SIGMA_HOME=${user.home}/.${web.app.name}
+export ONTOLOGYPORTAL_GIT=${git.home}
+export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
+export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
 </echo>
     </target>
 
     <target name="append.zshrc" unless="isUnixNotMac">
         <echo file="${user.home}/.zshrc" append="true">
 # For SIGMA
-export SIGMA_HOME=${user.home}/.${app.name}
-export ONTOLOGYPORTAL_GIT=${workspace.dir}
-export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${app.name}
+export SIGMA_HOME=${user.home}/.${web.app.name}
+export ONTOLOGYPORTAL_GIT=${git.home}
+export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
-export SIGMA_CP=$SIGMA_SRC/build/${app.name}.jar:$SIGMA_SRC/lib/*
+export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
 </echo>
     </target>
 

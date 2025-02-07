@@ -42,12 +42,11 @@ public class Modals {
      */
     public static Formula handleHOLpred(Formula f, KB kb, Integer worldNum) {
 
-        StringBuffer fstring = new StringBuffer();
-        ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
+        StringBuilder fstring = new StringBuilder();
+        List<Formula> flist = f.complexArgumentsToArrayList(1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln " + f.car() + " " +
-                flist.get(0) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
-        fstring.append(" " + processRecurse(flist.get(1),kb,worldNum));
+        fstring.append("(=> (accreln ").append(f.car()).append(" ").append(flist.get(0)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
+        fstring.append(" ").append(processRecurse(flist.get(1),kb,worldNum));
         fstring.append(")");
         Formula result = new Formula();
         result.read(fstring.toString());
@@ -59,11 +58,10 @@ public class Modals {
      */
     public static Formula handleModalAttribute(Formula f, KB kb, Integer worldNum) {
 
-        StringBuffer fstring = new StringBuffer();
-        ArrayList<Formula> flist = f.complexArgumentsToArrayList(1);
+        StringBuilder fstring = new StringBuilder();
+        List<Formula> flist = f.complexArgumentsToArrayList(1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accrelnP " +
-                flist.get(1) + " ?W" + (worldNum - 1) + " ?W" + worldNum + ") ");
+        fstring.append("(=> (accrelnP ").append(flist.get(1)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
         fstring.append(processRecurse(flist.get(0),kb,worldNum));
         fstring.append(")");
         Formula result = new Formula();
@@ -88,17 +86,17 @@ public class Modals {
             int argStart = 1;
             if (Formula.isQuantifier(f.car()))
                 argStart = 2;
-            ArrayList<Formula> flist = f.complexArgumentsToArrayList(argStart);
-            StringBuffer fstring = new StringBuffer();
-            fstring.append("(" + f.car());
+            List<Formula> flist = f.complexArgumentsToArrayList(argStart);
+            StringBuilder fstring = new StringBuilder();
+            fstring.append("(").append(f.car());
             if (argStart == 2) // append quantifier list without processing
-                fstring.append(" " + f.getStringArgument(1));
+                fstring.append(" ").append(f.getStringArgument(1));
             for (Formula arg : flist)
-                fstring.append(" " + processRecurse(arg,kb,worldNum));
+                fstring.append(" ").append(processRecurse(arg,kb,worldNum));
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
                 fstring.append(")");
             else {
-                fstring.append(" ?W" + worldNum + ")");
+                fstring.append(" ?W").append(worldNum).append(")");
                 List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
                 if (sig == null) {
                     if (!Formula.isVariable(f.car()))

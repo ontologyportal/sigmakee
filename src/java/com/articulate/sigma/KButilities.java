@@ -23,7 +23,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.dataProc.Infrastructure;
+//import com.articulate.sigma.dataProc.Infrastructure;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
@@ -47,7 +47,7 @@ public class KButilities {
     public static TreeSet<String> errors = new TreeSet<>();
 
     /** Warnings found during processing formulas */
-    public static TreeSet<String> warnings = new TreeSet<String>();
+    public static TreeSet<String> warnings = new TreeSet<>();
 
     /** *************************************************************
      */
@@ -126,7 +126,7 @@ public class KButilities {
             String error = "Formula rejected due to arity error of predicate " + term
                     + " in formula: \n" + f.getFormula();
             errors.add(error);
-            System.out.println("isValidFormula(): Error: " + error);
+            System.err.println("isValidFormula(): Error: " + error);
             return false;
         }
         if (!hasCorrectTypes(kb,f))
@@ -160,7 +160,7 @@ public class KButilities {
      */
     public static String getDocumentation(KB kb, String term) {
 
-        ArrayList<Formula> forms = kb.askWithRestriction(0,"documentation",1,term);
+        List<Formula> forms = kb.askWithRestriction(0,"documentation",1,term);
         if (forms == null || forms.isEmpty())
             return null;
         Formula form = forms.get(0);
@@ -176,7 +176,7 @@ public class KButilities {
      */
     public static int getCountTermFormats(KB kb, String lang) {
 
-        ArrayList<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
+        List<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
         return forms.size();
     }
 
@@ -187,8 +187,8 @@ public class KButilities {
      */
     public static int getCountUniqueTermFormats(KB kb, String lang) {
 
-        ArrayList<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
-        HashSet<String> terms = new HashSet<>();
+        List<Formula> forms = kb.askWithRestriction(0,"termFormat",1,lang);
+        Set<String> terms = new HashSet<>();
         String s;
         for (Formula f : forms) {
             s = f.getStringArgument(2);
@@ -268,26 +268,26 @@ public class KButilities {
     /** *************************************************************
      * Get all formulas that contain both terms.
      */
-    public static ArrayList<Formula> termIntersection(KB kb, String term1, String term2) {
+    public static List<Formula> termIntersection(KB kb, String term1, String term2) {
 
-    	ArrayList<Formula> ant1 = kb.ask("ant",0,term1);
-    	ArrayList<Formula> ant2 = kb.ask("ant",0,term2);
-        ArrayList<Formula> cons1 = kb.ask("cons",0,term1);
-        ArrayList<Formula> cons2 = kb.ask("cons",0,term2);
-        HashSet<Formula> hrule1 = new HashSet<>();
+    	List<Formula> ant1 = kb.ask("ant",0,term1);
+    	List<Formula> ant2 = kb.ask("ant",0,term2);
+        List<Formula> cons1 = kb.ask("cons",0,term1);
+        List<Formula> cons2 = kb.ask("cons",0,term2);
+        Set<Formula> hrule1 = new HashSet<>();
         hrule1.addAll(ant1);
         hrule1.addAll(cons1);
-        HashSet<Formula> hrule2 = new HashSet<>();
+        Set<Formula> hrule2 = new HashSet<>();
         hrule2.addAll(ant2);
         hrule2.addAll(cons2);
-        ArrayList<Formula> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         result.addAll(hrule1);
         result.retainAll(hrule2);
-        ArrayList<Formula> stmt1 = kb.ask("stmt",0,term1);
-        ArrayList<Formula> stmt2 = kb.ask("stmt",0,term2);
+        List<Formula> stmt1 = kb.ask("stmt",0,term1);
+        List<Formula> stmt2 = kb.ask("stmt",0,term2);
         stmt1.retainAll(stmt2);
         result.addAll(stmt1);
-        ArrayList<Formula> stmt;
+        List<Formula> stmt;
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 7; j++) {
             	if (j != i) {
@@ -306,7 +306,7 @@ public class KButilities {
         System.out.println("Relations: " + kb.getCountRelations());
         Iterator it = kb.terms.iterator();
         String term;
-        ArrayList al;
+        List al;
         while (it.hasNext()) {
             term = (String) it.next();
             al = kb.ask("arg",0,term);
@@ -364,15 +364,15 @@ public class KButilities {
      */
     public static void checkURLs(KB kb) {
 
-        URL u = null;
-        ArrayList<Formula> results = kb.ask("arg",0,"externalImage");
+        URL u;
+        List<Formula> results = kb.ask("arg",0,"externalImage");
         Formula f;
         String url;
         for (int i = 0; i < results.size(); i++) {
             f = (Formula) results.get(i);
             url = StringUtil.removeEnclosingQuotes(f.getStringArgument(2));
             if (!uRLexists(url))
-                System.out.println(f + " doesn't exist");
+                System.err.println(f + " doesn't exist");
         }
     }
 
@@ -387,7 +387,7 @@ public class KButilities {
         // (externalImage Reef "http://upload.wikimedia.org/wikipedia/en/3/33/Reef.jpg")
         // http://upload.wikimedia.org/wikipedia/commons/3/33/Reef.jpg
         //
-        URL u = null;
+        URL u;
         String line;
 
         try (FileReader fr = new FileReader("pictureList.kif"); LineNumberReader lr = new LineNumberReader(fr)) {
@@ -491,7 +491,7 @@ public class KButilities {
         Set<String> terms;
         GraphArc ga;
         String predicate, arg1, arg2;
-        ArrayList<String> args;
+        List<String> args;
         for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
             //if (debug) System.out.println("generateSemNetNeighbors(): check formula: " + f);
             if (isCacheFile(f.sourceFile)  && !cached) {
@@ -580,7 +580,7 @@ public class KButilities {
         TreeSet<String> resultSet = new TreeSet<>();
         Set<String> terms;
         String predicate, arg1, arg2;
-        ArrayList<String> args;
+        List<String> args;
         for (Formula f : kb.formulaMap.values()) {          // look at all formulas in the KB
             if (isCacheFile(f.sourceFile))
                 continue;
@@ -649,7 +649,7 @@ public class KButilities {
         sb.append("            \"type\": \"SUMO-graph\",\n");
         sb.append("            \"label\": \"").append(kb.name).append("\",\n");
         sb.append("            \"nodes\": {\n");
-        ArrayList<Formula> forms;
+        List<Formula> forms;
         String formStr;
         Formula form;
         for (String s : kb.getTerms()) {
@@ -701,7 +701,7 @@ public class KButilities {
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
         StringBuilder sb = new StringBuilder();
-        ArrayList<Formula> forms;
+        List<Formula> forms;
         String formStr;
         Formula form;
         try (PrintWriter nodepw = new PrintWriter(new FileWriter(nodeFileStr, false)); PrintWriter edgepw = new PrintWriter(new FileWriter(edgeFileStr, false))) {
@@ -759,7 +759,7 @@ public class KButilities {
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
         String formStr, doc;
-        ArrayList<Formula> forms;
+        List<Formula> forms;
         Formula form;
         String[] tuple;
         try (PrintWriter pw = new PrintWriter(new FileWriter(fileStr, false))) {
@@ -804,7 +804,7 @@ public class KButilities {
         if (StringUtil.emptyString(language))
             language = "EnglishLanguage";
         StringBuilder sb = new StringBuilder();
-        ArrayList<Formula> forms;
+        List<Formula> forms;
         String formStr;
         Formula form;
         String[] tuple;
@@ -865,7 +865,7 @@ public class KButilities {
     public static boolean instanceOfInstanceP(KB kb) {
 
         boolean result = false;
-        ArrayList<Formula> al, al2, al3;
+        List<Formula> al, al2, al3;
         Formula f, f2, f3;
         String term2, term3, term4;
         for (String term : kb.terms) {
@@ -901,9 +901,9 @@ public class KButilities {
 
         try (PrintWriter pr = new PrintWriter(new FileWriter(fname, false))) {
             //get all formulas that have the display predicate as the predicate
-            ArrayList<Formula> formats = kb.askWithRestriction(0, displayFormatPredicate, 1, language);
-            ArrayList<Formula> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);
-            HashMap<String,String> termMap = new HashMap<>();
+            List<Formula> formats = kb.askWithRestriction(0, displayFormatPredicate, 1, language);
+            List<Formula> terms = kb.askWithRestriction(0, displayTermPredicate, 1, language);
+            Map<String,String> termMap = new HashMap<>();
             Formula term;
             String key, value, argName, argNum;
             for (int i = 0; i < terms.size(); i++) {
@@ -916,7 +916,7 @@ public class KButilities {
             Formula format, f;
             String sTerm, displayText;
             StringBuilder sb;
-            ArrayList<Formula> predInstances, arguments;
+            List<Formula> predInstances, arguments;
             for (int i = 0; i < formats.size(); i++) {
                 format = formats.get(i);
                 // This is the current predicate whose format we are keeping track of.
@@ -1114,7 +1114,7 @@ public class KButilities {
     public static String termFormatIndex(KB kb) {
 
         StringBuilder sb = new StringBuilder();
-        ArrayList<Formula> forms = kb.ask("arg", 0, "termFormat");
+        List<Formula> forms = kb.ask("arg", 0, "termFormat");
         String term, str;
         for (Formula f : forms) {
             term = f.getStringArgument(2);
@@ -1131,7 +1131,7 @@ public class KButilities {
      */
     public static void genAllDoc(KB kb, String fname) {
 
-        ArrayList<Formula> al = kb.ask("arg",0,"documentation");
+        List<Formula> al = kb.ask("arg",0,"documentation");
         try (PrintWriter pr = new PrintWriter(new FileWriter(fname, false))) {
             String arg;
             for (Formula form : al) {
@@ -1152,7 +1152,7 @@ public class KButilities {
     public static void genDoc(KB kb, String fname) {
 
         System.out.println(genDocHeader(true));
-        ArrayList<Formula> al = kb.ask("arg",0,"documentation");
+        List<Formula> al = kb.ask("arg",0,"documentation");
         for (Formula form : al) {
             String arg;
             if (form.sourceFile.endsWith(fname)) {
@@ -1165,9 +1165,9 @@ public class KButilities {
 
     /** *************************************************************
      */
-    private static ArrayList<String> genAscii() {
+    private static List<String> genAscii() {
 
-        ArrayList<String> al = new ArrayList<>();
+        List<String> al = new ArrayList<>();
         for (int i = 65; i < 91; i++)
             al.add(Character.valueOf((char) i).toString());
         for (int i = 97; i < 123; i++)
@@ -1181,7 +1181,7 @@ public class KButilities {
 
         StringBuilder sb = new StringBuilder();
         sb.append("<h2>Data Dictionary</h2>");
-        ArrayList<String> ascii = genAscii();
+        List<String> ascii = genAscii();
         if (onePage) {
             for (String s : ascii)
                 sb.append("<a href=\"dict.html#").append(s).append("\">").append(s).append("</a>&nbsp;&nbsp;");
@@ -1197,11 +1197,11 @@ public class KButilities {
 
     /** *************************************************************
      */
-    private static TreeMap<String,PrintWriter> genHTMLDocFiles(KB kb) {
+    private static Map<String,PrintWriter> genHTMLDocFiles(KB kb) {
 
         String head = genDocHeader(false);
-        TreeMap<String,PrintWriter> files = new TreeMap<>();
-        ArrayList<String> ascii = genAscii();
+        Map<String,PrintWriter> files = new TreeMap<>();
+        List<String> ascii = genAscii();
         for (String s : ascii) {
             try (FileWriter fw = new FileWriter(s + "dict.html"); PrintWriter pw = new PrintWriter(fw)) {
                 pw.println(head + "\n");
@@ -1218,10 +1218,10 @@ public class KButilities {
     /** *************************************************************
      * collect all the documentation strings
      */
-    private static TreeMap<String,String> genDocList(KB kb) {
+    private static Map<String,String> genDocList(KB kb) {
 
-        ArrayList<Formula> al = kb.ask("arg",0,"documentation");
-        TreeMap<String,String> map = new TreeMap<>();
+        List<Formula> al = kb.ask("arg",0,"documentation");
+        Map<String,String> map = new TreeMap<>();
         String arg2;
         for (Formula form : al) {
             if (form.getArgument(2).toString().equals("EnglishLanguage")) {
@@ -1239,7 +1239,7 @@ public class KButilities {
     /** *************************************************************
      * flush and close all files
      */
-    private static void closeDocList(TreeMap<String,PrintWriter> files) {
+    private static void closeDocList(Map<String,PrintWriter> files) {
 
         for (String term : files.keySet()) {
             try (PrintWriter pw = files.get(term)) {
@@ -1254,7 +1254,7 @@ public class KButilities {
     public static List<String> getLabelsForTerm(KB kb, String term, String lang) {
 
         List<String> result = new ArrayList<>();
-        ArrayList<Formula> al = kb.askWithTwoRestrictions(0,"termFormat",1,lang,2,term);
+        List<Formula> al = kb.askWithTwoRestrictions(0,"termFormat",1,lang,2,term);
         return result;
     }
 
@@ -1308,12 +1308,14 @@ public class KButilities {
      */
     public static void genAllAlphaHTMLDoc(KB kb) {
 
-        TreeMap<String,String> map = genDocList(kb);
-        TreeMap<String,PrintWriter> files = genHTMLDocFiles(kb);
+        Map<String,String> map = genDocList(kb);
+        Map<String,PrintWriter> files = genHTMLDocFiles(kb);
         boolean shade = false;
+        String arg2;
+        PrintWriter pw;
         for (String term : map.keySet()) {
-            String arg2 = map.get(term);
-            PrintWriter pw = files.get(Character.toString(term.charAt(0)));
+            arg2 = map.get(term);
+            pw = files.get(Character.toString(term.charAt(0)));
             pw.println(genDocLine(shade, kb, term, "EnglishLanguage", arg2,false,false));
             shade = ! shade;
         }
@@ -1328,7 +1330,7 @@ public class KButilities {
 
         System.out.println("<h2>Data Dictionary</h2>");
         System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
-        TreeMap<String,String> map = genDocList(kb);
+        Map<String,String> map = genDocList(kb);
         boolean shade = false;
         String arg2;
         for (String term : map.keySet()) {
@@ -1363,7 +1365,7 @@ public class KButilities {
         genDocHeader(true); // true = one page
         System.out.println("<h2>Data Dictionary</h2>");
         System.out.println("<table><tr><th style:\"width:20%\"><b>Term</b></th><th><b>label</b></th><th><b>in List or Aux</b></th><th style=\"width:75%\"><b>Doc</b></th></tr>\n");
-        TreeMap<String,String> map = genDocList(kb);
+        Map<String,String> map = genDocList(kb);
         boolean shade = false;
         List<String> links;
         String arg2;
@@ -1446,7 +1448,7 @@ public class KButilities {
             //for (String s : generateSemanticNetwork(kb))
             //    System.out.println(s);
             KButilities kbu = new KButilities();
-            Infrastructure infra = new Infrastructure();
+//            Infrastructure infra = new Infrastructure();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
             }

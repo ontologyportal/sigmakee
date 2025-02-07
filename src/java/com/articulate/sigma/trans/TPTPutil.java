@@ -218,7 +218,7 @@ public class TPTPutil {
 
         //System.out.println("\nTPTPutil.citation: sumoStep: " + sumoStep);
         //System.out.println("TPTPutil.citation: stepName: " + stepName);
-        ArrayList<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
+        List<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.citation: formulas: " + ciAxioms);
         Formula arg;
         for (Formula f : ciAxioms) {
@@ -239,7 +239,7 @@ public class TPTPutil {
      */
     public static String getCitationString(String sumoStep, String stepName, KB kb) {
 
-        ArrayList<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
+        List<Formula> ciAxioms = kb.ask("arg",0,"containsFormula");
         //System.out.println("TPTPutil.getCitationString: stepName: " + stepName);
         //System.out.println("TPTPutil.getCitationString: sumo: " + sumoStep);
         Formula arg;
@@ -369,7 +369,5 @@ public class TPTPutil {
                 showHelp();
         }
     }
-
-
 
 }

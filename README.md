@@ -239,6 +239,8 @@ echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
 mandtory additions to .bashrc
 ```sh
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
+NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.\
+      ~/workspace is just a default suggestion
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
@@ -319,6 +321,8 @@ If not, then perform the exports before cloning SigmaKEE.
 ```sh
 cd ~
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
+NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.\
+      ~/workspace is just a default suggestion
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
 echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
@@ -402,8 +406,12 @@ To test run
 java -Xmx10g -Xss1m -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 ```
+If you want to monitor the server's condition and if it started successfully you can run:\
+```sh
+tail -f $CATALINA_HOME/logs/catalina.out
+```
 
-Start Tomcat with
+To start Tomcat, execute:
 ```sh
 $CATALINA_HOME/bin/startup.sh
 ```
@@ -418,10 +426,10 @@ Default credentials are: admin/admin
 
 Debugging
 
-- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
-again.
-- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
-from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+- If login.html redirects you to init.jsp that means the system is still initializing.
+Wait a minute or two and try again.
+- If you get an initial login error, try turning off your network card and try again.
+Some intranets block server requests that are not recognized.
 
 
 # Vampire
@@ -432,10 +440,10 @@ Please note that the command:
 ```sh
 ant install
 ```
-will also install Vampire
+will also install Vampire w/ matched z3
 
 
-## Older instructions
+## Legacy Vampire instructions
 You may need to install the Zlib library if you don't have it already installed
 ```sh
 sudo apt-get install libz-dev
@@ -448,7 +456,7 @@ sudo apt-get install g++
 then execute the following:
 
 ```sh
-cd $ONTOLOGYPORTAL_GIT
+mkdir ~/Programs && cd ~/Programs
 git clone https://github.com/vprover/vampire
 cd vampire
 make vampire_rel
@@ -508,19 +516,19 @@ sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/co
 
 ## jEdit Integration (optional)
 
-If you install jEdit (see http://jedit.org) and configure Sigma properly, you can click on a source
-file and line number for a statement in the Sigma Browse page and be taken to
-the editor, open on that line. By default, the edit feature will make use of your $ONTOLOGYPORTAL_GIT
-environment variable, and try to open the file in that location in the "sumo" module. Recommended practice
-is to edit .kif files in your local Git repository and then copy them to the .sigmakee/KBs directory. If
-you wish to edit in a different location, either a different repository or a different directory altogether,
+If you install jEdit (see http://jedit.org) and configure Sigma properly, you can click on a source\
+file and line number for a statement in the Sigma Browse page and be taken to\
+the editor, open on that line. By default, the edit feature will make use of your $ONTOLOGYPORTAL_GIT\
+environment variable, and try to open the file in that location in the "sumo" module. Recommended practice\
+is to edit .kif files in your local Git repository and then copy them to the .sigmakee/KBs directory. If\
+you wish to edit in a different location, either a different repository or a different directory altogether,\
 the you can set the editDir configuration variable in your config.xml file, for example
 
 ```xml
   <preference name="editDir" value="/home/user/workspace/myproject" />
 ```
-If you wish to install jEdit so that there's no path to it, for example on a shared machine as a user-specific
-program, you'll need to set a path in config.xml, for example
+If you wish to install jEdit so that there's no path to it, for example, on a shared machine as a\
+user-specific program, you'll need to set a path in config.xml, for example:
 
 ```xml
   <preference name="jedit" value="/home/user/jedit/jedit" />
@@ -625,18 +633,22 @@ Then create the administrator account and password
 java -Xmx4g -cp $SIGMA_CP com.articulate.sigma.PasswordService -a
 ```
 
-You can use Sigma without being administrator, but you'll have limited use of its functionality.
+Default user/pw: admin/admin
 
-You'll also need to set a few parameters in your config.xml file
+You can use Sigma without being administrator, but you'll have limited use of
+its functionality.
+
+You'll also need to set a few parameters in your config.xml file. If you chose
+user "admin", then your config.xml will need these 2 new lines added.
 
 ```xml
-  <preference name="dbUser" value="sa" />
+  <preference name="dbUser" value="admin" />
   <preference name="loadFresh" value="false" />
 ```
 
 To handle the account registration feature, you'll need to have an email account and supply the
 password in the .bashrc file where your Sigma installation is runnning.  Gmail might be convenient
-for this.  Change the password "my_pass" to your password on Gmail (or other service that you specify)
+for this. Change the password "my_pass" to your password on Gmail (or other service that you specify)
 
 ```sh
 export SIGMA_EMAIL_PASS="my_pass"
@@ -644,10 +656,10 @@ export SIGMA_EMAIL_SERVER="smtp.gmail.com"
 ```
 
 There are three types of user roles: "guest", "user" and "admin".  Guests are users who have not
-registered.  They can access read-only functions that are not computationally expensive.
-Registered users are granted access to computationally more expensive features.  Admin users
-have access to all Sigma functions.  Currently, this control is hard coded into the JSP pages
-that will check for user roles.  At some point in the future this may be changed to a more flexible
+registered. They can access read-only functions that are not computationally expensive.
+Registered users are granted access to computationally more expensive features. Admin users
+have access to all Sigma functions. Currently, this control is hard coded into the JSP pages
+that will check for user roles. At some point in the future this may be changed to a more flexible
 scheme of access rights driven from a file or database mapping roles to allowed functions.
 
 You'll need to start the database server with

@@ -430,14 +430,14 @@ August 9, Acapulco, Mexico.
         if (wordnet == null || wordnet.isEmpty())
             return "";
         StringBuilder result = new StringBuilder();
-        ArrayList<String> synsets = WordNet.wn.SUMOHash.get(term);
+        List<String> synsets = WordNet.wn.SUMOHash.get(term);
         int limit = synsets.size();
         if (limit > 50)
             limit = 50;
 
         String synset;
         String OMWsynset;
-        ArrayList<String> words;
+        List<String> words;
         for (int i = 0; i < limit; i++) {
             synset = synsets.get(i);
             OMWsynset = toOMWsynset(synset);

@@ -306,7 +306,7 @@
                     username="${username}"
                     password="${password}"
                     path="${context}"
-                    war="${basedir}/${dist.dir}/${web.app.name}.war"/>
+                    war="${basedir}/${dist.dir}/${app.name}.war"/>
             <sleep seconds="2"/>
             <antcall target="open.sigmakee.url"/>
         </sequential>
@@ -432,9 +432,7 @@
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
             <formatter type="plain" usefile="false"/>
-            <classpath>
-                <path refid="tcp"/>
-            </classpath>
+            <classpath refid="tcp"/>
             <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
                 <formatter type="xml"/>
             </test>
@@ -494,7 +492,7 @@
     =====
     -->
 
-    <target name="dist" depends="compile" description="Prepare and distribute the sigma.war and ${app.name}.jar files and place in ${dist.dir}.">
+    <target name="dist" depends="compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
@@ -516,7 +514,7 @@
             <attribute name="Main-Class"
                        value="${main.class}"/>
         </manifest>
-        <war destfile="${dist.dir}/${web.app.name}.war"
+        <war destfile="${dist.dir}/${app.name}.war"
              basedir="${build.home}"
              webxml="${web.dir}/web.xml"
              manifest="${manifest.mf}">
@@ -546,7 +544,7 @@
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
-            <fileset dir="${catalina.base}/work/Catalina/localhost/${web.app.name}"/>
+            <fileset dir="${catalina.base}/work/Catalina/localhost/${app.name}"/>
             <!-- JUnit generated products -->
             <fileset dir="${basedir}">
                 <include name="junit*.properties"/>

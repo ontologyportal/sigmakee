@@ -37,7 +37,7 @@ import java.util.*;
 public class LEO {
 
     public StringBuilder qlist = null; // quantifier list in order for answer extraction
-    public ArrayList<String> output = new ArrayList<>();
+    public List<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
     public static boolean debug = false;
 
@@ -74,7 +74,7 @@ public class LEO {
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
     public static boolean assertFormula(String userAssertionTPTP, KB kb,
-                                 ArrayList<Formula> parsedFormulas, boolean tptp) {
+                                        List<Formula> parsedFormulas, boolean tptp) {
 
         if (debug) System.out.println("INFO in Leo.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
@@ -146,10 +146,11 @@ public class LEO {
         Process _leo = _builder.start();
         //System.out.println("Leo.run(): process: " + _vampire);
 
-        BufferedReader _reader = new BufferedReader(new InputStreamReader(_leo.getInputStream()));
-        String line;
-        while ((line = _reader.readLine()) != null) {
-            output.add(line);
+        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_leo.getInputStream()))) {
+            String line;
+            while ((line = _reader.readLine()) != null) {
+                output.add(line);
+            }
         }
         int exitValue = _leo.waitFor();
         if (exitValue != 0) {
@@ -162,7 +163,7 @@ public class LEO {
     /** ***************************************************************
      * Write the THF statements to the temp-stmt.thf file
      */
-    public void writeStatements(HashSet<String> stmts, String type) {
+    public void writeStatements(Set<String> stmts, String type) {
 
         String dir = KBmanager.getMgr().getPref("kbDir");
         String fname = "temp-stmt." + type;
@@ -222,7 +223,7 @@ public class LEO {
      * @param stmts should be the query but the list gets expanded here with
      *              any other prior user assertions
      */
-    public void run(KB kb, File kbFile, int timeout, HashSet<String> stmts) throws Exception {
+    public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
 
         System.out.println("Leo.run(): query : " + stmts);
         String lang = "thf";
@@ -244,7 +245,7 @@ public class LEO {
         }
         writeStatements(stmts, lang);
         if (!kbFile.exists() || KBmanager.getMgr().infFileOld("thf")) {
-            ArrayList<String> kbAll2 = THF.transTHF(kb);
+            List<String> kbAll2 = THF.transTHF(kb);
             THF.writeTHF(kb,kbAll2);
         }
         catFiles(kbFile.toString(),stmtFile,outfile);

@@ -1,14 +1,11 @@
 package com.articulate.sigma.dataProc;
 
 import com.articulate.sigma.HTMLformatter;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
-import com.articulate.sigma.KButilities;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 
 import java.io.FileReader;
@@ -31,13 +28,13 @@ public class Infrastructure {
     public Map<String, Set<String>> relsForType = new HashMap<>();
 
     // exterior key of product type, interior key of relation, interior set of allowed values
-    public HashMap<String, HashMap<String, HashSet<String>>> allowableValues = new HashMap<>();
+    public Map<String, Map<String, Set<String>>> allowableValues = new HashMap<>();
 
-    public HashMap<String,String> productTypes = new HashMap<>();  // id, name
+    public Map<String,String> productTypes = new HashMap<>();  // id, name
     public Map<String,Set<String>> productsByTypeNames = new HashMap<>();
 
-    public HashMap<String,Product> products = new HashMap<>(); //id, product
-    public HashMap<String,Category> categories = new HashMap<>(); //id, category
+    public Map<String,Product> products = new HashMap<>(); //id, product
+    public Map<String,Category> categories = new HashMap<>(); //id, category
     public Map<String, Set<String>> parents = new HashMap<>(); //parent name, list of categories
 
     /** *************************************************************
@@ -47,14 +44,15 @@ public class Infrastructure {
         public String ID = null;
         public String name = null;
         public String subCat = null; // a JSON oid
-        public HashMap<String,String> attributes = new HashMap<>();
+        public Map<String,String> attributes = new HashMap<>();
 
+        @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
             if (SUMO != null)
-                sb.append("SUMO:" + SUMO + " ");
-            sb.append(ID + " : " + name + " : " + subCat);
-            sb.append("    " + attributes);
+                sb.append("SUMO:").append(SUMO).append(" ");
+            sb.append(ID).append(" : ").append(name).append(" : ").append(subCat);
+            sb.append("    ").append(attributes);
             return sb.toString();
         }
     }
@@ -67,14 +65,15 @@ public class Infrastructure {
         public String name = null;
         public String parent = null; // a JSON oid
         public String productType = null;  // a JSON oid
-        public HashSet<String> sectors = new HashSet<>();
+        public Set<String> sectors = new HashSet<>();
 
+        @Override
         public String toString() {
             StringBuilder sb = new StringBuilder();
             if (SUMO != null)
-                sb.append("SUMO:" + SUMO + " ");
-            sb.append(ID + " : " + name + " : " + parent);
-            sb.append("    " + sectors);
+                sb.append("SUMO:").append(SUMO).append(" ");
+            sb.append(ID).append(" : ").append(name).append(" : ").append(parent);
+            sb.append("    ").append(sectors);
             return sb.toString();
         }
     }
@@ -83,9 +82,9 @@ public class Infrastructure {
      * maps are old string ID keys and new (SUMO) id values
      */
     public class Mappings {
-        public HashMap<String,String> terms = new HashMap<>();
-        public HashMap<String,String> relations = new HashMap<>();
-        public HashMap<String,String> units = new HashMap<>();
+        public Map<String,String> terms = new HashMap<>();
+        public Map<String,String> relations = new HashMap<>();
+        public Map<String,String> units = new HashMap<>();
     }
 
     /** *************************************************************
@@ -98,11 +97,11 @@ public class Infrastructure {
             String oid = (String) jso2.get("$oid");
             String name = (String) jo.get("name");
             productTypes.put(oid,name);
-            PreparedStatement st = conn.prepareStatement("INSERT INTO edges (rel, source, target) " +
+            try (PreparedStatement st = conn.prepareStatement("INSERT INTO edges (rel, source, target) " +
                     "VALUES ('instance','" + StringUtil.stringToKIFid(name) + "','ProductAttribute') " +
-                    "ON CONFLICT DO NOTHING;");
-            st.executeUpdate();
-            st.close();
+                            "ON CONFLICT DO NOTHING;")) {
+                st.executeUpdate();
+            }
         }
     }
 
@@ -418,9 +417,9 @@ public class Infrastructure {
                 }
             }
             for (String ptype : allowableValues.keySet()) {
-                HashMap<String,HashSet<String>> rels = allowableValues.get(ptype);
+                Map<String,Set<String>> rels = allowableValues.get(ptype);
                 for (String rel : rels.keySet()) {
-                    HashSet<String> vals = rels.get(rel);
+                    Set<String> vals = rels.get(rel);
                     for (String val : vals) {
                         String funcID = "Function" + funcIdCounter++;
                         val = processValue(val,funcID);
@@ -835,7 +834,7 @@ public class Infrastructure {
             inf = new Infrastructure();
             inf.productCatJSONtoSUMO(productsF, categoriesF, mappingsF, typesF);
         }
-        catch (Exception e) {
+        catch (ClassNotFoundException | SQLException e) {
             e.printStackTrace();
         }
         //inf = new Infrastructure();
@@ -847,7 +846,7 @@ public class Infrastructure {
      */
     public static void showHelp() {
 
-        System.out.println("KButilities class");
+        System.out.println("Infrastructure class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -i initialize");

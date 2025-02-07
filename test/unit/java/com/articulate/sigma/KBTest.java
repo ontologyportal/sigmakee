@@ -76,7 +76,7 @@ public class KBTest extends UnitTestBase {
         if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
             System.out.println("testDeleteUserAssVamp(1): success");
         else
-            System.out.println("testDeleteUserAssVamp(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
+            System.err.println("testDeleteUserAssVamp(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
         assertTrue(tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")));
         SigmaTestBase.kb.deleteUserAssertionsAndReload();
         vamp = SigmaTestBase.kb.askVampire(query,10,1);
@@ -86,7 +86,7 @@ public class KBTest extends UnitTestBase {
         if (tpp.proof == null || tpp.status.equals("Timeout"))
             System.out.println("testDeleteUserAssVamp(2): success");
         else
-            System.out.println("testDeleteUserAssVamp(2): fail, proof size: " + tpp.proof.size() + " '" + tpp.status + "'");
+            System.err.println("testDeleteUserAssVamp(2): fail, proof size: " + tpp.proof.size() + " '" + tpp.status + "'");
         assertTrue(tpp.proof == null || tpp.status.equals("Timeout"));
     }
 

@@ -37,7 +37,7 @@ import java.util.*;
 public class Vampire {
 
     public StringBuilder qlist = null; // quantifier list in order for answer extraction
-    public ArrayList<String> output = new ArrayList<>();
+    public List<String> output = new ArrayList<>();
     public static int axiomIndex = 0;
     public enum ModeType {AVATAR, CASC, CUSTOM}; // Avatar is faster but doesn't provide answer variables.
                                                  // Custom takes value from env var
@@ -88,7 +88,7 @@ public class Vampire {
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
     public static boolean assertFormula(String userAssertionTPTP, KB kb,
-                                 ArrayList<Formula> parsedFormulas, boolean tptp) {
+                                 List<Formula> parsedFormulas, boolean tptp) {
 
         if (debug) System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
@@ -96,7 +96,7 @@ public class Vampire {
         Set<String> tptpFormulas;
         String tptpStr;
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            HashSet<Formula> processedFormulas = new HashSet();
+            Set<Formula> processedFormulas = new HashSet();
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
                 fp = new FormulaPreprocessor();
@@ -177,7 +177,7 @@ public class Vampire {
     /** ***************************************************************
      * Write all the strings in @param stmts to temp-stmt.[tptp|tff|thf]
      */
-    public void writeStatements(HashSet<String> stmts, String type) {
+    public void writeStatements(Set<String> stmts, String type) {
 
         String dir = KBmanager.getMgr().getPref("kbDir");
         String fname = "temp-stmt." + type;
@@ -197,7 +197,7 @@ public class Vampire {
     /** ***************************************************************
      * Read in two files and write their contents to a new file
      */
-    public void concatFiles(String f1, String f2, String fout) throws Exception {
+    public void concatFiles(String f1, String f2, String fout) throws IOException {
 
         System.out.println("concatFiles(): " + f1 + " and " + f2 + " to " + fout);
         File f1file = new File(f1);
@@ -206,22 +206,21 @@ public class Vampire {
             System.err.println("ERROR in concatFiles(): " + f1 + " does not exist");
         if (!f2file.exists())
             System.err.println("ERROR in concatFiles(): " + f2 + " does not exist");
-        try (PrintWriter pw = new PrintWriter(fout)) {
-            BufferedReader br = new BufferedReader(new FileReader(f1));
+        try (PrintWriter pw = new PrintWriter(fout);
+            BufferedReader br = new BufferedReader(new FileReader(f1))) {
             String line = br.readLine();
             while (line != null) {
                 pw.println(line);
                 line = br.readLine();
             }
 
-            br = new BufferedReader(new FileReader(f2));
-            line = br.readLine();
-            while (line != null) {
-                pw.println(line);
-                line = br.readLine();
+            try (BufferedReader bufr = new BufferedReader(new FileReader(f2))) {
+                line = bufr.readLine();
+                while (line != null) {
+                    pw.println(line);
+                    line = bufr.readLine();
+                }
             }
-            pw.flush();
-            br.close();
         }
     }
 
@@ -246,7 +245,7 @@ public class Vampire {
      * in TFF or TPTP language to a file and then calling Vampire.
      * Note that any query must be given as a "conjecture"
      */
-    public void run(KB kb, File kbFile, int timeout, HashSet<String> stmts) throws Exception {
+    public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
 
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))

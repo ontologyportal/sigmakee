@@ -388,7 +388,7 @@ public class KBmanager implements Serializable {
     private void preferencesFromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))
-        	System.out.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + configuration.getTagName());
+        	System.err.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + configuration.getTagName());
         else {
             SimpleElement element;
             String name, value;
@@ -404,7 +404,7 @@ public class KBmanager implements Serializable {
                 }
                 else
                     if (!element.getTagName().equals("kb"))
-                        System.out.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + element.getTagName());
+                        System.err.println("Error in KBmanager.preferencesFromXML(): Bad tag: " + element.getTagName());
             }
         }
         if (debug) System.out.println("KBmanager.preferencesFromXML(): number of preferences: " +
@@ -420,7 +420,7 @@ public class KBmanager implements Serializable {
         long milis = System.currentTimeMillis();
         boolean SUMOKBexists = false;
         if (!configuration.getTagName().equals("configuration"))
-        	System.out.println("Error in KBmanager.kbsFromXML(): Bad tag: " + configuration.getTagName());
+        	System.err.println("Error in KBmanager.kbsFromXML(): Bad tag: " + configuration.getTagName());
         else {
             SimpleElement element, kbConst;
             String kbName, filename;
@@ -438,7 +438,7 @@ public class KBmanager implements Serializable {
                     for (int j = 0; j < element.getChildElements().size(); j++) {
                         kbConst = (SimpleElement) element.getChildElements().get(j);
                         if (!kbConst.getTagName().equals("constituent"))
-                        	System.out.println("Error in KBmanager.kbsFromXML(): Bad tag: " + kbConst.getTagName());
+                        	System.err.println("Error in KBmanager.kbsFromXML(): Bad tag: " + kbConst.getTagName());
                         filename = (String) kbConst.getAttribute("filename");
                         if (!filename.startsWith((File.separator)))
                             filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
@@ -458,7 +458,7 @@ public class KBmanager implements Serializable {
         System.out.println("kbsFromXML(): Completed loading KBs");
         System.out.println("kbsFromXML(): seconds: " + (System.currentTimeMillis() - milis) / 1000);
         if (!SUMOKBexists)
-            System.out.println("Error in KBmanager.kbsFromXML(): no SUMO kb.  Some Sigma functions will not work.");
+            System.err.println("Error in KBmanager.kbsFromXML(): no SUMO kb.  Some Sigma functions will not work.");
     }
 
     /** ***************************************************************
@@ -469,8 +469,8 @@ public class KBmanager implements Serializable {
 
         List<List<String>> result = new ArrayList<>();
         if (!configuration.getTagName().startsWith("configuration")) {
-            System.out.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: " + configuration.getTagName());
-            System.out.println("Error in KBmanager.kbsFilenamesFromXML(): expected <configuration>");
+            System.err.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: "
+                    + configuration.getTagName() + ". expected <configuration>");
         }
         else {
             SimpleElement element, kbConst;
@@ -486,8 +486,8 @@ public class KBmanager implements Serializable {
                     for (int j = 0; j < element.getChildElements().size(); j++) {
                         kbConst = (SimpleElement) element.getChildElements().get(j);
                         if (!kbConst.getTagName().equals("constituent")) {
-                            System.out.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: " + kbConst.getTagName());
-                            System.out.println("Error in KBmanager.kbsFilenamesFromXML(): expected <constituent>");
+                            System.err.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: "
+                                    + kbConst.getTagName() + ". expected <constituent>");
                         }
                         filename = (String) kbConst.getAttribute("filename");
                         if (!filename.startsWith((File.separator)))
@@ -568,7 +568,7 @@ public class KBmanager implements Serializable {
     private void fromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))
-        	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
+        	System.err.println("Error in KBmanager.fromXML(): Bad tag: " + configuration.getTagName());
         else {
             SimpleElement element, kbConst;
             String name, value, kbName, filename;
@@ -579,7 +579,7 @@ public class KBmanager implements Serializable {
                 if (element.getTagName().equals("preference")) {
                     name = (String) element.getAttribute("name");
                     if (!configKeys.contains(name)) {
-                        System.out.println("Error in KBmanager.fromXML(): Bad key: " + name);
+                        System.err.println("Error in KBmanager.fromXML(): Bad key: " + name);
                         // continue; // set it anyway
                     }
                     value = (String) element.getAttribute("value");
@@ -594,7 +594,7 @@ public class KBmanager implements Serializable {
                         for (int j = 0; j < element.getChildElements().size(); j++) {
                             kbConst = (SimpleElement) element.getChildElements().get(j);
                             if (!kbConst.getTagName().equals("constituent"))
-                            	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
+                            	System.err.println("Error in KBmanager.fromXML(): Bad tag: " + kbConst.getTagName());
                             filename = (String) kbConst.getAttribute("filename");
                             if (!StringUtil.emptyString(filename)) {
                                 if (KButilities.isCacheFile(filename)) {
@@ -608,7 +608,7 @@ public class KBmanager implements Serializable {
                         loadKB(kbName, constituentsToAdd);
                     }
                     else
-                    	System.out.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
+                    	System.err.println("Error in KBmanager.fromXML(): Bad tag: " + element.getTagName());
                 }
             }
             preferences.putAll(prefOverride);
@@ -827,7 +827,7 @@ public class KBmanager implements Serializable {
             }
         }
         else
-            System.out.println("Error in KBmanager.setConfiguration(): No kbs");
+            System.err.println("Error in KBmanager.setConfiguration(): No kbs");
         if (debug) System.out.println("KBmanager.setConfiguration(): number of preferences: " +
                 preferences.keySet().size());
     }
@@ -880,8 +880,8 @@ public class KBmanager implements Serializable {
                 kb.eprover.terminate();
         }
         catch (IOException ioe) {
-            System.out.println("Error in KBmanager.removeKB(): ");
-            System.out.println("  Error terminating inference engine: " + ioe.getMessage());
+            System.err.println("Error in KBmanager.removeKB(): ");
+            System.err.println("  Error terminating inference engine: " + ioe.getMessage());
         }
         kbs.remove(name);
         try {
@@ -1035,7 +1035,7 @@ public class KBmanager implements Serializable {
     public String getPref(String key) {
 
         if (!configKeys.contains(key)) {
-            System.out.println("Error in KBmanager.getPref(): bad key: " + key);
+            System.err.println("Error in KBmanager.getPref(): bad key: " + key);
             return "";
         }
         String ans = (String) preferences.get(key);
@@ -1050,7 +1050,7 @@ public class KBmanager implements Serializable {
     public boolean prefEquals(String key, String value) {
 
         if (!configKeys.contains(key)) {
-            System.out.println("Error in KBmanager.getPref(): bad key: " + key);
+            System.err.println("Error in KBmanager.getPref(): bad key: " + key);
             return false;
         }
         String ans = (String) preferences.get(key);
@@ -1065,7 +1065,7 @@ public class KBmanager implements Serializable {
     public void setPref(String key, String value) {
 
         if (!configKeys.contains(key)) {
-            System.out.println("Error in KBmanager.setPref(): bad key: " + key);
+            System.err.println("Error in KBmanager.setPref(): bad key: " + key);
             return;
         }
         preferences.put(key,value);

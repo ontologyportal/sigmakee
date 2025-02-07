@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -37,14 +38,9 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         SUMOformulaToTPTPformula.lang = "tff";
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + ".tff";
-        PrintWriter pw = null;
-        try {
-            pw = new PrintWriter(new FileWriter(filename));
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
-            pw.flush();
-            pw.close();
-        }
-        catch (Exception e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
@@ -65,7 +61,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("testExtractSig(): Success!");
         else
-            System.out.println("testExtractSig(): fail");
+            System.err.println("testExtractSig(): fail");
         assertTrue(sorts.toString().equals("[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]"));
     }
 
@@ -76,7 +72,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testExtractUpdateSig(): ");
-        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSigFromName("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
+        List<String> sorts = SUMOtoTFAform.relationExtractUpdateSigFromName("ListFn__6Fn__0Ra1Ra2Ra3Ra4Ra5Ra6Ra");
         System.out.println(sorts);
         String expectedRes = "[RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber, RationalNumber]";
         String result = sorts.toString();
@@ -85,7 +81,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("testExtractUpdateSig(): Success!");
         else
-            System.out.println("testExtractUpdateSig(): fail");
+            System.err.println("testExtractUpdateSig(): fail");
         assertTrue(expectedRes.equals(result));
     }
 
@@ -96,7 +92,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testExtractUpdateSig2(): ");
-        ArrayList<String> sorts = SUMOtoTFAform.relationExtractUpdateSigFromName("partition__5");
+        List<String> sorts = SUMOtoTFAform.relationExtractUpdateSigFromName("partition__5");
         System.out.println(sorts);
         String expectedRes = "[, Class, Class, Class, Class, Class]";
         System.out.println("testExtractUpdateSig2(): expected: " + expectedRes);
@@ -105,7 +101,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("testExtractUpdateSig2(): Success!");
         else
-            System.out.println("testExtractUpdateSig2(): fail");
+            System.err.println("testExtractUpdateSig2(): fail");
         assertTrue(expectedRes.equals(result));
     }
 
@@ -124,7 +120,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("testSorts(): Success!");
         else
-            System.out.println("testSorts(): fail");
+            System.err.println("testSorts(): fail");
         assertTrue(expectedRes.equals(result));
     }
 
@@ -150,7 +146,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("testParents(): Success!");
         else
-            System.out.println("testParents(): fail");
+            System.err.println("testParents(): fail");
         assertEquals(expectedRes,result);
     }
 
@@ -169,7 +165,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("test1(): Success!");
         else
-            System.out.println("test1(): fail");
+            System.err.println("test1(): fail");
         assertEquals(expectedRes,result);
     }
 
@@ -188,7 +184,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(result))
             System.out.println("test1_5(): Success!");
         else
-            System.out.println("test1_5(): fail");
+            System.err.println("test1_5(): fail");
         assertEquals(expectedRes,result);
     }
 
@@ -214,7 +210,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("test2(): Success!");
         else
-            System.out.println("test2(): fail");
+            System.err.println("test2(): fail");
         assertEquals(expected,result);
     }
 
@@ -239,7 +235,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("test3(): Success!");
         else
-            System.out.println("test3(): fail");
+            System.err.println("test3(): fail");
         assertEquals(expected,result);
     }
 
@@ -263,7 +259,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("test4(): Success!");
         else
-            System.out.println("test4(): fail");
+            System.err.println("test4(): fail");
         assertEquals(expected,result);
     }
 
@@ -289,7 +285,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("test5(): Success!");
         else
-            System.out.println("test5(): fail");
+            System.err.println("test5(): fail");
         assertEquals(expected,result);
     }
 
@@ -317,7 +313,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testFloorFn(): Success!");
         else
-            System.out.println("testFloorFn(): fail");
+            System.err.println("testFloorFn(): fail");
         assertEquals(expected,result);
     }
 
@@ -347,7 +343,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testNumericSubclass(): Success!");
         else
-            System.out.println("testNumericSubclass(): fail");
+            System.err.println("testNumericSubclass(): fail");
         assertEquals(expected,result);
     }
 
@@ -370,7 +366,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testElimUnitaryLogops(): Success!");
         else
-            System.out.println("testElimUnitaryLogops(): fail");
+            System.err.println("testElimUnitaryLogops(): fail");
         assertEquals(expected,result);
     }
 
@@ -410,7 +406,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testVariableArity(): Success!");
         else
-            System.out.println("testVariableArity(): fail");
+            System.err.println("testVariableArity(): fail");
         assertEquals(expected,result);
     }
 
@@ -454,7 +450,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testVariableArity2(): Success!");
         else
-            System.out.println("testVariableArity2(): fail");
+            System.err.println("testVariableArity2(): fail");
         assertEquals(expected,result);
     }
 
@@ -519,7 +515,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testPredVarArity(): Success!");
         else
-            System.out.println("testPredVarArity(): fail");
+            System.err.println("testPredVarArity(): fail");
         assertEquals(expected,result);
     }
 
@@ -564,7 +560,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testRemoveNumInst(): Success!");
         else
-            System.out.println("testRemoveNumInst(): fail");
+            System.err.println("testRemoveNumInst(): fail");
         assertEquals(expected,result);
     }
 
@@ -601,7 +597,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testInstNum(): Success!");
         else
-            System.out.println("testInstNum(): fail");
+            System.err.println("testInstNum(): fail");
         assertEquals(expected,result);
     }
 
@@ -624,7 +620,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (inc)
             System.out.println("testTypeConflict(): Success!");
         else
-            System.out.println("testTypeConflict(): fail");
+            System.err.println("testTypeConflict(): fail");
         assertTrue(inc);
     }
 
@@ -649,7 +645,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (result.equals(expected))
             System.out.println("testTypeConflict2(): Success!");
         else
-            System.out.println("testTypeConflict2(): fail");
+            System.err.println("testTypeConflict2(): fail");
         assertEquals(expected,result);
     }
 
@@ -671,7 +667,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (inc)
             System.out.println("testTypeConflict3(): Success!");
         else
-            System.out.println("testTypeConflict3(): fail");
+            System.err.println("testTypeConflict3(): fail");
         assertTrue(inc);
     }
 
@@ -693,7 +689,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (StringUtil.emptyString(result))
             System.out.println("testTransNum(): Success!");
         else
-            System.out.println("testTransNum(): fail");
+            System.err.println("testTransNum(): fail");
         assertTrue(StringUtil.emptyString(result));
     }
 
@@ -718,7 +714,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expected.equals(result))
             System.out.println("testPropertyFn(): Success!");
         else
-            System.out.println("testPropertyFn(): fail");
+            System.err.println("testPropertyFn(): fail");
         assertTrue(expected.equals(result));
     }
 
@@ -743,7 +739,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         if (expectedRes.equals(actualRes.trim()))
             System.out.println("testMemberTypeCount(): Success!");
         else
-            System.out.println("testMemberTypeCount(): fail");
+            System.err.println("testMemberTypeCount(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -756,7 +752,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         SUMOtoTFAform.debug = true;
         SUMOtoTFAform stfa = new SUMOtoTFAform();
-        stfa.initOnce();
+        SUMOtoTFAform.initOnce();
         SUMOKBtoTFAKB.debug = true;
         System.out.println("\n========= testTypeConflict4 ==========\n");
         String input = "(=> (and (domain intelligenceQuotient ?NUMBER ?CLASS) " +
@@ -767,13 +763,13 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         System.out.println("testTypeConflict4(): testing missing sorts");
         stfa.sorts = stfa.missingSorts(f);
         System.out.println("testTypeConflict4(): sorts: " + stfa.sorts);
-        if (stfa.sorts != null && stfa.sorts.size() > 0)
+        if (stfa.sorts != null && !stfa.sorts.isEmpty())
             f.tffSorts.addAll(stfa.sorts);
         boolean actual = SUMOtoTFAform.typeConflict(f);
         if (actual)
             System.out.println("testTypeConflict4(): Success!");
         else
-            System.out.println("testTypeConflict4(): fail");
+            System.err.println("testTypeConflict4(): fail");
         assertTrue(actual);
     }
 }

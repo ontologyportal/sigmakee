@@ -98,7 +98,7 @@ public class KB implements Serializable {
 
     /* An ArrayList of Strings that are the full canonical pathnames of the
      * files that comprise the KB.    */
-    public ArrayList<String> constituents = new ArrayList<>();
+    public List<String> constituents = new ArrayList<>();
 
     /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";
@@ -111,13 +111,13 @@ public class KB implements Serializable {
     public transient CELT celt = null;
 
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
-    public HashMap<String,Integer> termDepthCache = new HashMap<>();
+    public Map<String,Integer> termDepthCache = new HashMap<>();
 
     /* A SortedSet of Strings, which are all the terms in the KB.     */
-    public SortedSet<String> terms = new TreeSet<>();
+    public Set<String> terms = new TreeSet<>();
 
     // A Map from all uppercase terms to their possibly mixed case original versions
-    public HashMap<String,String> capterms = new HashMap<>();
+    public Map<String,String> capterms = new HashMap<>();
 
     /** The String constant that is the suffix for file of user assertions. */
     public static final String _userAssertionsString = "_UserAssertions.kif";
@@ -137,28 +137,28 @@ public class KB implements Serializable {
     /* A Map of all the Formula objects in the KB. Each key is a String
      * representation of a Formula. Each value is the Formula object
      * corresponding to the key.     */
-    public HashMap<String, Formula> formulaMap = new HashMap<>();
+    public Map<String, Formula> formulaMap = new HashMap<>();
 
     /* A HashMap of ArrayLists of String formulae, containing all the formulae
      * in the KB. Keys are the formula itself, a formula ID, and term indexes
      * created in KIF.createKey(). The actual formula can be retrieved by using
      * the returned String as the key for the variable formulaMap     */
-    public HashMap<String, ArrayList<String>> formulas = new HashMap<>();
+    public Map<String, List<String>> formulas = new HashMap<>();
 
     /* The natural language formatting strings for relations in the KB. It is a
      * HashMap of language keys and HashMap values. The interior HashMap is term
      * name keys and String values.     */
-    private HashMap<String, HashMap<String, String>> formatMap = new HashMap<>();
+    private Map<String, Map<String, String>> formatMap = new HashMap<>();
 
     /* language keys and HashMap values. The interior HashMap is term name keys
      * and String values.     */
-    private HashMap<String, HashMap<String, String>> termFormatMap = new HashMap<>();
+    private Map<String, Map<String, String>> termFormatMap = new HashMap<>();
 
     /** Errors found during loading of the KB constituents. */
-    public TreeSet<String> errors = new TreeSet<>();
+    public Set<String> errors = new TreeSet<>();
 
     /** Warnings found during loading of the KB constituents. */
-    public TreeSet<String> warnings = new TreeSet<>();
+    public Set<String> warnings = new TreeSet<>();
 
     /* Future: If true, the contents of the KB have been modified without
      * updating the caches     */
@@ -171,7 +171,7 @@ public class KB implements Serializable {
     public KBcache kbCache = null;
 
     // maps TPTP axiom IDs to SUMO formulas
-    public static HashMap<String,Formula> axiomKey = new HashMap<>();
+    public static Map<String,Formula> axiomKey = new HashMap<>();
 
     public Map<String, Integer> termFrequency = new HashMap<>();
 
@@ -202,7 +202,7 @@ public class KB implements Serializable {
             }
         }
         catch (IOException ioe) {
-            System.out.println("Error in KB(): " + ioe.getMessage());
+            System.err.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
     }
@@ -236,18 +236,21 @@ public class KB implements Serializable {
             this.terms = Collections.synchronizedSortedSet(new TreeSet<>(kbIn.terms));
         if (kbIn.capterms != null)
             this.capterms.putAll(kbIn.capterms);
+        String key;
+        Formula newFormula;
         if (kbIn.formulaMap != null) {
             for (Map.Entry<String, Formula> pair : kbIn.formulaMap.entrySet()) {
-                String key = pair.getKey();
-                Formula newFormula = new Formula(pair.getValue());
+                key = pair.getKey();
+                newFormula = new Formula(pair.getValue());
                 this.formulaMap.put(key, newFormula);
             }
         }
 
         if (kbIn.formulas != null) {
-            for (Map.Entry<String, ArrayList<String>> pair : kbIn.formulas.entrySet()) {
-                String key = pair.getKey();
-                ArrayList<String> newList = Lists.newArrayList(pair.getValue());
+            List<String> newList;
+            for (Map.Entry<String, List<String>> pair : kbIn.formulas.entrySet()) {
+                key = pair.getKey();
+                newList = Lists.newArrayList(pair.getValue());
                 this.formulas.put(key, newList);
             }
         }
@@ -288,7 +291,7 @@ public class KB implements Serializable {
             }
         }
         catch (IOException ioe) {
-            System.out.println("Error in KB(): " + ioe.getMessage());
+            System.err.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
     }
@@ -296,7 +299,7 @@ public class KB implements Serializable {
     /**************************************************************
      * Returns a SortedSet of Strings, which are all the terms in the KB.
      */
-    public SortedSet<String> getTerms() {
+    public Set<String> getTerms() {
 
         return this.terms;
     }
@@ -341,7 +344,7 @@ public class KB implements Serializable {
      *            A String
      * @return An ArrayList of terms that have a match to term
      */
-    public ArrayList<String> getREMatch(String term, boolean ignoreCaps) {
+    public List<String> getREMatch(String term, boolean ignoreCaps) {
 
         try {
             Pattern p;
@@ -349,7 +352,7 @@ public class KB implements Serializable {
                 p = Pattern.compile(term, Pattern.CASE_INSENSITIVE);
             else
                 p = Pattern.compile(term);
-            ArrayList<String> matchesList = new ArrayList<>();
+            List<String> matchesList = new ArrayList<>();
             Matcher m;
             for (String t : getTerms()) {
                 m = p.matcher(t);
@@ -359,7 +362,7 @@ public class KB implements Serializable {
             return matchesList;
         }
         catch (PatternSyntaxException ex) {
-            ArrayList<String> err = new ArrayList<>();
+            List<String> err = new ArrayList<>();
             err.add("Invalid Input");
             return err;
         }
@@ -368,10 +371,10 @@ public class KB implements Serializable {
     /**************************************************************
      * Sets the synchronized SortedSet of all the terms in the KB to be kbTerms.
      */
-    public void setTerms(SortedSet<String> newTerms) {
+    public void setTerms(Set<String> newTerms) {
 
         getTerms().clear();
-        this.terms = Collections.synchronizedSortedSet(newTerms);
+        this.terms = Collections.synchronizedSortedSet(new TreeSet<>(newTerms));
         capterms.clear();
         for (String t : terms)
             capterms.put(t.toUpperCase(),t);
@@ -383,11 +386,11 @@ public class KB implements Serializable {
      *
      * @return an ArrayList of Strings containing the language identifiers
      */
-    public ArrayList<String> availableLanguages() {
+    public List<String> availableLanguages() {
 
-        ArrayList<String> al = new ArrayList<>();
-        ArrayList<Formula> col = ask("arg", 0, "format");
-        ArrayList<Formula> col2 = ask("arg", 0, "termFormat");
+        List<String> al = new ArrayList<>();
+        List<Formula> col = ask("arg", 0, "format");
+        List<Formula> col2 = ask("arg", 0, "termFormat");
         if (col != null) {
             if (col2 != null)
                 col.addAll(col2);
@@ -433,7 +436,7 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        ArrayList<String> toRemove = new ArrayList<>();
+        List<String> toRemove = new ArrayList<>();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
         String term;
         if (formulaMap != null && !formulaMap.isEmpty()) {
@@ -513,7 +516,7 @@ public class KB implements Serializable {
      * Note! This does not return instances of the given term, but rather the
      * terms of which the given term is an instance.
      */
-    public ArrayList<Formula> instancesOf(String term) {
+    public List<Formula> instancesOf(String term) {
 
         return askWithRestriction(1, term, 0, "instance");
     }
@@ -524,7 +527,7 @@ public class KB implements Serializable {
     public Set<String> instances(String term) {
 
         Set<String> result = new HashSet<>();
-        ArrayList<Formula> forms = askWithRestriction(2, term, 0, "instance");
+        List<Formula> forms = askWithRestriction(2, term, 0, "instance");
         for (Formula f : forms) {
             result.add(f.getStringArgument(1));
         }
@@ -666,7 +669,7 @@ public class KB implements Serializable {
      */
     public boolean isInstance(String term) {
 
-        ArrayList<Formula> al = askWithRestriction(0, "instance", 1, term);
+        List<Formula> al = askWithRestriction(0, "instance", 1, term);
         return (al != null && !al.isEmpty());
     }
 
@@ -744,9 +747,9 @@ public class KB implements Serializable {
      * @return An ArrayList of formula tuples (ArrayLists), or an empty
      * ArrayList.
      */
-    public static ArrayList<ArrayList<String>> formulasToArrayLists(List<Formula> formulaList) {
+    public static List<List<String>> formulasToArrayLists(List<Formula> formulaList) {
 
-        ArrayList<ArrayList<String>> ans = new ArrayList<>();
+        List<List<String>> ans = new ArrayList<>();
         if (formulaList instanceof List) {
             Iterator<Formula> it = formulaList.iterator();
             Formula f;
@@ -759,25 +762,27 @@ public class KB implements Serializable {
     }
 
     /* *************************************************************
+     * TODO: Not used and causes issues with FormulaProcessorTest 2/6/25 tdn
      * Converts
      * all Strings in the input List to Formula objects.
      *
      * @param strings A list of Strings.
      * @return An ArrayList of Formulas, or an empty ArrayList.
      */
-    public static ArrayList<Formula> stringsToFormulas(List<String> strings) {
-
-        ArrayList<Formula> ans = new ArrayList<>();
-        if (strings instanceof List) {
-            Iterator<String> it = strings.iterator();
-            while (it.hasNext()) {
-                Formula f = new Formula();
-                f.read(it.next());
-                ans.add(f);
-            }
-        }
-        return ans;
-    }
+//    public static List<Formula> stringsToFormulas(List<String> strings) {
+//
+//        List<Formula> ans = new ArrayList<>();
+//        if (strings instanceof List) {
+//            Iterator<String> it = strings.iterator();
+//            Formula f;
+//            while (it.hasNext()) {
+//                f = new Formula();
+//                f.read(it.next());
+//                ans.add(f);
+//            }
+//        }
+//        return ans;
+//    }
 
     /***************************************************************
      * Converts a
@@ -830,13 +835,13 @@ public class KB implements Serializable {
      * @return An ArrayList of terms, or an empty ArrayList if no terms can be
      * retrieved.
      */
-    public ArrayList<String> getTermsViaAskWithRestriction(int argnum1, String term1, int argnum2, String term2,
+    public List<String> getTermsViaAskWithRestriction(int argnum1, String term1, int argnum2, String term2,
                                                            int targetArgnum, Set<String> predicatesUsed) {
 
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         if (StringUtil.isNonEmptyString(term1) && !StringUtil.isQuotedString(term1)
                 && StringUtil.isNonEmptyString(term2) && !StringUtil.isQuotedString(term2)) {
-            ArrayList<Formula> formulae = askWithRestriction(argnum1, term1, argnum2, term2);
+            List<Formula> formulae = askWithRestriction(argnum1, term1, argnum2, term2);
             Formula f;
             Iterator<Formula> it = formulae.iterator();
             while (it.hasNext()) {
@@ -863,7 +868,7 @@ public class KB implements Serializable {
      * @return An ArrayList of terms, or an empty ArrayList if no terms can be
      * retrieved.
      */
-    public ArrayList<String> getTermsViaAskWithRestriction(int argnum1, String term1, int argnum2, String term2,
+    public List<String> getTermsViaAskWithRestriction(int argnum1, String term1, int argnum2, String term2,
                                                            int targetArgnum) {
 
         return getTermsViaAskWithRestriction(argnum1, term1, argnum2, term2, targetArgnum, null);
@@ -881,7 +886,7 @@ public class KB implements Serializable {
                                                     int targetArgnum) {
 
         String result = null;
-        ArrayList<String> terms = getTermsViaAskWithRestriction(argnum1, term1, argnum2, term2, targetArgnum);
+        List<String> terms = getTermsViaAskWithRestriction(argnum1, term1, argnum2, term2, targetArgnum);
         if (!terms.isEmpty())
             result = (String) terms.get(0);
         return result;
@@ -894,19 +899,19 @@ public class KB implements Serializable {
      * return an empty ArrayList. Iterate through the smallest list of
      * results.
      */
-    public ArrayList<Formula> askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
+    public List<Formula> askWithRestriction(int argnum1, String term1, int argnum2, String term2) {
 
         //System.out.println("INFO in KB.askWithRestriction(): argnum1: " + argnum1);
         //System.out.println("INFO in KB.askWithRestriction(): term1: " + term1);
         //System.out.println("INFO in KB.askWithRestriction(): argnum2: " + argnum2);
         //System.out.println("INFO in KB.askWithRestriction(): term2: " + term2);
-        ArrayList<Formula> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)) {
-            ArrayList<Formula> partial1 = ask("arg", argnum1, term1);
-            ArrayList<Formula> partial2 = ask("arg", argnum2, term2);
+            List<Formula> partial1 = ask("arg", argnum1, term1);
+            List<Formula> partial2 = ask("arg", argnum2, term2);
             //System.out.println("INFO in KB.askWithRestriction(): partial 1: " + partial1);
             //System.out.println("INFO in KB.askWithRestriction(): partial 2: " + partial2);
-            ArrayList<Formula> partial = partial1;
+            List<Formula> partial = partial1;
             // partial.retainAll(partial2); - this should be faster than below
             int arg = argnum2;
             String term = term2;
@@ -921,7 +926,7 @@ public class KB implements Serializable {
             String thisArg;
             for (Formula f : partial) {
                 if (f == null)
-                    System.out.println("Error in KB.askWithRestriction(): null formula searching on term: " + term);
+                    System.err.println("Error in KB.askWithRestriction(): null formula searching on term: " + term);
                 thisArg = f.getStringArgument(arg);
                 //System.out.println("INFO in KB.askWithRestriction(): thisArg: " + thisArg);
                 if (thisArg == null) {
@@ -943,7 +948,7 @@ public class KB implements Serializable {
      *
      * @return ArrayList
      */
-    public ArrayList<Formula> askWithTwoRestrictions(int argnum1, String term1, int argnum2, String term2, int argnum3,
+    public List<Formula> askWithTwoRestrictions(int argnum1, String term1, int argnum2, String term2, int argnum3,
                                                      String term3) {
 
         String[] args = new String[6];
@@ -954,14 +959,14 @@ public class KB implements Serializable {
         args[0] = "argnum3 = " + argnum3;
         args[1] = "term3 = " + term3;
 
-        ArrayList<Formula> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         if (StringUtil.isNonEmptyString(term1) && StringUtil.isNonEmptyString(term2)
                 && StringUtil.isNonEmptyString(term3)) {
             // a will get the smallest list then b then c
-            ArrayList<Formula> partiala = new ArrayList<>();
-            ArrayList<Formula> partial1 = ask("arg", argnum1, term1);
-            ArrayList<Formula> partial2 = ask("arg", argnum2, term2);
-            ArrayList<Formula> partial3 = ask("arg", argnum3, term3);
+            List<Formula> partiala = new ArrayList<>();
+            List<Formula> partial1 = ask("arg", argnum1, term1);
+            List<Formula> partial2 = ask("arg", argnum2, term2);
+            List<Formula> partial3 = ask("arg", argnum3, term3);
             int argb = -1;
             String termb = "";
             int argc = -1;
@@ -1011,10 +1016,11 @@ public class KB implements Serializable {
                 }
             }
             if (partiala != null) {
+                Formula f, fargb, fargc;
                 for (int i = 0; i < partiala.size(); i++) {
-                    Formula f = partiala.get(i);
-                    Formula fargb = f.getArgument(argb);
-                    Formula fargc = f.getArgument(argc);
+                    f = partiala.get(i);
+                    fargb = f.getArgument(argb);
+                    fargc = f.getArgument(argc);
                     if (f != null && fargb != null && f.getArgument(argb).equals(termb)) {
                         if (fargc != null && f.getArgument(argc).equals(termc))
                             result.add(f);
@@ -1032,10 +1038,10 @@ public class KB implements Serializable {
      * @return An ArrayList of terms, or an empty ArrayList if no matches can be
      * found.
      */
-    public ArrayList<String> getTermsViaAWTR(int argnum1, String term1, int argnum2, String term2, int argnum3,
+    public List<String> getTermsViaAWTR(int argnum1, String term1, int argnum2, String term2, int argnum3,
                                              String term3, int targetArgnum) {
 
-        ArrayList<String> ans = new ArrayList<>();
+        List<String> ans = new ArrayList<>();
         List<Formula> formulae = askWithTwoRestrictions(argnum1, term1, argnum2, term2, argnum3, term3);
         Formula f;
         for (int i = 0; i < formulae.size(); i++) {
@@ -1074,12 +1080,12 @@ public class KB implements Serializable {
      * @param targetArgnum The argument position of the terms being sought
      * @return An ArrayList of Strings, which will be empty if no match found.
      */
-    public ArrayList<String> getTermsViaAsk(int knownArgnum, String knownArg, int targetArgnum) {
+    public List<String> getTermsViaAsk(int knownArgnum, String knownArg, int targetArgnum) {
 
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         List<Formula> formulae = ask("arg", knownArgnum, knownArg);
         if (!formulae.isEmpty()) {
-            TreeSet<String> ts = new TreeSet<>();
+            Set<String> ts = new TreeSet<>();
             Formula f;
             Iterator<Formula> it = formulae.iterator();
             while (it.hasNext()) {
@@ -1093,20 +1099,18 @@ public class KB implements Serializable {
 
     /***************************************************************
      */
-    private ArrayList<Formula> stringsToFormulas(ArrayList<String> strings) {
+    private List<Formula> stringsToFormulas(List<String> strings) {
 
-        ArrayList<Formula> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         if (strings == null)
             return result;
-        String s;
         Formula f;
-        for (int i = 0; i < strings.size(); i++) {
-            s = strings.get(i);
+        for (String s : strings) {
             f = formulaMap.get(s);
             if (f != null)
                 result.add(f);
             else
-                System.out.println("Error in KB.stringsToFormulas(): null formula for key: " + s);
+                System.err.println("Error in KB.stringsToFormulas(): null formula for key: " + s);
         }
         return result;
     }
@@ -1123,9 +1127,9 @@ public class KB implements Serializable {
      * found.
      * see KIF.createKey()
      */
-    public ArrayList<Formula> ask(String kind, int argnum, String term) {
+    public List<Formula> ask(String kind, int argnum, String term) {
 
-        ArrayList<Formula> result = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
         String msg;
         if (StringUtil.emptyString(term)) {
             msg = ("Error in KB.ask(\"" + kind + "\", " + argnum + ", \"" + term + "\"), "
@@ -1136,13 +1140,13 @@ public class KB implements Serializable {
             msg = ("Error in KB.ask(), Strings are not indexed.  No results for " + term);
             errors.add(msg);
         }
-        ArrayList<Formula> tmp;
+        List<Formula> tmp;
         String key;
         if (kind.equals("arg"))
             key = kind + "-" + argnum + "-" + term;
         else
             key = kind + "-" + term;
-        ArrayList<String> alstr = formulas.get(key);
+        List<String> alstr = formulas.get(key);
 
         tmp = stringsToFormulas(alstr);
         if (tmp != null)
@@ -1169,19 +1173,19 @@ public class KB implements Serializable {
      * @return an ArrayList of Formulas that satisfy the query, or an empty
      * ArrayList if no Formulae are retrieved.
      */
-    public ArrayList<Formula> askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
+    public List<Formula> askWithPredicateSubsumption(String relation, int idxArgnum, String idxTerm) {
 
-        ArrayList<Formula> ans = new ArrayList<>();
-        HashSet<Formula> accumulator = new HashSet<>();
+        List<Formula> ans = new ArrayList<>();
+        Set<Formula> accumulator = new HashSet<>();
         if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm) && (idxArgnum >= 0)) { // &&
             // (idxArgnum
             // <
             // 7)
 
-            HashSet<String> relns = new HashSet<>(); // relation and
+            Set<String> relns = new HashSet<>(); // relation and
             // subrelations
             relns.add(relation);
-            ArrayList<Formula> subrelForms = askWithRestriction(0, "subrelation", 2, relation);
+            List<Formula> subrelForms = askWithRestriction(0, "subrelation", 2, relation);
             Formula f;
             String arg;
             for (int i = 0; i < subrelForms.size(); i++) {
@@ -1189,7 +1193,7 @@ public class KB implements Serializable {
                 arg = f.getStringArgument(1);
                 relns.add(arg);
             }
-            ArrayList<Formula> forms = ask("arg", idxArgnum, idxTerm);
+            List<Formula> forms = ask("arg", idxArgnum, idxTerm);
             for (int i = 0; i < forms.size(); i++) {
                 f = forms.get(i);
                 if (!accumulator.contains(f)) {
@@ -1225,14 +1229,14 @@ public class KB implements Serializable {
      * @return an ArrayList of terms (SUO-KIF constants), or an empty ArrayList
      * if no terms can be retrieved
      */
-    public ArrayList<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
+    public List<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
                                                              int targetArgnum, boolean useInverses, Set predicatesUsed) {
 
-        ArrayList<String> ans = new ArrayList<>();
+        List<String> ans = new ArrayList<>();
         if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm) && (idxArgnum >= 0)
             // && (idxArgnum < 7)
                 ) {
-            TreeSet<String> reduced = new TreeSet<>();
+            Set<String> reduced = new TreeSet<>();
             List<String> inverseSyns = null;
             List<String> inverses = null;
             if (useInverses) {
@@ -1297,7 +1301,7 @@ public class KB implements Serializable {
      * @return an ArrayList of terms (SUO-KIF constants), or an empty ArrayList
      * if no terms can be retrieved
      */
-    public ArrayList<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
+    public List<String> getTermsViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
                                                              int targetArgnum, boolean useInverses) {
 
         return getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm, targetArgnum, useInverses, null);
@@ -1330,7 +1334,7 @@ public class KB implements Serializable {
         if (StringUtil.isNonEmptyString(relation) && StringUtil.isNonEmptyString(idxTerm) && (idxArgnum >= 0)
             // && (idxArgnum < 7)
                 ) {
-            ArrayList<String> trms = getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm, targetArgnum,
+            List<String> trms = getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm, targetArgnum,
                     useInverses);
             if (!trms.isEmpty())
                 ans = (String) trms.get(0);
@@ -1358,14 +1362,14 @@ public class KB implements Serializable {
      * @return an ArrayList of terms (SUO-KIF constants), or an empty ArrayList
      * if no terms can be retrieved
      */
-    public ArrayList<String> getTransitiveClosureViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
+    public List<String> getTransitiveClosureViaPredicateSubsumption(String relation, int idxArgnum, String idxTerm,
                                                                          int targetArgnum, boolean useInverses) {
 
-        ArrayList<String> ans = new ArrayList<>();
+        List<String> ans = new ArrayList<>();
         Set<String> reduced = new TreeSet<>();
         Set<String> accumulator = new TreeSet<>(
                 getTermsViaPredicateSubsumption(relation, idxArgnum, idxTerm, targetArgnum, useInverses));
-        ArrayList<String> working = new ArrayList<>();
+        List<String> working = new ArrayList<>();
         while (!accumulator.isEmpty()) {
             reduced.addAll(accumulator);
             working.clear();
@@ -1397,10 +1401,10 @@ public class KB implements Serializable {
     public Set<String> getAllSub(String term, String rel) {
 
         //System.out.println("KB.getAllSub(): "  + term + " : " + rel);
-        ArrayList<String> temp = new ArrayList<>();
-        HashSet<String> result = new HashSet<>();
+        List<String> temp = new ArrayList<>();
+        Set<String> result = new HashSet<>();
         temp.add(term);
-        HashSet<String> oldResult = new HashSet<>();
+        Set<String> oldResult = new HashSet<>();
         while (!result.equals(oldResult)) {
             //System.out.println("KB.getAllSub(): "  + result);
             oldResult = new HashSet<>();
@@ -1429,15 +1433,15 @@ public class KB implements Serializable {
      * containing the old (existing) formulas, else returns an empty
      * ArrayList.
      */
-    public ArrayList<Formula> merge(KIF kif, String pathname) {
+    public List<Formula> merge(KIF kif, String pathname) {
 
-        ArrayList<Formula> formulasPresent = new ArrayList<>();
+        List<Formula> formulasPresent = new ArrayList<>();
         // Add all the terms from the new formula into the KB's current list
         getTerms().addAll(kif.terms);
         for (String t : kif.terms)
             capterms.put(t.toUpperCase(),t);
         Set<String> keys = kif.formulas.keySet();
-        ArrayList<String> newFormulas, oldFormulas;
+        List<String> newFormulas, oldFormulas;
         Formula newFormula, oldFormula, f;
         Iterator<String> it2;
         String newformulaStr;
@@ -1491,7 +1495,7 @@ public class KB implements Serializable {
      */
     public void rename(String term2, String term1) {
 
-        HashSet<Formula> formulas = new HashSet<>();
+        Set<Formula> formulas = new HashSet<>();
         for (int i = 0; i < 7; i++)
             formulas.addAll(ask("arg", i, term2));
         formulas.addAll(ask("ant", 0, term2));
@@ -1518,7 +1522,7 @@ public class KB implements Serializable {
         long flen = -1L;
 
         File file = new File(fname);
-        try (FileWriter fr = new FileWriter(file, true)) {
+        try (Writer fr = new FileWriter(file, true)) {
             fr.write(formula);
             fr.write("\n");
             flen = file.length();
@@ -1537,7 +1541,7 @@ public class KB implements Serializable {
        String fname = KBmanager.getMgr().getPref("kbDir") + File.separator + "terms.txt";
 
        File file = new File(fname);
-       try (FileWriter fr = new FileWriter(file, true)) {
+       try (Writer fr = new FileWriter(file, true)) {
             for (String term : terms) {
                 fr.write(term);
                 fr.write("\n");
@@ -1589,7 +1593,7 @@ public class KB implements Serializable {
             if (SUMOKBtoTPTPKB.lang.equals("thf"))
                 tptpfile = new File(dir, (userAssertionTHF));
             String filename = kiffile.getCanonicalPath();
-            ArrayList<Formula> formulasAlreadyPresent = merge(kif, filename);
+            List<Formula> formulasAlreadyPresent = merge(kif, filename);
             // only check formulasAlreadyPresent when filterSimpleOnly = false;
             // otherwise, some user assertions/axioms will not be asserted for
             // inference, since these axioms do exist in formulasAlreadyPresent but not in
@@ -1600,7 +1604,7 @@ public class KB implements Serializable {
                 result = "The formula was already added from " + sf;
             }
             else {
-                ArrayList<Formula> parsedFormulas = new ArrayList();
+                List<Formula> parsedFormulas = new ArrayList();
                 String term;
                 for (Formula parsedF : kif.formulaMap.values()) { // 2. Confirm that the input has been
                     // converted into at least one Formula object and stored in this.formulaMap.
@@ -1758,7 +1762,7 @@ public class KB implements Serializable {
                     KB kb = KBmanager.getMgr().getKB(kbName);
                     KBmanager.getMgr().loadKBforInference(kb);
                 }
-                HashSet<String> thfquery = new HashSet<>();
+                Set<String> thfquery = new HashSet<>();
                 StringBuilder combined = new StringBuilder();
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
@@ -1786,7 +1790,7 @@ public class KB implements Serializable {
                 String strQuery = processedQuery.iterator().next().getFormula();
             }
             else
-                System.out.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
+                System.err.println("Error in KB.askLeo(): no TPTP formula translation for query: " + query);
         }
         return leo;
     }
@@ -1828,7 +1832,7 @@ public class KB implements Serializable {
                     KBmanager.getMgr().loadKBforInference(kb);
                 }
                 else {
-                    HashSet<String> tptpquery = new HashSet<>();
+                    Set<String> tptpquery = new HashSet<>();
                     StringBuilder combined = new StringBuilder();
                     if (processedStmts.size() > 1) {
                         combined.append("(or ");
@@ -1872,7 +1876,7 @@ public class KB implements Serializable {
                 }
             }
             else
-                System.out.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
+                System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
         }
         return null;
     }
@@ -1906,9 +1910,9 @@ public class KB implements Serializable {
      * @return A list of answers from inference engine; If no proof or answer is
      * found, return null;
      */
-    public ArrayList<String> askNoProof(String suoKifFormula, int timeout, int maxAnswers) {
+    public List<String> askNoProof(String suoKifFormula, int timeout, int maxAnswers) {
 
-        ArrayList<String> answers = new ArrayList<>();
+        List<String> answers = new ArrayList<>();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
@@ -2166,15 +2170,15 @@ public class KB implements Serializable {
 
     /*****************************************************************
      */
-    public HashSet<String> immediateParents(String term) {
+    public Set<String> immediateParents(String term) {
 
         //System.out.println("KB.immediateParents(): " + term);
-        HashSet<String> result = new HashSet<>();
+        Set<String> result = new HashSet<>();
         if (!terms.contains(term)) {
             System.out.println("KB.immediateParents(): no such term " + term);
             return result;
         }
-        ArrayList<Formula> forms = askWithRestriction(0,"subclass",1,term);
+        List<Formula> forms = askWithRestriction(0,"subclass",1,term);
         forms.addAll(askWithRestriction(0,"instance",1,term));
         forms.addAll(askWithRestriction(0,"subrelation",1,term));
         forms.addAll(askWithRestriction(0,"subAttribute",1,term));
@@ -2386,7 +2390,7 @@ public class KB implements Serializable {
     public Formula getFormulaByKey(String key) {
 
         Formula f = null;
-        ArrayList<String> al = formulas.get(key);
+        List<String> al = formulas.get(key);
         if ((al != null) && !al.isEmpty())
             f = formulaMap.get(al.get(0));
         return f;
@@ -2412,9 +2416,9 @@ public class KB implements Serializable {
     /*****************************************************************
      * Create an ArrayList of the specific size, filled with empty strings.
      */
-    private ArrayList<String> arrayListWithBlanks(int size) {
+    private List<String> arrayListWithBlanks(int size) {
 
-        ArrayList<String> al = new ArrayList<>(size);
+        List<String> al = new ArrayList<>(size);
         for (int i = 0; i < size; i++)
             al.add("");
         return al;
@@ -2426,9 +2430,9 @@ public class KB implements Serializable {
      * alphabetically greater. If the term is at the beginning or end of the
      * alphabet, fill in blank items with the empty string: "".
      */
-    private ArrayList<String> getNearestKTerms(String term, int k) {
+    private List<String> getNearestKTerms(String term, int k) {
 
-        ArrayList<String> al;
+        List<String> al;
         if (k == 0)
             al = arrayListWithBlanks(1);
         else
@@ -2461,7 +2465,7 @@ public class KB implements Serializable {
      * greater. If the term is at the beginning or end of the alphabet, fill in
      * blank items with the empty string: "".
      */
-    private ArrayList<String> getNearestTerms(String term) {
+    private List<String> getNearestTerms(String term) {
 
         return getNearestKTerms(term, 15);
     }
@@ -2469,7 +2473,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Get the neighbors of this initial uppercase term (class or function).
      */
-    public ArrayList<String> getNearestRelations(String term) {
+    public List<String> getNearestRelations(String term) {
 
         term = Character.toLowerCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
@@ -2478,7 +2482,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Get the neighbors of this initial lowercase term (relation).
      */
-    public ArrayList<String> getNearestNonRelations(String term) {
+    public List<String> getNearestNonRelations(String term) {
 
         term = Character.toUpperCase(term.charAt(0)) + term.substring(1, term.length());
         return getNearestTerms(term);
@@ -2491,12 +2495,12 @@ public class KB implements Serializable {
     public String getAlphaBefore(String term, int num) {
 
         if (!getTerms().contains(term)) {
-            ArrayList<String> al = getNearestKTerms(term, 0);
+            List<String> al = getNearestKTerms(term, 0);
             term = (String) al.get(0);
         }
         if (getTerms().size() < 1)
             return "";
-        ArrayList<String> tal = new ArrayList<>(getTerms());
+        List<String> tal = new ArrayList<>(getTerms());
         int i = tal.indexOf(term.intern());
         if (i < 0)
             return "";
@@ -2513,12 +2517,12 @@ public class KB implements Serializable {
     public String getAlphaAfter(String term, int num) {
 
         if (!getTerms().contains(term)) {
-            ArrayList<String> al = getNearestKTerms(term, 0);
+            List<String> al = getNearestKTerms(term, 0);
             term = (String) al.get(0);
         }
         if (getTerms().size() < 1)
             return "";
-        ArrayList<String> tal = new ArrayList<>(getTerms());
+        List<String> tal = new ArrayList<>(getTerms());
         int i = tal.indexOf(term.intern());
         if (i < 0)
             return "";
@@ -2560,11 +2564,11 @@ public class KB implements Serializable {
 
         String key, format;
         if (!loadFormatMapsAttempted.contains(lang)) {
-            ArrayList<Formula> col = askWithRestriction(0, "format", 1, lang);
+            List<Formula> col = askWithRestriction(0, "format", 1, lang);
             if ((col == null) || col.isEmpty())
                 System.out.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);
             else {
-                HashMap<String, String> langFormatMap = formatMap.get(lang);
+                Map<String, String> langFormatMap = formatMap.get(lang);
                 for (Formula f : col) {
                     key = f.getStringArgument(2);
                     format = f.getStringArgument(3);
@@ -2574,9 +2578,9 @@ public class KB implements Serializable {
             }
             col = askWithRestriction(0, "termFormat", 1, lang);
             if ((col == null) || col.isEmpty())
-                System.out.println("Error in KB.loadFormatMaps(): No term format file loaded for language: " + lang);
+                System.err.println("Error in KB.loadFormatMaps(): No term format file loaded for language: " + lang);
             else {
-                HashMap<String, String> langTermFormatMap = termFormatMap.get(lang);
+                Map<String, String> langTermFormatMap = termFormatMap.get(lang);
                 for (Formula f : col) {
                     key = f.getStringArgument(2);
                     format = f.getStringArgument(3);
@@ -2595,14 +2599,14 @@ public class KB implements Serializable {
     protected void clearFormatMaps() {
 
         if (formatMap != null) {
-            for (HashMap<String, String> m : formatMap.values()) {
+            for (Map<String, String> m : formatMap.values()) {
                 if (m != null)
                     m.clear();
             }
             formatMap.clear();
         }
         if (termFormatMap != null) {
-            for (HashMap<String, String> m : termFormatMap.values()) {
+            for (Map<String, String> m : termFormatMap.values()) {
                 if (m != null)
                     m.clear();
             }
@@ -2621,13 +2625,13 @@ public class KB implements Serializable {
      * @return An instance of Map where the keys are terms and the values are
      *         format strings.
      */
-    public HashMap<String, String> getTermFormatMap(String lang) {
+    public Map<String, String> getTermFormatMap(String lang) {
 
         if (!StringUtil.isNonEmptyString(lang))
             lang = "EnglishLanguage";
         if ((termFormatMap == null) || termFormatMap.isEmpty())
             loadFormatMaps(lang);
-        HashMap<String, String> langTermFormatMap = termFormatMap.get(lang);
+        Map<String, String> langTermFormatMap = termFormatMap.get(lang);
         if ((langTermFormatMap == null) || langTermFormatMap.isEmpty())
             loadFormatMaps(lang);
         return (HashMap<String, String>) termFormatMap.get(lang);
@@ -2642,13 +2646,13 @@ public class KB implements Serializable {
      * @return An instance of Map where the keys are relation names and the
      *         values are format strings.
      */
-    public HashMap<String, String> getFormatMap(String lang) {
+    public Map<String, String> getFormatMap(String lang) {
 
         if (!StringUtil.isNonEmptyString(lang))
             lang = "EnglishLanguage";
         if ((formatMap == null) || formatMap.isEmpty())
             loadFormatMaps(lang);
-        HashMap<String, String> langFormatMap = formatMap.get(lang);
+        Map<String, String> langFormatMap = formatMap.get(lang);
         if ((langFormatMap == null) || langFormatMap.isEmpty())
             loadFormatMaps(lang);
         return formatMap.get(lang);
@@ -2659,7 +2663,7 @@ public class KB implements Serializable {
      */
     public String getTermFormat(String lang, String term) {
 
-        HashMap<String, String> langFormatMap = getTermFormatMap(lang);
+        Map<String, String> langFormatMap = getTermFormatMap(lang);
         return langFormatMap.get(term);
     }
     /** *************************************************************
@@ -2770,7 +2774,7 @@ public class KB implements Serializable {
 
         int count = 2;
         //System.out.println("INFO in KB.addConstituent(): add keys");
-        ArrayList<String> newlist, list;
+        List<String> newlist, list;
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
                 System.out.print(".");
@@ -2830,7 +2834,7 @@ public class KB implements Serializable {
      */
     public String reload() {
 
-        ArrayList<String> newConstituents = new ArrayList<>();
+        List<String> newConstituents = new ArrayList<>();
         synchronized (this.getTerms()) {
             for (String cName : constituents) {
                 if (!KButilities.isCacheFile(cName)) // Recompute cached data
@@ -2883,11 +2887,11 @@ public class KB implements Serializable {
      */
     public void writeFile(String fname) throws IOException {
 
-        HashSet<String> formulaSet = new HashSet<>();
+        Set<String> formulaSet = new HashSet<>();
 
         Iterator<String> it = formulas.keySet().iterator();
         String key;
-        ArrayList<String> list;
+        List<String> list;
         while (it.hasNext()) {
             key = (String) it.next();
             list = formulas.get(key);
@@ -2935,7 +2939,7 @@ public class KB implements Serializable {
      * A HashMap for holding compiled regular expression patterns. The map is initialized
      * by calling compilePatterns().
      */
-    private static HashMap<String, ArrayList> REGEX_PATTERNS = null;
+    private static Map<String, List> REGEX_PATTERNS = null;
 
     /*****************************************************************
      * This method returns a compiled regular expression Pattern object indexed by
@@ -2950,7 +2954,7 @@ public class KB implements Serializable {
     public static Pattern getCompiledPattern(String key) {
 
         if (StringUtil.isNonEmptyString(key) && (REGEX_PATTERNS != null)) {
-            ArrayList al = (ArrayList) REGEX_PATTERNS.get(key);
+            List al = REGEX_PATTERNS.get(key);
             if (al != null)
                 return (Pattern) al.get(0);
         }
@@ -2970,7 +2974,7 @@ public class KB implements Serializable {
     public static int getPatternGroupIndex(String key) {
 
         if (StringUtil.isNonEmptyString(key) && (REGEX_PATTERNS != null)) {
-            ArrayList al = (ArrayList) REGEX_PATTERNS.get(key);
+            List al = REGEX_PATTERNS.get(key);
             if (al != null)
                 return ((Integer) al.get(1));
         }
@@ -2997,7 +3001,7 @@ public class KB implements Serializable {
             String pName;
             Pattern p;
             Integer groupN;
-            ArrayList pVal;
+            List pVal;
             for (String[] patternArray1 : patternArray) {
                 pName = patternArray1[0];
                 p = Pattern.compile(patternArray1[1]);
@@ -3032,9 +3036,9 @@ public class KB implements Serializable {
      * @return An ArrayList, or null if no matches are found and an accumulator
      *         is not provided.
      */
-    public static ArrayList<String> getMatches(String input, String patternKey, ArrayList<String> accumulator) {
+    public static List<String> getMatches(String input, String patternKey, ArrayList<String> accumulator) {
 
-        ArrayList<String> ans = null;
+        List<String> ans = null;
         if (accumulator != null)
             ans = accumulator;
         if (REGEX_PATTERNS == null)
@@ -3075,7 +3079,7 @@ public class KB implements Serializable {
      *
      * @return An ArrayList, or null if no matches are found.
      */
-    public static ArrayList<String> getMatches(String input, String patternKey) {
+    public static List<String> getMatches(String input, String patternKey) {
         return KB.getMatches(input, patternKey, null);
     }
 
@@ -3093,9 +3097,9 @@ public class KB implements Serializable {
      * @return An ArrayList of Formula objects, or an empty ArrayList if no
      *         answers are retrieved.
      */
-    public ArrayList<Formula> askWithLiteral(List<String> queryLit) {
+    public List<Formula> askWithLiteral(List<String> queryLit) {
 
-        ArrayList<Formula> ans = new ArrayList<>();
+        List<Formula> ans = new ArrayList<>();
         if ((queryLit instanceof List) && !(queryLit.isEmpty())) {
             String pred = (String) queryLit.get(0);
             if (pred.equals("instance") && isVariable(queryLit.get(1)) && !(isVariable(queryLit.get(2)))) {
@@ -3115,7 +3119,7 @@ public class KB implements Serializable {
             }
             else if (pred.equals("valence") && isVariable((String) queryLit.get(1))
                     && isVariable((String) queryLit.get(2))) {
-                TreeSet<String> ai = getAllInstances("Relation");
+                Set<String> ai = getAllInstances("Relation");
                 Iterator<String> it = ai.iterator();
                 int valence;
                 String inst;
@@ -3166,7 +3170,7 @@ public class KB implements Serializable {
      * @return An ArrayList of Formula objects, or an empty ArrayList if no
      *         answers are retrieved.
      */
-    public ArrayList<Formula> askWithLiteral(Formula queryLit) {
+    public List<Formula> askWithLiteral(Formula queryLit) {
 
         List<String> input = queryLit.literalToArrayList();
         return askWithLiteral(input);
@@ -3199,9 +3203,9 @@ public class KB implements Serializable {
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
     @Deprecated
-    protected TreeSet<String> getAllInstances(TreeSet<String> classNames) {
+    protected Set<String> getAllInstances(Set<String> classNames) {
 
-        TreeSet<String> ans = new TreeSet<>();
+        Set<String> ans = new TreeSet<>();
         if ((classNames instanceof TreeSet) && !classNames.isEmpty()) {
             for (String nme : classNames)
                 ans.addAll(kbCache.getParentClassesOfInstance(nme));
@@ -3216,10 +3220,10 @@ public class KB implements Serializable {
      *            The name of a SUO-KIF Class.
      * @return A TreeSet, possibly empty, containing SUO-KIF constant names.
      */
-    public TreeSet<String> getAllInstances(String className) {
+    public Set<String> getAllInstances(String className) {
 
         if (StringUtil.isNonEmptyString(className)) {
-            TreeSet<String> input = new TreeSet<>();
+            Set<String> input = new TreeSet<>();
             input.add(className);
             return getAllInstances(input);
         }
@@ -3253,7 +3257,7 @@ public class KB implements Serializable {
      *
      * @return an ArrayList containing all predicates in this KB.
      */
-    public ArrayList<String> collectPredicates() {
+    public List<String> collectPredicates() {
 
         return new ArrayList<>(kbCache.instanceOf.get("Predicate"));
     }
@@ -3349,6 +3353,7 @@ public class KB implements Serializable {
             int start = 0;
             String term = "";
             String formToPrint;
+            StringBuilder hsb;
             while ((start < sb.length()) && ((i = sb.indexOf("&%", start)) != -1)) {
                 sb.delete(i, (i + 2));
                 j = i;
@@ -3364,7 +3369,7 @@ public class KB implements Serializable {
                     // formToPrint =
                     // DocGen.getInstance(this.name).showTermName(this,term,language);
                     formToPrint = term;
-                    StringBuilder hsb = new StringBuilder("<a href=\"");
+                    hsb = new StringBuilder("<a href=\"");
                     hsb.append(href);
                     hsb.append(isStaticFile ? StringUtil.toSafeNamespaceDelimiter(term) : term);
                     hsb.append(suffix);
@@ -3425,7 +3430,7 @@ public class KB implements Serializable {
     /***************************************************************
      * Save the contents of the current KB to a file.
      */
-    public String writeInferenceEngineFormulas(TreeSet<String> forms) {
+    public String writeInferenceEngineFormulas(Set<String> forms) {
 
         String filename = null;
         try {
@@ -3467,7 +3472,7 @@ public class KB implements Serializable {
         InferenceEngine res = null;
         try {
             if (!formulaMap.isEmpty()) {
-                TreeSet<String> forms = preProcess((HashSet<String>) formulaMap.keySet());
+                Set<String> forms = preProcess((HashSet<String>) formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = !StringUtil.emptyString(filename);
                 if (!vFileSaved)
@@ -3494,12 +3499,12 @@ public class KB implements Serializable {
         String vampex = KBmanager.getMgr().getPref("vampire");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
-            System.out.println("Error in Vampire: no executable string in preferences");
+            System.err.println("Error in Vampire: no executable string in preferences");
             return;
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.out.println("Error in Vampire: no executable " + vampex);
+            System.err.println("Error in Vampire: no executable " + vampex);
             return;
         }
         String lang = "tff";
@@ -3510,7 +3515,7 @@ public class KB implements Serializable {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
             try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
                 if (!formulaMap.isEmpty()) {
-//                    HashSet<String> formulaStrings = new HashSet<String>();
+//                    Set<String> formulaStrings = new HashSet<String>();
 //                    formulaStrings.addAll(formulaMap.keySet());
                     long millis = System.currentTimeMillis();
                     if (lang.equals("tptp")) {
@@ -3528,8 +3533,6 @@ public class KB implements Serializable {
                         if (SUMOKBtoTPTPKB.CWA)
                             pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
                         stff.printTFFNumericConstants(pw);
-                        pw.flush();
-                        pw.close();
                     }
                     System.out.println("KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
                 }
@@ -3554,7 +3557,7 @@ public class KB implements Serializable {
         }
         File executable = new File(leoex);
         if (!executable.exists()) {
-            System.out.println("Error in loadLeo: no executable " + leoex);
+            System.err.println("Error in loadLeo: no executable " + leoex);
             return;
         }
         String lang = "thf";
@@ -3605,7 +3608,7 @@ public class KB implements Serializable {
         }
         if (eprover == null) {
             mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
-            System.out.println("Error in KB.loadEProver(): EProver not loaded");
+            System.err.println("Error in KB.loadEProver(): EProver not loaded");
         }
     }
 
@@ -3617,11 +3620,11 @@ public class KB implements Serializable {
      *
      * @return a TreeSet of Strings.
      */
-    public TreeSet<String> preProcess(HashSet<String> forms) {
+    public Set<String> preProcess(Set<String> forms) {
 
         System.out.println("INFO in KB.preProcess(): ");
         long millis = System.currentTimeMillis();
-        TreeSet<String> newTreeSet = new TreeSet<>();
+        Set<String> newTreeSet = new TreeSet<>();
         KBmanager mgr = KBmanager.getMgr();
         boolean tptpParseP = mgr.getPref("TPTP").equalsIgnoreCase("yes");
         kbCache.kb = this;
@@ -3679,7 +3682,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * @return a defensive copy of loadFormatMapsAttempted.
      */
-    public ArrayList<String> getLoadFormatMapsAttempted() {
+    public List<String> getLoadFormatMapsAttempted() {
 
         return Lists.newArrayList(loadFormatMapsAttempted);
     }
@@ -3721,7 +3724,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Keep a count of axioms
      */
-    public static void addToAxiomCount(HashMap<String,Integer> currentCount,
+    public static void addToAxiomCount(Map<String,Integer> currentCount,
             Set<String> newAxioms) {
 
         Integer i;
@@ -3739,7 +3742,7 @@ public class KB implements Serializable {
      */
     public void addTermFormat(String lang, String term, String format) {
 
-        HashMap<String, String> forLang;
+        Map<String, String> forLang;
         if (termFormatMap.containsKey(lang))
             forLang = termFormatMap.get(lang);
         else {
@@ -3754,9 +3757,9 @@ public class KB implements Serializable {
      * by removing the axioms involved in a contradiction one-by-one and trying
      * again. @see contradictionHelp()
      */
-    public static HashMap<String,Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
+    public static Map<String,Formula> collectSourceAxioms(KB kb, TPTP3ProofProcessor tpp) {
 
-        HashMap<String,Formula> sourceAxioms = new HashMap<>();
+        Map<String,Formula> sourceAxioms = new HashMap<>();
         Formula f;
         for (TPTPFormula ps : tpp.proof) {
             System.out.println("KB.collectSourceAxioms(): " + ps.infRule);
@@ -3787,9 +3790,9 @@ public class KB implements Serializable {
      */
     public static void contradictionHelp(KB kb, String[] args, int timeout) {
 
-        HashSet<String> commonAxioms = new HashSet<>(); // axioms found in all contradictions
-        HashMap<String,Integer> axiomCount= new HashMap<>(); // count axioms found in contradictions
-        HashSet<Formula> removalSuccess = new HashSet<>(); // removing this axiom results in no contradiction
+        Set<String> commonAxioms = new HashSet<>(); // axioms found in all contradictions
+        Map<String,Integer> axiomCount= new HashMap<>(); // count axioms found in contradictions
+        Set<Formula> removalSuccess = new HashSet<>(); // removing this axiom results in no contradiction
         TPTP3ProofProcessor tpp = kb.runProver(args,timeout);
         tpp.printProof(3);
         System.out.println();
@@ -3798,15 +3801,15 @@ public class KB implements Serializable {
         String filename = prefix + "SUMO_contra.kif";
         System.out.println("KB.contradictionHelp(): prefix: " + prefix);
 
-        HashMap<String,Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
+        Map<String,Formula> sourceAxioms = collectSourceAxioms(kb,tpp);
         System.out.println("KB.contradictionHelp(): source axioms: " + sourceAxioms.keySet());
         commonAxioms.addAll(sourceAxioms.keySet());
         addToAxiomCount(axiomCount,sourceAxioms.keySet());
-        HashSet<String> minusAxioms;
-        ArrayList<String> display, display2, constituents;
+        Set<String> minusAxioms;
+        List<String> display, display2, constituents;
         KB kb2;
         TPTP3ProofProcessor tpp2;
-        HashMap<String, Formula> sourceAxioms2;
+        Map<String, Formula> sourceAxioms2;
         for (String s : sourceAxioms.keySet()) {
             minusAxioms = new HashSet<>();
             minusAxioms.addAll(kb.getFormulas());
@@ -3880,7 +3883,7 @@ public class KB implements Serializable {
             // kb.askEProver("(subclass ?X Object)",30,1);
         }
         catch (Exception ioe) {
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
         }
 
         // kb.generateSemanticNetwork();

@@ -30,7 +30,7 @@ public class EProver {
     private final Writer _writer;
     private static String kbdir;
     private static int axiomIndex = 0;
-    public ArrayList<String> output = new ArrayList<>();
+    public List<String> output = new ArrayList<>();
     public StringBuilder qlist = null;
 
     /** *************************************************************
@@ -57,10 +57,9 @@ public class EProver {
      *  */
     public static void writeBatchConfig(String inputFilename, int timeout) {
 
-    	try {
-            System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
-            File initFile = new File(kbdir, "EBatchConfig.txt");
-            PrintWriter pw = new PrintWriter(initFile);
+        System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
+        File initFile = new File(kbdir, "EBatchConfig.txt");
+        try (PrintWriter pw = new PrintWriter(initFile)) {
 
             pw.println("% SZS start BatchConfiguration");
             pw.println("division.category LTB.SMO");
@@ -73,11 +72,10 @@ public class EProver {
             pw.println("% SZS end BatchIncludes");
             pw.println("% SZS start BatchProblems");
             pw.println("% SZS end BatchProblems");
-            pw.close();
         }
         catch (Exception e1) {
             e1.printStackTrace();
-            System.out.println("Error in EProver.writeBatchFile()");
+            System.err.println("Error in EProver.writeBatchFile()");
             System.out.println(e1.getMessage());
         }
     }
@@ -99,33 +97,30 @@ public class EProver {
             ebatchfiles.add(inputFilename);
 
         // Collect existing TPTP files
-        try {
-            FileInputStream fis = new FileInputStream(initFile);
-            InputStreamReader isr = new InputStreamReader(fis);
-            BufferedReader in = new BufferedReader(isr);
+        try (InputStream fis = new FileInputStream(initFile);
+            Reader isr = new InputStreamReader(fis);
+            BufferedReader in = new BufferedReader(isr)) {
             String line = in.readLine();
+            String split;
+            int isEbatchFile;
             while (line != null) {
-                String split = "include('";
-                int isEbatchFile = line.indexOf(split);
+                split = "include('";
+                isEbatchFile = line.indexOf(split);
                 if (isEbatchFile != -1) {
                     String ebatchfile = line.substring(split.length(), line.lastIndexOf("')"));
                     ebatchfiles.add(ebatchfile);
                 }
                 line = in.readLine();
             }
-            fis.close();
-            isr.close();
-            in.close();
         }
         catch (Exception e) {
             e.printStackTrace();
-            System.out.println("Error in EProver.addBatchConfig()");
+            System.err.println("Error in EProver.addBatchConfig()");
             System.out.println(e.getMessage());
         }
 
         // write existing TPTP files and new tptp files (inputFilename) into EBatchConfig.txt
-        try {
-            PrintWriter pw = new PrintWriter(initFile);
+        try (PrintWriter pw = new PrintWriter(initFile)) {
             pw.println("% SZS start BatchConfiguration");
             pw.println("division.category LTB.SMO");
             pw.println("output.required Assurance");
@@ -139,11 +134,10 @@ public class EProver {
             pw.println("% SZS end BatchIncludes");
             pw.println("% SZS start BatchProblems");
             pw.println("% SZS end BatchProblems");
-            pw.close();
         }
         catch (FileNotFoundException e) {
             e.printStackTrace();
-            System.out.println("Error in EProver.addBatchConfig()");
+            System.err.println("Error in EProver.addBatchConfig()");
             System.out.println(e.getMessage());
         }
     }
@@ -179,11 +173,11 @@ public class EProver {
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
-        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+            eproverPath=KBmanager.getMgr().getPref("eproverPath");
         }
-		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+            eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+        List<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
 
@@ -217,11 +211,11 @@ public class EProver {
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
-        	eproverPath=KBmanager.getMgr().getPref("eproverPath");
+            eproverPath=KBmanager.getMgr().getPref("eproverPath");
         }
-		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+            eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+        List<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
 
@@ -254,15 +248,15 @@ public class EProver {
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
-        	eproverPath = KBmanager.getMgr().getPref("eproverPath");
+            eproverPath = KBmanager.getMgr().getPref("eproverPath");
         }
-		eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+            eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
 				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         //ArrayList<String> commands = new ArrayList<>(Arrays.asList(
         //        executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
        //        eproverPath));
         String batchPath = kbdir + File.separator + "EBatchConfig.txt";
-        ArrayList<String> commands = new ArrayList<>(Arrays.asList(
+        List<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", batchPath,
                 eproverPath));
         System.out.println("EProver(): command: " + commands);
@@ -325,12 +319,12 @@ public class EProver {
      * directly add assertion into opened inference engine (e_ltb_runner)
      */
     public boolean assertFormula(String userAssertionTPTP, KB kb, EProver eprover,
-                                 ArrayList<Formula> parsedFormulas, boolean tptp) {
+                                 List<Formula> parsedFormulas, boolean tptp) {
 
         System.out.println("EProver.assertFormula(2): process: " + _eprover);
         boolean allAdded = (eprover != null);
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            HashSet<Formula> processedFormulas = new HashSet<>();
+            Set<Formula> processedFormulas = new HashSet<>();
             FormulaPreprocessor fp;
             Set<String> tptpFormulas;
             String tptpstring;

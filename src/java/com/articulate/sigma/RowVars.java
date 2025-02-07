@@ -49,7 +49,7 @@ public class RowVars {
     /** ***************************************************************
      * given in @param ar which is a list for each variable of all the
      * predicates in which it appears as an argument, find the minimum
-     * arity allowed by predicate arities, as given by 
+     * arity allowed by predicate arities, as given by
      * @seeAlso kb.kbCache.valences
      */
     private static HashMap<String,Integer> getRowVarMaxArities(HashMap<String,HashSet<String>> ar, KB kb) {
@@ -207,9 +207,9 @@ public class RowVars {
     /** ***************************************************************
      * Merge the key,value pairs for a multiple value ArrayList
      */
-    private static HashMap<String,HashSet<String>> 
+    private static HashMap<String,HashSet<String>>
         mergeValueSets(HashMap<String,HashSet<String>> ar1, HashMap<String,HashSet<String>> ar2) {
-        
+
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         result.putAll(ar1);
         for (String key  : ar2.keySet()) {
@@ -223,25 +223,25 @@ public class RowVars {
         }
         return result;
     }
-    
+
     /** ***************************************************************
      * Add a key,value pair for a multiple value ArrayList
      */
-    private static HashMap<String,HashSet<String>> 
+    private static HashMap<String,HashSet<String>>
         addToValueSet(HashMap<String,HashSet<String>> ar, String key, String value) {
-        
+
         HashSet<String> val = ar.get(key);
-        if (val == null) 
+        if (val == null)
             val = new HashSet<String>();
         val.add(value);
         ar.put(key, val);
         return ar;
     }
-    
+
     /** ***************************************************************
      */
     private static HashMap<String,HashSet<String>> getRowVarRelLogOps(Formula f, String pred) {
-    
+
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): pred: " + pred + " f: " + f);
         HashMap<String,HashSet<String>> result = new HashMap<String,HashSet<String>>();
         if (Formula.isQuantifier(pred)) {
@@ -265,7 +265,7 @@ public class RowVars {
                 return result;
         }
         else {  // AND or OR
-            ArrayList<String> args = f.complexArgumentsToArrayListString(1);
+            List<String> args = f.complexArgumentsToArrayListString(1);
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelLogOps(): args: " + args);
             for (int i = 0; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
@@ -275,11 +275,11 @@ public class RowVars {
         }
         return result;
     }
-    
+
     /** ***************************************************************
      * Recurse through the formula looking for row variables.  If found,
-     * add it to a map that has row variables as keys and a set of 
-     * predicate names as values. 
+     * add it to a map that has row variables as keys and a set of
+     * predicate names as values.
      */
     protected static HashMap<String,HashSet<String>> getRowVarRelations(Formula f) {
 
@@ -305,7 +305,7 @@ public class RowVars {
             return getRowVarRelLogOps(f,pred);
         }
         else {  // regular predicate
-            ArrayList<String> args = f.complexArgumentsToArrayListString(1);
+            List<String> args = f.complexArgumentsToArrayListString(1);
             for (int i = 0; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
                 if (f2.getFormula().startsWith("@")) {
@@ -319,7 +319,7 @@ public class RowVars {
         }
         return result;
     }
-    
+
     /** ***************************************************************
      * Expand row variables, keeping the information about the original
      * source formula.  Each variable is treated like a macro that
@@ -407,7 +407,7 @@ public class RowVars {
             }
             result = newresult;
         }
-        
+
         for (int i = 0; i < result.size(); i++) {
             Formula newf = new Formula(result.get(i));
             newf.derivation.operator = "rowvar";
@@ -422,9 +422,9 @@ public class RowVars {
     /** ***************************************************************
      * */
     public static void main(String[] args) {
-        
+
         //String fstring = "(=> (and (subrelation ?REL1 ?REL2) (?REL1 @ROW)) (?REL2 @ROW))";
-        String fstring = "(=> (and (contraryAttribute @ROW1) (identicalListItems (ListFn @ROW1) (ListFn @ROW2))) (contraryAttribute @ROW2))"; 
+        String fstring = "(=> (and (contraryAttribute @ROW1) (identicalListItems (ListFn @ROW1) (ListFn @ROW2))) (contraryAttribute @ROW2))";
         Formula f = new Formula(fstring);
         System.out.println("Info in RowVars.main(): " + findRowVars(f));
         KBmanager.getMgr().initializeOnce();

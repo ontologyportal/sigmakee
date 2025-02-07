@@ -1,28 +1,28 @@
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.OWLtranslator;
+import com.articulate.sigma.utils.StringUtil;
+
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeMap;
 import java.util.TreeSet;
-
-import com.articulate.sigma.trans.OWLtranslator;
-import com.articulate.sigma.utils.StringUtil;
 
 /** This code is copyright Articulate Software (c) 2004.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.See also http://sigmakee.sourceforge.net
 
@@ -34,30 +34,30 @@ ad-hoc formats to KIF
    */
 public class Mapping {
 
-    public static TreeMap<String,TreeMap<Integer,String>> mappings = 
-        new TreeMap<String,TreeMap<Integer,String>>();
+    public static TreeMap<String,TreeMap<Integer,String>> mappings =
+        new TreeMap<>();
     public static char termSeparator = '!';
 
     /** *************************************************************
      *  Write synonymousExternalConcept expressions for term pairs
      *  given in cbset.  They are strings of the form
      *  [checkbox|subcheckbox]_[T_]name1-name2
-     * 
+     *
      *  There's a known bug when ontology terms contain dashes.
-     * 
+     *
      *  @return error messages if necessary
      */
     public static String writeEquivalences(TreeSet cbset, String kbname1, String kbname2) throws IOException {
 
         System.out.println("INFO in Mapping.writeEquivalences(): size: " + cbset.size());
         FileWriter fw = null;
-        PrintWriter pw = null; 
+        PrintWriter pw = null;
         String dir = (String) KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname1 + "-" + kbname2 + "-links";
 
-        if (mappings.keySet().size() < 1) 
+        if (mappings.keySet().size() < 1)
             return "Error: No mappings found";
-        
+
         try {
             File f = new File(filename + ".kif");
             int fileCounter = 0;
@@ -65,13 +65,13 @@ public class Mapping {
                 fileCounter++;
                 f = new File(filename + fileCounter + ".kif");
             }
-            if (fileCounter == 0) 
+            if (fileCounter == 0)
                 filename = filename + ".kif";
             else
                 filename = filename + fileCounter + ".kif";
 
             fw = new FileWriter(filename);
-            pw = new PrintWriter(fw);        
+            pw = new PrintWriter(fw);
             Iterator it = cbset.iterator();
             while (it.hasNext()) {
                 String st = (String) it.next();
@@ -81,26 +81,26 @@ public class Mapping {
                     subcheckbox = true;
                 }
                 else {
-                    if (st.startsWith ("checkbox_")) 
+                    if (st.startsWith ("checkbox_"))
                         st = st.substring(9);
                     else
                         return "Error in Mapping.writeEquivalences(): malformed string " + st;
                 }
 
-                if (st.startsWith ("T_")) 
+                if (st.startsWith ("T_"))
                     st = st.substring(2);
                 int i = st.indexOf(termSeparator);
-                if (i < 0)                     
+                if (i < 0)
                     return "Error in Mapping.writeEquivalences(): malformed string (no '" + termSeparator + "') " + st;
                 String term1 = st.substring(0,i);
                 String term2 = st.substring(i+1);
-                if (!subcheckbox) 
-                    pw.println("(synonymousExternalConcept \"" + term2 + 
+                if (!subcheckbox)
+                    pw.println("(synonymousExternalConcept \"" + term2 +
                                "\" " + term1 + " " + kbname2 + ")");
                 else
-                    pw.println("(subsumedExternalConcept \"" + term2 + 
+                    pw.println("(subsumedExternalConcept \"" + term2 +
                                "\" " + term1 + " " + kbname2 + ")");
-                
+
             }
         }
         catch (java.io.IOException e) {
@@ -125,14 +125,12 @@ public class Mapping {
     public static String merge(TreeSet cbset, String kbname1, String kbname2) {
 
         System.out.println("INFO in Mapping.merge()");
-        if (mappings.keySet().size() < 1) 
+        if (mappings.keySet().size() < 1)
             return "Error: No mappings found";
 
         KB kb1 = KBmanager.getMgr().getKB(kbname1);
         KB kb2 = KBmanager.getMgr().getKB(kbname2);
-        Iterator it = mappings.keySet().iterator();
-        while (it.hasNext()) {
-            String term1 = (String) it.next();
+        for (String term1 : mappings.keySet()) {
             TreeMap value = (TreeMap) mappings.get(term1);
             // System.out.println("INFO in Mapping.merge(): outer loop, examining " + term1);
             Iterator it2 = value.keySet().iterator();
@@ -143,12 +141,12 @@ public class Mapping {
                 String term2 = (String) value.get(score);
                 // System.out.println("INFO in Mapping.merge(): inner loop, examining " + term2);
                 String topScoreFlag = "";
-                if (counter == 1) 
+                if (counter == 1)
                     topScoreFlag = "T_";
                 String cbName = "checkbox_" + topScoreFlag + term1 + termSeparator + term2;
                 String subName = "sub_checkbox_" + topScoreFlag + term1 + termSeparator + term2;
                 if (cbset.contains(cbName) && !term2.equals(term1))
-                    kb2.rename(term2,term1);                    
+                    kb2.rename(term2,term1);
                 if (cbset.contains(subName)) {
                     if (kb2.isInstance(term2)) {
                         kb2.tell("(instance " + term2 + " " + term1 + ")");
@@ -159,7 +157,7 @@ public class Mapping {
                         System.out.println("(subclass " + term2 + " " + term1 + ")");
                     }
                 }
-            }           
+            }
         }
         String dir = (String) KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname2 + "-merged-" + kbname1;
@@ -170,7 +168,7 @@ public class Mapping {
                 counter++;
                 f = new File(filename + counter + ".kif");
             }
-            if (counter == 0) 
+            if (counter == 0)
                 filename = filename + ".kif";
             else
                 filename = filename + counter + ".kif";
@@ -191,13 +189,13 @@ public class Mapping {
 
         File f = new File(file);
         if (f == null) {
-            System.out.println( "INFO in convertYAGO(): " 
+            System.out.println( "INFO in convertYAGO(): "
                                 + "The file " + file + " does not exist" );
             return;
         }
         FileReader r = new FileReader(f);
         LineNumberReader lr = new LineNumberReader(r);
-        String line = null;
+        String line;
         while ((line = lr.readLine()) != null) {
             line = line.trim();
             if (line != null && line.length() > 0) {
@@ -220,8 +218,8 @@ public class Mapping {
     public static String getTermFormat(KB kb, String term) {
 
         if (kb != null) {
-            ArrayList al = kb.askWithRestriction(0,"termFormat",2,term);
-            if (al != null && al.size() > 0) {
+            List al = kb.askWithRestriction(0,"termFormat",2,term);
+            if (al != null && !al.isEmpty()) {
                 Formula f = (Formula) al.get(0);
                 String t = f.getStringArgument(3);
                 t = OWLtranslator.removeQuotes(t);
@@ -236,7 +234,7 @@ public class Mapping {
      */
     private static int min(int n1, int n2) {
 
-        if (n1<n2) 
+        if (n1<n2)
             return n1;
         else
             return n2;
@@ -247,9 +245,9 @@ public class Mapping {
      */
     private static int stringMatch(String t1, String t2, String matchMethod) {
 
-        if (matchMethod.equals("JaroWinkler")) 
+        if (matchMethod.equals("JaroWinkler"))
             return getJaroWinklerDistance(t1, t2);
-        if (matchMethod.equals("Levenshtein")) 
+        if (matchMethod.equals("Levenshtein"))
             return getLevenshteinDistance(t1, t2);
         return getSubstringDistance(t1,t2);
     }
@@ -261,12 +259,7 @@ public class Mapping {
      * (3) terms align to words in the same WordNet synset
      * (4) extra "points" for having terms that align with the same
      * structural arrangement
-     * 
-     * @return a TreeMap where the key is a term from the first
-     *         ontology and the value is another TreeMap.  The
-     *         internal TreeMap has keys that are an integer mapping
-     *         score and the values are terms from the second
-     *         ontology.
+     *
      */
     public static void mapOntologies(String kbName1, String kbName2, int threshold, String matchMethod) {
 
@@ -274,11 +267,11 @@ public class Mapping {
 
         long t1 = System.currentTimeMillis();
         int mapCount = 0;
-        if (!matchMethod.equals("JaroWinkler") && 
+        if (!matchMethod.equals("JaroWinkler") &&
                 !matchMethod.equals("Levenshtein") &&
                 !matchMethod.equals("Substring")) {
             matchMethod = "Substring";
-            System.out.println("Error in Mapping.mapOntologies(): Invalid match method " + 
+            System.out.println("Error in Mapping.mapOntologies(): Invalid match method " +
                     matchMethod + ". Defaulting to substring match.");
         }
 
@@ -304,33 +297,31 @@ public class Mapping {
                             String normTerm1 = normalize(term1);
                             String normLabel1 = normalize(getTermFormat(kb1,term1));
                             TreeMap tm = (TreeMap) result.get(term1);
-                            if (tm == null) 
+                            if (tm == null)
                                 tm = new TreeMap();
-                            Iterator it2 = kb2.getTerms().iterator();
-                            while (it2.hasNext()) {
-                                String term2 = (String) it2.next();
+                            for (String term2 : kb2.getTerms()) {
                                 if (isValidTerm(term2)) {
                                     String normTerm2 = normalize(term2);
                                     String normLabel2 = normalize(getTermFormat(kb2,term2));
-                                    int score = Integer.MAX_VALUE; 
+                                    int score = Integer.MAX_VALUE;
                                     score = min(score,stringMatch(normTerm1, normTerm2,matchMethod));
                                     //System.out.println(normTerm1 + " " + normTerm2);
                                     if (normLabel1 != null && isValidTerm(normLabel1))
-                                        score = min(score,stringMatch(normLabel1,normTerm2,matchMethod));                            
-                                    if (normLabel2 != null && isValidTerm(normLabel2)) 
-                                        score = min(score,stringMatch(normTerm1, normLabel2,matchMethod));                            
-                                    if (normLabel1 != null && normLabel2 != null && 
-                                            isValidTerm(normLabel1) && isValidTerm(normLabel2)) 
-                                        score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));                            
+                                        score = min(score,stringMatch(normLabel1,normTerm2,matchMethod));
+                                    if (normLabel2 != null && isValidTerm(normLabel2))
+                                        score = min(score,stringMatch(normTerm1, normLabel2,matchMethod));
+                                    if (normLabel1 != null && normLabel2 != null &&
+                                            isValidTerm(normLabel1) && isValidTerm(normLabel2))
+                                        score = min(score,stringMatch(normLabel1, normLabel2,matchMethod));
                                     if (score > 0 && score < Integer.MAX_VALUE) {
-                                        if (score < threshold) {                                
-                                            tm.put(Integer.valueOf(score), term2);
+                                        if (score < threshold) {
+                                            tm.put(score, term2);
                                             mapCount++;
                                         }
                                     }
                                 }
                             }
-                            if (tm.keySet().size() > 0)
+                            if (!tm.keySet().isEmpty())
                                 result.put(term1,tm);
                         }
                     }
@@ -341,7 +332,7 @@ public class Mapping {
             if (kb1 == null)
                 System.out.println(kbName1 + " not found<P>\n");
             if (kb2 == null)
-                System.out.println(kbName2 + " not found<P>\n");            
+                System.out.println(kbName2 + " not found<P>\n");
         }
         System.out.println();
         System.out.println(totalCandidates + " " + " possible mappings checked with " +
@@ -367,20 +358,20 @@ public class Mapping {
 
         if (s == null || s.length() < 1)
             return null;
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < s.length(); i++) {
             if ((Character.isLetter(s.charAt(i)) && Character.isLowerCase(s.charAt(i))) ||
-                Character.isDigit(s.charAt(i))) 
+                Character.isDigit(s.charAt(i)))
                 result.append(s.charAt(i));
             else {
                 if (Character.isLetter(s.charAt(i)) && Character.isUpperCase(s.charAt(i))) {
-                    if (result.length() > 0 && result.charAt(result.length()-1) != ' ') 
+                    if (result.length() > 0 && result.charAt(result.length()-1) != ' ')
                         result.append(" ");
                     result.append(Character.toLowerCase(s.charAt(i)));
                 }
-                else 
-                    if (result.length() > 0 && result.charAt(result.length()-1) != ' ') 
-                        result.append(" ");             
+                else
+                    if (result.length() > 0 && result.charAt(result.length()-1) != ' ')
+                        result.append(" ");
             }
         }
         return result.toString();
@@ -404,7 +395,7 @@ public class Mapping {
         if (term1.equals(term2))
             return 1;
         else if (term1.indexOf(term2) > -1)
-            return term1.indexOf(term2) + 
+            return term1.indexOf(term2) +
                     (term1.length() - term2.length());
         else if (term2.indexOf(term1) > -1)
             return term2.indexOf(term1) + (term2.length() - term1.length());
@@ -434,26 +425,26 @@ public class Mapping {
         int n = t.length();
         // d is a table with m+1 rows and n+1 columns
         int[][] d = new int[m][n];
-      
+
         for (int i = 0; i < m; i++)
             d[i][0] = i; // deletion
         for (int j = 0; j < n; j++)
             d[0][j] = j; // insertion
-      
+
         for (int j = 1; j < n; j++) {
             for (int i = 1; i < m; i++) {
-                if (s.charAt(i) == t.charAt(j)) 
+                if (s.charAt(i) == t.charAt(j))
                     d[i][j] = d[i-1][j-1];
                 else
                     d[i][j] = minimum(d[i-1][j] + 1, d[i][j-1] + 1, d[i-1][j-1] + 1);
             }                      // deletion,      insertion,     substitution
-        }       
+        }
 /**
         int result = 0;
         for (int j = 1; j < n; j++) {
             int min = Integer.MAX_VALUE;
             for (int i = 1; i < m; i++) {
-                if (d[i][j] < min) 
+                if (d[i][j] < min)
                     min = d[i][j];
             }
             result =+ min - 1;
@@ -476,7 +467,7 @@ public class Mapping {
         int len2 = s2.length();
         if (len1 == 0 || len2 == 0)
             return SCALING_FACTOR;
-        
+
         // without loss of generality assume s1 is longer
         if (len1 < len2) {
             String t = s1;
@@ -485,7 +476,7 @@ public class Mapping {
             len1 = len2;
             len2 = s2.length();
         }
-        
+
         // count and flag the matched pairs
         int maxDistance = (len1 >= 4) ? (int) Math.floor(len1 / 2) - 1 : 0;
         boolean[] s1Matches = new boolean[len1]; // initialized to false
@@ -506,10 +497,10 @@ public class Mapping {
                 }
             }
         }
-        
+
         if (nMatches == 0)
             return SCALING_FACTOR;
-        
+
         // count transpositions
         int nTranspositions = 0;
         int k = 0;
@@ -521,13 +512,13 @@ public class Mapping {
                         k = j + 1;
                         break;
                     }
-                    if (s2.charAt(i) != s1.charAt(j))
-                        nTranspositions++;
-                }
+                if (s2.charAt(i) != s1.charAt(j))
+                    nTranspositions++;
+            }
         int halfTranspositions = nTranspositions / 2;
 
-        double jaroScore = ((double) nMatches / len1 
-                           +(double) nMatches / len2 
+        double jaroScore = ((double) nMatches / len1
+                           +(double) nMatches / len2
                            +(double) (nMatches - halfTranspositions) / nMatches)
                            / 3.0;
 
@@ -544,11 +535,11 @@ public class Mapping {
             else
                 break;
         double jaroWinklerScore = jaroScore + l * winklerPrefixWeight * (1.0 - jaroScore);
-        
+
         // return as a distance value such that larger
         // values indicate greater distances
         return (int) (SCALING_FACTOR * (1.0 - jaroWinklerScore));
-    }    
+    }
 
     /** *************************************************************
      * A test method.
@@ -646,7 +637,7 @@ public class Mapping {
         /**
         try {
           KBmanager.getMgr().initializeOnce();
-        } 
+        }
         catch (Exception e ) {
           System.out.println(e.getMessage());
         }
@@ -659,7 +650,7 @@ public class Mapping {
 /***
         try {
             convertYAGO("TypeExtractor.txt","citizen");
-        } 
+        }
         catch (Exception e ) {
           System.out.println(e.getMessage());
           e.printStackTrace();

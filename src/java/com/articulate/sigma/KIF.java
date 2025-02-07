@@ -50,7 +50,7 @@ public class KIF {
     private int parseMode = NORMAL_PARSE_MODE;
 
     /** The set of all terms in the knowledge base. This is a set of Strings. */
-    public TreeSet<String> terms = new TreeSet<>();
+    public Set<String> terms = new TreeSet<>();
 
     /** A hashMap to store term frequencies for each term in knowledge base */
     public Map<String, Integer> termFrequency = new HashMap<>();
@@ -62,7 +62,7 @@ public class KIF {
      *
      * @see #createKey(String, boolean, boolean, int, int) for key format.
      */
-    public HashMap<String, ArrayList<String>> formulas = new HashMap<>();
+    public Map<String, List<String>> formulas = new HashMap<>();
 
     /**
      * A HashMap of String keys representing the formula, and Formula values.
@@ -70,19 +70,19 @@ public class KIF {
      * Formula that is that string, along with information about at what line
      * number and in what file it appears.
      */
-    public HashMap<String, Formula> formulaMap = new HashMap<>();
+    public Map<String, Formula> formulaMap = new HashMap<>();
 
     // all the formulas ordered by their start line
-    public TreeMap<Integer, Formula> formulasOrdered = new TreeMap<>();
+    public Map<Integer, Formula> formulasOrdered = new TreeMap<>();
 
     public String filename;
     private File file;
     private int totalLinesForComments = 0;
 
     /** warnings generated during parsing */
-    public TreeSet<String> warningSet = new TreeSet<>();
+    public Set<String> warningSet = new TreeSet<>();
     /** errors generated during parsing */
-    public TreeSet<String> errorSet = new TreeSet<>();
+    public Set<String> errorSet = new TreeSet<>();
 
     /*****************************************************************
      */
@@ -205,7 +205,7 @@ public class KIF {
      * @return a Set of warnings that may indicate syntax errors, but not fatal
      *         parse errors.
      */
-    public TreeSet<String> parse(Reader r) {
+    public Set<String> parse(Reader r) {
 
         int mode = this.getParseMode();
         StringBuilder expression = new StringBuilder();
@@ -230,10 +230,10 @@ public class KIF {
             int argumentNum = -1;
             boolean inAntecedent = false;
             boolean inConsequent = false;
-            HashSet<String> keySet = new HashSet<>();
+            Set<String> keySet = new HashSet<>();
             // int lineStart = 0;
             boolean isEOL = false;
-            ArrayList<String> list;
+            List<String> list;
             String key, fstr, validArgs;
             do {
                 lastVal = st.ttype;
@@ -295,7 +295,7 @@ public class KIF {
                             String warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
-                            System.out.println(warning);
+                            System.err.println(warning);
                             duplicateCount++;
                         }
                         if (mode == NORMAL_PARSE_MODE) { // Check arg validity ONLY in NORMAL_PARSE_MODE
@@ -319,7 +319,7 @@ public class KIF {
                                 if (!formulaMap.keySet().contains(f.getFormula())) { // don't add keys if formula is already present
                                     list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.getFormula())) {
-                                        System.out.println("Error in KIF.parse(): Storing empty formula from line: "
+                                        System.err.println("Error in KIF.parse(): Storing empty formula from line: "
                                                 + f.startLine);
                                         errorSet.add(errStr);
                                     }
@@ -329,7 +329,7 @@ public class KIF {
                             } else {
                                 list = new ArrayList<>();
                                 if (StringUtil.emptyString(f.getFormula())) {
-                                    System.out.println(
+                                    System.err.println(
                                             "Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
                                     errorSet.add(errStr);
                                 }
@@ -420,8 +420,9 @@ public class KIF {
             }
         }
         catch (IOException | ParseException ex) {
-            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
-            warningSet.add("Warning in KIF.parse() " + message);
+//            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
+            String message = ex.getMessage();
+            warningSet.add("Warning in KIF.parse(Reader) " + message);
             ex.printStackTrace();
         }
         if (duplicateCount > 0) {
@@ -503,8 +504,8 @@ public class KIF {
             return;
         }
         this.filename = file.getCanonicalPath();
-        try (FileReader fr = new FileReader(file)) {
-            parse(new BufferedReader(fr));
+        try (Reader fr = new FileReader(file); Reader br = new BufferedReader(fr)) {
+            parse(br);
         }
         catch (Exception ex) {
             exThr = ex;
@@ -540,9 +541,9 @@ public class KIF {
      * Return an ArrayList of Formula in the same lexical order as their
      * source file
      */
-    public ArrayList<Formula> lexicalOrder() {
+    public List<Formula> lexicalOrder() {
 
-        ArrayList<Formula> ordered = new ArrayList<>();
+        List<Formula> ordered = new ArrayList<>();
         ordered.addAll(formulaMap.values());
         Collections.sort(ordered,new Formula.SortByLine());
         return ordered;
@@ -621,7 +622,7 @@ public class KIF {
             System.err.println(ioe);
         }
         System.out.println(kif.formulaMap);
-        ArrayList<String> al = kif.formulas.get("arg-0-documentation");
+        List<String> al = kif.formulas.get("arg-0-documentation");
         String fstr = al.get(0);
         Formula f = kif.formulaMap.get(fstr);
         System.out.println(f);

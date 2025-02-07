@@ -11,6 +11,14 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net.
  */
 /*************************************************************************************************/
 package com.articulate.sigma;
+
+import com.articulate.sigma.dataProc.Hotel;
+import com.articulate.sigma.utils.AVPair;
+import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.wordNet.WSD;
+import com.articulate.sigma.wordNet.WordNet;
+import com.articulate.sigma.wordNet.WordNetUtilities;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,21 +50,14 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.dataProc.Hotel;
-import com.articulate.sigma.utils.AVPair;
-import com.articulate.sigma.utils.StringUtil;
-import com.articulate.sigma.wordNet.WSD;
-import com.articulate.sigma.wordNet.WordNet;
-import com.articulate.sigma.wordNet.WordNetUtilities;
-
 /** A class to interface with databases and database-like formats,
 such as spreadsheets. */
 public class DB {
       // a map of word keys, broken down by POS, listing whether it's a positive or negative word
       // keys are pre-defined as type, POS, stemmed, polarity
-    public static HashMap<String,HashMap<String,String>> sentiment = new HashMap<String,HashMap<String,String>>();
-    public static HashSet<String> amenityTerms = new HashSet<String>();
-    public static HashSet<String> stopConcepts = new HashSet<String>();
+    public static HashMap<String,HashMap<String,String>> sentiment = new HashMap<>();
+    public static HashSet<String> amenityTerms = new HashSet<>();
+    public static HashSet<String> stopConcepts = new HashSet<>();
 
     /** ***************************************************************
      *  Print statistics in a summary form for TPTP test run
@@ -176,14 +177,14 @@ public class DB {
      */
     private void generateDBElement(KB kb, String element) {
 
-        ArrayList docs = kb.askWithRestriction(0,"localDocumentation",3,element);
+        List docs = kb.askWithRestriction(0,"localDocumentation",3,element);
         System.out.println("alter table " + element + " add column documentation varchar(255);");
-        if (docs.size() > 0) {
+        if (!docs.isEmpty()) {
             Formula f = (Formula) docs.get(0);
             String doc = f.getStringArgument(4);
             System.out.println("insert into " + element + "(documentation) values ('" + doc + "');");
         }
-        ArrayList subs = kb.askWithRestriction(0,"HasDatabaseColumn",1,element);
+        List subs = kb.askWithRestriction(0,"HasDatabaseColumn",1,element);
         for (int i = 0; i < subs.size(); i++) {
             Formula f = (Formula) subs.get(i);
             String t = f.getStringArgument(2);
@@ -200,7 +201,7 @@ public class DB {
     public void generateDB(KB kb) {
 
         System.out.println("create database " + kb.name + ";");
-        ArrayList composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
+        List composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
         for (int i = 0; i < composites.size(); i++) {
             Formula f = (Formula) composites.get(i);
             String element = f.getStringArgument(1);
@@ -275,7 +276,7 @@ public class DB {
                         ex1.printStackTrace();
                     }
                 }
-            }            
+            }
             try {
                 if (lr != null) { lr.close(); } // Close the input stream.
             }
@@ -365,10 +366,10 @@ public class DB {
      */
     public static ArrayList<ArrayList<String>> readSpreadsheet(String fname, List lineStartTokens,
             boolean quote) {
-    	
+
     	return readSpreadsheet(fname,lineStartTokens,quote,',');
     }
-    
+
     /** ***************************************************************
      */
     private static boolean isInteger(String input) {
@@ -387,7 +388,7 @@ public class DB {
      */
     public static String writeSpreadsheetLine(ArrayList<String> al, boolean quote) {
 
-        StringBuffer result = new StringBuffer();        
+        StringBuffer result = new StringBuffer();
         for (int j = 0; j < al.size(); j++) {
             String s = al.get(j);
             if (quote && !isInteger(s))
@@ -397,7 +398,7 @@ public class DB {
             if (j < al.size())
                 result.append(",");
         }
-        result.append("\n");        
+        result.append("\n");
         return result.toString();
     }
 
@@ -409,7 +410,7 @@ public class DB {
         StringBuffer result = new StringBuffer();
         for (int i = 0; i < values.size(); i++) {
             ArrayList<String> al = values.get(i);
-            result.append(writeSpreadsheetLine(al,  quote));            
+            result.append(writeSpreadsheetLine(al,  quote));
         }
         return result.toString();
     }
@@ -699,8 +700,7 @@ public class DB {
 
         ArrayList relations = new ArrayList();
         synchronized (kb.getTerms()) {
-            for (Iterator it = kb.getTerms().iterator(); it.hasNext();) {
-                String term = (String) it.next();
+            for (String term : kb.getTerms()) {
                 if (kb.isInstanceOf(term, "Predicate"))
                     relations.add(term.intern());
             }
@@ -761,11 +761,12 @@ public class DB {
         ArrayList relations = getRelations(kb);
         ArrayList usedRelations = new ArrayList();
         TreeMap rows = new TreeMap();
+        TreeMap row;
         for (Iterator itr = relations.iterator(); itr.hasNext();) {
             String term = (String) itr.next();
-            ArrayList statements = kb.ask("arg",0,term);
+            List statements = kb.ask("arg",0,term);
             if (statements != null) {
-                TreeMap row = new TreeMap();
+                row = new TreeMap();
                 for (Iterator its = statements.iterator(); its.hasNext();) {
                     Formula f = (Formula) its.next();
                     String arg1 = f.getStringArgument(1);
@@ -944,7 +945,7 @@ public class DB {
         }
         return result.toString();
     }
-    
+
     /** *************************************************************
      * Excludes cases of where the mapping is to multiple SUMO terms
      *
@@ -1079,7 +1080,7 @@ public class DB {
             if (h != null && h.reviews != null) {
                 for (int j = 0; j < h.reviews.size(); j++) {
                     String r = h.reviews.get(j);
-                    if (!StringUtil.emptyString(r)) {                       
+                    if (!StringUtil.emptyString(r)) {
                         HashMap<String,Integer> senses = WordNet.wn.collectCountedWordSenses(r);
                         h.addAllSenses(senses);
                     }
@@ -1496,7 +1497,7 @@ public class DB {
             System.out.println("Error in readStopConceptArray(): file previously read.");
             return;
         }
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") + 
+        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
         		File.separator + "WordNetMappings" + File.separator + "stopConcept.csv",null,false);
         for (int i = 0; i < f.size(); i++) {
             ArrayList<String> al = f.get(i);
@@ -1516,7 +1517,7 @@ public class DB {
             System.out.println("Error in DB.readSentimentArray(): file previously read.");
             return;
         }
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") + 
+        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
         		File.separator + "WordNetMappings" + File.separator + "sentiment.csv",null,false);
         for (int i = 0; i < f.size(); i++) {
             ArrayList<String> al = f.get(i);
@@ -1603,13 +1604,13 @@ public class DB {
      * @return a map of concept keys and integer sentiment score values
      */
     public static HashMap<String,Integer> computeConceptSentimentFromFile(String filename) {
-    
+
         HashMap<String,Integer> result = new HashMap<String,Integer>();
         FileInputStream fis = null;
         try {
             fis = new FileInputStream(filename);
             if (fis != null) {
-                StringBuffer buffer = new StringBuffer();                    
+                StringBuffer buffer = new StringBuffer();
                 InputStreamReader isr = new InputStreamReader(fis,"US-ASCII");
                 Reader in = new BufferedReader(isr);
                 int ch;
@@ -1619,7 +1620,7 @@ public class DB {
                         result = addSentiment(result,computeConceptSentiment(buffer.toString()));
                         buffer = new StringBuffer();
                     }
-                }                
+                }
             }
         }
         catch (IOException ioe) {
@@ -1628,14 +1629,14 @@ public class DB {
         }
         return result;
     }
-    
+
     /** *************************************************************
      * Associate individual concepts with a sentiment score
      * @return a map of concept keys and integer sentiment score values
      */
     public static HashMap<String,Integer> computeConceptSentiment(String input) {
-        
-        System.out.println("INFO in DB.computeConceptSentiment(): " + input);        
+
+        System.out.println("INFO in DB.computeConceptSentiment(): " + input);
         HashMap<String,Integer> result = new HashMap<String,Integer>();
         String paragraph = WordNet.wn.removeStopWords(input.trim());
         paragraph = StringUtil.removeHTML(paragraph);
@@ -1646,7 +1647,7 @@ public class DB {
             int total = 0;
             for (int j = 0; j < words.length; j++)    // look at each word
                 total = total + computeSentimentForWord(words[j]);
-            ArrayList<String> SUMOal = WSD.collectSUMOFromWords(sentence);   
+            ArrayList<String> SUMOal = WSD.collectSUMOFromWords(sentence);
             String SUMOs = StringUtil.arrayListToSpacedString(SUMOal);
             System.out.println("INFO in DB.computeConceptSentiment(): done collecting SUMO terms: " + SUMOs + " from input: " + sentence);
             result = addConceptSentimentScores(result,SUMOs,total);
@@ -1665,19 +1666,19 @@ public class DB {
             amenityTerms.add(al.get(3));
         }
     }
-    
+
     /** *************************************************************
      * Add the Integer values of two HashMaps that have corresponding String keys
      */
-    private static HashMap<String,Integer> addSentiment(HashMap<String,Integer>totalSent, 
+    private static HashMap<String,Integer> addSentiment(HashMap<String,Integer>totalSent,
     		                                            HashMap<String,Integer>sent) {
-    	
+
     	HashMap<String,Integer> result = new HashMap<String,Integer>();
     	result.putAll(totalSent);
     	Iterator<String> it = sent.keySet().iterator();
     	while (it.hasNext()){
     		String key = it.next();
-    		if (!totalSent.keySet().contains(key)) 
+    		if (!totalSent.keySet().contains(key))
     			result.put(key, sent.get(key));
     		else
     			result.put(key, Integer.valueOf(sent.get(key).intValue() +
@@ -1685,7 +1686,7 @@ public class DB {
     	}
     	return result;
     }
-    
+
     /** *************************************************************
      */
     public static void textSentimentByPeriod() {
@@ -1694,7 +1695,7 @@ public class DB {
     	int period = 0;
     	int periodLength = 7; // in days
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZZ yyyy"); // "Tue Jun 28 06:53:37 +0000 2011"
-        
+
     	HashMap<String,Integer> totalSent = new HashMap<String,Integer>();
         ArrayList<ArrayList<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
         System.out.println("INFO in DB.textSentiment() : read spreadsheet with " + f.size() + " rows");
@@ -1714,7 +1715,7 @@ public class DB {
                     System.out.println("Error in DB.processTimeDate(): error parsing date/time string: " + date);
                 }
                 Calendar calendar = new GregorianCalendar();
-                if (d != null) {                  
+                if (d != null) {
                 	calendar.setTime(d);
                 	System.out.print(calendar.get(Calendar.SECOND));
                 }
@@ -1731,7 +1732,7 @@ public class DB {
      */
     public static void textSentiment() {
 
-    	int period = 0;    	
+    	int period = 0;
     	HashMap<String,Integer> totalSent = new HashMap<String,Integer>();
         ArrayList<ArrayList<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
         System.out.println("INFO in DB.textSentiment() : read spreadsheet with " + f.size() + " rows");
@@ -1747,7 +1748,7 @@ public class DB {
         }
         System.out.println(totalSent);
     }
-    
+
     /** *************************************************************
      * Compute sentiment for each line of a text file and output as CSV.
      */
@@ -1764,13 +1765,13 @@ public class DB {
                     line = StringUtil.removePunctuation(line);
                     int sent = computeSentiment(line);
                     if (neg) {
-                        if (sent < 0)                                           
+                        if (sent < 0)
                             System.out.println(line + ", " + sent + ", 1");
                         else
                             System.out.println(line + ", " + sent + ", 0");
                     }
                     else {
-                        if (sent > 0)                                           
+                        if (sent > 0)
                             System.out.println(line + ", " + sent + ", 1");
                         else
                             System.out.println(line + ", " + sent + ", 0");
@@ -1824,11 +1825,11 @@ public class DB {
             System.out.println(s[i] + ":" + computeSentiment(s[i]));
         }
     }
-    
+
     /** *************************************************************
      */
     public static void testSentimentCorpus() {
-        
+
         try {
             KBmanager.getMgr().initializeOnce();
         } catch (Exception ex) {
@@ -1837,13 +1838,13 @@ public class DB {
         WordNet.wn.initOnce();
         readSentimentArray();
         //System.out.println(DB.computeConceptSentiment("This hotel is really bad."));
-        textFileSentiment("rt-polarity.neg",true);        
+        textFileSentiment("rt-polarity.neg",true);
     }
-    
+
     /** *************************************************************
      */
     public static void guessGender(String fname) {
-       
+
         ArrayList<ArrayList<String>> fn = DB.readSpreadsheet("FirstNames.csv",null,false,',');
         HashMap<String,String> names = new HashMap<String,String>();
         for (int i = 1; i < fn.size(); i++) {  // skip header
@@ -1856,7 +1857,7 @@ public class DB {
             if (row != null && row.size() > 10 && StringUtil.emptyString(row.get(1))) {   // gender column
                 //System.out.println(row.get(1));
                 String firstName = names.get(row.get(10).toUpperCase());  // first name column
-                if (firstName != null) {   
+                if (firstName != null) {
                     //System.out.println(firstName);
                     String gender = "male";
                     if (names.get(row.get(10).toUpperCase()).equals("F"))
@@ -1867,7 +1868,7 @@ public class DB {
         }
         System.out.println(DB.writeSpreadsheet(dat, true));
     }
-    
+
     /** *************************************************************
      * A test method
      */
@@ -1875,7 +1876,7 @@ public class DB {
         /*
     TreeSet<String> result = new TreeSet<String>();
     */
-        
+
         if (args[0].equals("-help") || StringUtil.emptyString(args[0]) ) {
             System.out.println("usage:");
             System.out.println(">java -classpath . com.articulate.sigma.DB -gender /home/me/data.csv");
@@ -1896,11 +1897,11 @@ public class DB {
             System.out.println("INFO in DB.main: completed initialization");
             if (StringUtil.emptyString(args[1]))
                 System.out.println("Error in DB.main: no filename");
-            else 
-                System.out.println(computeConceptSentimentFromFile(args[1]));           
+            else
+                System.out.println(computeConceptSentimentFromFile(args[1]));
         }
-        
-        
+
+
         //textSentiment();
         /*
     PrintWriter pw = null;

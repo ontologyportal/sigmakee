@@ -1,30 +1,32 @@
 /*** The KIF2THF converter file is a contribution by Christoph Benzmueller
  */
 package com.articulate.sigma.trans;
+
+import com.articulate.sigma.*;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.articulate.sigma.*;
-
 /** ************************************************************
  * This class handles the conversion of problems (= axioms + queries)
- * from their KIF representation into a THF representation; THF is the 
+ * from their KIF representation into a THF representation; THF is the
  * TPTP standard for classical higher-order logic, i.e. Church's simple
  * theory.
  *
@@ -33,23 +35,23 @@ import com.articulate.sigma.*;
  * A challenge part in this transformation is the computation of an appropriate
  * typing for the KIF terms and formulas. This is partly non-trivial.
  * The conversion is intended to work purely syntactically (when no
- * typing-relevant information from SUMO is available) or mixed 
- * syntactically-semantically (when typing-relevant information from 
- * SUMO is available). 
+ * typing-relevant information from SUMO is available) or mixed
+ * syntactically-semantically (when typing-relevant information from
+ * SUMO is available).
  *
  * A small example:
- * The KIF Problem with axioms 
+ * The KIF Problem with axioms
  *
  *  (holdsDuring (YearFN n2009) (enjoys Mary Cooking))
  *  (holdsDuring (YearFN n2009) (=> (instance ?X Female) (wants Ben ?X)))
  *  (holdsDuring ?X (instance Mary Female))
  *
  *  and Query
- * 
+ *
  *  (holdsDuring ?X (and (?Y Mary Cooking) (wants ?Z Mary)))
  *
  * is tranlated into the THF problem:
- * 
+ *
  *  %%% The extracted Signature %%%
  *   thf(holdsDuring,type,(holdsDuring: ($i>$o>$o))).
  *   thf(enjoys_THFTYPE_IiioI,type,(enjoys_THFTYPE_IiioI: ($i>$i>$o))).
@@ -66,7 +68,7 @@ import com.articulate.sigma.*;
  *   thf(ax,axiom,((! [X: $i]: (holdsDuring @ X @ (instance_THFTYPE_IiioI @ mary @ female))))).
  *   thf(ax,axiom,((! [X: $i]: (holdsDuring @ (yearFN_THFTYPE_IiiI @ n2009) @ ((instance_THFTYPE_IiioI @ X @ female) => (wants @ ben @ X)))))).
  *   thf(ax,axiom,((holdsDuring @ (yearFN_THFTYPE_IiiI @ n2009) @ (enjoys_THFTYPE_IiioI @ mary @ cooking)))).
- *  
+ *
  *  %%% The translated conjectures %%%
  *   thf(con,conjecture,((? [X: $i,Y: $i,Z: $i]: (holdsDuring @ X @ ((enjoys_THFTYPE_IiioI @ mary @ Y) & (wants @ Z @ mary)))))).
  *
@@ -75,7 +77,7 @@ import com.articulate.sigma.*;
  * The transformation often needs to introduce several
  * 'copies' of KIF constants for different THF types. Therefore, some constant
  * symbols become tagged with type information during the transformation process.
- * Example for tagged contant symbols above enjoys_THFTYPE_IiioI and 
+ * Example for tagged contant symbols above enjoys_THFTYPE_IiioI and
  * instance_THFTYPE_IiioI.
  *
  * @author Christoph Benzmueller c.benzmueller [at] fu-berlin [dot] de
@@ -94,7 +96,7 @@ public class THF {
     }
 
     /** ***************************************************************
-     * THFdebug: variable for enabling/diabling debugging mode; when set then 
+     * THFdebug: variable for enabling/diabling debugging mode; when set then
      * there will be useful information printed
      */
     private static Boolean debug = false;
@@ -103,7 +105,7 @@ public class THF {
      * A debug print function (uses variable THFdebug)
      */
     private static String THFdebugOut (String str) {
-        
+
         if (debug) {
             System.out.println(str);
             return str;
@@ -112,20 +114,20 @@ public class THF {
     }
 
     /** ***************************************************************
-     * A string builder containing the dynamically modified 
+     * A string builder containing the dynamically modified
      * KIF formula during the KIF2THF transformation process
      */
     private StringBuilder kifFormula = new StringBuilder();
 
     /** ***************************************************************
-     * A map containing relevant information on the dynamically changing 
+     * A map containing relevant information on the dynamically changing
      * set of constant symbols during the KIF2THF transformation. This
      * is used in the 'tagging' of constant symbols with type information.
      */
     private HashMap subst = new HashMap();
 
     /** ***************************************************************
-     * Two maps from THF constant symbols to THF types as built up by the 
+     * Two maps from THF constant symbols to THF types as built up by the
      * KIF2THF transformation
      */
     private HashMap localsig = new HashMap();
@@ -150,7 +152,7 @@ public class THF {
     /** ***************************************************************
      * Declaration of some special THF types used in the KIF2THF translation.
      * In the final translation only the THF base types $i (individuals) and
-     * $o (Booleans) should be occuring.
+     * $o (Booleans) should be occurring.
      */
     private static final String boolTp = "$o";  // THF type for Booleans
     private static final String indTp = "$i";   // THF type for individuals
@@ -160,7 +162,7 @@ public class THF {
 
     /** ***************************************************************
      */
-    private List<String> numericOps = new ArrayList<String>();
+    private List<String> numericOps = new ArrayList<>();
 
     /** ***************************************************************
      * A function that checks whether a given term-to-type mapping
@@ -170,32 +172,32 @@ public class THF {
      * @param map a term-to-type mapping (where types are encoded as strings)
      */
     private boolean containsUnknownTp(HashMap map) {
-        
+
         Collection<String> entries = map.values();
         if (debug) System.out.println("\n  THF.containsUnknownTp()  Enter containsUnknownTp with entries = " + entries.toString());
         boolean found = false;
         for (String entry : entries) {
-            if (entry.contains(unknownTp)) 
-                found = true;            
+            if (entry.contains(unknownTp))
+                found = true;
         }
         if (debug) System.out.println("\n  THF.containsUnknownTp() Exit containsUnknownTp with found = " + found);
-        return found;   
+        return found;
     }
 
     /** ***************************************************************
-     * A special function that replaces all occurences of key by 
+     * A special function that replaces all occurrences of key by
      * keysubst in a formula string str. The special aspects here is that we do
      * not want to replace substrings of constants, e.g.
      * applySubstTo("what","which","(whatever (what (somewhat what)))")
      * returns "(whatever (which (somewhat which)))"
-     * and not "(whichever (what (somewhich what)))"   
+     * and not "(whichever (what (somewhich what)))"
      *
      * @param key a string to replace
      *
      * @param keysubst the string to use as replacement
      *
      * @param str the string to apply the substitution to
-     * 
+     *
      */
     private String applySubstTo(String key, String keysubst, String str) {
 
@@ -252,7 +254,7 @@ public class THF {
         // we request some semantic type-relevant information on the
         // function and relation symbols involved; this information is used with priority
         // below
-        HashMap<String, ArrayList> relTypeInfo = f.gatherRelationsWithArgTypes(kb);
+        Map<String, List> relTypeInfo = f.gatherRelationsWithArgTypes(kb);
         if (debug) System.out.println("oneKIF2THF(): reltypes: " + relTypeInfo);
         if (debug) System.out.println("oneKIF2THF(): localsig: " + localsig);
         // we initialize the terms-to-types mapping and start the actual
@@ -426,7 +428,7 @@ public class THF {
      *
      * @param map is a term-to-type mapping (both represented as strings)
      *
-     * @param f is a formula string 
+     * @param f is a formula string
      *
      */
     private HashMap clearMapFor(HashMap map, String f) {
@@ -446,7 +448,7 @@ public class THF {
                 copyMap.remove(key);
             }
         }
-        THFdebugOut("\n  Exit clearMapFor \n  map is " + localsig.toString());	
+        THFdebugOut("\n  Exit clearMapFor \n  map is " + localsig.toString());
         return copyMap;
     }
 
@@ -456,7 +458,7 @@ public class THF {
      *
      * @param map is a term-to-type mapping (both represented as strings)
      *
-     * @param f is a formula string 
+     * @param f is a formula string
      *
      */
     private HashMap clearMapSpecial(HashMap map, String f) {
@@ -468,14 +470,14 @@ public class THF {
             if (!key.contains("_THFTYPE_"))
                 copyMap.remove(key);
         }
-        THFdebugOut("\n  Exit clearMapSpecial\n  map is " + localsig.toString());	
+        THFdebugOut("\n  Exit clearMapSpecial\n  map is " + localsig.toString());
         return copyMap;
     }
 
     /** ***************************************************************
      * A function that converts a SUMO 'type' information into a THF type
      *
-     * @param intype is the SUMO type 
+     * @param intype is the SUMO type
      *
      */
     private String KIFType2THF(String intype) {
@@ -502,7 +504,7 @@ public class THF {
         convertTypeInfo.put("RealNumber",indTp);
         convertTypeInfo.put("Quantity",indTp);
         convertTypeInfo.put("PhysicalQuantity",indTp);
-        /* sets (if we enable this, then we run into problems) */ 
+        /* sets (if we enable this, then we run into problems) */
         //String setTpPattern = "(" + unknownTp + typeDelimiter + boolTp + ")";
         //convertTypeInfo.put("Class", setTpPattern);
         //convertTypeInfo.put("Collection", setTpPattern);
@@ -547,7 +549,7 @@ public class THF {
     /** ***************************************************************
      * A predicate that checks whether a THF type is a base type
      *
-     * @param intype is the THF type 
+     * @param intype is the THF type
      *
      */
     private boolean isBaseTp (String intype) {
@@ -563,7 +565,7 @@ public class THF {
      * A function that grounds a THF type, that is replaces all occurences
      * of 'unknownTp' by $iinformation into a THF type
      *
-     * @param intype is the THF type 
+     * @param intype is the THF type
      *
      */
     private String groundType(String sym, String intype) {
@@ -572,10 +574,10 @@ public class THF {
         String res = intype;
         if (intype.equals(unknownTp)) {
             // we check whether the overallsig contains some interesting types already for sym
-            Set osigkeyset = overallsig.keySet(); 
+            Set osigkeyset = overallsig.keySet();
             List<String> candidateTypes = new ArrayList();
             for (Iterator it = osigkeyset.iterator(); it.hasNext();) {
-                String entry = (String) it.next();	    
+                String entry = (String) it.next();
                 if (entry.startsWith(sym + "_")) {
                     THFdebugOut("\n  Inside groundType: sym " + entry + " startsWith " + sym);
                     String entryTp = (String) overallsig.get(entry);
@@ -592,7 +594,7 @@ public class THF {
                 res = indTp;
             }
         }
-        else {   
+        else {
             res = intype.replaceAll(unknownTp,"\\" + indTp);
         }
         //System.out.println("\n  Exit groundType with " + res);
@@ -601,7 +603,7 @@ public class THF {
     }
 
     /** ***************************************************************
-     * A predicate that checks whether some symbol string represents 
+     * A predicate that checks whether some symbol string represents
      * a KIF variable
      *
      * @param sym is the input symbol to analyse
@@ -618,7 +620,7 @@ public class THF {
     }
 
     /** ***************************************************************
-     * A predicate that checks whether some symbol string represents 
+     * A predicate that checks whether some symbol string represents
      * a KIF variable
      *
      * @param sym is the input symbol to analyse
@@ -661,7 +663,7 @@ public class THF {
         if (Character.isDigit(c)) {
             res = res.replaceFirst(c0,"n" + c0);
         }
-        else if (Character.isUpperCase(c)) { 
+        else if (Character.isUpperCase(c)) {
             res = res.replaceFirst(c0,"l" + c0);
         }
         THFdebugOut("\n  Exit toTHFKifConst: " + res);
@@ -686,7 +688,7 @@ public class THF {
      * @param relTpInfo is the passed on semantic 'type' information for symbols in f
      *
      */
-    private String toTHFHelp1 (Formula f, String op_thf, String goalTp, String argsTp, boolean preferPrefix, HashMap relTpInfo) {
+    private String toTHFHelp1 (Formula f, String op_thf, String goalTp, String argsTp, boolean preferPrefix, Map relTpInfo) {
 
         THFdebugOut("\n  Debug: logical connective at head position in " + f.getFormula());
         // resTerm will contain the result
@@ -706,17 +708,17 @@ public class THF {
                 Formula fi = new Formula();
                 fi.read(f.getStringArgument(i));
                 String argi = toTHF1(fi,argsTp,relTpInfo);
-                resTerm.append(" @ " + argi);
+                resTerm.append(" @ ").append(argi);
             }
         }
         else {
-            resTerm.append("(" + arg1);
+            resTerm.append("(").append(arg1);
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
                 fi.read(f.getStringArgument(i));
                 String argi = toTHF1(fi,argsTp,relTpInfo);
-                resTerm.append(" " + op_thf + " " + argi);
+                resTerm.append(" ").append(op_thf).append(" ").append(argi);
             }
         }
         resTerm.append(")");
@@ -743,14 +745,14 @@ public class THF {
     private String toTHFHelp2 (Formula f, String op_sumo, String op_thf, String goalTp, String argsTp, boolean preferPrefix) {
 
         THFdebugOut("\n  Enter toTHFHelp2: " + f.getFormula());
-        // in toTHF2 and in this help function we always reconstruct the worked off 
-        // formula (possible slightly modify it thereby) for later reuse 
+        // in toTHF2 and in this help function we always reconstruct the worked off
+        // formula (possible slightly modify it thereby) for later reuse
         kifFormula.append("("+ op_sumo);
         // a string builder for the result
         StringBuilder resTerm = new StringBuilder();
         Formula f1 = new Formula();
         f1.read(f.getStringArgument(1));
-        kifFormula.append(" ");	 
+        kifFormula.append(" ");
         // a (recursive) call to toTHF2 for the first argument
         String arg1 = toTHF2(f1);
         // we work off the remaining arguments and distinguish thereby between the prefix and infix case
@@ -763,7 +765,7 @@ public class THF {
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
                 fi.read(f.getStringArgument(i));
-                kifFormula.append(" ");	 
+                kifFormula.append(" ");
                 String argi = toTHF2(fi);
                 resTerm.append(" @ " + argi);
             }
@@ -774,7 +776,7 @@ public class THF {
             for (int i = 2; i < len; i++) {
                 Formula fi = new Formula();
                 fi.read(f.getStringArgument(i));
-                kifFormula.append(" ");	 
+                kifFormula.append(" ");
                 String argi = toTHF2(fi);
                 resTerm.append(" " + op_thf + " " + argi);
             }
@@ -782,7 +784,7 @@ public class THF {
         resTerm.append(")");
         kifFormula.append(")");
         // we also remember the new type information we gained for the resulting term; this is
-        // very important 
+        // very important
         terms.put(resTerm.toString(),goalTp);
         THFdebugOut("\n  Exit toTHFHelp2: " + f.getFormula());
         return 	resTerm.toString();
@@ -790,23 +792,23 @@ public class THF {
 
     /** ***************************************************************
      * A help function for toTHF1; this help function addresses the THF
-     * conversion of quantified formulas 
+     * conversion of quantified formulas
      *
      * @param f is the KIF formula to convert
      *
-     * @param quant_thf is the THF quantifier to use at head postion
+     * @param quant_thf is the THF quantifier to use at head position
      *
      * @param relTpInfo is the passed on semantic 'type' information for symbols in f
      *
      */
-    private String toTHFQuant1 (Formula f, String quant_thf, HashMap relTpInfo) {
+    private String toTHFQuant1 (Formula f, String quant_thf, Map relTpInfo) {
 
         THFdebugOut("\n  Debug: universal quantifier at head position in " + f.getFormula());
         String varlist = f.getStringArgument(1);
         Formula varlistF = new Formula();
         varlistF.read(varlist);
         StringBuilder resTerm = new StringBuilder();
-        resTerm.append("(" + quant_thf + " ["); 
+        resTerm.append("(" + quant_thf + " [");
         int len = varlistF.listLength();
         String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
@@ -827,14 +829,14 @@ public class THF {
                 resTerm.append("," + varTHF + ": " + terms.get(varTHF));
             }
         }
-        resTerm.append("]: " + arg2FTHF + ")"); 
+        resTerm.append("]: " + arg2FTHF + ")");
         terms.put(resTerm.toString(),boolTp);
         return resTerm.toString();
     }
 
     /** ***************************************************************
      * A help function for toTHF1; this help function addresses the THF
-     * conversion of KappaFN formulas 
+     * conversion of KappaFN formulas
      *
      * @param f is the KIF formula to convert
      *
@@ -843,7 +845,7 @@ public class THF {
      * @param relTpInfo is the passed on semantic 'type' information for symbols in f
      *
      */
-    private String toTHFKappaFN1 (Formula f, String kappa_thf, HashMap relTpInfo) {
+    private String toTHFKappaFN1 (Formula f, String kappa_thf, Map relTpInfo) {
 
         THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
         StringBuilder resTerm = new StringBuilder();
@@ -855,14 +857,14 @@ public class THF {
         arg2F.read(arg2);
         String arg2FTHF = toTHF1(arg2F,boolTp,relTpInfo);
         String varTHFtype = (String) terms.get(varTHF);
-        resTerm.append("(" + kappa_thf + " [" + varTHF + ": " + varTHFtype + "]: " + arg2FTHF + ")"); 
+        resTerm.append("(").append(kappa_thf).append(" [").append(varTHF).append(": ").append(varTHFtype).append("]: ").append(arg2FTHF).append(")");
         terms.put(resTerm.toString(),"(" + varTHFtype + typeDelimiter + boolTp + ")");
         return resTerm.toString();
     }
 
     /** ***************************************************************
      * A help function for toTHF2; this help function addresses the THF
-     * conversion of quantified formulas 
+     * conversion of quantified formulas
      *
      * @param f is the KIF formula to convert
      *
@@ -877,7 +879,7 @@ public class THF {
         Formula varlistF = new Formula();
         varlistF.read(varlist);
         StringBuilder resTerm = new StringBuilder();
-        resTerm.append("(" + quant_thf + " ["); 
+        resTerm.append("(" + quant_thf + " [");
         int len = varlistF.listLength();
         String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
@@ -893,7 +895,7 @@ public class THF {
                 resTerm.append("," + varTHF + ": " + terms.get(varTHF));
             }
         }
-        resTerm.append("]: " + arg2FTHF + ")"); 
+        resTerm.append("]: " + arg2FTHF + ")");
         kifFormula.append(")");
         terms.put(resTerm.toString(),boolTp);
         return resTerm.toString();
@@ -901,7 +903,7 @@ public class THF {
 
     /** ***************************************************************
      * A help function for toTHF1; this help function addresses the THF
-     * conversion of KappaFN formulas 
+     * conversion of KappaFN formulas
      *
      * @param f is the KIF formula to convert
      *
@@ -913,7 +915,7 @@ public class THF {
     private String toTHFKappaFN2 (Formula f, String kappa_sumo, String kappa_thf) {
 
         THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
-        StringBuilder resTerm = new StringBuilder();	
+        StringBuilder resTerm = new StringBuilder();
         String var = f.getStringArgument(1);
         kifFormula.append("("+ kappa_sumo + " " + var + " ");
         String varTHF = toTHFKifVar(var);
@@ -923,7 +925,7 @@ public class THF {
         arg2F.read(arg2);
         String arg2FTHF = toTHF2(arg2F);
         String varTHFtype = groundType("NOT_APPLICABLE",(String) terms.get(varTHF));
-        resTerm.append("(" + kappa_thf + " [" + varTHF + ": " + varTHFtype + "]: " + arg2FTHF + ")"); 
+        resTerm.append("(" + kappa_thf + " [" + varTHF + ": " + varTHFtype + "]: " + arg2FTHF + ")");
         kifFormula.append(")");
         terms.put(resTerm.toString(),"(" + varTHFtype + typeDelimiter + boolTp + ")");
         return resTerm.toString();
@@ -972,7 +974,7 @@ public class THF {
             reslist.set(reslist.size() - 1, (laststr + str));
             // THFdebugOut("\n   Inside addStr reslist = " + reslist.toString());
         }
-        // THFdebugOut("\n   Exit addStr with: " + reslist.toString());	    
+        // THFdebugOut("\n   Exit addStr with: " + reslist.toString());
         return reslist;
     }
 
@@ -1001,15 +1003,15 @@ public class THF {
             res = Arrays.asList(help);
         }
         THFdebugOut("\n   Exit toTHFList with: " + res.toString());
-        return res; 
+        return res;
     }
 
     /** ***************************************************************
-     * A help function for toTHFList above; this is actually a little 
-     * automaton that that needs to correctly parse bracketed THF type 
+     * A help function for toTHFList above; this is actually a little
+     * automaton that that needs to correctly parse bracketed THF type
      * strings
      *
-     * @param thfTp is the THF type 
+     * @param thfTp is the THF type
      *
      * @param i is an integer to count open brackets
      *
@@ -1093,23 +1095,23 @@ public class THF {
             }
         }
         THFdebugOut("\n   Exit toTHFListH with: " + reslist);
-        return reslist;	
+        return reslist;
     }
 
     /** ***************************************************************
-     * A function that creates a function type over unknownTp with 
+     * A function that creates a function type over unknownTp with
      * specified arity
-     * e.g. for int 3 it computes "uknownTp>uknownTp>uknownTp" 
+     * e.g. for int 3 it computes "uknownTp>uknownTp>uknownTp"
      *
      * @param num is the requested arity
      */
     private String makeUnknownTp (int num) {
-        
+
         StringBuilder result = new StringBuilder();
         if (num == 1) {
             result.append(unknownTp);
         }
-        else { 
+        else {
             result.append("(" + unknownTp);
             for (int i = 2; i <= num; i++) {
                 result.append(typeDelimiter + unknownTp);
@@ -1120,17 +1122,17 @@ public class THF {
     }
 
     /** ***************************************************************
-     * A function that computes a new 'compromise' type for two conflicting 
+     * A function that computes a new 'compromise' type for two conflicting
      * type informations for one and the same THF term
      *
      * @param type1 is the first given type
      *
      * @param type2 is the second given type
      *
-     */	
+     */
     private String computeConflictType(String type1, String type2) {
 
-        THFdebugOut("\n Enter computeConflictType t1= " + type1 + "  t2= "+ type2); 
+        THFdebugOut("\n Enter computeConflictType t1= " + type1 + "  t2= "+ type2);
         String res = null;
         if (type1.equals(unknownTp)) {
             res = type2;
@@ -1162,15 +1164,15 @@ public class THF {
      *
      * @param sym is the symbol (or term) to look for
      *
-     */	
-    private boolean containsRelevantTypeInfo(HashMap map,String sym) {
+     */
+    private boolean containsRelevantTypeInfo(Map map,String sym) {
 
         boolean result = false;
         // the criterion is that map returns a type information list for sym
         // which has at least one non null-entry (otherwise there is no useful information
         // given and the predicate returns false
         if (map.containsKey(sym)) {
-            List l = (List) map.get(sym); 
+            List l = (List) map.get(sym);
             for (Iterator it = l.iterator(); it.hasNext();) {
                 String entry = (String) it.next();
                 if (!(entry == null)) {
@@ -1192,7 +1194,7 @@ public class THF {
      * @param relTpInfo is the passed on semantic 'type' information for symbols in f
      *
      */
-    private String toTHF1(Formula f, String type, HashMap relTpInfo) {
+    private String toTHF1(Formula f, String type, Map relTpInfo) {
 
         StringBuilder result = new StringBuilder();
         //boolean THFdebugOld = THFdebug;
@@ -1202,24 +1204,24 @@ public class THF {
         if (!f.listP()) {
             String sym = f.getFormula();
             /* sym might be logical connective TRUE */
-            if (sym.equals(Formula.LOG_TRUE)) { 
+            if (sym.equals(Formula.LOG_TRUE)) {
                 THFdebugOut("\n  Debug: " + sym + " equals LOG_TRUE");
                 result.append("$true");
                 terms.put("$true",boolTp);
             }
             /* sym might be logical connective FALSE */
-            else if (sym.equals(Formula.LOG_FALSE)) { 
+            else if (sym.equals(Formula.LOG_FALSE)) {
                 THFdebugOut("\n  Debug: " + sym + " equals LOG_FALSE");
-                result.append("$false"); 
+                result.append("$false");
                 terms.put("$false",boolTp);
             }
             /* sym is a Kif variable */
-            else if (isKifVar(sym)) { 
+            else if (isKifVar(sym)) {
                 String symcon = toTHFKifVar(sym);
                 if ((!terms.containsKey(symcon) && !type.equals(unknownTp)) ||
                         (terms.containsKey(symcon) && terms.get(symcon).equals(unknownTp))) {
                     terms.put(symcon,type);
-                }		   
+                }
                 result.append(symcon);
             }
             /* sym is a constant symbol */
@@ -1241,7 +1243,7 @@ public class THF {
                 else {
                     THFdebugOut("\n  Debug: " + sym + " must be a constant symbol whose type needs to be defined as  " + type);
                     localsig.put(symcon,type);
-                    terms.put(symcon,type); 
+                    terms.put(symcon,type);
                 }
                 result.append(symcon);
             }
@@ -1261,7 +1263,7 @@ public class THF {
             result.append(arg1FTHF);
             terms.put(f.getFormula(),boolTp);
         }
-        /* the formula has form (h arg1 ... argN) */	    
+        /* the formula has form (h arg1 ... argN) */
         else {
             String h = f.getStringArgument(0);
             /* documentation formulas and some others are not translated */
@@ -1275,7 +1277,7 @@ public class THF {
                     h.equals("givenName") || h.equals("lexicon") || h.equals("abbrev") || h.equals("carCode") ||
                     h.equals("governmentType") || h.equals("established") || h.equals("codeMapping") ||
                     h.equals("acronym") || f.getFormula().equals("(contraryAttribute False True)")) {
-                result.append(notTranslatedStr + f.getFormula().trim());
+                result.append(notTranslatedStr).append(f.getFormula().trim());
             }
             /* we treat the cases where h is a logical or arithmetic connective */
             else if (h.equals(Formula.NOT)) {
@@ -1287,13 +1289,13 @@ public class THF {
             else if (h.equals(Formula.OR)) {
                 result.append(toTHFHelp1(f,"|",boolTp,boolTp,false,relTpInfo));
             }
-            else if (h.equals(Formula.IF)) { 
+            else if (h.equals(Formula.IF)) {
                 result.append(toTHFHelp1(f,"=>",boolTp,boolTp,false,relTpInfo));
             }
-            else if (h.equals(Formula.IFF)) { 
+            else if (h.equals(Formula.IFF)) {
                 result.append(toTHFHelp1(f,"<=>",boolTp,boolTp,false,relTpInfo));
             }
-            else if (h.equals(Formula.EQUAL)) { 
+            else if (h.equals(Formula.EQUAL)) {
                 String arg1 = f.getStringArgument(1);
                 Formula arg1F = new Formula();
                 arg1F.read(arg1);
@@ -1313,29 +1315,29 @@ public class THF {
             else if (h.equals(Formula.GT)) {
                 result.append(toTHFHelp1(f,"gt",boolTp,indTp,true,relTpInfo));
             }
-            else if (h.equals(Formula.GTET)) { 
+            else if (h.equals(Formula.GTET)) {
                 result.append(toTHFHelp1(f,"gtet",boolTp,indTp,true,relTpInfo));
             }
-            else if (h.equals(Formula.LT))  { 
+            else if (h.equals(Formula.LT))  {
                 result.append(toTHFHelp1(f,"lt",boolTp,indTp,true,relTpInfo));
             }
-            else if (h.equals(Formula.LTET)) { 
+            else if (h.equals(Formula.LTET)) {
                 result.append(toTHFHelp1(f,"ltet",boolTp,indTp,true,relTpInfo));
             }
             else if (h.equals(Formula.PLUSFN)) {
                 result.append(toTHFHelp1(f,"plus",indTp,indTp,true,relTpInfo));
-            }  
-            else if (h.equals(Formula.MINUSFN)) { 
+            }
+            else if (h.equals(Formula.MINUSFN)) {
                 result.append(toTHFHelp1(f,"minus",indTp,indTp,true,relTpInfo));
-            }  
-            else if (h.equals(Formula.TIMESFN)) { 
+            }
+            else if (h.equals(Formula.TIMESFN)) {
                 result.append(toTHFHelp1(f,"times",indTp,indTp,true,relTpInfo));
-            }  
-            else if (h.equals(Formula.DIVIDEFN)) { 
+            }
+            else if (h.equals(Formula.DIVIDEFN)) {
                 result.append(toTHFHelp1(f,"div",indTp,indTp,true,relTpInfo));
             }
             /* we treat the cases where h is a quantifier */
-            else if (h.equals(Formula.UQUANT)) { 
+            else if (h.equals(Formula.UQUANT)) {
                 result.append(toTHFQuant1(f,"!",relTpInfo));
             }
             else if (h.equals(Formula.EQUANT)) {
@@ -1344,7 +1346,7 @@ public class THF {
             /* we treat the case where h is the KappaFN */
             else if (h.equals(Formula.KAPPAFN)) {
                 result.append(toTHFKappaFN1(f,"^",relTpInfo));
-                // old: 
+                // old:
                 //THFdebugOut("\n  Debug: kappa function at head position in " + f.theFormula);
                 //String res = "kappaFn_todo";
                 //localsig.put(res,type);
@@ -1363,15 +1365,15 @@ public class THF {
                 else {
                     hconv = toTHFKifConst(h);
                 }
-                resTerm.append("(" + hconv);
-                resType.append("("); 
+                resTerm.append("(").append(hconv);
+                resType.append("(");
                 int len = f.listLength();
-                List typeInfo = new ArrayList<String>();
+                List<String> typeInfo = new ArrayList<>();
                 String goalTp = null;
                 // relTpInfo, that is the KB, contains some useful type information;
-                // store it in variables typeInfo and goalTp 
+                // store it in variables typeInfo and goalTp
                 if (containsRelevantTypeInfo(relTpInfo,h)) {
-                    typeInfo = (List<String>) relTpInfo.get(h); 
+                    typeInfo = (List<String>) relTpInfo.get(h);
                     THFdebugOut("\n   relTpInfo contains  " + hconv + " with " + typeInfo.toString());
                     if (typeInfo.get(0) == null) {
                         goalTp = boolTp;
@@ -1381,8 +1383,8 @@ public class THF {
                         goalTp = KIFType2THF(sumoTp);
                     }
                 }
-                // the terms-to-type mapping contains useful information on hconv; 
-                // store it in variables typeInfo and goalTp 
+                // the terms-to-type mapping contains useful information on hconv;
+                // store it in variables typeInfo and goalTp
                 else if (terms.containsKey(hconv) && !((terms.get(hconv)).equals(unknownTp))) {
                     THFdebugOut("\n   terms contains  " + hconv + " and it is not unknownTp");
                     List typeInfoHelp = (toTHFList((String) terms.get(hconv)));
@@ -1403,7 +1405,7 @@ public class THF {
                     }
                 }
                 // no useful information is available; translation proceeds purely syntactic;
-                // store information in variables typeInfo and goalTp 
+                // store information in variables typeInfo and goalTp
                 else {
                     THFdebugOut("\n   Neither relTpInfo nor terms contains  " + hconv + " or it is unknownTp; len=" + len);
                     for (int i = 0; i < len; i++) {
@@ -1417,7 +1419,7 @@ public class THF {
                     }
                 }
                 THFdebugOut("\n   typeInfo =  " + typeInfo.toString());
-                // recurse over the arguments and pass on useful type information; memorize useful information delivered back 
+                // recurse over the arguments and pass on useful type information; memorize useful information delivered back
                 // bottom up
                 for (int i = 1; i < Math.min(len,7); i++) {
                     String sumoTp = (String) typeInfo.get(i);
@@ -1492,7 +1494,7 @@ public class THF {
             if (entry instanceof java.lang.String) {
                 result.append((String) entry + typeDelimiter);
             }
-            else if (entry instanceof java.util.List) {	   
+            else if (entry instanceof java.util.List) {
                 result.append("(" + toTHFTpList((List) entry) + ")");
             }
         }
@@ -1500,7 +1502,7 @@ public class THF {
         if (entry0 instanceof java.lang.String) {
             result.append((String) entry0);
         }
-        else if (entry0 instanceof java.util.List) {	  
+        else if (entry0 instanceof java.util.List) {
             result.append("(" + toTHFTpList((List) entry0) + ")");
         }
         THFdebugOut("\n   Exit toTHFTpList with " + result.toString());
@@ -1509,7 +1511,7 @@ public class THF {
 
     /** ***************************************************************
      * A function that computes a suffix for a THF constant name that
-     * suitably encodes some given THF type information (one problem is 
+     * suitably encodes some given THF type information (one problem is
      * that '$' is not allowed in THF constant names).
      *
      * @param thfTp is the THF type to encode
@@ -1530,7 +1532,7 @@ public class THF {
     /** ***************************************************************
      * A function that computes a new name for a given constant name.
      * It computes and appends a suffix for the constant name that
-     * suitably encodes some given THF type information (one problem is 
+     * suitably encodes some given THF type information (one problem is
      * that '$' is not allowed in THF constant names).
      *
      * @param oldConst is the name of the given constant
@@ -1554,7 +1556,7 @@ public class THF {
 
     /** ***************************************************************
      * A recursive function that turns a SUMO formula into a THF string.
-     * It works structurally similar to toTHF1 but it cares about the 
+     * It works structurally similar to toTHF1 but it cares about the
      * 'unknownTp' information leftover by toTHF1; several calls to THF2
      * may be required until sufficient type information is generated and
      * all 'unknownTp' entries have disappeared
@@ -1569,17 +1571,17 @@ public class THF {
         if (!f.listP()) {
             String sym = f.getFormula();
             /* sym might be logical connective TRUE */
-            if (sym.equals(Formula.LOG_TRUE)) { 
-                result.append("$true"); 
+            if (sym.equals(Formula.LOG_TRUE)) {
+                result.append("$true");
                 kifFormula.append(Formula.LOG_TRUE);
             }
             /* sym might be logical connective FALSE */
-            else if (sym.equals(Formula.LOG_FALSE)) { 
-                result.append("$false"); 
+            else if (sym.equals(Formula.LOG_FALSE)) {
+                result.append("$false");
                 kifFormula.append(Formula.LOG_FALSE);
             }
             /* sym is a Kif variable */
-            else if (isKifVar(sym)) { 
+            else if (isKifVar(sym)) {
                 String symcon = toTHFKifVar(sym);
                 //if (terms.get(symcon).equals(unknownTp)) {
                 //   terms.put(symcon,indTp);
@@ -1615,9 +1617,9 @@ public class THF {
             Formula arg1F = new Formula();
             arg1F.read(arg1);
             String arg1FTHF = toTHF2(arg1F);
-            result.append(arg1FTHF); 
+            result.append(arg1FTHF);
         }
-        /* the formula has form (h arg1 ... argN) */	    
+        /* the formula has form (h arg1 ... argN) */
         else {
             String h = f.getStringArgument(0);
             String arith_pred_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + boolTp + ")";
@@ -1646,13 +1648,13 @@ public class THF {
             else if (h.equals(Formula.OR)) {
                 result.append(toTHFHelp2(f,Formula.OR,"|",boolTp,boolTp,false));
             }
-            else if (h.equals(Formula.IF)) { 
+            else if (h.equals(Formula.IF)) {
                 result.append(toTHFHelp2(f,Formula.IF,"=>",boolTp,boolTp,false));
             }
-            else if (h.equals(Formula.IFF)) { 
+            else if (h.equals(Formula.IFF)) {
                 result.append(toTHFHelp2(f,Formula.IFF,"<=>",boolTp,boolTp,false));
             }
-            else if (h.equals(Formula.EQUAL)) { 
+            else if (h.equals(Formula.EQUAL)) {
                 result.append(toTHFHelp2(f,Formula.EQUAL,"=",boolTp,unknownTp,false));
             }
             else if (h.equals(Formula.GT)) {
@@ -1660,17 +1662,17 @@ public class THF {
                 result.append(toTHFHelp2(f,Formula.GT,newHd,boolTp,indTp,true));
                 localsig.put(newHd,arith_pred_tp);
             }
-            else if (h.equals(Formula.GTET)) { 
+            else if (h.equals(Formula.GTET)) {
                 String newHd = makeNewConstWithSuffix("gtet",arith_pred_tp);
                 result.append(toTHFHelp2(f,Formula.GTET,newHd,boolTp,indTp,true));
                 localsig.put(newHd,arith_pred_tp);
             }
-            else if (h.equals(Formula.LT))  { 
+            else if (h.equals(Formula.LT))  {
                 String newHd = makeNewConstWithSuffix("lt",arith_pred_tp);
                 result.append(toTHFHelp2(f,Formula.LT,newHd,boolTp,indTp,true));
                 localsig.put(newHd,arith_pred_tp);
             }
-            else if (h.equals(Formula.LTET)) { 
+            else if (h.equals(Formula.LTET)) {
                 String newHd = makeNewConstWithSuffix("ltet",arith_pred_tp);
                 result.append(toTHFHelp2(f,Formula.LTET,newHd,boolTp,indTp,true));
                 localsig.put(newHd,arith_pred_tp);
@@ -1679,23 +1681,23 @@ public class THF {
                 String newHd = makeNewConstWithSuffix("plus",arith_op_tp);
                 result.append(toTHFHelp2(f,Formula.PLUSFN,newHd,indTp,indTp,true));
                 localsig.put(newHd,arith_op_tp);
-            }  
-            else if (h.equals(Formula.MINUSFN)) { 
+            }
+            else if (h.equals(Formula.MINUSFN)) {
                 String newHd = makeNewConstWithSuffix("minus",arith_op_tp);
                 result.append(toTHFHelp2(f,Formula.MINUSFN,newHd,indTp,indTp,true));
                 localsig.put(newHd,arith_op_tp);
-            }  
-            else if (h.equals(Formula.TIMESFN)) { 
+            }
+            else if (h.equals(Formula.TIMESFN)) {
                 String newHd = makeNewConstWithSuffix("times",arith_op_tp);
                 result.append(toTHFHelp2(f,Formula.TIMESFN,newHd,indTp,indTp,true));
                 localsig.put(newHd,arith_op_tp);
-            }  
-            else if (h.equals(Formula.DIVIDEFN)) { 
+            }
+            else if (h.equals(Formula.DIVIDEFN)) {
                 String newHd = makeNewConstWithSuffix("div",arith_op_tp);
                 result.append(toTHFHelp2(f,Formula.DIVIDEFN,newHd,indTp,indTp,true));
                 localsig.put(newHd,arith_op_tp);
             }
-            else if (h.equals(Formula.UQUANT)) { 
+            else if (h.equals(Formula.UQUANT)) {
                 result.append(toTHFQuant2(f,Formula.UQUANT,"!"));
             }
             else if (h.equals(Formula.EQUANT)) {
@@ -1724,7 +1726,7 @@ public class THF {
                 resTerm.append("(");
                 kifFormula.append("(");
                 int marker1 = kifFormula.length();
-                resType.append("("); 
+                resType.append("(");
                 int len = f.listLength();
                 String headTpOld = (String) terms.get(hconv);
                 List typeInfo = new ArrayList();
@@ -1758,23 +1760,23 @@ public class THF {
                     if (!resTerm.toString().endsWith("~"))
                         resTerm.append(" @ ");
                     resTerm.append(argiFTHF);
-                    resType.append(terms.get(argiFTHF) + typeDelimiter);
+                    resType.append(terms.get(argiFTHF)).append(typeDelimiter);
                 }
-                String goalTp = groundType("NOT_APPLICABLE",toTHFTp(typeInfo.get(0)));    
+                String goalTp = groundType("NOT_APPLICABLE",toTHFTp(typeInfo.get(0)));
                 if (goalTp.equals(unknownTp)) {
                     goalTp = indTp;
                 }
                 resType.append(goalTp + ")");
-                String headNew = null;
-                String headNewKif = null;
+                String headNew;
+                String headNewKif;
                 if (isKifVar(h)) {
                     headNew = hconv;
                     headNewKif = h;
                 }
                 else {
                     //if  (headTpOld.equals(resType.toString())) {
-                    //    headNew = hconv; 
-                    //    headNewKif = toTHFKifConst(h); 
+                    //    headNew = hconv;
+                    //    headNewKif = toTHFKifConst(h);
                     //}
                     //else {
                     headNew = makeNewConstWithSuffix(hconv,resType.toString());
@@ -1806,11 +1808,12 @@ public class THF {
         if (debug) System.out.println("\n   Enter sortFormulas with " + formulas.toString());
         THFdebugOut("\n   Enter sortFormulas with " + formulas.toString());
         SortedSet orderedFormulas = new TreeSet(new Comparator() {
+            @Override
             public int compare(Object o1, Object o2){
                 Formula f1 = (Formula) o1;
                 String h1 = f1.getStringArgument(0);
-                if (h1.equals("instance") || 
-                        h1.equals("domain") || 
+                if (h1.equals("instance") ||
+                        h1.equals("domain") ||
                         h1.equals("domainSubclass") ||
                         h1.equals("subrelation") ||
                         h1.equals("relatedInternalConcept") ||
@@ -1830,50 +1833,49 @@ public class THF {
 
     /** ***************************************************************
      */
-    public static ArrayList<String> transModalTHF(KB kb) {
+    public static List<String> transModalTHF(KB kb) {
 
         THF thf = new THF();
         Collection coll = Collections.EMPTY_LIST;
-        Collection<Formula> result = new ArrayList<Formula>();
+        Collection<Formula> result = new ArrayList<>();
+        Formula res;
         for (Formula f : kb.formulaMap.values()) {
             System.out.println("THF.transModalTHF(): " + f);
-            Formula res = Modals.processModals(f, kb);
+            res = Modals.processModals(f, kb);
             if (res != null)
                 result.add(res);
         }
-        ArrayList<String> kbAll2 = thf.KIF2THF(result,coll,kb);
+        List<String> kbAll2 = thf.KIF2THF(result,coll,kb);
         return kbAll2;
     }
 
     /** ***************************************************************
      */
-    public static ArrayList<String> transTHF(KB kb) {
+    public static List<String> transTHF(KB kb) {
 
         THF thf = new THF();
         Collection coll = Collections.EMPTY_LIST;
-        ArrayList<String> kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
+        List<String> kbAll2 = thf.KIF2THF(kb.formulaMap.values(),coll,kb);
         return kbAll2;
     }
 
     /** ***************************************************************
      */
-    public static void writeTHF(KB kb, ArrayList<String> kbAll2) {
+    public static void writeTHF(KB kb, List<String> kbAll2) {
 
-        THF thf = new THF();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
-        try {
-            System.out.println("\n\nTHF.writeTHF()");
-            String filename = kbDir + sep + kb.name + ".thf";
-            FileWriter fstream = new FileWriter(filename);
-            BufferedWriter out = new BufferedWriter(fstream);
+
+        System.out.println("\n\nTHF.writeTHF()");
+        String filename = kbDir + sep + kb.name + ".thf";
+        try (FileWriter fstream = new FileWriter(filename);
+            BufferedWriter out = new BufferedWriter(fstream)) {
             out.write(Modals.getTHFHeader());
             for (String s : kbAll2)
                 out.write(s);
-            out.close();
             System.out.println("\n\nTHF.main(): Result written to file " + filename);
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -1934,7 +1936,7 @@ public class THF {
             }
             else if (args != null && args.length > 0 && args[0].equals("-o")) {
                 System.out.println("THF.main(): translate to THF");
-                ArrayList<String> kbAll2 = transTHF(kb);
+                List<String> kbAll2 = transTHF(kb);
                 writeTHF(kb, kbAll2);
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
@@ -1943,7 +1945,7 @@ public class THF {
             }
             else if (args != null && args.length > 0 && args[0].equals("-m")) {
                 System.out.println("THF.main(): translate to THF with modals");
-                ArrayList<String> kbAll2 = transModalTHF(kb);
+                List<String> kbAll2 = transModalTHF(kb);
                 writeTHF(kb, kbAll2);
             }
             else

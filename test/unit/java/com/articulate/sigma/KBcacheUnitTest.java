@@ -310,12 +310,12 @@ public class KBcacheUnitTest {
 
         System.out.println("Test testCollectArgsFromFormulas");
         String rel = "TransitiveRelation";
-        ArrayList<Formula> forms = kb.askWithRestriction(0,"instance",2,rel);
+        List<Formula> forms = kb.askWithRestriction(0,"instance",2,rel);
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): forms2: " + forms);
-        HashSet<String> actual = new HashSet<>();
+        Set<String> actual = new HashSet<>();
         if (forms != null)
             actual.addAll(KBcache.collectArgFromFormulas(1,forms));
-        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+        Set<String> expected = new HashSet<>(Arrays.asList("subAttribute",
                  "subclass", "subrelation"));
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): actual: " + actual);
         System.out.println("INFO in KBcache.testCollectArgsFromFormulas(): expected: " + expected);
