@@ -1,13 +1,14 @@
+==========================================
 Running the SigmaKEE docker image on macOS
 ==========================================
 
-With Homebrew:
+With Homebrew (install Homebrew from http://brew.sh):
 brew install --cask docker <- will install the latest Docker Desktop for macOS
 
 then:
 open -a Docker <- to get the Docker daemon running
 docker pull apease/sigmakee <- will pull the latest image
-docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest <- the name can be anything you like
+docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest <- can sub trial04 to anything you like
 
 point a browser to:
 http://localhost:8080/sigma/login.html
@@ -20,42 +21,45 @@ docker stop trial04
 macOS install notes
 ===================
 
-- you need curl or wget to download files, you can install both with
-  Homebrew.
-- java will be installed in /usr/libexec/java_home
-- get git from the xcode tools with "xcode-select --install”
+- java path can be accessed with: /usr/libexec/java_home
+- obtain git from the xcode tools with "xcode-select --install”, or install
+  with Homebrew
 - instead of ~/.bash_profile edit ~/.zshrc
-- install Homebrew from http://brew.sh and the packages:
+- With Homebrew, install these packages:
 
+brew install curl
+brew install wget
 brew install make
 brew install cmake
 brew install gcc
 brew install git
 brew install graphviz
 brew install ant
+brew install tomcat@9
 
-Add the following lines in your ~/.zshrc and make sure to have all
-these variables created before the next step, and replace
-/Users/user with your home directory:
+Note: Installing ant and/or tomcat will also install the latest openjdk
+
+Add the following lines in your ~/.zshrc and make sure to have all these
+variables created before any next steps. Replace /Users/user with your home
+directory:
 
   # For SIGMA
   export SIGMA_HOME=/Users/user/.sigmakee
   NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
-       ~/workspace is just a default suggestion
+        ~/workspace is just a default suggestion
   export ONTOLOGYPORTAL_GIT=~/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
-  export CATALINA_HOME=/Users/user/Programs/apache-tomcat-9.0.97
+  export CATALINA_HOME=brew.path.to.apache-tomcat-9*
   export PATH=$CATALINA_HOME/bin:$PATH
   export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*
 
-Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 14.5):
+Next, execute step-by-step the commands below (tested on MacOS 10.14.5 to Sonoma 15.3):
 
 You will need at least Java 21+ (avoid JDK 17) to compile SigmaKEE and to run
-Apache Tomcat.
+Apache Tomcat and Apache Ant.
 
-! For ARM processors download it from here: https://jdk.java.net/archive/
-    Scroll down to 23 GA (build 23+37)
+If you want to manually install a JDK, download it from here: https://jdk.java.net/archive/
 
 # Check your JDK path, open a terminal and run:
 
@@ -75,6 +79,7 @@ git clone https://github.com/ontologyportal/sigmakee
 cd sigmakee
 
 Install (ensure the above preparations have been performed)
+> source ~/.zshrc
 > ant install
 > ant
 
@@ -159,10 +164,6 @@ Debugging
 
 - If login.html redirects you to init.jsp that means the system is
   still initializing. Wait a minute or two and try again.
-
-- If you are on mac and getting errors related to not finding jars
-  when running com.articulate.sigma.KB, copy all jars from
-  ~/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
 
 Vampire theorem prover - follow instructions in the main README
 
