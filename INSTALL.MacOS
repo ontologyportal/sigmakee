@@ -158,7 +158,11 @@ simply: startup.sh since $CATALINA_HOME/bin was export to your PATH
 Point your browser at http://localhost:8080/sigma/login.html
 Default credentials are: admin/admin
 
-You may have some error on login or on a term search initially, that's because server may need ~3 min to initialize everything.
+If you get an initial login error, try turning off your network card and try again.
+Some intranets block server requests that are not recognized.
+
+You may have some error on a term search initially, that's because
+server may need ~3 min to initialize everything.
 
 Debugging
 

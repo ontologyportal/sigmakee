@@ -422,10 +422,10 @@ Default credentials are: admin/admin
 
 Debugging
 
-- If login.html redirects you to init.jsp that means the system is still initializing. Wait a minute or two and try
-again.
-- If you are on mac and getting errors related to not finding jars when running com.articulate.sigma.KB, copy all jars
-from /home/theuser/workspace/sigmakee/build/lib/ to /Library/Java/Extensions
+- If login.html redirects you to init.jsp that means the system is still initializing.
+Wait a minute or two and try again.
+- If you get an initial login error, try turning off your network card and try again.
+Some intranets block server requests that are not recognized.
 
 
 # Vampire
