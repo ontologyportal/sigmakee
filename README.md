@@ -406,8 +406,12 @@ To test run
 java -Xmx10g -Xss1m -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 ```
+If you want to monitor the server's condition and if it started successfully you can run:\
+```sh
+tail -f $CATALINA_HOME/logs/catalina.out
+```
 
-Start Tomcat with
+To start Tomcat, execute:
 ```sh
 $CATALINA_HOME/bin/startup.sh
 ```
