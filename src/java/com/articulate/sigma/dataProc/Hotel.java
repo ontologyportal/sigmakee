@@ -26,12 +26,13 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.wordNet.WordNet;
+import com.articulate.sigma.wordNet.WordNetUtilities;
+
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import com.articulate.sigma.wordNet.WordNetUtilities;
 
 /** ***************************************************************
  */
@@ -70,75 +71,58 @@ public class Hotel {
     public String lastModified = "";
 
     // type, [title,description]
-    public HashMap<String,AVPair> facilities = new HashMap<String,AVPair>();
+    public HashMap<String,AVPair> facilities = new HashMap<>();
 
       // amenity code, value
-    public HashMap<String,String> amenities = new HashMap<String,String>();
+    public HashMap<String,String> amenities = new HashMap<>();
 
       // code, url
-    public HashMap<String,String> media = new HashMap<String,String>();
-    public ArrayList<String> reviews = new ArrayList<String>();
+    public HashMap<String,String> media = new HashMap<>();
+    public ArrayList<String> reviews = new ArrayList<>();
 
       // a map of the sense (or term) and the number of appearances
-    public HashMap<String,Integer> senses = new HashMap<String,Integer>();
-    public HashMap<String,Integer> SUMO = new HashMap<String,Integer>();
+    public HashMap<String,Integer> senses = new HashMap<>();
+    public HashMap<String,Integer> SUMO = new HashMap<>();
 
       // a numerical assessment against arbitrary labels
-    public TreeMap<String,Float> buckets = new TreeMap<String,Float>();
-    
-    public ArrayList<String> feedData = new ArrayList<String>();
+    public TreeMap<String,Float> buckets = new TreeMap<>();
+
+    public List<String> feedData = new ArrayList<>();
 
       // overall sentiment for the hotel's reviews
     public int sentiment = 0;
 
       // Concept key and sentiment value reflecting the sentiment of each sentence
       // and the concepts in that sentence - an approximate association
-    public HashMap<String,Integer> conceptSentiment = new HashMap<String,Integer>();
-    
-    public HashMap<String,String> values = new HashMap<String,String>();
+    public HashMap<String,Integer> conceptSentiment = new HashMap<>();
+
+    public HashMap<String,String> values = new HashMap<>();
 
     /** ***************************************************************
      */
     public String asCSV() {
 
-        StringBuffer result = new StringBuffer();
-        result.append("\"" + oID + "\",");
-        result.append("\"" + name + "\",");
-        result.append("\"" + address + "\",");
-        result.append("\"" + city + "\",");
-        result.append("\"" + stateProv + "\",");
-        result.append("\"" + country + "\",");
-        result.append("\"" + postCode + "\",");
-        result.append("\"" + tel + "\",");
+        StringBuilder result = new StringBuilder();
+        result.append("\"").append(oID).append("\",");
+        result.append("\"").append(name).append("\",");
+        result.append("\"").append(address).append("\",");
+        result.append("\"").append(city).append("\",");
+        result.append("\"").append(stateProv).append("\",");
+        result.append("\"").append(country).append("\",");
+        result.append("\"").append(postCode).append("\",");
+        result.append("\"").append(tel).append("\",");
         //result.append("\"" + sentiment + "\",");
-
-        //for (int i = 0; i < senses.size(); i++) {
-        //    String sense = senses.get(i);
-        //    result.append("\"" + sense + "\",");
-        //}
-        //for (int i = 0; i < feedData.size(); i++) {
-        //    String S = feedData.get(i);
-        //    result.append(S + ",");
-        //}
-        
-        //Iterator<String> it = SUMO.keySet().iterator();
-        //while (it.hasNext()) {
-        //    String S = it.next();
-        //    result.append("\"" + S + "\",");
-        //}
-        Iterator<String> it = buckets.keySet().iterator();
-        while (it.hasNext()) {
-            String S = it.next();
-            result.append("\"" + buckets.get(S) + "\",");
+        for (String S : buckets.keySet()) {
+            result.append("\"").append(buckets.get(S)).append("\",");
         }
         return result.toString();
     }
-    
+
     /** ***************************************************************
      */
     public static String asCSVHeader() {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         result.append("id,");
         result.append("name,");
         result.append("address,");
@@ -147,27 +131,26 @@ public class Hotel {
         result.append("country,");
         result.append("postCode,");
         result.append("tel,");
-        result.append("Business, Child Friendly, Fitness, Romantic, Xtend Stay");        
+        result.append("Business, Child Friendly, Fitness, Romantic, Xtend Stay");
         return result.toString();
     }
 
     /** ***************************************************************
      */
+    @Override
     public String toString() {
 
-        StringBuffer result = new StringBuffer();
-        result.append("name: " + name + "\n");
-        result.append("address: " + address + "\n");
+        StringBuilder result = new StringBuilder();
+        result.append("name: ").append(name).append("\n");
+        result.append("address: ").append(address).append("\n");
         if (!StringUtil.emptyString(address2))
-            result.append("address2: " + address2 + "\n");
-        result.append("city: " + city + "\n");
-        result.append("stateProv: " + stateProv + "\n");
-        result.append("country: " + country + "\n");
+            result.append("address2: ").append(address2).append("\n");
+        result.append("city: ").append(city).append("\n");
+        result.append("stateProv: ").append(stateProv).append("\n");
+        result.append("country: ").append(country).append("\n");
 
-        Iterator<String> it = reviews.iterator();
-        while (it.hasNext()) {
-            String S = it.next();
-            result.append("\"" + S + "\"\n");
+        for (String S : reviews) {
+            result.append("\"").append(S).append("\"\n");
         }
         result.append("\n\n");
         return result.toString();
@@ -175,46 +158,45 @@ public class Hotel {
 
     /** *************************************************************
      */
-    public void addConceptSentiment(HashMap<String,Integer> conceptSent) {
+    public void addConceptSentiment(Map<String,Integer> conceptSent) {
 
-        Iterator<String> it = conceptSent.keySet().iterator();
-        while (it.hasNext()) {
-            String term = it.next();
-            int val = conceptSent.get(term).intValue();
-            int oldVal = 0;
+        int val, oldVal;
+        for (String term : conceptSent.keySet()) {
+            val = conceptSent.get(term);
+            oldVal = 0;
             if (conceptSentiment.keySet().contains(term)) {
-                oldVal = conceptSentiment.get(term).intValue();
+                oldVal = conceptSentiment.get(term);
                 val = val + oldVal;
             }
-            conceptSentiment.put(term,Integer.valueOf(val));
+            conceptSentiment.put(term, val);
         }
     }
 
     /** *************************************************************
      */
-    public static String printAllHotels(ArrayList<Hotel> hotels) {
+    public static String printAllHotels(List<Hotel> hotels) {
 
         System.out.println("INFO in Hotel.printAllHotels(): number: " + hotels.size());
-        StringBuffer sb = new StringBuffer();
-        sb.append(asCSVHeader() + "\n");
+        StringBuilder sb = new StringBuilder();
+        sb.append(asCSVHeader()).append("\n");
         for (int i = 0; i < hotels.size(); i++)
-            sb.append(hotels.get(i).asCSV() + "\n");
+            sb.append(hotels.get(i).asCSV()).append("\n");
         return sb.toString();
     }
 
     /** *************************************************************
      */
-    public static void printAllHotelAmenitySentiment(ArrayList<Hotel> hotels) {
+    public static void printAllHotelAmenitySentiment(List<Hotel> hotels) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < hotels.size(); i++) {
             Hotel h = hotels.get(i);
-            StringBuffer result = new StringBuffer();
-            result.append("\"" + h.name + "\",");
-            result.append("\"" + h.address + "\",");
-            result.append("\"" + h.city + "\",");
-            result.append("\"" + h.stateProv + "\",");
-            result.append("\"" + h.country + "\",");
+            StringBuilder result = new StringBuilder();
+            result.append("\"").append(h.name).append("\",");
+            result.append("\"").append(h.address).append("\",");
+            result.append("\"").append(h.city).append("\",");
+            result.append("\"").append(h.stateProv).append("\",");
+            result.append("\"").append(h.country).append("\",");
 
             System.out.println(sb.toString());
         }
@@ -227,21 +209,25 @@ public class Hotel {
      * fitness with respect to a particular criterion.  Result is a side
      * effect of setting the bucket weights for the hotels.
      */
-    public static void setHotelWeights(ArrayList<Hotel> hotels) {
+    public static void setHotelWeights(List<Hotel> hotels) {
 
-        ArrayList<ArrayList<String>> rawWeights = DB.readSpreadsheet("OAmenities-weights.csv",null,false);
+        List<List<String>> rawWeights = DB.readSpreadsheet("OAmenities-weights.csv",null,false);
 
           // amenity key, value map of bucket name key, weight value
-        HashMap<String,HashMap<String,String>> weights = new HashMap<String,HashMap<String,String>>();
-        ArrayList<String> header = rawWeights.get(0);
+        Map<String,Map<String,String>> weights = new HashMap<>();
+        List<String> header = rawWeights.get(0);
         //System.out.println("INFO in DB.setHotelWeights(): buckets: " + buckets);
+        List<String> al;
+        String amenity;
+        Map<String,String> amenityValues;
+        String bucket, value;
         for (int i = 1; i < rawWeights.size(); i++) {
-            ArrayList<String> al = rawWeights.get(i);
-            String amenity =  al.get(0).trim();
-            HashMap<String,String> amenityValues = new HashMap<String,String>();
+            al = rawWeights.get(i);
+            amenity =  al.get(0).trim();
+            amenityValues = new HashMap<>();
             for (int j = 2; j < header.size(); j++) {
-                String bucket = header.get(j);
-                String value =  al.get(j);
+                bucket = header.get(j);
+                value =  al.get(j);
                 amenityValues.put(bucket,value);
                 //System.out.println("INFO in DB.setHotelWeights(): bucket, value: " + bucket + "," + value);
             }
@@ -249,37 +235,38 @@ public class Hotel {
             weights.put(amenity,amenityValues);
         }
 
+        Hotel h;
+        String amenityValue, bucketValue;
+        Map<String,String> weightBuckets;
+        Float currentValue, addValue, newTotal;
         for (int i = 0; i < hotels.size(); i++) {
-            Hotel h = hotels.get(i);
+            h = hotels.get(i);
             for (int k = 2; k < header.size(); k++)
                 h.buckets.put(header.get(k),Float.valueOf(0));
-            Iterator<String> it = h.amenities.keySet().iterator();
-            while (it.hasNext()) {  // go through all the amenities
-                String amenity = it.next();
-                if (!StringUtil.emptyString(amenity)) { 
-                    String amenityValue = h.amenities.get(amenity);
+            for (String amen : h.amenities.keySet()) {
+                // go through all the amenities
+                if (!StringUtil.emptyString(amen)) {
+                    amenityValue = h.amenities.get(amen);
                     if (amenityValue.equals("Y")) {  // if the value for the amenity is non-empty
                         //System.out.println("INFO in DB.setHotelWeights(): amenity, amenityValue is non-empty: " + amenity + "," + amenityValue);
-                        if (weights.keySet().contains(amenity)) {  // if the amenity has a weight
+                        if (weights.keySet().contains(amen)) {  // if the amenity has a weight
                             //System.out.println("INFO in DB.setHotelWeights(): amenity has a weight: " + amenity);
-                            HashMap<String,String> weightBuckets = weights.get(amenity);
-                            Iterator<String> it2 = weightBuckets.keySet().iterator();
-                            while (it2.hasNext()) {
-                                String bucket = it2.next();
+                            weightBuckets = weights.get(amen);
+                            for (String buc : weightBuckets.keySet()) {
                                 //System.out.println("INFO in DB.setHotelWeights(): weight: " + weightBuckets.get(bucket));
                                 //System.out.println("INFO in DB.setHotelWeights(): bucket: " + bucket);
-                                Float currentValue = h.buckets.get(bucket);
-                                String bucketValue = weightBuckets.get(bucket);
+                                currentValue = h.buckets.get(buc);
+                                bucketValue = weightBuckets.get(buc);
                                 //System.out.println("INFO in DB.setHotelWeights(): bucketValue: " + bucketValue);
                                 if (!StringUtil.emptyString(bucketValue)) {
-                                    Float addValue = Float.parseFloat(bucketValue);
-                                    Float newTotal = currentValue.floatValue() + addValue;
-                                    h.buckets.put(bucket,Float.valueOf(newTotal));
+                                    addValue = Float.valueOf(bucketValue);
+                                    newTotal = currentValue + addValue;
+                                    h.buckets.put(buc, newTotal);
                                 }
                             }
                         }
                         //else
-                            //System.out.println("INFO in DB.setHotelWeights(): weights: " + weights.keySet() + " does not contain amenity: " + amenity);
+                        //System.out.println("INFO in DB.setHotelWeights(): weights: " + weights.keySet() + " does not contain amenity: " + amenity);
                     }
                 }
             }
@@ -295,14 +282,16 @@ public class Hotel {
     /** *******************************************************************
      * @param w states whether to write SUMO statements
      */
-    public static ArrayList<Hotel> HotelDBImport(boolean w) {
+    public static List<Hotel> HotelDBImport(boolean w) {
 
-        HashMap<String,String> abbrevs = DB.readStateAbbrevs();
-        ArrayList<Hotel> result = new ArrayList<Hotel>();
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet("Hotels_SF.csv",null,false);
+        Map<String,String> abbrevs = DB.readStateAbbrevs();
+        List<Hotel> result = new ArrayList<>();
+        List<List<String>> f = DB.readSpreadsheet("Hotels_SF.csv",null,false);
+        Hotel h;
+        List<String> al;
         for (int i = 1; i < f.size(); i++) {
-            Hotel h = new Hotel();
-            ArrayList al = f.get(i);
+            h = new Hotel();
+            al = f.get(i);
             h.feedData = al;
             String NTMHotelID                = (String) al.get(0);
             h.nID = NTMHotelID;
@@ -467,36 +456,34 @@ public class Hotel {
 
     /** *******************************************************************
      * Collect all possible column names and assign them a number, then sort
-     * on that frequency.  
+     * on that frequency.
      * @result a list of SUMO term names, sorted by frequency
      */
-    public static ArrayList<String> generateSUMOHeader(ArrayList<Hotel> hotels) {
-        
-        TreeMap<String, Integer> columnNumbers = new TreeMap<String, Integer>();
-        ArrayList<String> result = DB.fill("",hotelColumns.size());
-        Iterator<Hotel> it = hotels.iterator();
-        while (it.hasNext()) {
-            Hotel h = it.next();
-            Iterator<String> it2 = h.SUMO.keySet().iterator();
-            while (it2.hasNext()) {
-                String columnName = it2.next();
-                Integer value = h.SUMO.get(columnName);
-                Integer oldValue = columnNumbers.get(columnName);
-                Integer newValue = Integer.valueOf(value.intValue() + oldValue.intValue());
+    public static List<String> generateSUMOHeader(List<Hotel> hotels) {
+
+        Map<String, Integer> columnNumbers = new TreeMap<>();
+        List<String> result = DB.fill("",hotelColumns.size());
+        Integer value, oldValue, newValue;
+        for (Hotel h : hotels) {
+            for (String columnName : h.SUMO.keySet()) {
+                value = h.SUMO.get(columnName);
+                oldValue = columnNumbers.get(columnName);
+                newValue = value + oldValue;
                 columnNumbers.put(columnName, newValue);
             }
         }
-        TreeSet<String> conceptsUnused = new TreeSet<String>();
+        Set<String> conceptsUnused = new TreeSet<String>();
         conceptsUnused.addAll(columnNumbers.keySet());
-        while (conceptsUnused.size() > 0) {
-            int maxValue = -1;
-            String maxConcept = "";
-            Iterator<String> it2 = columnNumbers.keySet().iterator();
-            while (it2.hasNext()) {
-                String columnName = it2.next();
-                Integer count = columnNumbers.get(columnName);   
-                if (count.intValue() > maxValue) {
-                    maxValue = count.intValue();
+        int maxValue;
+        String maxConcept;
+        Integer count;
+        while (!conceptsUnused.isEmpty()) {
+            maxValue = -1;
+            maxConcept = "";
+            for (String columnName : columnNumbers.keySet()) {
+                count = columnNumbers.get(columnName);
+                if (count > maxValue) {
+                    maxValue = count;
                     maxConcept = columnName;
                 }
                 result.add(columnName);
@@ -505,61 +492,68 @@ public class Hotel {
         }
         return result;
     }
-    
+
     /** *******************************************************************
      */
-    public static ArrayList<String> generateSUMOColumns(Hotel h, ArrayList<String> SUMOheader) {
-        
-        ArrayList<String> result = DB.fill("",SUMOheader.size());
-        Iterator<String> it = h.SUMO.keySet().iterator();
-        while (it.hasNext()) {  // iterate through the columns
-            String columnName = it.next();
-            Integer cellValue = h.SUMO.get(columnName);
+    public static List<String> generateSUMOColumns(Hotel h, List<String> SUMOheader) {
+
+        List<String> result = DB.fill("",SUMOheader.size());
+        Integer cellValue;
+        for (String columnName : h.SUMO.keySet()) {
+            // iterate through the columns
+            cellValue = h.SUMO.get(columnName);
             result.add(cellValue.toString());
         }
         return result;
-    }    
+    }
 
     /** *******************************************************************
      * Convert a particular XML markup into an array of hotels
      */
-    public static ArrayList<Hotel> readXMLHotels(String fname) {
+    public static List<Hotel> readXMLHotels(String fname) {
 
           // CSV data structure: a list of lines containing list of column cells
-        ArrayList<Hotel> result = new ArrayList<Hotel>();
-        try {
-            String line = "";
-            FileReader fr = new FileReader(fname);
-            LineNumberReader lr = new LineNumberReader(fr);
-            StringBuffer sb = new StringBuffer();
+        List<Hotel> result = new ArrayList<>();
+
+        String line;
+        try (Reader fr = new FileReader(fname);
+            LineNumberReader lr = new LineNumberReader(fr)) {
+            StringBuilder sb = new StringBuilder();
+            DocumentBuilderFactory dbf;
+            DocumentBuilder db;
+            byte[] bytes;
+            Document dom;
+            Element docEle;
+            Hotel h;
             while ((line = lr.readLine()) != null) {
-                if (line.indexOf("<hotel>") >= 0) {
-                    sb.append(line + "\n");
-                    while ((line = lr.readLine()) != null && line.indexOf("</hotel>") < 0) 
-                        sb.append(line + "\n");
-                    if (line.indexOf("</hotel>") >= 0) { 
-                        sb.append(line + "\n");
+                if (line.contains("<hotel>")) {
+                    sb.append(line).append("\n");
+                    while ((line = lr.readLine()) != null && !line.contains("</hotel>"))
+                        sb.append(line).append("\n");
+                    if (line.contains("</hotel>")) {
+                        sb.append(line).append("\n");
                         //System.out.println("INFO in Hotel.readXMLHotels(): one hotel record:");
                         //System.out.println("------------------------------------------------");
                         //System.out.println(sb.toString());
                         //System.out.println("------------------------------------------------");
-                        DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+                        dbf = DocumentBuilderFactory.newInstance();
                         dbf.setIgnoringElementContentWhitespace(true);
-                        DocumentBuilder db = dbf.newDocumentBuilder();
-                        byte[] bytes = sb.toString().getBytes("US-ASCII");
-                        ByteArrayInputStream bais = new ByteArrayInputStream(bytes);                        
-                        Document dom = db.parse(bais);
-                        Element docEle = dom.getDocumentElement();                      
-                        Hotel h = processOneXMLHotel(docEle);
-                        System.out.println("INFO in Hotel.readXMLHotels(): " + h.name);
-                        result.add(h);          
-                        sb = new StringBuffer();
+                        db = dbf.newDocumentBuilder();
+                        bytes = sb.toString().getBytes("US-ASCII");
+                        try (InputStream bais = new ByteArrayInputStream(bytes)) {
+                            dom = db.parse(bais);
+                            docEle = dom.getDocumentElement();
+                            h = processOneXMLHotel(docEle);
+                            System.out.println("INFO in Hotel.readXMLHotels(): " + h.name);
+                            result.add(h);
+                            sb.setLength(0); // reset
+                        }
                     }
                 }
             }
         }
         catch (Exception e) {
-            System.out.println("File error reading " + fname + ": " + e.getMessage());
+            System.err.println("File error reading " + fname + ": " + e.getMessage());
             e.printStackTrace();
             return null;
         }
@@ -584,11 +578,11 @@ public class Hotel {
                     for (int j = 0; j < fs.getLength(); j++) {
                         if (fs.item(j).getNodeType() == Node.ELEMENT_NODE) {
                             Element f = (Element) fs.item(j);
-                            if (f.getTagName().equals("line1")) 
+                            if (f.getTagName().equals("line1"))
                                 h.address = f.getTextContent();
-                            else if (f.getTagName().equals("city")) 
+                            else if (f.getTagName().equals("city"))
                                 h.city = f.getTextContent();
-                            else if (f.getTagName().equals("postal")) 
+                            else if (f.getTagName().equals("postal"))
                                 h.postCode = f.getTextContent();
                             else  if (f.getTagName().equals("state")) {
                                 h.stateProv = f.getAttribute("name");
@@ -611,12 +605,12 @@ public class Hotel {
                         }
                     }
                 }
-                else if (feature.getTagName().equals("id")) 
-                    h.oID = feature.getTextContent();    
-                else if (feature.getTagName().equals("name")) 
-                    h.name = feature.getTextContent();    
-                else if (feature.getTagName().equals("phone")) 
-                    h.tel = feature.getTextContent();    
+                else if (feature.getTagName().equals("id"))
+                    h.oID = feature.getTextContent();
+                else if (feature.getTagName().equals("name"))
+                    h.name = feature.getTextContent();
+                else if (feature.getTagName().equals("phone"))
+                    h.tel = feature.getTextContent();
                 else if (feature.getTagName().equals("leadprice")) {
                     NodeList fs = feature.getChildNodes();
                     for (int j = 0; j < fs.getLength(); j++) {
@@ -666,39 +660,42 @@ public class Hotel {
 
     /** *******************************************************************
      */
-    public static ArrayList<Hotel> readCSVHotels(String fname) {
- 
-        HashMap<String,String> abbrevs = DB.readStateAbbrevs();
-        ArrayList<Hotel> result = new ArrayList<Hotel>();
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(fname,null,false);
+    public static List<Hotel> readCSVHotels(String fname) {
+
+        Map<String,String> abbrevs = DB.readStateAbbrevs();
+        List<Hotel> result = new ArrayList<Hotel>();
+        List<List<String>> f = DB.readSpreadsheet(fname,null,false);
+        Hotel h;
+        List<String> al;
+        String NTMHotelID, HotelName, hotelAddress, City, Country, State, StreetAddressPostalCode, addr, orient, field;
+        String[] Landmarks;
         for (int i = 1; i < f.size(); i++) {
-            Hotel h = new Hotel();
-            ArrayList al = f.get(i);
+            h = new Hotel();
+            al = f.get(i);
             System.out.println(al);
             h.feedData = al;
-            String NTMHotelID                = (String) al.get(0);
+            NTMHotelID                = al.get(0);
             h.nID = NTMHotelID;
-            String HotelName                 = (String) al.get(1);
+            HotelName                 = al.get(1);
             h.name = StringUtil.removeEnclosingQuotes(HotelName);
-            String hotelAddress              = (String) al.get(2);
+            hotelAddress              = al.get(2);
             h.address = StringUtil.removeEnclosingQuotes(hotelAddress).trim();
             h.nID = StringUtil.stringToKIF(HotelName + NTMHotelID,true);
-            String City                      = (String) al.get(3);
-            String Country                   = (String) al.get(4);
-            h.country = new String(Country);
-            h.city = new String(City);
+            City                      = al.get(3);
+            Country                   = al.get(4);
+            h.country = Country;
+            h.city = City;
             //h.city = StringUtil.stringToKIF(h.city,true);
-            String State                     = (String) al.get(5);
-            State = State.trim();
+            State                     = al.get(5).trim();
             if (State.length() > 2 && abbrevs.keySet().contains(State.toUpperCase()))
                 State = abbrevs.get(State.toUpperCase());
             h.stateProv = State;
-            String StreetAddressPostalCode   = (String) al.get(6);
+            StreetAddressPostalCode   = al.get(6);
             h.postCode = StreetAddressPostalCode;
             result.add(h);
-            h.lat                            = (String) al.get(36);
-            h.lng                            = (String) al.get(37);
-            String addr = h.address + ", " + h.city + ", " + h.stateProv + ", " +
+            h.lat                     = al.get(36);
+            h.lng                     = al.get(37);
+            addr = h.address + ", " + h.city + ", " + h.stateProv + ", " +
                           h.country + ", " + h.postCode;
             /*
             geocodeCount++;
@@ -710,12 +707,12 @@ public class Hotel {
                 }
             }
             */
-            String[] Landmarks = {"Airport","Beach","City","ConventionCenter","Highway","Lake",
+            Landmarks = new String[] {"Airport","Beach","City","ConventionCenter","Highway","Lake",
                     "Mountain","RuralArea","Suburb","TouristArea"};
             for (int j = 0; j < Landmarks.length; j++) {
-                String orient = null;
+                orient = null;
                 // A="At",I="In",N="Near"
-                String field = (String) al.get(38+j);
+                field = (String) al.get(38+j);
                 if (field.equals("A"))
                     orient = "Adjacent";
                 if (field.equals("I"))
@@ -731,7 +728,7 @@ public class Hotel {
     /** *************************************************************
      * Set address fields in the hotel as a side effect.
      * <span class="format_address"><span class="street-address" property="v:street-address">
-     * 1734 South Harbor Blvd.</span>, <span class="locality"><span property="v:locality">Anaheim</span>, 
+     * 1734 South Harbor Blvd.</span>, <span class="locality"><span property="v:locality">Anaheim</span>,
      * <span property="v:region">CA</span> <span property="v:postal-code">92802</span></span>
      */
     public static void parseHTMLAddress(Hotel h, String addr) {
@@ -833,7 +830,7 @@ public class Hotel {
         }
         return h;
     }
-    
+
     /** *************************************************************
      * @param fname has no file extension or directory
      */
@@ -907,7 +904,7 @@ public class Hotel {
         }
         return h;
     }
-    
+
     /** *************************************************************
      * Read hotel review files
      * @return an ArrayList of Hotel
@@ -972,7 +969,7 @@ public class Hotel {
                     Matcher mMemberReview = pMemberReview.matcher(line);
                     Matcher mName = pName.matcher(line);
                     if (mName.find())
-                        h.name = mName.group(1);                                       
+                        h.name = mName.group(1);
                     else if (mMemberReview.find()) {
                         //System.out.println("found review: " + line);
                         Matcher mEndMemberReview = pEndMemberReview.matcher(line);
@@ -1015,8 +1012,8 @@ public class Hotel {
         try {
             File fin  = new File(fname);
             String[] children = fin.list();
-            if (children == null || children.length == 0) 
-                System.out.println("Error in parseAllTHotelReviewFiles(): dir: " + fname + " does not exist or is empty.");            
+            if (children == null || children.length == 0)
+                System.out.println("Error in parseAllTHotelReviewFiles(): dir: " + fname + " does not exist or is empty.");
             else {
                 System.out.println("INFO in parseAllTHotelReviewFiles(): " + children.length + " files.");
                 for (int i=0; i<children.length; i++) {
@@ -1025,7 +1022,7 @@ public class Hotel {
                     if (!StringUtil.emptyString(filename) && filename.startsWith("tvly"))
                         result.add(parseOneTHotelReviewFile(fname + File.separator + filename));
                     if (result.size() % 100 == 0)
-                        System.out.print('.');                    
+                        System.out.print('.');
                 }
             }
         }
@@ -1092,13 +1089,11 @@ public class Hotel {
 
     /** *************************************************************
      */
-    public void addAllSenses(HashMap<String,Integer> wnsenses) {
+    public void addAllSenses(Map<String,Integer> wnsenses) {
 
-        Iterator<String> it = wnsenses.keySet().iterator();
-        while (it.hasNext()) {
-            String sense = it.next();
+        for (String sense : wnsenses.keySet()) {
             if (senses.keySet().contains(sense))
-                senses.put(sense,Integer.valueOf(wnsenses.get(sense).intValue() + senses.get(sense).intValue()));
+                senses.put(sense, wnsenses.get(sense) + senses.get(sense));
             else
                 senses.put(sense,wnsenses.get(sense));
         }
@@ -1306,30 +1301,30 @@ public class Hotel {
         }
         return hotels;
     }
-    
+
     /** *************************************************************
-     */  
+     */
     public static int level = 0;
-    
+
     /** *************************************************************
-     */     
+     */
     public class JSONElement {
-    
+
         String key = ""; // empty key signifies root element
         String value = "";
         ArrayList<JSONElement> subelements = new ArrayList<JSONElement>();
-        
+
         /** *************************************************************
-         */     
+         */
         public String toString() {
-            
-            StringBuffer sb = new StringBuffer();
-            if (!StringUtil.emptyString(key)) 
-                sb.append(key + ":");            
+
+            StringBuilder sb = new StringBuilder();
+            if (!StringUtil.emptyString(key))
+                sb.append(key + ":");
             if (!StringUtil.emptyString(value))
-                sb.append(value);  
+                sb.append(value);
             else {
-                if (!StringUtil.emptyString(key)) 
+                if (!StringUtil.emptyString(key))
                     sb.append("[");
                 else
                     sb.append("{");
@@ -1338,18 +1333,18 @@ public class Hotel {
                     if (i < subelements.size()-1)
                         sb.append(",");
                 }
-                if (!StringUtil.emptyString(key)) 
+                if (!StringUtil.emptyString(key))
                     sb.append("]");
                 else
                     sb.append("}");
             }
             return sb.toString();
         }
-        
+
         /** *************************************************************
-         */     
+         */
         public JSONElement getElement(String key) {
-            
+
             for (int i = 0; i < subelements.size(); i++) {
                 if (subelements.get(i).key.equals(key)) {
                     //System.out.println("INFO in Hotel.JSONElement.getElement(): " + subelements.get(i).key);
@@ -1358,31 +1353,31 @@ public class Hotel {
             }
             return null;
         }
-        
+
         /** *************************************************************
-         */     
+         */
         public String getElementValue(String key) {
-            
+
             JSONElement js = getElement(key);
             if (js == null)
                 return "";
             if (!StringUtil.emptyString(js.value))
-                return js.value;                
-            return "";            
+                return js.value;
+            return "";
         }
     }
-    
+
     /** *************************************************************
-     * This routine adds keys and values to the parameter.  There are 
+     * This routine adds keys and values to the parameter.  There are
      * three possibilities:
      * - string key : string value
      * - string key : integer value
      * - string key : [list]
-     * 
+     *
      * @return the string index
-     */   
+     */
     public static int parseJSONPair(String s, int ind, JSONElement js) {
-        
+
         //System.out.println("INFO in parseJSONPair(): index: " + ind + " " + s.substring(ind));
         int index = ind;
         Hotel h = new Hotel();
@@ -1390,25 +1385,25 @@ public class Hotel {
             System.out.println("Error in parseJSONPair(): test for quote: Bad character " + s.charAt(index) + " at character " + index);
             return index;
         }
-        index++;                            
+        index++;
         int end = s.indexOf('"',index);
-        String key = s.substring(index,end);        
+        String key = s.substring(index,end);
         index = end;
         index++;
         if (s.charAt(index) != ':') {
-            System.out.println("Error in parseJSONPair(): test for colon: Bad character " + s.charAt(index) + " at character " + index);            
+            System.out.println("Error in parseJSONPair(): test for colon: Bad character " + s.charAt(index) + " at character " + index);
             System.out.println("INFO in parseJSONPair(): key " + key);
             return index;
         }
         index++;
-        
+
         if (s.charAt(index) == '"') {
             index++;
             int start = index;
             while (s.charAt(s.indexOf('"',index) - 1) == '\\')  // skip over escaped quotes
                 index = s.indexOf('"',index) + 1;
             end = s.indexOf('"',index);
-            String value = s.substring(start,end);        
+            String value = s.substring(start,end);
             index = end;
             index++;
             JSONElement jsNew = h.new JSONElement();
@@ -1421,8 +1416,8 @@ public class Hotel {
         else if (Character.isDigit(s.charAt(index))) {
             int start = index;
             while (Character.isDigit(s.charAt(index)) || s.charAt(index) == '.')
-                index++;                    
-            String value = s.substring(start,index); 
+                index++;
+            String value = s.substring(start,index);
             JSONElement jsNew = h.new JSONElement();
             jsNew.key = key;
             jsNew.value = value;
@@ -1430,7 +1425,7 @@ public class Hotel {
             //System.out.println("INFO in parseJSONPair(): key,value " + key + "," + value);
             return index;
         }
-        else if (s.charAt(index) == '[') {       
+        else if (s.charAt(index) == '[') {
             Hotel.level++;
             JSONElement jsNew = h.new JSONElement();
             jsNew.key = key;
@@ -1440,23 +1435,23 @@ public class Hotel {
             js.subelements.add(jsNew);
             return index;
         }
-        else if (s.substring(index,index+4).equals("null")) {       
+        else if (s.substring(index,index+4).equals("null")) {
             index = index + 4;
             return index;
-        } 
+        }
         else {
             System.out.println("Error in parseJSONPair(): Bad character " + s.charAt(index) + " at character " + index);
             System.out.println(s.substring(index,index+4));
             return index;
         }
     }
-    
+
     /** *************************************************************
      * This routine adds elements to the parameter
      * @return the string index
-     */   
+     */
     public static int parseJSONElement(String s, int ind, JSONElement js) {
-    
+
         //System.out.println("INFO in Hotel.parseJSONElement(): index: " + ind + " " + s.substring(ind));
         //System.out.println("INFO in Hotel.parseJSONElement(): character " + s.charAt(ind));
         //System.out.println("INFO in Hotel.parseJSONElement(): level " + Hotel.level);
@@ -1475,22 +1470,22 @@ public class Hotel {
             else if (s.charAt(index) == '{') {
                 Hotel.level++;
                 //System.out.println("INFO in Hotel.parseJSONElement(): it's an open brace");
-                index++;        
+                index++;
                 JSONElement jsNew = h.new JSONElement();
-                index = parseJSONElement(s,index,jsNew); 
+                index = parseJSONElement(s,index,jsNew);
                 //System.out.println("INFO in Hotel.parseJSONElement(): returning " + jsNew);
                 //System.out.println("INFO in Hotel.parseJSONElement(): character " + s.charAt(index));
                 js.subelements.add(jsNew);
             }
-            else if (s.charAt(index) == '"') {   
+            else if (s.charAt(index) == '"') {
                 //System.out.println("INFO in Hotel.parseJSONElement(): it's a quote");
                 index = parseJSONPair(s,index,js);
             }
-            else if (s.charAt(index) == ',') {   
+            else if (s.charAt(index) == ',') {
                 //System.out.println("INFO in Hotel.parseJSONElement(): it's a comma");
                 index++;
             }
-            else { 
+            else {
                 System.out.println("Error in parseJSONElement(): Bad character " + s.charAt(index) + " at character " + index);
                 return index;
             }
@@ -1498,14 +1493,14 @@ public class Hotel {
         }
         return index;
     }
-    
+
     /** *************************************************************
      */
     public static Hotel convertJSON2Hotel(JSONElement js) {
-    
+
         Hotel result = new Hotel();
         JSONElement jsNew = js.subelements.get(0);
-        result.name = jsNew.getElementValue("name");        
+        result.name = jsNew.getElementValue("name");
         result.address = jsNew.getElementValue("address");
         result.taID = jsNew.getElementValue("id");
         result.stateProv = jsNew.getElementValue("state");
@@ -1515,11 +1510,11 @@ public class Hotel {
             for (int i = 0; i < reviews.subelements.size(); i++) {
                 String review = reviews.subelements.get(i).getElementValue("review");
                 result.reviews.add(review);
-            }  
+            }
         }
         return result;
     }
-    
+
     /** *************************************************************
      */
     public static Hotel parseOneJSONReviewFile(String fname) {
@@ -1541,7 +1536,7 @@ public class Hotel {
                     //System.out.println("---------------------------");
                     //System.out.println(h);
                     //System.out.println(js);
-                    
+
                 }
             }
         }
@@ -1559,11 +1554,11 @@ public class Hotel {
         }
         return h;
     }
-    
+
     /** *************************************************************
      */
     public static String normalizeSentiment(String value) {
-    
+
         try {
             float val = Integer.parseInt(value);
             if (val < 0)
@@ -1576,11 +1571,11 @@ public class Hotel {
             return "0";
         }
     }
-    
+
     /** *************************************************************
      */
     public static void writeHotelAsXML(Hotel h, PrintWriter pw) {
-        
+
         try {
             pw.println("\t<hotel>");
             pw.println("\t\t<taID value=\"" + StringUtil.encode(h.taID) + "\"/>");
@@ -1590,7 +1585,7 @@ public class Hotel {
             pw.println("\t\t<city value=\"" + StringUtil.encode(h.city) + "\"/>");
             pw.println("\t\t<stateProv value=\"" + StringUtil.encode(h.stateProv) + "\"/>");
             pw.println("\t\t<country value=\"" + StringUtil.encode(h.country) + "\"/>");
-            pw.println("\t\t<postCode value=\"" + StringUtil.encode(h.postCode) + "\"/>");            
+            pw.println("\t\t<postCode value=\"" + StringUtil.encode(h.postCode) + "\"/>");
             pw.println("\t\t<tel value=\"" + StringUtil.encode(h.tel) + "\"/>");
             pw.println("\t\t<sentiment>");
             Iterator<String> it = h.conceptSentiment.keySet().iterator();
@@ -1598,7 +1593,7 @@ public class Hotel {
                 String concept = it.next();
                 String value = h.conceptSentiment.get(concept).toString();
                 concept = WordNetUtilities.getBareSUMOTerm(concept);
-                System.out.println(concept);                
+                System.out.println(concept);
                 //value = normalizeSentiment(value);
                 pw.println("\t\t\t<sent concept=\"" + concept + "\" value=\"" + value + "\"/>");
             }
@@ -1608,11 +1603,11 @@ public class Hotel {
         catch (Exception e) {
             System.out.println("Error in Hotel.writeHotelAsXML(): Error writing " + pw + ": " + e.getMessage());
             e.printStackTrace();
-        } 
+        }
     }
-    
+
     /** *************************************************************
-     * @param writeIncremental means that each hotel review will be 
+     * @param writeIncremental means that each hotel review will be
      * processed and each spreadsheet line will be written after reading
      * each hotel.
      */
@@ -1623,7 +1618,7 @@ public class Hotel {
         System.out.println("INFO in readJSONHotels(): completed KB initialization");
         WordNet.wn.initOnce();
         System.out.println("INFO in readJSONHotels(): complete reading WordNet files");
-        
+
         long t1 = System.currentTimeMillis();
         ArrayList<Hotel> result = new ArrayList<Hotel>();
         LineNumberReader lnr = null;
@@ -1635,14 +1630,14 @@ public class Hotel {
             if (writeIncremental)
                 pw.println("<hotels>");
             String[] children = fin.list();
-            if (children == null || children.length == 0) 
-                System.out.println("Error in Hotel.readJSONHotels(): dir: " + dir + " does not exist or is empty.");            
+            if (children == null || children.length == 0)
+                System.out.println("Error in Hotel.readJSONHotels(): dir: " + dir + " does not exist or is empty.");
             else {
                 System.out.println("INFO in readJSONHotels(): " + children.length + " files.");
                 for (int i=0; i<children.length; i++) {
-                    // Get filename of file or directory                   
+                    // Get filename of file or directory
                     String filename = children[i];
-                    //System.out.println("INFO in readJSONHotels(): filename: " + filename); 
+                    //System.out.println("INFO in readJSONHotels(): filename: " + filename);
                     String qualifiedFilename = dir + File.separator + filename;
                     if (!StringUtil.emptyString(filename) && filename.endsWith("json")) {
                         Hotel h = parseOneJSONReviewFile(qualifiedFilename);
@@ -1651,10 +1646,10 @@ public class Hotel {
                             writeHotelAsXML(h,pw);
                         }
                         else
-                            result.add(h);                        
+                            result.add(h);
                     }
                     if (i % 10 == 0)
-                        System.out.print('.');                    
+                        System.out.print('.');
                 }
                 System.out.println("INFO in readJSONHotels(): Completed reading reviews.");
             }
@@ -1678,7 +1673,7 @@ public class Hotel {
         System.out.println("INFO in Hotel.readJSONHotels(): done reading reviews in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
         return result;
     }
-    
+
     /** *************************************************************
      */
     public static void hotelSentiment(ArrayList<Hotel> hotels) {
@@ -1711,25 +1706,28 @@ public class Hotel {
     public static void oneHotelAmenitySentiment(Hotel h) {
 
         //System.out.println("======== " + h.name + " ========");
+        String review;
+        Map<String,Integer> conceptSent;
         for (int j = 0; j < h.reviews.size(); j++) {
-            String review = h.reviews.get(j);
+            review = h.reviews.get(j);
             //System.out.println(review);
-            HashMap<String,Integer> conceptSent = DB.computeConceptSentiment(review);
+            conceptSent = DB.computeConceptSentiment(review);
             //System.out.println("=== " + conceptSent + " ===");
             h.addConceptSentiment(conceptSent);
-        }        
+        }
     }
-    
+
     /** *************************************************************
      * Compute concept sentiment and store as a side effect.
      */
-    public static void hotelAmenitySentiment(ArrayList<Hotel> hotels) {
+    public static void hotelAmenitySentiment(List<Hotel> hotels) {
 
-        WordNet.wn.initOnce();
+        WordNet.initOnce();
         DB.readSentimentArray();
         DB.readStopConceptArray();
+        Hotel h;
         for (int i = 0; i < hotels.size(); i++) {
-            Hotel h = hotels.get(i);
+            h = hotels.get(i);
             oneHotelAmenitySentiment(h);
         }
     }
@@ -1737,14 +1735,14 @@ public class Hotel {
     /** ***************************************************************
      */
     public static void execJSON(String path) {
-        
+
         //ArrayList<Hotel> hotels = readJSONHotels(path,false);
         ArrayList<Hotel> hotels = readJSONHotels(path,true);
         long t1 = System.currentTimeMillis();
         //System.out.println(DB.writeSpreadsheet(Hotel.hotelReviewSUMOSentimentAsSparseMatrix(hotels,true),true));
         System.out.println("INFO in Hotel.execJSON(): done computing sentiment in " + ((System.currentTimeMillis() - t1) / 1000.0) + " seconds");
     }
-    
+
     /** ***************************************************************
      */
     public static void main(String[] args) {
@@ -1760,7 +1758,7 @@ public class Hotel {
             execJSON(path);
         }
         //parseOneJSONReviewFile(System.getProperty("user.home") + "/Rearden/Schema/TA/2992-Arlington.json");
-        
+
         //HotelDBImport();
         //System.out.println(topSUMOInReviews());
         //System.out.println(topWordSensesInReviews());

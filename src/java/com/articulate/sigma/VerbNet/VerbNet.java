@@ -149,7 +149,7 @@ public class VerbNet {
     /** *************************************************************
      * @param tm Map of words with their corresponding synset numbers
      */
-    public static String formatVerbsList(TreeMap<String,ArrayList<String>> tm) {
+    public static String formatVerbsList(Map<String,List<String>> tm) {
 
         StringBuilder result = new StringBuilder();
         int count = 0;
