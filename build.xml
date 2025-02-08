@@ -396,7 +396,7 @@
         <antcall target="clone.sigmautils"/>
 
         <!-- Copy sumo and WordNet files to ${sigma.home} -->
-        <antcall target="copy.to.sigma.home"/>
+        <antcall target="copy.sumo.and.wordnet.to.sigma.home"/>
 
         <!-- Build E theorem prover -->
         <antcall target="build.E"/>
@@ -420,7 +420,7 @@
         <delete file="${programs.dir}/E.tgz"/>
     </target>
 
-    <target name="copy.to.sigma.home" description="Copy WordNetMappings and config.xml to ~/.sigmakee -> ($SIGMA_HOME)">
+    <target name="copy.sumo.and.wordnet.to.sigma.home" description="Copy WordNetMappings and config.xml to ~/.sigmakee -> ($SIGMA_HOME)">
         <antcall target="refresh.KBs"/>
         <copy todir="${user.home}/.${web.app.name}/KBs">
             <fileset file="${sigma.src}/config.xml"/>
