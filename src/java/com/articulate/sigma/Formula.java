@@ -1623,7 +1623,7 @@ public class Formula implements Comparable, Serializable {
             if (start == 0)
                 return stringArgs;
             if (start > stringArgs.size()) {
-                System.err.println("Error in Formula.argumentsToArrayList() start " +
+                System.err.println("Error in Formula.argumentsToArrayListString() start " +
                         start + " greater than end : " + stringArgs.size() + " in formula " + getFormula());
                 return result;
             }
