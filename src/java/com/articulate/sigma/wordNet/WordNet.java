@@ -642,7 +642,7 @@ public class WordNet implements Serializable {
         String line;
         File nounFile = getWnFile("noun_mappings",null);
         if (nounFile == null) {
-            System.out.println("Error in WordNet.readNouns(): The noun mappings file does not exist in " + baseDir );
+            System.err.println("Error in WordNet.readNouns(): The noun mappings file does not exist in " + baseDir );
             return;
         }
         long t1 = System.currentTimeMillis();
@@ -655,7 +655,7 @@ public class WordNet implements Serializable {
                 line = line.trim();
                 if (!processNounLine(line)) {
                     System.out.println();
-                    System.err.println( "Error in WordNet.readNouns(): No match in "
+                    System.err.println("Error in WordNet.readNouns(): No match in "
                             + nounFile.getCanonicalPath() + " for line " + line );
                 }
             }
@@ -777,7 +777,7 @@ public class WordNet implements Serializable {
         String line;
         File verbFile = getWnFile("verb_mappings",null);
         if (verbFile == null) {
-            System.out.println("Error in WordNet.readVerbs(): The verb mappings file does not exist in " + baseDir);
+            System.err.println("Error in WordNet.readVerbs(): The verb mappings file does not exist in " + baseDir);
             return;
         }
         long t1 = System.currentTimeMillis();
@@ -1293,16 +1293,16 @@ public class WordNet implements Serializable {
     public void addToWordFreq(String word, AVPair avp) {
 
         if (avp == null) {
-            System.out.println("Error in WordNet.addToWordFreq(): null AVPair for word " + word);
+            System.err.println("Error in WordNet.addToWordFreq(): null AVPair for word " + word);
             return;
         }
         if (!StringUtil.isInteger(avp.attribute)) {
-            System.out.println("Error in WordNet.addToWordFreq(): bad sense count: " + avp +
+            System.err.println("Error in WordNet.addToWordFreq(): bad sense count: " + avp +
             " for word " + word);
             return;
         }
         if (!WordNetUtilities.isValidSynset9(avp.value)) {
-            //System.out.println("Error in WordNet.addToWordFreq(): bad synset: " + avp +
+            //System.err.println("Error in WordNet.addToWordFreq(): bad synset: " + avp +
             //        " for word " + word);
             return;
         }
@@ -2205,7 +2205,7 @@ public class WordNet implements Serializable {
         if (adv != null)
             result.addAll(prependPOS(adv,"1"));
         if (!result.isEmpty() && getSenseKeysFromWord(word).keySet().isEmpty())
-            System.out.println("Error in WordNet.getSynsetsFromWord(): synset but no sense key for word: " + word);
+            System.err.println("Error in WordNet.getSynsetsFromWord(): synset but no sense key for word: " + word);
         return result;
     }
 
@@ -3419,8 +3419,8 @@ public class WordNet implements Serializable {
             KBmanager.getMgr().initializeOnce();
         }
         catch (Exception ex) {
-            System.out.println("Error in WordNet.testWordFreq(): ");
-            System.out.println(ex.getMessage());
+            System.err.println("Error in WordNet.testWordFreq(): ");
+            System.err.println(ex.getMessage());
         }
         System.out.println("INFO in WordNet.testWordFreq(): done initializing");
         WordNet.initOnce();
@@ -3463,7 +3463,7 @@ public class WordNet implements Serializable {
         }
         catch (Exception ioe ) {
             System.err.println("Error in WordNet.checkWordsToSenses(): ");
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
         }
         System.out.println("run " + wn.wordsToSenseKeys.get("run"));
         System.out.println("TV " + wn.wordsToSenseKeys.get("TV"));
@@ -3486,7 +3486,7 @@ public class WordNet implements Serializable {
         }
         catch (Exception ioe ) {
             System.err.println("Error in WordNet.getEntailments(): ");
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
         }
         Collection<AVPair> values;
         String s1, s2, sumo1, sumo2;
