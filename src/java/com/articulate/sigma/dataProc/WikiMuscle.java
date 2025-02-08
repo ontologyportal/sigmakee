@@ -23,15 +23,15 @@ public class WikiMuscle {
 
     }
 
-    public ArrayList<Record> records = new ArrayList<>();
+    public List<Record> records = new ArrayList<>();
 
     /** ***************************************************************
      */
     public void read(String fname) {
 
-        ArrayList<ArrayList<String>> cells = DB.readSpreadsheet(fname, null,false,',');
+        List<List<String>> cells = DB.readSpreadsheet(fname, null,false,',');
         int count = 0;
-        for (ArrayList<String> line : cells) {
+        for (List<String> line : cells) {
             Record rec = this.new Record();
             if (count++ > 1 && line != null && line.size() > 7 &&
                     (!StringUtil.emptyString(line.get(1)) ||

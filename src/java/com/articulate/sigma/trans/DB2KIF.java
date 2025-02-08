@@ -48,14 +48,14 @@ public class DB2KIF {
 
     // relation keys and key value pairs of first argument and a set of prohibited second arguments
     // When the first argument doesn't matter, include a value for that argument of "*"
-    public HashMap<String,HashMap<String,HashSet<String>>> badValues = new HashMap<>();
+    public Map<String,Map<String,Set<String>>> badValues = new HashMap<>();
 
     // relation keys and key value pairs of first argument and a set of possible allowed second arguments
     // When the first argument doesn't matter, include a value for that argument of "*"
-    public HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
+    public Map<String,Map<String,Set<String>>> goodValues = new HashMap<>();
 
     // relation keys and key value pairs of argument number and maximum value
-    public HashMap<String,HashMap<Integer,Double>> maxValue = new HashMap<>();
+    public Map<String,Map<Integer,Double>> maxValue = new HashMap<>();
 
     // relation keys and key value pairs of argument number and minimum value
     public HashMap<String,HashMap<Integer,Double>> minValue = new HashMap<>();
@@ -97,7 +97,7 @@ public class DB2KIF {
 
         //System.out.println("DB2KIF.getMax(): rel: " + rel + " arg: " + arg);
         if (maxValue.containsKey(rel)) {
-            HashMap<Integer,Double> values = maxValue.get(rel);
+            Map<Integer,Double> values = maxValue.get(rel);
             //System.out.println("DB2KIF.getMax(): values: " + values);
             if (values.containsKey(arg))
                 return values.get(arg);
@@ -113,10 +113,10 @@ public class DB2KIF {
      * the given argument to a relation.  Return null if there are no
      * such values specified for the relation and argument number.
      */
-    public HashSet<String> getGood(String rel, String arg) {
+    public Set<String> getGood(String rel, String arg) {
 
         if (goodValues.containsKey(rel)) {
-            HashMap<String,HashSet<String>> values = goodValues.get(rel);
+            Map<String,Set<String>> values = goodValues.get(rel);
             if (values.containsKey(arg))
                 return values.get(arg);
             else
@@ -131,10 +131,10 @@ public class DB2KIF {
      * the given argument to a relation.  Return null if there are no
      * such values specified for the relation and argument number.
      */
-    public HashSet<String> getBad(String rel, String arg) {
+    public Set<String> getBad(String rel, String arg) {
 
         if (badValues.containsKey(rel)) {
-            HashMap<String,HashSet<String>> values = badValues.get(rel);
+            Map<String,Set<String>> values = badValues.get(rel);
             if (values.containsKey(arg))
                 return values.get(arg);
             else
@@ -149,17 +149,17 @@ public class DB2KIF {
      * relation and "*" or "any" first argument.  Note that valSet could
      * be either the goodValues or the badValues set.
      */
-    private void addValueForAny(String rel, String arg, HashMap<String,HashMap<String,HashSet<String>>> valSet) {
+    private void addValueForAny(String rel, String arg, Map<String,Map<String,Set<String>>> valSet) {
 
         //HashMap<String,HashMap<String,HashSet<String>>>
-        HashMap<String,HashSet<String>> forRel = valSet.get(rel);
+        Map<String,Set<String>> forRel = valSet.get(rel);
         if (forRel == null) {
-            forRel = new HashMap<String, HashSet<String>>();
+            forRel = new HashMap<>();
             valSet.put(rel, forRel);
         }
-        HashSet<String> forAny = forRel.get("*");
+        Set<String> forAny = forRel.get("*");
         if (forAny == null) {
-            forAny = new HashSet<String>();
+            forAny = new HashSet<>();
             forRel.put("*",forAny);
         }
         forAny.add(arg);
@@ -170,7 +170,7 @@ public class DB2KIF {
      * relation and "*" or "any" first argument.  Note that valSet could
      * be either the goodValues or the badValues set.
      */
-    private void addValuesForAny(String rel, Collection<String> args, HashMap<String,HashMap<String,HashSet<String>>> valSet) {
+    private void addValuesForAny(String rel, Collection<String> args, Map<String,Map<String,Set<String>>> valSet) {
 
         for (String s : args)
             addValueForAny(rel,s,valSet);
@@ -181,44 +181,47 @@ public class DB2KIF {
      * mapped to relations and there is a set of good and bad values
      * compiled for the arguments to those relations.
      */
-    public String clean(ArrayList<ArrayList<String>> cells) {
+    public String clean(List<List<String>> cells) {
 
         System.out.println("DB2KIF.clean()");
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
+        List<String> row;
+        String header, relation, value;
+        Double min, doubleVal, max;
+        Map<String,Set<String>> good4Rel, bad4Rel;
+        Set<String> goodVals, badVals;
         for (int r = 2; r < cells.size(); r++) {
-            ArrayList<String> row = cells.get(r);
+            row = cells.get(r);
             for (int i = 0; i < row.size(); i++) {
-                String header = cells.get(0).get(i);
-                String relation = column2Rel.get(header);
+                header = cells.get(0).get(i);
+                relation = column2Rel.get(header);
                 if (StringUtil.emptyString(relation))
                     relation = header;
-                String value = row.get(i);
+                value = row.get(i);
                 //System.out.println("DB2KIF.test(): header: " + header +
                 //    " relation: " + relation + " value: " + value);
                 if (StringUtil.isNumeric(value)) {
                     //System.out.println("DB2KIF.test(): is numeric");
-                    Double min = getMin(relation,2);
+                    min = getMin(relation,2);
                     if (min != null) {
-                        Double doubleVal = Double.parseDouble(value);
+                        doubleVal = Double.valueOf(value);
                         if (doubleVal != null) {
                             if (doubleVal < min) {
-                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value " +
-                                        doubleVal + " less than " + min + " for relation " + relation + "<P>\n");
-                                sb.append("row: " + row + "<P>\n");
+                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value ").append(doubleVal).append(" less than ").append(min).append(" for relation ").append(relation).append("<P>\n");
+                                sb.append("row: ").append(row).append("<P>\n");
                                 if (action == Action.Correct)
                                     value = min.toString();
                             }
                         }
                     }
 
-                    Double max = getMax(relation,2);
+                    max = getMax(relation,2);
                     if (max != null) {
-                        Double doubleVal = Double.parseDouble(value);
+                        doubleVal = Double.valueOf(value);
                         if (doubleVal != null) {
                             if (doubleVal > max) {
-                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value " +
-                                        doubleVal + " more than " + max + " for relation " + relation + "<P>\n");
-                                sb.append("row: " + row + "<P>\n");
+                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value ").append(doubleVal).append(" more than ").append(max).append(" for relation ").append(relation).append("<P>\n");
+                                sb.append("row: ").append(row).append("<P>\n");
                                 if (action == Action.Correct)
                                     value = max.toString();
                             }
@@ -229,28 +232,25 @@ public class DB2KIF {
                     // relation keys and key value pairs of first argument and a set of possible allowed second arguments
                     //HashMap<String,HashMap<String,HashSet<String>>> goodValues = new HashMap<>();
                     //sb.append("DB2KIF.clean(): relation " + relation + "<P>\n");
-                    HashMap<String,HashSet<String>> good4Rel = goodValues.get(relation);
+                    good4Rel = goodValues.get(relation);
                     if (good4Rel != null) {
                         //sb.append("DB2KIF.clean(): found relation " + relation + "<P>\n");
-                        HashSet<String> goodVals = good4Rel.get(defaultRowType);
+                        goodVals = good4Rel.get(defaultRowType);
                         if (goodVals != null){
                             //sb.append("DB2KIF.clean(): found row type " + defaultRowType + "<P>\n");
                             if (!goodVals.contains(value)) {
-                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value " +
-                                        value + " not in list of allowed values " + goodVals + " for relation " + relation + "<P>\n");
-                                sb.append("row: " + row + "<P>\n");
+                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value ").append(value).append(" not in list of allowed values ").append(goodVals).append(" for relation ").append(relation).append("<P>\n");
+                                sb.append("row: ").append(row).append("<P>\n");
                             }
                         }
                     }
-                    HashMap<String,HashSet<String>> bad4Rel = badValues.get(relation);
+                    bad4Rel = badValues.get(relation);
                     if (bad4Rel != null) {
-                        HashSet<String> badVals = bad4Rel.get(defaultRowType);
+                        badVals = bad4Rel.get(defaultRowType);
                         if (badVals != null) {
                             if (badVals.contains(value)) {
-                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value " +
-                                        value + " not an allowed value for relation " + relation +
-                                        " with bad value list " + badVals + "<P>\n");
-                                sb.append("row: " + row + "<P>\n");
+                                sb.append("<b>Error</b> in DB2KIF.clean(): bad value ").append(value).append(" not an allowed value for relation ").append(relation).append(" with bad value list ").append(badVals).append("<P>\n");
+                                sb.append("row: ").append(row).append("<P>\n");
                             }
                         }
                     }
@@ -267,22 +267,22 @@ public class DB2KIF {
      */
     public static void initSampleValues(DB2KIF dbkif) {
 
-        HashMap<Integer,Double> limit = new HashMap<Integer,Double>();
-        limit.put(2,Double.valueOf(80.0));
+        Map<Integer,Double> limit = new HashMap<>();
+        limit.put(2, 80.0);
 
         dbkif.maxValue.put("hours per week",limit);
-        dbkif.column2Rel.put("hours per week","hours per week");
+        DB2KIF.column2Rel.put("hours per week","hours per week");
 
-        HashMap<String,HashSet<String>> good4Rel = new HashMap<>();
-        HashSet<String> goodVals = new HashSet<>();
+        Map<String,Set<String>> good4Rel = new HashMap<>();
+        Set<String> goodVals = new HashSet<>();
         goodVals.add("Male");
         goodVals.add("Female");
         goodVals.add("Unknown");
         good4Rel.put("Human",goodVals);
         dbkif.goodValues.put("gender",good4Rel);
 
-        HashMap<String,HashSet<String>> bad4Rel = new HashMap<>();
-        HashSet<String> badVals = new HashSet<>();
+        Map<String,Set<String>> bad4Rel = new HashMap<>();
+        Set<String> badVals = new HashSet<>();
         badVals.add("Other");
         bad4Rel.put("Human",badVals);
         dbkif.badValues.put("gender",bad4Rel);
@@ -296,25 +296,30 @@ public class DB2KIF {
 
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         kb = KBmanager.getMgr().getKB(kbName);
+        String t;
+        Set<String> insts;
+        Map<String,Set<String>> temp;
+        Collection<String> cls;
+        Set<String> children;
         for (String r : column2Rel.values()) {
-            String t = kb.getArgType(r,2);
+            t = kb.getArgType(r,2);
             if (StringUtil.emptyString(t))
                 continue;
-            Set<String> insts = new HashSet<String>();
+            insts = new HashSet<>();
             if (kb.isInstance(t)) {
-                Map<String,Set<String>> temp = kb.kbCache.children.get("subAttribute");
+                temp = kb.kbCache.children.get("subAttribute");
                 if (insts != null)
                     insts = temp.get(t);
                 else
-                    System.out.println("Error in DB2KIF.initValues(): null set of subAttributes");
+                    System.err.println("Error in DB2KIF.initValues(): null set of subAttributes");
             }
             else {
-                Collection<String> cls = kb.kbCache.getInstancesForType(t);
+                cls = kb.kbCache.getInstancesForType(t);
                 if (cls != null)
                     insts.addAll(cls);
                 System.out.println("DB2KIF.initValues(): instances: " + cls);
                 for (String c : cls) {
-                    Set<String> children = kb.kbCache.children.get("subAttribute").get(c);
+                    children = kb.kbCache.children.get("subAttribute").get(c);
                     if (children != null)
                         insts.addAll(children);
                 }
@@ -343,23 +348,25 @@ public class DB2KIF {
 
     /** *****************************************************************
      */
-    public void toKIF(ArrayList<ArrayList<String>> cells, boolean print) {
+    public void toKIF(List<List<String>> cells, boolean print) {
 
         int id = 0;
-        for (ArrayList<String> row : cells.subList(2,cells.size())) { // skip header and def'n rows
+        String cell, header, rel, unit, kifstring;
+        Map<String,String> map;
+        for (List<String> row : cells.subList(2,cells.size())) { // skip header and def'n rows
             for (int i = 0; i < row.size(); i++) {
-                String cell = row.get(i);
+                cell = row.get(i);
                 if (StringUtil.emptyString(cell))
                     continue;
-                String header = cells.get(0).get(i);
-                String rel = column2Rel.get(header);
+                header = cells.get(0).get(i);
+                rel = column2Rel.get(header);
                 //System.out.println("toKIF(): header,cell,rel: " + header + ", " + cell + ", " + rel);
                 if (StringUtil.emptyString(rel))
                     continue;
-                if (rel.indexOf(" : ") != -1)
+                if (rel.contains(" : "))
                     rel = rel.substring(0,rel.indexOf(" : "));
                 if (units.containsKey(header)) {
-                    String unit = units.get(header);
+                    unit = units.get(header);
                     //System.out.println("toKIF(): unit: " + unit);
                     if (unit.endsWith("Fn")) {
                         cell = "(" + unit + " " + cell + ")";
@@ -370,12 +377,12 @@ public class DB2KIF {
                 }
                 else {
                     if (symbolMatches.containsKey(header)) {
-                        HashMap<String,String> map = symbolMatches.get(header);
+                        map = symbolMatches.get(header);
                         if (map.containsKey(cell))
                             cell = map.get(cell);
                     }
                 }
-                String kifstring = "(" + rel + " " + defaultRowType + id + " " + cell + ")";
+                kifstring = "(" + rel + " " + defaultRowType + id + " " + cell + ")";
                 if (print)
                     System.out.println(kifstring);
                 else
@@ -392,8 +399,8 @@ public class DB2KIF {
         KBmanager.getMgr().initializeOnce();
         DB2KIF dbkif = new DB2KIF();
         String fname = System.getenv("CORPORA") + File.separator + "UICincome" + File.separator + "adult.data-AP-small.txt.csv";
-        ArrayList<ArrayList<String>> cells = DB.readSpreadsheet(fname,null,false,',');
-        dbkif.column2Rel.put("color","color");
+        List<List<String>> cells = DB.readSpreadsheet(fname,null,false,',');
+        DB2KIF.column2Rel.put("color","color");
         initValues(dbkif);
         /*
         ArrayList<String> result = new ArrayList<>();
