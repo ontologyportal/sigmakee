@@ -311,10 +311,11 @@ public class TPTPutil {
                     tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
                     System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
                     System.out.println("TPTPutil.main(): showing only source axioms ");
+                    Formula f;
                     for (TPTPFormula step : tpp.proof) {
                         //System.out.println(step);
                         if (TPTPutil.sourceAxiom(step)) {
-                            Formula f = new Formula(step.sumo);
+                            f = new Formula(step.sumo);
                             System.out.println(f.format("","  ","\n"));
                         }
                     }
@@ -334,13 +335,14 @@ public class TPTPutil {
                     //System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
                     //System.out.println("TPTPutil.main(): showing only source axioms ");
                     //System.out.println("TPTPutil.main(): axiomKey: " + KB.axiomKey);
-                    String id, str;
+                    String id, str, name;
                     int firstParen, firstComma, secondParen;
+                    Formula f;
                     for (TPTPFormula step : tpp.proof) {
                         //System.out.println("TPTPutil.main(): step: " + step);
                         if (TPTPutil.sourceAxiom(step)) {
-                            Formula f = new Formula(step.sumo);
-                            String name = step.infRule;
+                            f = new Formula(step.sumo);
+                            name = step.infRule;
                             //System.out.println("TPTPutil.main(): name: " + name);
                             if (name.startsWith("file(")) {
                                 firstParen = name.indexOf("(");
@@ -369,5 +371,4 @@ public class TPTPutil {
                 showHelp();
         }
     }
-
 }
