@@ -270,7 +270,7 @@ public class SUMOformulaToTPTPformula {
                         processRecurse(new Formula(args.get(1))) + "))";
             }
             else {
-                System.out.println("Error in SUMOformulaToTPTPformula.processQuant(): null arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOformulaToTPTPformula.processQuant(): null arguments to " + op + " in " + f);
                 return "";
             }
         }
@@ -283,7 +283,7 @@ public class SUMOformulaToTPTPformula {
 
         String op = car.getFormula();
         if (args.size() < 2) {
-            System.out.println("Error in SUMOformulaToTPTPformula.processConjDisj(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOformulaToTPTPformula.processConjDisj(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         String tptpOp = "&";
