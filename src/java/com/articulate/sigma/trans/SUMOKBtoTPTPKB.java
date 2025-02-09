@@ -500,6 +500,6 @@ public class SUMOKBtoTPTPKB {
         if (StringUtil.isNonEmptyString(fileWritten))
             System.out.println("File written: " + fileWritten);
         else
-            System.out.println("Could not write " + filename);
+            System.err.println("Could not write " + filename);
     }
 }
