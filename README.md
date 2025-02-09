@@ -236,10 +236,10 @@ echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
 echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
 ```
 
-mandtory additions to .bashrc
+mandatory additions to .bashrc
 ```sh
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.\
+NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
       ~/workspace is just a default suggestion
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
@@ -275,8 +275,8 @@ wget https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37
   gunzip openjdk-23_linux-x64_bin.tar.gz
 ```
 
-Copy the download link into this command.  Then you need two commands to install
-the new Java (check that the paths conform to the java version you downloaded) -
+Copy the download link into this command.  Then you need two commands to install\
+the new Java (check that the paths conform to the java version you downloaded)
 
 ```sh
 sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk-23/bin/java" 1
@@ -296,8 +296,8 @@ OpenJDK Runtime Environment (build 23+37-2369)
 OpenJDK 64-Bit Server VM (build 23+37-2369, mixed mode, sharing)
 ```
 
-Verify that you see the same Java version when you startup Apache Tomcat that you do when you
-run java -version . It's also a good idea to run javac -version to verify that you have installed
+Verify that you see the same Java version when you startup Apache Tomcat that you do when you\
+run java -version . It's also a good idea to run javac -version to verify that you have installed\
 the full JDK and not just te JRE.
 
 On AWS it helps to be reminded of which server you're on.  I use machine size as a reminder with
@@ -321,7 +321,7 @@ If not, then perform the exports before cloning SigmaKEE.
 ```sh
 cd ~
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.\
+NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
       ~/workspace is just a default suggestion
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
@@ -406,7 +406,7 @@ To test run
 java -Xmx10g -Xss1m -cp $SIGMA_CP \
     com.articulate.sigma.KB -c Object Transaction
 ```
-If you want to monitor the server's condition and if it started successfully you can run:\
+If you want to monitor the server's condition and if it started successfully you can run:
 ```sh
 tail -f $CATALINA_HOME/logs/catalina.out
 ```
@@ -421,7 +421,7 @@ startup.sh
 ```
 since $CATALINA_HOME/bin is on your PATH
 
-Point your browser at http://localhost:8080/sigma/login.html
+Point your browser at http://localhost:8080/sigma/login.html\
 Default credentials are: admin/admin
 
 Debugging
