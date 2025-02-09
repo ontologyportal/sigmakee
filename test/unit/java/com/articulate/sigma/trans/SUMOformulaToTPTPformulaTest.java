@@ -41,7 +41,7 @@ public class SUMOformulaToTPTPformulaTest {
         if (!StringUtil.emptyString(actualRes) && actualRes.equals(expected))
             System.out.println(label + " : Success");
         else
-            System.out.println(label + " : fail!");
+            System.err.println(label + " : fail!");
         assertEquals(expected, actualRes);
     }
 
