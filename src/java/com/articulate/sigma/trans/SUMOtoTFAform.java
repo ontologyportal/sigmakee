@@ -190,7 +190,7 @@ public class SUMOtoTFAform {
             case "En":
                 return "Entity";
             default:
-                System.out.println("Error in SUMOtoTFAform.suffixToType(): unknown type " + type);
+                System.err.println("Error in SUMOtoTFAform.suffixToType(): unknown type " + type);
                 return "Entity";
         }
     }
@@ -209,7 +209,7 @@ public class SUMOtoTFAform {
             case "Entity":
                 return "En";
             default:
-                System.out.println("Error in SUMOtoTFAform.typeToSuffix(): unknown type " + type);
+                System.err.println("Error in SUMOtoTFAform.typeToSuffix(): unknown type " + type);
                 return "En";
         }
     }
@@ -235,8 +235,9 @@ public class SUMOtoTFAform {
         String text = rel.substring(under + 2, rel.length());
         Pattern pattern = Pattern.compile(patternString);
         Matcher matcher = pattern.matcher(text);
+        String type;
         while (matcher.find()) {
-            String type = matcher.group(2);
+            type = matcher.group(2);
             type = suffixToType(type);
             int arg = Integer.parseInt(matcher.group(1));
             if (arg > sig.size()-1)
@@ -259,7 +260,7 @@ public class SUMOtoTFAform {
             return new ArrayList<>();
         List<String> origsig = kb.kbCache.getSignature(withoutSuffix(rel));
         if (origsig == null) {
-            System.out.println("Error in SUMOtoTFAform.relationExtractUpdateSigFromName(): null signature for " + rel);
+            System.err.println("Error in SUMOtoTFAform.relationExtractUpdateSigFromName(): null signature for " + rel);
             return null;
         }
         List<String> sig = new ArrayList();
@@ -326,10 +327,12 @@ public class SUMOtoTFAform {
             type = "RationalNumber";
             start = 1;
         }
+        String arg;
+        Set<String> types;
         for (int i = start; i <= 2; i++) {
-            String arg = sig.get(i);
+            arg = sig.get(i);
             if (Formula.isVariable(arg)) {
-                HashSet<String> types = varmap.get(arg);
+                types = varmap.get(arg);
                 types.add(type);
                 varmap.put(arg,types);
             }
@@ -447,7 +450,7 @@ public class SUMOtoTFAform {
 
         //if (debug) System.out.println("SUMOtoTFAform.processQuant(): quantifier");
         if (args.size() != 3) { // quant + list + formula
-            System.out.println("Error in SUMOtoTFAform.processQuant(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOtoTFAform.processQuant(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         else {
@@ -466,7 +469,7 @@ public class SUMOtoTFAform {
                         oneVar = oneVar + ":" + SUMOKBtoTFAKB.translateSort(kb,type);
                     }
                     else
-                        System.out.println("Error in SUMOtoTFAform.processQuant(): var type not found for " + v +
+                        System.err.println("Error in SUMOtoTFAform.processQuant(): var type not found for " + v +
                                 " in formula " + f);
                     varStr.append(oneVar).append(", ");
                 }
@@ -492,7 +495,7 @@ public class SUMOtoTFAform {
 
         String op = car.getFormula();
         if (args.size() < 3) {
-            System.out.println("Error in SUMOtoTFAform.processConjDisj(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOtoTFAform.processConjDisj(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         String tptpOp = "&";
@@ -518,7 +521,7 @@ public class SUMOtoTFAform {
             return processConjDisj(f,car,parentType,args);
         if (op.equals("=>")) {
             if (args.size() != 3) {  // op + 2 args
-                System.out.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
@@ -540,7 +543,7 @@ public class SUMOtoTFAform {
             return processConjDisj(f,car,parentType,args);
         if (op.equals("not")) {
             if (args.size() != 2) { // op + 1 arg
-                System.out.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
@@ -706,7 +709,7 @@ public class SUMOtoTFAform {
             if (i < newArgTypes.size())
                 argType = newArgTypes.get(i);
             else
-                System.out.println("Error in SUMOtoTFAform.processNumericSuperArgs(): type list and arg list different size for " + f);
+                System.err.println("Error in SUMOtoTFAform.processNumericSuperArgs(): type list and arg list different size for " + f);
             processedArgs.add(processRecurse(new Formula(args.get(i)), argType));
         }
         StringBuilder result = new StringBuilder();
@@ -764,7 +767,7 @@ public class SUMOtoTFAform {
         String op = car.getFormula();
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): f: " + f);
         if (args.size() != 3) {
-            System.out.println("Error in SUMOtoTFAform.processCompOp(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOtoTFAform.processCompOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         Formula lhs = new Formula(args.get(1));
@@ -802,7 +805,7 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): final best: " + best);
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
         if (!op.startsWith("lessThan") && !op.startsWith("greaterThan") && !op.startsWith("equal")) {
-            System.out.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
+            System.err.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
             return "";
         }
         String lhsResult = processRecurse(lhs,best);
@@ -876,7 +879,7 @@ public class SUMOtoTFAform {
             }
         }
         if ("".equals(promote)) {
-            System.out.println("Error in mixedQuotient() with arg " + args +
+            System.err.println("Error in mixedQuotient() with arg " + args +
                     " and types " + argTypes);
             return "$quotient" + eSuffix + "(" + processRecurse(lhs,parentType) + " ," +
                     processRecurse(rhs,parentType) + ")";
@@ -902,11 +905,11 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): sig: " + sig);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): best: " + best);
         if (!op.startsWith("FloorFn") && !op.startsWith("CeilingFn") && args.size() != 3) {
-            System.out.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         if (op.startsWith("FloorFn") && op.startsWith("CeilingFn") && args.size() != 2) {
-            System.out.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         Formula arg1 = new Formula(args.get(1));
@@ -1121,7 +1124,7 @@ public class SUMOtoTFAform {
         if (argTypes1 == null || argTypes2 == null ||
             argTypes1.size() != argTypes2.size()) {
             if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith("equal"))
-                System.out.println("Error in equalTFFsig(): bad signatures " +
+                System.err.println("Error in equalTFFsig(): bad signatures " +
                     argTypes1 + ", " + argTypes2 + " for " + pred);
             return false;
         }
@@ -1178,7 +1181,7 @@ public class SUMOtoTFAform {
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             String promotion = numTypePromotion(f,parentType);
-            String result = null;
+            String result;
             if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
             if (promotion != null)
                 result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
@@ -1386,7 +1389,7 @@ public class SUMOtoTFAform {
                 continue;
             type = argTypes.get(i);
             if (!kb.isSubclass(type,"Quantity"))
-                System.out.println("Error in SUMOtoTFAform.constrainVars(): non numeric type: " + type);
+                System.err.println("Error in SUMOtoTFAform.constrainVars(): non numeric type: " + type);
             types = varmap.get(t);
             if (debug) System.out.println("SUMOtoTFAform.constrainVars(): checking var " + t + " with type " + types);
             best = bestSpecificTerm(types);
@@ -1519,7 +1522,7 @@ public class SUMOtoTFAform {
                 term = t.substring(0,t.length()-1);
             if (StringUtil.emptyString(term) || !kb.containsTerm(term)) {
                 if (!StringUtil.emptyString(term))
-                    System.out.println("Error in SUMOtoTFAform.mostSpecificType(): no such term: " + term);
+                    System.err.println("Error in SUMOtoTFAform.mostSpecificType(): no such term: " + term);
                 continue;
             }
             if (!isBuiltInNumericType(term) && isNumericType(term))
@@ -1666,7 +1669,7 @@ public class SUMOtoTFAform {
 
         //if (debug) System.out.println("SUMOtoTFAform.mostSpecificSignature(): args1 args2: " + args1 + " " + args2);
         if (args1 == null || args2 == null || args1.size() != args2.size()) {
-            //if (debug) System.out.println("Error in mostSpecificSignature(): bad arguments: " + args1 + " " + args2);
+            //if (debug) System.err.println("Error in mostSpecificSignature(): bad arguments: " + args1 + " " + args2);
             if (args1 == null)
                 return args2;
             if (args2 == null)
@@ -1696,7 +1699,7 @@ public class SUMOtoTFAform {
 
         if (debug) System.out.println("SUMOtoTFAform.bestSignature(): args1 args2: " + args1 + " " + args2);
         if (args1 == null || args2 == null || args1.size() != args2.size()) {
-            if (debug) System.out.println("Error in bestSignature(): bad arguments: " + args1 + " " + args2);
+            if (debug) System.err.println("Error in bestSignature(): bad arguments: " + args1 + " " + args2);
             if (args1 == null)
                 return args2;
             if (args2 == null)
@@ -1734,7 +1737,7 @@ public class SUMOtoTFAform {
                 term = t.substring(0, t.length() - 1);
             if (StringUtil.emptyString(term) || !kb.containsTerm(term)) {
                 if (!StringUtil.emptyString(term))
-                    System.out.println("Error in SUMOtoTFAform.mostSpecificTFFTerm(): no such term: " + term);
+                    System.err.println("Error in SUMOtoTFAform.mostSpecificTFFTerm(): no such term: " + term);
                 continue;
             }
             if ("".equals(result))
@@ -1763,7 +1766,7 @@ public class SUMOtoTFAform {
                 term = t.substring(0, t.length() - 1);
             if (StringUtil.emptyString(term) || !kb.containsTerm(term)) {
                 if (!StringUtil.emptyString(term))
-                    System.out.println("Error in SUMOtoTFAform.bestSpecificTerm(): no such term: " + term);
+                    System.err.println("Error in SUMOtoTFAform.bestSpecificTerm(): no such term: " + term);
                 continue;
             }
             if ("".equals(result))
@@ -1909,7 +1912,6 @@ public class SUMOtoTFAform {
         List<String> newargs = new ArrayList<>();
         newargs.addAll(args);
         newargs.remove(0);
-        String composed = op;
 
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): newsig: " + newsig);
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): sig: " + sig);
@@ -2128,7 +2130,7 @@ public class SUMOtoTFAform {
                     if (builtInOrSubNumericType(arg)) { // meaning a subtype actually
                         String cons = numericConstraints.get(arg);
                         if (StringUtil.emptyString(cons))
-                            System.out.println("Error in SUMOtoTFAform.removeNumericInstance(): no constraint for " +
+                            System.err.println("Error in SUMOtoTFAform.removeNumericInstance(): no constraint for " +
                                     cons + " in formula:\n" + f);
                         else {
                             String origVar = numericVars.get(arg);
@@ -2315,9 +2317,9 @@ public class SUMOtoTFAform {
      * @return a list of TFF relation sort definitions to cover
      * ListFn statements that have diverse sorts
      */
-    public HashSet<String> missingSorts(Formula f) {
+    public Set<String> missingSorts(Formula f) {
 
-        HashSet<String> result = new HashSet<>();
+        Set<String> result = new HashSet<>();
         Pattern p = Pattern.compile("(ListFn[^ ]+)");
         Matcher m = p.matcher(f.getFormula());
         String rel, sort;
@@ -2567,7 +2569,7 @@ public class SUMOtoTFAform {
                 //        " for type: " + type);
                 if (StringUtil.emptyString(cons)) {
                     if (!type.equals("RealNumber") && !type.equals("RationalNumber") && !type.equals("Integer"))
-                        System.out.println("Error in SUMOtoTFAform.modifyTypesToConstraints(): no constraint for " +
+                        System.err.println("Error in SUMOtoTFAform.modifyTypesToConstraints(): no constraint for " +
                             type + " in formula:\n" + f);
                     found = false;
                 }
