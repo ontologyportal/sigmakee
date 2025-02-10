@@ -424,8 +424,8 @@ public class SUMOformulaToTPTPformula {
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
             qlist.append(oneVar).append(",");
         }
-        if (qlist.length() > 1)
-            qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
+        if (qlist.length() > 0)
+            qlist.deleteCharAt(qlist.lastIndexOf(","));  // delete final comma
     }
 
     /** ***************************************************************
