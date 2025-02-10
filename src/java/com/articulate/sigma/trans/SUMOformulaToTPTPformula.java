@@ -14,7 +14,7 @@ public class SUMOformulaToTPTPformula {
     public static boolean debug = false;
     public static boolean hideNumbers = true;
     public static String lang = "fof"; // or "tff"
-    public static StringBuilder qlist;
+    public static StringBuilder qlist = new StringBuilder();
 
     /** ***************************************************************
      */
@@ -418,14 +418,21 @@ public class SUMOformulaToTPTPformula {
     public static void generateQList(Formula f) {
 
         Set<String> UqVars = f.collectUnquantifiedVariables();
-        qlist = new StringBuilder();
+        qlist.setLength(0); // reset
         String oneVar;
+        int sizeUqVars = UqVars.size();
+        int count = 0;
         for (String s : UqVars) {
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-            qlist.append(oneVar).append(",");
+            if (count < sizeUqVars-1)
+                qlist.append(oneVar).append(",");
+            else
+                qlist.append(oneVar); // don't write a final comma
+
+            count++;
         }
-        if (qlist.length() > 0)
-            qlist.deleteCharAt(qlist.lastIndexOf(","));  // delete final comma
+
+        if (debug) System.err.println("SUMOformulaToTPTPformula.generateQList(): qlist: " + qlist);
     }
 
     /** ***************************************************************
@@ -479,7 +486,7 @@ public class SUMOformulaToTPTPformula {
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 2: " + result);
             return result;
         }
-        return (f.getFormula());
+        return f.getFormula();
     }
 
     /** ***************************************************************
@@ -514,9 +521,10 @@ public class SUMOformulaToTPTPformula {
             if (processed != null) {
                 _f.theTptpFormulas = new HashSet<>();
                 //----Performs function on each current processed axiom
+                String tptpStr;
                 for (Formula f : processed) {
                     if (!f.getFormula().contains("@") && !f.higherOrder) {
-                        String tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
+                        tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
                         if (StringUtil.isNonEmptyString(tptpStr))
                             _f.theTptpFormulas.add(tptpStr);
                     }
