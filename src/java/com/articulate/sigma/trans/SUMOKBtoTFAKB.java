@@ -40,7 +40,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static final String TFF_RAT = "$rat";
     public static final String TFF_ENTITY = "$i";
 
-    public HashSet<String> sortLabels = new HashSet<>();
+    public Set<String> sortLabels = new HashSet<>();
 
     /** *************************************************************
      */
@@ -142,7 +142,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return qNotI.contains(s);
         if (type.equals("RealNumber"))
             return qNotL.contains(s);
-        System.out.println("Error in SUMOKBtoTFAKB.quantButNotBuiltInType(): bad type: " + type);
+        System.err.println("Error in SUMOKBtoTFAKB.quantButNotBuiltInType(): bad type: " + type);
         return false;
     }
 
@@ -405,7 +405,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX);
             }
         }
-        HashSet<String> allsig = new HashSet<>();
+        Set<String> allsig = new HashSet<>();
         allsig.add("");
         Set<String> sigElem, newsig;
         for (String str : modsig.keySet()) {  // number of the argument
