@@ -24,9 +24,9 @@
   if (term1 == null || term1.equals("null"))
   	term1 = "Object";
   String term2 = request.getParameter("term2");
-  if (term2 == null || term2.equals("null")) 
+  if (term2 == null || term2.equals("null"))
   	term2 = "subclass";
-  ArrayList<Formula> forms = KButilities.termIntersection(kb,term1,term2);
+  List<Formula> forms = KButilities.termIntersection(kb,term1,term2);
 %>
 
 <form action="Intersect.jsp">

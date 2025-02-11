@@ -190,7 +190,7 @@ public class Formula implements Comparable, Serializable {
      * explicitly quantified variables in the Formula.  The second
      * contains all variables in Formula that are not within the scope
      * of some explicit quantifier. */
-    public List<HashSet<String>> allVarsPairCache = new ArrayList<>();
+    public List<Set<String>> allVarsPairCache = new ArrayList<>();
 
     public Set<String> quantVarsCache = new HashSet<>();
     public Set<String> unquantVarsCache = new HashSet<>();
@@ -256,15 +256,15 @@ public class Formula implements Comparable, Serializable {
 
     /** *****************************************************************
      */
-	public Formula() {
-	}
+    public Formula() {
+    }
 
     /** *****************************************************************
      * Just set the textual version of the formula
      */
-	public Formula(String f) {
-		theFormula = f;
-	}
+    public Formula(String f) {
+            theFormula = f;
+    }
 
     /** *****************************************************************
      * the textual version of the formula
@@ -495,7 +495,7 @@ public class Formula implements Comparable, Serializable {
                 ans = true;
             else {
                 String input = this.theFormula.trim();
-                List quoteChars = Arrays.asList('"', '\'');
+                List<Character> quoteChars = Arrays.asList('"', '\'');
                 int i = 0;
                 int len = input.length();
                 int end = len - 1;
@@ -623,7 +623,7 @@ public class Formula implements Comparable, Serializable {
                 ans = this.theFormula;
             else {
                 String input = theFormula.trim();
-                List quoteChars = Arrays.asList('"', '\'');
+                List<Character> quoteChars = Arrays.asList('"', '\'');
                 int i = 1;
                 int len = input.length();
                 int end = len - 1;
@@ -1737,11 +1737,11 @@ public class Formula implements Comparable, Serializable {
      * @return An ArrayList containing two ArrayLists, each of which
      * could be empty
      */
-    public List<HashSet<String>> collectVariables() {
+    public List<Set<String>> collectVariables() {
 
         if (!allVarsPairCache.isEmpty() && KBmanager.initialized)
             return allVarsPairCache;
-        List<HashSet<String>> ans = new ArrayList<>();
+        List<Set<String>> ans = new ArrayList<>();
         ans.add(new HashSet());
         ans.add(new HashSet());
         allVarsPairCache.add(new HashSet());
@@ -1822,9 +1822,9 @@ public class Formula implements Comparable, Serializable {
      *
      * @return An ArrayList of String variable names
 
-    public ArrayList<String> collectOrderedVariables() {
+    public List<String> collectOrderedVariables() {
 
-        ArrayList<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         if (listLength() < 1)
             return result;
         Formula fcar = new Formula();
@@ -1974,11 +1974,12 @@ public class Formula implements Comparable, Serializable {
             return resultSet;
         if (debug)
             System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
+
     	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
             if (!remainder.listP()) {
-                System.out.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
+                System.err.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
                 return resultSet;
             }
             Formula varlist = new Formula();
@@ -2079,7 +2080,7 @@ public class Formula implements Comparable, Serializable {
 
         String result = this.theFormula;
         String arg0 = this.car();
-        List<HashSet<String>> vpair = collectVariables();
+        List<Set<String>> vpair = collectVariables();
         Set<String> quantVariables = vpair.get(0);
         Set<String> unquantVariables = vpair.get(1);
 
@@ -2433,8 +2434,8 @@ public class Formula implements Comparable, Serializable {
         String arg;
         int argnum = 1;
         do {
-        	arg = this.getStringArgument(argnum);
-        	argnum++;
+            arg = this.getStringArgument(argnum);
+            argnum++;
             if (listP(arg)) {
             	Formula f = new Formula(arg);
                 if (kb != null && !kb.isFunction(f.car()))
@@ -3134,9 +3135,9 @@ public class Formula implements Comparable, Serializable {
                         if (outfile.exists()) { outfile.delete(); }
                         bw = new BufferedWriter(new FileWriter(outfile, true));
                         Iterator it = kif.formulas.values().iterator();
-                        Iterator it2 = null;
-                        Formula f = null;
-                        Formula clausalForm = null;
+                        Iterator it2;
+                        Formula f;
+                        Formula clausalForm;
                         while (it.hasNext()) {
                             it2 = ((List) it.next()).iterator();
                             while (it2.hasNext()) {

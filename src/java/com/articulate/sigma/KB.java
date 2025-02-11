@@ -711,7 +711,7 @@ public class KB implements Serializable {
             return false;
         }
         if (StringUtil.emptyString(parent)) {
-            //System.out.println("Error in KB.isSubclass(): empty parent");
+            //System.err.println("Error in KB.isSubclass(): empty parent");
             //Thread.dumpStack();
             return false;
         }
@@ -930,7 +930,7 @@ public class KB implements Serializable {
                 thisArg = f.getStringArgument(arg);
                 //System.out.println("INFO in KB.askWithRestriction(): thisArg: " + thisArg);
                 if (thisArg == null) {
-                    System.out.println("Error in KB.askWithRestriction(): null argument: " + f);
+                    System.err.println("Error in KB.askWithRestriction(): null argument: " + f);
                 }
                 else if (f.getStringArgument(arg).equals(term))
                     result.add(f);
@@ -1562,7 +1562,7 @@ public class KB implements Serializable {
 
         //System.out.println("KB.tell: eprover: " + eprover);
         //if (eprover == null) {
-        //    System.out.println("Error in KB.tell: eprover not initialized");
+        //    System.err.println("Error in KB.tell: eprover not initialized");
         //    return null;
         //}
 
@@ -2085,7 +2085,7 @@ public class KB implements Serializable {
                 }
             }
             catch (IOException ex) {
-                System.out.println("Error in KB.askLEO(): " + ex.getMessage());
+                System.err.println("Error in KB.askLEO(): " + ex.getMessage());
                 ex.printStackTrace();
             }
             List<Formula> selectedFormulas = new ArrayList();
@@ -2124,7 +2124,7 @@ public class KB implements Serializable {
             }
         }
         catch (Exception ex) {
-            System.out.println("Error in KB.askLEO(): " + ex.getMessage());
+            System.err.println("Error in KB.askLEO(): " + ex.getMessage());
             ex.printStackTrace();
         }
         return result;
@@ -2237,7 +2237,7 @@ public class KB implements Serializable {
             if (StringUtil.emptyString(t))
                 continue;
             if (!containsTerm(t)) {
-                System.out.println("Error in KB.mostSpecificType(): no such term: " + t);
+                System.err.println("Error in KB.mostSpecificType(): no such term: " + t);
                 continue;
             }
             if ("".equals(result) || compareTermDepth(t,result) < 0)
@@ -2258,7 +2258,7 @@ public class KB implements Serializable {
             if (StringUtil.emptyString(t))
                 continue;
             if (!containsTerm(t)) {
-                System.out.println("Error in KB.mostSpecificType(): no such term: " + t);
+                System.err.println("Error in KB.mostSpecificType(): no such term: " + t);
                 continue;
             }
             if ("".equals(result) || compareTermDepth(t,result) > 0)
@@ -2286,7 +2286,7 @@ public class KB implements Serializable {
             if (t.endsWith("+"))
                 t = t.substring(0,t.length()-1);
             if (!containsTerm(t)) {
-                System.out.println("Error in KB.mostSpecificTerm(): no such term: " + t);
+                System.err.println("Error in KB.mostSpecificTerm(): no such term: " + t);
                 continue;
             }
             if ("".equals(result) || compareTermDepth(t,result) > 0)
@@ -2566,7 +2566,7 @@ public class KB implements Serializable {
         if (!loadFormatMapsAttempted.contains(lang)) {
             List<Formula> col = askWithRestriction(0, "format", 1, lang);
             if ((col == null) || col.isEmpty())
-                System.out.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);
+                System.err.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);
             else {
                 Map<String, String> langFormatMap = formatMap.get(lang);
                 for (Formula f : col) {
@@ -2715,7 +2715,7 @@ public class KB implements Serializable {
                     reload();
                 }
                 catch (IOException ioe) {
-                    System.out.println(
+                    System.err.println(
                             "Error in KB.deleteUserAssertionsAndReload(): writing configuration: " + ioe.getMessage());
                 }
             }
@@ -3246,7 +3246,7 @@ public class KB implements Serializable {
                                                         // is checked in
                                                         // KIF.parse()
                 return -1;
-            System.out.println("Error in KB.getValence(): No valence found for " + relnName);
+            System.err.println("Error in KB.getValence(): No valence found for " + relnName);
             return -1;
         }
         else
@@ -3449,7 +3449,7 @@ public class KB implements Serializable {
                         }
                     }
                 } else {
-                    System.out.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
+                    System.err.println("Error in KB.writeInferenceEngineFormulas(): no executable " + inferenceEngine);
                 }
             }
         } catch (IOException ioe) {
@@ -3476,7 +3476,7 @@ public class KB implements Serializable {
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = !StringUtil.emptyString(filename);
                 if (!vFileSaved)
-                    System.out.println("Error in KB.createInterenceEngine(): new -v.kif file not written");
+                    System.err.println("Error in KB.createInterenceEngine(): new -v.kif file not written");
                 if (vFileSaved && !factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
                     res = factory.createFromKBFile(filename);
                 if (factory.getClass().getName().equals("com.articulate.sigma.STP$STPEngineFactory"))
@@ -3552,7 +3552,7 @@ public class KB implements Serializable {
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         KBmanager.getMgr().prover = KBmanager.Prover.LEO;
         if (StringUtil.emptyString(leoex)) {
-            System.out.println("Error in loadLeo: no executable string in preferences");
+            System.err.println("Error in loadLeo: no executable string in preferences");
             return;
         }
         File executable = new File(leoex);
@@ -3957,9 +3957,9 @@ public class KB implements Serializable {
                 System.out.println("KB.main(): args[0]: " + args[0]);
             if (args != null && args.length > 2 && args[0].contains("c")) {
                 if (!kb.containsTerm(args[1]))
-                    System.out.println("Error in KB.main() no such term: " + args[1]);
+                    System.err.println("Error in KB.main() no such term: " + args[1]);
                 if (!kb.containsTerm(args[2]))
-                    System.out.println("Error in KB.main() no such term: " + args[2]);
+                    System.err.println("Error in KB.main() no such term: " + args[2]);
                 int eqrel = kb.compareTermDepth(args[1], args[2]);
                 String eqText = KButilities.eqNum2Text(eqrel);
                 System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));

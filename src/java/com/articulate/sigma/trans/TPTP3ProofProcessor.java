@@ -162,10 +162,10 @@ public class TPTP3ProofProcessor {
     public static List<String> getPrologArgs(String line) {
 
         List<String> result = new ArrayList<>();
-        boolean inQuote = false;
+//        boolean inQuote = false;
         int parenLevel = 0;
         StringBuilder sb = new StringBuilder();
-        char quoteChar;
+//        char quoteChar;
         int i = 0;
         while (i < line.length()) {
             switch (line.charAt(i)) {
@@ -1176,7 +1176,7 @@ public class TPTP3ProofProcessor {
                 + sep + "sigma" + sep + "graph";
         String filename = dir + sep + "proof";
 
-        try (FileWriter fw = new FileWriter(filename + ".dot"); PrintWriter pw = new PrintWriter(fw)) {
+        try (Writer fw = new FileWriter(filename + ".dot"); PrintWriter pw = new PrintWriter(fw)) {
             File dirfile = new File(dir);
             if (!dirfile.exists()) {
                 dirfile.mkdir();

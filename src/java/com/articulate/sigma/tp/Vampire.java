@@ -309,7 +309,7 @@ public class Vampire {
             System.out.println("Vampire.main(): no such file: " + s);
         else {
             System.out.println("Vampire.main(): first test");
-            HashSet<String> query = new HashSet<>();
+            Set<String> query = new HashSet<>();
             query.add("tff(conj1,conjecture,?[V__X, V__Y] : (s__subclass(V__X,V__Y))).");
             System.out.println("Vampire.main(): calling Vampire with: " + s + ", 30, " + query);
             Vampire vampire = new Vampire();

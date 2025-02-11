@@ -40,7 +40,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static final String TFF_RAT = "$rat";
     public static final String TFF_ENTITY = "$i";
 
-    public HashSet<String> sortLabels = new HashSet<>();
+    public Set<String> sortLabels = new HashSet<>();
 
     /** *************************************************************
      */
@@ -142,7 +142,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return qNotI.contains(s);
         if (type.equals("RealNumber"))
             return qNotL.contains(s);
-        System.out.println("Error in SUMOKBtoTFAKB.quantButNotBuiltInType(): bad type: " + type);
+        System.err.println("Error in SUMOKBtoTFAKB.quantButNotBuiltInType(): bad type: " + type);
         return false;
     }
 
@@ -159,7 +159,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             return qNotI.contains(s) && !s.equals("Integer");
         if (type.equals("RealNumber"))
             return qNotL.contains(s) && !s.equals("RealNumber");
-        System.out.println("Error in SUMOKBtoTFAKB.quantButNotBuiltInType(): bad type: " + type);
+        System.err.println("Error in SUMOKBtoTFAKB.quantButNotBuiltInType(): bad type: " + type);
         return false;
     }
 
@@ -277,7 +277,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
 
         pw.println("% SUMOKBtoTFAKB.writeRelationSort(): " + t);
         if (t.endsWith("Fn") != kb.isFunction(t))
-            System.out.println("ERROR in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
+            System.err.println("Error in writeRelationSort(): is function mismatch with term name : " + t + ", " + kb.isFunction(t));
         if (Formula.isLogicalOperator(t) || Formula.isMathFunction(t)  || Formula.isComparisonOperator(t)) {
             String label = translateName(t);
             String output = "tff(" + label + ",type," + label +
@@ -292,7 +292,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         if (endIndex > 6)
             return;
         if (endIndex < 1) {
-            System.err.println("Error SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
+            System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
             endIndex = sig.size();
         }
         if (endIndex > sig.size())
@@ -405,7 +405,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
                 MapUtils.addToMap(modsig, strnum, strnum + ENTITY_SUFFIX);
             }
         }
-        HashSet<String> allsig = new HashSet<>();
+        Set<String> allsig = new HashSet<>();
         allsig.add("");
         Set<String> sigElem, newsig;
         for (String str : modsig.keySet()) {  // number of the argument
@@ -687,14 +687,19 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
         System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
+        String fileWritten = null;
         try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
             skbtfakb.writeSorts(pw);
             System.out.println("---------------------------");
             System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");
-            skbtfakb.writeFile(filename, null, false, pw);
+            fileWritten = skbtfakb.writeFile(filename, null, false, pw);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
+        if (StringUtil.isNonEmptyString(fileWritten)) {
+            System.out.println("File written: " + filename);
+        } else
+            System.err.println("Could not write: " + filename);
     }
 }

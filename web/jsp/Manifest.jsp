@@ -5,11 +5,11 @@
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 */
@@ -42,7 +42,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     }
 
     if ((kb == null) || StringUtil.emptyString(kbName))
-        response.sendRedirect("KBs.jsp");  // That KB does not exist  
+        response.sendRedirect("KBs.jsp");  // That KB does not exist
 
     else if (StringUtil.isNonEmptyString(saveAs)) {
         if (saveAs.equalsIgnoreCase("prolog")) {
@@ -117,7 +117,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     if (delete != null) {
         int i = kb.constituents.indexOf(constituent.intern());
         if (i == -1)
-            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());       
+            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
         else {
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
@@ -199,7 +199,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
           <TD>
 
           <% if (role != null && role.equalsIgnoreCase("admin")) { %>
-                <A href="Manifest.jsp?delete=true&constituent=<%=aConstituent%>&kb=<%=kbName%>">Remove</A>            
+                <A href="Manifest.jsp?delete=true&constituent=<%=aConstituent%>&kb=<%=kbName%>">Remove</A>
           <%     } %>
           </TD>
           </TR>
@@ -256,13 +256,13 @@ if (role != null && role.equalsIgnoreCase("admin")) {
 
 <% if (StringUtil.isNonEmptyString(result)) {
        out.println("<p>");
-       out.println(result); 
+       out.println(result);
        out.println("</p>");
        result = "";
    } %>
 
     <FORM name=save ID=save action="Manifest.jsp" method="GET">
-        <INPUT type="hidden" name="kb" value=<%=kbName%>><br> 
+        <INPUT type="hidden" name="kb" value=<%=kbName%>><br>
         <B>Filename:</B>&nbsp;<INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
         <INPUT type="submit" NAME="submit" VALUE="Save">
         <select name="saveAs">
@@ -274,22 +274,22 @@ if (role != null && role.equalsIgnoreCase("admin")) {
         </select>
     </FORM>
 
-<% } 
+<% }
   HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?";
   String er = KBmanager.getMgr().getError();
   if (!kb.errors.isEmpty()) {
-      TreeSet<String> errors = kb.errors;
+      Set<String> errors = kb.errors;
       out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
       out.println(HTMLformatter.formatErrorsWarnings(errors,kb));
   }
   if (!kb.warnings.isEmpty()) {
-      TreeSet<String> warns = kb.warnings;
+      Set<String> warns = kb.warnings;
       out.println("<br/><b>Warnings in KB " + kb.name + "</b><br>\n");
       out.println(HTMLformatter.formatErrorsWarnings(warns,kb));
   }
 
-  if (StringUtil.isNonEmptyString(er)) 
-      out.println(er);    
+  if (StringUtil.isNonEmptyString(er))
+      out.println(er);
   else
       if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
           out.println("File " + constituent + " loaded successfully.");
