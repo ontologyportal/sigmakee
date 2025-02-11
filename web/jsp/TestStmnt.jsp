@@ -35,12 +35,12 @@ if (!role.equalsIgnoreCase("admin")) {
         System.out.println("Error: No knowledge base specified");
         kbName = KBmanager.getMgr().getPref("sumokbname");
     }
-    
+
     if (stmt != null)
         System.out.println("text box input: " + stmt.trim());
 
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
-        stmt = "(instance ?X Relation)";    
+        stmt = "(instance ?X Relation)";
     else {
         String msg = (new KIF()).parseStatement(stmt);
         if (msg != null) {
@@ -65,7 +65,7 @@ if (!role.equalsIgnoreCase("admin")) {
                 status.append("Quantifier not in body<P>\n");
                 error = true;
             }
-            HashSet<String> svars = Diagnostics.singleUseVariables(f);
+            Set<String> svars = Diagnostics.singleUseVariables(f);
             if (svars != null && svars.size() > 0) {
                 status.append("Single use variables: " + svars + "<P>\n");
                 error = true;
@@ -101,7 +101,7 @@ if (!role.equalsIgnoreCase("admin")) {
         String pageString = "Test A Statement";
     %>
     <%@include file="CommonHeader.jsp" %>
-    
+
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>
     <br>
@@ -123,4 +123,4 @@ if (!role.equalsIgnoreCase("admin")) {
 
 </BODY>
 </HTML>
- 
+

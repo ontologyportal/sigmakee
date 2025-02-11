@@ -41,7 +41,7 @@
         ]&nbsp;
         <b>KB:&nbsp;
 <%
-        ArrayList kbnames = new ArrayList();
+        List kbnames = new ArrayList();
         kbnames.addAll(KBmanager.getMgr().getKBnames());
         out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
 %>
