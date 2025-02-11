@@ -627,12 +627,12 @@ public class SUMOformulaToTPTPformula {
      */
     public static void main(String[] args) {
 
-        System.out.println("INFO in Graph.main()");
+        System.out.println("INFO in SUMOformulaToTPTPformula.main()");
         if (args != null && args.length > 1 && args[0].equals("-h")) {
             showHelp();
         } else if (args.length > 1 && args[0].equals("-g")) {
             KBmanager.getMgr().initializeOnce();
-            Formula f = new Formula(args[1]);
+//            Formula f = new Formula(args[1]);
             String actual = StringUtil.removeEnclosingQuotes(args[1]);
             System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(actual, false));
         } else {

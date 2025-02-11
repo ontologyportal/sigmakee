@@ -292,7 +292,7 @@ public class HTMLformatter {
     /**************************************************************
      * Show a hyperlinked list of terms.
      */
-    public static String termList(ArrayList<String> terms, String kbHref) {
+    public static String termList(List<String> terms, String kbHref) {
 
         StringBuilder show = new StringBuilder();
         String term;
@@ -612,7 +612,7 @@ public class HTMLformatter {
     /**************************************************************
      * Show a hyperlinked list of WordNet synsets.
      */
-    public static String synsetList(ArrayList<String> synsets, String kbHref) {
+    public static String synsetList(List<String> synsets, String kbHref) {
 
         StringBuilder show = new StringBuilder();
         String synset;

@@ -656,14 +656,15 @@ public class WordNetUtilities {
     /** ***************************************************************
      * HTML format a TreeMap of word senses and their associated synset
      */
-    public static String formatWords(TreeMap<String,String> words, String kbName) {
+    public static String formatWords(Map<String,String> words, String kbName) {
 
         StringBuilder result = new StringBuilder();
         int count = 0;
         Iterator<String> it = words.keySet().iterator();
+        String word, synset;
         while (it.hasNext() && count < 50) {
-            String word = it.next();
-            String synset = words.get(word);
+            word = it.next();
+            synset = words.get(word);
             result.append("<a href=\"WordNet.jsp?word=");
             result.append(word);
             result.append("&POS=");
@@ -672,7 +673,7 @@ public class WordNetUtilities {
             result.append(kbName);
             result.append("&synset=");
             result.append(synset.substring(1,synset.length()));
-            result.append("\">" + word + "</a>");
+            result.append("\">").append(word).append("</a>");
             count++;
             if (it.hasNext() && count < 50)
                 result.append(", ");
@@ -685,16 +686,18 @@ public class WordNetUtilities {
     /** ***************************************************************
      * HTML format a TreeMap of ArrayLists word senses
      */
-    public static String formatWordsList(TreeMap<String,ArrayList<String>> words, String kbName) {
+    public static String formatWordsList(Map<String,List<String>> words, String kbName) {
 
         StringBuilder result = new StringBuilder();
         int count = 0;
         Iterator<String> it = words.keySet().iterator();
+        String word, synset;
+        List<String> synsetList;
         while (it.hasNext() && count < 50) {
-            String word = (String) it.next();
-            ArrayList<String> synsetList = words.get(word);
+            word = (String) it.next();
+            synsetList = words.get(word);
             for (int i = 0; i < synsetList.size(); i++) {
-                String synset = synsetList.get(i);
+                synset = synsetList.get(i);
                 result.append("<a href=\"WordNet.jsp?word=");
                 result.append(word);
                 result.append("&POS=");
@@ -703,7 +706,7 @@ public class WordNetUtilities {
                 result.append(kbName);
                 result.append("&synset=");
                 result.append(synset.substring(1,synset.length()));
-                result.append("\">" + word + "</a>");
+                result.append("\">").append(word).append("</a>");
                 count++;
                 if (i < synsetList.size() - 1)
                     result.append(", ");
