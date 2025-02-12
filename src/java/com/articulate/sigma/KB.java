@@ -191,20 +191,8 @@ public class KB implements Serializable {
      */
     public KB(String n, String dir) {
 
-        name = n;
+        this(n);
         kbDir = dir;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            if (mgr != null) {
-                String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
-                    celt = new CELT();
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("Error in KB(): " + ioe.getMessage());
-            celt = null;
-        }
     }
 
     /***************************************************************
