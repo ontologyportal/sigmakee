@@ -3499,18 +3499,19 @@ public class KB implements Serializable {
         String vampex = KBmanager.getMgr().getPref("vampire");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
-            System.err.println("Error in Vampire: no executable string in preferences");
+            System.err.println("Error in KB.loadVampire(): no executable string in preferences");
             return;
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.err.println("Error in Vampire: no executable " + vampex);
+            System.err.println("Error in KB.loadVampire(): no executable " + vampex);
             return;
         }
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
+        String fileWritten = null;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
             try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
@@ -3521,28 +3522,34 @@ public class KB implements Serializable {
                     if (lang.equals("tptp")) {
                         SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                         skb.kb = this;
-                        skb.writeFile(infFilename, null, false, pw);
+                        fileWritten = skb.writeFile(infFilename, null, false, pw);
                     }
                     else {
                         SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
                         stff.kb = this;
                         SUMOtoTFAform.initOnce();
                         stff.writeSorts(pw);
-                        stff.writeFile(infFilename,null,false,pw);
+                        fileWritten = stff.writeFile(infFilename,null,false, pw);
                         System.out.println("INFO in KB.loadVampire(): CWA: " + SUMOKBtoTPTPKB.CWA);
                         if (SUMOKBtoTPTPKB.CWA)
                             pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
                         stff.printTFFNumericConstants(pw);
                     }
-                    System.out.println("KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
                 }
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
+            if (StringUtil.isNonEmptyString(fileWritten))
+                System.out.println("File written: " + infFilename);
+            else
+                System.err.println("Could not write: " + infFilename);
+
         }
     }
+
     /***************************************************************
      * Checks for a Leo executable, preprocesses all of the constituents
      */
