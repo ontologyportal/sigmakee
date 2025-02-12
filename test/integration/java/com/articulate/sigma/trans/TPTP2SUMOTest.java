@@ -6,7 +6,6 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class TPTP2SUMOTest {
@@ -20,7 +19,6 @@ public class TPTP2SUMOTest {
 
     /** *************************************************************
      */
-    @Ignore
     @Test
     public void testPartition() {
 
@@ -49,7 +47,6 @@ public class TPTP2SUMOTest {
 
     /** *************************************************************
      */
-    @Ignore
     @Test
     public void testCollapse() {
 
@@ -66,7 +63,6 @@ public class TPTP2SUMOTest {
 
     /** *************************************************************
      */
-    @Ignore
     @Test
     public void testCollapse2() {
 

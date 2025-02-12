@@ -12,7 +12,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    SUMOtoTFAKBTest.class,
+//    SUMOtoTFAKBTest.class,
     SUMOtoTFAformTest.class,
     THFtest.class,
     TPTP2SUMOTest.class

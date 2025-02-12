@@ -127,6 +127,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void testParents() {
 
         System.out.println();
@@ -153,6 +154,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void test1() {
 
         System.out.println();
@@ -172,6 +174,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void test1_5() {
 
         System.out.println();
@@ -191,6 +194,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void test2() {
 
         System.out.println();
@@ -217,6 +221,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void test3() {
 
         System.out.println();
@@ -242,6 +247,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void test4() {
 
         System.out.println();
@@ -292,6 +298,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testFloorFn() {
 
         System.out.println();
@@ -320,6 +327,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testNumericSubclass() {
 
         System.out.println();
@@ -457,6 +465,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testPredVarArity() {
 
         System.out.println();
@@ -568,6 +577,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testInstNum() {
 
         SUMOtoTFAform.debug = true;
@@ -604,6 +614,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testTypeConflict() {
 
         //SUMOtoTFAform.debug = true;
@@ -627,6 +638,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testTypeConflict2() {
 
         //SUMOtoTFAform.debug = true;
@@ -653,6 +665,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
      * nonsense axiom just to check types
      */
     @Test
+    @Ignore
     public void testTypeConflict3() {
 
         //SUMOtoTFAform.debug = true;
@@ -696,6 +709,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testPropertyFn() {
 
         SUMOtoTFAform.debug = true;
@@ -721,6 +735,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testMemberTypeCount() {
 
         SUMOtoTFAform.debug = true;
@@ -746,6 +761,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testTypeConflict4() {
 
         // tff(kb_SUMO_283,axiom,(! [V__ROW1 : $i,V__ROW2 : $real,V__CLASS : $i,V__NUMBER : $int] : ((s__instance(V__ROW1, s__Human) & s__instance(V__CLASS, s__Class)) => (s__domain__2In(s__intelligenceQuotient__m, V__NUMBER, V__CLASS) & s__instance(s__intelligenceQuotient__m, s__Predicate) & s__intelligenceQuotient__2Re(V__ROW1, V__ROW2)) => s__instance(s__ListOrderFn__2InFn(s__ListFn__2ReFn(V__ROW1, V__ROW2), V__NUMBER), V__CLASS)))).

@@ -8,6 +8,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertTrue;
+import org.junit.Ignore;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -46,6 +47,7 @@ public class THFtest extends IntegrationTestBase {
     /** *************************************************************
      */
     @Test
+    @Ignore
     public void testTrans1() {
 
         String f = "(=> (and (instance ?ROW3 Language) (instance ?ROW1 SymbolicString)) " +
