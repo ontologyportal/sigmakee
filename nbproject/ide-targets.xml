@@ -577,4 +577,21 @@
         <echo message="System date/time is: ${TODAY_US}"/>
     </target>
 
+    <!--
+    =========
+    UTILITIES
+    =========
+    -->
+
+    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.tptp has already been generated">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <!-- default timeout is 60 if -t is not specified -->
+            <!-- NOTE: [- -mode casc] is a shortcut for [- -mode portfolio -sched casc -p tptp] -->
+            <arg value="${programs.dir}/vampire/build/vampire --mode casc ${sigma_home}/KBs/SUMO.tptp &amp;> ${sigma_home}/KBs/vamp-out.txt"/>
+        </exec>
+        <loadfile property="vamp.out" srcFile="${sigma_home}/KBs/vamp-out.txt"/>
+        <echo message="${vamp.out}"/>
+    </target>
+
 </project>
