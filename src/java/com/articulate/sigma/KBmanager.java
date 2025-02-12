@@ -163,13 +163,13 @@ public class KBmanager implements Serializable {
             for (String f : kb.constituents) { // iterate through the constituents
                 sfile = new File(f);
                 sfileDate = new Date(sfile.lastModified());
-                System.out.println("INFO in KBmanager.infFileOld(lang): file " + f + " was saved on " + sfileDate);
+                System.out.println("INFO in KBmanager.infFileOld(lang): file " + sfile.getName() + " was saved on " + sfileDate);
                 if (fileDate.compareTo(sfileDate) < 0) {
                     return true;
                 }
             }
         }
-        System.out.println("INFO in KBmanager.infFileOld(lang): returning false (not old)");
+        System.out.println("INFO in KBmanager.infFileOld(lang): returning false (config and constituents are not old)");
         return false;
     }
 
