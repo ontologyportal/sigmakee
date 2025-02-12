@@ -156,20 +156,20 @@ public class KBmanager implements Serializable {
             kb = getKB(kbname);
             file = new File(kbDir + File.separator + kbname + "." + lang);
             fileDate = new Date(file.lastModified());
-            System.out.println("KBmanager.infFileOld(): file " + kbname + "." + lang + " was saved on " + fileDate);
+            System.out.println("INFO in KBmanager.infFileOld(lang): file " + kbname + "." + lang + " was saved on " + fileDate);
             if (fileDate.compareTo(configDate) < 0) {
                 return true;
             }
             for (String f : kb.constituents) { // iterate through the constituents
                 sfile = new File(f);
                 sfileDate = new Date(sfile.lastModified());
-                System.out.println("KBmanager.infFileOld(): file " + f + " was saved on " + sfileDate);
+                System.out.println("INFO in KBmanager.infFileOld(lang): file " + f + " was saved on " + sfileDate);
                 if (fileDate.compareTo(sfileDate) < 0) {
                     return true;
                 }
             }
         }
-        System.out.println("KBmanager.infFileOld(config): returning false (not old)");
+        System.out.println("INFO in KBmanager.infFileOld(lang): returning false (not old)");
         return false;
     }
 
@@ -179,7 +179,7 @@ public class KBmanager implements Serializable {
      */
     public boolean infFileOld() {
 
-        System.out.println("KBmanager.tptpOld(config): ");
+        System.out.println("INFO in KBmanager.infFileOld(): ");
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
@@ -1087,7 +1087,7 @@ public class KBmanager implements Serializable {
             KBmanager.getMgr().initializeOnce();
         }
         catch (Exception e ) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
         GatewayServer server = new GatewayServer(new PythonAPI());
         server.start();
@@ -1098,7 +1098,7 @@ public class KBmanager implements Serializable {
      */
     public static void printHelp() {
 
-        System.out.println("Sigma Knowledge Engineering Environment");
+        System.out.println("KBmanager class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -p - demo Python interface");
