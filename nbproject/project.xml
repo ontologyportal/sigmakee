@@ -60,11 +60,11 @@ auxiliary.show.customizer.message=<message>
                 </action>
                 <action name="clean">
                     <script>${ant.script}</script>
-                    <target>thorough.clean</target>
+                    <target>clean</target>
                 </action>
                 <action name="rebuild">
                     <script>${ant.script}</script>
-                    <target>thorough.clean</target>
+                    <target>clean</target>
                     <target>dist</target>
                 </action>
                 <action name="run">
@@ -290,7 +290,7 @@ auxiliary.show.customizer.message=<message>
             </export>
             <export>
                 <type>folder</type>
-                <location>build/WEB-INF/classes</location>
+                <location>build/test/classes</location>
                 <script>${ant.script}</script>
                 <build-target>dist</build-target>
             </export>
