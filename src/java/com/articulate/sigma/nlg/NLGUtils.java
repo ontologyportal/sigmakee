@@ -727,7 +727,7 @@ public class NLGUtils implements Serializable {
             Iterator<String> it = problems.iterator();
             while (it.hasNext()) {
                 str = it.next();
-                System.out.println("Error in NLGUtils.expandStar(): ");
+                System.err.println("Error in NLGUtils.expandStar(): ");
                 System.out.println("  " + str);
                 errStr += ("\n<br/>" + str + "\n<br/>");
             }
