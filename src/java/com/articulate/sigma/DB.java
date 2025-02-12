@@ -44,6 +44,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -55,7 +56,7 @@ such as spreadsheets. */
 public class DB {
       // a map of word keys, broken down by POS, listing whether it's a positive or negative word
       // keys are pre-defined as type, POS, stemmed, polarity
-    public static HashMap<String,HashMap<String,String>> sentiment = new HashMap<>();
+    public static Map<String,Map<String,String>> sentiment = new HashMap<>();
     public static HashSet<String> amenityTerms = new HashSet<>();
     public static HashSet<String> stopConcepts = new HashSet<>();
 
@@ -344,18 +345,17 @@ public class DB {
      * @param quote signifies whether to retain quotes in elements
      * @return An ArrayList of ArrayLists
      */
-    public static ArrayList<ArrayList<String>> readSpreadsheet(String fname, List lineStartTokens,
+    public static List<List<String>> readSpreadsheet(String fname, List lineStartTokens,
             boolean quote, char delimiter) {
 
         System.out.println("ENTER DB.readSpreadsheet(" + fname + ", " + lineStartTokens + ")");
-        ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-        try {
-            FileReader fr = new FileReader(fname);
+        List<List<String>> rows = new ArrayList<>();
+        try (FileReader fr = new FileReader(fname)) {
             rows = readSpreadsheet(fr, lineStartTokens,quote,delimiter);
         }
         catch (Exception e) {
-            System.out.println("Error in DB.readSpreadsheet()");
-            System.out.println(e.getMessage());
+            System.err.println("Error in DB.readSpreadsheet()");
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         System.out.println("EXIT DB.readSpreadsheet(" + fname + ", " + lineStartTokens + ")");
@@ -364,7 +364,7 @@ public class DB {
 
     /** ***************************************************************
      */
-    public static ArrayList<ArrayList<String>> readSpreadsheet(String fname, List lineStartTokens,
+    public static List<List<String>> readSpreadsheet(String fname, List lineStartTokens,
             boolean quote) {
 
     	return readSpreadsheet(fname,lineStartTokens,quote,',');
@@ -375,10 +375,10 @@ public class DB {
     private static boolean isInteger(String input) {
 
        try {
-          Integer.parseInt(input);
+          Integer.valueOf(input);
           return true;
        }
-       catch (Exception e) {
+       catch (NumberFormatException e) {
           return false;
        }
     }
@@ -386,13 +386,14 @@ public class DB {
     /** ***************************************************************
      * @param quote signifies whether to quote entries from the spreadsheet
      */
-    public static String writeSpreadsheetLine(ArrayList<String> al, boolean quote) {
+    public static String writeSpreadsheetLine(List<String> al, boolean quote) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
+        String s;
         for (int j = 0; j < al.size(); j++) {
-            String s = al.get(j);
+            s = al.get(j);
             if (quote && !isInteger(s))
-                result.append("\"" + s + "\"");
+                result.append("\"").append(s).append("\"");
             else
                 result.append(s);
             if (j < al.size())
@@ -405,11 +406,12 @@ public class DB {
     /** ***************************************************************
      * @param quote signifies whether to quote entries from the spreadsheet
      */
-    public static String writeSpreadsheet(ArrayList<ArrayList<String>> values, boolean quote) {
+    public static String writeSpreadsheet(List<List<String>> values, boolean quote) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
+        List<String> al;
         for (int i = 0; i < values.size(); i++) {
-            ArrayList<String> al = values.get(i);
+            al = values.get(i);
             result.append(writeSpreadsheetLine(al,  quote));
         }
         return result.toString();
@@ -935,7 +937,7 @@ public class DB {
      */
     public static String parseCuisines(String cuisine, String RST_RESTAURANTNAME, String RST_RESTAURANTID) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         cuisine = StringUtil.removeEnclosingQuotes(cuisine);
         String[] al = cuisine.split(",");
         for (int i = 0; i < al.length; i++) {
@@ -1075,13 +1077,16 @@ public class DB {
         }
         WordNet.wn.initOnce();
 */
+        Map<String,Integer> senses;
+        Hotel h;
+        String r;
         for (int i = 0; i < hotels.size(); i++) {
-            Hotel h = hotels.get(i);
+            h = hotels.get(i);
             if (h != null && h.reviews != null) {
                 for (int j = 0; j < h.reviews.size(); j++) {
-                    String r = h.reviews.get(j);
+                    r = h.reviews.get(j);
                     if (!StringUtil.emptyString(r)) {
-                        HashMap<String,Integer> senses = WordNet.wn.collectCountedWordSenses(r);
+                        senses = WordNet.wn.collectCountedWordSenses(r);
                         h.addAllSenses(senses);
                     }
                 }
@@ -1118,14 +1123,16 @@ public class DB {
 
     /** *******************************************************************
      */
-    public static HashMap<String,String> readStateAbbrevs() {
+    public static Map<String,String> readStateAbbrevs() {
 
-        HashMap<String,String> result = new HashMap<String,String>();
-        ArrayList<ArrayList<String>> st = DB.readSpreadsheet("states.csv",null,false);
+        Map<String,String> result = new HashMap<>();
+        List<List<String>> st = DB.readSpreadsheet("states.csv",null,false);
+        List<String> al;
+        String stateName, abbrev;
         for (int i = 1; i < st.size(); i++) {
-            ArrayList al = st.get(i);
-            String stateName = ((String) al.get(0)).trim();
-            String abbrev = ((String) al.get(1)).trim();
+            al = st.get(i);
+            stateName = ((String) al.get(0)).trim();
+            abbrev = ((String) al.get(1)).trim();
             result.put(stateName,abbrev);
         }
         return result;
@@ -1133,9 +1140,9 @@ public class DB {
 
     /** *******************************************************************
      */
-    public static ArrayList<String> fill(String value, int count) {
+    public static List<String> fill(String value, int count) {
 
-        ArrayList<String> line = new ArrayList<String>();
+        List<String> line = new ArrayList<>();
         for (int i = 0; i < count; i++)
             line.add(value);
         return line;
@@ -1145,31 +1152,33 @@ public class DB {
      */
     public static void DiningDBImport() {
 
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet("dining.csv",null,false);
+        List<List<String>> f = DB.readSpreadsheet("dining.csv",null,false);
+        List<String> al;
+        String RST_PROCESS_ID, RST_CUSTOMER_ID, RST_COMPANY_NAME, RST_ADDRESSCITY, RST_ADDRESSPOSTALCODE, RST_ADDRESSSTATE, RST_CUISINETYPE, RST_PARTYSIZE, RST_RESTAURANTID, RST_RESTAURANTNAME, RST_RESERVATION_TIME;
         for (int i = 0; i < f.size(); i++) {
-            ArrayList al = f.get(i);
-            String RST_PROCESS_ID          = (String) al.get(5);
-            String RST_CUSTOMER_ID         = (String) al.get(10);
+            al = f.get(i);
+            RST_PROCESS_ID          = (String) al.get(5);
+            RST_CUSTOMER_ID         = (String) al.get(10);
             System.out.println("(instance Human-" + RST_CUSTOMER_ID + " Human)");
-            String RST_COMPANY_NAME        = (String) al.get(28);
+            RST_COMPANY_NAME        = (String) al.get(28);
             //RST_COMPANY_NAME = RST_COMPANY_NAME;
             RST_COMPANY_NAME = StringUtil.stringToKIF(RST_COMPANY_NAME,true);
             System.out.println("(instance " + RST_COMPANY_NAME + " Organization)");
             System.out.println("(employs " + RST_COMPANY_NAME + " Human-" + RST_CUSTOMER_ID + ")");
-            String RST_ADDRESSCITY         = (String) al.get(41);
+            RST_ADDRESSCITY         = (String) al.get(41);
             //RST_ADDRESSCITY = RST_ADDRESSCITY;
             RST_ADDRESSCITY = StringUtil.stringToKIF(RST_ADDRESSCITY,true);
-            String RST_ADDRESSPOSTALCODE   = (String) al.get(42);
-            String RST_ADDRESSSTATE        = (String) al.get(43);
-            String RST_CUISINETYPE         = (String) al.get(45);
-            String RST_PARTYSIZE           = (String) al.get(47);
+            RST_ADDRESSPOSTALCODE   = (String) al.get(42);
+            RST_ADDRESSSTATE        = (String) al.get(43);
+            RST_CUISINETYPE         = (String) al.get(45);
+            RST_PARTYSIZE           = (String) al.get(47);
             System.out.println("(and\n  (instance Eat-" + RST_PROCESS_ID + " Eating)\n  (instance Group-" + RST_PROCESS_ID + " Group)\n" +
                     "  (experiencer Eat-" + RST_PROCESS_ID + " Group-" + RST_PROCESS_ID + ")\n"+
                     "  (memberCount Group-" + RST_PROCESS_ID + " " + RST_PARTYSIZE + "))");
             //String RST_PRICERANGE          = (String) al.get(48);
             //System.out.println("(instance Rest-" + RST_COMPANY_NAME + " Restaurant)");
-            String RST_RESTAURANTID          = (String) al.get(49);
-            String RST_RESTAURANTNAME      = (String) al.get(50);
+            RST_RESTAURANTID          = (String) al.get(49);
+            RST_RESTAURANTNAME      = (String) al.get(50);
             //RST_RESTAURANTNAME = RST_RESTAURANTNAME;
             RST_RESTAURANTNAME = StringUtil.stringToKIF(RST_RESTAURANTNAME,true);
             System.out.println("(postCity " + RST_ADDRESSCITY + " Rest-" + RST_RESTAURANTNAME + "-" + RST_RESTAURANTID + ")");
@@ -1178,7 +1187,7 @@ public class DB {
             System.out.println("(instance Rest-" + RST_RESTAURANTNAME + "-" + RST_RESTAURANTID + " Restaurant)");
             System.out.println(parseCuisines(RST_CUISINETYPE,RST_RESTAURANTNAME,RST_RESTAURANTID));
             System.out.println("(located Eat-" + RST_PROCESS_ID + " Rest-" + RST_RESTAURANTNAME + "-" + RST_RESTAURANTID + ")");
-            String RST_RESERVATION_TIME    = (String) al.get(52);
+            RST_RESERVATION_TIME    = (String) al.get(52);
             //RST_RESERVATION_TIME = RST_RESERVATION_TIME;
             String timeDateFormula = processTimeDate(RST_RESERVATION_TIME);
             System.out.println("(equals (BeginFn Eat-" + RST_PROCESS_ID + ") " + timeDateFormula + ")");
@@ -1213,30 +1222,33 @@ public class DB {
      * @return a list of SUMO terms that are the best guess at classes for
      * each word
      */
-    public static ArrayList<String> getFoodWordSenses(ArrayList<String> al) {
+    public static List<String> getFoodWordSenses(List<String> al) {
 
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         String foodSynset1 = "107555863"; // food, solid_food
         String foodSynset2 = "100004475"; // being, organism
         //System.out.println("INFO in DB.getFoodWordSenses()");
-        ArrayList<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
+        Map<String,List<String>> al2;
+        List<String> al3;
+        boolean equivalence;
+        String[] terms;
+        String term, aterm;
         for (int i = 0; i < al.size(); i++) {
             //System.out.println("\nINFO in DB.getFoodWordSenses(): word: " + al.get(i));
             // TreeMap of word keys and values that are ArrayLists of synset Strings
-            TreeMap<String,ArrayList<String>> al2 = WordNet.wn.getSenseKeysFromWord(al.get(i));
-            boolean equivalence = false;
-            Iterator it = al2.keySet().iterator();
-            while (it.hasNext()) {
-                String word = (String) it.next();
-                ArrayList<String> al3 = al2.get(word);
+            al2 = WordNet.wn.getSenseKeysFromWord(al.get(i));
+            equivalence = false;
+            for (String word : al2.keySet()) {
+                al3 = al2.get(word);
                 for (int j = 0; j < al3.size(); j++) {
-                    String term = WordNet.wn.getSUMOMapping(al3.get(j));
+                    term = WordNet.wn.getSUMOMapping(al3.get(j));
                     if (!DB.emptyString(term)) {
-                        String[] terms = term.split(" ");                     // have to split on space - may be multiple mappings
-                        for (int k = 0; k < terms.length; k++) {
+                        terms = term.split(" ");                     // have to split on space - may be multiple mappings
+                        for (String term1 : terms) {
                             if (term.charAt(term.length() - 1) == '=')
                                 equivalence = true;
-                            String aterm = WordNetUtilities.getBareSUMOTerm(terms[k]);
+                            aterm = WordNetUtilities.getBareSUMOTerm(term1);
                             if (WordNet.wn.isHyponym(al3.get(j),foodSynset1) ||
                                     WordNet.wn.isHyponym(al3.get(j),foodSynset2))
                                 if (!kb.isChildOf(aterm,"Human") && !kb.isChildOf(aterm,"GroupOfPeople") &&
@@ -1255,20 +1267,34 @@ public class DB {
 
     /** *******************************************************************
      */
-    public static HashSet<String> parseRest(String menu, String placename, String price,
+    public static Set<String> parseRest(String menu, String placename, String price,
             String address, String latitude, String longitude, String phone) {
 
-        HashSet<String> axioms = new HashSet();
+        Set<String> axioms = new HashSet();
         placename = StringUtil.stringToKIF(placename,true);
         if (!StringUtil.emptyString(phone))
             axioms.add("(telephoneNumber \"" + phone + "\" " + placename + ")");
         if (!StringUtil.emptyString(phone))
             axioms.add("(postAddressText \"" + address + "\" " + placename + ")");
-        if (price.equals("$")) price = "CheapMenu";
-        else if (price.equals("$$")) price = "InexpensiveMenu";
-        else if (price.equals("$$$")) price = "ModerateMenu";
-        else if (price.equals("$$$$")) price = "ExpensiveMenu";
-        else if (price.equals("$$$$$")) price = "VeryExpensiveMenu";
+        switch (price) {
+            case "$":
+                price = "CheapMenu";
+                break;
+            case "$$":
+                price = "InexpensiveMenu";
+                break;
+            case "$$$":
+                price = "ModerateMenu";
+                break;
+            case "$$$$":
+                price = "ExpensiveMenu";
+                break;
+            case "$$$$$":
+                price = "VeryExpensiveMenu";
+                break;
+            default:
+                break;
+        }
         if (!StringUtil.emptyString(phone))
             axioms.add("(ratingAttribute " + price + " " + placename + " MenuPagesCom)");
         axioms.add("(serves " + placename + " " + placename + "-menu)");
@@ -1279,11 +1305,17 @@ public class DB {
         Matcher m = p.matcher(menu);
         int fieldCount = 0;
         String menuItem = null;
+        String code, content, term;
+        Pattern p2;
+        Matcher m2;
+        String description;
+        String[] words;
+        List<String> al, terms;
         while (m.find()) {
-            String code = m.group(1);
-            String content = m.group(2);
-            Pattern p2 = Pattern.compile("[^\\d]*(\\d*\\.\\d\\d)");
-            Matcher m2 = p2.matcher(content);
+            code = m.group(1);
+            content = m.group(2);
+            p2 = Pattern.compile("[^\\d]*(\\d*\\.\\d\\d)");
+            m2 = p2.matcher(content);
             if (m2.matches())
                 axioms.add("(itemPrice " + menuItem + " (MeasureFn " + m2.group(1) + " UnitedStatesDollar))");
             else if (Pattern.matches("</tr>", code)) {
@@ -1299,19 +1331,19 @@ public class DB {
                 }
                 else
                     axioms.add("(documentation " + menuItem + " EnglishLanguage \"" + content.trim() + "\")");
-                String description = WordNet.wn.removeStopWords(content.trim());
+                description = WordNet.wn.removeStopWords(content.trim());
                 description = StringUtil.removePunctuation(description);
-                String[] words = description.split(" ");
+                words = description.split(" ");
                 //System.out.println("INFO in DB.parseRestaurantMenu(): content: " + content);
                 //System.out.println("INFO in DB.parseRestaurantMenu(): words: " + words);
                 //System.out.println("INFO in DB.parseRestaurantMenu(): num words: " + words.length);
-                ArrayList al = new ArrayList();
+                al = new ArrayList<>();
                 al.addAll(Arrays.asList(words));
                 //System.out.println("INFO in DB.parseRestaurantMenu(): al: " + al);
-                ArrayList<String> terms = getFoodWordSenses(al);
+                terms = getFoodWordSenses(al);
                 //System.out.println("INFO in DB.parseRestaurantMenu(): terms: " + terms);
                 for (int i = 0; i < terms.size(); i++) {
-                    String term = terms.get(i);
+                    term = terms.get(i);
                     axioms.add("(ingredient-PreparedFood " + term + " " + menuItem + ")");
                 }
             }
@@ -1321,18 +1353,19 @@ public class DB {
 
     /** *************************************************************
      */
-    public static HashSet<String> getAllRest() {
+    public static Set<String> getAllRest() {
 
-        HashSet<String> result = new HashSet<String>();
-        File dir = null;
-        dir = new File(".");
+        Set<String> result = new HashSet<>();
+        File dir = new File(".");
         String[] children = dir.list();
+        File f;
         if (children != null) {
-            for (int i = 0; i < children.length; i++) {
-                if (!children[i].equals(".")) {
-                    File f = new File(children[i] + File.separator + "menu");
-                    if (f.exists())
-                        result.add(children[i] + File.separator + "menu");
+            for (String children1 : children) {
+                if (!children1.equals(".")) {
+                    f = new File(children1 + File.separator + "menu");
+                    if (f.exists()) {
+                        result.add(children1 + File.separator + "menu");
+                    }
                 }
             }
         }
@@ -1408,7 +1441,7 @@ public class DB {
      */
     public static String printTopSUMOInReviews(ArrayList<AVPair> topSUMO) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         for (int i = 0; i < topSUMO.size(); i++) {
             AVPair avp = topSUMO.get(i);
             result.append(avp.attribute + " " + avp.value + "\n");
@@ -1420,7 +1453,7 @@ public class DB {
      * A test method.
      * @param fname has no file extension or directory
      */
-    public static HashSet<String> parseOneRestFile(String fname) {
+    public static Set<String> parseOneRestFile(String fname) {
 
         String menu = "";
         Pattern pMenu = Pattern.compile("restaurant.menu");
@@ -1436,52 +1469,52 @@ public class DB {
         Pattern pLongitude = Pattern.compile("longitude..([^<]+)");
         String phone = "";
         Pattern pPhone = Pattern.compile("li class..phone..Phone: .string.([^<]+)");
-        LineNumberReader lnr = null;
-        try {
-            File fin  = new File(fname);
-            FileReader fr = new FileReader(fin);
+
+        File fin  = new File(fname);
+        try (Reader fr = new FileReader(fin)) {
             if (fr != null) {
-                lnr = new LineNumberReader(fr);
-                String line = null;
-                boolean done = false;
-                while ((line = lnr.readLine()) != null && !done) {
-                    line = line.trim();
-                    Matcher mMenu = pMenu.matcher(line);
-                    Matcher mPlacename = pPlacename.matcher(line);
-                    Matcher mPrice = pPrice.matcher(line);
-                    Matcher mAddress = pAddress.matcher(line);
-                    Matcher mLatitude = pLatitude.matcher(line);
-                    Matcher mLongitude = pLongitude.matcher(line);
-                    Matcher mPhone = pPhone.matcher(line);
-                    System.out.println(line);
-                    if (mMenu.find())
-                        menu = lnr.readLine();
-                    if (mPlacename.find())
-                        placename = mPlacename.group(1);
-                    if (mPrice.find())
-                        price = mPrice.group(1);
-                    if (mAddress.find())
-                        address = mAddress.group(1);
-                    if (mLatitude.find())
-                        latitude = mLatitude.group(1);
-                    if (mLongitude.find())
-                        longitude = mLongitude.group(1);
-                    if (mPhone.find())
-                        phone = mPhone.group(1);
+                try (LineNumberReader lnr = new LineNumberReader(fr)) {
+                    String line;
+                    boolean done = false;
+                    Matcher mMenu, mPlacename, mPrice, mAddress, mLatitude, mLongitude, mPhone;
+                    while ((line = lnr.readLine()) != null && !done) {
+                        line = line.trim();
+                        mMenu = pMenu.matcher(line);
+                        mPlacename = pPlacename.matcher(line);
+                        mPrice = pPrice.matcher(line);
+                        mAddress = pAddress.matcher(line);
+                        mLatitude = pLatitude.matcher(line);
+                        mLongitude = pLongitude.matcher(line);
+                        mPhone = pPhone.matcher(line);
+                        System.out.println(line);
+                        if (mMenu.find()) {
+                            menu = lnr.readLine();
+                        }
+                        if (mPlacename.find()) {
+                            placename = mPlacename.group(1);
+                        }
+                        if (mPrice.find()) {
+                            price = mPrice.group(1);
+                        }
+                        if (mAddress.find()) {
+                            address = mAddress.group(1);
+                        }
+                        if (mLatitude.find()) {
+                            latitude = mLatitude.group(1);
+                        }
+                        if (mLongitude.find()) {
+                            longitude = mLongitude.group(1);
+                        }
+                        if (mPhone.find()) {
+                            phone = mPhone.group(1);
+                        }
+                    }
                 }
             }
         }
         catch (IOException ioe) {
-            System.out.println("File error: " + ioe.getMessage());
+            System.err.println("File error: " + ioe.getMessage());
             return null;
-        }
-        finally {
-            try {
-                if (lnr != null) lnr.close();
-            }
-            catch (Exception e) {
-                System.out.println("Exception in testOneRestaurant()" + e.getMessage());
-            }
         }
         return parseRest(menu,placename,price,address,latitude,longitude,phone);
     }
@@ -1493,14 +1526,16 @@ public class DB {
      */
     public static void readStopConceptArray() {
 
-        if (stopConcepts.size() > 0) {
-            System.out.println("Error in readStopConceptArray(): file previously read.");
+        if (!stopConcepts.isEmpty()) {
+            System.err.println("Error in readStopConceptArray(): file previously read.");
             return;
         }
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
         		File.separator + "WordNetMappings" + File.separator + "stopConcept.csv",null,false);
+
+        List<String> al;
         for (int i = 0; i < f.size(); i++) {
-            ArrayList<String> al = f.get(i);
+            al = f.get(i);
             stopConcepts.add(al.get(0));
         }
     }
@@ -1509,19 +1544,21 @@ public class DB {
      *  Fill out from a CSV file a map of word keys, and values broken down by POS,
         listing whether it's a positive or negative word interior hash map keys are
         type, POS, stemmed, polarity
-        @return void side effect on static variable "sentiment"
      */
     public static void readSentimentArray() {
 
-        if (sentiment.size() > 0) {
+        if (!sentiment.isEmpty()) {
             System.out.println("Error in DB.readSentimentArray(): file previously read.");
             return;
         }
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
         		File.separator + "WordNetMappings" + File.separator + "sentiment.csv",null,false);
+
+        List<String> al;
+        Map<String,String> entry;
         for (int i = 0; i < f.size(); i++) {
-            ArrayList<String> al = f.get(i);
-            HashMap<String,String> entry = new HashMap<String,String>();
+            al = f.get(i);
+            entry = new HashMap<>();
             entry.put("type",al.get(0));   // weak, strong
             entry.put("POS",al.get(2));    // noun,verb,adj,adverb,anypos
             entry.put("stemmed",al.get(3));   // y,n
@@ -1539,8 +1576,9 @@ public class DB {
         description = StringUtil.removePunctuation(description);
         String[] words = description.split(" ");
         int total = 0;
-        for (int i = 0; i < words.length; i++)
-            total = total + computeSentimentForWord(words[i]);
+        for (String word : words) {
+            total = total + computeSentimentForWord(word);
+        }
         return total;
     }
 
@@ -1552,12 +1590,12 @@ public class DB {
 
         //System.out.println("INFO in DB.computeSentimentForWord() word: " + word);
         if (sentiment.keySet().size() < 1) {
-            System.out.println("Error in DB.computeSentimentForWord() sentiment list not loaded.");
+            System.err.println("Error in DB.computeSentimentForWord() sentiment list not loaded.");
             return 0;
         }
         String nounroot = WordNet.wn.nounRootForm(word,word.toLowerCase());
         String verbroot = WordNet.wn.verbRootForm(word,word.toLowerCase());
-        HashMap<String,String> hm = null;
+        Map<String,String> hm = null;
         if (sentiment.keySet().contains(word))
             hm = sentiment.get(word);
         else if (!word.equals(verbroot) && sentiment.keySet().contains(verbroot))
@@ -1584,17 +1622,19 @@ public class DB {
      * Add new scores to existing scores.  Note the side effect on scores.
      * @return a map of concept keys and integer sentiment score values
      */
-    public static HashMap<String,Integer> addConceptSentimentScores(HashMap<String,Integer> scores,
+    public static Map<String,Integer> addConceptSentimentScores(Map<String,Integer> scores,
                                                             String SUMOs, int total) {
 
         String[] terms = SUMOs.split(" ");
-        for (int i = 0; i < terms.length; i++) {
-            String term = terms[i].trim();
+        String term;
+        int newTotal;
+        for (String term1 : terms) {
+            term = term1.trim();
             if (!StringUtil.emptyString(term)) {
-	            int newTotal = total;
-	            if (scores.keySet().contains(term))
-	                newTotal = total + scores.get(term).intValue();
-	            scores.put(term,Integer.valueOf(newTotal));
+                newTotal = total;
+                if (scores.keySet().contains(term))
+                    newTotal = total + scores.get(term);
+                scores.put(term, newTotal);
             }
         }
         return scores;
@@ -1603,22 +1643,20 @@ public class DB {
      * Associate individual concepts with a sentiment score
      * @return a map of concept keys and integer sentiment score values
      */
-    public static HashMap<String,Integer> computeConceptSentimentFromFile(String filename) {
+    public static Map<String,Integer> computeConceptSentimentFromFile(String filename) {
 
-        HashMap<String,Integer> result = new HashMap<String,Integer>();
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(filename);
+        Map<String,Integer> result = new HashMap<>();
+        try (InputStream fis = new FileInputStream(filename)) {
             if (fis != null) {
-                StringBuffer buffer = new StringBuffer();
-                InputStreamReader isr = new InputStreamReader(fis,"US-ASCII");
-                Reader in = new BufferedReader(isr);
-                int ch;
-                while ((ch = in.read()) > -1) {
-                    buffer.append((char) ch);
-                    if (ch == '!' || ch == '.' || ch == '?') {
-                        result = addSentiment(result,computeConceptSentiment(buffer.toString()));
-                        buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
+                try (Reader isr = new InputStreamReader(fis, "US-ASCII"); Reader in = new BufferedReader(isr)) {
+                    int ch;
+                    while ((ch = in.read()) > -1) {
+                        buffer.append((char) ch);
+                        if (ch == '!' || ch == '.' || ch == '?') {
+                            result = addSentiment(result, computeConceptSentiment(buffer.toString()));
+                            buffer = new StringBuilder();
+                        }
                     }
                 }
             }
@@ -1634,21 +1672,28 @@ public class DB {
      * Associate individual concepts with a sentiment score
      * @return a map of concept keys and integer sentiment score values
      */
-    public static HashMap<String,Integer> computeConceptSentiment(String input) {
+    public static Map<String,Integer> computeConceptSentiment(String input) {
 
         System.out.println("INFO in DB.computeConceptSentiment(): " + input);
-        HashMap<String,Integer> result = new HashMap<String,Integer>();
+        Map<String,Integer> result = new HashMap<>();
         String paragraph = WordNet.wn.removeStopWords(input.trim());
         paragraph = StringUtil.removeHTML(paragraph);
         String[] sentences = paragraph.split("[\\.\\/\\!]");
-        for (int i = 0; i < sentences.length; i++) {  // look at each sentence
-            String sentence = StringUtil.removePunctuation(sentences[i]);
-            String[] words = sentence.split(" ");
-            int total = 0;
-            for (int j = 0; j < words.length; j++)    // look at each word
-                total = total + computeSentimentForWord(words[j]);
-            ArrayList<String> SUMOal = WSD.collectSUMOFromWords(sentence);
-            String SUMOs = StringUtil.arrayListToSpacedString(SUMOal);
+        String sentence, SUMOs;
+        String[] words;
+        int total;
+        List<String> SUMOal;
+        for (String sentence1 : sentences) {
+            // look at each sentence
+            sentence = StringUtil.removePunctuation(sentence1);
+            words = sentence.split(" ");
+            total = 0;
+            for (String word : words) {
+                // look at each word
+                total = total + computeSentimentForWord(word);
+            }
+            SUMOal = WSD.collectSUMOFromWords(sentence);
+            SUMOs = StringUtil.arrayListToSpacedString(SUMOal);
             System.out.println("INFO in DB.computeConceptSentiment(): done collecting SUMO terms: " + SUMOs + " from input: " + sentence);
             result = addConceptSentimentScores(result,SUMOs,total);
         }
@@ -1659,10 +1704,11 @@ public class DB {
      */
     public static void readAmenities() {
 
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
+        List<List<String>> f = DB.readSpreadsheet(KBmanager.getMgr().getPref("kbDir") +
                 File.separator + "Feeds-SUMO_Mapping.csv",null,false);
+        List<String> al;
         for (int i = 1; i < f.size(); i++) {
-            ArrayList<String> al = f.get(i);
+            al = f.get(i);
             amenityTerms.add(al.get(3));
         }
     }
@@ -1670,20 +1716,17 @@ public class DB {
     /** *************************************************************
      * Add the Integer values of two HashMaps that have corresponding String keys
      */
-    private static HashMap<String,Integer> addSentiment(HashMap<String,Integer>totalSent,
-    		                                            HashMap<String,Integer>sent) {
+    private static Map<String,Integer> addSentiment(Map<String,Integer>totalSent,
+    		                                            Map<String,Integer>sent) {
 
-    	HashMap<String,Integer> result = new HashMap<String,Integer>();
+    	Map<String,Integer> result = new HashMap<>();
     	result.putAll(totalSent);
-    	Iterator<String> it = sent.keySet().iterator();
-    	while (it.hasNext()){
-    		String key = it.next();
-    		if (!totalSent.keySet().contains(key))
-    			result.put(key, sent.get(key));
-    		else
-    			result.put(key, Integer.valueOf(sent.get(key).intValue() +
-    					                    result.get(key).intValue()));
-    	}
+        for (String key : sent.keySet()) {
+            if (!totalSent.keySet().contains(key))
+                result.put(key, sent.get(key));
+            else
+                result.put(key, sent.get(key) + result.get(key));
+        }
     	return result;
     }
 
@@ -1691,37 +1734,40 @@ public class DB {
      */
     public static void textSentimentByPeriod() {
 
-    	  // ArrayList by time period of an array of SUMO terms and sentiment values for that period
-    	int period = 0;
+    	// ArrayList by time period of an array of SUMO terms and sentiment values for that period
     	int periodLength = 7; // in days
         SimpleDateFormat sdf = new SimpleDateFormat("EEE MMM dd HH:mm:ss ZZZZZ yyyy"); // "Tue Jun 28 06:53:37 +0000 2011"
 
-    	HashMap<String,Integer> totalSent = new HashMap<String,Integer>();
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
+    	Map<String,Integer> totalSent = new HashMap<>();
+        List<List<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
         System.out.println("INFO in DB.textSentiment() : read spreadsheet with " + f.size() + " rows");
+        List<String> al;
+        Calendar c, calendar;
+        Date d;
+        String date, text;
+        Map<String,Integer> sent;
         for (int i = 1; i < f.size(); i++) {
-            ArrayList<String> al = f.get(i);
+            al = f.get(i);
             if (al.size() > 1) {
-            	Calendar c = Calendar.getInstance();  // now
+            	c = Calendar.getInstance();  // now
             	c.add(Calendar.DATE, periodLength);
-            	Date d = null;
+            	d = new Date();
             	d.setTime(c.getTime().getTime());
-                String date = al.get(0);
-                Date firstDate = null;
+                date = al.get(0);
                 try {
                     d = sdf.parse(date);
                 }
                 catch (ParseException pe) {
-                    System.out.println("Error in DB.processTimeDate(): error parsing date/time string: " + date);
+                    System.err.println("Error in DB.processTimeDate(): error parsing date/time string: " + date);
                 }
-                Calendar calendar = new GregorianCalendar();
+                calendar = new GregorianCalendar();
                 if (d != null) {
-                	calendar.setTime(d);
-                	System.out.print(calendar.get(Calendar.SECOND));
+                    calendar.setTime(d);
+                    System.out.print(calendar.get(Calendar.SECOND));
                 }
                 //String id = al.get(1);
-                String text = al.get(2);
-                HashMap<String,Integer> sent = computeConceptSentiment(text);
+                text = al.get(2);
+                sent = computeConceptSentiment(text);
                 totalSent = addSentiment(totalSent,sent);
             }
         }
@@ -1732,17 +1778,19 @@ public class DB {
      */
     public static void textSentiment() {
 
-    	int period = 0;
-    	HashMap<String,Integer> totalSent = new HashMap<String,Integer>();
-        ArrayList<ArrayList<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
+    	Map<String,Integer> totalSent = new HashMap<String,Integer>();
+        List<List<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
         System.out.println("INFO in DB.textSentiment() : read spreadsheet with " + f.size() + " rows");
+        List<String> al;
+        String date, text;
+        Map<String,Integer> sent;
         for (int i = 1; i < f.size(); i++) {
-            ArrayList<String> al = f.get(i);
+            al = f.get(i);
             if (al.size() > 1) {
-                String date = al.get(0);
+                date = al.get(0);
                 //String id = al.get(1);
-                String text = al.get(2);
-                HashMap<String,Integer> sent = computeConceptSentiment(text);
+                text = al.get(2);
+                sent = computeConceptSentiment(text);
                 totalSent = addSentiment(totalSent,sent);
             }
         }
@@ -1845,21 +1893,23 @@ public class DB {
      */
     public static void guessGender(String fname) {
 
-        ArrayList<ArrayList<String>> fn = DB.readSpreadsheet("FirstNames.csv",null,false,',');
-        HashMap<String,String> names = new HashMap<String,String>();
+        List<List<String>> fn = DB.readSpreadsheet("FirstNames.csv",null,false,',');
+        Map<String,String> names = new HashMap<>();
+        List<String> row;
         for (int i = 1; i < fn.size(); i++) {  // skip header
-            ArrayList<String> row = fn.get(i);
+            row = fn.get(i);
             names.put(row.get(0).toUpperCase(), row.get(1));
         }
-        ArrayList<ArrayList<String>> dat = DB.readSpreadsheet(fname,null,false,'\t');
+        List<List<String>> dat = DB.readSpreadsheet(fname,null,false,'\t');
+        String firstName, gender;
         for (int i = 1; i < dat.size(); i++) {
-            ArrayList<String> row = dat.get(i);
+            row = dat.get(i);
             if (row != null && row.size() > 10 && StringUtil.emptyString(row.get(1))) {   // gender column
                 //System.out.println(row.get(1));
-                String firstName = names.get(row.get(10).toUpperCase());  // first name column
+                firstName = names.get(row.get(10).toUpperCase());  // first name column
                 if (firstName != null) {
                     //System.out.println(firstName);
-                    String gender = "male";
+                    gender = "male";
                     if (names.get(row.get(10).toUpperCase()).equals("F"))
                         gender = "female";
                     row.set(1,gender);

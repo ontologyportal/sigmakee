@@ -46,7 +46,7 @@
             show.append(HTMLformatter.termList(kb.getREMatch(".*" + term + ".*",true),HTMLformatter.kbHref));
     }
     show.append(HTMLformatter.showNeighborTerms(kb,term));
-    TreeMap<String,ArrayList<String>> tm = WordNet.wn.getSenseKeysFromWord(term);
+    Map<String,List<String>> tm = WordNet.wn.getSenseKeysFromWord(term);
     if (tm != null) {
         show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
         show.append("<td width=\"40%\" valign=\"top\"><small>");
@@ -64,7 +64,7 @@
  }
  else if ((kb != null) && (term != null) && kb.containsTerm(term)) {  // Build the HTML format for all the formulas in
      term = kb.simplifyTerm(term, true);
-     
+
      show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
      show.append("<table width=\"95%\"><tr><td width=\"50%\"><font face=\"Arial,helvetica\" size=\"+3\"><b>");
 
@@ -104,13 +104,13 @@
          show.append(HTMLformatter.showMap(kb,term));
          show.append(HTMLformatter.showPictures(kb,term));
          show.append("</td>");
-         TreeMap<String,String> tm = WordNet.wn.getWordsFromTerm(term);
+         Map<String,String> tm = WordNet.wn.getWordsFromTerm(term);
          if (tm != null) {
              show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
              show.append("<td width=\"40%\"><small>");
-             if (language.equals("EnglishLanguage")) 
+             if (language.equals("EnglishLanguage"))
                  show.append(WordNetUtilities.formatWords(tm,kbName));
-             else 
+             else
                  show.append(OMWordnet.formatWords(term,kbName,language,HTMLformatter.createHrefStart() + "/sigma/"));
              String verbs = VerbNet.formatVerbs(tm);
              if (!StringUtil.emptyString(verbs))

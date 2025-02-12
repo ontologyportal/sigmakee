@@ -14,7 +14,7 @@ public class SUMOformulaToTPTPformula {
     public static boolean debug = false;
     public static boolean hideNumbers = true;
     public static String lang = "fof"; // or "tff"
-    public static StringBuilder qlist;
+    public static StringBuilder qlist = new StringBuilder();
 
     /** ***************************************************************
      */
@@ -245,7 +245,7 @@ public class SUMOformulaToTPTPformula {
 
         if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantifier");
         if (args.size() < 2) {
-            System.out.println("Error in SUMOformulaToTPTPformula.processQuant(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOformulaToTPTPformula.processQuant(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         else {
@@ -256,8 +256,9 @@ public class SUMOformulaToTPTPformula {
                 List<String> vars = varlist.argumentsToArrayListString(0);
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): valid vars: " + vars);
                 StringBuilder varStr = new StringBuilder();
+                String oneVar;
                 for (String v : vars) {
-                    String oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
+                    oneVar = SUMOformulaToTPTPformula.translateWord(v,v.charAt(0),false);
                     varStr.append(oneVar).append(", ");
                 }
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): valid vars: " + varStr);
@@ -269,7 +270,7 @@ public class SUMOformulaToTPTPformula {
                         processRecurse(new Formula(args.get(1))) + "))";
             }
             else {
-                System.out.println("Error in SUMOformulaToTPTPformula.processQuant(): null arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOformulaToTPTPformula.processQuant(): null arguments to " + op + " in " + f);
                 return "";
             }
         }
@@ -282,7 +283,7 @@ public class SUMOformulaToTPTPformula {
 
         String op = car.getFormula();
         if (args.size() < 2) {
-            System.out.println("Error in SUMOformulaToTPTPformula.processConjDisj(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOformulaToTPTPformula.processConjDisj(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         String tptpOp = "&";
@@ -308,7 +309,7 @@ public class SUMOformulaToTPTPformula {
             return processConjDisj(f,car,args);
         if (op.equals("=>")) {
             if (args.size() < 2) {
-                System.out.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else {
@@ -322,7 +323,7 @@ public class SUMOformulaToTPTPformula {
         }
         if (op.equals("<=>")) {
             if (args.size() < 2) {
-                System.out.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
@@ -335,7 +336,7 @@ public class SUMOformulaToTPTPformula {
             return processConjDisj(f,car,args);
         if (op.equals("not")) {
             if (args.size() != 1) {
-                System.out.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
@@ -353,14 +354,14 @@ public class SUMOformulaToTPTPformula {
 
         String op = car.getFormula();
         if (args.size() != 2) {
-            System.out.println("Error in SUMOformulaToTPTPformula.processCompOp(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         if (op.startsWith("equal")) {
             return "(" + processRecurse(new Formula(args.get(0))) + " = " +
                     processRecurse(new Formula(args.get(1))) + ")";
         }
-        System.out.println("Error in SUMOformulaToTPTPformula.processCompOp(): bad comparison operator " + op + " in " + f);
+        System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
     }
 
@@ -382,7 +383,7 @@ public class SUMOformulaToTPTPformula {
         //System.out.println("SUMOformulaToTPTPformula.processRecurse(): car: " + car.theFormula);
         List<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
-            System.out.println("Error in SUMOformulaToTPTPformula.processRecurse(): formula " + f);
+            System.err.println("Error in SUMOformulaToTPTPformula.processRecurse(): formula " + f);
             return "";
         }
         if (Formula.isLogicalOperator(car.getFormula()))
@@ -392,9 +393,10 @@ public class SUMOformulaToTPTPformula {
         else {
             if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): not math or comparison op: " + car);
             StringBuilder argStr = new StringBuilder();
+            int ttype ;
             for (String s : args) {
                 if (car.getFormula().equals("instance")) {
-                    int ttype = f.getFormula().charAt(0);
+                    ttype = f.getFormula().charAt(0);
                     if (Character.isDigit(ttype))
                         ttype = StreamTokenizer_s.TT_NUMBER;
                     if (Formula.atom(s))
@@ -416,13 +418,21 @@ public class SUMOformulaToTPTPformula {
     public static void generateQList(Formula f) {
 
         Set<String> UqVars = f.collectUnquantifiedVariables();
-        qlist = new StringBuilder();
+        qlist.setLength(0); // reset
+        String oneVar;
+        int sizeUqVars = UqVars.size();
+        int count = 0;
         for (String s : UqVars) {
-            String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-            qlist.append(oneVar).append(",");
+            oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
+            if (count < sizeUqVars-1)
+                qlist.append(oneVar).append(",");
+            else
+                qlist.append(oneVar); // don't write a final comma
+
+            count++;
         }
-        if (qlist.length() > 1)
-            qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
+
+        if (debug) System.err.println("SUMOformulaToTPTPformula.generateQList(): qlist: " + qlist);
     }
 
     /** ***************************************************************
@@ -446,7 +456,7 @@ public class SUMOformulaToTPTPformula {
         }
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             return "( " + process(new Formula(suoString),query) + " )";
-        System.out.println("ERROR in tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
+        System.err.println("ERROR in tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
         return "( " + process(new Formula(suoString),query) + " )";
     }
 
@@ -457,7 +467,7 @@ public class SUMOformulaToTPTPformula {
     public static String process(Formula f, boolean query) {
 
         if (f == null) {
-            if (debug) System.out.println("Error in SUMOformulaToTPTPformula.process(): null formula: ");
+            if (debug) System.err.println("Error in SUMOformulaToTPTPformula.process(): null formula: ");
             return "";
         }
         if (f.atom())
@@ -476,7 +486,7 @@ public class SUMOformulaToTPTPformula {
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 2: " + result);
             return result;
         }
-        return (f.getFormula());
+        return f.getFormula();
     }
 
     /** ***************************************************************
@@ -511,9 +521,10 @@ public class SUMOformulaToTPTPformula {
             if (processed != null) {
                 _f.theTptpFormulas = new HashSet<>();
                 //----Performs function on each current processed axiom
+                String tptpStr;
                 for (Formula f : processed) {
                     if (!f.getFormula().contains("@") && !f.higherOrder) {
-                        String tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
+                        tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
                         if (StringUtil.isNonEmptyString(tptpStr))
                             _f.theTptpFormulas.add(tptpStr);
                     }
@@ -616,12 +627,12 @@ public class SUMOformulaToTPTPformula {
      */
     public static void main(String[] args) {
 
-        System.out.println("INFO in Graph.main()");
+        System.out.println("INFO in SUMOformulaToTPTPformula.main()");
         if (args != null && args.length > 1 && args[0].equals("-h")) {
             showHelp();
         } else if (args.length > 1 && args[0].equals("-g")) {
             KBmanager.getMgr().initializeOnce();
-            Formula f = new Formula(args[1]);
+//            Formula f = new Formula(args[1]);
             String actual = StringUtil.removeEnclosingQuotes(args[1]);
             System.out.println(SUMOformulaToTPTPformula.tptpParseSUOKIFString(actual, false));
         } else {

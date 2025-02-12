@@ -220,10 +220,11 @@ public class THFnew {
 
         if (debug) System.out.println("THFnew.generateQList(): typeMap: " + typeMap);
         StringBuilder qlist = new StringBuilder();
+        String thftype, oneVar;
         for (String s : vars) {
-            String thftype = getTHFtype(s,typeMap);
-            String oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-            qlist.append(oneVar + ":" + thftype + ",");
+            thftype = getTHFtype(s,typeMap);
+            oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
+            qlist.append(oneVar).append(":").append(thftype).append(",");
         }
         if (qlist.length() > 1)
             qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
@@ -315,7 +316,7 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static void oneTrans(KB kb, Formula f, BufferedWriter bw) throws IOException {
+    public static void oneTrans(KB kb, Formula f, Writer bw) throws IOException {
 
         bw.write("% original: " + f.getFormula() + "\n" +
                 "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
@@ -331,7 +332,7 @@ public class THFnew {
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(1): " + typeMap);
             typeMap.putAll(res.varTypeCache);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
-            HashSet<String> types = new HashSet<String>();
+            Set<String> types = new HashSet<>();
             types.add("World");
             String worldVar = makeWorldVar(kb,f);
             typeMap.put(worldVar,types);
@@ -362,16 +363,13 @@ public class THFnew {
      */
     public static boolean protectedRelation(String s) {
 
-        if (s.equals("domain") || s.equals("instance") || s.equals("subAttribute") || s.equals("contraryAttribute"))
-            return true;
-        else
-            return false;
+        return s.equals("domain") || s.equals("instance") || s.equals("subAttribute") || s.equals("contraryAttribute");
     }
 
     /** ***************************************************************
      * Formulas to exclude from the translation
      */
-    public static boolean exclude(Formula f, KB kb, BufferedWriter out) throws IOException {
+    public static boolean exclude(Formula f, KB kb, Writer out) throws IOException {
 
         if (debug) System.out.println("exclude(): " + f);
         if (f.getFormula().contains("\"")) {
@@ -415,7 +413,7 @@ public class THFnew {
      * Predicates that denote formulas that shouldn't be included in
      * the translation.
      */
-    public static boolean excludePred(String pred, BufferedWriter out) throws IOException {
+    public static boolean excludePred(String pred, Writer out) throws IOException {
 
         if (pred.equals("documentation") ||
                 pred.equals("termFormat") ||
@@ -436,7 +434,7 @@ public class THFnew {
      * Predicates that denote formulas that shouldn't be included in
      * type definitions of the translation.
      */
-    public static boolean excludeForTypedef(String pred, BufferedWriter out) throws IOException {
+    public static boolean excludeForTypedef(String pred, Writer out) throws IOException {
 
         if (pred.equals("documentation") ||
             pred.equals("termFormat") ||
@@ -504,7 +502,7 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static void writeIntegerTypes(KB kb, BufferedWriter out) throws IOException {
+    public static void writeIntegerTypes(KB kb, Writer out) throws IOException {
 
         for (int i = 0; i < 7; i++) {
             out.write("thf(n__" + i + "_tp,type,(n__" + i + " : $i)).\n");
@@ -513,7 +511,7 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static void writeTypes(KB kb, BufferedWriter out) throws IOException {
+    public static void writeTypes(KB kb, Writer out) throws IOException {
 
         writeIntegerTypes(kb,out);
         for (String t : kb.terms) {
@@ -556,16 +554,16 @@ public class THFnew {
      */
     public static void transModalTHF(KB kb) {
 
-        THF thf = new THF();
-        Collection coll = Collections.EMPTY_LIST;
-        Collection<Formula> result = new ArrayList<Formula>();
+//        THF thf = new THF();
+//        Collection coll = Collections.EMPTY_LIST;
+//        Collection<Formula> result = new ArrayList<>();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         String sep = File.separator;
-        try {
-            if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
-            String filename = kbDir + sep + kb.name + ".thf";
-            FileWriter fstream = new FileWriter(filename);
-            BufferedWriter out = new BufferedWriter(fstream);
+
+        if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
+        String filename = kbDir + sep + kb.name + ".thf";
+         try (Writer fstream = new FileWriter(filename);
+            BufferedWriter out = new BufferedWriter(fstream)) {
             out.write(Modals.getTHFHeader() + "\n");
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
@@ -577,10 +575,9 @@ public class THFnew {
                             "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
             }
-            out.close();
             System.out.println("\n\nTHFnew.transModalTHF(): Result written to file " + filename);
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -602,7 +599,7 @@ public class THFnew {
         try {
             oneTrans(kb,f,null);
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             ex.printStackTrace();
         }
     }

@@ -76,7 +76,7 @@ public class Clausifier  {
             System.out.println("Error Formula.separateConjunctions(): not a conjunction " + thisFormula);
             return null;
         }
-        List<Formula> result = new ArrayList<Formula>();
+        List<Formula> result = new ArrayList<>();
         Formula temp = new Formula();
         temp.read(thisFormula.cdr());
         Formula clause;
@@ -123,15 +123,15 @@ public class Clausifier  {
      * @see toNegAndPosLitsWithRenameInfo()
      * @see toCanonicalClausalForm();
      */
-    public ArrayList clausifyWithRenameInfo() {
+    public List clausifyWithRenameInfo() {
 
         Formula old = new Formula(thisFormula.getFormula());
-        ArrayList result = new ArrayList();
+        List result = new ArrayList();
         Formula ans = null;
-        HashMap topLevelVars  = new HashMap();
-        HashMap scopedRenames = new HashMap();
-        HashMap allRenames    = new HashMap();
-        HashMap standardizedRenames = new HashMap();
+        Map<String,String> topLevelVars  = new HashMap<>();
+        Map<String,String> scopedRenames = new HashMap<>();
+        Map<String,String> allRenames    = new HashMap<>();
+        Map<String,String> standardizedRenames = new HashMap();
         thisFormula = equivalencesOut();
         thisFormula = implicationsOut();
         thisFormula = negationsIn();
@@ -302,16 +302,18 @@ public class Clausifier  {
             List clauses = (List) clauseData.get(0);
             if (!clauses.isEmpty()) {
                 List sortedClauses = new ArrayList();
-                StringBuilder sb = null;
-                Iterator itc = null;
+                StringBuilder sb;
+                Iterator itc, itl;
+                List neglits, poslits;
+                int i;
                 for (itc = clauses.iterator(); itc.hasNext();) {
                     List clause = (List) itc.next();
                     if (!clause.isEmpty() && (clause.size() == 2)) {
                         sb = new StringBuilder();
-                        Iterator itl = null;
-                        List neglits = (List) clause.get(0);
+                        itl = null;
+                        neglits = (List) clause.get(0);
                         if (neglits.size() > 1) Collections.sort(neglits);
-                        int i = 0;
+                        i = 0;
                         for (itl = neglits.iterator(); itl.hasNext(); i++) {
                             if (i > 0) sb.append(Formula.SPACE);
                             sb.append(Formula.LP);
@@ -320,7 +322,7 @@ public class Clausifier  {
                             sb.append(itl.next().toString());
                             sb.append(Formula.RP);
                         }
-                        List poslits = (List) clause.get(1);
+                        poslits = (List) clause.get(1);
                         if (!poslits.isEmpty()) {
                             Collections.sort(poslits);
                             for (itl = poslits.iterator(); itl.hasNext(); i++) {
@@ -534,7 +536,7 @@ public class Clausifier  {
      */
     protected static String normalizeVariables(String input, boolean replaceSkolemTerms) {
 
-        String result = input;
+        String result;
         int[] idxs = {1, 1};
         Map vmap = new HashMap();
         result = normalizeVariables_1(input, idxs, vmap, replaceSkolemTerms);
@@ -561,7 +563,7 @@ public class Clausifier  {
     protected static String normalizeVariables_1(String input,int[] idxs,
                                                  Map vmap, boolean replaceSkolemTerms) {
 
-        String result = "";
+        String result;
         String vbase = Formula.VVAR;
         String rvbase = (Formula.RVAR + "VAR");
         StringBuilder sb = new StringBuilder();
@@ -610,7 +612,7 @@ public class Clausifier  {
     private Formula equivalencesOut() {
 
         Formula ans = thisFormula;
-        String theNewFormula = null;
+        String theNewFormula;
         if (thisFormula.listP() && !(thisFormula.empty())) {
             String head = thisFormula.car();
             if (!StringUtil.emptyString(head) && Formula.listP(head)) {
@@ -651,7 +653,7 @@ public class Clausifier  {
     private Formula implicationsOut() {
 
         Formula ans = thisFormula;
-        String theNewFormula = null;
+        String theNewFormula;
         if (thisFormula.listP() && !thisFormula.empty()) {
             String head = thisFormula.car();
             if (!StringUtil.emptyString(head) && Formula.listP(head)) {
@@ -731,7 +733,7 @@ public class Clausifier  {
                     return arg1_of_arg1F;
                 }
                 if (Formula.isCommutative(arg0_of_arg1)) {
-                    String newOp = null;
+                    String newOp;
                     if (arg0_of_arg1.equals(Formula.AND))
                     	newOp = Formula.OR;
                     else
@@ -741,7 +743,7 @@ public class Clausifier  {
                 if (Formula.isQuantifier(arg0_of_arg1)) {
                     String vars = arg1F.cadr();
                     String arg2_of_arg1 = arg1F.caddr();
-                    String quant = null;
+                    String quant;
                     if (arg0_of_arg1.equals(Formula.UQUANT))
                     	quant = Formula.EQUANT;
                     else
@@ -809,7 +811,7 @@ public class Clausifier  {
     private Formula listAll(String before, String after) {
 
         Formula ans = thisFormula;
-        String theNewFormula = null;
+        String theNewFormula;
         if (thisFormula.listP()) {
             theNewFormula = "";
             Formula f = thisFormula;
@@ -983,7 +985,7 @@ public class Clausifier  {
      */
     public static Set<String> extractVariables(Formula f) {
 
-        Set<String> result = new TreeSet<String>();
+        Set<String> result = new TreeSet<>();
         extractVariablesRecursively(f, result);
         return result;
     }
@@ -1043,9 +1045,9 @@ public class Clausifier  {
      */
     private Formula renameVariables() {
 
-        HashMap topLevelVars = new HashMap();
-        HashMap scopedRenames = new HashMap();
-        HashMap allRenames = new HashMap();
+        Map topLevelVars = new HashMap();
+        Map scopedRenames = new HashMap();
+        Map allRenames = new HashMap();
         return renameVariables(topLevelVars, scopedRenames, allRenames);
     }
 
@@ -1091,14 +1093,15 @@ public class Clausifier  {
             String arg0 = thisFormula.car();
             if (Formula.isQuantifier(arg0)) {
                 // Copy the scopedRenames map to protect variable scope as we descend below this quantifier.
-                Map<String,String> newScopedRenames = new HashMap<String,String>(scopedRenames);
+                Map<String,String> newScopedRenames = new HashMap<>(scopedRenames);
                 String oldVars = thisFormula.cadr();
                 Formula oldVarsF = new Formula();
                 oldVarsF.read(oldVars);
                 String newVars = "";
+                String oldVar, newVar;
                 while (oldVarsF != null && !oldVarsF.empty()) {
-                    String oldVar = oldVarsF.car();
-                    String newVar = newVar();
+                    oldVar = oldVarsF.car();
+                    newVar = newVar();
                     newScopedRenames.put(oldVar, newVar);
                     allRenames.put(newVar, oldVar);
                     newVars += (Formula.SPACE + newVar);
@@ -1157,7 +1160,7 @@ public class Clausifier  {
      * (a list) if vars contains variables.  Otherwise, it will be an
      * atomic constant.
      */
-    private static String newSkolemTerm(TreeSet<String> vars) {
+    private static String newSkolemTerm(Set<String> vars) {
 
         String ans = Formula.SK_PREF;
         int idx = incSkolemIndex();
@@ -1165,8 +1168,9 @@ public class Clausifier  {
 //            ans += (Formula.FN_SUFF + Formula.SPACE + idx);
             ans += (Formula.FN_SUFF + idx);
             Iterator<String> it = vars.iterator();
+            String var;
             while (it.hasNext()) {
-                String var = (String) it.next();
+                var = (String) it.next();
                 ans += (Formula.SPACE + var);
             }
             ans = (Formula.LP + ans + Formula.RP);
@@ -1193,13 +1197,13 @@ public class Clausifier  {
         Map<String,String> evSubs = new HashMap<>();
 
         // Implicitly universally quantified variables.
-        TreeSet<String> iUQVs = new TreeSet<>();
+        Set<String> iUQVs = new TreeSet<>();
 
         // Explicitly quantified variables.
-        TreeSet<String> scopedVars = new TreeSet<>();
+        Set<String> scopedVars = new TreeSet<>();
 
         // Explicitly universally quantified variables.
-        TreeSet<String> scopedUQVs = new TreeSet<>();
+        Set<String> scopedUQVs = new TreeSet<>();
 
         // Collect the implicitly universally qualified variables from
         // the Formula.
@@ -1227,7 +1231,7 @@ public class Clausifier  {
      * @return A new SUO-KIF Formula without existentially quantified
      * variables.
      */
-    private Formula existentialsOut(Map<String,String> evSubs, TreeSet<String> iUQVs, TreeSet<String> scopedUQVs) {
+    private Formula existentialsOut(Map<String,String> evSubs, Set<String> iUQVs, Set<String> scopedUQVs) {
 
         if (thisFormula.listP()) {
             if (thisFormula.empty()) { return thisFormula; }
@@ -1235,12 +1239,13 @@ public class Clausifier  {
             if (arg0.equals(Formula.UQUANT)) {
                 // Copy the scoped variables set to protect variable scope as we descend below this
                 // quantifier.
-                TreeSet<String> newScopedUQVs = new TreeSet<String>(scopedUQVs);
+                Set<String> newScopedUQVs = new TreeSet<>(scopedUQVs);
                 String varList = thisFormula.cadr();
                 Formula varListF = new Formula();
                 varListF.read(varList);
+                String var;
                 while (!(varListF.empty())) {
-                    String var = varListF.car();
+                    var = varListF.car();
                     newScopedUQVs.add(var);
                     varListF.read(varListF.cdr());
                 }
@@ -1255,23 +1260,25 @@ public class Clausifier  {
             }
             if (arg0.equals(Formula.EQUANT)) {
                 // Collect the relevant universally quantified variables.
-                TreeSet<String> uQVs = new TreeSet<>(iUQVs);
+                Set<String> uQVs = new TreeSet<>(iUQVs);
                 uQVs.addAll(scopedUQVs);
                 // Collect the existentially quantified variables.
-                ArrayList<String> eQVs = new ArrayList<>();
+                List<String> eQVs = new ArrayList<>();
                 String varList = thisFormula.cadr();
                 Formula varListF = new Formula();
                 varListF.read(varList);
+                String var;
                 while (!(varListF.empty())) {
-                    String var = varListF.car();
+                    var = varListF.car();
                     eQVs.add(var);
                     varListF.read(varListF.cdr());
                 }
                 // For each existentially quantified variable, create a corresponding skolem term, and
                 // store the pair in the evSubs map.
+                String skTerm;
                 for (int i = 0; i < eQVs.size() ; i++) {
-                    String var = (String) eQVs.get(i);
-                    String skTerm = newSkolemTerm(uQVs);
+                    var = (String) eQVs.get(i);
+                    skTerm = newSkolemTerm(uQVs);
                     evSubs.put(var, skTerm);
                 }
                 String arg2 = thisFormula.caddr();
@@ -1296,7 +1303,7 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    private static Formula existentialsOut(Formula f, Map evSubs, TreeSet iUQVs, TreeSet scopedUQVs) {
+    private static Formula existentialsOut(Formula f, Map evSubs, Set iUQVs, Set scopedUQVs) {
 
         Clausifier temp = new Clausifier(f.getFormula());
         return temp.existentialsOut(evSubs, iUQVs, scopedUQVs);
@@ -1315,19 +1322,20 @@ public class Clausifier  {
      *
      * @return void
      */
-    private void collectIUQVars(TreeSet iuqvs, TreeSet scopedVars) {
+    private void collectIUQVars(Set iuqvs, Set scopedVars) {
 
         if (thisFormula.listP() && !thisFormula.empty()) {
             String arg0 = thisFormula.car();
             if (Formula.isQuantifier(arg0)) {
                 // Copy the scopedVars set to protect variable  scope as we descend below this quantifier.
-                TreeSet newScopedVars = new TreeSet(scopedVars);
+                Set newScopedVars = new TreeSet(scopedVars);
 
                 String varList = thisFormula.cadr();
                 Formula varListF = new Formula();
                 varListF.read(varList);
+                String var;
                 while (!(varListF.empty())) {
-                    String var = varListF.car();
+                    var = varListF.car();
                     newScopedVars.add(var);
                     varListF = varListF.cdrAsFormula();
                 }
@@ -1352,7 +1360,7 @@ public class Clausifier  {
     /** ***************************************************************
      *  convenience method
      */
-    private static void collectIUQVars(Formula f, TreeSet iuqvs, TreeSet scopedVars) {
+    private static void collectIUQVars(Formula f, Set iuqvs, Set scopedVars) {
 
         Clausifier temp = new Clausifier(f.getFormula());
         temp.collectIUQVars(iuqvs,scopedVars);
@@ -1448,25 +1456,27 @@ public class Clausifier  {
             if (thisFormula.empty()) { return thisFormula; }
             String arg0 = thisFormula.car();
             if (Formula.isCommutative(arg0) || arg0.equals(Formula.NOT)) {
-                ArrayList literals = new ArrayList();
+                List literals = new ArrayList();
                 Formula restF = thisFormula.cdrAsFormula();
+                String lit, litFarg0, theNewFormula, rest2arg0;
+                Formula litF, newF, rest2F, rest2arg0F;
                 while (!(restF.empty())) {
-                    String lit = restF.car();
-                    Formula litF = new Formula();
+                    lit = restF.car();
+                    litF = new Formula();
                     litF.read (lit);
                     if (litF.listP()) {
-                        String litFarg0 = litF.car();
+                        litFarg0 = litF.car();
                         if (litFarg0.equals(arg0)) {
                             if (arg0.equals(Formula.NOT)) {
-                                String theNewFormula = litF.cadr();
-                                Formula newF = new Formula();
+                                theNewFormula = litF.cadr();
+                                newF = new Formula();
                                 newF.read(theNewFormula);
                                 return nestedOperatorsOut_1(newF);
                             }
-                            Formula rest2F = litF.cdrAsFormula();
+                            rest2F = litF.cdrAsFormula();
                             while (!(rest2F.empty())) {
-                                String rest2arg0 = rest2F.car();
-                                Formula rest2arg0F = new Formula();
+                                rest2arg0 = rest2F.car();
+                                rest2arg0F = new Formula();
                                 rest2arg0F.read(rest2arg0);
                                 literals.add(nestedOperatorsOut_1(rest2arg0F).getFormula());
                                 rest2F = rest2F.cdrAsFormula();
@@ -1479,11 +1489,11 @@ public class Clausifier  {
                         literals.add(lit);
                     restF = restF.cdrAsFormula();
                 }
-                String theNewFormula = (Formula.LP + arg0);
+                theNewFormula = (Formula.LP + arg0);
                 for (int i = 0 ; i < literals.size() ; i++)
                     theNewFormula += (Formula.SPACE + (String)literals.get(i));
                 theNewFormula += Formula.RP;
-                Formula newF = new Formula();
+                newF = new Formula();
                 newF.read(theNewFormula);
                 return newF;
             }
@@ -1544,9 +1554,11 @@ public class Clausifier  {
                 List<String> disjuncts = new ArrayList<>();
                 List<String> conjuncts = new ArrayList<>();
                 Formula restF = thisFormula.cdrAsFormula();
+                String disjunct;
+                Formula disjunctF;
                 while (!(restF.empty())) {
-                    String disjunct = restF.car();
-                    Formula disjunctF = new Formula();
+                    disjunct = restF.car();
+                    disjunctF = new Formula();
                     disjunctF.read(disjunct);
                     if (disjunctF.listP()
                         && disjunctF.car().equals(Formula.AND)
@@ -1608,18 +1620,20 @@ public class Clausifier  {
      * @return An ArrayList of LISP lists, each of which contains one
      * or more Formulas.
      */
-    private ArrayList<Formula> operatorsOut() {
+    private List<Formula> operatorsOut() {
 
-        ArrayList<Formula> result = new ArrayList<>();
-        ArrayList<Formula> clauses = new ArrayList<>();
+        List<Formula> result = new ArrayList<>();
+        List<Formula> clauses = new ArrayList<>();
         if (!StringUtil.emptyString(thisFormula.getFormula())) {
             if (thisFormula.listP()) {
                 String arg0 = thisFormula.car();
                 if (arg0.equals(Formula.AND)) {
                     Formula restF = thisFormula.cdrAsFormula();
+                    String fStr;
+                    Formula newF;
                     while (!(restF.empty())) {
-                        String fStr = restF.car();
-                        Formula newF = new Formula();
+                        fStr = restF.car();
+                        newF = new Formula();
                         newF.read(fStr);
                         clauses.add(newF);
                         restF = restF.cdrAsFormula();
@@ -1628,15 +1642,17 @@ public class Clausifier  {
             }
             if (clauses.isEmpty())
                 clauses.add(thisFormula);
+            Formula clauseF, f;
+            String lit;
             for (int i = 0 ; i < clauses.size() ; i++) {
-                Formula clauseF = new Formula();
+                clauseF = new Formula();
                 clauseF.read("()");
-                Formula f = (Formula) clauses.get(i);
+                f = (Formula) clauses.get(i);
                 if (f.listP()) {
                     if (f.car().equals(Formula.OR)) {
                         f = f.cdrAsFormula();
                         while (!(f.empty())) {
-                            String lit = f.car();
+                            lit = f.car();
                             clauseF = clauseF.cons(lit);
                             f = f.cdrAsFormula();
                         }
@@ -1661,7 +1677,7 @@ public class Clausifier  {
      * @return A Formula.
      */
     private Formula standardizeApart() {
-        HashMap<String, String> reverseRenames = new HashMap<>();
+        Map<String, String> reverseRenames = new HashMap<>();
         return standardizeApart(thisFormula,reverseRenames);
     }
 
@@ -1703,9 +1719,11 @@ public class Clausifier  {
                 String arg0 = thisFormula.car();
                 if (arg0.equals(Formula.AND)) {
                     Formula restF = thisFormula.cdrAsFormula();
+                    String fStr;
+                    Formula newF;
                     while (!(restF.empty())) {
-                        String fStr = restF.car();
-                        Formula newF = new Formula();
+                        fStr = restF.car();
+                        newF = new Formula();
                         newF.read(fStr);
                         clauses.add(newF);
                         restF = restF.cdrAsFormula();
@@ -1716,17 +1734,19 @@ public class Clausifier  {
                 clauses.add(thisFormula);
             // 'Standardize apart' by renaming the variables in each clause.
             int n = clauses.size();
+            Map<String, String> renames;
             for (int i = 0 ; i < n ; i++) {
-                HashMap<String, String> renames = new HashMap<String, String>();
+                renames = new HashMap<String, String>();
                 Formula oldClause = (Formula) clauses.remove(0);
                 clauses.add(standardizeApart_1(oldClause,renames,reverseRenames));
             }
 
             // Construct the new Formula to return.
+            Formula f;
             if (n > 1) {
                 String theNewFormula = "(and";
                 for (int i = 0 ; i < n ; i++) {
-                    Formula f = (Formula) clauses.get(i);
+                    f = (Formula) clauses.get(i);
                     theNewFormula += (Formula.SPACE + f.getFormula());
                 }
                 theNewFormula += Formula.RP;
@@ -1806,7 +1826,7 @@ public class Clausifier  {
     public static String getOriginalVar(String var, Map<String, String> varMap) {
 
         String ans = null;
-        String next = null;
+        String next;
         if (!StringUtil.emptyString(var) && (varMap instanceof Map)) {
             ans = var;
             next = varMap.get(ans);

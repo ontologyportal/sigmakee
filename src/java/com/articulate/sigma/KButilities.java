@@ -241,10 +241,9 @@ public class KButilities {
     public static void genSynLinks(String fname) {
 
         int termcol = 0;
-        ArrayList<ArrayList<String>> spread = new ArrayList<>();
-        spread = DB.readSpreadsheet(fname,null,false,'\t');
+        List<List<String>> spread = DB.readSpreadsheet(fname,null,false,'\t');
         String label;
-        for (ArrayList<String> row : spread) {
+        for (List<String> row : spread) {
             if (row != null && row.size() > 1) {
                 label = row.get(termcol);
                 System.out.println("(synonymousExternalConcept \"" + label + "\" Entity Taxonomy)");

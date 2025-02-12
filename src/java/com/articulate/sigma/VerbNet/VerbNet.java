@@ -77,35 +77,27 @@ public class VerbNet {
     /** *************************************************************
      */
     public static void readVerbFiles() {
+        String dirStr = KBmanager.getMgr().getPref("verbnet");
+        System.out.println("VerbNet.readVerbFiles(): loading files from: " + dirStr);
+        File dir = new File(dirStr);
+        if (!dir.exists()) {
+            System.err.println("VerbNet.readVerbFiles(): no such dir: " + dirStr);
+            return;
+        }
+        File folder = new File(dirStr);
+        SimpleDOMParser sdp;
+        for (File fileEntry : folder.listFiles()) {
+            if (!fileEntry.toString().endsWith(".xml")) {
+                continue;
+            }
 
-        try {
-            String dirStr = KBmanager.getMgr().getPref("verbnet");
-            System.out.println("VerbNet.readVerbFiles(): loading files from: " + dirStr);
-            File dir = new File(dirStr);
-            if (!dir.exists()) {
-                System.out.println("VerbNet.readVerbFiles(): no such dir: " + dirStr);
-                return;
-            }
-            try {
-                File folder = new File(dirStr);
-                BufferedReader br;
-                SimpleDOMParser sdp;
-                for (File fileEntry : folder.listFiles()) {
-                    if (!fileEntry.toString().endsWith(".xml"))
-                        continue;
-                    br = new BufferedReader(new FileReader(fileEntry.toString()));
-                    sdp = new SimpleDOMParser();
-                    VERB_FILES.put(fileEntry.toString(), sdp.parse(br));
-                }
-            }
-            catch (FileNotFoundException e) {
+            try (Reader br = new BufferedReader(new FileReader(fileEntry.toString()))) {
+                sdp = new SimpleDOMParser();
+                VERB_FILES.put(fileEntry.toString(), sdp.parse(br));
+            } catch (IOException e) {
                 System.err.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
                 e.printStackTrace();
             }
-        }
-        catch (IOException e) {
-            System.err.println("Error in VerbNet.readVerbFiles(): " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
@@ -149,7 +141,7 @@ public class VerbNet {
     /** *************************************************************
      * @param tm Map of words with their corresponding synset numbers
      */
-    public static String formatVerbsList(TreeMap<String,ArrayList<String>> tm) {
+    public static String formatVerbsList(Map<String,List<String>> tm) {
 
         StringBuilder result = new StringBuilder();
         int count = 0;

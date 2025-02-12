@@ -260,11 +260,11 @@ public class KBcache implements Serializable {
     public int getArity(String rel) {
 
         if (valences == null) {
-            System.out.println("Error in KBcache.getArity(): null valences");
+            System.err.println("Error in KBcache.getArity(): null valences");
             return 0;
         }
         if (!valences.containsKey(rel)) {
-            System.out.println("Error in KBcache.getArity(): " + rel + " not found");
+            System.err.println("Error in KBcache.getArity(): " + rel + " not found");
             return 0;
         }
         return valences.get(rel);
@@ -276,7 +276,7 @@ public class KBcache implements Serializable {
     private void arrayListReplace(List<String> al, int index, String newEl) {
 
         if (index > al.size()) {
-            System.out.println("Error in KBcache.arrayListReplace(): index " + index +
+            System.err.println("Error in KBcache.arrayListReplace(): index " + index +
                     " out of bounds.");
             return;
         }
@@ -321,7 +321,7 @@ public class KBcache implements Serializable {
         if (instanceOf.containsKey(i)) {
             Set<String> hashSet = instanceOf.get(i);
             if (hashSet == null) {
-                System.out.println("Error in KBcache.isInstanceOf(): null result for " + i);
+                System.err.println("Error in KBcache.isInstanceOf(): null result for " + i);
                 return false;
             }
             return hashSet.contains(c);
@@ -447,7 +447,7 @@ public class KBcache implements Serializable {
             sig.add("Entity");
         }
         if (sig == null)
-            System.out.println("Error in KBcache.extendInstance(): no sig for term " + term);
+            System.err.println("Error in KBcache.extendInstance(): no sig for term " + term);
         List<String> newsig = SUMOtoTFAform.relationExtractSigFromName(newTerm);
         signatures.put(newTerm,newsig);
         // The number of arguments to each relation.  Variable arity is -1
@@ -774,7 +774,7 @@ public class KBcache implements Serializable {
         for (String cl : p1) {
             classes = subclasses.get(cl);
             if (classes == null)
-                System.out.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
+                System.err.println("Error in KBcache.mostSpecificParent(): no subclasses for : " + cl);
             else {
                 count = classes.size();
                 countString = Integer.toString(count);
@@ -1141,7 +1141,7 @@ public class KBcache implements Serializable {
 
         Map<String,Set<String>> relParents = parents.get(rel);
         if (relParents == null) {
-            System.out.println("Error in KBcache.breadthFirstBuildParents(): no relation " + rel);
+            System.err.println("Error in KBcache.breadthFirstBuildParents(): no relation " + rel);
             return;
         }
         int threshold = 10;      // maximum time that a term can be traversed in breadthFirstBuildParents()
@@ -1191,7 +1191,7 @@ public class KBcache implements Serializable {
 
         Map<String,Set<String>> relChildren = children.get(rel);
         if (relChildren == null) {
-            System.out.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
+            System.err.println("Error in KBcache.breadthFirstBuildChildren(): no relation " + rel);
             return;
         }
         //if (debug) System.out.println("INFO in KBcache.breadthFirstBuildChildren(): trying relation " + rel);
@@ -1411,7 +1411,7 @@ public class KBcache implements Serializable {
                     if (debug) System.out.println("INFO in KBcache.collectDomains(): form " + form);
                     arg2 = form.getStringArgument(2);
                     if (StringUtil.emptyString(arg2) || !StringUtil.isNumeric(arg2)) {
-                        System.out.println("Error in KBcache.collectDomains(): arg2 not a number in:  " + form);
+                        System.err.println("Error in KBcache.collectDomains(): arg2 not a number in:  " + form);
                         continue;
                     }
                     arg = Integer.parseInt(form.getStringArgument(2));
@@ -1477,8 +1477,8 @@ public class KBcache implements Serializable {
         String rel = "subrelation";
         Map<String,Set<String>> relParents = parents.get("subrelation");
         if (relParents == null) {
-            System.out.println("Error in KBcache.breadthFirstInheritDomains(): no parents using relation subrelation");
-            System.out.println(parents);
+            System.err.println("Error in KBcache.breadthFirstInheritDomains(): no parents using relation subrelation");
+            System.err.println(parents);
             return;
         }
         Deque<String> Q = new ArrayDeque<>();
@@ -1497,7 +1497,7 @@ public class KBcache implements Serializable {
                     newDomains = signatures.get(newTerm);
                     if (debug) System.out.println("KBcache.breadthFirstInheritDomains(); newDomains: " + newDomains);
                     if (valences.get(t) == null) {
-                        System.out.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
+                        System.err.println("Error in KBcache.breadthFirstInheritDomains(): no valence for " + t);
                         continue;
                     }
                     else if (valences.get(newTerm) == null || valences.get(newTerm) < valences.get(t)) {
@@ -1657,7 +1657,7 @@ public class KBcache implements Serializable {
             boolean instrel = true;
             sig = signatures.get(rel);
             if (sig == null) {
-                System.out.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
+                System.err.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
             }
             else {
                 for (int i = 0; i < sig.size(); i++) {
@@ -1768,7 +1768,7 @@ public class KBcache implements Serializable {
 
         List<String> sig = getSignature(r);
         if (sig == null)
-            System.out.println("Error in variableArityType() null signature for " + r);
+            System.err.println("Error in variableArityType() null signature for " + r);
         String type = sig.get(sig.size() - 1);
         return type;
     }

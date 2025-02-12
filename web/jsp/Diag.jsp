@@ -1,5 +1,5 @@
 <%@ include file="Prelude.jsp" %>
-<html>                                             
+<html>
   <head>
     <title> Knowledge base Diagnostics</title>
   </head>
@@ -43,12 +43,12 @@ if (!role.equals("admin") && !role.equals("user")) {
 
 <%
   // Terms without parents
-  ArrayList<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
+  List<String> termsWithoutParent = Diagnostics.termsNotBelowEntity(kb);
   out.println(HTMLformatter.htmlDivider("Error: Terms without a root at Entity"));
   out.println(HTMLformatter.termList(termsWithoutParent,kbHref));
 
   // Children of disjoint parents
-  ArrayList<String> disjoint = Diagnostics.childrenOfDisjointParents(kb);
+  List<String> disjoint = Diagnostics.childrenOfDisjointParents(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Error: Terms with disjoint parents"));
   out.println(HTMLformatter.termList(disjoint,kbHref));
 
@@ -67,42 +67,42 @@ if (!role.equals("admin") && !role.equals("user")) {
   }
 
   // relations without format
-  ArrayList<String> termsWithoutFormat = Diagnostics.relationsWithoutFormat(kb);
+  List<String> termsWithoutFormat = Diagnostics.relationsWithoutFormat(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Relations without format"));
   out.println(HTMLformatter.termList(termsWithoutFormat,kbHref));
 
   // Terms without documentation
-  ArrayList<String> termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
+  List<String> termsWithoutDoc = Diagnostics.termsWithoutDoc(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms without documentation"));
   out.println(HTMLformatter.termList(termsWithoutDoc,kbHref));
 
   // Terms with multiple documentation
-  ArrayList<String> termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
+  List<String> termsWithMultipleDoc = Diagnostics.termsWithMultipleDoc(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms with multiple documentation"));
   out.println(HTMLformatter.termList(termsWithMultipleDoc,kbHref));
 
   // Terms differing only in capitalization
-  ArrayList<String> termCapDiff = Diagnostics.termCapDiff(kb);
+  List<String> termCapDiff = Diagnostics.termCapDiff(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms differing only in capitalization"));
   out.println(HTMLformatter.termList(termCapDiff,kbHref));
 
   // Members (instances) of a parent class that are not also members
   // of one of the subclasses that constitute the exhaustive
   // decomposition of the parent class.
-  ArrayList<String> termsMissingFromPartition = Diagnostics.membersNotInAnyPartitionClass(kb);
+  List<String> termsMissingFromPartition = Diagnostics.membersNotInAnyPartitionClass(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Instances of a partitioned class that are not instances of one of the class's partitioning subclasses"));
   out.println(HTMLformatter.termList(termsMissingFromPartition,kbHref));
 
-  ArrayList<String> norule = Diagnostics.termsWithoutRules(kb);
+  List<String> norule = Diagnostics.termsWithoutRules(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Terms that do not appear in any rules"));
   out.println(HTMLformatter.termList(norule,kbHref));
 
-  ArrayList<Formula> noquant = Diagnostics.quantifierNotInBody(kb);
+  List<Formula> noquant = Diagnostics.quantifierNotInBody(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with extraneous quantified variables"));
   for (Formula f : noquant)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
 
-  ArrayList<Formula> noquantconseq = Diagnostics.unquantsInConseq(kb);
+  List<Formula> noquantconseq = Diagnostics.unquantsInConseq(kb);
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Formulae with unquantified variable appearing only in consequent"));
   for (Formula f : noquantconseq)
 	  out.println(f.htmlFormat(kbHref) + "<p>");
@@ -110,7 +110,7 @@ if (!role.equals("admin") && !role.equals("user")) {
   out.println("<br>" + HTMLformatter.htmlDivider("Warning: Files with mutual dependencies"));
   out.println(Diagnostics.printTermDependency(kb,kbHref));
 
-  System.out.println("  > " + ((System.currentTimeMillis() - t0) / 1000.0) 
+  System.out.println("  > " + ((System.currentTimeMillis() - t0) / 1000.0)
                      + " seconds to run all diagnostics");
 %>
 <%@ include file="Postlude.jsp" %>
