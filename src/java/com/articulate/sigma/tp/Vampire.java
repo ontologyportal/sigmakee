@@ -22,6 +22,7 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;
+import tptp_parser.TPTPFormula;
 
 /**
  * Class for invoking the latest research version of Vampire from Java
@@ -280,7 +281,7 @@ public class Vampire {
         System.out.println("Vampire class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -p - run Vampire on the default generated KB (tptp, fof or tff");
+        System.out.println("  -p - run Vampire on the default generated KB (tptp) and output a proof");
         System.out.println("  with no arguments, show this help screen and execute a test");
         System.out.println();
     }
@@ -307,10 +308,10 @@ public class Vampire {
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
-        File s = new File(dir + kbName + "." + lang);
-            if (!s.exists()) {
-                System.err.println("Error in Vampire.main(): no KB file: " + s);
-                return;
+        File kbFile = new File(dir + kbName + "." + lang);
+        if (!kbFile.exists()) {
+            System.err.println("Error in Vampire.main(): no KB file: " + kbFile);
+            return;
         }
 
         Vampire vampire = new Vampire();
@@ -334,8 +335,8 @@ public class Vampire {
             System.out.println("Vampire.main(): first test");
             Set<String> query = new HashSet<>();
             query.add("tff(conj1,conjecture,?[V__X, V__Y] : (s__subclass(V__X,V__Y))).");
-            System.out.println("Vampire.main(): calling Vampire with: " + s + ", 30, " + query);
-            vampire.run(kb, s, 30, query);
+            System.out.println("Vampire.main(): calling Vampire with: " + kbFile + ", 30, " + query);
+            vampire.run(kb, kbFile, 30, query);
             System.out.println("----------------\nVampire output\n");
             for (String l : vampire.output)
                 System.out.println(l);
@@ -351,20 +352,33 @@ public class Vampire {
         } else {
             if (args.length > 0 && args[0].equals("-h"))
                 printHelp();
-            if (args.length > 0 && args[0].equals("-p")) {
-                vampire.run(s, 60);
+            else if (args.length > 0 && args[0].equals("-p")) {
+                vampire.run(kbFile, 60);
 
-                System.out.println("----------------\nVampire output\n");
-                for (String l : vampire.output) {
-                    System.out.println(l);
+                String query = "(maximumPayloadCapacity ?X (MeasureFn ?Y ?Z))";
+                StringBuilder answerVars = new StringBuilder("?X ?Y ?Z");
+                System.out.println("input: " + vampire.output + "\n");
+                tpp.parseProofOutput(vampire.output, query, kb, answerVars);
+
+                String sep = File.separator;
+                dir = System.getenv("CATALINA_HOME") + sep + "webapps"
+                + sep + "sigma" + sep + "graph";
+                File webGphDir = new File(dir);
+                if (!webGphDir.exists())
+                    webGphDir.mkdirs();
+
+                tpp.createProofDotGraph();
+                System.out.println("Vampire.main(): " + tpp.proof.size() + " steps ");
+                Formula f;
+                for (TPTPFormula step : tpp.proof) {
+                    System.out.println(":: " + step);
+                    f = new Formula(step.sumo);
+                    System.out.println(f.format("", "  ", "\n"));
                 }
-                String queryStr = "(subclass ?X ?Y)";
-                tpp.parseProofOutput(vampire.output, queryStr, kb, vampire.qlist);
-                System.out.println("Vampire.main(): bindings: " + tpp.bindings);
-                System.out.println("Vampire.main(): proof: " + tpp.proof);
-                System.out.println("-----------------\n");
-                System.out.println();
-            }
+                System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
+                System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
+            } else
+                System.err.println("Unknown option: " + args[0]);
         }
     }
 }
