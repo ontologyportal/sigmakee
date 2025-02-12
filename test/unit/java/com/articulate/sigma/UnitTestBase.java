@@ -18,7 +18,7 @@ public class UnitTestBase extends SigmaTestBase {
     private static final String CONFIG_FILE_PATH = CONFIG_FILE_DIR + File.separator +
             "config_topOnly.xml";
 //    private static final String CONFIG_FILE_PATH = System.getenv("SIGMA_HOME") + "/KBs/config.xml";
-    private static final Class CLASS = UnitTestBase.class;
+    private static final Class<?> CLASS = UnitTestBase.class;
     public static final int NUM_KIF_FILES = 3; // config_topOnly.xml
 //    public static final int NUM_KIF_FILES = 45; // full config.xml
 
