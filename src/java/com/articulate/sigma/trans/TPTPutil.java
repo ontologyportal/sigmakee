@@ -90,7 +90,7 @@ public class TPTPutil {
                 formString = formString.trim();
             }
             else {
-                System.out.println("Error in Formula.htmlTPTPFormat(): empty TPTP formula: " + formString);
+                System.err.println("Error in Formula.htmlTPTPFormat(): empty TPTP formula: " + formString);
                 continue;
             }
             formString = extractTPTPaxiom(formString);
