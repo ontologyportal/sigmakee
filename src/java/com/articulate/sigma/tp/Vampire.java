@@ -366,17 +366,14 @@ public class Vampire {
                 File webGphDir = new File(dir);
                 if (!webGphDir.exists())
                     webGphDir.mkdirs();
-
                 tpp.createProofDotGraph();
+                
                 System.out.println("Vampire.main(): " + tpp.proof.size() + " steps ");
-                Formula f;
-                for (TPTPFormula step : tpp.proof) {
-                    System.out.println(":: " + step);
-                    f = new Formula(step.sumo);
-                    System.out.println(f.format("", "  ", "\n"));
-                }
-                System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
-                System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
+                System.out.println("Vampire.main() bindings: " + tpp.bindingMap);
+                System.out.println("Vampire.main() skolems: " + tpp.skolemTypes);
+                System.out.println("Vampire.main() proof[3]: {");
+                tpp.printProof(3);
+                System.out.println("}");
             } else
                 System.err.println("Unknown option: " + args[0]);
         }
