@@ -267,7 +267,7 @@ public class KBmanager implements Serializable {
             //out.close();
             //file.close();
             encoder(manager);
-            System.out.println("KBmanager.serialize(): KBmanager has been serialized ");
+            System.out.println("KBmanager.serialize(): KBmanager has been serialized");
         }
         catch (Exception ex) {
             System.err.println("Error in KBmanager.serialize(): IOException is caught");
