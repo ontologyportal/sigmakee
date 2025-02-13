@@ -424,10 +424,9 @@ public class SUMOformulaToTPTPformula {
         int count = 0;
         for (String s : UqVars) {
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-            if (count < sizeUqVars-1)
-                qlist.append(oneVar).append(",");
-            else
-                qlist.append(oneVar); // don't write a final comma
+            qlist.append(oneVar); // don't write a final comma
+            if (count < sizeUqVars-1 && sizeUqVars > 1)
+                qlist.append(",");
 
             count++;
         }
@@ -440,7 +439,7 @@ public class SUMOformulaToTPTPformula {
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
-        if (debug) System.out.println("SUMOformulaToTPTPformula.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
+        if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (SUMOKBtoTPTPKB.lang.equals("tff"))
             return "( " + SUMOtoTFAform.process(suoString,query) + " )";
@@ -519,7 +518,7 @@ public class SUMOformulaToTPTPformula {
             if (debug)
                 System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
             if (processed != null) {
-                _f.theTptpFormulas = new HashSet<>();
+                _f.theTptpFormulas.clear();
                 //----Performs function on each current processed axiom
                 String tptpStr;
                 for (Formula f : processed) {
