@@ -2841,7 +2841,7 @@ public class KB implements Serializable {
 
             String cName;
             while (nci.hasNext()) {
-                cName = (String) nci.next();
+                cName = nci.next();
                 addConstituent(cName);
                 // addConstituent(cName, false, false, false);
             }
@@ -3504,8 +3504,6 @@ public class KB implements Serializable {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
             try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
                 if (!formulaMap.isEmpty()) {
-//                    Set<String> formulaStrings = new HashSet<String>();
-//                    formulaStrings.addAll(formulaMap.keySet());
                     long millis = System.currentTimeMillis();
                     if (lang.equals("tptp")) {
                         SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
@@ -3534,7 +3532,6 @@ public class KB implements Serializable {
                 System.out.println("File written: " + infFilename);
             else
                 System.err.println("Could not write: " + infFilename);
-
         }
     }
 
