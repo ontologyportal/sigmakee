@@ -48,8 +48,6 @@ import java.nio.file.Paths;
  */
 public class WordNet implements Serializable {
 
-    private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
-
     public static boolean disable = false;
     public static boolean debug = false;
     public static WordNet wn  = new WordNet();
@@ -1682,8 +1680,7 @@ public class WordNet implements Serializable {
      */
     public static void encoder(Object object) {
 
-        String kbDir = SIGMA_HOME + File.separator + "KBs";
-        Path path = Paths.get(kbDir, "wn.ser");
+        Path path = Paths.get(baseDir, "wn.ser");
         try (Output output = new Output(Files.newOutputStream(path))) {
             kryoLocal.get().writeObject(output, object);
         }
@@ -1697,8 +1694,7 @@ public class WordNet implements Serializable {
     public static <T> T decoder() {
 
         WordNet ob = null;
-        String kbDir = SIGMA_HOME + File.separator + "KBs";
-        Path path = Paths.get(kbDir, "wn.ser");
+        Path path = Paths.get(baseDir, "wn.ser");
         try (Input input = new Input(Files.newInputStream(path))) {
             ob = kryoLocal.get().readObject(input,WordNet.class);
         }
@@ -1713,6 +1709,7 @@ public class WordNet implements Serializable {
     public static boolean serializedExists() {
 
         File serfile = new File(baseDir + File.separator + "wn.ser");
+        System.out.println("WordNet.serializedExists(): " + serfile.exists());
         return serfile.exists();
     }
 
@@ -1723,6 +1720,7 @@ public class WordNet implements Serializable {
 
         File serfile = new File(baseDir + File.separator + "wn.ser");
         Date saveDate = new Date(serfile.lastModified());
+        System.out.println("KBmanager.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         File file;
         Date fileDate;
         for (String f : wnFilenames.values()) {
@@ -1743,7 +1741,7 @@ public class WordNet implements Serializable {
         wn = null;
         try {
             // Reading the object from a file
-            //FileInputStream file = new FileInputStream(baseDir + File.separator + "wn.ser");
+            //FileInputStream file = new FileInputStream(baseDir + File.separator + " ");
             //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
             wn = decoder();
@@ -1851,7 +1849,7 @@ public class WordNet implements Serializable {
         System.out.println("WordNet.initOnce(): 'disable' is: " + disable);
         if (disable) return;
         try {
-            if (initNeeded == true) {
+            if (initNeeded) {
                 if (("".equals(WordNet.baseDir)) || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
