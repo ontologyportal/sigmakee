@@ -24,7 +24,7 @@
     http://github.com/ontologyportal
 */
 
-ArrayList<String> userPages = new ArrayList<String>();
+List<String> userPages = new ArrayList<String>();
 userPages.add("AllPictures.jsp");
 userPages.add("Browse.jsp");
 userPages.add("BrowseExtra.jsp");

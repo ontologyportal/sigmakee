@@ -24,7 +24,7 @@
     boolean builtInExists = (new File(systemsDir)).exists()
             && (new File(systemsInfo)).exists();
     String defaultSystemBuiltIn = "";
-    ArrayList<String> systemListBuiltIn = new ArrayList<String>();
+    List<String> systemListBuiltIn = new ArrayList<String>();
 
     //----If built in Systems Directory exist, call built-in SystemOnTPTP
     if (builtInExists) {
@@ -35,8 +35,8 @@
     //----Check if SystemOnTPTP exists in a local copy of TPTPWorld
     String TPTPWorld = KBmanager.getMgr().getPref("tptpHomeDir");
     InterfaceTPTP.init();
-    ArrayList<String> systemListLocal = InterfaceTPTP.systemListLocal;
-    ArrayList<String> systemListRemote = InterfaceTPTP.systemListRemote;
+    List<String> systemListLocal = InterfaceTPTP.systemListLocal;
+    List<String> systemListRemote = InterfaceTPTP.systemListRemote;
     String defaultSystemLocal = InterfaceTPTP.defaultSystemLocal;
     String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
     boolean tptpWorldExists = InterfaceTPTP.tptpWorldExists;
@@ -76,30 +76,30 @@
     if (systemChosenBuiltIn == null)
         systemChosenBuiltIn = defaultSystemBuiltIn;
     if (location == null) {
-        if (tptpWorldExists) 
+        if (tptpWorldExists)
             location = "local";
-        else if (builtInExists) 
+        else if (builtInExists)
             location = "local";
-        else 
-            location = "remote";        
+        else
+            location = "remote";
     }
     if (location.equals("local")) {
-        if (tptpWorldExists) 
+        if (tptpWorldExists)
             systemChosen = systemChosenLocal;
-        else 
-            systemChosen = systemChosenBuiltIn;        
-    } 
-    else 
-        systemChosen = systemChosenRemote;    
+        else
+            systemChosen = systemChosenBuiltIn;
+    }
+    else
+        systemChosen = systemChosenRemote;
 
-    if (tstpFormat == null) 
-        tstpFormat = "";    
-    if (sanitize == null) 
-        sanitize = "no";    
-    if (stmt == null || stmt.equalsIgnoreCase("null")) 
+    if (tstpFormat == null)
+        tstpFormat = "";
+    if (sanitize == null)
+        sanitize = "no";
+    if (stmt == null || stmt.equalsIgnoreCase("null"))
         stmt = "(exists (?X) (instance ?X Relation))";
-    else 
-        System.out.println(stmt.trim());    
+    else
+        System.out.println(stmt.trim());
 %>
   <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - TPTP</TITLE>
@@ -254,13 +254,13 @@
                         + "/sigma/Browse.jsp?kb=" + kbName;
                 out.println("Status: ");
                 out.println(kb.tell(stmt) + "<P>\n"    + statement.htmlFormat(kbHref));
-            } 
+            }
             else if (req.equalsIgnoreCase("test")) {
-                StringBuffer sb = new StringBuffer();
+                StringBuilder sb = new StringBuilder();
                 sb = sb.append(InferenceTestSuite.test(kb,
                         systemChosen, out));
                 out.println(sb.toString());
-            } 
+            }
             else if (req.equalsIgnoreCase("Ask")) {
                 String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
                 //----Code for doing the query
@@ -317,7 +317,7 @@
                     result = "";
                     //----If we found a new set of answers, update query and axiom list
                     if (lastAnswer != null) {
-                        out.println("<hr>");   //----Get symbols from lastAnswer                        
+                        out.println("<hr>");   //----Get symbols from lastAnswer
                         TreeSet<TPTPParser.Symbol> newSymbols = TPTPParser
                                 .getSymbolList(lastAnswer);
                         //----Find uniqueSymbols from lastAnswer not in symbolsSoFar
@@ -344,28 +344,28 @@
                         //----Copy original kb file
                         kbFileName = kb.copyFile(originalKBFileName);
                         //----Append ld axioms and conjecture to the end
-                        kb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);                        
+                        kb.addToFile(kbFileName, ldAxiomsSoFar, conjectureTPTPFormula);
                         lastAnswer = null;  //----Reset last answer
-                    } 
-                    else { 
-                        kbFileName = kb.copyFile(originalKBFileName);  //----Copy original kb file                        
+                    }
+                    else {
+                        kbFileName = kb.copyFile(originalKBFileName);  //----Copy original kb file
                         kb.addToFile(kbFileName, null,conjectureTPTPFormula);  //----Append conjecture to the end
-                    }                    
+                    }
                     if (location.equals("remote")) {   //----Call RemoteSoT
-                        if (systemChosen.equals("Choose%20system")) 
+                        if (systemChosen.equals("Choose%20system"))
                             out.println("No system chosen");
-                        else {  //----Need to check the name exists                            
+                        else {  //----Need to check the name exists
                             Hashtable URLParameters = new Hashtable();
                             URLParameters.put("NoHTML", "1");
                             if (quietFlag.equals("IDV")) {
                                 URLParameters.put("IDV", "-T");
                                 URLParameters.put("QuietFlag", "-q4");
                                 URLParameters.put("X2TPTP", tstpFormat);
-                            } 
+                            }
                             else if (quietFlag.equals("hyperlinkedKIF")) {
                                 URLParameters.put("QuietFlag", "-q3");
                                 URLParameters.put("X2TPTP", "-S");
-                            } 
+                            }
                             else {
                                 URLParameters.put("QuietFlag",quietFlag);
                                 URLParameters.put("X2TPTP", tstpFormat);
@@ -400,29 +400,29 @@
                             out.println("</PRE>");
                             reader.close();
                         }
-                    } 
+                    }
                     else if (location.equals("local") && tptpWorldExists) {
                         //----Call local copy of TPTPWorld instead of using RemoteSoT
                         if (systemChosen.equals("Choose%20system"))
                             out.println("No system chosen");
                         else {
-                            if (quietFlag.equals("hyperlinkedKIF")) 
+                            if (quietFlag.equals("hyperlinkedKIF"))
                                 command = SoTPTP + " " + "-q3" + " "
                                         + // quietFlag
                                         systemChosen + " " + timeout
                                         + " " + "-S" + " " + //tstpFormat
-                                        kbFileName;                            
-                            else if (quietFlag.equals("IDV")) 
+                                        kbFileName;
+                            else if (quietFlag.equals("IDV"))
                                 command = SoTPTP + " " + "-q4" + " "
                                         + // quietFlag
                                         systemChosen + " " + timeout
                                         + " " + "-S" + " " + //tstpFormat
-                                        kbFileName;                        
-                            else 
+                                        kbFileName;
+                            else
                                 command = SoTPTP + " " + quietFlag
                                         + " " + systemChosen + " "
                                         + timeout + " " + tstpFormat
-                                        + " " + kbFileName;                            
+                                        + " " + kbFileName;
                             if (numAnswers == 0)
                                 out.println("(Local SystemOnTPTP call)");
                             proc = Runtime.getRuntime().exec(command);
@@ -440,23 +440,23 @@
                             out.println("</PRE>");
                             reader.close();
                         }
-                    } 
+                    }
                     else if (location.equals("local")
                             && builtInExists && !tptpWorldExists) {
                         //----Call built in SystemOnTPTP instead of using RemoteSoT or local
                         if (systemChosen.equals("Choose%20system"))
                             out.println("No system chosen");
-                        else {   //----Set quiet flag                            
+                        else {   //----Set quiet flag
                             String qq;
                             String format;
                             if (quietFlag.equals("IDV")) {
                                 qq = "-q4";
                                 format = "-S";
-                            } 
+                            }
                             else if (quietFlag.equals("hyperlinkedKIF")) {
                                 qq = "-q4";
                                 format = "-S";
-                            } 
+                            }
                             else {
                                 qq = quietFlag;
                                 format = tstpFormat;
@@ -483,7 +483,7 @@
                             }
                             out.println("</PRE>");
                         }
-                    } 
+                    }
                     else
                         out.println("INTERNAL ERROR: chosen option not valid: "
                                 + location
@@ -506,7 +506,7 @@
                         ArrayList<Binding> answer = SystemOnTPTP.getSZSBindings(conj, originalResult);
                         lastAnswer = answer;
                         newResult = TPTP2SUMO.convert(result, answer,false);
-                    } 
+                    }
                     else {
                         //----Procedure if not SNARK (call one answer system: Metis)
                         TPTPParser parser = TPTPParser.parse(new BufferedReader(
@@ -523,10 +523,10 @@
                                 out.println("No solution output by system.  IDV tree unavaiable.");
                             else
                                 out.println(idvResult);
-                        } 
+                        }
                         else
                             out.println("Not a theorem.  IDV tree unavailable.");
-                    } 
+                    }
                     else if (quietFlag.equals("IDV") && !location.equals("remote")) {
                         if (SystemOnTPTP.isTheorem(originalResult)) {
                             int size = SystemOnTPTP.getTPTPFormulaSize(result);
@@ -544,15 +544,15 @@
                                         + result + "\">");
                                 out.println("  Hey, you cant see my applet!!!");
                                 out.println("</APPLET>");
-                            } 
+                            }
                             else
                                 out.println("No solution output by system.  IDV tree unavaiable.");
-                        } 
+                        }
                         else
                             out.println("Not a theorem.  IDV tree unavailable.");
-                    } 
+                    }
                     else if (quietFlag.equals("hyperlinkedKIF")) {
-                        if (originalAnswer == null) 
+                        if (originalAnswer == null)
                             originalAnswer = lastAnswer;
                         else {
                             //----This is not the first answer, that means result has dummy ld predicates, bind conjecture with new answer, remove outside existential
@@ -573,18 +573,18 @@
                         boolean proofExists = SystemOnTPTP.proofExists(originalResult);
                         int timeUsed = SystemOnTPTP.timeUsed(originalResult);
                         if (isTheorem) {
-                            if (proofExists)                                     
+                            if (proofExists)
                                 out.println(HTMLformatter.formatProofResult(
                                             newResult, stmt, stmt, lineHtml,kbName, language));
-                            else //----Proof does not exist, but was a theorem                                
+                            else //----Proof does not exist, but was a theorem
                                 out.println("Answer 1. Yes [Theorem]<br>");
-                        } 
+                        }
                         else if (isCounterSatisfiable)
                             out.println("Answer 1. No [CounterSatisfiable]<br>");
 
-                        else 
+                        else
                             if (numAnswers == 0)
-                                out.println("Answer 1. No<br>");                        
+                                out.println("Answer 1. No<br>");
                         out.flush();
                     }
                     //----If lastAnswer != null (we found an answer) && there is an answer (lastAnswer.size() > 0)
@@ -594,7 +594,7 @@
                 } while (numAnswers < maxAnswers && lastAnswer != null
                         && lastAnswer.size() > 0);
             }
-        } 
+        }
         catch (IOException ioe) {
             out.println(ioe.getMessage());
         }

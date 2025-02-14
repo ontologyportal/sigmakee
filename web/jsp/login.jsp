@@ -18,7 +18,7 @@ import="com.articulate.sigma.*"
 
     Please cite the following article in any publication with references:
 
-    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    Pease A., and Benzm??ller C. (2013). Sigma: An Integrated Development Environment
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
@@ -40,7 +40,7 @@ if (ps.userExists(userName)) {
         response.sendRedirect("KBs.jsp");
     }
     else {
-        System.out.println("Bad login attempt in login.jsp - no matching password for " + u.username);
+        System.err.println("Bad login attempt in login.jsp - no matching password for " + u.username);
         response.sendRedirect("login.html");
     }
 }
