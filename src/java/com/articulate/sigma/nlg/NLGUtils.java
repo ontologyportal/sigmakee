@@ -106,6 +106,7 @@ public class NLGUtils implements Serializable {
         Date configDate = new Date(phrasesFile.lastModified());
         File serfile = new File(kbDir + File.separator + "NLGUtils.ser");
         Date saveDate = new Date(serfile.lastModified());
+        System.out.println("NLGUtils.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         return saveDate.compareTo(configDate) < 0;
     }
 
@@ -114,7 +115,6 @@ public class NLGUtils implements Serializable {
      */
     public static void loadSerialized() {
 
-        System.out.println("NLGUtils.loadSerialized()");
         nlg = null;
         try {
             // Reading the object from a file
@@ -123,12 +123,6 @@ public class NLGUtils implements Serializable {
             //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
             nlg = decoder();
-            if (serializedOld()) {
-                nlg = null;
-                System.out.println("NLGUtils.loadSerialized(): serialized file is older than sources, " +
-                        "reloding from sources.");
-                return;
-            }
             //in.close();
             //file.close();
             System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
