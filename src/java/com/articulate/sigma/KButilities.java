@@ -1503,7 +1503,12 @@ public class KButilities {
             }
             else if (args != null && args.length > 1 && args[0].equals("-v")) {
                 SUMOtoTFAform.initOnce();
-                System.out.println(isValidFormula(kb,args[1]));
+                System.out.print("Formula " + args[1] + "\nis valid: ");
+                boolean valid = isValidFormula(kb,args[1]);
+                if (valid)
+                    System.out.println(valid);
+                else
+                    System.err.println(valid);
             }
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();
