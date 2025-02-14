@@ -26,10 +26,10 @@ public class PredVarInst {
     public static Map<String,Integer> predVarArity = new HashMap<>();
 
     // All predicates that meet that class membership and arity constraints for the given variable
-    private static Map<String,HashSet<String>> candidatePredicates = new HashMap<>();
+//    private static Map<String,Set<String>> candidatePredicates = new HashMap<>();
 
     //The list of logical terms that not related to arity check, will skip these predicates
-    private static List<String> logicalTerms = Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
+    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
 
     public static boolean debug = false;
 
@@ -42,7 +42,7 @@ public class PredVarInst {
     public static void init() {
 
         doublesHandled = false;
-        candidatePredicates = new HashMap<>();
+//        candidatePredicates = new HashMap<>();
         predVarArity = new HashMap<>();
     }
 
@@ -351,7 +351,7 @@ public class PredVarInst {
             if (intval != null)
                 val = intval;
             else {
-                if (!logicalTerms.contains(rel) && !rel.startsWith("?")) {
+                if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith("?")) {
                     System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): " +
                             "Predicate %s does not have an arity defined in KB, " +
                             "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
