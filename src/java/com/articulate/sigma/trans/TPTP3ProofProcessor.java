@@ -540,7 +540,7 @@ public class TPTP3ProofProcessor {
         if (debug) {
             System.out.println("processAnswersFromProof(): bindingMap: " + bindingMap);
         }
-        bindingMap = new HashMap<>();
+        bindingMap.clear();
         if (qlist != null && qlist.length() > 0) {
             List<String> qvarslist = Arrays.asList(qlist.toString().split(","));
             for (String s : qvarslist) {

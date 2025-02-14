@@ -4,11 +4,11 @@ package com.articulate.sigma;
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
@@ -18,18 +18,20 @@ import com.articulate.sigma.utils.FileUtil;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
  /** A trivial structure to hold the elements of a proof step. */
 public class ProofStep {
 
     public static boolean debug = false;
 
-	public static final String QUERY = "[Query]";
-	public static final String NEGATED_QUERY = "[Negated Query]";
-	public static final String INSTANTIATED_QUERY = "[Instantiated Query]";
+    public static final String QUERY = "[Query]";
+    public static final String NEGATED_QUERY = "[Negated Query]";
+    public static final String INSTANTIATED_QUERY = "[Instantiated Query]";
 
-	// the TPTP3 input
-	public String input = null;
+    // the TPTP3 input
+    public String input = null;
 
      /** A String giving the type of the clause or formula, such as 'conjecture', 'plain' or 'axiom' */
     public String formulaType = null;
@@ -55,41 +57,42 @@ public class ProofStep {
       *  which this axiom is derived. Note that the numbering is what
       *  the ProofProcessor assigns, not necessarily the proof
       *  numbers returned directly from the inference engine. */
-    public ArrayList<Integer> premises = new ArrayList();
-    
+    public List<Integer> premises = new ArrayList();
+
     /** ***************************************************************
      * Take an ArrayList of ProofSteps and renumber them consecutively
      * starting at 1.  Update the ArrayList of premises so that they
      * reflect the renumbering.
      */
-    public static ArrayList<ProofStep> normalizeProofStepNumbers(ArrayList<ProofStep> proofSteps) {
+    public static List<ProofStep> normalizeProofStepNumbers(List<ProofStep> proofSteps) {
 
         // old number, new number
-        HashMap<Integer,Integer> numberingMap = new HashMap<>();
+        Map<Integer,Integer> numberingMap = new HashMap<>();
         System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): begin with " + proofSteps.size() + " steps ");
         //if (debug) System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): before: " + proofSteps);
         int newIndex = 1;
+        ProofStep ps;
+        Integer oldIndex, premiseNum, newNumber;
         for (int i = 0; i < proofSteps.size(); i++) {
             //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): numberingMap: " + numberingMap);
-            ProofStep ps = (ProofStep) proofSteps.get(i);
+            ps = (ProofStep) proofSteps.get(i);
             //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): Checking proof step: " + ps);
-            Integer oldIndex = Integer.valueOf(ps.number);
-            if (numberingMap.containsKey(oldIndex)) 
-                ps.number = (Integer) numberingMap.get(oldIndex);
+            oldIndex = ps.number;
+            if (numberingMap.containsKey(oldIndex))
+                ps.number = numberingMap.get(oldIndex);
             else {
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): adding new step: " + newIndex);
-                ps.number = Integer.valueOf(newIndex);
-                numberingMap.put(oldIndex,Integer.valueOf(newIndex++));
+                ps.number = newIndex;
+                numberingMap.put(oldIndex, newIndex++);
             }
             for (int j = 0; j < ps.premises.size(); j++) {
-                Integer premiseNum = ps.premises.get(j);
+                premiseNum = ps.premises.get(j);
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): old premise num: " + premiseNum);
-                Integer newNumber = null;
-                if (numberingMap.get(premiseNum) != null) 
-                    newNumber = Integer.valueOf((Integer) numberingMap.get(premiseNum));
+                if (numberingMap.get(premiseNum) != null)
+                    newNumber = numberingMap.get(premiseNum);
                 else {
-                    newNumber = Integer.valueOf(newIndex++);
-                    numberingMap.put(premiseNum,Integer.valueOf(newNumber));
+                    newNumber = newIndex++;
+                    numberingMap.put(premiseNum, newNumber);
                 }
                 //System.out.println("INFO in ProofStep.normalizeProofStepNumbers(): new premise num: " + newNumber);
                 ps.premises.set(j,newNumber);
@@ -102,30 +105,33 @@ public class ProofStep {
     /** ***************************************************************
      * Remove duplicate statements in the proof
      */
-    public static ArrayList<ProofStep> removeDuplicates(ArrayList<ProofStep> proofSteps) {
+    public static List<ProofStep> removeDuplicates(List<ProofStep> proofSteps) {
 
         if (debug) System.out.println("INFO in ProofStep.removeDuplicates(): before: " + proofSteps);
         //	System.out.println("INFO in ProofSteps.removeDuplicates()");
         // old number, new number
-        HashMap<Integer,Integer> numberingMap = new HashMap<Integer,Integer>();
-        
+        Map<Integer,Integer> numberingMap = new HashMap<>();
+
         // formula string, proof step number
-        HashMap<String,Integer> formulaMap = new HashMap<String,Integer>();
-        
+        Map<String,Integer> formulaMap = new HashMap<>();
+
         // proof step number, proof step
-        HashMap<Integer,ProofStep> reverseFormulaMap = new HashMap<Integer,ProofStep>();
-        
-        ArrayList<ProofStep> newProofSteps = new ArrayList<ProofStep>();
-        ArrayList<ProofStep> dedupedProofSteps = new ArrayList<ProofStep>();
-        
+        Map<Integer,ProofStep> reverseFormulaMap = new HashMap<>();
+
+        List<ProofStep> newProofSteps = new ArrayList<>();
+        List<ProofStep> dedupedProofSteps = new ArrayList<>();
+
         int counter = 1;
+        ProofStep ps, psNew;
+        Integer index, fNum, newIndex, premiseNum, newNumber;
+        String s;
         for (int i = 0; i < proofSteps.size(); i++) {
-            ProofStep ps = proofSteps.get(i);
-            Integer index = ps.number;
+            ps = proofSteps.get(i);
+            index = ps.number;
             reverseFormulaMap.put(index,ps);
-            String s = Clausifier.normalizeVariables(ps.axiom);
+            s = Clausifier.normalizeVariables(ps.axiom);
             if (formulaMap.keySet().contains(s) && ps.premises.size() == 1) {   // If the step is a duplicate, relate the current step number
-            	Integer fNum = formulaMap.get(s);                   // to the existing number of the formula
+            	fNum = formulaMap.get(s);                   // to the existing number of the formula
             	numberingMap.put(index,fNum);
             }
             else {
@@ -135,31 +141,31 @@ public class ProofStep {
             	dedupedProofSteps.add(ps);
             }
         }
-        for (int i = 0; i < dedupedProofSteps.size(); i++) { 
-            ProofStep ps = dedupedProofSteps.get(i);
-        	Integer newIndex = Integer.valueOf(ps.number);
-        	if (numberingMap.keySet().contains(newIndex))
-        		newIndex = numberingMap.get(newIndex);
-        	ProofStep psNew = new ProofStep();
-        	psNew.formulaRole = ps.formulaRole;
-        	psNew.formulaType = ps.formulaType;
+        List<Integer> newPremises;
+        for (int i = 0; i < dedupedProofSteps.size(); i++) {
+            ps = dedupedProofSteps.get(i);
+            newIndex = ps.number;
+            if (numberingMap.keySet().contains(newIndex))
+                    newIndex = numberingMap.get(newIndex);
+            psNew = new ProofStep();
+            psNew.formulaRole = ps.formulaRole;
+            psNew.formulaType = ps.formulaType;
             psNew.inferenceType = ps.inferenceType;
-            String s = Clausifier.normalizeVariables(ps.axiom);
-        	psNew.axiom = s;
-        	psNew.number = newIndex;
-        	psNew.input = ps.input;
-        	ArrayList<Integer> newPremises = new ArrayList();        	   
-        	for (int j = 0; j < ps.premises.size(); j++) {
-        		Integer premiseNum = ps.premises.get(j);
-        		Integer newNumber = null;
-        		if (numberingMap.get(premiseNum) != null) 
-        			newNumber = Integer.valueOf((Integer) numberingMap.get(premiseNum));
-        		else 
-        			newNumber = Integer.valueOf(premiseNum);
-        		newPremises.add(newNumber);                    
-        	}
-        	psNew.premises = newPremises;
-        	newProofSteps.add(psNew);            
+            s = Clausifier.normalizeVariables(ps.axiom);
+            psNew.axiom = s;
+            psNew.number = newIndex;
+            psNew.input = ps.input;
+            newPremises = new ArrayList();
+            for (int j = 0; j < ps.premises.size(); j++) {
+                    premiseNum = ps.premises.get(j);
+                    if (numberingMap.get(premiseNum) != null)
+                            newNumber = numberingMap.get(premiseNum);
+                    else
+                            newNumber = premiseNum;
+                    newPremises.add(newNumber);
+            }
+            psNew.premises = newPremises;
+            newProofSteps.add(psNew);
         }
         if (debug) System.out.println("INFO in ProofStep.removeDuplicates(): after: " + newProofSteps);
         return newProofSteps;
@@ -172,13 +178,14 @@ public class ProofStep {
      * (1) conjecture
      * (2) duplicate $false;
      */
-    public static ArrayList<ProofStep> removeUnnecessary(ArrayList<ProofStep> proofSteps) {
+    public static List<ProofStep> removeUnnecessary(List<ProofStep> proofSteps) {
 
         if (debug) System.out.println("INFO in ProofStep.removeUnnecessary(): before: " + proofSteps);
-        ArrayList<ProofStep> results = new ArrayList<ProofStep>();
+        List<ProofStep> results = new ArrayList<>();
         boolean firstTimeSeeFALSE = true;
+        ProofStep ps;
         for (int i = 0; i < proofSteps.size(); i++) {
-            ProofStep ps = proofSteps.get(i);
+            ps = proofSteps.get(i);
             if (ps.formulaType != null &&
                     !ps.formulaType.equals("conjecture") ) { // conjecture is not allowed in the proof step
                 if (ps.axiom.equalsIgnoreCase("FALSE")) {
@@ -202,25 +209,26 @@ public class ProofStep {
 
     /** ***************************************************************
      */
+    @Override
     public String toString() {
 
-        StringBuffer sb = new StringBuffer();
-        sb.append(number + ". " + new Formula(axiom).format("","  ","\n") + " " + premises + " ");
+        StringBuilder sb = new StringBuilder();
+        sb.append(number).append(". ").append(new Formula(axiom).format("","  ","\n")).append(" ").append(premises).append(" ");
         if (inferenceType.startsWith("kb_")) {
             Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
             if (originalF != null) {
-                sb.append(inferenceType + ":" + originalF.startLine + ":" + FileUtil.noPath(originalF.getSourceFile()) + "\n");
+                sb.append(inferenceType).append(":").append(originalF.startLine).append(":").append(FileUtil.noPath(originalF.getSourceFile())).append("\n");
                 if (originalF.derivation != null &&
                         originalF.derivation.operator != null &&
                         !originalF.derivation.operator.equals("input"))
                     sb.append(originalF.derivation.toString());
             }
             else
-                sb.append(inferenceType + "\n");
+                sb.append(inferenceType).append("\n");
 
         }
         else
-            sb.append(inferenceType + "\n");
+            sb.append(inferenceType).append("\n");
         return sb.toString();
     }
 }

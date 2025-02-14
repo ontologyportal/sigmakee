@@ -96,8 +96,9 @@ public class ProofProcessor {
     	Matcher match;
 
     	List<String> matches = new ArrayList<>();
+        TPTPFormula step;
     	for (int i = 0; i < proofSteps.size(); i++) {
-			TPTPFormula step = proofSteps.get(i);
+                step = proofSteps.get(i);
     		match = pattern.matcher(step.sumo);
     		while (match.find()) {
     			for (int j = 1; j <= match.groupCount(); j++) {
@@ -126,7 +127,7 @@ public class ProofProcessor {
     	if (relation.equals("not")) {
     		Formula fcdar = f.cdrAsFormula().carAsFormula();
     		if (fcdar == null) {
-    			System.out.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
+    			System.err.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
     			return null;
     		}
     		Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
@@ -199,7 +200,7 @@ public class ProofProcessor {
     		return queryResponse.subelements.size()-1;
     	// Note that there is a <summary> element under the queryResponse element that shouldn't be counted, hence the -1
     	else
-    		System.out.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
+    		System.err.println("Error in ProofProcessor.numAnswers(): Bad tag: " + queryResponse.tagname);
     	return 0;
     }
 
@@ -299,15 +300,17 @@ public class ProofProcessor {
             ex.printStackTrace();
         }
 
+        String val;
         for (String key : axioms.keySet()) {
-            String val = axioms.get(key);
+            val = axioms.get(key);
             System.out.println(key + "\t" + val);
         }
 
         System.out.println();
+        Integer vall;
         for (String key : counts.keySet()) {
-            Integer val = counts.get(key);
-            System.out.println(key + "\t" + val);
+            vall = counts.get(key);
+            System.out.println(key + "\t" + vall);
         }
     }
 

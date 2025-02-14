@@ -43,10 +43,7 @@ public class NLGStringUtils {
      */
     static boolean isVowel(char c) {
 
-        if (c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u')
-            return true;
-        else
-            return false;
+        return c == 'a' || c == 'e' || c == 'i' || c == 'o' || c == 'u';
     }
 
     /**************************************************************************************************************
@@ -55,9 +52,6 @@ public class NLGStringUtils {
      * @return
      */
     public static boolean isVariable(String str) {
-        if(str.substring(0, 1).equals("?")) {
-            return true;
-        }
-        return false;
+        return str.substring(0, 1).equals("?");
     }
 }

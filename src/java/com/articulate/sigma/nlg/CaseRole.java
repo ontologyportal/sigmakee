@@ -1,7 +1,6 @@
 package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
 
 import java.util.Collection;
 

@@ -26,37 +26,37 @@ public class CCheck implements Runnable {
     private PrintWriter pw;
     private String ccheck_kb;
     private String inferenceEngine;
-    private HashMap<String, String> ieSettings;
+    private Map<String, String> ieSettings;
     private int timeOut = 10;
-    private String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" + 
+    private String lineHtml = "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'>" +
             "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-    
+
     /** *************************************************************
      */
     public CCheck(KB kb, String filename) {
-        
+
         this.kb = kb;
         try {
-            ccheckFile = new File(filename);                        
+            ccheckFile = new File(filename);
             fw = new FileWriter(ccheckFile);
-            pw = new PrintWriter(fw);            
+            pw = new PrintWriter(fw);
         }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
+        catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
     }
-    
+
     /** *************************************************************
      */
     public CCheck(KB kb, String fileName, String chosenEngine, int timeout) throws Exception {
-        
+
         this(kb, fileName);
         timeOut = timeout;
         if (setInferenceEngine(chosenEngine) == false) {
-            System.out.println("Unable to create CCheck for kb: " + kb.name + 
+            System.out.println("Unable to create CCheck for kb: " + kb.name +
                     "; Error setting up inference engine = " + inferenceEngine);
-            throw new Exception("Could not set inference engine with the following params for KB " + 
+            throw new Exception("Could not set inference engine with the following params for KB " +
                     kb.name + ". Inference Engine chosen = " + chosenEngine);
         }
     }
@@ -65,25 +65,25 @@ public class CCheck implements Runnable {
      */
     public CCheck(KB kb, String fileName, String chosenEngine, String systemChosen, String quietFlag,
                 String location, String language, int timeout) throws Exception {
-        
+
         this (kb, fileName);
         timeOut = timeout;
         if (!setInferenceEngine(chosenEngine, systemChosen, location.toLowerCase(), quietFlag, language))
-            throw new Exception("Could not set inference engine with the following params: {chosenEngine=" + 
+            throw new Exception("Could not set inference engine with the following params: {chosenEngine=" +
         chosenEngine + ", systemChosen=" + systemChosen + ", location=" + location + "}");
-        else System.out.println("Set up inference engine for Consistency Check of KB: " + kb.name + 
+        else System.out.println("Set up inference engine for Consistency Check of KB: " + kb.name +
                 ". Engine Chosen: " + chosenEngine);
     }
 
     /** *************************************************************
-     * This sets the inference engine to be used for the consistency check.  
+     * This sets the inference engine to be used for the consistency check.
      * This particular method sets it if chosenEngine == 'SoTPTP'
-     * 
-     * @param chosenEngine - string describing the inference engine to be used.  
+     *
+     * @param chosenEngine - string describing the inference engine to be used.
      *         For this particular method, it should be 'SoTPTP'
      * @param systemChosen - the theorem prover to be used
      * @param location - if it's local or remote
-     * @param quietFlag - command option as to the verbosity of the result 
+     * @param quietFlag - command option as to the verbosity of the result
      * @param language - language for formatting
      * @return true if there are no errors in setting the engine, false if errors are encountered.
      */
@@ -95,66 +95,65 @@ public class CCheck implements Runnable {
                 //String result = InterfaceTPTP.queryTPTP("(instance instance BinaryPredicate)", 10, 1, lineHtml,
                 //        systemChosen, location, quietFlag, kb.name, language);
                 inferenceEngine = "SoTPTP";
-                ieSettings = new HashMap<String, String>();
+                ieSettings = new HashMap<>();
                 ieSettings.put("systemChosen", systemChosen);
-                if (location == "" || location == null) 
+                if ("".equals(location) || location == null)
                     return false;
-                else ieSettings.put("location", location);                
-                if (quietFlag == "" || quietFlag == null)
+                else ieSettings.put("location", location);
+                if ("".equals(quietFlag) || quietFlag == null)
                     ieSettings.put("quietFlag", "hyperlinkedKIF");
                 else
-                    ieSettings.put("quietFlag", quietFlag);                
-                if (language == "" || language == null)
+                    ieSettings.put("quietFlag", quietFlag);
+                if ("".equals(language) || language == null)
                     language = "EnglishLanguage";
-                ieSettings.put("language", language);                
-                return true;                
+                ieSettings.put("language", language);
+                return true;
             }
-            else 
+            else
                 setInferenceEngine(chosenEngine);
         }
         catch (Exception e) {
-            System.out.println("Error in setting up SystemOnTPTP: " + e.getMessage());
+            System.err.println("Error in setting up SystemOnTPTP: " + e.getMessage());
             return false;
         }
         return false;
     }
-    
+
     /** *************************************************************
-     * This sets the inference engine to be used for the consistency check.  
+     * This sets the inference engine to be used for the consistency check.
      * It sends a test query to the inference engine to
      * ensure that the engine works.
      * @param chosenEngine - string describing the inference engine to be used.
-     * @return true if there are no errors in setting the engine, false if 
+     * @return true if there are no errors in setting the engine, false if
      *         errors are encountered
-     */    
+     */
     private boolean setInferenceEngine(String chosenEngine) {
-        
-        String result = "";
+
+        String result;
         try {
-            if (chosenEngine.equals("EProver")) {
-                result = kb.askEProver("(instance instance BinaryPredicate)", 10, 1) + " ";
-                inferenceEngine = "EProver";
-                return true;
+            switch (chosenEngine) {
+                case "EProver":
+                    result = kb.askEProver("(instance instance BinaryPredicate)", 10, 1) + " ";
+                    inferenceEngine = "EProver";
+                    return true;
+                case "SInE":
+                    result = kb.askSInE("(instance instance BinaryPredicate)", 10, 1);
+                    inferenceEngine = "SInE";
+                    return true;
+                case "LeoLocal":
+                    LEO leo = kb.askLeo("(instance instance BinaryPredicate)", 10, 1);
+                    inferenceEngine = "LeoLocal";
+                    return true;
+                default:
+                    return false;
             }
-            else if (chosenEngine.equals("SInE")) {
-                result = kb.askSInE("(instance instance BinaryPredicate)", 10, 1);
-                inferenceEngine = "SInE";
-                return true;
-            }
-            else if (chosenEngine.equals("LeoLocal")) {
-                LEO leo = kb.askLeo("(instance instance BinaryPredicate)", 10, 1);
-                inferenceEngine = "LeoLocal";
-                return true;
-            }
-            else 
-                return false;
         }
         catch (Exception e) {
             e.printStackTrace();
             return false;
         }
     }
-    
+
     /** *************************************************************
      */
     public String getKBName() {
@@ -164,46 +163,41 @@ public class CCheck implements Runnable {
     /** *************************************************************
      */
     private KB makeEmptyKB() {
-        
+
         ccheck_kb = "CCheck_" + kb.name;
         String kbDir = (String) KBmanager.getMgr().getPref("kbDir");
-        if (KBmanager.getMgr().existsKB(ccheck_kb)) 
-            KBmanager.getMgr().removeKB(ccheck_kb);        
+        if (KBmanager.getMgr().existsKB(ccheck_kb))
+            KBmanager.getMgr().removeKB(ccheck_kb);
         File dir = new File( kbDir );
         File emptyCFile = new File( dir, "emptyConstituent.txt" );
-        String emptyCFilename = emptyCFile.getAbsolutePath();        
-        FileWriter fwriter = null; 
-        PrintWriter pwriter = null;
+        String emptyCFilename = emptyCFile.getAbsolutePath();
         KBmanager.getMgr().addKB(ccheck_kb, false);
         KB empty = KBmanager.getMgr().getKB(ccheck_kb);
 
         try { // Fails elsewhere if no constituents, or empty constituent, thus...
             empty.eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
-            fwriter = new FileWriter( emptyCFile );
-            pwriter = new PrintWriter(fwriter);   
-            pwriter.println("(instance instance BinaryPredicate)\n");
-            if (pwriter != null) pwriter.close();
-            if (fwriter != null) fwriter.close();
-            empty.addConstituent(emptyCFilename);
-        }
-        catch (java.io.IOException e) {
-            System.out.println("Error writing file " + emptyCFilename);
-        }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
+            try (Writer fwriter = new FileWriter(emptyCFile); PrintWriter pwriter = new PrintWriter(fwriter)) {
+                pwriter.println("(instance instance BinaryPredicate)\n");
+                empty.addConstituent(emptyCFilename);
+            } catch (IOException e) {
+                System.err.println("Error writing file " + emptyCFilename);
+            }
+
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return empty;
     }
-    
-    /** *************************************************************     
+
+    /** *************************************************************
      */
     private void printReport(Formula query, String processedQ,
             String sourceFile, boolean syntaxError, String proof,
             String testType) {
-        
-           pw.println("    <entry>");
-        pw.println("      <query>");            
+
+        pw.println("    <entry>");
+        pw.println("      <query>");
         pw.println("        " + query.getFormula());
         pw.println("      </query>");
         pw.println("      <processedStatement>");
@@ -221,57 +215,58 @@ public class CCheck implements Runnable {
         pw.println("      </type>");
         pw.println("      <proof src=\"" + inferenceEngine + "\">");
         String[] split = proof.split("\n");
-        for (int i = 0; i < split.length; i++)
-            pw.println("      " + split[i]);
+        for (String split1 : split) {
+            pw.println("      " + split1);
+        }
         pw.println("      </proof>");
         pw.println("    </entry>");
     }
-    
+
     /** *************************************************************
-     * This method saves the answer and proof for detected redundancies 
+     * This method saves the answer and proof for detected redundancies
      * or inconsistencies into the file.
-     * 
-     * @param proof - the proof presented that establishes the 
+     *
+     * @param proof - the proof presented that establishes the
      *         redundancy or inconsistency
      * @param query - the statement that caused the error
      * @param testType - whether it is a redundancy or inconsistency
      */
-    private void reportAnswer(String proof, Formula query, String testType, 
+    private void reportAnswer(String proof, Formula query, String testType,
             String processedQ, String sourceFile) {
 
-        if (proof.indexOf("Syntax error detected") != -1) 
-            printReport(query,processedQ,sourceFile,true,proof,testType);        
+        if (proof.contains("Syntax error detected"))
+            printReport(query,processedQ,sourceFile,true,proof,testType);
         else if (inferenceEngine.equals("EProver")) {
     		StringReader sr = new StringReader(proof);
     		LineNumberReader lnr = new LineNumberReader(sr);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(lnr, kb);
-            if (tpp.proof != null && tpp.proof.size() > 0) 
-                printReport(query,processedQ,sourceFile,false,proof,testType);            
+            if (tpp.proof != null && !tpp.proof.isEmpty())
+                printReport(query,processedQ,sourceFile,false,proof,testType);
         }
         else if (inferenceEngine.equals("SoTPTP")) {
             proof = proof.replaceAll("<", "%3C");
             proof = proof.replaceAll(">", "%3E");
             proof = proof.replaceAll("/n", "");
             if (proof.contains("[yes]") || proof.contains("[Theorem]")
-                    || proof.contains("[definite]")) 
-                printReport(query,processedQ,sourceFile,false,proof,testType);            
+                    || proof.contains("[definite]"))
+                printReport(query,processedQ,sourceFile,false,proof,testType);
         }
         try {
             pw.flush();
             fw.flush();
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
     }
-    
+
     /** *************************************************************
      * This would save the error message for a formula in the CCheck results
      * file to inform the user that an error occurred while performing a
      * consistency check on one of the statements.
-     * 
+     *
      * @param message
      *            - error message
      * @param query
@@ -282,9 +277,9 @@ public class CCheck implements Runnable {
      *            - the source file where the formula being tested came from
      */
     private void reportError(String message, Formula query, String processedQ, String sourceFile) {
-        
+
         pw.println("    <entry>");
-        pw.println("      <query>");            
+        pw.println("      <query>");
         pw.println("        " + query.getFormula());
         pw.println("      </query>");
         pw.println("      <processedStatement>");
@@ -301,12 +296,12 @@ public class CCheck implements Runnable {
         pw.println("        " + message);
         pw.println("      </proof>");
         pw.println("    </entry>");
-        
+
         try {
             pw.flush();
             fw.flush();
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             System.out.println(ex.getMessage());
             ex.printStackTrace();
         }
@@ -316,29 +311,30 @@ public class CCheck implements Runnable {
      * This initiates the consistency check
      */
     private void runConsistencyCheck() {
-        
-        String proof;        
+
+        String proof;
         KB empty = this.makeEmptyKB();
         try {
             pw.println("<ConsistencyCheck>");
             pw.println("  <kb>");
             pw.println("    " + kb.name);
-            pw.println("  </kb>");            
+            pw.println("  </kb>");
             Collection<Formula> allFormulas = kb.formulaMap.values();
             Iterator<Formula> it = allFormulas.iterator();
-            pw.println("  <entries>");            
+            pw.println("  <entries>");
+            Formula query;
+            FormulaPreprocessor fp;
+            Set<Formula> processedQueries;
+            String processedQuery, sourceFile;
+            StringBuilder negatedQuery;
             while (it.hasNext()) {
-                Formula query = (Formula) it.next();
+                query = (Formula) it.next();
                 System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                Set<Formula> processedQueries = fp.preProcess(query,false, kb);
-                
-                String processedQuery = null;
-                String sourceFile = null;
-                Iterator<Formula> q = processedQueries.iterator();                
-                while(q.hasNext()) {
-                    Formula f = q.next();                    
-                    processedQuery = f.makeQuantifiersExplicit(false);                    
+                fp = new FormulaPreprocessor();
+                processedQueries = fp.preProcess(query,false, kb);
+
+                for (Formula f : processedQueries) {
+                    processedQuery = f.makeQuantifiersExplicit(false);
                     sourceFile = f.sourceFile;
                     sourceFile = sourceFile.replace("/", "&#47;");
                     try {
@@ -346,20 +342,20 @@ public class CCheck implements Runnable {
                         reportAnswer(proof, query, "Redundancy", processedQuery, sourceFile);
                     }
                     catch(Exception e) {
-                        reportError(e.getMessage(), query, processedQuery, sourceFile);                        
+                        reportError(e.getMessage(), query, processedQuery, sourceFile);
                         System.out.println("Error from inference engine: " + e.getMessage());
-                    }                        
-                    StringBuffer negatedQuery = new StringBuffer();
-                    negatedQuery.append("(not " + processedQuery + ")");
+                    }
+                    negatedQuery = new StringBuilder();
+                    negatedQuery.append("(not ").append(processedQuery).append(")");
                     try {
                         proof = askInferenceEngine(empty, negatedQuery.toString());
-                        reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);                           
+                        reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);
                     }
                     catch(Exception e) {
-                        reportError(e.getMessage(), query, processedQuery, sourceFile);                        
+                        reportError(e.getMessage(), query, processedQuery, sourceFile);
                         System.out.println("Error from inference engine: " + e.getMessage());
                     }
-                }                                
+                }
                 empty.tell(query.getFormula());
             }
             pw.println("  </entries>");
@@ -369,9 +365,9 @@ public class CCheck implements Runnable {
             pw.println("  </entries>");
             pw.print("  <error>");
             pw.print("Error encountered while running consistency check.");
-            pw.println("</error>");            
+            pw.println("</error>");
             pw.print("</ConsistencyCheck>");
-            System.out.println(e.getMessage());    
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -384,7 +380,6 @@ public class CCheck implements Runnable {
      */
     private void runConsistencyCheckNew() {
 
-        String proof;
         KB empty = this.makeEmptyKB();
         try {
             pw.println("<ConsistencyCheck>");
@@ -392,16 +387,16 @@ public class CCheck implements Runnable {
             pw.println("    " + kb.name);
             pw.println("  </kb>");
             Collection<Formula> allFormulas = kb.formulaMap.values();
-            Collection<String> allTPTP= new ArrayList<String>();
+            Collection<String> allTPTP = new ArrayList<>();
             for (Formula f : allFormulas) {
                 allTPTP.addAll(f.theTptpFormulas);
             }
             Iterator<String> it = allTPTP.iterator();
             pw.println("  <entries>");
+            String query;
             while (it.hasNext()) {
-                String query = (String) it.next();
+                query = it.next();
                 System.out.println("CCheck.runConsistencyCheck: eprover: " + empty.eprover);
-
             }
             pw.println("  </entries>");
             pw.print("</ConsistencyCheck>");
@@ -412,7 +407,7 @@ public class CCheck implements Runnable {
             pw.print("Error encountered while running consistency check.");
             pw.println("</error>");
             pw.print("</ConsistencyCheck>");
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -423,7 +418,7 @@ public class CCheck implements Runnable {
     /** *************************************************************
      * Picks the inference engine to use for the consistency check based on the
      * set-up inference engine.
-     * 
+     *
      * @param empty
      *            - the kb to be used for the check
      * @param query
@@ -433,29 +428,32 @@ public class CCheck implements Runnable {
     private String askInferenceEngine(KB empty, String query) {
 
         String result = "";
-        
+
         try {
-            if (inferenceEngine.equals("EProver")) {
-                result = empty.askEProver(query, timeOut, 1) + " ";
+            switch (inferenceEngine) {
+                case "EProver":
+                    result = empty.askEProver(query, timeOut, 1) + " ";
+                    break;
+                case "SInE":
+                    result = empty.askSInE(query, timeOut, 1);
+                    break;
+                case "LeoLocal":
+                    LEO leo = empty.askLeo(query, timeOut, 1);
+                    break;
+            //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
+            //        ieSettings.get("systemChosen"),
+            //        ieSettings.get("location"),
+            //        ieSettings.get("quietFlag"), empty.name,
+            //        ieSettings.get("language"));
+                case "SoTPTP":
+                    break;
+                default:
+                    throw new Exception("No inference engine.");
             }
-            else if (inferenceEngine.equals("SInE")) {
-                result = empty.askSInE(query, timeOut, 1);
-            }
-            else if (inferenceEngine.equals("LeoLocal")) {
-                LEO leo = empty.askLeo(query, timeOut, 1);
-            }
-            else if (inferenceEngine.equals("SoTPTP")) {
-                //result = InterfaceTPTP.queryTPTP(query, timeOut, 1, lineHtml,
-                //        ieSettings.get("systemChosen"),
-                //        ieSettings.get("location"),
-                //        ieSettings.get("quietFlag"), empty.name,
-                //        ieSettings.get("language"));
-            }                        
-            else throw new Exception("No inference engine.");
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
-            result = "ERROR [for query: " + query + "]: " + e.getMessage(); 
+            System.err.println(e.getMessage());
+            result = "ERROR [for query: " + query + "]: " + e.getMessage();
         }
         return result;
     }

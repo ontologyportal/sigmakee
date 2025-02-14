@@ -484,9 +484,9 @@ public class NLGUtils implements Serializable {
         for (int i = 0; i < form.length(); i++) {
             char ch = form.charAt(i);
             switch (ch) {
-            case '"': inString = !inString; break;
-            case '?': if (!inString) inVar = true; break;
-            case '@': if (!inString) inVar = true; break;
+                case '"': inString = !inString; break;
+                case '?': if (!inString) inVar = true; break;
+                case '@': if (!inString) inVar = true; break;
             }
             if (inVar && !Character.isLetterOrDigit(ch) && ch != '?' && ch != '@') {
                 if (!result.contains(var))

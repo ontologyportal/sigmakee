@@ -83,11 +83,11 @@ public class FormulaPreprocessor {
 
         List<String> sig = null;
         if (kb == null || kb.kbCache == null) {
-            System.out.println("Error in FormulaPreprocessor.findType(): null cache");
+            System.err.println("Error in FormulaPreprocessor.findType(): null cache");
             return null;
         }
         else if (kb.kbCache.signatures == null)
-            System.out.println("Error in FormulaPreprocessor.findType(): null cache signatures");
+            System.err.println("Error in FormulaPreprocessor.findType(): null cache signatures");
         if (kb.kbCache != null && kb.kbCache.signatures != null)
             sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
@@ -443,7 +443,7 @@ public class FormulaPreprocessor {
      *                      ContentDevelopment, Writing]
      * return the most specific type Writing
      */
-    protected String getMostRelevantType(KB kb, HashSet<String> types) {
+    protected String getMostRelevantType(KB kb, Set<String> types) {
 
         Set<String> insts = new HashSet<>();
         for (String type : types) {
@@ -677,7 +677,7 @@ public class FormulaPreprocessor {
         String type = kb.kbCache.getRange(fstr);
         if (type == null) {
             type = "Entity";
-            System.out.println("Error in FormulaPreprocessor.setEqualsVartype() no function type for " + fstr);
+            System.err.println("Error in FormulaPreprocessor.setEqualsVartype() no function type for " + fstr);
         }
         MapUtils.addToMap(result,arg1,type);
     }
@@ -693,7 +693,7 @@ public class FormulaPreprocessor {
                                                                        Map<String,Set<String>> input) {
 
         if (kb == null)
-            System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() kb = null found while processing: \n" + f);
+            System.err.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() kb = null found while processing: \n" + f);
         Map<String,Set<String>> result = new HashMap<>();
         if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() || f.isVariable() || f.atom())
             return result;
@@ -717,7 +717,7 @@ public class FormulaPreprocessor {
             if (f.getFormula().contains("?") && !Formula.isVariable(pred)) {
                 List<Formula> args = f.complexArgumentsToArrayList(1);
                 if (args == null)
-                    System.out.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() args = null found while processing: \n" + f);
+                    System.err.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() args = null found while processing: \n" + f);
                 if (pred.equals(Formula.EQUAL) && args.size() > 1) {
                     if (args.get(0).isVariable() && args.get(1).listP() &&
                             kb.isFunctional(args.get(1)))
@@ -781,7 +781,6 @@ public class FormulaPreprocessor {
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
                                      boolean translateIneq, boolean translateMath,
                                      KB kb) {
-
 
         if (debug) System.out.println("preProcessRecurse: " + f);
         StringBuilder result = new StringBuilder();
@@ -889,14 +888,14 @@ public class FormulaPreprocessor {
      */
     protected List<Formula> replacePredVarsAndRowVars(Formula form, KB kb, boolean addHoldsPrefix) {
 
-        List<Formula> result = new ArrayList<Formula>();
+        List<Formula> result = new ArrayList<>();
         if (debug) System.out.println("FormulaPreprocessor.replacePredVarsAndRowVars(): " + form);
         Formula startF = new Formula();
         startF.read(form.getFormula());
         Set<String> predVars = PredVarInst.gatherPredVars(kb,startF);
         Set<Formula> accumulator = new LinkedHashSet<>();
         accumulator.add(startF);
-        List<Formula> working = new ArrayList<Formula>();
+        List<Formula> working = new ArrayList<>();
         int prevAccumulatorSize = 0;
         Set<Formula> instantiations;
         List<Formula> ar;
@@ -950,7 +949,7 @@ public class FormulaPreprocessor {
                     else
                         accumulator.addAll(ar);
                     if (accumulator.size() > AXIOM_EXPANSION_LIMIT) {
-                        System.out.println("Error in FormulaPreprocessor.replacePredVarsAndRowVars(): AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
+                        System.err.println("Error in FormulaPreprocessor.replacePredVarsAndRowVars(): AXIOM_EXPANSION_LIMIT EXCEEDED: " + AXIOM_EXPANSION_LIMIT);
                         break;
                     }
                 }
@@ -1094,7 +1093,7 @@ public class FormulaPreprocessor {
             KBmanager mgr = KBmanager.getMgr();
             if (!form.isBalancedList()) {
                 String errStr = "Unbalanced parentheses or quotes in: " + form.getFormula();
-                System.out.println("Error in preProcess(): " + errStr);
+                System.err.println("Error in preProcess(): " + errStr);
                 form.errors.add(errStr);
                 return results;
             }
@@ -1118,11 +1117,9 @@ public class FormulaPreprocessor {
             // Iterate over the formulae resulting from predicate variable instantiation and row variable expansion,
             // passing each to preProcessRecurse for further processing.
             if (!accumulator.isEmpty()) {
-                String theNewFormula = null;
-                FormulaPreprocessor fp;
+                String theNewFormula;
                 for (Formula fnew : accumulator) {
-                    fp = new FormulaPreprocessor();
-                    theNewFormula = fp.preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
+                    theNewFormula = preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
                     fnew.read(theNewFormula);
                     //if (debug) System.out.println("preProcess: fnew: " + fnew);
                     form.errors.addAll(fnew.getErrors());
@@ -1145,10 +1142,9 @@ public class FormulaPreprocessor {
             Formula fnew;
             for (Formula f : results) {
                 if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + f);
-                fp = new FormulaPreprocessor();
                 fnew = f;
                 //if (addTypes)
-                    fnew.read(fp.addTypeRestrictions(f,kb).getFormula());
+                    fnew.read(addTypeRestrictions(f,kb).getFormula());
                 //else
                 //    if (debug) System.out.println("preProcess(): not adding types");
                 f.read(fnew.getFormula());
