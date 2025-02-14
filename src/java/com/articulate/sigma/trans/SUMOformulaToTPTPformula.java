@@ -437,7 +437,7 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * Parse a single formula into TPTP format
      */
-    public static String tptpParseSUOKIFString(String suoString, boolean query) {
+    public static synchronized String tptpParseSUOKIFString(String suoString, boolean query) {
 
         if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
