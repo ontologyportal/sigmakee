@@ -1972,9 +1972,7 @@ public class Formula implements Comparable, Serializable {
     	fcar.read(this.car());
         if (fcar.empty())
             return resultSet;
-        if (debug)
-            System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
-
+        if (debug) System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
     	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
@@ -2116,7 +2114,7 @@ public class Formula implements Comparable, Serializable {
     public Formula renameVariableArityRelations(KB kb, Map<String,String> relationMap) {
 
         Formula result = this;
-        if (this.listP()) {
+        if (result.listP()) {
             StringBuilder sb = new StringBuilder();
             Formula f = new Formula();
             f.read(this.theFormula);
