@@ -102,7 +102,7 @@ public class KbIntegrationTest extends IntegrationTestBase {
         if (!f.isHigherOrder(SigmaTestBase.kb))
             System.out.println("testIsHigherOrder3(): success!");
         else
-            System.out.println("testIsHigherOrder3(): failure");
+            System.err.println("testIsHigherOrder3(): failure");
         assertTrue(!f.isHigherOrder(SigmaTestBase.kb));
     }
 
