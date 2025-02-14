@@ -728,10 +728,10 @@ public class KBmanager implements Serializable {
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
             if (serializedExists() && !serializedOld(configuration)) {
-                if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old ");
+                if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
                 if (loaded) {
-                    if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
+                    if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded");
                     if (!prefEquals("loadLexicons","false")) {
                         if (debug) System.out.println("KBmanager.initializeOnce(): here 1");
                         WordNet.initOnce();
