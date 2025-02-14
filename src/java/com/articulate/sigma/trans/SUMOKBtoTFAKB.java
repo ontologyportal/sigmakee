@@ -223,6 +223,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String label;
         label = translateName(t) + "_sig";
         pw.println("% writeSort(): term: " + t);
+        if (t.equals("True") || t.equals("False")) {
+            pw.println("% writeSort(): skipping terms True and False");
+            return;
+        }
         String bareTerm = SUMOtoTFAform.getBareTerm(t);
         pw.println("% bare term: " + bareTerm);
         if (sortLabels.contains(label)) {
@@ -289,8 +293,10 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         int endIndex = sig.size();
         if (KButilities.isVariableArity(kb,SUMOtoTFAform.withoutSuffix(t)))
             endIndex = getVariableAritySuffix(t) + 1;
-        if (endIndex > 6)
+        if (endIndex > 8) {
+            pw.println("% SUMOKBtoTFAKB.writeRelationSort(): size too large: " + t);
             return;
+        }
         if (endIndex < 1) {
             System.err.println("Error in SUMOKBtoTFAKB.writeRelationSort(): " + t + " variable arity relation without suffix");
             endIndex = sig.size();
