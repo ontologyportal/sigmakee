@@ -879,7 +879,7 @@ public class SUMOtoTFAform {
             }
         }
         if ("".equals(promote)) {
-            System.err.println("Error in mixedQuotient() with arg " + args +
+            System.err.println("Error in SUMOtoTFAform.mixedQuotient() with args: " + args +
                     " and types " + argTypes);
             return "$quotient" + eSuffix + "(" + processRecurse(lhs,parentType) + " ," +
                     processRecurse(rhs,parentType) + ")";
