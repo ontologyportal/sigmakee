@@ -73,7 +73,7 @@
 
     <property name="impl.title" value="${ant.project.name}"/>
     <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
-    <property name="product.version.major" value="1"/>
+    <property name="product.version.major" value="3"/>
     <property name="product.version.minor" value="0"/>
     <property name="product.version.patch" value="0"/>
     <property name="product.Version" value="${product.version.major}.${product.version.minor}.${product.version.patch}"/>
