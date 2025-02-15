@@ -700,7 +700,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");
             fileWritten = skbtfakb.writeFile(filename, null, false, pw);
         }
-        catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
         }
         if (StringUtil.isNonEmptyString(fileWritten)) {
