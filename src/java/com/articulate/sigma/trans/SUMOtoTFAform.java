@@ -1814,7 +1814,7 @@ public class SUMOtoTFAform {
      * new list from two of equal size that has the most specific type
      * at each index.
      */
-    private static List<String> mostSpecificArgType(ArrayList<String> args1, ArrayList<String> args2) {
+    private static List<String> mostSpecificArgType(List<String> args1, List<String> args2) {
 
         if (args1 == null || args1.size() < 1)
             return args2;
@@ -2368,7 +2368,7 @@ public class SUMOtoTFAform {
         //if (debug) System.out.println("SUMOtoTFAform.process(): f so far: " + f);
         varmap = fp.findAllTypeRestrictions(f, kb);
         if (inconsistentVarTypes()) {
-            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
+            System.err.println("SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
             return "";
         }
         counter = 0;
