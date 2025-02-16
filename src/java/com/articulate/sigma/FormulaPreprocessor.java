@@ -1120,8 +1120,7 @@ public class FormulaPreprocessor {
             if (!accumulator.isEmpty()) {
                 String theNewFormula;
                 for (Formula fnew : accumulator) {
-//                    fp = new FormulaPreprocessor();
-                    theNewFormula = /*fp.*/preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
+                    theNewFormula = preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
                     fnew.read(theNewFormula);
                     //if (debug) System.out.println("preProcess: fnew: " + fnew);
                     form.errors.addAll(fnew.getErrors());
@@ -1142,11 +1141,10 @@ public class FormulaPreprocessor {
         if (typePrefix && !isQuery) {
             Formula fnew;
             for (Formula f : results) {
-//                fp = new FormulaPreprocessor();
                 if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + f);
                 fnew = f;
                 //if (addTypes)
-                    fnew.read(/*fp.*/addTypeRestrictions(f,kb).getFormula());
+                    fnew.read(addTypeRestrictions(f,kb).getFormula());
                 //else
                 //    if (debug) System.out.println("preProcess(): not adding types");
                 f.read(fnew.getFormula());
