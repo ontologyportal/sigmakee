@@ -2856,7 +2856,7 @@ public class SUMOtoTFAform {
         System.out.println("INFO in SUMOtoTFAform.main()");
         System.out.println("args:" + args.length + " : " + Arrays.toString(args));
         if (args == null) {
-            System.out.println("no command given");
+            System.err.println("no command given, see help:");
             showHelp();
         }
         else if (args != null && args.length > 0 && args[0].equals("-h"))
@@ -2864,12 +2864,11 @@ public class SUMOtoTFAform {
         else {
             SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
             skbtfakb.initOnce();
-            initOnce();
             System.out.println("INFO in SUMOtoTFAform.main(): completed initialization");
             if (args != null && args.length > 2 && args[0].equals("-c")) {
                 String t1 = args[1];
                 String t2 = args[2];
-                System.out.println("main() best of " + t1 + " and " + t2 + " : " + constrainTerm(t1,t2));
+                System.out.println("SUMOtoTFAform.main(): best of " + t1 + " and " + t2 + " : " + constrainTerm(t1,t2));
                 List<String> argTypeMap = new ArrayList<>();
                 argTypeMap.add("RealNumber");
                 argTypeMap.add("RealNumber");
@@ -2878,21 +2877,21 @@ public class SUMOtoTFAform {
                 predTypes.add("RealNumber");
                 System.out.println();
                 List<String> best = bestSignature(argTypeMap,predTypes);
-                System.out.println("main() best: " + best);
+                System.out.println("SUMOtoTFAform.main(): best: " + best);
                 System.out.println();
                 List<String> constrained = mostSpecificSignature(argTypeMap,predTypes);
-                System.out.println("main() most specific for (argTypeMap, predType) " +
+                System.out.println("SUMOtoTFAform.main(): most specific for (argTypeMap, predType) " +
                         argTypeMap + ", " + predTypes + " : " + constrained);
                 System.out.println();
                 constrained = mostSpecificSignature(predTypes,predTypes);
-                System.out.println("main() most specific for (argTypeMap, predType) " +
+                System.out.println("SUMOtoTFAform.main(): most specific for (argTypeMap, predType) " +
                         predTypes + ", " + predTypes + " : " + constrained);
             }
             else if (args != null && args.length > 1 && args[0].equals("-f")) {
                 debug = true;
                 SUMOformulaToTPTPformula.debug = true;
                 Formula f = new Formula(args[1]);
-                System.out.println("in TFA: " + process(f,false));
+                System.out.println("SUMOtoTFAform.main(): in TFA: " + process(f,false));
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 String bare = getBareTerm("s__refers__1En2In");
