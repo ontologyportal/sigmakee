@@ -35,6 +35,7 @@ RUN apt-get update && apt-get install -y --install-recommends \
     cp build/vampire vampire ;\
     ./checks/sanity vampire
 
+# For a specific version of Vampire and z3
 #RUN apt update && apt install -y --install-recommends \
 #    build-essential \
 #    clang \
@@ -69,6 +70,12 @@ RUN apt-get update && apt-get install -y --install-recommends \
 # runtime image.
 FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ant \
+    ant-optional \
+    git \
+    graphviz
+
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
 
@@ -87,8 +94,4 @@ COPY --from=builder \
 COPY --from=builder \
     /usr/local/tomcat/vampire/z3/build/libz3.* /usr/local/bin/
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ant \
-    ant-optional \
-    git \
-    graphviz
+ENV LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
