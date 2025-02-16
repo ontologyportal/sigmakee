@@ -260,7 +260,9 @@ public class SUMOKBtoTPTPKB {
 
         String retVal = _writeFile(fileName, conjecture, isQuestion, pw);
 
-        // Experimental manual threading of main loop
+        // Experimental manual threading of main loop writes big SUMO in half
+        // the time as the sequential method above, but produces out of order
+        // metadata. 2/15/25 tdn
 //        String retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
 
         KB.axiomKey = axiomKey;
@@ -552,7 +554,7 @@ public class SUMOKBtoTPTPKB {
                                 pw.println("% f(" + formCount + ") empty, already written or filtered formula, skipping : " + theTPTPFormula);
                         }
                         formCount++;
-//                    }
+//                    } // end synchronized
                 }; // end Runnable
                 t = new Thread(r);
                 t.setName("SUMOKBtoTPTPKB:writeFile" + (++tCounter));
