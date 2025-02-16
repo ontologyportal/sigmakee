@@ -1,8 +1,10 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.trans.*;
-import com.articulate.sigma.nlg.UnitNLGTestSuite;
+import com.articulate.sigma.nlg.*;
 import com.articulate.sigma.wordNet.*;
+
+import org.junit.AfterClass;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
@@ -21,4 +23,8 @@ import org.junit.runners.Suite;
 })
 public class UnitTestSuite extends UnitTestBase {
 
+    @AfterClass
+    public static void shutDown() {
+        KButilities.shutDownExecutorService();
+    }
 }
