@@ -4040,5 +4040,6 @@ public class KB implements Serializable {
                 }
             }
         }
+        KButilities.shutDownExecutorService();
     }
 }
