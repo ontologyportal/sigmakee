@@ -619,7 +619,8 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            pw.println("% f(" + formCount + "): " + form.format("", "", " "));
+            pw.println("% f: " + form.format("", "", " "));
+//            pw.println("% f(" + formCount + "): " + form.format("", "", " ")); // <- for manually threaded experiment (tdn)
             pw.println("% quoted thing");
             return true;
         }
