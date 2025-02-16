@@ -247,6 +247,7 @@ public class SUMOKBtoTPTPKB {
     private int axiomIndex = 1; // a count appended to axiom names to make a unique ID
     private int counter    = 0;
     private int formCount  = 1;
+    private long millis    = 0;;
 
     /** *************************************************************
      *  Write all axioms in the KB to TPTP format.
@@ -256,8 +257,7 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
-        long millis = System.currentTimeMillis();
-
+        // Default sequential processing
         String retVal = _writeFile(fileName, conjecture, isQuestion, pw);
 
         // Experimental manual threading of main loop writes big SUMO in half
@@ -273,6 +273,7 @@ public class SUMOKBtoTPTPKB {
         axiomIndex = 1; // reset
         counter    = 0; // reset
         formCount  = 1; // reset
+        millis     = 0; // reset
 
         return retVal;
     }
@@ -281,6 +282,7 @@ public class SUMOKBtoTPTPKB {
                             boolean isQuestion, PrintWriter pw) {
 
         PredVarInst.init();
+        millis = System.currentTimeMillis();
         if (!KBmanager.initialized) {
             System.err.println("Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed");
             return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
@@ -307,7 +309,7 @@ public class SUMOKBtoTPTPKB {
                         for (Formula derivF : f.derivation.parents)
                             pw.println("% original f: " + derivF.format("", "", " "));
                     }
-                    pw.println("% " + formCount + " of " + total +
+                    pw.println("% " + formCount++ + " of " + total +
                             " from file " + f.sourceFile + " at line " + f.startLine);
                 }
                 if (f.isHigherOrder(kb)) {
@@ -399,7 +401,6 @@ public class SUMOKBtoTPTPKB {
                     else
                         pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
                 }
-                formCount++;
             } // end outer for loop
             System.out.println();
             printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
@@ -426,10 +427,15 @@ public class SUMOKBtoTPTPKB {
         return getInfFilename();
     }
 
+    /** *************************************************************
+     * Experimental manual threading of the main loop
+     * @return the result of the KB translation to TPTP
+     */
     private String _tWriteFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
         PredVarInst.init();
+        millis = System.currentTimeMillis();
         if (!KBmanager.initialized) {
             System.err.println("Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed");
             return "Error in SUMOKBtoTPTPKB.writeFile(): KB initialization not completed";
@@ -456,7 +462,7 @@ public class SUMOKBtoTPTPKB {
                         SUMOtoTFAform stfa;
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
                         if (!f.getFormula().startsWith("(documentation")) {
-                            pw.println("% f(" + formCount + "): " + f.format("", "", " "));
+                            pw.println("% f(" + formCount++ + "): " + f.format("", "", " "));
                             if (!f.derivation.parents.isEmpty()) {
                                 for (Formula derivF : f.derivation.parents)
                                     pw.println("% original f(" + formCount + ") " + derivF.format("", "", " "));
@@ -553,7 +559,6 @@ public class SUMOKBtoTPTPKB {
                             else
                                 pw.println("% f(" + formCount + ") empty, already written or filtered formula, skipping : " + theTPTPFormula);
                         }
-                        formCount++;
 //                    } // end synchronized
                 }; // end Runnable
                 t = new Thread(r);
