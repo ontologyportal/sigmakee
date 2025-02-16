@@ -323,7 +323,6 @@ public class SUMOKBtoTPTPKB {
                 if (counter++ % 100 == 0) System.out.print(".");
                 if ((counter % 4000) == 1)
                     System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
-//                fp = new FormulaPreprocessor();
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                 processed = fp.preProcess(f,false,kb);
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
@@ -478,7 +477,6 @@ public class SUMOKBtoTPTPKB {
                         if (counter++ % 100 == 0) System.out.print(".");
                         if ((counter % 4000) == 1)
                             System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
-//                        fp = new FormulaPreprocessor();
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                         processed = fp.preProcess(f,false,kb);
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
