@@ -375,7 +375,7 @@
     <!-- At this point we will assume you have already complied with the
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
-    <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
+    <target name="install" depends="init" description="Appends .*shrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
         <mkdir dir="${git.home}"/>
         <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${programs.dir}"/>
