@@ -191,8 +191,20 @@ public class KB implements Serializable {
      */
     public KB(String n, String dir) {
 
-        this(n);
+        name = n;
         kbDir = dir;
+        try {
+            KBmanager mgr = KBmanager.getMgr();
+            if (mgr != null) {
+                String loadCelt = mgr.getPref("loadCELT");
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
+                    celt = new CELT();
+                }
+            }
+        } catch (IOException ioe) {
+            System.err.println("Error in KB(): " + ioe.getMessage());
+            celt = null;
+        }
     }
 
     /***************************************************************
@@ -268,20 +280,7 @@ public class KB implements Serializable {
      */
     public KB(String n) {
 
-        name = n;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            kbDir = mgr.getPref("kbDir");
-            if (mgr != null) {
-                String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
-                    celt = new CELT();
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("Error in KB(): " + ioe.getMessage());
-            celt = null;
-        }
+        this(n, KBmanager.getMgr().getPref("kbDir"));
     }
 
     /**************************************************************
