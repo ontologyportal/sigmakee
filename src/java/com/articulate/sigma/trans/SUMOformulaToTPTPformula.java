@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 public class SUMOformulaToTPTPformula {
 
@@ -437,26 +440,38 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * Parse a single formula into TPTP format
      */
-    public static synchronized String tptpParseSUOKIFString(String suoString, boolean query) {
+    public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
-        if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        if (SUMOKBtoTPTPKB.lang.equals("tff"))
-            return "( " + SUMOtoTFAform.process(suoString,query) + " )";
-        if (SUMOKBtoTPTPKB.lang.equals("thf")) {
-            THF thf = new THF();
-            Collection<Formula> stmts = new ArrayList<>();
-            Collection<Formula> queries = new ArrayList<>();
-            if (query)
-                queries.add(new Formula(suoString));
-            else
-                stmts.add(new Formula(suoString));
-            return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
-        }
-        if (SUMOKBtoTPTPKB.lang.equals("fof"))
+        Callable<String> task = () -> {
+            if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            if (SUMOKBtoTPTPKB.lang.equals("tff"))
+                return "( " + SUMOtoTFAform.process(suoString,query) + " )";
+            if (SUMOKBtoTPTPKB.lang.equals("thf")) {
+                THF thf = new THF();
+                Collection<Formula> stmts = new ArrayList<>();
+                Collection<Formula> queries = new ArrayList<>();
+                if (query)
+                    queries.add(new Formula(suoString));
+                else
+                    stmts.add(new Formula(suoString));
+                return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
+            }
+            if (SUMOKBtoTPTPKB.lang.equals("fof"))
+                return "( " + process(new Formula(suoString),query) + " )";
+            System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
             return "( " + process(new Formula(suoString),query) + " )";
-        System.err.println("ERROR in tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
-        return "( " + process(new Formula(suoString),query) + " )";
+        };
+
+        Future<String> future = KButilities.executorService.submit(task);
+
+        String retVal = null;
+        try {
+            retVal = future.get(); // waits to complete the task
+        } catch (InterruptedException | ExecutionException ex) {
+            System.err.printf("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): %s", ex);
+        }
+        return retVal;
     }
 
     /** *************************************************************
