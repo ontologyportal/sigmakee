@@ -442,25 +442,44 @@ public class SUMOformulaToTPTPformula {
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
-        Callable<String> task = () -> {
-            if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            if (SUMOKBtoTPTPKB.lang.equals("tff"))
-                return "( " + SUMOtoTFAform.process(suoString,query) + " )";
-            if (SUMOKBtoTPTPKB.lang.equals("thf")) {
-                THF thf = new THF();
-                Collection<Formula> stmts = new ArrayList<>();
-                Collection<Formula> queries = new ArrayList<>();
-                if (query)
-                    queries.add(new Formula(suoString));
-                else
-                    stmts.add(new Formula(suoString));
-                return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
-            }
-            if (SUMOKBtoTPTPKB.lang.equals("fof"))
-                return "( " + process(new Formula(suoString),query) + " )";
-            System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
+        // Default sequential processing
+//        return _tptpParseSUOKIFString(suoString, query);
+
+        // Experimental use of a thread pool executor
+        return _tTptpParseSUOKIFString(suoString, query);
+    }
+
+    private static String _tptpParseSUOKIFString(String suoString, boolean query) {
+
+        if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        if (SUMOKBtoTPTPKB.lang.equals("tff"))
+            return "( " + SUMOtoTFAform.process(suoString,query) + " )";
+        if (SUMOKBtoTPTPKB.lang.equals("thf")) {
+            THF thf = new THF();
+            Collection<Formula> stmts = new ArrayList<>();
+            Collection<Formula> queries = new ArrayList<>();
+            if (query)
+                queries.add(new Formula(suoString));
+            else
+                stmts.add(new Formula(suoString));
+            return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
+        }
+        if (SUMOKBtoTPTPKB.lang.equals("fof"))
             return "( " + process(new Formula(suoString),query) + " )";
+        System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
+        return "( " + process(new Formula(suoString),query) + " )";
+    }
+
+    /** *************************************************************
+     * Experimental use of a ThreadPoolExecutor to parse the formula
+     * to TPTP
+     * @return the result of the formula parse
+     */
+    private static String _tTptpParseSUOKIFString(String suoString, boolean query) {
+
+        Callable<String> task = () -> {
+            return _tptpParseSUOKIFString(suoString, query);
         };
 
         Future<String> future = KButilities.executorService.submit(task);
