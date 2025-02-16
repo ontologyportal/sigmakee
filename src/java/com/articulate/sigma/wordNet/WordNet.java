@@ -346,7 +346,7 @@ public class WordNet implements Serializable {
         for (int i = 0; i < regexPatternStrings.length; i++) {
             regexPatterns[i] = Pattern.compile(regexPatternStrings[i]);
             if (!(regexPatterns[i] instanceof Pattern))
-                System.out.println("ERROR in WordNet.compileRegexPatterns(): could not compile \""
+                System.err.println("Error in WordNet.compileRegexPatterns(): could not compile \""
                         + regexPatternStrings[i] + "\"");
         }
     }
@@ -632,7 +632,7 @@ public class WordNet implements Serializable {
      *  Use a default filename and path unless a non-null string is
      *  provided, in which case assume it is a full path.
      */
-    private void readNouns() throws java.io.IOException {
+    private void readNouns() throws IOException {
 
         System.out.println("INFO in WordNet.readNouns(): Reading WordNet noun files");
 
@@ -664,7 +664,7 @@ public class WordNet implements Serializable {
             // System.out.println("INFO in WordNet.readNouns(): Reading WordNet noun exceptions");
             nounFile = getWnFile("noun_exceptions",null);
             if (nounFile == null) {
-                System.err.println("ERROR in WordNet.readNouns(): "
+                System.err.println("Error in WordNet.readNouns(): "
                         + "The noun mapping exceptions file does not exist in " + baseDir);
                 return;
             }
@@ -1741,16 +1741,15 @@ public class WordNet implements Serializable {
         wn = null;
         try {
             // Reading the object from a file
-            //FileInputStream file = new FileInputStream(baseDir + File.separator + " ");
+            //FileInputStream file = new FileInputStream(baseDir + File.separator + "wn.ser");
             //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
-            wn = decoder();
             if (serializedOld()) {
-                wn = null;
                 System.out.println("WordNet.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
+            wn = decoder();
             //in.close();
             //file.close();
             System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
@@ -1855,16 +1854,19 @@ public class WordNet implements Serializable {
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
                 System.out.println("WordNet.initOnce(): disable: " + disable);
                 baseDirFile = new File(WordNet.baseDir);
-                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
+//                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
                     System.out.println("WordNet.initOnce(): loading WordNet source files ");
-                    loadFresh();
-                    initNeeded = false;
-                }
-                else {
-                    loadSerialized();
-                    if (wn == null)
-                        loadFresh();
-                }
+                    loadFresh(); // <- will serialize
+                    // FIXME: a deserialized WN instance does not load the MultiWords.multiWord map.
+                    //        only a loadFresh() does this, so, even though we have a serialized
+                    //        WN file, we must do a loadFresh() to get the mappings anyway.
+                    //        2/15/25 tdn
+//                }
+//                else {
+//                    loadSerialized();
+//                    if (wn == null)
+//                        loadFresh();
+//                }
                 DB.readSentimentArray();
             }
         }
