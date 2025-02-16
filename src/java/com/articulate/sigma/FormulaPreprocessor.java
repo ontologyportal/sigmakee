@@ -740,8 +740,8 @@ public class FormulaPreprocessor {
                                         !pred.equals("equal")) {
                                     System.err.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                             "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
-                                    System.out.println("sig: " + kb.kbCache.getSignature(pred));
-                                    System.out.println("sig count: " + kb.kbCache.signatures.keySet().size());
+                                    System.err.println("sig: " + kb.kbCache.getSignature(pred));
+                                    System.err.println("sig count: " + kb.kbCache.signatures.keySet().size());
                                 }
                             }
                             else
@@ -1089,6 +1089,7 @@ public class FormulaPreprocessor {
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + form);
         Set<Formula> results = new HashSet<>();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
         if (!StringUtil.emptyString(form.getFormula())) {
             KBmanager mgr = KBmanager.getMgr();
             if (!form.isBalancedList()) {
@@ -1119,7 +1120,8 @@ public class FormulaPreprocessor {
             if (!accumulator.isEmpty()) {
                 String theNewFormula;
                 for (Formula fnew : accumulator) {
-                    theNewFormula = preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
+//                    fp = new FormulaPreprocessor();
+                    theNewFormula = /*fp.*/preProcessRecurse(fnew,"",ignoreStrings,translateIneq,translateMath,kb);
                     fnew.read(theNewFormula);
                     //if (debug) System.out.println("preProcess: fnew: " + fnew);
                     form.errors.addAll(fnew.getErrors());
@@ -1138,13 +1140,13 @@ public class FormulaPreprocessor {
         //System.out.println("INFO in FormulaPreprocessor.preProcess(): type prefix: " + typePrefix);
         //System.out.println("INFO in FormulaPreprocessor.preProcess(): !isQuery: " + !isQuery);
         if (typePrefix && !isQuery) {
-            FormulaPreprocessor fp;
             Formula fnew;
             for (Formula f : results) {
+//                fp = new FormulaPreprocessor();
                 if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + f);
                 fnew = f;
                 //if (addTypes)
-                    fnew.read(addTypeRestrictions(f,kb).getFormula());
+                    fnew.read(/*fp.*/addTypeRestrictions(f,kb).getFormula());
                 //else
                 //    if (debug) System.out.println("preProcess(): not adding types");
                 f.read(fnew.getFormula());
