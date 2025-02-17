@@ -20,8 +20,8 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -1410,28 +1410,19 @@ public class KButilities {
         return result;
     }
 
-    private static final int CORE_POOL_SIZE = 10;
-    private static final int MAX_POOL_SIZE = 10;
-    private static final long KEEP_ALIVE_TIME = 10L;
-    private static final TimeUnit TIME_UNIT = TimeUnit.SECONDS;
-    public static final ThreadPoolExecutor executorService = new ThreadPoolExecutor(
-                                                CORE_POOL_SIZE,
-                                                MAX_POOL_SIZE,
-                                                KEEP_ALIVE_TIME,
-                                                TIME_UNIT,
-                                                new LinkedBlockingQueue<>()
-                                            );
+    /** Uses the number of available processors to set the thread pool count */
+    public static final ExecutorService executorService = Executors.newWorkStealingPool();
 
     /** ***************************************************************
      * Must be called whenever a *.tptp, *.tff or *.fof file is written
      * to allow for clean shutdown of the JVM. Call this at the bottom
-     * of any main class where the above write operation is invoked.
+     * of any main class where the executor is invoked.
      */
     public static void shutDownExecutorService() {
 
         executorService.shutdown();
         try {
-            if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
                 executorService.shutdownNow();
             }
         } catch (InterruptedException e) {
@@ -1473,7 +1464,7 @@ public class KButilities {
         else {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println("KBmutilities.main(): completed init");
+            System.out.println("KButilities.main(): completed init");
             //countRelations(kb);
             //checkURLs(kb);
             //validatePictureList();
@@ -1535,12 +1526,14 @@ public class KButilities {
                 System.out.println(generateFormulasAndDoc(kb));
             }
             else if (args != null && args.length > 1 && args[0].equals("-v")) {
-                System.out.print("Formula " + args[1] + "\nis valid: ");
                 boolean valid = isValidFormula(kb,args[1]);
+                String s = "Formula " + args[1] + "\nis valid: ";
+                StringBuilder sb = new StringBuilder();
+                sb.append(s);
                 if (valid)
-                    System.out.println(valid);
+                    System.out.println(sb.append(valid));
                 else
-                    System.err.println(valid);
+                    System.err.println(sb.append(valid));
             }
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();
