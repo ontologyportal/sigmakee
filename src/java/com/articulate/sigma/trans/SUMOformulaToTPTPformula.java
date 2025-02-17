@@ -438,18 +438,12 @@ public class SUMOformulaToTPTPformula {
     }
 
     /** ***************************************************************
-     * Parse a single formula into TPTP format
+     * Parse a single formula into TPTP format. Synchronized to keep
+     * order when writing to file during threaded operations.
+     * @param suoString the SUO entry to parse
+     * @param query true if the suoString is a query
      */
-    public static String tptpParseSUOKIFString(String suoString, boolean query) {
-
-        // Default sequential processing
-//        return _tptpParseSUOKIFString(suoString, query);
-
-        // Experimental use of a thread pool executor
-        return _tTptpParseSUOKIFString(suoString, query);
-    }
-
-    private static String _tptpParseSUOKIFString(String suoString, boolean query) {
+    public static synchronized String tptpParseSUOKIFString(String suoString, boolean query) {
 
         if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
@@ -469,28 +463,6 @@ public class SUMOformulaToTPTPformula {
             return "( " + process(new Formula(suoString),query) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
         return "( " + process(new Formula(suoString),query) + " )";
-    }
-
-    /** *************************************************************
-     * Experimental use of a ThreadPoolExecutor to parse the formula
-     * to TPTP
-     * @return the result of the formula parse
-     */
-    private static String _tTptpParseSUOKIFString(String suoString, boolean query) {
-
-        Callable<String> task = () -> {
-            return _tptpParseSUOKIFString(suoString, query);
-        };
-
-        Future<String> future = KButilities.executorService.submit(task);
-
-        String retVal = null;
-        try {
-            retVal = future.get(); // waits to complete the task
-        } catch (InterruptedException | ExecutionException ex) {
-            System.err.printf("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): %s", ex);
-        }
-        return retVal;
     }
 
     /** *************************************************************
