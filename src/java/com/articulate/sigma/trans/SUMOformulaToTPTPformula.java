@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 public class SUMOformulaToTPTPformula {
 
@@ -440,7 +437,7 @@ public class SUMOformulaToTPTPformula {
     /** ***************************************************************
      * Parse a single formula into TPTP format. Synchronized to keep
      * order when writing to file during threaded operations.
-     * @param suoString the SUO entry to parse
+     * @param suoString the formula entry to parse
      * @param query true if the suoString is a query
      */
     public static synchronized String tptpParseSUOKIFString(String suoString, boolean query) {
