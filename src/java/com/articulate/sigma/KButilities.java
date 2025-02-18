@@ -44,6 +44,9 @@ import org.json.simple.JSONValue;
  */
 public class KButilities {
 
+    /** Uses the number of available processors to set the thread pool count */
+    public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
+
     public static boolean debug = false;
 
     /** Errors found during processing formulas */
@@ -1409,9 +1412,6 @@ public class KButilities {
         }
         return result;
     }
-
-    /** Uses the number of available processors to set the thread pool count */
-    public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
 
     /** ***************************************************************
      * Must be called whenever a *.tptp, *.tff or *.fof file is written
