@@ -690,9 +690,17 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      * Reads in the KBs and other parameters defined in the XML
-     * configuration file, or uses the default parameters.
+     * configuration file, or uses the default parameters. Entry point
+     * for the web app (Prelude.jsp).
      */
     public void initializeOnce() {
+
+        if (!initialized)
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("Shutdown hook executed");
+                // Perform cleanup tasks here
+                KButilities.shutDownExecutorService();
+            }));
 
         System.out.println("Info in KBmanager.initializeOnce()");
         //Thread.dumpStack();
