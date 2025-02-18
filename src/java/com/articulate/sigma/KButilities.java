@@ -1411,7 +1411,7 @@ public class KButilities {
     }
 
     /** Uses the number of available processors to set the thread pool count */
-    public static final ExecutorService executorService = Executors.newWorkStealingPool();
+    public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
 
     /** ***************************************************************
      * Must be called whenever a *.tptp, *.tff or *.fof file is written
@@ -1420,13 +1420,13 @@ public class KButilities {
      */
     public static void shutDownExecutorService() {
 
-        executorService.shutdown();
+        EXECUTOR_SERVICE.shutdown();
         try {
-            if (!executorService.awaitTermination(10, TimeUnit.SECONDS)) {
-                executorService.shutdownNow();
+            if (!EXECUTOR_SERVICE.awaitTermination(10, TimeUnit.SECONDS)) {
+                EXECUTOR_SERVICE.shutdownNow();
             }
         } catch (InterruptedException e) {
-            executorService.shutdownNow();
+            EXECUTOR_SERVICE.shutdownNow();
         }
     }
 
