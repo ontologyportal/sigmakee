@@ -1883,7 +1883,7 @@ public class DB {
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
-        WordNet.wn.initOnce();
+        WordNet.initOnce();
         readSentimentArray();
         //System.out.println(DB.computeConceptSentiment("This hotel is really bad."));
         textFileSentiment("rt-polarity.neg",true);

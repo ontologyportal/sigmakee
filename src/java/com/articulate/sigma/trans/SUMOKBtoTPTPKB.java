@@ -5,6 +5,10 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class SUMOKBtoTPTPKB {
 
@@ -16,6 +20,9 @@ public class SUMOKBtoTPTPKB {
     public static boolean removeHOL = true; // remove higher order expressions
     public static boolean removeNum = true; // remove numbers
     public static boolean removeStrings = true;
+
+    /** Flag to enable rapid parsing via multiple threads coordinated by an ExecutorService */
+    public static boolean rapidParsing = false;
 
     public static boolean debug = false;
 
@@ -30,10 +37,13 @@ public class SUMOKBtoTPTPKB {
 
     public Set<String> alreadyWrittenTPTPs = new HashSet<>();
 
+    /** Prevents interleaving of PrintWriter writes in writeFile() */
+    private final ReadWriteLock lock;
+
     /** *************************************************************
      */
     public SUMOKBtoTPTPKB() {
-
+        lock = new ReentrantReadWriteLock(true);
         buildExcludedPredicates();
     }
 
@@ -257,13 +267,13 @@ public class SUMOKBtoTPTPKB {
     public String writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
-        // Default sequential processing
-        String retVal = _writeFile(fileName, conjecture, isQuestion, pw);
+        // Default (orig) sequential processing
+//        String retVal = _writeFile(fileName, conjecture, isQuestion, pw);
 
-        // Experimental manual threading of main loop writes big SUMO in half
-        // the time as the sequential method above, but produces out of order
-        // metadata. 2/15/25 tdn
-//        String retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
+        // Experimental threading of main loop writes big SUMO in half
+        // the time as the sequential method above if not synchronized,
+        // but interleaves metadata. 2/17/25 tdn
+        String retVal = _tWriteFile(fileName, conjecture, isQuestion, pw);
 
         KB.axiomKey = axiomKey;
         KBmanager.serialize();
@@ -401,7 +411,7 @@ public class SUMOKBtoTPTPKB {
                     else
                         pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
                 }
-            } // end outer for loop
+            } // end outer (main) for loop
             System.out.println();
             printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
             printTFFNumericConstants(pw);
@@ -428,8 +438,8 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * Experimental manual threading of the main loop
-     * @return the result of the KB translation to TPTP
+     * Experimental threading of the main loop
+     * @return the name of the KB translation to TPTP file
      */
     private String _tWriteFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
@@ -448,12 +458,14 @@ public class SUMOKBtoTPTPKB {
             orderedFormulae.addAll(kb.formulaMap.values());
             //if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): added formulas: " + orderedFormulae.size());
 
-            int tCounter = 0;
+            Future<?> future;
             int total = orderedFormulae.size();
-            Thread t;
+            List<Future<?>> futures = new ArrayList<>();
             for (Formula formula : orderedFormulae) {
                 Runnable r = () -> {
-//                    synchronized (pw) { // <- works only for small single file KBs like tinySUMO.kif
+                    try {
+                        if (!rapidParsing)
+                            lock.writeLock().lock();
                         Formula f = formula;
                         f.theTptpFormulas.clear();
                         FormulaPreprocessor fp = new FormulaPreprocessor();
@@ -462,7 +474,7 @@ public class SUMOKBtoTPTPKB {
                         SUMOtoTFAform stfa;
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
                         if (!f.getFormula().startsWith("(documentation")) {
-                            pw.println("% f(" + formCount++ + "): " + f.format("", "", " "));
+                            pw.println("% f(" + formCount + "): " + f.format("", "", " "));
                             if (!f.derivation.parents.isEmpty()) {
                                 for (Formula derivF : f.derivation.parents)
                                     pw.println("% original f(" + formCount + ") " + derivF.format("", "", " "));
@@ -559,23 +571,23 @@ public class SUMOKBtoTPTPKB {
                             else
                                 pw.println("% f(" + formCount + ") empty, already written or filtered formula, skipping : " + theTPTPFormula);
                         }
-//                    } // end synchronized
-                }; // end Runnable
-                t = new Thread(r);
-                t.setName("SUMOKBtoTPTPKB:writeFile" + (++tCounter));
-                t.setDaemon(true);
-                t.start();
-            } // end outer loop
+                    } finally {
+                        formCount++;
 
-            // Wait for all spawned runnables to finish
-            Thread[] threads = new Thread[Thread.activeCount()];
-            Thread.enumerate(threads);
-            for (Thread th : threads) {
+                        if (!rapidParsing)
+                            lock.writeLock().unlock();
+                    }
+                }; // end Runnable
+                future = KButilities.EXECUTOR_SERVICE.submit(r);
+                futures.add(future);
+            } // end outer (main) loop
+
+            for (Future<?> f : futures)
                 try {
-                    if (th != null && th.getName().contains("SUMOKBtoTPTPKB:writeFile"))
-                        if (th != null) th.join();
-                } catch (NullPointerException ex) {} // <- hack, but trap this
-            }
+                    f.get(); // waits for task completion
+                } catch (InterruptedException | ExecutionException ex) {
+                    System.err.printf("Error in SUMOKBtoTPTPKB.writeFile(): %s", ex);
+                }
 
             System.out.println();
             printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
@@ -594,7 +606,7 @@ public class SUMOKBtoTPTPKB {
             }
             pw.flush();
         }
-        catch (InterruptedException ex) {
+        catch (Exception ex) {
             System.err.println("Error in SUMOKBtoTPTPKB.writeFile(): " + ex.getMessage());
             ex.printStackTrace();
         }

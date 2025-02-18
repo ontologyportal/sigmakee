@@ -435,12 +435,20 @@ public class SUMOformulaToTPTPformula {
     }
 
     /** ***************************************************************
-     * Parse a single formula into TPTP format. Synchronized to keep
-     * order when writing to file during threaded operations.
+     * Parse a single formula into TPTP format.
      * @param suoString the formula entry to parse
      * @param query true if the suoString is a query
      */
-    public static synchronized String tptpParseSUOKIFString(String suoString, boolean query) {
+    public static String tptpParseSUOKIFString(String suoString, boolean query) {
+
+        if (!SUMOKBtoTPTPKB.rapidParsing)
+            return _tptpParseSUOKIFString(suoString, query);
+        else
+            // This must be used for threaded parsing to keep axiom variables synchronized
+            return _tTptpParseSUOKIFString(suoString, query);
+    }
+
+    private static String _tptpParseSUOKIFString(String suoString, boolean query) {
 
         if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
@@ -460,6 +468,15 @@ public class SUMOformulaToTPTPformula {
             return "( " + process(new Formula(suoString),query) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
         return "( " + process(new Formula(suoString),query) + " )";
+    }
+
+    /** ***************************************************************
+     * Synchronized to keep axiom variable order when writing to file
+     * during threaded operations.
+     */
+    private static synchronized String _tTptpParseSUOKIFString(String suoString, boolean query) {
+
+        return _tptpParseSUOKIFString(suoString, query);
     }
 
     /** *************************************************************
