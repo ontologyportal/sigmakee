@@ -70,8 +70,8 @@
     =================
     -->
 
-    <target name="run" depends="kb.clean,prep.main.config,compile" description="Performs a test run of the SigmaKEE KB using default arguments">
-        <java classname="${main.class}"
+    <target name="run" depends="kb.clean,prep.top.and.mid.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
+        <java classname="${run.class}"
               classpath="${run.classpath}"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
@@ -82,31 +82,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-<!--    <target name="run" depends="kb.clean,prep.top.only.config,compile">
-        <java classname="${main.class}"
-              classpath="${run.classpath}"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-<!--    <target name="run" depends="kb.clean,prep.tiny.sumo.config,compile">
-        <java classname="${main.class}"
-              classpath="${run.classpath}"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-<!--    <target name="run-selected-file-in-java" depends="compile">
+    <target name="run-selected-file-in-java" depends="compile">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <java classname="${run.class}"
               classpathref="rcp"
@@ -118,59 +94,7 @@
             <env key="CATALINA_HOME" value="${catalina.base}"/>
             <arg line="${run.args}"/>
         </java>
-    </target>-->
-<!--    <target name="run-selected-file-in-java" depends="kb.clean,compile">
-        <fail unless="run.class">Must set property 'run.class'</fail>
-        <java classname="${run.class}"
-              classpathref="rcp"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${sigma_src}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-<!--    <target name="run-selected-file-in-java" depends="kb.clean,prep.top.and.mid.config,compile">
-        <fail unless="run.class">Must set property 'run.class'</fail>
-        <java classname="${run.class}"
-              classpathref="rcp"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${sigma_src}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-<!--    <target name="run-selected-file-in-java" depends="kb.clean,prep.top.only.config,compile">
-        <fail unless="run.class">Must set property 'run.class'</fail>
-        <java classname="${run.class}"
-              classpathref="rcp"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${sigma_src}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-<!--    <target name="run-selected-file-in-java" depends="kb.clean,prep.tiny.sumo.config,compile">
-        <fail unless="run.class">Must set property 'run.class'</fail>
-        <java classname="${run.class}"
-              classpathref="rcp"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${sigma_src}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
+    </target>
     <target name="password.service" depends="compile" description="Performs account management services">
         <java classname="com.articulate.sigma.PasswordService"
               classpath="${run.classpath}"
@@ -413,23 +337,7 @@
     ===================
     -->
 
-<!--    <target name="debug-nb" depends="clean,compile">
-        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
-            <classpath refid="dcp"/>
-        </nbjpdastart>
-        <java classname="${main.class}"
-              classpathref="dcp"
-              fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg line="${debug.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-    <target name="debug-nb" depends="kb.clean,prep.tiny.sumo.config,compile">
+    <target name="debug-nb" depends="kb.clean,prep.top.only.config,compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -445,41 +353,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <!--    <target name="debug-selected-file-in-java" depends="kb.clean,compile">
-        <fail unless="debug.class">Must set property 'debug.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
-            <classpath refid="dcp"/>
-        </nbjpdastart>
-        <java classname="${debug.class}"
-              classpathref="dcp"
-              fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg line="${debug.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-<!--    <target name="debug-selected-file-in-java" depends="kb.clean,prep.top.only.config,compile">
-        <fail unless="debug.class">Must set property 'debug.class'</fail>
-        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
-            <classpath refid="dcp"/>
-        </nbjpdastart>
-        <java classname="${debug.class}"
-              classpathref="dcp"
-              fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg line="${debug.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${run.args}"/>
-        </java>
-    </target>-->
-    <target name="debug-selected-file-in-java" depends="kb.clean,prep.tiny.sumo.config,compile">
+    <target name="debug-selected-file-in-java" depends="compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
