@@ -352,7 +352,7 @@ public class PredVarInst {
                 val = intval;
             else {
                 if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith("?")) {
-                    System.out.printf("INFO in PredVarInst.hasCorrectArityRecurse(): " +
+                    System.out.printf("%nINFO in PredVarInst.hasCorrectArityRecurse(): " +
                             "Predicate %s does not have an arity defined in KB, " +
                             "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
                     //throw new IllegalArgumentException();
@@ -422,10 +422,10 @@ public class PredVarInst {
         return false;
     }
 
-     /** ***************************************************************
+    /** ***************************************************************
      * Get a set of all the predicate variables in the formula.  If
-      * the argument list has a row variable, return 0 as the value, meaning
-      * any possible arity of 1 - maxArity
+     * the argument list has a row variable, return 0 as the value, meaning
+     * any possible arity of 1 - maxArity
      */
     protected static Set<String> gatherPredVarRecurse(KB kb, Formula f) {
 
