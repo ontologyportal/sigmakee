@@ -341,7 +341,7 @@
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
-        <java classname="${main.class}"
+        <java classname="${run.class}"
               classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
