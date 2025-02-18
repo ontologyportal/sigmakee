@@ -70,7 +70,7 @@
     =================
     -->
 
-    <target name="run" depends="kb.clean,prep.top.and.mid.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
+    <target name="run" depends="kb.clean,prep.main.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
         <java classname="${run.class}"
               classpath="${run.classpath}"
               fork="true">
@@ -286,8 +286,22 @@
         <!--<antcall target="monitor.catalina.out"/>-->
     </target>
 
-    <!-- For debugging the running web app in the NB IDE, attach a debugger
-         with the running Tomcat PID found from the activity monitor. -->
+    <target name="debug.sigma.web.app" description="debug web application in tomcat">
+        <!-- To debug catalina for a running web app in the NB IDE, attach a
+             debugger with the running Tomcat PID found from the activity monitor.
+        -->
+        <exec executable="sh">
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_OPS" value="${catalina.ops}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="JPDA_OPTS" value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address},server=y,suspend=n"/>
+            <arg value="-c"/>
+            <arg value="'${catalina.base}/bin/${catalina}' jpda start"/>
+        </exec>
+    </target>
+
 
     <available file="${catalina.out}" property="catalina.out.present"/>
     <target name="monitor.catalina.out" if="catalina.out.present">
