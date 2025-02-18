@@ -157,37 +157,13 @@ public class EProver {
      */
     public EProver (String executable, String kbFile) throws IOException {
 
-        if (this._eprover != null)
-            this.terminate();
-        kbdir = KBmanager.getMgr().getPref("kbDir");
-        writeBatchConfig(kbFile, 60);
-        System.out.println("INFO in EProver(): executable: " + executable);
+        this(executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
+        writeBatchConfig(kbFile, 60);
         if (!(new File(kbFile)).exists()) {
             System.out.println("EProver(): no such file: " + kbFile + ". Creating it.");
-            KB kb = KBmanager.getMgr().getKB(kbFile);
-
+            KBmanager.getMgr().getKB(kbFile);
         }
-        // To make sigma work on windows.
-        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
-        String eproverPath = null;
-        String _OS = System.getProperty("os.name");
-        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
-            eproverPath=KBmanager.getMgr().getPref("eproverPath");
-        }
-            eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
-				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
-                eproverPath));
-
-        System.out.println("EProver(): command: " + commands);
-        _builder = new ProcessBuilder(commands);
-        _builder.redirectErrorStream(false);
-        _eprover = _builder.start();
-        System.out.println("EProver(): new process: " + _eprover);
-        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
-        _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
 
     /** *************************************************************
@@ -200,6 +176,7 @@ public class EProver {
      */
     public EProver (String executable) throws IOException {
 
+        System.out.println("INFO in EProver(): executable: " + executable);
         if (this._eprover != null)
             this.terminate();
 
@@ -207,14 +184,13 @@ public class EProver {
 
         // To make sigma work on windows
         //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
-
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
             eproverPath=KBmanager.getMgr().getPref("eproverPath");
         }
-            eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
-				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
+        eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+                            : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         List<String> commands = new ArrayList<>(Arrays.asList(
                 executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
                 eproverPath));
@@ -235,7 +211,7 @@ public class EProver {
      *
      * @param executable A File object denoting the platform-specific
      * EProver executable.
-     * @param maxAnswers - Limit the answers upto maxAnswers only
+     * @param maxAnswers - Limit the answers up to maxAnswers only
      * @throws IOException
      */
     public EProver (String executable,int maxAnswers) throws IOException {
