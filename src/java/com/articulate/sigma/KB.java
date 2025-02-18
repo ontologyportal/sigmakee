@@ -74,6 +74,8 @@ import tptp_parser.TPTPFormula;
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -166,7 +168,7 @@ public class KB implements Serializable {
 
     /* If true, assertions of the form (predicate x x) will be included in the
      * relation cache tables.     */
-    private boolean cacheReflexiveAssertions = false;
+//    private boolean cacheReflexiveAssertions = false;
 
     public KBcache kbCache = null;
 
@@ -415,6 +417,8 @@ public class KB implements Serializable {
         return returnSet;
     }
 
+    private int counter = 0;
+
     /***************************************************************
      * Arity errors should already have been trapped in addConstituent() unless a
      * relation is used before it is defined. This routine is a comprehensive
@@ -423,23 +427,38 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        List<String> toRemove = new ArrayList<>();
+//        List<String> toRemove = new ArrayList<>();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
-        String term;
+//        String term;
         if (formulaMap != null && !formulaMap.isEmpty()) {
-            int counter = 0;
+//            int counter = 0;
+            Future<?> future;
+            List<Future<?>> futures = new ArrayList<>();
+            int total = formulaMap.values().size();
             for (Formula f : formulaMap.values()) {
-                if (counter++ % 10 == 0)
-                    System.out.print(".");
-                if (counter % 400 == 0)
-                    System.out.print("\nINFO in KB.checkArity(): Still performing Arity Check");
-                term = PredVarInst.hasCorrectArity(f, this);
-                if (!StringUtil.emptyString(term)) {
-                    errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
-                            + " in formula: \n" + f.getFormula());
-                    toRemove.add(f.getFormula());
-                }
+                Runnable r = () -> {
+                    if (counter++ % 10 == 0)
+                        System.out.print(".");
+                    if (counter % 400 == 0)
+                        System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
+                    String term = PredVarInst.hasCorrectArity(f, this);
+                    if (!StringUtil.emptyString(term)) {
+                        errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
+                                + " in formula: \n" + f.getFormula());
+    //                    toRemove.add(f.getFormula());
+                    }
+                };
+                future = KButilities.EXECUTOR_SERVICE.submit(r);
+                futures.add(future);
             }
+            for (Future<?> f : futures)
+                try {
+                    f.get(); // waits for task completion
+                } catch (InterruptedException | ExecutionException ex) {
+                    System.err.printf("Error in KB.checkArity(): %s", ex);
+                }
+
+            counter = 0; // reset
             System.out.println();
         }
         System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
@@ -2762,11 +2781,12 @@ public class KB implements Serializable {
         int count = 2;
         //System.out.println("INFO in KB.addConstituent(): add keys");
         List<String> newlist, list;
+        int total = file.formulas.keySet().size();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
                 System.out.print(".");
             if ((count % 4000) == 1)
-                System.out.println("\nINFO in KB.addConstituent(): still adding keys");
+                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
             newlist = file.formulas.get(key);
             list = formulas.get(key);
             if (list != null) {
@@ -2786,7 +2806,7 @@ public class KB implements Serializable {
             if ((count++ % 100) == 1)
                 System.out.print(".");
             if ((count % 4000) == 1)
-                System.out.println("\nINFO in KB.addConstituent(): still adding values");
+                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -3945,6 +3965,8 @@ public class KB implements Serializable {
             if (args != null && args.length > 1 && args[0].contains("R") || args[1].contains("R"))
                 SUMOKBtoTPTPKB.rapidParsing = true;
 
+            System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
+
             //KBmanager.prefOverride.put("loadLexicons","false");
             //System.out.println("KB.main(): Note! Not loading lexicons.");
             KBmanager.getMgr().initializeOnce();
@@ -4046,6 +4068,5 @@ public class KB implements Serializable {
                 }
             }
         }
-        KButilities.shutDownExecutorService();
     }
 }
