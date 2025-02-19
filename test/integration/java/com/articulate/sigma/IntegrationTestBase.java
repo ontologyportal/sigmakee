@@ -1,10 +1,11 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
-import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
+
+import org.junit.BeforeClass;
 
 /** ***************************************************************
  * Base class for unit tests which are closer to integration tests because they require a large KB configuration.

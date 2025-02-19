@@ -2,10 +2,10 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 
+import java.io.*;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-
-import java.io.*;
 
 import static org.junit.Assert.fail;
 
