@@ -2407,9 +2407,21 @@ public class SUMOtoTFAform {
         return "";
     }
 
-    /** *************************************************************
+    /** ***************************************************************
+     * Parse a single formula into TPTP format.
+     * @param suoString the formula entry to parse
+     * @param query true if the suoString is a query
      */
-    public static String process(String s, boolean query) {
+    public static String process(String suoString, boolean query) {
+
+        if (!SUMOKBtoTPTPKB.rapidParsing)
+            return _process(suoString, query);
+        else
+            // This must be used for threaded parsing to deep recursion synchronized
+            return _tProcess(suoString, query);
+    }
+
+    private static String _process(String s, boolean q) {
 
         filterMessage = "";
         if (s.contains("ListFn"))
@@ -2418,8 +2430,11 @@ public class SUMOtoTFAform {
         if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
             return "";
         Formula f = new Formula(s);
-        String res = process(f,query);
-        return res;
+        return process(f,q);
+    }
+
+    private static synchronized String _tProcess(String s, boolean q) {
+        return _process(s, q);
     }
 
     /** *************************************************************
