@@ -441,6 +441,9 @@
         <copy todir="${user.home}/.${web.app.name}/KBs">
             <fileset dir="${kbs.home}">
                 <exclude name=".github/**"/>
+                <exclude name="SimpleFacts/**"/>
+                <exclude name="mappings/**"/>
+                <exclude name="tests/**"/>
             </fileset>
         </copy>
     </target>
