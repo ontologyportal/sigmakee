@@ -452,9 +452,10 @@ public class KB implements Serializable {
                     f.get(); // waits for task completion
                 } catch (InterruptedException | ExecutionException ex) {
                     System.err.printf("Error in KB.checkArity(): %s", ex);
-                } finally {
-                    counter = 0; // reset
+                    ex.printStackTrace();
                 }
+
+            counter = 0; // reset
             System.out.println();
         }
         System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
