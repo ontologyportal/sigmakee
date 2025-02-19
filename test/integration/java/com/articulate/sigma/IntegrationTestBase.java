@@ -1,5 +1,6 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import org.junit.BeforeClass;
 
 import java.io.File;
@@ -47,6 +48,9 @@ public class IntegrationTestBase extends SigmaTestBase {
      */
     @BeforeClass
     public static void setup() throws IOException {
+
+        SUMOKBtoTPTPKB.rapidParsing = true;
+        System.out.println("UnitTestSuite.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
 
         long startTime = System.currentTimeMillis();
 
