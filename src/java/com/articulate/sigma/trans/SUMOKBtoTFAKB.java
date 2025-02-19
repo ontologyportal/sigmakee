@@ -683,7 +683,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
     public static void main(String[] args) {
 
         SUMOKBtoTPTPKB.rapidParsing = true; // TODO: write algo. to set this from the command line and show in printHelp
-        System.out.println("SUMOKBtoTFAKB.main():");
+        System.out.println("SUMOKBtoTFAKB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         System.out.println("SUMOKBtoTFAKB.main(): completed init");

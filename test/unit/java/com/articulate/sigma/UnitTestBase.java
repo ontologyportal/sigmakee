@@ -1,5 +1,7 @@
 package com.articulate.sigma;
 
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
+
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
@@ -37,6 +39,9 @@ public class UnitTestBase extends SigmaTestBase {
      * */
     @BeforeClass
     public static void setup()  {
+
+        SUMOKBtoTPTPKB.rapidParsing = true;
+        System.out.println("UnitTestSuite.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
 
         System.out.println("UnitTestBase.setup(): reading test config file: " + CONFIG_FILE_PATH);
         System.out.println("***** UnitTestBase.setup(): warning! Note that only KB files in the test config file will be loaded! ***** ");
