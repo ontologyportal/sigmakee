@@ -24,8 +24,6 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.utils.StringUtil;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.io.*;
 import java.util.*;
 
@@ -1443,8 +1441,8 @@ public class Formula implements Comparable, Serializable {
 
         if (debug)
             System.out.println("deepEquals(2): normalized this: \n" + f1.format("","  ","\n") + "\n arg: \n" + f2.format("","  ","\n"));
-        if (debug)
-            System.out.println("difference: \n" + StringUtils.difference(f1.getFormula(),f2.getFormula()));
+        //if (debug)
+        //    System.out.println("difference: \n" + StringUtils.difference(f1.getFormula(),f2.getFormula()));
         return normalized1.equals(normalized2);
     }
 

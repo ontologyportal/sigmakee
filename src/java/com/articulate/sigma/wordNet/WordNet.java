@@ -2197,13 +2197,13 @@ public class WordNet implements Serializable {
             result.addAll(prependPOS(nouns,"1"));
         Set<String> verbs = verbSynsetHash.get(word);
         if (verbs != null)
-            result.addAll(prependPOS(verbs,"1"));
+            result.addAll(prependPOS(verbs,"2"));
         Set<String> adj = adjectiveSynsetHash.get(word);
         if (adj != null)
-            result.addAll(prependPOS(adj,"1"));
+            result.addAll(prependPOS(adj,"3"));
         Set<String> adv = adverbSynsetHash.get(word);
         if (adv != null)
-            result.addAll(prependPOS(adv,"1"));
+            result.addAll(prependPOS(adv,"4"));
         if (!result.isEmpty() && getSenseKeysFromWord(word).keySet().isEmpty())
             System.err.println("Error in WordNet.getSynsetsFromWord(): synset but no sense key for word: " + word);
         return result;

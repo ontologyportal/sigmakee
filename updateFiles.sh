@@ -10,6 +10,10 @@ cd $ONTOLOGYPORTAL_GIT/sigmakee
 git pull
 cd $ONTOLOGYPORTAL_GIT/TPTP-ANTLR
 git pull
+cd $ONTOLOGYPORTAL_GIT/SUMOjEdit
+git pull
+cd $ONTOLOGYPORTAL_GIT/sumonlp
+git pull
 rm $CATALINA_HOME/logs/*.*
 rm $CATALINA_HOME/webapps/sigma/graph/*.*
 rm $SIGMA_HOME/KBs/*.ser
