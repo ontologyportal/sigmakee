@@ -705,8 +705,9 @@ public class FormulaPreprocessor {
             int start = 1;
             if (Formula.isQuantifier(carstr))  // skip the quantified variable list
                 start = 2;
+            Formula farg;
             for (int i = start; i <= f.listLength(); i++) {
-                Formula farg = f.getArgument(i);
+                farg = f.getArgument(i);
                 if (farg != null)
                     result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
             }
