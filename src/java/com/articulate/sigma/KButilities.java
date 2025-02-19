@@ -1428,6 +1428,7 @@ public class KButilities {
         } catch (InterruptedException e) {
             EXECUTOR_SERVICE.shutdownNow();
         }
+        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
     }
 
     /** ***************************************************************
