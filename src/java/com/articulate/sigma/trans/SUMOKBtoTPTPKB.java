@@ -729,9 +729,9 @@ public class SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
+        SUMOKBtoTPTPKB.rapidParsing = true; // TODO: write algo. to set this from the command line and show in printHelp
         System.out.println("SUMOKBtoTPTPKB.main():");
         KBmanager.getMgr().initializeOnce();
-
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
