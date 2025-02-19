@@ -427,11 +427,8 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-//        List<String> toRemove = new ArrayList<>();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
-//        String term;
         if (formulaMap != null && !formulaMap.isEmpty()) {
-//            int counter = 0;
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
@@ -445,7 +442,6 @@ public class KB implements Serializable {
                     if (!StringUtil.emptyString(term)) {
                         errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
                                 + " in formula: \n" + f.getFormula());
-    //                    toRemove.add(f.getFormula());
                     }
                 };
                 future = KButilities.EXECUTOR_SERVICE.submit(r);
@@ -456,9 +452,9 @@ public class KB implements Serializable {
                     f.get(); // waits for task completion
                 } catch (InterruptedException | ExecutionException ex) {
                     System.err.printf("Error in KB.checkArity(): %s", ex);
+                } finally {
+                    counter = 0; // reset
                 }
-
-            counter = 0; // reset
             System.out.println();
         }
         System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
