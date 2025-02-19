@@ -448,35 +448,35 @@ public class SUMOformulaToTPTPformula {
             return _tTptpParseSUOKIFString(suoString, query);
     }
 
-    private static String _tptpParseSUOKIFString(String suoString, boolean query) {
+    private static String _tptpParseSUOKIFString(String s, boolean q) {
 
-        if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
+        if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + s + ", " + q + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (SUMOKBtoTPTPKB.lang.equals("tff"))
-            return "( " + SUMOtoTFAform.process(suoString,query) + " )";
+            return "( " + SUMOtoTFAform.process(s,q) + " )";
         if (SUMOKBtoTPTPKB.lang.equals("thf")) {
             THF thf = new THF();
             Collection<Formula> stmts = new ArrayList<>();
             Collection<Formula> queries = new ArrayList<>();
-            if (query)
-                queries.add(new Formula(suoString));
+            if (q)
+                queries.add(new Formula(s));
             else
-                stmts.add(new Formula(suoString));
+                stmts.add(new Formula(s));
             return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
         }
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
-            return "( " + process(new Formula(suoString),query) + " )";
+            return "( " + process(new Formula(s),q) + " )";
         System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
-        return "( " + process(new Formula(suoString),query) + " )";
+        return "( " + process(new Formula(s),q) + " )";
     }
 
     /** ***************************************************************
      * Synchronized to keep axiom variable order when writing to file
      * during threaded operations.
      */
-    private static synchronized String _tTptpParseSUOKIFString(String suoString, boolean query) {
+    private static synchronized String _tTptpParseSUOKIFString(String s, boolean query) {
 
-        return _tptpParseSUOKIFString(suoString, query);
+        return _tptpParseSUOKIFString(s, query);
     }
 
     /** *************************************************************
