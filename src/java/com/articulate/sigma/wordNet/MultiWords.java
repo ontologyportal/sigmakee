@@ -49,7 +49,7 @@ public class MultiWords implements Serializable {
 
         if (debug) System.out.println("INFO in WordNet.addMultiWord(): word: " + word);
         if (StringUtil.emptyString(word)) {
-            System.out.println("Error in MultiWords.addMultiWord(): word is null");
+            System.err.println("Error in MultiWords.addMultiWord(): word is null");
             return;
         }
         if (word.indexOf(wordDelimit) >= 0) {
@@ -77,7 +77,7 @@ public class MultiWords implements Serializable {
 
         List<String> synset = new ArrayList<>();
         int endIndex = findMultiWord(text, 0, synset);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         if (endIndex != 0) {
             for (int i = 0; i < endIndex; i++) {
                 if (i != 0)
@@ -119,11 +119,13 @@ public class MultiWords implements Serializable {
         if (multiWord.containsKey(multiWordKey) && !multiWordTail.isEmpty()) {
             String foundMultiWord = multiWordKey + "_" + multiWordTail.get(wordIndex);
             Collection<String> candidates = multiWord.get(multiWordKey);
-            while (candidates.size() > 0) {
-                ArrayList<String> newCandidates = new ArrayList<String>();
+            List<String> newCandidates;
+            String sense;
+            while (!candidates.isEmpty()) {
+                newCandidates = new ArrayList<>();
                 for (String candidate : candidates) {
                     if (candidate.equals(foundMultiWord)) {
-                        String sense = WSD.getBestDefaultSense(foundMultiWord);
+                        sense = WSD.getBestDefaultSense(foundMultiWord);
                         if (!StringUtil.emptyString(sense)) { // only declare success if the multiword has a synset (trapping errors in the DB)
                             synset.add(sense);
                             return wordIndex + 2;
@@ -133,9 +135,9 @@ public class MultiWords implements Serializable {
                         newCandidates.add(candidate);
                     }
                 }
-                if (newCandidates.size() > 0) {
+                if (!newCandidates.isEmpty()) {
                     if (wordIndex > multiWordTail.size() - 1) {
-                        candidates = new ArrayList<String>();  // ran out of words, trigger an exit
+                        candidates.clear(); // ran out of words, trigger an exit
                     }
                     else {
                         candidates = newCandidates;
@@ -145,7 +147,7 @@ public class MultiWords implements Serializable {
                     }
                 }
                 else {
-                    candidates = new ArrayList<String>();
+                    candidates.clear();
                 }
             }
         }

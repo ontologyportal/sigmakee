@@ -1,5 +1,6 @@
 package com.articulate.sigma.trans;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.utils.StringUtil;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -50,7 +51,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string1() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
 
         kifstring = "(=> " +
                 "(instance ?X P)" +
@@ -64,7 +65,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string2() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
         kifstring = "(=> " +
                 "(or " +
                 "(instance ?X Q)" +
@@ -79,7 +80,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string3() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
         kifstring = "(or " +
                 "(not " +
                 "(instance ?X Q))" +
@@ -93,7 +94,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string4() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
         kifstring = "(<=>\n" +
                 "    (instance ?NUMBER NegativeRealNumber)\n" +
                 "    (and\n" +
@@ -111,7 +112,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string5() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
         kifstring = "(<=>\n" +
                 "    (instance ?NUMBER NegativeRealNumber)\n" +
                 "    (and\n" +
@@ -129,7 +130,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string6() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
         kifstring = "(<=> (temporalPart ?POS (WhenFn ?THING)) (time ?THING ?POS))";
         expectedRes = "( ( ! [V__POS,V__THING] : (((s__temporalPart(V__POS,s__WhenFn(V__THING)) => " +
                 "s__time(V__THING,V__POS)) & (s__time(V__THING,V__POS) => s__temporalPart(V__POS,s__WhenFn(V__THING)))) ) ) )";
@@ -141,7 +142,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void hol() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
 
         kifstring = "(=> (and (instance ?GUN Gun) (effectiveRange ?GUN ?LM) " +
                 "(distance ?GUN ?O ?LM1) (instance ?O Organism) (not (exists (?O2) " +
@@ -161,7 +162,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void string7() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
         kifstring = "(<=> (exists (?BUILD) (and (instance ?BUILD Constructing) " +
                 "(result ?BUILD ?ARTIFACT))) (instance ?ARTIFACT StationaryArtifact))";
         expectedRes = "( ( ! [V__ARTIFACT] : (((( ? [V__BUILD] : ((s__instance(V__BUILD,s__Constructing) & " +
@@ -174,10 +175,9 @@ public class SUMOformulaToTPTPformulaTest {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void embedded() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
 
         //SUMOformulaToTPTPformula.debug = true;
         kifstring = "(instance equal BinaryPredicate)";
@@ -190,7 +190,7 @@ public class SUMOformulaToTPTPformulaTest {
     @Test
     public void equality() {
 
-        String kifstring, expectedRes, actualRes;
+        String kifstring, expectedRes;
 
         //SUMOformulaToTPTPformula.debug = true;
         kifstring = "(=> (and (minValue minValue ?ARG ?N) (minValue ?ARGS2) " +
@@ -198,5 +198,24 @@ public class SUMOformulaToTPTPformulaTest {
         expectedRes = "( ( ! [V__ARG,V__ARGS2,V__N,V__VAL] : (((s__minValue(s__minValue__m,V__ARG,V__N) & s__minValue(V__ARGS2) & " +
                 "(V__VAL = s__ListOrderFn(s__List__Fn__1Fn(V__ARGS2),V__ARG))) => s__greaterThan(V__VAL,V__N)) ) ) )";
         test(kifstring,expectedRes,"equality");
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testGenerateQList() {
+
+        Formula f = new Formula("(<=> (instance ?NUMBER NegativeRealNumber) (and (lessThan ?NUMBER 0) (instance ?NUMBER RealNumber)))");
+        SUMOformulaToTPTPformula.generateQList(f);
+        assertEquals(SUMOformulaToTPTPformula.qlist.toString(),"V__NUMBER");
+
+        String kifstring = "(=> (and (instance ?GUN Gun) (effectiveRange ?GUN ?LM) " +
+                "(distance ?GUN ?O ?LM1) (instance ?O Organism) (not (exists (?O2) " +
+                "(between ?O ?O2 ?GUN))) (lessThanOrEqualTo ?LM1 ?LM)) " +
+                "(capability (KappaFn ?KILLING (and (instance ?KILLING Killing) " +
+                "(patient ?KILLING ?O))) instrument ?GUN))";
+        f = new Formula(kifstring);
+        SUMOformulaToTPTPformula.generateQList(f);
+        assertEquals(SUMOformulaToTPTPformula.qlist.toString(), "V__LM,V__O,V__KILLING,V__GUN,V__LM1");
     }
 }

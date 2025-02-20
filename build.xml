@@ -73,7 +73,7 @@
 
     <property name="impl.title" value="${ant.project.name}"/>
     <property name="product.Name" value="Sigma Knowledge Engineering Environment (${impl.title})"/>
-    <property name="product.version.major" value="1"/>
+    <property name="product.version.major" value="3"/>
     <property name="product.version.minor" value="0"/>
     <property name="product.version.patch" value="0"/>
     <property name="product.Version" value="${product.version.major}.${product.version.minor}.${product.version.patch}"/>
@@ -375,7 +375,7 @@
     <!-- At this point we will assume you have already complied with the
          README.md under the heading "System preparation on Linux." This task
          will take over from the heading "Linux Installation."  -->
-    <target name="install" depends="init" description="Appends .*hrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
+    <target name="install" depends="init" description="Appends .*shrc files, clones Sigma tools, installs WordNetMappings and SUMO to ${sigma.home}/KBs and builds the E and Vampire Theorem provers">
         <mkdir dir="${git.home}"/>
         <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${programs.dir}"/>
@@ -391,9 +391,9 @@
         <antcall target="retrieve.E"/>
 
         <!-- Clone the sigma tools -->
-        <antcall target="clone.sumo"/>
-        <antcall target="clone.tptpantlr"/>
         <antcall target="clone.sigmautils"/>
+        <antcall target="clone.tptpantlr"/>
+        <antcall target="clone.sumo"/>
 
         <!-- Copy sumo and WordNet files to ${sigma.home} -->
         <antcall target="copy.sumo.and.wordnet.to.sigma.home"/>
@@ -434,7 +434,7 @@
     </target>
 
     <!-- When the SUMO KB files get updated, do this frequently -->
-    <target name="refresh.KBs" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
+    <target name="refresh.KBs" depends="update.sumo" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
         <mkdir dir="${user.home}/.${web.app.name}"/>
         <chmod dir="${user.home}/.${web.app.name}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${user.home}/.${web.app.name}/KBs"/>
@@ -445,14 +445,22 @@
         </copy>
     </target>
 
-    <target name="clone.sumo">
-        <mkdir dir="${kbs.home}"/>
-        <git command="clone" dir="${kbs.home}">
+    <target name="clone.sigmautils">
+        <mkdir dir="${git.home}/SigmaUtils"/>
+        <git command="clone" dir="${git.home}/SigmaUtils">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/sumo"/>
-                <arg value="${kbs.home}"/>
+                <arg value="https://github.com/ontologyportal/SigmaUtils"/>
+                <arg value="${git.home}/SigmaUtils"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sigmautils">
+        <git command="pull" dir="${git.home}/SigmaUtils">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
             </args>
         </git>
     </target>
@@ -467,14 +475,38 @@
             </args>
         </git>
     </target>
-    <target name="clone.sigmautils">
-        <mkdir dir="${git.home}/SigmaUtils"/>
-        <git command="clone" dir="${git.home}/SigmaUtils">
+    <target name="update.tptpantlr">
+        <git command="pull" dir="${git.home}/TPTP-ANTLR">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
-                <arg value="https://github.com/ontologyportal/SigmaUtils"/>
-                <arg value="${git.home}/SigmaUtils"/>
+            </args>
+        </git>
+    </target>
+    <target name="clone.sumo">
+        <mkdir dir="${kbs.home}"/>
+        <git command="clone" dir="${kbs.home}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/ontologyportal/sumo"/>
+                <arg value="${kbs.home}"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sumo">
+        <git command="pull" dir="${kbs.home}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sigmakee">
+        <git command="pull" dir="${user.dir}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
             </args>
         </git>
     </target>
@@ -494,14 +526,6 @@
             <args>
                 <arg value="update"/>
                 <arg value="--init"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.sigmakee">
-        <git command="pull" dir="${user.dir}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
             </args>
         </git>
     </target>

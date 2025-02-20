@@ -1,9 +1,11 @@
 package com.articulate.sigma;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 
 import java.io.*;
+
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 
 import static org.junit.Assert.fail;
 
@@ -18,7 +20,7 @@ public class UnitTestBase extends SigmaTestBase {
     private static final String CONFIG_FILE_PATH = CONFIG_FILE_DIR + File.separator +
             "config_topOnly.xml";
 //    private static final String CONFIG_FILE_PATH = System.getenv("SIGMA_HOME") + "/KBs/config.xml";
-    private static final Class CLASS = UnitTestBase.class;
+    private static final Class<?> CLASS = UnitTestBase.class;
     public static final int NUM_KIF_FILES = 3; // config_topOnly.xml
 //    public static final int NUM_KIF_FILES = 45; // full config.xml
 
@@ -37,6 +39,9 @@ public class UnitTestBase extends SigmaTestBase {
      * */
     @BeforeClass
     public static void setup()  {
+
+        SUMOKBtoTPTPKB.rapidParsing = true;
+        System.out.println("UnitTestSuite.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
 
         System.out.println("UnitTestBase.setup(): reading test config file: " + CONFIG_FILE_PATH);
         System.out.println("***** UnitTestBase.setup(): warning! Note that only KB files in the test config file will be loaded! ***** ");

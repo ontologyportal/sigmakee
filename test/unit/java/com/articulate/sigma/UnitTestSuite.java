@@ -1,7 +1,7 @@
 package com.articulate.sigma;
 
 import com.articulate.sigma.trans.*;
-import com.articulate.sigma.nlg.UnitNLGTestSuite;
+import com.articulate.sigma.nlg.*;
 import com.articulate.sigma.wordNet.*;
 
 import org.junit.runner.RunWith;

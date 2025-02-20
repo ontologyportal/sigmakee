@@ -74,6 +74,8 @@ import tptp_parser.TPTPFormula;
 import java.io.*;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -166,7 +168,7 @@ public class KB implements Serializable {
 
     /* If true, assertions of the form (predicate x x) will be included in the
      * relation cache tables.     */
-    private boolean cacheReflexiveAssertions = false;
+//    private boolean cacheReflexiveAssertions = false;
 
     public KBcache kbCache = null;
 
@@ -197,11 +199,11 @@ public class KB implements Serializable {
             KBmanager mgr = KBmanager.getMgr();
             if (mgr != null) {
                 String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
+                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes")) {
                     celt = new CELT();
+                }
             }
-        }
-        catch (IOException ioe) {
+        } catch (IOException ioe) {
             System.err.println("Error in KB(): " + ioe.getMessage());
             celt = null;
         }
@@ -280,20 +282,7 @@ public class KB implements Serializable {
      */
     public KB(String n) {
 
-        name = n;
-        try {
-            KBmanager mgr = KBmanager.getMgr();
-            kbDir = mgr.getPref("kbDir");
-            if (mgr != null) {
-                String loadCelt = mgr.getPref("loadCELT");
-                if ((loadCelt != null) && loadCelt.equalsIgnoreCase("yes"))
-                    celt = new CELT();
-            }
-        }
-        catch (IOException ioe) {
-            System.err.println("Error in KB(): " + ioe.getMessage());
-            celt = null;
-        }
+        this(n, KBmanager.getMgr().getPref("kbDir"));
     }
 
     /**************************************************************
@@ -428,6 +417,8 @@ public class KB implements Serializable {
         return returnSet;
     }
 
+    private int counter = 0;
+
     /***************************************************************
      * Arity errors should already have been trapped in addConstituent() unless a
      * relation is used before it is defined. This routine is a comprehensive
@@ -436,23 +427,35 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        List<String> toRemove = new ArrayList<>();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
-        String term;
         if (formulaMap != null && !formulaMap.isEmpty()) {
-            int counter = 0;
+            Future<?> future;
+            List<Future<?>> futures = new ArrayList<>();
+            int total = formulaMap.values().size();
             for (Formula f : formulaMap.values()) {
-                if (counter++ % 10 == 0)
-                    System.out.print(".");
-                if (counter % 400 == 0)
-                    System.out.print("\nINFO in KB.checkArity(): Still performing Arity Check");
-                term = PredVarInst.hasCorrectArity(f, this);
-                if (!StringUtil.emptyString(term)) {
-                    errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
-                            + " in formula: \n" + f.getFormula());
-                    toRemove.add(f.getFormula());
-                }
+                Runnable r = () -> {
+                    if (counter++ % 10 == 0)
+                        System.out.print(".");
+                    if (counter % 400 == 0)
+                        System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
+                    String term = PredVarInst.hasCorrectArity(f, this);
+                    if (!StringUtil.emptyString(term)) {
+                        errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
+                                + " in formula: \n" + f.getFormula());
+                    }
+                };
+                future = KButilities.EXECUTOR_SERVICE.submit(r);
+                futures.add(future);
             }
+            for (Future<?> f : futures)
+                try {
+                    f.get(); // waits for task completion
+                } catch (InterruptedException | ExecutionException ex) {
+                    System.err.printf("Error in KB.checkArity(): %s", ex);
+                    ex.printStackTrace();
+                }
+
+            counter = 0; // reset
             System.out.println();
         }
         System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
@@ -2775,11 +2778,12 @@ public class KB implements Serializable {
         int count = 2;
         //System.out.println("INFO in KB.addConstituent(): add keys");
         List<String> newlist, list;
+        int total = file.formulas.keySet().size();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
                 System.out.print(".");
             if ((count % 4000) == 1)
-                System.out.println("\nINFO in KB.addConstituent(): still adding keys");
+                System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
             newlist = file.formulas.get(key);
             list = formulas.get(key);
             if (list != null) {
@@ -2799,7 +2803,7 @@ public class KB implements Serializable {
             if ((count++ % 100) == 1)
                 System.out.print(".");
             if ((count % 4000) == 1)
-                System.out.println("\nINFO in KB.addConstituent(): still adding values");
+                System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -2853,7 +2857,7 @@ public class KB implements Serializable {
 
             String cName;
             while (nci.hasNext()) {
-                cName = (String) nci.next();
+                cName = nci.next();
                 addConstituent(cName);
                 // addConstituent(cName, false, false, false);
             }
@@ -3499,50 +3503,54 @@ public class KB implements Serializable {
         String vampex = KBmanager.getMgr().getPref("vampire");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         if (StringUtil.emptyString(vampex)) {
-            System.err.println("Error in Vampire: no executable string in preferences");
+            System.err.println("Error in KB.loadVampire(): no executable string in preferences");
             return;
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.err.println("Error in Vampire: no executable " + vampex);
+            System.err.println("Error in KB.loadVampire(): no executable " + vampex);
             return;
         }
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
+        String fileWritten = null;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
             try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
                 if (!formulaMap.isEmpty()) {
-//                    Set<String> formulaStrings = new HashSet<String>();
-//                    formulaStrings.addAll(formulaMap.keySet());
                     long millis = System.currentTimeMillis();
                     if (lang.equals("tptp")) {
                         SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                         skb.kb = this;
-                        skb.writeFile(infFilename, null, false, pw);
+                        fileWritten = skb.writeFile(infFilename, null, false, pw);
                     }
                     else {
                         SUMOKBtoTFAKB stff = new SUMOKBtoTFAKB();
                         stff.kb = this;
                         SUMOtoTFAform.initOnce();
                         stff.writeSorts(pw);
-                        stff.writeFile(infFilename,null,false,pw);
+                        fileWritten = stff.writeFile(infFilename,null,false, pw);
                         System.out.println("INFO in KB.loadVampire(): CWA: " + SUMOKBtoTPTPKB.CWA);
                         if (SUMOKBtoTPTPKB.CWA)
                             pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
                         stff.printTFFNumericConstants(pw);
                     }
-                    System.out.println("KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
                 }
             }
             catch (Exception e) {
                 System.err.println(e.getMessage());
                 e.printStackTrace();
             }
+            if (StringUtil.isNonEmptyString(fileWritten))
+                System.out.println("File written: " + infFilename);
+            else
+                System.err.println("Could not write: " + infFilename);
         }
     }
+
     /***************************************************************
      * Checks for a Leo executable, preprocesses all of the constituents
      */
@@ -3938,6 +3946,7 @@ public class KB implements Serializable {
         System.out.println("  o <seconds> - set the query timeout");
         System.out.println("  c <term1> <term2> - compare term depth");
         System.out.println("  s - show statistics");
+        System.out.println("  R - rapid parsing of KB to TPTP");
     }
 
     /** ***************************************************************
@@ -3948,6 +3957,13 @@ public class KB implements Serializable {
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
+
+            // Check for "R" before initializing the KBmanager
+            if (args != null && args.length > 1 && args[0].contains("R") || args[1].contains("R"))
+                SUMOKBtoTPTPKB.rapidParsing = true;
+
+            System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
+
             //KBmanager.prefOverride.put("loadLexicons","false");
             //System.out.println("KB.main(): Note! Not loading lexicons.");
             KBmanager.getMgr().initializeOnce();

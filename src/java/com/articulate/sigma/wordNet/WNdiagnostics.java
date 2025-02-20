@@ -318,7 +318,7 @@ public class WNdiagnostics {
             KBmanager.getMgr().initializeOnce();
         }
         catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
         }
         WordNet.initOnce();
         System.out.println(nonRelationTermsWithoutSynsets());

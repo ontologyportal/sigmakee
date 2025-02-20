@@ -170,7 +170,7 @@ public class TPTP2SUMO {
      */
     public static void showHelp() {
 
-        System.out.println("KB class");
+        System.out.println("TPTP2SUMO class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -c - parse test clause");
@@ -216,7 +216,7 @@ public class TPTP2SUMO {
               }
           }
           catch (Exception e) {
-              System.out.println("e: " + e);
+              System.err.println("e: " + e);
           }
       }
   }

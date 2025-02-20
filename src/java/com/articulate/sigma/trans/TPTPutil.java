@@ -23,7 +23,6 @@ import com.articulate.sigma.utils.StringUtil;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 
 import tptp_parser.TPTPFormula;
@@ -90,7 +89,7 @@ public class TPTPutil {
                 formString = formString.trim();
             }
             else {
-                System.out.println("Error in Formula.htmlTPTPFormat(): empty TPTP formula: " + formString);
+                System.err.println("Error in Formula.htmlTPTPFormat(): empty TPTP formula: " + formString);
                 continue;
             }
             formString = extractTPTPaxiom(formString);
@@ -265,7 +264,6 @@ public class TPTPutil {
     public static void test() {
 
         Formula f = new Formula();
-        f.theTptpFormulas = new HashSet();
         //f.theTptpFormulas.add("fof(kb_ArabicCulture_20,axiom,(( s__subclass(s__Hajj,s__Translocation) ))).");
         f.theTptpFormulas.add("(! [V__P] : (s__instance(V__P,s__Agent) => ((s__attribute(V__P,s__Muslim) & s__capability(s__Hajj,s__agent__m,V__P)) => " +
                 "s__modalAttribute('(? [V__H] : (s__instance(V__H,s__Process) & s__instance(V__H,s__Hajj) & s__agent(V__H,V__P)))',s__Obligation))))");

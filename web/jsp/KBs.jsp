@@ -63,7 +63,7 @@
       boolean odd = true;
       String kbName2 = null;
       while (kbNames.hasNext()) {
-          kbName2 = (String) kbNames.next();
+          kbName2 = kbNames.next();
           if (first) {
               defaultKB = kbName2;
               first = false;

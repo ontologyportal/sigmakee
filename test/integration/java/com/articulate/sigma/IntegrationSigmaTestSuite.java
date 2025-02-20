@@ -20,8 +20,8 @@ import org.junit.runners.Suite;
     KbIntegrationTest.class,
     PredVarInstIntegrationTest.class,
     SUMOformulaToTPTPformulaTest.class, // <- already tested in the UnitTestSuite
-//    TPTP3Test.class,
-//    WSDwKBtest.class
+    TPTP3Test.class,
+    WSDwKBtest.class
 })
 public class IntegrationSigmaTestSuite extends IntegrationTestBase {
 

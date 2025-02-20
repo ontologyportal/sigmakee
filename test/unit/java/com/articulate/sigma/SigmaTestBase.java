@@ -82,9 +82,9 @@ public class SigmaTestBase {
      * @param theClass
      * @return
      */
-    protected static BufferedReader getXmlReader(String path, Class theClass)  {
+    protected static Reader getXmlReader(String path, Class<?> theClass)  {
 
-        BufferedReader xmlReader = null;
+        Reader xmlReader = null;
         try {
             //URI uri = theClass.getClassLoader().getResource(path).toURI();
             //URI uri = theClass.getResource(path).toURI();
@@ -102,7 +102,7 @@ public class SigmaTestBase {
                 //String msg = "Could not find " + path + " in " + uri.toString();
                 ex.printStackTrace();
                 System.err.println(ex.getMessage());
-                System.err.println("SigmaTestBase.getXmlReader(): Could not find " + path);
+                System.err.println("SigmaTestBase.getXmlReader(): Could not find: " + path);
                 //throw new IllegalStateException(msg);
             //}
             //catch (URISyntaxException e) {

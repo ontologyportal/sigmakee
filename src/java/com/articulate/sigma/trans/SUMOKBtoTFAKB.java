@@ -675,14 +675,15 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             }
         }
         pw.flush();
-        pw.println("% SUMOKBtoTFAKB.writeSorts(): finished");
+        pw.println("% SUMOKBtoTFAKB.writeSorts(): finished\n");
     }
 
     /** *************************************************************
      */
     public static void main(String[] args) {
 
-        System.out.println("SUMOKBtoTFAKB.main():");
+        SUMOKBtoTPTPKB.rapidParsing = true; // TODO: write algo. to set this from the command line and show in printHelp
+        System.out.println("SUMOKBtoTFAKB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         System.out.println("SUMOKBtoTFAKB.main(): completed init");
@@ -700,7 +701,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");
             fileWritten = skbtfakb.writeFile(filename, null, false, pw);
         }
-        catch (Exception e) {
+        catch (IOException e) {
             e.printStackTrace();
         }
         if (StringUtil.isNonEmptyString(fileWritten)) {

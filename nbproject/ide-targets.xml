@@ -70,19 +70,19 @@
     =================
     -->
 
-    <target name="run" depends="compile" description="Performs a test run of SigmaKEE using default arguments">
-        <java classname="${main.class}"
-              classpath="${run.classpath}"
+    <target name="run" depends="kb.clean,prep.main.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
+        <java classname="${run.class}"
+              classpathref="rcp"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="-c Object Transaction"/>
+            <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="run-selected-file-in-java" depends="compile">
+    <target name="run-selected-file-in-java" depends="prep.top.only.config,compile">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <java classname="${run.class}"
               classpathref="rcp"
@@ -97,7 +97,7 @@
     </target>
     <target name="password.service" depends="compile" description="Performs account management services">
         <java classname="com.articulate.sigma.PasswordService"
-              classpath="${run.classpath}"
+              classpathref="rcp"
               fork="true">
             <jvmarg line="${run.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
@@ -134,7 +134,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="clean,prep.top.and.mid.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -154,7 +154,7 @@
         <antcall target="junit.report"/>
         <!-- Now, manually run thorough.clean to purge KBs/*.ser, KBs/*.tptp & restore the main config -->
     </target>
-    <target name="run-selected-test-in-corpus" depends="clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-corpus" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -174,7 +174,7 @@
         </junit>
         <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -213,7 +213,7 @@
             </test>
         </junit>
     </target>
-    <target name="run-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="run-single-test-method-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -286,8 +286,22 @@
         <!--<antcall target="monitor.catalina.out"/>-->
     </target>
 
-    <!-- For debugging the running web app in the NB IDE, attach a debugger
-         with the running Tomcat PID found from the activity monitor. -->
+    <target name="debug.sigma.web.app" description="debug web application in tomcat">
+        <!-- To debug catalina for a running web app in the NB IDE, attach a
+             debugger with the running Tomcat PID found from the activity monitor.
+        -->
+        <exec executable="sh">
+            <env key="SIGMA_HOME" value="${sigma_home}"/>
+            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
+            <env key="SIGMA_SRC" value="${basedir}"/>
+            <env key="CATALINA_OPS" value="${catalina.ops}"/>
+            <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="JPDA_OPTS" value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address},server=y,suspend=n"/>
+            <arg value="-c"/>
+            <arg value="'${catalina.base}/bin/${catalina}' jpda start"/>
+        </exec>
+    </target>
+
 
     <available file="${catalina.out}" property="catalina.out.present"/>
     <target name="monitor.catalina.out" if="catalina.out.present">
@@ -337,23 +351,23 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="clean,compile">
+    <target name="debug-nb" depends="kb.clean,prep.main.config,compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
-        <java classname="${main.class}"
+        <java classname="${run.class}"
               classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg line="${run.jvmargs}"/>
+            <jvmarg line="${debug.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="-c Object Transaction"/>
+            <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="clean,compile">
+    <target name="debug-selected-file-in-java" depends="prep.tiny.sumo.config,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -362,7 +376,7 @@
               classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg line="${run.jvmargs}"/>
+            <jvmarg line="${debug.jvmargs}"/>
             <env key="SIGMA_HOME" value="${sigma_home}"/>
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
@@ -375,7 +389,7 @@
             <classpath refid="dcp"/>
         </nbjpdastart>
         <java classname="com.articulate.sigma.PasswordService"
-              classpath="${run.classpath}"
+              classpathref="dcp"
               fork="true">
             <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
             <jvmarg line="${run.jvmargs}"/>
@@ -393,7 +407,7 @@
     =====================
     -->
 
-    <target name="debug-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="debug-selected-test-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -438,7 +452,7 @@
             </test>
         </junit>
     </target>
-    <target name="debug-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="debug-single-test-method-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -528,19 +542,29 @@
         <copy todir="${build.home}" file="${dist.jar}"/> <!-- For SUMOjEdit -->
     </target>
 
-    <!-- Copy customized config files to their respective directories -->
+    <!-- Copy customized config files for testing -->
     <target name="prep.main.config" depends="init">
         <!-- Restore main config post integration testing -->
         <copy todir="${sigma_home}/KBs" file="${main.config}" overwrite="true"/>
     </target>
-    <target name="prep.unit.config">
-        <copy todir="${test.unit.resources.dir}" file="${unit.config}" overwrite="true"/>
-    </target>
-    <target name="prep.integration.config">
+    <!-- SUMO, MILO and domain only -->
+    <target name="prep.top.and.mid.config">
         <!-- Comment out to conduct tests with all KB files listed in config.xml -->
         <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
     </target>
+    <!-- SUMO and domain only -->
+    <target name="prep.unit.config">
+        <copy todir="${test.unit.resources.dir}" file="${unit.config}" overwrite="true"/>
+    </target>
+    <!-- SUMO and domain only -->
+    <target name="prep.top.only.config">
+        <copy tofile="${sigma_home}/KBs/config.xml" file="${unit.config}" overwrite="true"/>
+    </target>
+    <target name="prep.tiny.sumo.config">
+        <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>
+    </target>
     <target name="thorough.clean" depends="clean,prep.main.config">
+        <antcall target="kb.clean"/>
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
@@ -551,13 +575,8 @@
                 <include name="*.owl"/>
                 <include name="*.tab"/>
             </fileset>
-            <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
-                <include name="*.fof"/>
-                <include name="*.tff"/>
-                <include name="*.tptp"/>
                 <include name="*.ser"/>
-                <include name="vamp-out.txt"/>
             </fileset>
             <fileset dir="${sigma_home}/KBs/WordNetMappings">
                 <include name="*.ser"/>
@@ -565,6 +584,19 @@
         </delete>
         <delete file="${dist_war}"/>
         <antcall target="delete.catalina.logs"/>
+    </target>
+    <target name="kb.clean" depends="clean">
+        <delete>
+            <!-- Prune KB after integration tests -->
+            <fileset dir="${sigma_home}/KBs">
+                <include name="*.fof"/>
+                <include name="*.tff"/>
+                <include name="*.tptp"/>
+                <include name="kbmanager.ser"/>
+                <include name="*UserAssertions.kif"/>
+                <include name="vamp-out.txt"/>
+            </fileset>
+        </delete>
     </target>
     <target name="delete.catalina.logs" depends="init">
         <delete>
@@ -575,6 +607,21 @@
     </target>
     <target name="all" depends="clean,dist">
         <echo message="System date/time is: ${TODAY_US}"/>
+    </target>
+
+    <!--
+    =========
+    UTILITIES
+    =========
+    -->
+
+    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.tptp has already been generated">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="${programs.dir}/vampire/build/vampire ${vamp.args}"/>
+        </exec>
+        <loadfile property="vamp.out" srcFile="${vamp.out.file}"/>
+        <echo message="${vamp.out}"/>
     </target>
 
 </project>

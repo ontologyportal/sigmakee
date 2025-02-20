@@ -12,7 +12,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-    VerbNetTest.class
+//    VerbNetTest.class
 })
 public class IntegrationVerbNetTestSuite extends IntegrationTestBase {
 

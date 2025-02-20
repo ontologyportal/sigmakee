@@ -20,6 +20,9 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -41,13 +44,16 @@ import org.json.simple.JSONValue;
  */
 public class KButilities {
 
+    /** Uses the number of available processors to set the thread pool count */
+    public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
+
     public static boolean debug = false;
 
     /** Errors found during processing formulas */
-    public static TreeSet<String> errors = new TreeSet<>();
+    public static Set<String> errors = new TreeSet<>();
 
     /** Warnings found during processing formulas */
-    public static TreeSet<String> warnings = new TreeSet<>();
+    public static Set<String> warnings = new TreeSet<>();
 
     /** *************************************************************
      */
@@ -87,13 +93,13 @@ public class KButilities {
         String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
             error = "inconsistent types in " + SUMOtoTFAform.varmap;
-            System.out.println("hasCorrectTypes(): " + SUMOtoTFAform.errors);
+            System.out.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
             error = "Type conflict: " + SUMOtoTFAform.errors;
-            System.out.println("hasCorrectTypes(): " + SUMOtoTFAform.errors);
+            System.out.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             return false;
         }
@@ -469,7 +475,7 @@ public class KButilities {
     public String semnetAsJSON3(KB kb, boolean cached, boolean strings) {
 
         Set<String> s = generateSemanticNetwork(kb, cached, strings);
-        ArrayList<GraphArc> al = new ArrayList();
+        List<GraphArc> al = new ArrayList();
         for (String st : s) {
             String[] sp = st.split(" ");
             GraphArc ga = this.new GraphArc(sp[0],sp[1],sp[2]);
@@ -485,8 +491,8 @@ public class KButilities {
     public Set<GraphArc> generateSemNetNeighbors(KB kb, boolean cached, boolean strings, boolean links, String term, int count) {
 
         if (debug) System.out.println("generateSemNetNeighbors(): term: " + term + " count: " + count);
-        TreeSet<GraphArc> resultSet = new TreeSet<>();
-        TreeSet<String> targets = new TreeSet<>();
+        Set<GraphArc> resultSet = new TreeSet<>();
+        Set<String> targets = new TreeSet<>();
         Set<String> terms;
         GraphArc ga;
         String predicate, arg1, arg2;
@@ -576,7 +582,7 @@ public class KButilities {
      */
     private static Set<String> generateSemanticNetwork(KB kb, boolean cached, boolean strings) {
 
-        TreeSet<String> resultSet = new TreeSet<>();
+        Set<String> resultSet = new TreeSet<>();
         Set<String> terms;
         String predicate, arg1, arg2;
         List<String> args;
@@ -1025,12 +1031,12 @@ public class KButilities {
      */
     public static int getCountNonLinguisticAxioms(KB kb) {
 
-        HashSet<String> rels = new HashSet<>();
+        Set<String> rels = new HashSet<>();
         rels.add("documentation");
         rels.add("termFormat");
         rels.add("format");
         int counter = 0;
-        HashSet<Formula> forms = new HashSet<>();
+        Set<Formula> forms = new HashSet<>();
         forms.addAll(kb.formulaMap.values());
         for (Formula f : forms) {
             if (!rels.contains(f.getArgument(0).toString()))
@@ -1074,7 +1080,7 @@ public class KButilities {
      */
     public static Set<Formula> getAllFormulasOfTerm(KB kb, String term) {
 
-        HashSet<Formula> result = new HashSet<>();
+        Set<Formula> result = new HashSet<>();
         Pattern pattern = Pattern.compile("(\\s|\\()" + term + "(\\s|\\))");
         for (String f : kb.formulaMap.keySet()){
                 Matcher matcher = pattern.matcher(f);
@@ -1249,6 +1255,7 @@ public class KButilities {
 
     /** *************************************************************
      * Generate a HTML list of labels from termFormats
+     * TODO: Does this work? Only returning an empty List
      */
     public static List<String> getLabelsForTerm(KB kb, String term, String lang) {
 
@@ -1407,6 +1414,24 @@ public class KButilities {
     }
 
     /** ***************************************************************
+     * Must be called whenever a *.tptp, *.tff or *.fof file is written
+     * to allow for clean shutdown of the JVM. Call this at the bottom
+     * of any main class where the executor is invoked.
+     */
+    public static void shutDownExecutorService() {
+
+        EXECUTOR_SERVICE.shutdown();
+        try {
+            if (!EXECUTOR_SERVICE.awaitTermination(10, TimeUnit.SECONDS)) {
+                EXECUTOR_SERVICE.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            EXECUTOR_SERVICE.shutdownNow();
+        }
+        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
+    }
+
+    /** ***************************************************************
     */
     public static void showHelp() {
 
@@ -1440,7 +1465,7 @@ public class KButilities {
         else {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println("KBmutilities.main(): completed init");
+            System.out.println("KButilities.main(): completed init");
             //countRelations(kb);
             //checkURLs(kb);
             //validatePictureList();
@@ -1502,8 +1527,14 @@ public class KButilities {
                 System.out.println(generateFormulasAndDoc(kb));
             }
             else if (args != null && args.length > 1 && args[0].equals("-v")) {
-                SUMOtoTFAform.initOnce();
-                System.out.println(isValidFormula(kb,args[1]));
+                boolean valid = isValidFormula(kb,args[1]);
+                String s = "Formula " + args[1] + "\nis valid: ";
+                StringBuilder sb = new StringBuilder();
+                sb.append(s);
+                if (valid)
+                    System.out.println(sb.append(valid));
+                else
+                    System.err.println(sb.append(valid));
             }
             else if (args != null && args.length > 1 && args[0].equals("-a")) {
                 SUMOtoTFAform.initOnce();

@@ -638,12 +638,11 @@ Default user/pw: admin/admin
 You can use Sigma without being administrator, but you'll have limited use of
 its functionality.
 
-You'll also need to set a few parameters in your config.xml file. If you chose
-user "admin", then your config.xml will need these 2 new lines added.
+You'll also need to set a parameter in your config.xml file. If you chose
+user "admin", then your config.xml will need this line added.
 
 ```xml
   <preference name="dbUser" value="admin" />
-  <preference name="loadFresh" value="false" />
 ```
 
 To handle the account registration feature, you'll need to have an email account and supply the

@@ -24,7 +24,7 @@ if (!role.equals("admin")) {
 
 System.out.println("INFO in CELT.jsp");
 String result = null;
-StringBuffer sbStatus = new StringBuffer();
+StringBuilder sbStatus = new StringBuilder();
 
 String req = request.getParameter("request");
 String stmt = request.getParameter("stmt");
@@ -91,7 +91,7 @@ if (req != null) {
         String pageString = "CELT";
     %>
     <%@include file="CommonHeader.jsp" %>
-    
+
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea><br>
     Maximum answers: <input TYPE="TEXT" NAME="maxAnswers" VALUE="<%=maxAnswers%>">
@@ -113,8 +113,9 @@ if (result != null && result.toString().length() > 0) {
     System.out.print("INFO in CELT.jsp: Number of XML elements: ");
     System.out.println(res.elements.size());
     ProofProcessor pp = new ProofProcessor(res.elements);
+    List<ProofStep> proofSteps;
     for (int i = 0; i < pp.numAnswers()-1; i++) {
-        ArrayList proofSteps = pp.getProofSteps(i);
+        proofSteps = pp.getProofSteps(i);
         proofSteps = new ArrayList(ProofStep.normalizeProofStepNumbers(proofSteps));
         System.out.print("Proof steps: ");
         System.out.println(proofSteps.size());

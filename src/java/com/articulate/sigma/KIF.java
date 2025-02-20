@@ -584,6 +584,7 @@ public class KIF {
             String msg = e1.getMessage();
             if (e1 instanceof ParseException)
                 msg = msg + (" in statement starting at line " + ((ParseException) e1).getErrorOffset());
+            System.err.println(msg);
         }
         File outfile = new File(filename + ".tptp");
         try (FileWriter fw = new FileWriter(outfile);

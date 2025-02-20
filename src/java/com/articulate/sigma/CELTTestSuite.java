@@ -6,8 +6,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-import com.articulate.sigma.KB;
-
 /** This code is copyright Articulate Software (c) 2003.  Some portions
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -73,7 +71,7 @@ public class CELTTestSuite {
 
         while (it.hasNext()) {
             String formula = (String) it.next();
-            if (formula.indexOf(";") != -1)
+            if (formula.contains(";"))
                 formula = formula.substring(0,formula.indexOf(";"));
             System.out.println("INFO in CELTTestSuite.test(): Formula: " + formula);
             if (formula.startsWith("(sentence")) {

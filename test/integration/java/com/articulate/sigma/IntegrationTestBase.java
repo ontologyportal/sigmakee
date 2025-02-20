@@ -1,9 +1,11 @@
 package com.articulate.sigma;
 
-import org.junit.BeforeClass;
+import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 
 import java.io.File;
 import java.io.IOException;
+
+import org.junit.BeforeClass;
 
 /** ***************************************************************
  * Base class for unit tests which are closer to integration tests because they require a large KB configuration.
@@ -47,6 +49,9 @@ public class IntegrationTestBase extends SigmaTestBase {
      */
     @BeforeClass
     public static void setup() throws IOException {
+
+        SUMOKBtoTPTPKB.rapidParsing = true;
+        System.out.println("IntegrationTestBase.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
 
         long startTime = System.currentTimeMillis();
 

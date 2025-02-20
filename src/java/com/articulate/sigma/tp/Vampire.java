@@ -22,6 +22,7 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;
+import tptp_parser.TPTPFormula;
 
 /**
  * Class for invoking the latest research version of Vampire from Java
@@ -63,7 +64,7 @@ public class Vampire {
         if (mode == ModeType.AVATAR)
             opts = "--proof tptp -t";
         if (mode == ModeType.CASC)
-            opts = "--avatar off --mode casc --proof tptp -t";
+            opts = "--mode casc -t"; // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
         if (mode == ModeType.CUSTOM)
             opts = System.getenv("VAMPIRE_OPTS");
         String[] optar = opts.split(" ");
@@ -145,11 +146,11 @@ public class Vampire {
 
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
-            System.out.println("Error in Vampire.run(): no executable string in preferences");
+            System.err.println("Error in Vampire.run(): no executable string in preferences");
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.out.println("Error in Vampire.run(): no executable " + vampex);
+            System.err.println("Error in Vampire.run(): no executable " + vampex);
         }
         String[] cmds = createCommandList(executable, timeout, kbFile);
         System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
@@ -168,7 +169,7 @@ public class Vampire {
         }
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
-            System.err.println("Vampire.run(): Abnormal process termination");
+            System.err.println("Error in Vampire.run(): Abnormal process termination");
             System.err.println(output);
         }
         System.out.println("Vampire.run() done executing");
@@ -263,13 +264,26 @@ public class Vampire {
         if (userAsserts != null && stmts != null)
             stmts.addAll(userAsserts);
         else {
-            System.out.println("Error in Vampire.run(): null query or user assertions set");
+            System.err.println("Error in Vampire.run(): null query or user assertions set");
             return;
         }
         writeStatements(stmts, lang);
         concatFiles(kbFile.toString(),stmtFile,outfile);
         File comb = new File(outfile);
         run(comb,timeout);
+    }
+
+    /** ***************************************************************
+     */
+    public static void printHelp() {
+
+        System.out.println();
+        System.out.println("Vampire class");
+        System.out.println("  options:");
+        System.out.println("  -h - show this help screen");
+        System.out.println("  -p - run Vampire on the default generated KB (tptp) and output a proof");
+        System.out.println("  with no arguments, show this help screen and execute a test");
+        System.out.println();
     }
 
     /** *************************************************************
@@ -285,8 +299,8 @@ public class Vampire {
         // System.out.print(vampire.assertFormula("(holds instance Adam Human)"));
         // System.out.print(vampire.submitQuery("(human ?X)", 1, 2));
         // System.out.print(vampire.submitQuery("(holds instance ?X Human)", 5, 2));
-        vampire.terminate();
         */
+        System.out.println("INFO in Vampire.main()");
         KBmanager.getMgr().initializeOnce();
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         KB kb = KBmanager.getMgr().getKB(kbName);
@@ -294,40 +308,74 @@ public class Vampire {
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
-        String outfile = dir + "temp-comb." + lang;
-        String stmtFile = dir + "temp-stmt." + lang;
-        File f1 = new File(outfile);
-        f1.delete();
-        File f2 = new File(stmtFile);
-        f2.delete();
-        File f3 = new File(dir + kbName + KB._userAssertionsString);
-        f3.delete();
-        File f4 = new File(dir + kbName + KB._userAssertionsTPTP);
-        f4.delete();
-        File s = new File(dir + kbName + "." + lang);
-        if (!s.exists())
-            System.out.println("Vampire.main(): no such file: " + s);
-        else {
+        File kbFile = new File(dir + kbName + "." + lang);
+        if (!kbFile.exists()) {
+            System.err.println("Error in Vampire.main(): no KB file: " + kbFile);
+            return;
+        }
+
+        Vampire vampire = new Vampire();
+        Vampire.mode = Vampire.ModeType.CASC; // default
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+
+        if (args == null || args.length == 0) {
+            printHelp();
+
+            String outfile = dir + "temp-comb." + lang;
+            String stmtFile = dir + "temp-stmt." + lang;
+            File f1 = new File(outfile);
+            f1.delete();
+            File f2 = new File(stmtFile);
+            f2.delete();
+            File f3 = new File(dir + kbName + KB._userAssertionsString);
+            f3.delete();
+            File f4 = new File(dir + kbName + KB._userAssertionsTPTP);
+            f4.delete();
+
             System.out.println("Vampire.main(): first test");
             Set<String> query = new HashSet<>();
             query.add("tff(conj1,conjecture,?[V__X, V__Y] : (s__subclass(V__X,V__Y))).");
-            System.out.println("Vampire.main(): calling Vampire with: " + s + ", 30, " + query);
-            Vampire vampire = new Vampire();
-            vampire.run(kb, s, 30, query);
+            System.out.println("Vampire.main(): calling Vampire with: " + kbFile + ", 30, " + query);
+            vampire.run(kb, kbFile, 30, query);
             System.out.println("----------------\nVampire output\n");
             for (String l : vampire.output)
                 System.out.println(l);
             String queryStr = "(subclass ?X ?Y)";
-            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output,queryStr,kb,vampire.qlist);
             System.out.println("Vampire.main(): bindings: " + tpp.bindings);
             System.out.println("Vampire.main(): proof: " + tpp.proof);
             System.out.println("-----------------\n");
-            System.out.println("\n");
+            System.out.println();
 
             System.out.println("Vampire.main(): second test");
             System.out.println(kb.askVampire("(subclass ?X Entity)",30,1));
-            //vampire.terminate();
+        } else {
+            if (args.length > 0 && args[0].equals("-h"))
+                printHelp();
+            else if (args.length > 0 && args[0].equals("-p")) {
+                vampire.run(kbFile, 60);
+
+                String query = "(maximumPayloadCapacity ?X (MeasureFn ?Y ?Z))";
+                StringBuilder answerVars = new StringBuilder("?X ?Y ?Z");
+                System.out.println("input: " + vampire.output + "\n");
+                tpp.parseProofOutput(vampire.output, query, kb, answerVars);
+
+                String sep = File.separator;
+                dir = System.getenv("CATALINA_HOME") + sep + "webapps"
+                + sep + "sigma" + sep + "graph";
+                File webGphDir = new File(dir);
+                if (!webGphDir.exists())
+                    webGphDir.mkdirs();
+                tpp.createProofDotGraph();
+                
+                System.out.println("Vampire.main(): " + tpp.proof.size() + " steps ");
+                System.out.println("Vampire.main() bindings: " + tpp.bindingMap);
+                System.out.println("Vampire.main() skolems: " + tpp.skolemTypes);
+                System.out.println("Vampire.main() proof[3]: {");
+                tpp.printProof(3);
+                System.out.println("}");
+            } else
+                System.err.println("Unknown option: " + args[0]);
         }
     }
 }

@@ -120,7 +120,7 @@ public class KBmanager implements Serializable {
         Date configDate = new Date(configFile.lastModified());
         File serfile = new File(kbDir + File.separator + "kbmanager.ser");
         Date saveDate = new Date(serfile.lastModified());
-        System.out.println("KBmanager.serializedOld(config): save date: " + saveDate.toString());
+        System.out.println("KBmanager.serializedOld(config): " + serfile.getName() + " save date: " + saveDate.toString());
         if (saveDate.compareTo(configDate) < 0)
             return true;
         List<List<String>> kbFilenames = kbFilenamesFromXML(configuration);
@@ -130,7 +130,7 @@ public class KBmanager implements Serializable {
             for (String f : thekb) { // iterate through the constituents
                 file = new File(f);
                 fileDate = new Date(file.lastModified());
-                System.out.println("serializedOld(): file " + f + " was saved on " + fileDate);
+                System.out.println("serializedOld(): file " + file.getName() + " was saved on " + fileDate);
                 if (saveDate.compareTo(fileDate) < 0) {
                     return true;
                 }
@@ -156,20 +156,20 @@ public class KBmanager implements Serializable {
             kb = getKB(kbname);
             file = new File(kbDir + File.separator + kbname + "." + lang);
             fileDate = new Date(file.lastModified());
-            System.out.println("KBmanager.infFileOld(): file " + kbname + "." + lang + " was saved on " + fileDate);
+            System.out.println("INFO in KBmanager.infFileOld(lang): file " + kbname + "." + lang + " was saved on " + fileDate);
             if (fileDate.compareTo(configDate) < 0) {
                 return true;
             }
             for (String f : kb.constituents) { // iterate through the constituents
                 sfile = new File(f);
                 sfileDate = new Date(sfile.lastModified());
-                System.out.println("KBmanager.infFileOld(): file " + f + " was saved on " + sfileDate);
+                System.out.println("INFO in KBmanager.infFileOld(lang): file " + sfile.getName() + " was saved on " + sfileDate);
                 if (fileDate.compareTo(sfileDate) < 0) {
                     return true;
                 }
             }
         }
-        System.out.println("KBmanager.infFileOld(config): returning false (not old)");
+        System.out.println("INFO in KBmanager.infFileOld(lang): returning false (config and constituents are not old)");
         return false;
     }
 
@@ -179,7 +179,7 @@ public class KBmanager implements Serializable {
      */
     public boolean infFileOld() {
 
-        System.out.println("KBmanager.tptpOld(config): ");
+        System.out.println("INFO in KBmanager.infFileOld(): ");
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
@@ -267,7 +267,7 @@ public class KBmanager implements Serializable {
             //out.close();
             //file.close();
             encoder(manager);
-            System.out.println("KBmanager.serialize(): KBmanager has been serialized ");
+            System.out.println("KBmanager.serialize(): KBmanager has been serialized");
         }
         catch (Exception ex) {
             System.err.println("Error in KBmanager.serialize(): IOException is caught");
@@ -624,11 +624,11 @@ public class KBmanager implements Serializable {
      */
     public static void copyFile(File in, File out) {
 
-        try (FileInputStream fis = new FileInputStream(in);
-             FileOutputStream fos = new FileOutputStream(out)
+        try (InputStream fis = new FileInputStream(in);
+             OutputStream fos = new FileOutputStream(out)
         ){
             byte[] buf = new byte[1024];
-            int i = 0;
+            int i;
             while ((i = fis.read(buf)) != -1) {
                 fos.write(buf, 0, i);
             }
@@ -690,9 +690,17 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      * Reads in the KBs and other parameters defined in the XML
-     * configuration file, or uses the default parameters.
+     * configuration file, or uses the default parameters. Entry point
+     * for the web app (Prelude.jsp).
      */
     public void initializeOnce() {
+
+        if (!initialized)
+            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+                System.out.println("Shutdown hook executed");
+                // Perform cleanup tasks here
+                KButilities.shutDownExecutorService();
+            }));
 
         System.out.println("Info in KBmanager.initializeOnce()");
         //Thread.dumpStack();
@@ -728,10 +736,10 @@ public class KBmanager implements Serializable {
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
             if (serializedExists() && !serializedOld(configuration)) {
-                if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old ");
+                if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
                 if (loaded) {
-                    if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded ");
+                    if (debug) System.out.println("KBmanager.initializeOnce(): manager is loaded");
                     if (!prefEquals("loadLexicons","false")) {
                         if (debug) System.out.println("KBmanager.initializeOnce(): here 1");
                         WordNet.initOnce();
@@ -1087,7 +1095,7 @@ public class KBmanager implements Serializable {
             KBmanager.getMgr().initializeOnce();
         }
         catch (Exception e ) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
         GatewayServer server = new GatewayServer(new PythonAPI());
         server.start();
@@ -1098,7 +1106,7 @@ public class KBmanager implements Serializable {
      */
     public static void printHelp() {
 
-        System.out.println("Sigma Knowledge Engineering Environment");
+        System.out.println("KBmanager class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -p - demo Python interface");

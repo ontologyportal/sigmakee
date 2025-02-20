@@ -879,7 +879,7 @@ public class SUMOtoTFAform {
             }
         }
         if ("".equals(promote)) {
-            System.err.println("Error in mixedQuotient() with arg " + args +
+            System.err.println("Error in SUMOtoTFAform.mixedQuotient() with args: " + args +
                     " and types " + argTypes);
             return "$quotient" + eSuffix + "(" + processRecurse(lhs,parentType) + " ," +
                     processRecurse(rhs,parentType) + ")";
@@ -1814,7 +1814,7 @@ public class SUMOtoTFAform {
      * new list from two of equal size that has the most specific type
      * at each index.
      */
-    private static List<String> mostSpecificArgType(ArrayList<String> args1, ArrayList<String> args2) {
+    private static List<String> mostSpecificArgType(List<String> args1, List<String> args2) {
 
         if (args1 == null || args1.size() < 1)
             return args2;
@@ -2368,7 +2368,7 @@ public class SUMOtoTFAform {
         //if (debug) System.out.println("SUMOtoTFAform.process(): f so far: " + f);
         varmap = fp.findAllTypeRestrictions(f, kb);
         if (inconsistentVarTypes()) {
-            System.out.println("SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
+            System.err.println("SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
             return "";
         }
         counter = 0;
@@ -2407,9 +2407,21 @@ public class SUMOtoTFAform {
         return "";
     }
 
-    /** *************************************************************
+    /** ***************************************************************
+     * Parse a single formula into TPTP format.
+     * @param suoString the formula entry to parse
+     * @param query true if the suoString is a query
      */
-    public static String process(String s, boolean query) {
+    public static String process(String suoString, boolean query) {
+
+        if (!SUMOKBtoTPTPKB.rapidParsing)
+            return _process(suoString, query);
+        else
+            // This must be used for threaded parsing to keep deep recursion synchronized
+            return _tProcess(suoString, query);
+    }
+
+    private static String _process(String s, boolean q) {
 
         filterMessage = "";
         if (s.contains("ListFn"))
@@ -2418,8 +2430,15 @@ public class SUMOtoTFAform {
         if (StringUtil.emptyString(s)) // || numConstAxioms.contains(s))
             return "";
         Formula f = new Formula(s);
-        String res = process(f,query);
-        return res;
+        return process(f,q);
+    }
+
+    /** ***************************************************************
+     * Synchronized to keep to keep deep recursion synchronized during
+     * threaded operations.
+     */
+    private static synchronized String _tProcess(String s, boolean q) {
+        return _process(s, q);
     }
 
     /** *************************************************************
@@ -2856,7 +2875,7 @@ public class SUMOtoTFAform {
         System.out.println("INFO in SUMOtoTFAform.main()");
         System.out.println("args:" + args.length + " : " + Arrays.toString(args));
         if (args == null) {
-            System.out.println("no command given");
+            System.err.println("no command given, see help:");
             showHelp();
         }
         else if (args != null && args.length > 0 && args[0].equals("-h"))
@@ -2864,12 +2883,11 @@ public class SUMOtoTFAform {
         else {
             SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
             skbtfakb.initOnce();
-            initOnce();
             System.out.println("INFO in SUMOtoTFAform.main(): completed initialization");
             if (args != null && args.length > 2 && args[0].equals("-c")) {
                 String t1 = args[1];
                 String t2 = args[2];
-                System.out.println("main() best of " + t1 + " and " + t2 + " : " + constrainTerm(t1,t2));
+                System.out.println("SUMOtoTFAform.main(): best of " + t1 + " and " + t2 + " : " + constrainTerm(t1,t2));
                 List<String> argTypeMap = new ArrayList<>();
                 argTypeMap.add("RealNumber");
                 argTypeMap.add("RealNumber");
@@ -2878,21 +2896,21 @@ public class SUMOtoTFAform {
                 predTypes.add("RealNumber");
                 System.out.println();
                 List<String> best = bestSignature(argTypeMap,predTypes);
-                System.out.println("main() best: " + best);
+                System.out.println("SUMOtoTFAform.main(): best: " + best);
                 System.out.println();
                 List<String> constrained = mostSpecificSignature(argTypeMap,predTypes);
-                System.out.println("main() most specific for (argTypeMap, predType) " +
+                System.out.println("SUMOtoTFAform.main(): most specific for (argTypeMap, predType) " +
                         argTypeMap + ", " + predTypes + " : " + constrained);
                 System.out.println();
                 constrained = mostSpecificSignature(predTypes,predTypes);
-                System.out.println("main() most specific for (argTypeMap, predType) " +
+                System.out.println("SUMOtoTFAform.main(): most specific for (argTypeMap, predType) " +
                         predTypes + ", " + predTypes + " : " + constrained);
             }
             else if (args != null && args.length > 1 && args[0].equals("-f")) {
                 debug = true;
                 SUMOformulaToTPTPformula.debug = true;
                 Formula f = new Formula(args[1]);
-                System.out.println("in TFA: " + process(f,false));
+                System.out.println("SUMOtoTFAform.main(): in TFA: " + process(f,false));
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 String bare = getBareTerm("s__refers__1En2In");

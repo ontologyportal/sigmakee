@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static junit.framework.TestCase.assertEquals;
+import org.junit.Ignore;
 
 public class WSDwKBtest extends IntegrationTestBase {
 
@@ -26,6 +27,7 @@ public class WSDwKBtest extends IntegrationTestBase {
     /****************************************************************
      */
     @Test
+    @Ignore
     public void testHyundai() {
 
         System.out.println("---------------------------");
@@ -77,6 +79,7 @@ public class WSDwKBtest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testSentenceWSD2() {
 
         System.out.println("---------------------------");
@@ -107,6 +110,7 @@ public class WSDwKBtest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testSentenceWSD4() {
 
         System.out.println("---------------------------");

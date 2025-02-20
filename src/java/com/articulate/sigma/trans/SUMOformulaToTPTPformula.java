@@ -424,10 +424,9 @@ public class SUMOformulaToTPTPformula {
         int count = 0;
         for (String s : UqVars) {
             oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
-            if (count < sizeUqVars-1)
-                qlist.append(oneVar).append(",");
-            else
-                qlist.append(oneVar); // don't write a final comma
+            qlist.append(oneVar); // don't write a final comma
+            if (count < sizeUqVars-1 && sizeUqVars > 1)
+                qlist.append(",");
 
             count++;
         }
@@ -436,28 +435,48 @@ public class SUMOformulaToTPTPformula {
     }
 
     /** ***************************************************************
-     * Parse a single formula into TPTP format
+     * Parse a single formula into TPTP format.
+     * @param suoString the formula entry to parse
+     * @param query true if the suoString is a query
      */
     public static String tptpParseSUOKIFString(String suoString, boolean query) {
 
-        if (debug) System.out.println("SUMOformulaToTPTPformula.process(): string,query,lang: " + suoString + ", " + query + ", " + SUMOKBtoTPTPKB.lang);
+        if (!SUMOKBtoTPTPKB.rapidParsing)
+            return _tptpParseSUOKIFString(suoString, query);
+        else
+            // This must be used for threaded parsing to keep axiom variables synchronized
+            return _tTptpParseSUOKIFString(suoString, query);
+    }
+
+    private static String _tptpParseSUOKIFString(String s, boolean q) {
+
+        if (debug) System.out.println("tptpParseSUOKIFString.process(): string,query,lang: " + s + ", " + q + ", " + SUMOKBtoTPTPKB.lang);
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (SUMOKBtoTPTPKB.lang.equals("tff"))
-            return "( " + SUMOtoTFAform.process(suoString,query) + " )";
+            return "( " + SUMOtoTFAform.process(s,q) + " )";
         if (SUMOKBtoTPTPKB.lang.equals("thf")) {
             THF thf = new THF();
             Collection<Formula> stmts = new ArrayList<>();
             Collection<Formula> queries = new ArrayList<>();
-            if (query)
-                queries.add(new Formula(suoString));
+            if (q)
+                queries.add(new Formula(s));
             else
-                stmts.add(new Formula(suoString));
+                stmts.add(new Formula(s));
             return "( " + thf.KIF2THF(stmts,queries,kb) + " )";
         }
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
-            return "( " + process(new Formula(suoString),query) + " )";
-        System.err.println("ERROR in tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
-        return "( " + process(new Formula(suoString),query) + " )";
+            return "( " + process(new Formula(s),q) + " )";
+        System.err.println("Error in SUMOformulaToTPTPformula.tptpParseSUOKIFString(): unknown language type: " + SUMOKBtoTPTPKB.lang);
+        return "( " + process(new Formula(s),q) + " )";
+    }
+
+    /** ***************************************************************
+     * Synchronized to keep axiom variable order when writing to file
+     * during threaded operations.
+     */
+    private static synchronized String _tTptpParseSUOKIFString(String s, boolean query) {
+
+        return _tptpParseSUOKIFString(s, query);
     }
 
     /** *************************************************************
@@ -519,7 +538,7 @@ public class SUMOformulaToTPTPformula {
             if (debug)
                 System.out.println("INFO in SUMOformulaToTPTPformula.tptpParse(): preprocessed: " + processed);
             if (processed != null) {
-                _f.theTptpFormulas = new HashSet<>();
+                _f.theTptpFormulas.clear();
                 //----Performs function on each current processed axiom
                 String tptpStr;
                 for (Formula f : processed) {

@@ -24,7 +24,7 @@
     http://github.com/ontologyportal
 */
 
-ArrayList<String> userPages = new ArrayList<String>();
+List<String> userPages = new ArrayList<String>();
 userPages.add("AllPictures.jsp");
 userPages.add("Browse.jsp");
 userPages.add("BrowseExtra.jsp");
@@ -58,7 +58,10 @@ if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
 }
 
 if (!KBmanager.initialized) {
-    KBmanager.getMgr().initializeOnce();
+    // Here would be the place to set rapid (threaded) KB processing
+    SUMOKBtoTPTPKB.rapidParsing = true;
+    System.out.println("Prelude.jsp: SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
+    mgr.initializeOnce(); // <- first call for KB initialization at startup 2/17/25 (tdn)
     System.out.println("Prelude.jsp: initializing.  Redirecting to init.jsp.");
     response.sendRedirect("init.jsp");
     return;
@@ -80,12 +83,12 @@ if (StringUtil.isNonEmptyString(simple) && simple.equalsIgnoreCase("yes")) {
 String kbName = request.getParameter("kb");
 if (StringUtil.emptyString(kbName)) {
     kbName = "SUMO";
-    if (!KBmanager.getMgr().kbs.keySet().contains("SUMO"))
-        kbName = KBmanager.getMgr().getPref("sumokbname");
+    if (!mgr.kbs.keySet().contains("SUMO"))
+        kbName = mgr.getPref("sumokbname");
 }
 
 KB kb = null;
-kb = KBmanager.getMgr().getKB(kbName);
+kb = mgr.getKB(kbName);
 if (kb != null)
     TaxoModel.kbName = kbName;
 
@@ -96,10 +99,10 @@ String flang = request.getParameter("flang");    // formal language
 flang = HTMLformatter.processFormalLanguage(flang);
 language = request.getParameter("lang");
 language = HTMLformatter.processNaturalLanguage(language,kb);
-String hostname = KBmanager.getMgr().getPref("hostname");
+String hostname = mgr.getPref("hostname");
 if (hostname == null)
     hostname = "localhost";
-String port = KBmanager.getMgr().getPref("port");
+String port = mgr.getPref("port");
 if (port == null)
     port = "8080";
 String term = request.getParameter("term");

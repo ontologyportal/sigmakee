@@ -24,7 +24,7 @@ if (ccheckPage == null)
 String action = request.getParameter("action");
 String override = request.getParameter("override");
 
-StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
+StringBuilder show = new StringBuilder();       // Variable to contain the HTML page generated.
 String kbHref = null;
 String htmlDivider = "<table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>\n";
 String formattedFormula = null;
@@ -33,18 +33,18 @@ HttpSession hsObj = request.getSession();
 hsObj.setMaxInactiveInterval(-1);
 kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName + "&flang=" + flang;
 InterfaceTPTP.init();
-ArrayList<String> systemListBuiltIn = InterfaceTPTP.systemListBuiltIn;
-ArrayList<String> systemListLocal = InterfaceTPTP.systemListLocal;
-ArrayList<String> systemListRemote = InterfaceTPTP.systemListRemote;
+List<String> systemListBuiltIn = InterfaceTPTP.systemListBuiltIn;
+List<String> systemListLocal = InterfaceTPTP.systemListLocal;
+List<String> systemListRemote = InterfaceTPTP.systemListRemote;
 String defaultSystemBuiltIn = InterfaceTPTP.defaultSystemBuiltIn;
 String defaultSystemLocal = InterfaceTPTP.defaultSystemLocal;
 String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
-  
+
 %>
 
 <script type="text/javascript">//<![CDATA[
   var tstp_dump;
-  var chosenLocation = "Local";                      
+  var chosenLocation = "Local";
   function openSoTSTP (dump) {
     var tstp_url = 'http://www.cs.miami.edu/~tptp/cgi-bin/SystemOnTSTP';
     var tstp_browser = window.open(tstp_url, '_blank');
@@ -54,26 +54,26 @@ String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
   function getTSTPDump () {
     return tstp_dump;
   }
-  
+
   function toggleList (location) {
-  		chosenLocation = location;       
+  		chosenLocation = location;
 
         var obj;
-        
+
         obj = window.document.getElementById("systemListLocal");
         obj.style.display='none';
         obj = window.document.getElementById("systemListBuiltIn");
         obj.style.display='none';
         obj = window.document.getElementById("systemListRemote");
-		obj.style.display='none';        
+		obj.style.display='none';
         obj = window.document.getElementById("systemList" + location);
         obj.style.display='inline';
   }
-  
+
   function submit (location) { }
 </script>
 
-<html>                                             
+<html>
 <HEAD><TITLE> Knowledge base Browser</TITLE></HEAD>
 <BODY BGCOLOR="#FFFFFF">
 <FORM action="CCheck.jsp">
@@ -84,7 +84,7 @@ String defaultSystemRemote = InterfaceTPTP.defaultSystemRemote;
     <%@include file="CommonHeader.jsp" %>
 
 <%
-show = new StringBuffer();
+show = new StringBuilder();
 int pageNum = Integer.parseInt(ccheckPage);
 boolean overrideValue = false;
 if (action != null && action != "")
@@ -195,7 +195,7 @@ else
 
 show.append("</form>");
 %>
-   
+
 <table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR><BR>
   <%=show.toString() %><BR>
 <%@ include file="Postlude.jsp" %>
