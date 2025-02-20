@@ -3946,7 +3946,7 @@ public class KB implements Serializable {
         System.out.println("  o <seconds> - set the query timeout");
         System.out.println("  c <term1> <term2> - compare term depth");
         System.out.println("  s - show statistics");
-        System.out.println("  R - rapid parsing of KB to TPTP");
+        System.out.println("  N - sequential (slower) parsing of KB to TPTP");
     }
 
     /** ***************************************************************
@@ -3958,9 +3958,9 @@ public class KB implements Serializable {
             showHelp();
         else {
 
-            // Check for "R" before initializing the KBmanager
-            if (args != null && args.length > 1 && (args[0].contains("R") || args[1].contains("R")))
-                SUMOKBtoTPTPKB.rapidParsing = true;
+            // Check for "N" before initializing the KBmanager
+            if (args != null && args.length > 1 && (args[0].contains("N") || args[1].contains("N")))
+                SUMOKBtoTPTPKB.rapidParsing = false;
 
             System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
 
