@@ -40,7 +40,6 @@ public class UnitTestBase extends SigmaTestBase {
     @BeforeClass
     public static void setup()  {
 
-        SUMOKBtoTPTPKB.rapidParsing = true;
         System.out.println("UnitTestSuite.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
 
         System.out.println("UnitTestBase.setup(): reading test config file: " + CONFIG_FILE_PATH);
