@@ -541,10 +541,11 @@ public class TPTP3ProofProcessor {
             System.out.println("processAnswersFromProof(): bindingMap: " + bindingMap);
         }
         bindingMap.clear();
+        String news;
         if (qlist != null && qlist.length() > 0) {
             List<String> qvarslist = Arrays.asList(qlist.toString().split(","));
             for (String s : qvarslist) {
-                String news = s.replace("V__", "?");
+                news = s.replace("V__", "?");
                 qvars.add(news);
             }
         }
