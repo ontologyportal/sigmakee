@@ -589,7 +589,7 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
-        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser/workspace/vampire/vampire" value="${programs.dir}/vampire/build/vampire"/>
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser/Programs/vampire/build/vampire" value="${programs.dir}/vampire/build/vampire"/>
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary -->
