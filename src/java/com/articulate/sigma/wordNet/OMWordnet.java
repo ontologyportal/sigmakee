@@ -380,8 +380,9 @@ August 9, Acapulco, Mexico.
         omw = new OMWordnet();
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
+        String filename;
         for (int i = 0; i < lcodes.size(); i++) {
-            String filename = kbDir + File.separator + "OMW" +
+            filename = kbDir + File.separator + "OMW" +
                     File.separator + lcodes.get(i)  + File.separator +
                     "wn-data-" + lcodes.get(i) + ".tab";
             System.out.print(filename);
