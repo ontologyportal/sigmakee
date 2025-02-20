@@ -3959,7 +3959,7 @@ public class KB implements Serializable {
         else {
 
             // Check for "R" before initializing the KBmanager
-            if (args != null && args.length > 1 && args[0].contains("R") || args[1].contains("R"))
+            if (args != null && args.length > 1 && (args[0].contains("R") || args[1].contains("R")))
                 SUMOKBtoTPTPKB.rapidParsing = true;
 
             System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
