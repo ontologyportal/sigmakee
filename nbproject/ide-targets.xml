@@ -70,7 +70,7 @@
     =================
     -->
 
-    <target name="run" depends="kb.clean,prep.main.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
+    <target name="run" depends="prep.main.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
         <java classname="${run.class}"
               classpathref="rcp"
               fork="true">
@@ -563,7 +563,7 @@
     <target name="prep.tiny.sumo.config">
         <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>
     </target>
-    <target name="thorough.clean" depends="clean,prep.main.config">
+    <target name="thorough.clean" depends="clean,prep.tiny.sumo.config">
         <antcall target="kb.clean"/>
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
