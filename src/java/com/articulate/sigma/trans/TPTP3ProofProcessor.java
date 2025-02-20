@@ -130,12 +130,12 @@ public class TPTP3ProofProcessor {
                 } else {
                     commentsAfter.add(s);
                 }
-                sb = new StringBuilder();
+                sb = new StringBuilder(); // TODO: sb.setLength(0);
             } else if (s.trim().endsWith(").") || s.trim().endsWith("]")) {
                 before = false;
                 sb.append(s);
                 outputs.add(sb.toString());
-                sb = new StringBuilder();
+                sb = new StringBuilder();  // TODO: sb.setLength(0);
             } else {
                 sb.append(s.trim());
             }
@@ -172,7 +172,7 @@ public class TPTP3ProofProcessor {
                 case '(':
                     if (parenLevel == 0) {
                         result.add(sb.toString());
-                        sb = new StringBuilder();
+                        sb = new StringBuilder(); // TODO: sb.setLength(0);
                         parenLevel++;
                     } else {
                         parenLevel++;
@@ -183,7 +183,7 @@ public class TPTP3ProofProcessor {
                     parenLevel--;
                     if (parenLevel == 0) {
                         result.add(sb.toString());
-                        sb = new StringBuilder();
+                        sb = new StringBuilder(); // TODO: sb.setLength(0);
                     } else {
                         sb.append(line.charAt(i));
                     }
@@ -205,7 +205,7 @@ public class TPTP3ProofProcessor {
                 case ',':
                     if (parenLevel == 1) {
                         result.add(sb.toString());
-                        sb = new StringBuilder();
+                        sb = new StringBuilder(); // TODO: sb.setLength(0);
                     } else {
                         sb.append(line.charAt(i));
                     }
@@ -778,6 +778,7 @@ public class TPTP3ProofProcessor {
                     + lines);
         }
         try {
+            String bracketedAnswers;
             boolean inProof = false, finishAnswersTuple = false;
             int end;
             TPTPVisitor sv;
@@ -815,7 +816,7 @@ public class TPTP3ProofProcessor {
                         if (end == -1 || (line.length() < end + 1)) {
                             end = line.length();
                         }
-                        String bracketedAnswers = line.substring(20, end + 1);
+                        bracketedAnswers = line.substring(20, end + 1);
                         processAnswers(bracketedAnswers);
                         finishAnswersTuple = true;
                     }
