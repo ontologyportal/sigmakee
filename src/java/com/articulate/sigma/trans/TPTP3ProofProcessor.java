@@ -162,17 +162,15 @@ public class TPTP3ProofProcessor {
     public static List<String> getPrologArgs(String line) {
 
         List<String> result = new ArrayList<>();
-//        boolean inQuote = false;
         int parenLevel = 0;
         StringBuilder sb = new StringBuilder();
-//        char quoteChar;
         int i = 0;
         while (i < line.length()) {
             switch (line.charAt(i)) {
                 case '(':
                     if (parenLevel == 0) {
                         result.add(sb.toString());
-                        sb = new StringBuilder(); // TODO: sb.setLength(0);
+                        sb.setLength(0); // reset
                         parenLevel++;
                     } else {
                         parenLevel++;
@@ -183,7 +181,7 @@ public class TPTP3ProofProcessor {
                     parenLevel--;
                     if (parenLevel == 0) {
                         result.add(sb.toString());
-                        sb = new StringBuilder(); // TODO: sb.setLength(0);
+                        sb.setLength(0); // reset
                     } else {
                         sb.append(line.charAt(i));
                     }
@@ -205,7 +203,7 @@ public class TPTP3ProofProcessor {
                 case ',':
                     if (parenLevel == 1) {
                         result.add(sb.toString());
-                        sb = new StringBuilder(); // TODO: sb.setLength(0);
+                        sb.setLength(0); // reset
                     } else {
                         sb.append(line.charAt(i));
                     }
