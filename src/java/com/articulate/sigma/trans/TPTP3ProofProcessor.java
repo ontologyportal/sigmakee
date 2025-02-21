@@ -398,7 +398,7 @@ public class TPTP3ProofProcessor {
             System.out.println("INFO in processAnswers(): trimmed: " + trimmed);
         }
         if (trimmed == null) {
-            System.out.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
+            System.err.println("Error in TPTP3ProofProcessor.processAnswers() bad format: " + line);
             return;
         }
         String[] answers = trimmed.split("\\|");
@@ -579,7 +579,7 @@ public class TPTP3ProofProcessor {
         }
         if (answers == null || vars.size() != answers.size()) {
             if (debug) {
-                System.out.println("Error in processAnswersFromProof(): null answers");
+                System.err.println("Error in processAnswersFromProof(): null answers");
             }
             return;
         }
@@ -838,7 +838,7 @@ public class TPTP3ProofProcessor {
                         }
                         if (sv.result != null) {
                             if (sv.result.values().size() > 1) {
-                                System.out.println("Error in TPTP3ProofProcessor.parseProofOutput(ar,2): more than one line in " + line);
+                                System.err.println("Error in TPTP3ProofProcessor.parseProofOutput(ar,2): more than one line in " + line);
                             }
                             step = sv.result.values().iterator().next();
                             if (step.role.equals("negated_conjecture") || step.role.equals("conjecture")) {
@@ -950,7 +950,7 @@ public class TPTP3ProofProcessor {
 
         File f = new File(filename);
         if (!f.exists()) {
-            System.out.println("Error in parseProofFromFile() no such file " + filename);
+            System.err.println("Error in parseProofFromFile() no such file " + filename);
         }
         try (FileReader fr = new FileReader(filename); LineNumberReader lnr = new LineNumberReader(fr)) {
             parseProofOutput(lnr, kb);
