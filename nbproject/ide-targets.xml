@@ -474,7 +474,7 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <antcall target="prep.main.config"/> <!-- restore the main config -->
+        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
