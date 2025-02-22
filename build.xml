@@ -434,7 +434,7 @@
     </target>
 
     <!-- When the SUMO KB files get updated, do this frequently -->
-    <target name="refresh.KBs" depends="update.sumo" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
+    <target name="refresh.kbs" depends="update.sumo" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
         <mkdir dir="${user.home}/.${web.app.name}"/>
         <chmod dir="${user.home}/.${web.app.name}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${user.home}/.${web.app.name}/KBs"/>
