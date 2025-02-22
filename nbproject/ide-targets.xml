@@ -115,7 +115,7 @@
     -->
 
     <target name="test" depends="test.unit,test.integration"/>
-    <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
+    <target name="test.unit" depends="clean,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -194,7 +194,7 @@
         </junit>
         <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
+    <target name="run-selected-test-in-unit" depends="clean,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -233,7 +233,7 @@
         </junit>
         <antcall target="prep.main.config"/> <!-- restore the main config -->
     </target>
-    <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
+    <target name="run-single-test-method-in-unit" depends="clean,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -367,7 +367,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="prep.tiny.sumo.config,compile">
+    <target name="debug-selected-file-in-java" depends="compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -429,9 +429,9 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <antcall target="prep.main.config"/> <!-- restore the main config -->
+        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
+    <target name="debug-selected-test-in-unit" depends="clean,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -476,7 +476,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
+    <target name="debug-single-test-method-in-unit" depends="clean,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -563,7 +563,7 @@
     <target name="prep.tiny.sumo.config">
         <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>
     </target>
-    <target name="thorough.clean" depends="clean,prep.tiny.sumo.config">
+    <target name="thorough.clean" depends="clean">
         <antcall target="kb.clean"/>
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
@@ -585,7 +585,7 @@
         <delete file="${dist_war}"/>
         <antcall target="delete.catalina.logs"/>
     </target>
-    <target name="kb.clean" depends="clean">
+    <target name="clean.kbs" depends="clean">
         <delete>
             <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
