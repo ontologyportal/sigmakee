@@ -1696,7 +1696,7 @@ public class KB implements Serializable {
                 if (SUMOKBtoTPTPKB.lang.equals("fof"))
                     lang = "tptp";
                 eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                        System.getenv("SIGMA_HOME") + "/KBs/" + name + "." + lang);
+                        KBmanager.getMgr().getPref("kbDir") + "/" + name + "." + lang);
             }
         }
         catch (IOException e) {
@@ -1915,7 +1915,6 @@ public class KB implements Serializable {
      */
     public List<String> askNoProof(String suoKifFormula, int timeout, int maxAnswers) {
 
-        List<String> answers = new ArrayList<>();
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             Formula query = new Formula();
             query.read(suoKifFormula);
@@ -1939,8 +1938,7 @@ public class KB implements Serializable {
                     System.out.println("Get response from EProver, start for parsing ...");
                 // System.out.println("Results returned from E = \n" + EResult);
                 TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                answers = tpp.parseAnswerTuples(eprover.output, strQuery, this,eprover.qlist);
-                return answers;
+                return tpp.parseAnswerTuples(eprover.output, strQuery, this,eprover.qlist);
             }
         }
         return null;
