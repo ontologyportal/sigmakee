@@ -22,7 +22,6 @@ package com.articulate.sigma;
  Relation
  */
 import org.junit.Test;
-import org.junit.Ignore;
 import org.junit.BeforeClass;
 
 import java.util.*;
@@ -106,7 +105,7 @@ public class KBcacheUnitTest {
 
     /** ***************************************************************
      */
-    @Ignore("Not sure why we'd expect var, rel and relsub")
+//    @Ignore("Not sure why we'd expect var, rel and relsub")
     @Test
     public void testPredicates() {
 
