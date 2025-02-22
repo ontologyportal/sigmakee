@@ -130,12 +130,12 @@ public class TPTP3ProofProcessor {
                 } else {
                     commentsAfter.add(s);
                 }
-                sb = new StringBuilder(); // TODO: sb.setLength(0);
+                sb.setLength(0); // reset
             } else if (s.trim().endsWith(").") || s.trim().endsWith("]")) {
                 before = false;
                 sb.append(s);
                 outputs.add(sb.toString());
-                sb = new StringBuilder();  // TODO: sb.setLength(0);
+                sb.setLength(0); // reset
             } else {
                 sb.append(s.trim());
             }
