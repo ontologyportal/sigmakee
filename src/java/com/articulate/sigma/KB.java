@@ -428,6 +428,38 @@ public class KB implements Serializable {
 
         long millis = System.currentTimeMillis();
         System.out.print("INFO in KB.checkArity(): Performing Arity Check");
+
+        if (!SUMOKBtoTPTPKB.rapidParsing)
+            _checkArity();
+        else
+            _tCheckArity();
+
+        counter = 0; // reset
+        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
+    }
+
+    private void _checkArity() {
+
+        if (formulaMap != null && !formulaMap.isEmpty()) {
+            int total = formulaMap.values().size();
+            String term;
+            for (Formula f : formulaMap.values()) {
+                if (counter++ % 10 == 0)
+                    System.out.print(".");
+                if (counter % 400 == 0)
+                    System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
+                 term = PredVarInst.hasCorrectArity(f, this);
+                if (!StringUtil.emptyString(term)) {
+                    errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
+                            + " in formula: \n" + f.getFormula());
+                }
+            }
+            System.out.println();
+        }
+    }
+
+    private void _tCheckArity() {
+
         if (formulaMap != null && !formulaMap.isEmpty()) {
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
@@ -447,6 +479,7 @@ public class KB implements Serializable {
                 future = KButilities.EXECUTOR_SERVICE.submit(r);
                 futures.add(future);
             }
+            System.out.println();
             for (Future<?> f : futures)
                 try {
                     f.get(); // waits for task completion
@@ -454,11 +487,7 @@ public class KB implements Serializable {
                     System.err.printf("Error in KB.checkArity(): %s", ex);
                     ex.printStackTrace();
                 }
-
-            counter = 0; // reset
-            System.out.println();
         }
-        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
     }
 
     /***************************************************************
@@ -2825,7 +2854,7 @@ public class KB implements Serializable {
         System.out.println("INFO in KB.addConstituent(): " + filename);
         KIF file = readConstituent(filename);
         addConstituentInfo(file);
-        System.out.println("INFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
+        System.out.println("\nINFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
                 + file.terms.size() + " terms.");
         System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / 1000);
 
