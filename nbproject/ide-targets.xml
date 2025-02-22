@@ -70,7 +70,7 @@
     =================
     -->
 
-    <target name="run" depends="prep.main.config,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
+    <target name="run" depends="compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
         <java classname="${run.class}"
               classpathref="rcp"
               fork="true">
@@ -82,7 +82,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="run-selected-file-in-java" depends="prep.top.only.config,compile">
+    <target name="run-selected-file-in-java" depends="compile">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <java classname="${run.class}"
               classpathref="rcp"
@@ -351,7 +351,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="kb.clean,prep.main.config,compile">
+    <target name="debug-nb" depends="compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
