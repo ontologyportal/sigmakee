@@ -27,10 +27,10 @@ RUN apt-get update && apt-get install -y --install-recommends \
     mkdir build ;\
     mkdir -p z3/build && cd z3/build ;\
     cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
-    make -j2 ;\
+    make -j`nproc` ;\
     cd ../../build ;\
     cmake .. ;\
-    make -j2 ;\
+    make -j`nproc` ;\
     cd .. ;\
     cp build/vampire vampire ;\
     ./checks/sanity vampire
