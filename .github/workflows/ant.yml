@@ -81,9 +81,9 @@ jobs:
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
         working-directory: ./sigmakee
         run: |
-          sed -i "s|/home/apease/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
-          sed -i "s|/home/apease/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
-          sed -i "s|/home/apease/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
 
       - name: Run unit tests
