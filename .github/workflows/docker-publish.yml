@@ -20,7 +20,7 @@ env:
 
 jobs:
   build:
-    # Previous runner due to seg. faults when building Vampire
+    # Previous runner due to seg. faults (2/1/25) when building Vampire
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
