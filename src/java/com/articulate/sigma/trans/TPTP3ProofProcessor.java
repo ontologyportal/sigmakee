@@ -1145,17 +1145,27 @@ public class TPTP3ProofProcessor {
 
         try {
             String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-            String command = graphVizDir + File.separator + "dot " + filename + ".dot -Tgif";
-            Process proc = Runtime.getRuntime().exec(command);
-            System.out.println("Graph.createDotGraph(): exec command: " + command);
-            File file = new File(filename + ".gif");
-            try (InputStream img = new BufferedInputStream(proc.getInputStream())) {
-                RenderedImage image = ImageIO.read(img);
-                if (image != null) {
-                    ImageIO.write(image, "gif", file);
-                }
-            }
-            System.out.println("Graph.createDotGraph(): write image file: " + file);
+
+            List<String> cmd = new ArrayList<>();
+            cmd.add(graphVizDir + File.separator + "dot");
+            cmd.add("-Tsvg");
+            cmd.add("-Kosage");
+            cmd.add("-O");
+            cmd.add(filename + ".dot");
+
+            // Build a ${graph}.png from an input file
+            // From: https://graphviz.org/doc/info/command.html#-O
+            ProcessBuilder pb = new ProcessBuilder(cmd);
+            File file = new File(filename + ".dot.png");
+            System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): exec command: " + pb.command());
+            pb.directory(file.getParentFile());
+            File log = new File(file.getParentFile(),"log");
+            if (log.exists())
+                log.delete();
+            pb.redirectErrorStream(true);
+            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
+            pb.start();
+            System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
         } catch (IOException e) {
             String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
             throw new IOException(err);
@@ -1174,22 +1184,20 @@ public class TPTP3ProofProcessor {
         String link = "graph" + sep + "proof.gif";
         String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
                 + sep + "sigma" + sep + "graph";
-        String filename = dir + sep + "proof";
+        File dirfile = new File(dir);
+        if (!dirfile.exists())
+            dirfile.mkdirs();
+        String filename = dirfile.getPath() + sep + "proof";
 
         try (Writer fw = new FileWriter(filename + ".dot"); PrintWriter pw = new PrintWriter(fw)) {
-            File dirfile = new File(dir);
-            if (!dirfile.exists()) {
-                dirfile.mkdir();
-            }
-            System.out.println("Graph.createGraphBody(): creating file at " + filename + ".dot");
+            System.out.println("TPTP3ProofProcessor.createProofDotGraph(): creating file: " + filename + ".dot");
 
             Set<String> result = new HashSet<>();
             result.addAll(createProofDotGraphBody());
             pw.println("digraph G {");
             pw.println("  rankdir=LR");
-            for (String s : result) {
+            for (String s : result)
                 pw.println(s);
-            }
             pw.println("}");
             createProofDotGraphImage(filename);
         } catch (IOException e) {
