@@ -6,7 +6,15 @@ FROM $IMAGE_ACCOUNT/sigma-ci:latest AS builder
 FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    graphviz
+    qemu-user-static \
+    binfmt-support \
+    graphviz \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install libc-bin separately to manage potential segmentation faults
+RUN apt-get install -y --no-install-recommends libc-bin
+RUN dpkg --configure -a
 
 COPY --from=builder \
     /usr/local/bin/e_ltb_runner /usr/local/bin/e_ltb_runner

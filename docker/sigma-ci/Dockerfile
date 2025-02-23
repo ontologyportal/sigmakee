@@ -86,6 +86,7 @@ RUN apt-get install -y --no-install-recommends \
 
 # Install libc-bin separately to manage potential segmentation faults
 RUN apt-get install -y --no-install-recommends libc-bin
+RUN dpkg --configure -a
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
