@@ -1,4 +1,4 @@
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
+FROM tomcat:9.0.97-jdk21-temurin-noble AS builder
 
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling the latest vampire w/ latest z3
@@ -73,20 +73,22 @@ FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
 # Ensure the package list is up to date
 RUN apt-get update
 
+# Install libc-bin separately to manage potential segmentation faults
+#RUN apt-get install -y --no-install-recommends libc-bin
+#RUN dpkg --configure -a
+
+# Install graphviz separately to manage potential segmentation faults
+RUN apt-get install -y --no-install-recommends graphviz
+
 # Install necessary packages with retries to handle intermittent issues
 RUN apt-get install -y --no-install-recommends \
     ant \
     ant-optional \
-    git \
-    qemu-user-static \
-    binfmt-support \
-    graphviz \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    git
 
 # Install libc-bin separately to manage potential segmentation faults
-RUN apt-get install -y --no-install-recommends libc-bin
-RUN dpkg --configure -a
+#RUN apt-get install -y --no-install-recommends libc-bin
+#RUN dpkg --configure -a
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
