@@ -158,7 +158,7 @@ jobs:
           path: /usr/local/tomcat/webapps/sigma.war
 
   build-sumo-ci:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
       - name: Checkout
