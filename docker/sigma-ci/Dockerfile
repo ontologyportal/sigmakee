@@ -70,11 +70,22 @@ RUN apt-get update && apt-get install -y --install-recommends \
 # runtime image.
 FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Ensure the package list is up to date
+RUN apt-get update
+
+# Install necessary packages with retries to handle intermittent issues
+RUN apt-get install -y --no-install-recommends \
     ant \
     ant-optional \
     git \
-    graphviz
+    qemu-user-static \
+    binfmt-support \
+    graphviz \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install libc-bin separately to manage potential segmentation faults
+RUN apt-get install -y --no-install-recommends libc-bin
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
