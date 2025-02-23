@@ -70,7 +70,7 @@
     =================
     -->
 
-    <target name="run" depends="compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
+    <target name="run" depends="clean,compile" description="Runs a main class with ${run.class} with ${run.args} set in build.properties">
         <java classname="${run.class}"
               classpathref="rcp"
               fork="true">
@@ -82,7 +82,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="run-selected-file-in-java" depends="compile">
+    <target name="run-selected-file-in-java" depends="clean,compile">
         <fail unless="run.class">Must set property 'run.class'</fail>
         <java classname="${run.class}"
               classpathref="rcp"
@@ -95,7 +95,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="password.service" depends="compile" description="Performs account management services">
+    <target name="password.service" depends="clean,compile" description="Performs account management services">
         <java classname="com.articulate.sigma.PasswordService"
               classpathref="rcp"
               fork="true">
@@ -134,7 +134,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="clean,prep.top.and.mid.config,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="clean,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -351,7 +351,7 @@
     ===================
     -->
 
-    <target name="debug-nb" depends="compile">
+    <target name="debug-nb" depends="clean,compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -367,7 +367,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="debug-selected-file-in-java" depends="compile">
+    <target name="debug-selected-file-in-java" depends="clean,compile">
         <fail unless="debug.class">Must set property 'debug.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
@@ -384,7 +384,7 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="debug.password.service" depends="compile">
+    <target name="debug.password.service" depends="clean,compile">
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="dcp"/>
         </nbjpdastart>
@@ -506,7 +506,7 @@
     =====
     -->
 
-    <target name="dist" depends="compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
+    <target name="dist" depends="clean,compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
