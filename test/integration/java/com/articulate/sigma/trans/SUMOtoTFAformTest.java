@@ -395,7 +395,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(instance ?ELEMENT ?CLASS))) (exists (?ITEM) (?REL @ROW ?ITEM))))))");
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.testVariableArity(): result: " + result);
+        System.out.println("result: " + result);
         String expected = "! [V__REL : $i] : (((s__instance(V__REL, s__TotalValuedRelation) & " +
                 "s__instance(V__REL, s__Predicate)) => ( ? [V__VALENCE:$int] : " +
                 "((s__instance(V__REL, s__Relation) & s__valence__2In(V__REL, V__VALENCE) & " +
@@ -434,7 +434,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "(instance ?ELEMENT ?CLASS))) (exists (?ITEM) (stringLength @ROW ?ITEM))))))");
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.testVariableArity2(): actual: " + result);
+        System.out.println("actual: " + result);
         String expected = "((s__instance(s__stringLength__m, s__TotalValuedRelation) & " +
                 "s__instance(s__stringLength__m, s__Predicate)) => ( ? [V__VALENCE:$int] : " +
                 "((s__instance(s__stringLength__m, s__Relation) & " +
@@ -500,7 +500,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
                 "              (greaterThan__1Ra2Ra ?ROW1 ?ITEM))))))))");
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.testPredVarArity(): actual: " + result);
+        System.out.println("actual: " + result);
         String expected = "! [V__ROW1 : $rat] : (((s__instance(s__greaterThan__1Ra2Ra__m, s__TotalValuedRelation) & " +
                 "s__instance(s__greaterThan__1Ra2Ra__m, s__Predicate)) => ( ? [V__VALENCE:$int] : " +
                 "(($greater(V__VALENCE ,0) & (s__instance(s__greaterThan__1Ra2Ra__m, s__Relation) & " +
@@ -562,7 +562,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.testRemoveNumInst(): actual: " + result);
+        System.out.println("actual: " + result);
         String expected = "! [V__ROW : $i] : (((s__instance(s__initialList__2Ra__m, s__TotalValuedRelation) & s__instance(s__initialList__2Ra__m, s__Predicate)) => ( ? [V__VALENCE:$int] : ((s__instance(s__initialList__2Ra__m, s__Relation) & s__valence__2In(s__initialList__2Ra__m, V__VALENCE) & ( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__initialList__2Ra__m, V__NUMBER, V__CLASS) & equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn(V__ROW), V__NUMBER))) => s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$rat] : (s__initialList__2Ra(V__ROW, V__ITEM))))))) & (( ? [V__VALENCE:$int] : ((s__instance(s__initialList__2Ra__m, s__Relation) & s__valence__2In(s__initialList__2Ra__m, V__VALENCE) & ( ! [V__NUMBER:$int, V__ELEMENT:$i, V__CLASS:$i] : (($less(V__NUMBER ,V__VALENCE) & s__domain__2In(s__initialList__2Ra__m, V__NUMBER, V__CLASS) & equal(V__ELEMENT ,s__ListOrderFn__2InFn(s__ListFn(V__ROW), V__NUMBER))) => s__instance(V__ELEMENT, V__CLASS))) => ( ? [V__ITEM:$rat] : (s__initialList__2Ra(V__ROW, V__ITEM)))))) => (s__instance(s__initialList__2Ra__m, s__TotalValuedRelation) & s__instance(s__initialList__2Ra__m, s__Predicate))))";
         System.out.println("expect: " + expected);
         System.out.println("equal: " + expected.equals(result));
@@ -593,7 +593,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
-        System.out.println("SUMOtoTFAformTest.testInstNum(): actual: " + result);
+        System.out.println("actual: " + result);
         //String expected = "! [V__Q2 : $i,V__U : $i,V__I1 : $real,V__I2 : $real,V__Q1 : $i] : " +
         //        "((s__instance(s__equal__1Re2Re__m, s__RelationExtendedToQuantities) & V__Q1 = " +
         //        "s__MeasureFn__1ReFn(V__I1, V__U) & V__Q2 = s__MeasureFn__1ReFn(V__I2, V__U) & " +

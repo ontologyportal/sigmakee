@@ -1,4 +1,4 @@
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
+FROM tomcat:9.0.97-jdk21-temurin-noble AS builder
 
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling the latest vampire w/ latest z3
@@ -68,8 +68,9 @@ RUN apt-get update && apt-get install -y --install-recommends \
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
+FROM tomcat:9.0.97-jdk21-temurin-noble AS runtime
 
+# Ensure the package list is up to date
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ant \
     ant-optional \

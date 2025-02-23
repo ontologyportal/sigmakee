@@ -58,8 +58,7 @@ if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
 }
 
 if (!KBmanager.initialized) {
-    // Here would be the place to set rapid (threaded) KB processing
-    SUMOKBtoTPTPKB.rapidParsing = true;
+    // Entry point from the web app into SigmaKEE
     System.out.println("Prelude.jsp: SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
     mgr.initializeOnce(); // <- first call for KB initialization at startup 2/17/25 (tdn)
     System.out.println("Prelude.jsp: initializing.  Redirecting to init.jsp.");

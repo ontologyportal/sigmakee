@@ -497,10 +497,10 @@ public class KIF {
         Exception exThr = null;
         this.file = new File(fname);
         if (!this.file.exists()) {
-            String errString =  " error file " + fname + "does not exist";
+            String errString =  " error file " + fname + " does not exist";
             KBmanager.getMgr()
                     .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
-            System.out.println("Error in KIF.readFile(): " + errString);
+            System.err.println("Error in KIF.readFile(): " + errString);
             return;
         }
         this.filename = file.getCanonicalPath();

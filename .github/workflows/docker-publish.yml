@@ -1,4 +1,4 @@
-name: Docker
+name: Docker publish sigma-ci
 
 # This workflow uses actions that are not certified by GitHub.
 # They are provided by a third-party and are governed by
@@ -20,7 +20,9 @@ env:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    # Previous runner due to seg. faults (2/25) when building Vampire
+#    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4

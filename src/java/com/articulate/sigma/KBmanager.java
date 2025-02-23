@@ -119,19 +119,19 @@ public class KBmanager implements Serializable {
         File configFile = new File(kbDir + File.separator + "config.xml");
         Date configDate = new Date(configFile.lastModified());
         File serfile = new File(kbDir + File.separator + "kbmanager.ser");
-        Date saveDate = new Date(serfile.lastModified());
-        System.out.println("KBmanager.serializedOld(config): " + serfile.getName() + " save date: " + saveDate.toString());
-        if (saveDate.compareTo(configDate) < 0)
+        Date kbserDate = new Date(serfile.lastModified());
+        System.out.println("KBmanager.serializedOld(config): " + serfile.getName() + " save date: " + kbserDate.toString());
+        if (kbserDate.compareTo(configDate) < 0)
             return true;
         List<List<String>> kbFilenames = kbFilenamesFromXML(configuration);
         File file;
-        Date fileDate;
+        Date kifDate;
         for (List<String> thekb : kbFilenames) { // iterate through the kbs
             for (String f : thekb) { // iterate through the constituents
                 file = new File(f);
-                fileDate = new Date(file.lastModified());
-                System.out.println("serializedOld(): file " + file.getName() + " was saved on " + fileDate);
-                if (saveDate.compareTo(fileDate) < 0) {
+                kifDate = new Date(file.lastModified());
+                System.out.println("serializedOld(): file " + file.getName() + " was saved on " + kifDate);
+                if (kbserDate.compareTo(kifDate) < 0) {
                     return true;
                 }
             }

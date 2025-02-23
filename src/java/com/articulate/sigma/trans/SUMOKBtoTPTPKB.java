@@ -21,7 +21,7 @@ public class SUMOKBtoTPTPKB {
     public static boolean removeStrings = true;
 
     /** Flag to enable rapid parsing via multiple threads coordinated by an ExecutorService */
-    public static boolean rapidParsing = false;
+    public static boolean rapidParsing = true;
 
     public static boolean debug = false;
 
@@ -729,7 +729,6 @@ public class SUMOKBtoTPTPKB {
      */
     public static void main(String[] args) {
 
-        SUMOKBtoTPTPKB.rapidParsing = true; // TODO: write algo. to set this from the command line and show in printHelp
         System.out.println("SUMOKBtoTPTPKB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
         KBmanager.getMgr().initializeOnce();
         SUMOKBtoTPTPKB skbtptpkb = new SUMOKBtoTPTPKB();

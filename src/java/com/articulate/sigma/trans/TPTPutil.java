@@ -21,7 +21,6 @@ import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -306,7 +305,7 @@ public class TPTPutil {
                     String query = "(";
                     StringBuilder answerVars = new StringBuilder("");
                     System.out.println("input: " + lines + "\n");
-                    tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
+                    tpp.parseProofOutput(lines, query, kb,answerVars);
                     System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
                     System.out.println("TPTPutil.main(): showing only source axioms ");
                     Formula f;

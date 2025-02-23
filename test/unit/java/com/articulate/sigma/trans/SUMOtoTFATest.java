@@ -23,7 +23,6 @@ public class SUMOtoTFATest extends UnitTestBase {
     public static void init() {
 
         System.out.println("============ SUMOtoTFATest.init()");
-        SUMOtoTFAform.initOnce();
         System.out.println("SUMOtoTFATest.init(): " + SUMOtoTFAform.numericConstantValues);
         SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
@@ -730,7 +729,6 @@ public class SUMOtoTFATest extends UnitTestBase {
         System.out.println("\n========= test testAvgWork ==========\n");
 
         kb.addConstituent(KBmanager.getMgr().getPref("kbDir") + "/Demographics.kif");
-        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
         if (!kb.terms.contains("avgWorkHours")) {
             System.out.println("test6AvgWork(): Demographics.kif not loaded");
             return;
@@ -752,7 +750,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         if (expectedRes.equals(actualRes.trim()))
             System.out.println("testAvgWork(): Success!");
         else
-            System.out.println("testAvgWork(): fail");
+            System.err.println("testAvgWork(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 
@@ -772,7 +770,7 @@ public class SUMOtoTFATest extends UnitTestBase {
         if (expectedRes.equals(actualRes.trim()))
             System.out.println("testComposeSuffix(): Success!");
         else
-            System.out.println("testComposeSuffix(): fail");
+            System.err.println("testComposeSuffix(): fail");
         assertEquals(expectedRes, actualRes.trim());
     }
 }
