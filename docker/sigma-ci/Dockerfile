@@ -68,27 +68,14 @@ RUN apt-get update && apt-get install -y --install-recommends \
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
+FROM tomcat:9.0.97-jdk21-temurin-noble AS runtime
 
 # Ensure the package list is up to date
-RUN apt-get update
-
-# Install libc-bin separately to manage potential segmentation faults
-#RUN apt-get install -y --no-install-recommends libc-bin
-#RUN dpkg --configure -a
-
-# Install graphviz separately to manage potential segmentation faults
-RUN apt-get install -y --no-install-recommends graphviz
-
-# Install necessary packages with retries to handle intermittent issues
-RUN apt-get install -y --no-install-recommends \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ant \
     ant-optional \
-    git
-
-# Install libc-bin separately to manage potential segmentation faults
-#RUN apt-get install -y --no-install-recommends libc-bin
-#RUN dpkg --configure -a
+    git \
+    graphviz
 
 COPY --from=builder \
     /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
