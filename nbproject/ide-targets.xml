@@ -624,4 +624,11 @@
         <echo message="${vamp.out}"/>
     </target>
 
+    <target name="run.dot" depends="init" description="Run the GraphViz image producer on a *.dot file">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="${dot.cmd} ${dot.args}"/>
+        </exec>
+    </target>
+
 </project>
