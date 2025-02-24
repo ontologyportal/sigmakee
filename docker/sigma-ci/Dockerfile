@@ -22,7 +22,7 @@ RUN apt-get update && apt-get install -y --install-recommends \
     python3 ;\
     wget $E_PROVER && tar xf E.tgz ;\
     cd E ;\
-    ./configure && make -j2 ;\
+    ./configure && make -j`nproc` ;\
     cd .. ;\
     wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
     git clone $VAMPIRE_GIT ;\
@@ -89,7 +89,7 @@ COPY --from=builder \
 
 #COPY --from=builder \
 #    /usr/local/tomcat/vampire-4.9casc2024/vampire /usr/local/bin/vampire
-#
+
 #COPY --from=builder \
 #    /usr/local/tomcat/vampire-4.9casc2024/z3/build/libz3.* /usr/local/bin/
 
