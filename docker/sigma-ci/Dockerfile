@@ -1,11 +1,15 @@
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS builder
+FROM tomcat:9.0.97-jdk21-temurin-noble AS builder
 
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling the latest vampire w/ latest z3
 
+# Latest Vampire
+ARG VAMPIRE_GIT='https://github.com/vprover/vampire'
+
 # Here, we are utilizing a known Vampire build w/ Z3 matched to that build
-ARG VAMPIRE_GIT='https://github.com/vprover/vampire/archive/refs/tags/v4.9casc2024.tar.gz'
-ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
+#ARG VAMPIRE_GIT='https://github.com/vprover/vampire/archive/refs/tags/v4.9casc2024.tar.gz'
+#ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
+
 # Latest E Theorem Prover (2024-05-01)
 ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 ARG WORD_NET='https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
@@ -21,21 +25,21 @@ RUN apt-get update && apt-get install -y --install-recommends \
     ./configure && make -j2 ;\
     cd .. ;\
     wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
-    git clone https://github.com/vprover/vampire ;\
+    git clone $VAMPIRE_GIT ;\
     cd vampire ;\
     git submodule update --init ;\
     mkdir build ;\
     mkdir -p z3/build && cd z3/build ;\
     cmake .. -DZ3_SINGLE_THREADED=1 -DCMAKE_BUILD_TYPE=Release ;\
-    make -j2 ;\
+    make -j`nproc` ;\
     cd ../../build ;\
     cmake .. ;\
-    make -j2 ;\
+    make -j`nproc` ;\
     cd .. ;\
     cp build/vampire vampire ;\
     ./checks/sanity vampire
 
-# For a specific version of Vampire and z3
+# For a specific version of Vampire and z3 using CLANG
 #RUN apt update && apt install -y --install-recommends \
 #    build-essential \
 #    clang \
@@ -68,8 +72,9 @@ RUN apt-get update && apt-get install -y --install-recommends \
 
 #################################################
 # runtime image.
-FROM tomcat:9.0.97-jdk21-temurin-jammy AS runtime
+FROM tomcat:9.0.97-jdk21-temurin-noble AS runtime
 
+# Ensure the package list is up to date
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ant \
     ant-optional \

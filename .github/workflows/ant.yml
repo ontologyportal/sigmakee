@@ -1,6 +1,6 @@
 # This workflow will build a Java project with Ant
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
-name: Java CI with Ant
+name: Java CI with Ant / Build sumo-ci
 
 on:
   push:
@@ -81,10 +81,10 @@ jobs:
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
         working-directory: ./sigmakee
         run: |
-          sed -i "s|/home/apease/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
-          sed -i "s|/home/apease/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
-          sed -i "s|/home/apease/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
-          sed -i "s|/home/apease/workspace/vampire/vampire|/usr/local/bin/vampire|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
+          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
 
       - name: Run unit tests
         env:
@@ -107,7 +107,7 @@ jobs:
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
-          sed -i "s|/home/theuser/workspace/vampire/vampire|/usr/local/bin/vampire|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_HOME/KBs/config.xml
           sed -i '/<kb name/,/<\/kb>/d' $SIGMA_HOME/KBs/config.xml
 
       - name: Setup KB for integration tests
@@ -188,7 +188,7 @@ jobs:
         run: |
           ls .
           sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser/workspace/vampire/vampire|/usr/local/bin/vampire|g" ./sigmakee/config.xml
+          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" ./sigmakee/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" ./sigmakee/config.xml
           cp ./sigmakee/config.xml ./sigmakee-runtime/KBs
 

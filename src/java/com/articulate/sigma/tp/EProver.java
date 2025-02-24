@@ -439,7 +439,7 @@ public class EProver {
             EProver eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
                     KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
             System.out.println("------------- INFO in EProver.main() completed init of E --------");
-            System.out.println("Result: " + eprover.submitQuery("(subclass ?X Object)",kb));
+            System.out.println("Result:\n " + eprover.submitQuery("(subclass ?X Object)",kb));
             eprover.terminate();
         }
         catch (IOException e) {

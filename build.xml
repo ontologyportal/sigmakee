@@ -434,13 +434,16 @@
     </target>
 
     <!-- When the SUMO KB files get updated, do this frequently -->
-    <target name="refresh.KBs" depends="update.sumo" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
+    <target name="refresh.kbs" depends="update.sumo" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
         <mkdir dir="${user.home}/.${web.app.name}"/>
         <chmod dir="${user.home}/.${web.app.name}" perm="ugo+rw" includes="**/*"/>
         <mkdir dir="${user.home}/.${web.app.name}/KBs"/>
         <copy todir="${user.home}/.${web.app.name}/KBs">
             <fileset dir="${kbs.home}">
                 <exclude name=".github/**"/>
+                <exclude name="SimpleFacts/**"/>
+                <exclude name="mappings/**"/>
+                <exclude name="tests/**"/>
             </fileset>
         </copy>
     </target>
@@ -586,7 +589,7 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
-        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser/workspace/vampire/vampire" value="${programs.dir}/vampire/build/vampire"/>
+        <replace file="${user.home}/.${web.app.name}/KBs/config.xml" token="/home/theuser/Programs/vampire/build/vampire" value="${programs.dir}/vampire/build/vampire"/>
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary -->
