@@ -1,6 +1,21 @@
 #!/bin/bash -e
 
-UNAME=$( command -v uname)
+UNAME=$(command -v uname)
+file=$1
+
+function nix {
+    sed -i 's/.*$to_real.*//g' $file
+    sed -i 's/.*$remainder_t.*//g' $file
+    sed -i 's/.*$quotient_e.*//g' $file
+}
+
+# Prepending the string expression with an empty string: '' lets it work on
+# macOS by mitigating unknown label errors
+function mac {
+    sed -i '' 's/.*$to_real.*//g' $file
+    sed -i '' 's/.*$remainder_t.*//g' $file
+    sed -i '' 's/.*$quotient_e.*//g' $file
+}
 
 case $( "${UNAME}" | tr '[:upper:]' '[:lower:]') in
   linux*)
@@ -17,20 +32,6 @@ case $( "${UNAME}" | tr '[:upper:]' '[:lower:]') in
     nix
     ;;
   *)
-    printf 'unknown o/s\n'
+    printf 'unsupported o/s\n'
     ;;
 esac
-
-nix() {
-    sed -i 's/.*$to_real.*//g' $1
-    sed -i 's/.*$remainder_t.*//g' $1
-    sed -i 's/.*$quotient_e.*//g' $1
-}
-
-mac() {
-    # Prepending the string expression with an empty string: '' lets it work on
-    # macOS by mitigating unknown label errors
-    sed -i '' 's/.*$to_real.*//g' $1
-    sed -i '' 's/.*$remainder_t.*//g' $1
-    sed -i '' 's/.*$quotient_e.*//g' $1
-}
