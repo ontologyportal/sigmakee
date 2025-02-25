@@ -25,27 +25,29 @@
   <preference name="sumokbname" value="SUMO" />
   <preference name="systemsDir" value="/home/theuser" />
   <preference name="termFormats" value="no" />
-  <preference name="testOutputDir" value="/var/tomcat/apache-tomcat-9.0.96/webapps/sigma/tests" />
+  <preference name="testOutputDir" value="/usr/local/tomcat/apache-tomcat-9.0.97/webapps/sigma/tests" />
   <preference name="TPTPDisplay" value="no" />
   <preference name="tptpHomeDir" value="/home/theuser" />
   <preference name="TPTP" value="yes" />
   <preference name="typePrefix" value="yes" />
   <preference name="userBrowserLimit" value="25" />
-  <preference name="vampire" value="/home/theuser/workspace/vampire/vampire" />
+  <preference name="vampire" value="/home/theuser/Programs/vampire/build/vampire" />
   <kb name="SUMO" >
     <constituent filename="english_format.kif" />
     <constituent filename="domainEnglishFormat.kif" />
-    <constituent filename="Merge.kif" />
-    <constituent filename="Mid-level-ontology.kif" />
     <constituent filename="ArabicCulture.kif" />
+    <constituent filename="Anatomy.kif" />
+    <constituent filename="arteries.kif" />
+    <constituent filename="Biography.kif" />
     <constituent filename="Cars.kif" />
     <constituent filename="Catalog.kif" />
     <constituent filename="Communications.kif" />
     <constituent filename="CountriesAndRegions.kif" />
     <constituent filename="Dining.kif" />
     <constituent filename="Economy.kif" />
-    <!-- constituent filename="emotion.kif" / -->
+    <constituent filename="emotion.kif" />
     <constituent filename="engineering.kif" />
+    <constituent filename="Facebook.kif" />
     <constituent filename="FinancialOntology.kif" />
     <constituent filename="Food.kif" />
     <constituent filename="Geography.kif" />
@@ -53,7 +55,11 @@
     <constituent filename="Hotel.kif" />
     <constituent filename="Justice.kif" />
     <constituent filename="Languages.kif" />
+    <constituent filename="Law.kif" />
     <constituent filename="Media.kif" />
+    <constituent filename="Medicine.kif" />
+    <constituent filename="Merge.kif" />
+    <constituent filename="Mid-level-ontology.kif" />
     <constituent filename="MilitaryDevices.kif" />
     <constituent filename="Military.kif" />
     <constituent filename="MilitaryPersons.kif" />
@@ -61,13 +67,16 @@
     <constituent filename="Music.kif" />
     <constituent filename="naics.kif" />
     <constituent filename="People.kif" />
+    <constituent filename="pictureList.kif" />
+    <constituent filename="pictureList-ImageNet.kif" />
     <constituent filename="QoSontology.kif" />
     <constituent filename="Sports.kif" />
     <constituent filename="TransnationalIssues.kif" />
     <constituent filename="Transportation.kif" />
     <constituent filename="TransportDetail.kif" />
+    <constituent filename="UXExperimentalTerms.kif" />
     <constituent filename="VirusProteinAndCellPart.kif" />
+    <constituent filename="Weather.kif" />
     <constituent filename="WMD.kif" />
   </kb>
 </configuration>
-
