@@ -1143,20 +1143,21 @@ public class TPTP3ProofProcessor {
      */
     private void createProofDotGraphImage(String filename) throws IOException {
 
-        try {
-            String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
+        String imageExt = "svg";
+        File file = new File(filename + ".dot." + imageExt);
 
-            List<String> cmd = new ArrayList<>();
-            cmd.add(graphVizDir + File.separator + "dot");
-            cmd.add("-Tsvg");
-            cmd.add("-Kosage");
-            cmd.add("-O");
-            cmd.add(filename + ".dot");
+        List<String> cmd = new ArrayList<>();
+        cmd.add(graphVizDir + File.separator + "dot");
+        cmd.add("-T" + imageExt);
+        cmd.add("-Kosage");
+        cmd.add("-O");
+        cmd.add(filename + ".dot");
+        try {
 
             // Build a ${graph}.png from an input file
             // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(cmd);
-            File file = new File(filename + ".dot.png");
             System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): exec command: " + pb.command());
             pb.directory(file.getParentFile());
             File log = new File(file.getParentFile(),"log");
