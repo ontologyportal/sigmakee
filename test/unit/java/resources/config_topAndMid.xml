@@ -25,13 +25,13 @@
   <preference name="sumokbname" value="SUMO" />
   <preference name="systemsDir" value="/home/theuser" />
   <preference name="termFormats" value="no" />
-  <preference name="testOutputDir" value="/var/tomcat/apache-tomcat-9.0.97/webapps/sigma/tests" />
+  <preference name="testOutputDir" value="/usr/local/tomcat/apache-tomcat-9.0.97/webapps/sigma/tests" />
   <preference name="TPTPDisplay" value="no" />
   <preference name="tptpHomeDir" value="/home/theuser" />
   <preference name="TPTP" value="yes" />
   <preference name="typePrefix" value="yes" />
   <preference name="userBrowserLimit" value="25" />
-  <preference name="vampire" value="/home/theuser/workspace/vampire/vampire" />
+  <preference name="vampire" value="/home/theuser/Programs/vampire/build/vampire" />
   <kb name="SUMO" >
     <constituent filename="Merge.kif" />
     <constituent filename="Mid-level-ontology.kif" />
