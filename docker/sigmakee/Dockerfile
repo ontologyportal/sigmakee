@@ -20,7 +20,12 @@ COPY --from=builder \
 COPY --from=builder \
     /usr/local/bin/libz3.* /usr/local/bin/
 
-COPY ./sigmakee-runtime /root/sigmakee-runtime/
+# Just the essentials
+COPY ./sigmakee-runtime/config.xml /root/sigmakee-runtime/
+COPY ./sigmakee-runtime/*.kif /root/sigmakee-runtime/
+COPY ./sigmakee-runtime/Translations /root/sigmakee-runtime/
+COPY ./sigmakee-runtime/WordNetMappings /root/sigmakee-runtime/
+COPY ./sigmakee-runtime/development /root/sigmakee-runtime/
 
 COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
 
