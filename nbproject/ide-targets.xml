@@ -615,7 +615,7 @@
     =========
     -->
 
-    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.tptp has already been generated">
+    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.* has already been generated">
         <exec executable="sh">
             <arg value="-c"/>
             <arg value="${programs.dir}/vampire/build/vampire ${vamp.args}"/>
