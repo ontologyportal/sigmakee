@@ -359,15 +359,8 @@ public class Vampire {
                 StringBuilder answerVars = new StringBuilder("?X ?Y ?Z");
                 System.out.println("input: " + vampire.output + "\n");
                 tpp.parseProofOutput(vampire.output, query, kb, answerVars);
-
-                String sep = File.separator;
-                dir = System.getenv("CATALINA_HOME") + sep + "webapps"
-                + sep + "sigma" + sep + "graph";
-                File webGphDir = new File(dir);
-                if (!webGphDir.exists())
-                    webGphDir.mkdirs();
                 tpp.createProofDotGraph();
-                
+
                 System.out.println("Vampire.main(): " + tpp.proof.size() + " steps ");
                 System.out.println("Vampire.main() bindings: " + tpp.bindingMap);
                 System.out.println("Vampire.main() skolems: " + tpp.skolemTypes);
