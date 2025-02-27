@@ -23,9 +23,9 @@ COPY --from=builder \
 # Just the essentials
 COPY ./sigmakee-runtime/KBs/config.xml /root/sigmakee-runtime/KBs/
 COPY ./sigmakee-runtime/KBs/*.kif /root/sigmakee-runtime/KBs/
-COPY ./sigmakee-runtime/KBs/Translations /root/sigmakee-runtime/KBs/
-COPY ./sigmakee-runtime/KBs/WordNetMappings /root/sigmakee-runtime/KBs/
-COPY ./sigmakee-runtime/KBs/development /root/sigmakee-runtime/KBs/
+COPY ./sigmakee-runtime/KBs/Translations /root/sigmakee-runtime/KBs/Translations/
+COPY ./sigmakee-runtime/KBs/WordNetMappings /root/sigmakee-runtime/KBs/WordNetMappings/
+COPY ./sigmakee-runtime/KBs/development /root/sigmakee-runtime/KBs/development/
 
 # Not necessary since everything is in the WAR
 COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
