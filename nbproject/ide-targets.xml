@@ -615,7 +615,38 @@
     =========
     -->
 
-    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.* has already been generated">
+    <!-- Check that MILO is loaded for the config.xml. If not, run
+         prep.top.and.mid.config -->
+    <target name="run.ontology.process">
+        <!-- Generate TPTP by translating the KB to FOF or TFF -->
+        <antcall target="run">
+            <!-- FOF -->
+            <param name="run.class"
+                   value="com.articulate.sigma.trans.SUMOKBtoTPTPKB"/>
+        </antcall>
+        <antcall target="run">
+            <!-- TFF -->
+            <param name="run.class"
+                   value="com.articulate.sigma.trans.SUMOKBtoTFAKB"/>
+        </antcall>
+        <!-- Run Vampire on the tptp saving proof to file -->
+        <!-- Ensure either *.fof or *.tff is set for the tptp.ext prop in
+             build.properties as well as desired vamp.time -->
+        <antcall target="run.vampire.on.tptp"/>
+        <!-- Run analysis on the proof -->
+        <antcall target="run">
+            <!-- FOF -->
+            <param name="run.class"
+                   value="com.articulate.sigma.trans.TPTP3ProofProcessor"/>
+            <param name="run.args"
+                   value="-f ${vamp.out.file}"/>
+        </antcall>
+        <!-- View the proof -->
+        <antcall target="view.proof.image"/>
+    </target>
+
+    <target name="run.vampire.on.tptp" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.* has already been generated">
+        <echo message="Running vampire with: [${vamp.args}]"/>
         <exec executable="sh">
             <arg value="-c"/>
             <arg value="${programs.dir}/vampire/build/vampire ${vamp.args}"/>
@@ -625,14 +656,15 @@
     </target>
 
     <target name="run.dot" depends="init" description="Run the GraphViz image producer on a *.dot file">
+        <echo message="Running dot with: [${dot.args}]"/>
         <exec executable="sh">
             <arg value="-c"/>
             <arg value="${dot.cmd} ${dot.args}"/>
         </exec>
-        <antcall target="open.dot.image"/>
+        <antcall target="view.proof.image"/>
     </target>
 
-    <target name="view.dot.image" depends="init" description="Open the image produces by GraphViz">
+    <target name="view.proof.image" depends="init" description="View the proof image produced by GraphViz">
         <exec executable="sh" osfamily="mac">
             <arg value="-c"/>
             <arg value="open -a 'Google Chrome' ${dot.image.file}"/>
