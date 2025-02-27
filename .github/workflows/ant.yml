@@ -158,7 +158,7 @@ jobs:
           name: sigma-webapp
           path: /usr/local/tomcat/webapps/sigma.war
 
-  build-sumo-ci:
+  build-sumo-ci-and-sigmakee:
     runs-on: ubuntu-latest
     needs: build
     steps:

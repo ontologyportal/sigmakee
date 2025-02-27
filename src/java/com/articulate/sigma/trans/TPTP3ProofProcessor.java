@@ -1150,7 +1150,7 @@ public class TPTP3ProofProcessor {
         List<String> cmd = new ArrayList<>();
         cmd.add(graphVizDir + File.separator + "dot");
         cmd.add("-T" + imageExt);
-        cmd.add("-Kosage");
+        cmd.add("-Kdot");
         cmd.add("-O");
         cmd.add(filename + ".dot");
         try {
@@ -1484,10 +1484,10 @@ public class TPTP3ProofProcessor {
                     tpp.parseProofOutput(lines, query, kb, answerVars);
                     tpp.createProofDotGraph();
                     System.out.println("TPTP3ProofProcessor.main(): " + tpp.proof.size() + " steps ");
-                    Formula f;
+                    Formula f = new Formula();
                     for (TPTPFormula step : tpp.proof) {
                         System.out.println(":: " + step);
-                        f = new Formula(step.sumo);
+                        f.setFormula(step.sumo);
                         System.out.println(f.format("", "  ", "\n"));
                     }
                     System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);

@@ -564,7 +564,7 @@
         <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>
     </target>
     <target name="thorough.clean" depends="clean">
-        <antcall target="kb.clean"/>
+        <antcall target="clean.kbs"/>
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
@@ -615,7 +615,7 @@
     =========
     -->
 
-    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.tptp has already been generated">
+    <target name="run.vampire" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.* has already been generated">
         <exec executable="sh">
             <arg value="-c"/>
             <arg value="${programs.dir}/vampire/build/vampire ${vamp.args}"/>
@@ -628,6 +628,14 @@
         <exec executable="sh">
             <arg value="-c"/>
             <arg value="${dot.cmd} ${dot.args}"/>
+        </exec>
+        <antcall target="open.dot.image"/>
+    </target>
+
+    <target name="view.dot.image" depends="init" description="Open the image produces by GraphViz">
+        <exec executable="sh" osfamily="mac">
+            <arg value="-c"/>
+            <arg value="open -a 'Google Chrome' ${dot.image.file}"/>
         </exec>
     </target>
 

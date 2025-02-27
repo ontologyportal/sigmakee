@@ -49,7 +49,7 @@ RUN apt-get update && apt-get install -y --install-recommends \
 #    wget $E_PROVER &&\
 #    tar xf E.tgz ;\
 #    cd E ;\
-#    ./configure && make CC="clang" CXX="clang++" ;\
+#    ./configure && make -j`nproc` CC="clang" CXX="clang++" ;\
 #    cd .. ;\
 #    wget $WORD_NET &&\
 #    tar xf WordNet-3.0.tar.gz ;\
