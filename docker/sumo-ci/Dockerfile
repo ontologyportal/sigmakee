@@ -20,7 +20,7 @@ COPY --from=builder \
 COPY --from=builder \
     /usr/local/bin/libz3.* /usr/local/bin/
 
-COPY ./sigmakee-runtime/KBs/config.xml /root/sigmakee-runtime/
+COPY ./sigmakee-runtime/KBs/config.xml /root/sigmakee-runtime/KBs/
 
 COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
 
