@@ -1150,7 +1150,7 @@ public class TPTP3ProofProcessor {
         List<String> cmd = new ArrayList<>();
         cmd.add(graphVizDir + File.separator + "dot");
         cmd.add("-T" + imageExt);
-        cmd.add("-Kosage");
+        cmd.add("-Kdot");
         cmd.add("-O");
         cmd.add(filename + ".dot");
         try {
