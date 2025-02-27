@@ -632,10 +632,10 @@
         <antcall target="open.dot.image"/>
     </target>
 
-    <target name="open.dot.image" depends="init" description="Open the image produces by GraphViz">
+    <target name="view.dot.image" depends="init" description="Open the image produces by GraphViz">
         <exec executable="sh" osfamily="mac">
             <arg value="-c"/>
-            <arg value="open -a Safari ${dot.image.file}"/>
+            <arg value="open -a 'Google Chrome' ${dot.image.file}"/>
         </exec>
     </target>
 
