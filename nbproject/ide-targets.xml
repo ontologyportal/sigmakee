@@ -629,6 +629,14 @@
             <arg value="-c"/>
             <arg value="${dot.cmd} ${dot.args}"/>
         </exec>
+        <antcall target="open.dot.image"/>
+    </target>
+
+    <target name="open.dot.image" depends="init" description="Open the image produces by GraphViz">
+        <exec executable="sh" osfamily="mac">
+            <arg value="-c"/>
+            <arg value="open -a Safari ${dot.image.file}"/>
+        </exec>
     </target>
 
 </project>
