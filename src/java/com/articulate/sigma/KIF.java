@@ -249,10 +249,10 @@ public class KIF {
                         // statement is to start. Check if a new statement
                         // has already been generated, otherwise report error
                         if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
-                            errStr = (errStart + " possible missed closing parenthesis near start line: " + f.startLine
-                                    + " end line " + f.endLine + " for formula " + expression.toString() + "\n and key "
-                                    + keySet.toString() + " keyset size " + keySet.size() + " exp length "
-                                    + expression.length() + " comment lines " + totalLinesForComments);
+                            errStr = (errStart + "\n\tPossible missed closing parenthesis near start line: " + f.startLine
+                                    + "end line " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
+                                    + keySet.toString() + " keyset size; " + keySet.size() + " exp length; "
+                                    + expression.length() + "\n\tcomment lines; " + totalLinesForComments);
                             errorSet.add(errStr);
                             throw new ParseException(errStr, f.startLine);
                         }
@@ -412,9 +412,9 @@ public class KIF {
             } while (st.ttype != StreamTokenizer.TT_EOF);
 
             if (!keySet.isEmpty() || expression.length() > 0) {
-                errStr = (errStart + ": Missed closing parenthesis near line: " + f.startLine +
-                        " for token " + st.sval + " and form " + f.getFormula() +
-                        " and expression " + expression + " and keySet " + keySet);
+                errStr = (errStart + ":\n\tMissed closing parenthesis near line: " + f.startLine +
+                        "\n\tfor token: " + st.sval + " and form: " + f.getFormula() +
+                        "\n\tand expression: " + expression + "\n\tand keySet: " + keySet);
                 errorSet.add(errStr);
                 throw new ParseException(errStr, f.startLine);
             }
