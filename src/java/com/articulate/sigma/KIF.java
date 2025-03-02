@@ -250,7 +250,7 @@ public class KIF {
                         // has already been generated, otherwise report error
                         if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
                             errStr = (errStart + "\n\tPossible missed closing parenthesis near start line: " + f.startLine
-                                    + "end line: " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
+                                    + " end line: " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
                                     + keySet.toString() + " keyset size: " + keySet.size() + " exp length: "
                                     + expression.length() + "\n\tcomment lines: " + totalLinesForComments);
                             errorSet.add(errStr);
