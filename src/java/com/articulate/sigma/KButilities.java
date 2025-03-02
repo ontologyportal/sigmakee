@@ -77,7 +77,7 @@ public class KButilities {
     /** *************************************************************
      */
     public static void clearErrors() {
-        errors = new TreeSet<>();
+        errors.clear();
     }
 
     /** *************************************************************
