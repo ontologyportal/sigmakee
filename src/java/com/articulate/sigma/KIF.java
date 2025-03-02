@@ -250,9 +250,9 @@ public class KIF {
                         // has already been generated, otherwise report error
                         if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
                             errStr = (errStart + "\n\tPossible missed closing parenthesis near start line: " + f.startLine
-                                    + "end line " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
-                                    + keySet.toString() + " keyset size; " + keySet.size() + " exp length; "
-                                    + expression.length() + "\n\tcomment lines; " + totalLinesForComments);
+                                    + "end line: " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
+                                    + keySet.toString() + " keyset size: " + keySet.size() + " exp length: "
+                                    + expression.length() + "\n\tcomment lines: " + totalLinesForComments);
                             errorSet.add(errStr);
                             throw new ParseException(errStr, f.startLine);
                         }
@@ -422,7 +422,7 @@ public class KIF {
         catch (IOException | ParseException ex) {
 //            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             String message = ex.getMessage();
-            warningSet.add("Warning in KIF.parse(Reader) " + message);
+            errorSet.add("Error in KIF.parse(Reader) " + message);
             ex.printStackTrace();
         }
         if (duplicateCount > 0) {
