@@ -21,6 +21,7 @@ import org.junit.runners.Suite;
     FormulaUtilTest.class,
     KBTest.class,
     KBcacheUnitTest.class,
+    KIFTest.class,
     KBmanagerInitTest.class,
     PredVarInstTest.class,
     RowVarTest.class
