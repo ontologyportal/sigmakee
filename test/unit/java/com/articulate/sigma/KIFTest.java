@@ -25,7 +25,7 @@ public class KIFTest extends UnitTestBase {
                   "(and\n" +
                   "(instance ?STH1 Physical)\n" +
                   "(holdsDuring ?T1\n" +
-                  "WhenFn(?STH!))\n" +
+                  "WhenFn(?STH!))\n" + // Illegal character
                   "(holdsDuring ?T2\n" +
                   "WhenFn(?STH2))\n" +
                   "(earlier ?T1 ?T2))))";
@@ -46,6 +46,7 @@ public class KIFTest extends UnitTestBase {
     @Test
     public void testParseStatement() throws IOException {
 
+        System.out.println("============= KIFTest.testParseStatement ==================");
         Set<String> set;
         try (Reader r = new StringReader(stmt)) {
             set = kif.parse(r);
