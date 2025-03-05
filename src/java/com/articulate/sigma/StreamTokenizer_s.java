@@ -323,7 +323,7 @@ public class StreamTokenizer_s {
      * in this tokenizer. It removes any special significance the
      * character has as a comment character, word component, string
      * delimiter, white space, or number character. When such a character
-     * is encountered by the parser, the parser treates it as a
+     * is encountered by the parser, the parser treats it as a
      * single-character token and sets <code>ttype</code> field to the
      * character value.
      *
