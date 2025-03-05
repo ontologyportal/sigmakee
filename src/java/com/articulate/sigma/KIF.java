@@ -344,7 +344,7 @@ public class KIF {
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
-                        expression = new StringBuilder();
+                        expression.setLength(0); // reset
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
@@ -424,7 +424,8 @@ public class KIF {
 //            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             String message = ex.getMessage();
             errorSet.add("Error in KIF.parse(Reader) " + message);
-            ex.printStackTrace();
+            if (ex instanceof IOException)
+                ex.printStackTrace(System.err);
         }
         if (duplicateCount > 0) {
             String warning = "WARNING in KIF.parse(Reader), " + duplicateCount + " duplicate statement"
