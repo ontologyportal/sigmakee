@@ -211,15 +211,15 @@ public class KIF {
         StringBuilder expression = new StringBuilder();
         int lastVal;
         Formula f = new Formula();
-        String errStart = "Parsing error in " + filename;
+        String errStart = "Parsing error in: " + ((filename==null) ? "Formula" : filename);
         String errStr = null;
         int duplicateCount = 0;
 
         if (r == null) {
             errStr = "No Input Reader Specified";
-            warningSet.add(errStr);
+            errorSet.add(errStr);
             System.err.println("Error in KIF.parse(): " + errStr);
-            return warningSet;
+            return errorSet;
         }
         try {
             count++;
@@ -234,7 +234,7 @@ public class KIF {
             // int lineStart = 0;
             boolean isEOL = false;
             List<String> list;
-            String key, fstr, validArgs;
+            String key, fstr, validArgs, com;
             do {
                 lastVal = st.ttype;
                 st.nextToken();
@@ -326,7 +326,8 @@ public class KIF {
                                     else if (!list.contains(f.getFormula()))
                                         list.add(f.getFormula());
                                 }
-                            } else {
+                            }
+                            else {
                                 list = new ArrayList<>();
                                 if (StringUtil.emptyString(f.getFormula())) {
                                     System.err.println(
@@ -357,7 +358,7 @@ public class KIF {
                     if (lastVal != 40) // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
-                    String com = st.sval;
+                    com = st.sval;
                     totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
                     expression.append(com);
                     expression.append("\"");
@@ -405,7 +406,7 @@ public class KIF {
                 else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow '`' in relaxed parse mode
                     expression.append(" `");
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    errStr = (errStart + ": Illegal character '" + st.sval + "' near line: " + f.startLine);
+                    errStr = (errStart + ": Illegal character: " + st);
                     errorSet.add(errStr);
                     throw new ParseException(errStr, f.startLine);
                 }
@@ -431,7 +432,7 @@ public class KIF {
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);
         }
-        return warningSet;
+        return errorSet;
     }
 
     /*****************************************************************
@@ -555,11 +556,10 @@ public class KIF {
     public String parseStatement(String formula) {
 
         boolean isError;
-        try (StringReader r = new StringReader(formula)) {
+        try (Reader r = new StringReader(formula)) {
             isError = !parse(r).isEmpty();
             if (isError) {
-                String msg = "Error parsing " + formula;
-                return msg;
+                return "Error parsing " + formula;
             }
         }
         catch (Exception e) {
