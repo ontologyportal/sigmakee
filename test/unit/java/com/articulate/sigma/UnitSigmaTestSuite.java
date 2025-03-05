@@ -22,6 +22,7 @@ import org.junit.runners.Suite;
     KBTest.class,
     KBcacheUnitTest.class,
     KIFTest.class,
+    KButilitiesTest.class,
     KBmanagerInitTest.class,
     PredVarInstTest.class,
     RowVarTest.class
