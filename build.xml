@@ -57,7 +57,7 @@
         <path id="compile.test.classpath">
             <path refid="compile.classpath"/>
             <pathelement location="${build.classes.dir}"/>
-            <pathelement path="${basedir}/lib/hamcrest-core-1.3.jar:${basedir}/lib/junit-4.13.2.jar"/>
+            <pathelement path="lib/hamcrest-core-1.3.jar:lib/junit-4.13.2.jar"/>
         </path>
         <path id="run.test.classpath">
             <path refid="compile.test.classpath"/>

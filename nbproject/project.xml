@@ -15,7 +15,7 @@ auxiliary.show.customizer.message=<message>
             <name>SigmaKEE</name>
             <properties>
                 <property-file>nbproject/private/private.properties</property-file>
-                <property-file>nbproject/build.properties</property-file>
+                <property-file>nbproject/project.properties</property-file>
             </properties>
             <folders>
                 <source-folder>

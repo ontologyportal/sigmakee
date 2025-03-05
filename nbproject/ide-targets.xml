@@ -9,7 +9,7 @@
 
     <property file="nbproject/private/private.properties"/>
     <import   file="../build.xml"/>
-    <property file="nbproject/build.properties"/>
+    <property file="nbproject/project.properties"/>
     <import   file="${catalina.base}/bin/catalina-tasks.xml"/>
 
     <path id="rcp">
