@@ -209,7 +209,7 @@ public class KIF {
 
         int mode = this.getParseMode();
         StringBuilder expression = new StringBuilder();
-        int lastVal;
+        int lastTtype;
         Formula f = new Formula();
         String errStart = "Parsing error in: " + ((filename==null) ? "Formula" : filename);
         String errStr = null;
@@ -236,7 +236,7 @@ public class KIF {
             List<String> list;
             String key, fstr, validArgs, com;
             do {
-                lastVal = st.ttype;
+                lastTtype = st.ttype;
                 st.nextToken();
                 //System.out.println("KIF.parse(): sval: " + st.sval);
                 //System.out.println("KIF.parse(): parenLevel: " + parenLevel);
@@ -281,7 +281,7 @@ public class KIF {
                             inConsequent = true;
                         }
                     }
-                    if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0))
+                    if ((parenLevel != 0) && (lastTtype != 40) && (expression.length() > 0))
                         expression.append(" "); // add back whitespace that ST removes
                     expression.append("(");
                 }
@@ -319,9 +319,9 @@ public class KIF {
                                 if (!formulaMap.keySet().contains(f.getFormula())) { // don't add keys if formula is already present
                                     list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.getFormula())) {
-                                        System.err.println("Error in KIF.parse(): Storing empty formula from line: "
-                                                + f.startLine);
+                                        errStr = (errStart + ": Storing empty formula from line: " + f.startLine);
                                         errorSet.add(errStr);
+                                        throw new ParseException(errStr, f.startLine);
                                     }
                                     else if (!list.contains(f.getFormula()))
                                         list.add(f.getFormula());
@@ -330,9 +330,9 @@ public class KIF {
                             else {
                                 list = new ArrayList<>();
                                 if (StringUtil.emptyString(f.getFormula())) {
-                                    System.err.println(
-                                            "Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
+                                    errStr = (errStart + ": Storing empty formula from line: " + f.startLine);
                                     errorSet.add(errStr);
+                                    throw new ParseException(errStr, f.startLine);
                                 }
                                 else if (!list.contains(f.getFormula()))
                                     list.add(f.getFormula());
@@ -355,7 +355,7 @@ public class KIF {
                 }
                 else if (st.ttype == 34) { // " - it's a string
                     st.sval = StringUtil.escapeQuoteChars(st.sval);
-                    if (lastVal != 40) // add back whitespace that ST removes
+                    if (lastTtype != 40) // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
                     com = st.sval;
@@ -367,7 +367,7 @@ public class KIF {
                 }
                 else if ((st.ttype == StreamTokenizer.TT_NUMBER) || // number
                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {
-                    if (lastVal != 40) // add back whitespace that ST removes
+                    if (lastTtype != 40) // add back whitespace that ST removes
                         expression.append(" ");
                     if (st.nval == 0)
                         expression.append(st.sval);
@@ -381,9 +381,9 @@ public class KIF {
                         inRule = true; // implications in statements aren't rules
                     if (parenLevel < 2) // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
-                    if (lastVal != 40) // add back whitespace that ST removes
+                    if (lastTtype != 40) // add back whitespace that ST removes
                         expression.append(" ");
-                    expression.append(String.valueOf(st.sval));
+                    expression.append(st.sval);
                     if (expression.length() > 64000) {
                         errStr = (errStart + ": Sentence over 64000 characters new line: " + f.startLine);
                         errorSet.add(errStr);
@@ -423,7 +423,7 @@ public class KIF {
         catch (IOException | ParseException ex) {
 //            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             String message = ex.getMessage();
-            errorSet.add("Error in KIF.parse(Reader) " + message);
+            System.err.println("Error in KIF.parse(Reader): " + message);
             if (ex instanceof IOException)
                 ex.printStackTrace(System.err);
         }
