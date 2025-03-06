@@ -2781,7 +2781,7 @@ public class KB implements Serializable {
                 error.append(" at line ").append(((ParseException) ex1).getErrorOffset());
             error.append(" in file ").append(canonicalPath);
             errors.add(error.toString());
-            System.err.println("Error in KB.addConstituent(): " + error.toString());
+            System.err.println("Error in KB.readConstituent(): " + error.toString());
             ex1.printStackTrace();
         }
         file.filename = filename;
