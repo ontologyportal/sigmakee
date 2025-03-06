@@ -613,7 +613,7 @@ public class KBcache implements Serializable {
             for (int j = i+1; j < size; j++) {
                 c2 = typeList.get(j);
                 if (checkDisjoint(kb,c1,c2)) {
-                    errors.add("disjoint classes " + c1 + " and " + c2);
+                    System.err.println("KBcache.checkDisjoint(): disjoint classes " + c1 + " and " + c2);
                     return true;
                 }
             }
@@ -643,18 +643,18 @@ public class KBcache implements Serializable {
         if (!StringUtil.emptyString(c1) && !StringUtil.emptyString(c2) && c1.endsWith("+") && !c2.endsWith("+") && !c2.endsWith("Class")) {
             String err = "KBcache.checkDisjoint(): mixing class and instance: " + c1 + ", " + c2;
             errors.add(err);
-            System.out.println(err);
+            System.err.println(err);
             return true;
         }
         if (!StringUtil.emptyString(c1) && !StringUtil.emptyString(c2) && c2.endsWith("+") && !c1.endsWith("+") && !c1.endsWith("Class")) {
             String err = "KBcache.checkDisjoint(): mixing class and instance: " + c1 + ", " + c2;
-            System.out.println(err);
+            System.err.println(err);
             errors.add(err);
             return true;
         }
         if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1)) {
             String err = "KBcache.checkDisjoint(): disjoint terms: " + c1 + ", " + c2;
-            System.out.println(err);
+            System.err.println(err);
             errors.add(err);
             return true;
         }
