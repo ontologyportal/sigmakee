@@ -30,7 +30,7 @@ public class KIFTest extends UnitTestBase {
                   "WhenFn(?STH2))\n" +
                   "(earlier ?T1 ?T2))))";
 
-    String stmt2 = "(WhenFn(?STH2))";
+    String stmt2 = "(WhenFn(?STH2))"; // args in parens
 
     KIF kif;
 
