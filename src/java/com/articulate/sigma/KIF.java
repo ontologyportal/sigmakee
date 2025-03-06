@@ -212,7 +212,7 @@ public class KIF {
         int lastTtype;
         Formula f = new Formula();
         String errStart = "Parsing error in: " + ((filename==null) ? "Formula" : filename);
-        String errStr = null;
+        String errStr;
         int duplicateCount = 0;
 
         if (r == null) {
