@@ -3,12 +3,12 @@ package com.articulate.sigma;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
-import java.util.HashSet;
 import java.util.Set;
 import org.junit.After;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
+import org.junit.Ignore;
 
 /**
  *
@@ -29,7 +29,13 @@ public class KIFTest extends UnitTestBase {
                   "(holdsDuring ?T2\n" +
                   "WhenFn(?STH2))\n" +
                   "(earlier ?T1 ?T2))))";
+
+    String stmt2 = "(WhenFn(?STH2))";
+
     KIF kif;
+
+
+    Set<String> errorSet;
 
     @Before
     public void beforeTest() {
@@ -41,19 +47,32 @@ public class KIFTest extends UnitTestBase {
     public void afterTest() {
 
         kif = null;
+
+        if (errorSet != null)
+            errorSet.clear();
     }
 
     @Test
     public void testParseStatement() throws IOException {
 
         System.out.println("============= KIFTest.testParseStatement ==================");
-        Set<String> set;
         try (Reader r = new StringReader(stmt)) {
-            set = kif.parse(r);
+            errorSet = kif.parse(r);
         }
-        assertFalse(set.isEmpty()); // ErrorList not empty (ParseException)
-        for (String s : set)
-            assertTrue(s.contains("Illegal character"));
+        assertFalse(errorSet.isEmpty()); // ErrorList not empty (ParseException)
+        for (String e : errorSet)
+            assertTrue(e.contains("Illegal character"));
+    }
+
+    @Test // TODO: KIF won't complain about this syntax error
+    @Ignore
+    public void testParseStatement2() throws IOException {
+
+        System.out.println("============= KIFTest.testParseStatement2 ==================");
+        try (Reader r = new StringReader(stmt2)) {
+            errorSet = kif.parse(r);
+        }
+        assertFalse(errorSet.isEmpty()); // ErrorList not empty (ParseException)
     }
 
 } // end class file KIFTest.java
