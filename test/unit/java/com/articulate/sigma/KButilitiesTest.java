@@ -23,8 +23,7 @@ public class KButilitiesTest extends UnitTestBase {
                   "WhenFn(?STH2))\n" +
                   "(earlier ?T1 ?T2))))";
 
-//    String stmt2 = "(WhenFn(?STH2))"; // arg in parens
-    String stmt2 = "(WhenFn ?STH2)"; // arg in parens
+    String stmt2 = "(WhenFn(?STH2))"; // arg in parens
 
     @Test
     public void testIsValidFormula() {
