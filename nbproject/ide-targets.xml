@@ -134,7 +134,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="clean,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="clean,prep.top.and.mid.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -153,6 +153,7 @@
         </junit>
         <antcall target="junit.report"/>
         <echo message="Now, manually run thorough.clean to purge KBs and restore the main config"/>
+        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="run-selected-test-in-corpus" depends="clean,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -174,7 +175,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="run-selected-test-in-integration" depends="clean,compile.test">
+    <target name="run-selected-test-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -213,7 +214,7 @@
             </test>
         </junit>
     </target>
-    <target name="run-single-test-method-in-integration" depends="clean,compile.test">
+    <target name="run-single-test-method-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -407,7 +408,7 @@
     =====================
     -->
 
-    <target name="debug-selected-test-in-integration" depends="clean,compile.test">
+    <target name="debug-selected-test-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -452,7 +453,7 @@
             </test>
         </junit>
     </target>
-    <target name="debug-single-test-method-in-integration" depends="clean,compile.test">
+    <target name="debug-single-test-method-in-integration" depends="clean,prep.top.and.mid.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
