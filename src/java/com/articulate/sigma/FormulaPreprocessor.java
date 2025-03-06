@@ -720,7 +720,7 @@ public class FormulaPreprocessor {
             if (f.getFormula().contains("?") && !Formula.isVariable(pred)) {
                 List<Formula> args = f.complexArgumentsToArrayList(1);
                 if (args == null) {
-                    String errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse() args = null found while processing: \n" + f;
+                    String errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): no arguments found in: \n" + f;
                     System.err.println(errStr);
                     errors.add(errStr);
                 }
