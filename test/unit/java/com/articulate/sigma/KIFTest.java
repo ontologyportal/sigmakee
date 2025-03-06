@@ -32,8 +32,20 @@ public class KIFTest extends UnitTestBase {
 
     String stmt2 = "(WhenFn(?STH2))"; // args in parens
 
+    String stmt3 = "(=>\n" +
+                   "(and\n" +
+                   "(instance ?STH2 Physical)\n" +
+                   "(instance ?FW Following)\n" +
+                   "(patient ?FW ?STH2))\n" +
+                   "(exists (?STH1 ?T1 ?T2)\n" +
+                   "(and\n" +
+                   "(instance ?STH1 Physical)\n" +
+                   "(holdsDuring ?T1\n" +
+                   "WhenFn(?STH1))\n" + // args in parens
+                   "(holdsDuring ?T2\n" +
+                   "WhenFn(?STH2))\n" + // args in parens
+                   "(earlier ?T1 ?T2))))";
     KIF kif;
-
 
     Set<String> errorSet;
 
@@ -73,6 +85,21 @@ public class KIFTest extends UnitTestBase {
             errorSet = kif.parse(r);
         }
         assertFalse(errorSet.isEmpty()); // ErrorList not empty (ParseException)
+        for (String e : errorSet)
+            assertTrue(e.contains("Illegal character"));
+    }
+
+    @Test // TODO: KIF won't complain about this syntax error
+    @Ignore
+    public void testParseStatement3() throws IOException {
+
+        System.out.println("============= KIFTest.testParseStatement3 ==================");
+        try (Reader r = new StringReader(stmt3)) {
+            errorSet = kif.parse(r);
+        }
+        assertFalse(errorSet.isEmpty()); // ErrorList not empty (ParseException)
+        for (String e : errorSet)
+            System.err.println(e);
     }
 
 } // end class file KIFTest.java
