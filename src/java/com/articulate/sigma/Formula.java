@@ -2865,7 +2865,6 @@ public class Formula implements Comparable, Serializable {
         if (debug) System.out.println("Formula.format(): "  + this.theFormula);
         if (this.theFormula == null)
             return "";
-        String result = this.theFormula;
         if (!StringUtil.emptyString(this.theFormula))
             this.theFormula = this.theFormula.trim();
         if (atom())
@@ -2981,8 +2980,7 @@ public class Formula implements Comparable, Serializable {
             else
                 formatted.append(token);
         }
-        result = formatted.toString();
-        return result;
+        return formatted.toString();
     }
 
     /** ***************************************************************
