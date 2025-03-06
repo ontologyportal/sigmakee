@@ -2194,6 +2194,7 @@ public class SUMOtoTFAform {
         if (kb.kbCache.checkDisjoint(kb,type,rangeType)) {
             if (debug) System.out.println("SUMOtoTFAform.typeConflict(2): found type conflict between " + type + " and " + rangeType);
             errors.addAll(KBcache.errors);
+            KBcache.errors.clear();
             return true;
         }
         return false;
@@ -2215,6 +2216,7 @@ public class SUMOtoTFAform {
             if (kb.kbCache.checkDisjoint(kb, s, type)) {
                 if (debug) System.out.println("SUMOtoTFAform.typeConflict(2): found type conflict between " + s + " and " + type);
                 errors.addAll(KBcache.errors);
+                KBcache.errors.clear();
                 return true;
             }
         }
