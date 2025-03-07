@@ -151,7 +151,9 @@ latest: digest: sha256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx size: 2417
 
 ## System preparation on Linux
 
-Make sure that throughout the commands below that you replace "theuser" with your desired user name
+Make sure that throughout the commands below that you replace "theuser" with \
+your desired user name. Also, if you know you already have sudo priviledges, you
+can skip to "Install unzip"
 
 create user theuser
 ```sh
@@ -478,13 +480,14 @@ being sure to terminate with -t for the timeout
 VAMPIRE_OPTS="--mode portfolio --avatar off -qa answer_literal --schedule casc_2019 --proof tptp -t"
 ```
 
-## MacOS install notes
+## macOS install notes
 
 See INSTALL.MacOS
 
-## Windows Subsystem for Linux Install Notes
+## Windows Subsystem for Linux (WSL) Install Notes
+(Make sure you are installing WSL 2 vice WSL 1)
 
-Open up CMD prompt
+Open up CMD prompt (replace "/home/theuser" with your particular path)
 
 ```
     wsl –-install
