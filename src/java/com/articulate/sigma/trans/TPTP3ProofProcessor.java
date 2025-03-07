@@ -25,8 +25,6 @@ import com.igormaznitsa.prologparser.PrologParser;
 import com.igormaznitsa.prologparser.terms.*;
 import com.igormaznitsa.prologparser.tokenizer.Op;
 
-import javax.imageio.ImageIO;
-import java.awt.image.RenderedImage;
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -1144,7 +1142,7 @@ public class TPTP3ProofProcessor {
     private void createProofDotGraphImage(String filename) throws IOException {
 
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-        String imageExt = "svg";
+        String imageExt = "png";
         File file = new File(filename + ".dot." + imageExt);
 
         List<String> cmd = new ArrayList<>();
@@ -1155,7 +1153,7 @@ public class TPTP3ProofProcessor {
         cmd.add(filename + ".dot");
         try {
 
-            // Build a ${graph}.png from an input file
+            // Build a proof image from an input file
             // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(cmd);
             System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): exec command: " + pb.command());
@@ -1166,18 +1164,18 @@ public class TPTP3ProofProcessor {
             pb.redirectErrorStream(true);
             pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
             pb.start();
-            System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
         } catch (IOException e) {
-            String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
+            String err = "Error writing file " + file + "\n" + e.getMessage();
             throw new IOException(err);
         }
+        System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
     }
 
     /**
      * *************************************************************
      * Create a proof in a format suitable for GraphViz' input format
-     * http://www.graphviz.org/ Generate a GIF from the .dot output with a
-     * command like dot SUMO-graph.dot -Tgif > graph.gif
+     * http://www.graphviz.org/. Generate a GIF from the .dot output with a
+     * command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
      */
     public String createProofDotGraph() throws IOException {
 
@@ -1196,6 +1194,8 @@ public class TPTP3ProofProcessor {
             Set<String> result = new HashSet<>();
             result.addAll(createProofDotGraphBody());
             pw.println("digraph G {");
+            pw.println("  node [color=black, fontcolor=black];"); // Black text and borders
+            pw.println("  edge [color=black];"); // Black edges
             pw.println("  rankdir=LR");
             for (String s : result)
                 pw.println(s);
