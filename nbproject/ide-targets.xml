@@ -115,7 +115,7 @@
     -->
 
     <target name="test" depends="test.unit,test.integration"/>
-    <target name="test.unit" depends="clean,compile.test" description="Runs the UnitTestSuite">
+    <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -195,7 +195,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="run-selected-test-in-unit" depends="clean,compile.test">
+    <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -234,7 +234,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="run-single-test-method-in-unit" depends="clean,compile.test">
+    <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -432,7 +432,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="debug-selected-test-in-unit" depends="clean,compile.test">
+    <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -477,7 +477,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="debug-single-test-method-in-unit" depends="clean,compile.test">
+    <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
