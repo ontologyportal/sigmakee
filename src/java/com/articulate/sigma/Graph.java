@@ -339,6 +339,7 @@ public class Graph {
         File dirfile = new File(dir);
         if (!dirfile.exists())
             dirfile.mkdir();
+        File file = null;
         try (FileWriter fw = new FileWriter(filename + ".dot");
             PrintWriter pw = new PrintWriter(fw)) {
             if (debug) System.out.println("Graph.createGraphBody(): creating file at " + filename);
@@ -363,16 +364,18 @@ public class Graph {
             pw.println("}");
             pw.flush();
 
-            // Build a ${graph}.png from an input file
+            String ext = "png";
+            // Build an image proof from an input file
             // From: https://graphviz.org/doc/info/command.html#-O
             ProcessBuilder pb = new ProcessBuilder(
                 graphVizDir + File.separator + "dot",
-                "-Tpng",
+                "-T" + ext,
+                "-Kdot",
                 "-O",
                 filename + ".dot"
             );
 
-            File file = new File(filename + ".dot.png");
+            file = new File(filename + ".dot." + ext);
             System.out.println("Graph.createDotGraph(): exec command: " + pb.command());
             pb.directory(file.getParentFile());
             File log = new File(file.getParentFile(),"log");
@@ -381,11 +384,11 @@ public class Graph {
             pb.start();
         }
         catch (Exception e) {
-            String err = "Error writing file " + filename + ".dot.png\n" + e.getMessage();
+            String err = "Error writing file " + file +"\n" + e.getMessage();
             errors.add(err);
             throw new IOException(err);
         }
-        System.out.println("Graph.createDotGraph(): write image file: " + filename + ".dot.png");
+        System.out.println("Graph.createDotGraph(): write image file: " + file);
         return true;
     }
 
