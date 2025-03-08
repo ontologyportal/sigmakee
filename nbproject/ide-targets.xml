@@ -114,7 +114,6 @@
     ===================
     -->
 
-    <target name="test" depends="test.unit,test.integration"/>
     <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
