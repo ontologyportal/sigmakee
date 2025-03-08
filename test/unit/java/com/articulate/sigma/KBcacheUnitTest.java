@@ -110,7 +110,7 @@ public class KBcacheUnitTest {
     public void testPredicates() {
 
         System.out.println("Test predicates");
-        HashSet<String> expected = new HashSet<>(Arrays.asList("subAttribute",
+        Set<String> expected = new HashSet<>(Arrays.asList("subAttribute",
                 "var", "rel", "subclass", "relsub",
                 "subrelation"));
         Set<String> actual = kb.kbCache.predicates;
