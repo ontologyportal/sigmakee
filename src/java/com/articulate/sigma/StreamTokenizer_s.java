@@ -58,6 +58,17 @@ import java.io.Reader;
   */
 public class StreamTokenizer_s {
 
+    private static final int NEED_CHAR = Integer.MAX_VALUE;
+    private static final int SKIP_LF = Integer.MAX_VALUE - 1;
+
+    private static final byte CT_WHITESPACE = 1;
+    private static final byte CT_DIGIT = 2;
+    private static final byte CT_ALPHA = 4;
+    private static final byte CT_QUOTE = 8;
+    private static final byte CT_COMMENT = 16;
+
+    private final byte ctype[] = new byte[256];
+
     /* Only one of these will be non-null */
     private Reader reader = null;
     private InputStream input = null;
@@ -72,25 +83,15 @@ public class StreamTokenizer_s {
      * read.
      */
     private int peekc = NEED_CHAR;
-
-    private static final int NEED_CHAR = Integer.MAX_VALUE;
-    private static final int SKIP_LF = Integer.MAX_VALUE - 1;
-
     private boolean pushedBack;
     private boolean forceLower;
+
     /** The line number of the last token read */
     private int LINENO = 1;
 
     private boolean eolIsSignificantP = false;
     private boolean slashSlashCommentsP = false;
     private boolean slashStarCommentsP = false;
-
-    private byte ctype[] = new byte[256];
-    private static final byte CT_WHITESPACE = 1;
-    private static final byte CT_DIGIT = 2;
-    private static final byte CT_ALPHA = 4;
-    private static final byte CT_QUOTE = 8;
-    private static final byte CT_COMMENT = 16;
 
     /**
      * After a call to the <code>nextToken</code> method, this field
@@ -226,9 +227,9 @@ public class StreamTokenizer_s {
     public StreamTokenizer_s(InputStream is) {
 
         this();
-            if (is == null) {
-                throw new NullPointerException();
-            }
+        if (is == null) {
+            throw new NullPointerException();
+        }
         input = is;
     }
 
@@ -241,9 +242,9 @@ public class StreamTokenizer_s {
     public StreamTokenizer_s(Reader r) {
 
         this();
-            if (r == null) {
-                throw new NullPointerException();
-            }
+        if (r == null) {
+            throw new NullPointerException();
+        }
         reader = r;
     }
 
@@ -323,7 +324,7 @@ public class StreamTokenizer_s {
      * in this tokenizer. It removes any special significance the
      * character has as a comment character, word component, string
      * delimiter, white space, or number character. When such a character
-     * is encountered by the parser, the parser treates it as a
+     * is encountered by the parser, the parser treats it as a
      * single-character token and sets <code>ttype</code> field to the
      * character value.
      *
@@ -607,9 +608,10 @@ public class StreamTokenizer_s {
 
 	if ((ctype & CT_ALPHA) != 0) {
 	    int i = 0;
+            char nb[];
 	    do {
 		if (i >= buf.length) {
-		    char nb[] = new char[buf.length * 2];
+		    nb = new char[buf.length * 2];
 		    System.arraycopy(buf, 0, nb, 0, buf.length);
 		    buf = nb;
 		}
@@ -633,13 +635,15 @@ public class StreamTokenizer_s {
 	     */
 	    int d = read();
 	    // while (d >= 0 && d != ttype && d != '\n' && d != '\r') {
+            int c2;
+            char nb[];
 	    while (d >= 0 && d != ttype ) {
 	        if (d == '\\') {
    		    c = read();
 		    int first = c;   /* To allow \377, but not \477 */
 		    if (c >= '0' && c <= '7') {
 			c = c - '0';
-			int c2 = read();
+			c2 = read();
 			if ('0' <= c2 && c2 <= '7') {
 			    c = (c << 3) + (c2 - '0');
 			    c2 = read();
@@ -681,7 +685,7 @@ public class StreamTokenizer_s {
 		    d = read();
 		}
 		if (i >= buf.length) {
-		    char nb[] = new char[buf.length * 2];
+		    nb = new char[buf.length * 2];
 		    System.arraycopy(buf, 0, nb, 0, buf.length);
 		    buf = nb;
 		}

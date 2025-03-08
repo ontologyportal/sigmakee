@@ -2,6 +2,9 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.Test;
 
 import java.util.*;
@@ -253,5 +256,36 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         else
             System.err.println(label + " : fail!");
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testCreateProofImage() throws IOException, InterruptedException {
+
+        System.out.println("========================");
+        String label = "testCreateProofImage";
+        System.out.println("TPTP3ProofProcTest: " + label);
+        List<String> input = new ArrayList();
+        input.add("% SZS status Theorem for temp-comb");
+        input.add("% SZS answers Tuple [[s__TransitFn__m]|_] for temp-comb");
+        input.add("% SZS output start Proof for temp-comb");
+        input.add("fof(f916,plain,( $false), inference(unit_resulting_resolution,[],[f915,f914])).");
+        input.add("fof(f914,plain,( ~ans0(s__TransitFn__m)), inference(resolution,[],[f601,f822])).");
+        input.add("fof(f822,plain,( s__instance(s__TransitFn__m,s__Relation)), inference(cnf_transformation,[],[f200])).");
+        input.add("fof(f200,axiom,( s__instance(s__TransitFn__m,s__Relation)), file('" + KBmanager.getMgr().getPref("kbDir") + "/temp-comb.tptp',kb_SUMO_200)).");
+        input.add("fof(f601,plain,( ( ! [X0] : (~s__instance(X0,s__Relation) | ~ans0(X0)) )), inference(cnf_transformation,[],[f553])).");
+        input.add("fof(f553,plain,( ! [X0] : (~s__instance(X0,s__Relation) | ~ans0(X0))), inference(ennf_transformation,[],[f395])).");
+        input.add("fof(f395,plain,( ~? [X0] : (s__instance(X0,s__Relation) & ans0(X0))), inference(rectify,[],[f394])).");
+        input.add("fof(f394,plain,( ~? [X16] : (s__instance(X16,s__Relation) & ans0(X16))), inference(answer_literal,[],[f393])).");
+        input.add("fof(f393,negated_conjecture,( ~? [X16] : s__instance(X16,s__Relation)), inference(negated_conjecture,[],[f392])).");
+        input.add("fof(f392,conjecture,( ? [X16] : s__instance(X16,s__Relation)), file('" + KBmanager.getMgr().getPref("kbDir") + "/temp-comb.tptp',query_0)).");
+        input.add("fof(f915,plain,( ( ! [X0] : (ans0(X0)) )), introduced(answer_literal,[])).");
+        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        String query = "(instance ?X Relation)";
+        StringBuilder sb = new StringBuilder("X0");
+        tpp.parseProofOutput(input,query,kb,sb);
+        tpp.createProofDotGraph();
+        Thread.sleep(500); // image needs some time to get generated and placed
+        assertTrue(Files.exists(Path.of(System.getenv("CATALINA_HOME") + "/webapps/sigma/graph/proof.dot.png")));
     }
 }

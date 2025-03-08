@@ -422,11 +422,13 @@ public class FormulaPreprocessor {
             return arglist;
         }
         else if (argstr.startsWith(Formula.LP)) {
-            arglist = new ArrayList<>(Arrays.asList(argstr.substring(1, argstr.length()-1).split(" ")));
+            arglist.addAll(Arrays.asList(argstr.substring(1, argstr.length()-1).split(" ")));
             return arglist;
         }
         else {
-            System.err.println("Errors in FormulaPreprocessor.collectVariables ...");
+            String errStr = "Error in FormulaPreprocessor.collectVariables ...";
+            System.err.println(errStr);
+            // TODO: report to error log?
             return null;
         }
     }
@@ -717,8 +719,11 @@ public class FormulaPreprocessor {
             if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): simple clause ");
             if (f.getFormula().contains("?") && !Formula.isVariable(pred)) {
                 List<Formula> args = f.complexArgumentsToArrayList(1);
-                if (args == null)
-                    System.err.println("Error in FormulaPreprocessor.computeVariableTypesRecurse() args = null found while processing: \n" + f);
+                if (args == null) {
+                    String errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): no arguments found in: \n" + f;
+                    System.err.println(errStr);
+                    errors.add(errStr);
+                }
                 if (pred.equals(Formula.EQUAL) && args.size() > 1) {
                     if (args.get(0).isVariable() && args.get(1).listP() &&
                             kb.isFunctional(args.get(1)))
@@ -743,6 +748,7 @@ public class FormulaPreprocessor {
                                             "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
                                     System.err.println("sig: " + kb.kbCache.getSignature(pred));
                                     System.err.println("sig count: " + kb.kbCache.signatures.keySet().size());
+                                    // TODO: These should be reported to the errors log, but for now, there is a benign nature to these 3/5/25 tdn
                                 }
                             }
                             else
@@ -1029,7 +1035,7 @@ public class FormulaPreprocessor {
                 Formula f, ioF;
                 int start, argslen;
                 List<String> args;
-                StringBuilder sb;
+                StringBuilder sb = new StringBuilder();
                 for (Iterator<Formula> it = variableReplacements.iterator(); it.hasNext();) {
                     f = it.next();
                     formulae.add(f);
@@ -1042,13 +1048,9 @@ public class FormulaPreprocessor {
                             args = new ArrayList<>(Arrays.asList(f.getStringArgument(1),
                                                                   f.getStringArgument(2)));
                             argslen = args.size();
-                            ioStr = null;
-                            ioF = null;
-                            arg = null;
                             for (int i = start; i < argslen; i++) {
                                 arg = args.get(i);
                                 if (!Formula.isVariable(arg) && !arg.equals("Class") && Formula.atom(arg)) {
-                                    sb = new StringBuilder();
                                     sb.setLength(0);
                                     sb.append("(instance ");
                                     sb.append(arg);
@@ -1275,7 +1277,7 @@ public class FormulaPreprocessor {
 
         System.out.println();
         System.out.println();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+        FormulaPreprocessor fp;
         String strf = "(=>\n" +
                 "    (equal\n" +
                 "        (GreatestCommonDivisorFn @ROW) ?NUMBER)\n" +
@@ -1302,7 +1304,7 @@ public class FormulaPreprocessor {
 
         System.out.println();
         System.out.println();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+        FormulaPreprocessor fp;
         String strf = "(equal (AbsoluteValueFn ?NUMBER1) 2)";
         Formula f = new Formula();
         f.read(strf);
@@ -1320,7 +1322,7 @@ public class FormulaPreprocessor {
 
         System.out.println();
         System.out.println();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+        FormulaPreprocessor fp;
         String strf = "\n" +
                 "(<=>\n" +
                 "    (and\n" +
@@ -1352,7 +1354,7 @@ public class FormulaPreprocessor {
 
         System.out.println();
         System.out.println();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+        FormulaPreprocessor fp;
         String strf = "(forall (?NUMBER ?ELEMENT ?CLASS)\n" +
                 "        (=>\n" +
                 "          (equal ?ELEMENT\n" +
@@ -1379,7 +1381,7 @@ public class FormulaPreprocessor {
 
         System.out.println();
         System.out.println();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+        FormulaPreprocessor fp;
         String strf = "(equal (AdditionFn 1 2) ?X)";
         Formula f = new Formula();
         f.read(strf);

@@ -146,6 +146,7 @@ jobs:
       - name: Upload sigmakee jars
         uses: actions/upload-artifact@v4
         with:
+          name: sigma-base
           path: |
             ./sigmakee/build/WEB-INF/lib/*.jar
             ./sigmakee/build/sigmakee.jar
@@ -178,7 +179,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4.1.7
         with:
-          name: artifact
+          name: sigma-base
 
       - name: Download artifact
         uses: actions/download-artifact@v4.1.7

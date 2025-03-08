@@ -53,7 +53,7 @@ public class KButilities {
     public static Set<String> errors = new TreeSet<>();
 
     /** Warnings found during processing formulas */
-    public static Set<String> warnings = new TreeSet<>();
+//    public static Set<String> warnings = new TreeSet<>();
 
     /** *************************************************************
      */
@@ -77,7 +77,7 @@ public class KButilities {
     /** *************************************************************
      */
     public static void clearErrors() {
-        errors = new TreeSet<>();
+        errors.clear();
     }
 
     /** *************************************************************
@@ -86,21 +86,28 @@ public class KButilities {
 
         SUMOtoTFAform.initOnce();
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+        if (!FormulaPreprocessor.errors.isEmpty()) {
+            errors.addAll(FormulaPreprocessor.errors);
+            FormulaPreprocessor.errors.clear();
+            return false;
+        }
         if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
         Map<String, Set<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
-        KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+//        KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
             error = "inconsistent types in " + SUMOtoTFAform.varmap;
-            System.out.println("hasCorrectTypes(): " + error);
+            System.err.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
+            SUMOtoTFAform.errors.clear();
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
             error = "Type conflict: " + SUMOtoTFAform.errors;
-            System.out.println("hasCorrectTypes(): " + error);
+            System.err.println("hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
+            SUMOtoTFAform.errors.clear();
             return false;
         }
         if (debug) System.out.println("hasCorrectTypes() no conflicts in: " + f);
@@ -123,6 +130,7 @@ public class KButilities {
         }
         if (!StringUtil.emptyString(result)) {
             errors.addAll(kif.errorSet);
+            kif.errorSet.clear();
             if (debug) System.out.println("isValidFormula(): Error: " + result);
             return false;
         }

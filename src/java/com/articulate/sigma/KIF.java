@@ -209,17 +209,17 @@ public class KIF {
 
         int mode = this.getParseMode();
         StringBuilder expression = new StringBuilder();
-        int lastVal;
+        int lastTtype;
         Formula f = new Formula();
-        String errStart = "Parsing error in " + filename;
-        String errStr = null;
+        String errStart = "Parsing error in: " + ((filename==null) ? "Formula" : filename);
+        String errStr;
         int duplicateCount = 0;
 
         if (r == null) {
             errStr = "No Input Reader Specified";
-            warningSet.add(errStr);
+            errorSet.add(errStr);
             System.err.println("Error in KIF.parse(): " + errStr);
-            return warningSet;
+            return errorSet;
         }
         try {
             count++;
@@ -234,9 +234,9 @@ public class KIF {
             // int lineStart = 0;
             boolean isEOL = false;
             List<String> list;
-            String key, fstr, validArgs;
+            String key, fstr, validArgs, com;
             do {
-                lastVal = st.ttype;
+                lastTtype = st.ttype;
                 st.nextToken();
                 //System.out.println("KIF.parse(): sval: " + st.sval);
                 //System.out.println("KIF.parse(): parenLevel: " + parenLevel);
@@ -249,10 +249,10 @@ public class KIF {
                         // statement is to start. Check if a new statement
                         // has already been generated, otherwise report error
                         if (f.startLine != 0 && (!keySet.isEmpty() || (expression.length() > 0))) {
-                            errStr = (errStart + " possible missed closing parenthesis near start line: " + f.startLine
-                                    + " end line " + f.endLine + " for formula " + expression.toString() + "\n and key "
-                                    + keySet.toString() + " keyset size " + keySet.size() + " exp length "
-                                    + expression.length() + " comment lines " + totalLinesForComments);
+                            errStr = (errStart + "\n\tPossible missed closing parenthesis near start line: " + f.startLine
+                                    + " end line: " + f.endLine + "\n\tfor formula: " + expression.toString() + "\n\tand key: "
+                                    + keySet.toString() + " keyset size: " + keySet.size() + " exp length: "
+                                    + expression.length() + "\n\tcomment lines: " + totalLinesForComments);
                             errorSet.add(errStr);
                             throw new ParseException(errStr, f.startLine);
                         }
@@ -281,7 +281,7 @@ public class KIF {
                             inConsequent = true;
                         }
                     }
-                    if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0))
+                    if ((parenLevel != 0) && (lastTtype != 40) && (expression.length() > 0))
                         expression.append(" "); // add back whitespace that ST removes
                     expression.append("(");
                 }
@@ -319,19 +319,20 @@ public class KIF {
                                 if (!formulaMap.keySet().contains(f.getFormula())) { // don't add keys if formula is already present
                                     list = formulas.get(fkey);
                                     if (StringUtil.emptyString(f.getFormula())) {
-                                        System.err.println("Error in KIF.parse(): Storing empty formula from line: "
-                                                + f.startLine);
+                                        errStr = (errStart + ": Storing empty formula from line: " + f.startLine);
                                         errorSet.add(errStr);
+                                        throw new ParseException(errStr, f.startLine);
                                     }
                                     else if (!list.contains(f.getFormula()))
                                         list.add(f.getFormula());
                                 }
-                            } else {
+                            }
+                            else {
                                 list = new ArrayList<>();
                                 if (StringUtil.emptyString(f.getFormula())) {
-                                    System.err.println(
-                                            "Error in KIF.parse(): Storing empty formula from line: " + f.startLine);
+                                    errStr = (errStart + ": Storing empty formula from line: " + f.startLine);
                                     errorSet.add(errStr);
+                                    throw new ParseException(errStr, f.startLine);
                                 }
                                 else if (!list.contains(f.getFormula()))
                                     list.add(f.getFormula());
@@ -343,7 +344,7 @@ public class KIF {
                         inConsequent = false;
                         inRule = false;
                         argumentNum = -1;
-                        expression = new StringBuilder();
+                        expression.setLength(0); // reset
                         keySet.clear();
                     }
                     else if (parenLevel < 0) {
@@ -354,10 +355,10 @@ public class KIF {
                 }
                 else if (st.ttype == 34) { // " - it's a string
                     st.sval = StringUtil.escapeQuoteChars(st.sval);
-                    if (lastVal != 40) // add back whitespace that ST removes
+                    if (lastTtype != 40) // add back whitespace that ST removes
                         expression.append(" ");
                     expression.append("\"");
-                    String com = st.sval;
+                    com = st.sval;
                     totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
                     expression.append(com);
                     expression.append("\"");
@@ -366,7 +367,7 @@ public class KIF {
                 }
                 else if ((st.ttype == StreamTokenizer.TT_NUMBER) || // number
                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {
-                    if (lastVal != 40) // add back whitespace that ST removes
+                    if (lastTtype != 40) // add back whitespace that ST removes
                         expression.append(" ");
                     if (st.nval == 0)
                         expression.append(st.sval);
@@ -380,9 +381,9 @@ public class KIF {
                         inRule = true; // implications in statements aren't rules
                     if (parenLevel < 2) // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
-                    if (lastVal != 40) // add back whitespace that ST removes
+                    if (lastTtype != 40) // add back whitespace that ST removes
                         expression.append(" ");
-                    expression.append(String.valueOf(st.sval));
+                    expression.append(st.sval);
                     if (expression.length() > 64000) {
                         errStr = (errStart + ": Sentence over 64000 characters new line: " + f.startLine);
                         errorSet.add(errStr);
@@ -405,16 +406,16 @@ public class KIF {
                 else if ((mode == RELAXED_PARSE_MODE) && (st.ttype == 96)) // allow '`' in relaxed parse mode
                     expression.append(" `");
                 else if (st.ttype != StreamTokenizer.TT_EOF) {
-                    errStr = (errStart + ": Illegal character '" + st.sval + "' near line: " + f.startLine);
+                    errStr = (errStart + ": Illegal character: " + st);
                     errorSet.add(errStr);
                     throw new ParseException(errStr, f.startLine);
                 }
             } while (st.ttype != StreamTokenizer.TT_EOF);
 
             if (!keySet.isEmpty() || expression.length() > 0) {
-                errStr = (errStart + ": Missed closing parenthesis near line: " + f.startLine +
-                        " for token " + st.sval + " and form " + f.getFormula() +
-                        " and expression " + expression + " and keySet " + keySet);
+                errStr = (errStart + ":\n\tMissed closing parenthesis near line: " + f.startLine +
+                        "\n\tfor token: " + st.sval + " and form: " + f.getFormula() +
+                        "\n\tand expression: " + expression + "\n\tand keySet: " + keySet);
                 errorSet.add(errStr);
                 throw new ParseException(errStr, f.startLine);
             }
@@ -422,8 +423,9 @@ public class KIF {
         catch (IOException | ParseException ex) {
 //            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             String message = ex.getMessage();
-            warningSet.add("Warning in KIF.parse(Reader) " + message);
-            ex.printStackTrace();
+            System.err.println("Error in KIF.parse(Reader): " + message);
+            if (ex instanceof IOException)
+                ex.printStackTrace(System.err);
         }
         if (duplicateCount > 0) {
             String warning = "WARNING in KIF.parse(Reader), " + duplicateCount + " duplicate statement"
@@ -431,7 +433,7 @@ public class KIF {
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);
         }
-        return warningSet;
+        return errorSet;
     }
 
     /*****************************************************************
@@ -555,11 +557,10 @@ public class KIF {
     public String parseStatement(String formula) {
 
         boolean isError;
-        try (StringReader r = new StringReader(formula)) {
+        try (Reader r = new StringReader(formula)) {
             isError = !parse(r).isEmpty();
             if (isError) {
-                String msg = "Error parsing " + formula;
-                return msg;
+                return "Error parsing " + formula;
             }
         }
         catch (Exception e) {

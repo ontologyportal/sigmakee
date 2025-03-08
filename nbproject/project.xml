@@ -14,9 +14,8 @@ auxiliary.show.customizer.message=<message>
  will show your customized message when someone attempts to open the customizer.  -->
             <name>SigmaKEE</name>
             <properties>
-                <property-file>nbproject/private/project.properties</property-file>
-                <property-file>nbproject/build.properties</property-file>
-                <property name="ant.script">${buildfile}</property>
+                <property-file>nbproject/private/private.properties</property-file>
+                <property-file>nbproject/project.properties</property-file>
             </properties>
             <folders>
                 <source-folder>
