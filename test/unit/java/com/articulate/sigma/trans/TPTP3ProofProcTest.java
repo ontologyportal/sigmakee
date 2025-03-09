@@ -285,7 +285,7 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         StringBuilder sb = new StringBuilder("X0");
         tpp.parseProofOutput(input,query,kb,sb);
         tpp.createProofDotGraph();
-        Thread.sleep(500); // image needs some time to get generated and placed
+        Thread.sleep(1000); // image needs some time to get generated and placed
         assertTrue(Files.exists(Path.of(System.getenv("CATALINA_HOME") + "/webapps/sigma/graph/proof.dot.png")));
     }
 }
