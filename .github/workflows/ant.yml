@@ -149,7 +149,7 @@ jobs:
         with:
           name: Unit Test Results
           working-directory: ${{ github.workspace }}/sigmakee
-          path: ./sigmakee/build/test/results/TEST-*.xml
+          path: build/test/results/TEST-*.xml
           reporter: java-junit
           fail-on-error: true
 
