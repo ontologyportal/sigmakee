@@ -12,7 +12,7 @@ env:
   DEFAULT_DOCKER_ACCOUNT: apease
 
 jobs:
-  build-test:
+  build-test-upload:
     name: Build & Test
     runs-on: ubuntu-latest
     container:
@@ -143,7 +143,7 @@ jobs:
           find $SIGMA_HOME/KBs -name '*.tff' -delete
           rm -rf $SIGMA_HOME/KBs/tests
 
-      - name: Upload Unit Test Results
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
           name: test-results
@@ -168,7 +168,7 @@ jobs:
 
   build-sumo-ci-and-sigmakee:
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: build-test-upload
     steps:
       - name: Checkout
         uses: actions/checkout@v4
