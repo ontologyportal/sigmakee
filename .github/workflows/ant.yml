@@ -1,6 +1,6 @@
 # This workflow will build a Java project with Ant
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
-name: Java CI with Ant / Build sumo-ci
+name: 'Java CI with Ant / Build sumo-ci'
 
 on:
   push:
@@ -13,7 +13,7 @@ env:
 
 jobs:
   build-test:
-
+    name: Build & Test
     runs-on: ubuntu-latest
     container:
       image: apease/sigma-ci:latest
@@ -71,8 +71,8 @@ jobs:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
-        run: ant
         working-directory: ./sigmakee
+        run: ant
 
       - name: Prepare test env
         env:
@@ -143,14 +143,12 @@ jobs:
           find $SIGMA_HOME/KBs -name '*.tff' -delete
           rm -rf $SIGMA_HOME/KBs/tests
 
-      - name: Report PR Unit Test Results
-        uses: dorny/test-reporter@v1
-        if: ${{ github.event_name == 'pull_request' && (success() || failure()) }}
+      - name: Upload Unit Test Results
+        uses: actions/upload-artifact@v4
         with:
-          name: Unit Test Results
-          working-directory: ./sigmakee
-          path: build/test/results/TEST-*.xml
-          reporter: java-junit
+          name: test-results
+          path: |
+            ./sigmakee/build/test/results/*
 
       - name: Upload sigmakee jars
         uses: actions/upload-artifact@v4
