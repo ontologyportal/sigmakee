@@ -12,7 +12,7 @@ env:
   DEFAULT_DOCKER_ACCOUNT: apease
 
 jobs:
-  build:
+  build-test:
 
     runs-on: ubuntu-latest
     container:
@@ -143,6 +143,15 @@ jobs:
           find $SIGMA_HOME/KBs -name '*.tff' -delete
           rm -rf $SIGMA_HOME/KBs/tests
 
+      - name: Unit Test Reports
+        uses: dorny/test-reporter@v1
+        if: success() || failure()
+        with:
+          name: Unit Test Results
+          path: ${{ github.workspace }}/sigmakee/build/test/results/TEST-*.xml
+          reporter: java-junit
+          fail-on-error: true
+
       - name: Upload sigmakee jars
         uses: actions/upload-artifact@v4
         with:
@@ -161,7 +170,7 @@ jobs:
 
   build-sumo-ci-and-sigmakee:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-test
     steps:
       - name: Checkout
         uses: actions/checkout@v4
