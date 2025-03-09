@@ -42,7 +42,7 @@ jobs:
           repository: 'ontologyportal/sumo'
           path: sumo
 
-      - name: Setup SigmaKEE
+      - name: Setup SIGMA_HOME
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
@@ -148,7 +148,7 @@ jobs:
         if: success() || failure()
         with:
           name: Unit Test Results
-          working-directory: ${{ github.workspace }}/sigmakee
+          working-directory: ./sigmakee
           path: build/test/results/TEST-*.xml
           reporter: java-junit
           fail-on-error: true
