@@ -1139,7 +1139,7 @@ public class TPTP3ProofProcessor {
     /**
      * *************************************************************
      */
-    private void createProofDotGraphImage(String filename) throws IOException {
+    private String createProofDotGraphImage(String filename) throws IOException {
 
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         String imageExt = "png";
@@ -1169,6 +1169,7 @@ public class TPTP3ProofProcessor {
             throw new IOException(err);
         }
         System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
+        return file.getAbsolutePath();
     }
 
     /**
@@ -1180,7 +1181,7 @@ public class TPTP3ProofProcessor {
     public String createProofDotGraph() throws IOException {
 
         String sep = File.separator;
-        String link = "graph" + sep + "proof.gif";
+        String link;
         String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
                 + sep + "sigma" + sep + "graph";
         File dirfile = new File(dir);
@@ -1200,7 +1201,7 @@ public class TPTP3ProofProcessor {
             for (String s : result)
                 pw.println(s);
             pw.println("}");
-            createProofDotGraphImage(filename);
+            link = createProofDotGraphImage(filename);
         } catch (IOException e) {
             String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
             throw new IOException(err);
