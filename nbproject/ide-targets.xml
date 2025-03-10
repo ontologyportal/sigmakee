@@ -672,6 +672,7 @@
     </target>
 
     <target name="run.leo" description="Runs a check on a given TPTP file">
+        <echo message="Running leo with: [${leo.args}]"/>
         <java jar="${leo.jar}">
             <jvmarg line="${run.jvmargs}"/>
             <arg line="${leo.args}"/>
