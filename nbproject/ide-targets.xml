@@ -632,7 +632,7 @@
         <!-- Run Vampire on the tptp saving proof to file -->
         <!-- Ensure either *.fof or *.tff is set for the tptp.ext prop in
              build.properties as well as desired vamp.time -->
-        <antcall target="run.vampire.on.tptp"/>
+        <antcall target="run.vampire"/>
         <!-- Run analysis on the proof -->
         <antcall target="run">
             <!-- FOF -->
@@ -642,10 +642,10 @@
                    value="-f ${vamp.out.file}"/>
         </antcall>
         <!-- View the proof -->
-        <antcall target="view.proof.image"/>
+        <antcall target="view.proof"/>
     </target>
 
-    <target name="run.vampire.on.tptp" depends="init" description="Assumes that ${sigma_home}/KBs/SUMO.* has already been generated">
+    <target name="run.vampire" description="Assumes that ${sigma_home}/KBs/SUMO.* has already been generated">
         <echo message="Running vampire with: [${vamp.args}]"/>
         <exec executable="sh">
             <arg value="-c"/>
@@ -655,7 +655,7 @@
         <echo message="${vamp.out}"/>
     </target>
 
-    <target name="run.dot" depends="init" description="Run the GraphViz image producer on a *.dot file">
+    <target name="run.dot" description="Run the GraphViz image producer on a *.dot file">
         <echo message="Running dot with: [${dot.args}]"/>
         <exec executable="sh">
             <arg value="-c"/>
@@ -664,11 +664,18 @@
         <antcall target="view.proof.image"/>
     </target>
 
-    <target name="view.proof.image" depends="init" description="View the proof image produced by GraphViz">
+    <target name="view.proof" description="View the proof image produced by GraphViz">
         <exec executable="sh" osfamily="mac">
             <arg value="-c"/>
             <arg value="open -a 'Google Chrome' ${dot.image.file}"/>
         </exec>
+    </target>
+
+    <target name="run.leo" description="Runs a check on a given TPTP file">
+        <java jar="${leo.jar}">
+            <jvmarg line="${run.jvmargs}"/>
+            <arg line="${leo.args}"/>
+        </java>
     </target>
 
 </project>
