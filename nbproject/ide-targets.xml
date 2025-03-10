@@ -661,7 +661,7 @@
             <arg value="-c"/>
             <arg value="${dot.cmd} ${dot.args}"/>
         </exec>
-        <antcall target="view.proof.image"/>
+        <antcall target="view.proof"/>
     </target>
 
     <target name="view.proof" description="View the proof image produced by GraphViz">
