@@ -1,10 +1,10 @@
 # Build status
 
-![build results](https://github.com/ontologyportal/sigmakee/actions/workflows/test-report.yml/badge.svg)
+![badge](https://github.com/ontologyportal/sigmakee/actions/workflows/ant.yml/badge.svg)
 
 # Test status
 
-![test results](https://github.com/ontologyportal/sigmakee/actions/workflows/ant.yml/badge.svg)
+![badge](https://github.com/ontologyportal/sigmakee/actions/workflows/test-report.yml/badge.svg)
 
 # Notice
 
