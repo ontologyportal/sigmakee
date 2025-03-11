@@ -13,11 +13,16 @@ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
 
+import com.articulate.sigma.trans.TPTP3ProofProcessor;
+
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.ProcessBuilder.Redirect;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import com.articulate.sigma.utils.FileUtil;
@@ -318,9 +323,9 @@ public class Graph {
     /** *************************************************************
      * Create a ArrayList with a set of terms comprising a hierarchy
      * in a format suitable for GraphViz' input format
-     * http://www.graphviz.org/
-     * Generate a GIF from the .dot output with a command like
-     *  dot SUMO-graph.dot -Tgif > graph.gif
+     * http://www.graphviz.org.
+     * Generate a proof image from the .dot output with a command like
+     * dot SUMO-graph.dot -Tgif > graph.gif
      *
      * @param kb the knowledge base being graphed
      * @param term the term in the KB being graphed
@@ -333,15 +338,12 @@ public class Graph {
         String sep = File.separator;
         String dir = System.getenv("CATALINA_HOME") + sep + "webapps" +
                 sep + "sigma" + sep + "graph";
-        String filename = System.getenv("CATALINA_HOME") + sep + "webapps" +
-                sep + "sigma" + sep + "graph" + sep + fname;
-        String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         File dirfile = new File(dir);
         if (!dirfile.exists())
             dirfile.mkdir();
-        File file = null;
-        try (FileWriter fw = new FileWriter(filename + ".dot");
-            PrintWriter pw = new PrintWriter(fw)) {
+        String filename = dirfile.getPath() + sep + fname + ".dot";
+        Path path = Paths.get(filename);
+        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
             if (debug) System.out.println("Graph.createGraphBody(): creating file at " + filename);
             Set<String> result;
             Set<String> start = new HashSet<>();
@@ -362,34 +364,13 @@ public class Graph {
                 pw.println(s);
             }
             pw.println("}");
-            pw.flush();
-
-            String ext = "png";
-            // Build an image proof from an input file
-            // From: https://graphviz.org/doc/info/command.html#-O
-            ProcessBuilder pb = new ProcessBuilder(
-                graphVizDir + File.separator + "dot",
-                "-T" + ext,
-                "-Kdot",
-                "-O",
-                filename + ".dot"
-            );
-
-            file = new File(filename + ".dot." + ext);
-            System.out.println("Graph.createDotGraph(): exec command: " + pb.command());
-            pb.directory(file.getParentFile());
-            File log = new File(file.getParentFile(),"log");
-            pb.redirectErrorStream(true);
-            pb.redirectOutput(Redirect.appendTo(log)); // <- in case of any errors
-            pb.start();
         }
         catch (Exception e) {
-            String err = "Error writing file " + file +"\n" + e.getMessage();
+            String err = "Error writing file " + path +"\n" + e.getMessage();
             errors.add(err);
             throw new IOException(err);
         }
-        System.out.println("Graph.createDotGraph(): write image file: " + file);
-        return true;
+        return new File(TPTP3ProofProcessor.createProofDotGraphImage(filename)).exists();
     }
 
     /** *************************************************************
@@ -635,7 +616,7 @@ public class Graph {
             String relation = args[2];
             String fileRestrict = "";
             try {
-                g.createDotGraph(kb, term, relation, 2, 2, 100, "graph.txt", fileRestrict);
+                g.createDotGraph(kb, term, relation, 1, 2, 100, "proof", fileRestrict);
             }
             catch (IOException e) {
                 System.err.println(e.getMessage());
