@@ -26,6 +26,10 @@ import com.igormaznitsa.prologparser.terms.*;
 import com.igormaznitsa.prologparser.tokenizer.Op;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -1148,7 +1152,6 @@ public class TPTP3ProofProcessor {
         List<String> cmd = new ArrayList<>();
         cmd.add(graphVizDir + File.separator + "dot");
         cmd.add("-T" + imageExt);
-        cmd.add("-Kdot");
         cmd.add("-O");
         cmd.add(filename + ".dot");
         try {
@@ -1181,7 +1184,6 @@ public class TPTP3ProofProcessor {
     public String createProofDotGraph() throws IOException {
 
         String sep = File.separator;
-        String link;
         String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
                 + sep + "sigma" + sep + "graph";
         File dirfile = new File(dir);
@@ -1189,7 +1191,8 @@ public class TPTP3ProofProcessor {
             dirfile.mkdirs();
         String filename = dirfile.getPath() + sep + "proof";
 
-        try (Writer fw = new FileWriter(filename + ".dot"); PrintWriter pw = new PrintWriter(fw)) {
+        Path path = Paths.get(filename + ".dot");
+        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
             System.out.println("TPTP3ProofProcessor.createProofDotGraph(): creating file: " + filename + ".dot");
 
             Set<String> result = new HashSet<>();
@@ -1201,12 +1204,11 @@ public class TPTP3ProofProcessor {
             for (String s : result)
                 pw.println(s);
             pw.println("}");
-            link = createProofDotGraphImage(filename);
         } catch (IOException e) {
             String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
             throw new IOException(err);
         }
-        return link;
+        return createProofDotGraphImage(filename);
     }
 
     /**
