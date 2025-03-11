@@ -1,6 +1,6 @@
 # This workflow will build a Java project with Ant
 # For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-ant
-name: Java CI with Ant / Build sumo-ci
+name: 'Java CI with Ant / Build sumo-ci'
 
 on:
   push:
@@ -12,8 +12,8 @@ env:
   DEFAULT_DOCKER_ACCOUNT: apease
 
 jobs:
-  build:
-
+  build-test-upload:
+    name: Build & Test
     runs-on: ubuntu-latest
     container:
       image: apease/sigma-ci:latest
@@ -42,7 +42,7 @@ jobs:
           repository: 'ontologyportal/sumo'
           path: sumo
 
-      - name: Setup SigmaKEE
+      - name: Setup SIGMA_HOME
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
@@ -71,8 +71,8 @@ jobs:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
           SIGMA_SRC: ${{ github.workspace }}/sigmakee
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
-        run: ant
         working-directory: ./sigmakee
+        run: ant
 
       - name: Prepare test env
         env:
@@ -143,6 +143,13 @@ jobs:
           find $SIGMA_HOME/KBs -name '*.tff' -delete
           rm -rf $SIGMA_HOME/KBs/tests
 
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            ./sigmakee/build/test/results/*
+
       - name: Upload sigmakee jars
         uses: actions/upload-artifact@v4
         with:
@@ -161,7 +168,7 @@ jobs:
 
   build-sumo-ci-and-sigmakee:
     runs-on: ubuntu-latest
-    needs: build
+    needs: build-test-upload
     steps:
       - name: Checkout
         uses: actions/checkout@v4

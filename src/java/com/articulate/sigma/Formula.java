@@ -1229,7 +1229,7 @@ public class Formula implements Comparable, Serializable {
 
     /** *****************************************************************
      *  Compares this formula with the parameter by trying to compare the
-     *  predicate structure of th two and logically
+     *  predicate structure of the two and logically
      *  unify their variables. The helper method mapFormulaVariables(....)
      *  returns a logical mapping between the variables
      *  of two formulae of one exists.
