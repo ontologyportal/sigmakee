@@ -236,7 +236,7 @@
         <mkdir dir="${reports.dir}"/>
     </target>
 
-    <target name="dist" depends="compile,compile.test" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
+    <target name="dist" depends="compile.test" description="Create the *.war file and place in $CATALINA_HOME/webapps/sigma, create sigmakee.jar.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${user.name}"/>
             <attribute name="Specification-Title"
