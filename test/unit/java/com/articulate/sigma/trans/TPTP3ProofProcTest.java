@@ -285,7 +285,6 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         StringBuilder sb = new StringBuilder("X0");
         tpp.parseProofOutput(input,query,kb,sb);
         String path = tpp.createProofDotGraph();
-        Thread.sleep(1000); // image needs some time to get generated and placed
         assertTrue(Files.exists(Path.of(path)));
     }
 }
