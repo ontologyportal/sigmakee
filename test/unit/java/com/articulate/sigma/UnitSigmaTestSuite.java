@@ -19,7 +19,7 @@ import org.junit.runners.Suite;
     FormulaTest.class,
     FormulaUnificationTest.class,
     FormulaUtilTest.class,
-    Graph.class,
+    GraphTest.class,
     KBTest.class,
     KBcacheUnitTest.class,
     KIFTest.class,
