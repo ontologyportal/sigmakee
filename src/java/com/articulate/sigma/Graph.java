@@ -340,7 +340,7 @@ public class Graph {
                 sep + "sigma" + sep + "graph";
         File dirfile = new File(dir);
         if (!dirfile.exists())
-            dirfile.mkdir();
+            dirfile.mkdirs();
         String filename = dirfile.getPath() + sep + fname + ".dot";
         Path path = Paths.get(filename);
         try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
@@ -616,7 +616,7 @@ public class Graph {
             String relation = args[2];
             String fileRestrict = "";
             try {
-                g.createDotGraph(kb, term, relation, 1, 2, 100, "proof", fileRestrict);
+                g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
             }
             catch (IOException e) {
                 System.err.println(e.getMessage());

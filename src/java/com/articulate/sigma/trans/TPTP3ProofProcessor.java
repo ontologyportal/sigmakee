@@ -1145,8 +1145,12 @@ public class TPTP3ProofProcessor {
      */
     public static String createProofDotGraphImage(String filename) throws IOException {
 
+        int exitCode;
+        String retVal = "";
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
-        String imageExt = "png";
+        String imageExt = KBmanager.getMgr().getPref("imageFormat");
+        if (imageExt == null || imageExt.isBlank())
+            imageExt = "png"; // default
         File file = new File(filename + "." + imageExt);
 
         List<String> cmd = new ArrayList<>();
@@ -1166,13 +1170,17 @@ public class TPTP3ProofProcessor {
                 log.delete();
             pb.redirectErrorStream(true);
             pb.redirectOutput(ProcessBuilder.Redirect.appendTo(log)); // <- in case of any errors
-            pb.start();
-        } catch (IOException e) {
+            Process proc = pb.start();
+            exitCode = proc.waitFor();
+        } catch (InterruptedException e) {
             String err = "Error writing file " + file + "\n" + e.getMessage();
             throw new IOException(err);
         }
-        System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
-        return file.getAbsolutePath();
+        if (exitCode == 0) {
+            System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
+            retVal = file.getAbsolutePath();
+        }
+        return retVal;
     }
 
     /**
@@ -1190,7 +1198,6 @@ public class TPTP3ProofProcessor {
         if (!dirfile.exists())
             dirfile.mkdirs();
         String filename = dirfile.getPath() + sep + "proof.dot";
-
         Path path = Paths.get(filename);
         try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
             System.out.println("TPTP3ProofProcessor.createProofDotGraph(): creating file: " + path);

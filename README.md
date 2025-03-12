@@ -1,3 +1,11 @@
+# Build status
+
+![badge](https://github.com/ontologyportal/sigmakee/actions/workflows/ant.yml/badge.svg)
+
+# Test status
+
+![badge](https://github.com/ontologyportal/sigmakee/actions/workflows/test-report.yml/badge.svg)
+
 # Notice
 
 2024 November 2 - We're making some improvements to clean up the configuration and code of Sigma and its associated projects. For existing installations, some changes are needed to stay in sync. OpenJDK is now supported, eliminating the dependency on Oracle JDK. Tomcat 9 is now required. A new environment variable SIGMA_CP is now required in your .bashrc (or similar for non-Linux). Please let us know if you have any issues!
@@ -519,7 +527,7 @@ sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/co
 
 ## jEdit Integration (optional)
 
-If you install jEdit (see http://jedit.org) and configure Sigma properly, you can click on a source\
+If you install [jEdit](http://jedit.org) and configure Sigma properly, you can click on a source\
 file and line number for a statement in the Sigma Browse page and be taken to\
 the editor, open on that line. By default, the edit feature will make use of your $ONTOLOGYPORTAL_GIT\
 environment variable, and try to open the file in that location in the "sumo" module. Recommended practice\
@@ -573,7 +581,7 @@ ant test
 
 ## RESTful Interface
 
-see the SigmaRest project - https://github.com/ontologyportal/SigmaRest
+see the [SigmaRest project](https://github.com/ontologyportal/SigmaRest)
 
 
 ## Python Interface

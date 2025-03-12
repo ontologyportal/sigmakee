@@ -90,8 +90,9 @@ function setWidth(id) {
   String[] items = request.getParameterValues("columns");
   if (items != null) {
       Iterator<String> it = g.columnList.keySet().iterator();
+      String key;
       while (it.hasNext()) {
-          String key = it.next();
+          key = it.next();
           g.columnList.put(key,"no");
       }
       for (int i = 0; i < items.length; i++)
@@ -151,7 +152,6 @@ function setWidth(id) {
                           " and fileRestrict=" + fileRestrict);
                       graphAvailable = g.createDotGraph(kb,term,relation,Integer.parseInt(up),
                                                         Integer.parseInt(down),limitInt,fname,fileRestrict);
-                      Thread.sleep(500); // give some time for the image to write to disc
                   }
                   catch (Exception ex) {
                       graphAvailable = false;
