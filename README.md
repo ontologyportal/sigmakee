@@ -239,13 +239,13 @@ echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
 ```
 
 mandatory additions to .bashrc
+NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
+      ~/workspace is the recommendation
 ```sh
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
-      ~/workspace is just a default suggestion
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
+echo "export CATALINA_OPTS=$CATALINA_OPTS -Xmx10g -Xss1m" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
@@ -320,14 +320,14 @@ First, comply with System preparation on Linux above
 
 Clone SigmaKEE. First, ensure the below exports are contained in your ~/.bashrc.
 If not, then perform the exports before cloning SigmaKEE.
+NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
+      ~/workspace is just a default suggestion
 ```sh
 cd ~
 echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
-      ~/workspace is just a default suggestion
 echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
 echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
+echo "export CATALINA_OPTS=$CATALINA_OPTS -Xmx10g -Xss1m" >> .bashrc
 echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
 echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
 echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc

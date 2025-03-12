@@ -19,10 +19,10 @@ public class KBcacheTest extends IntegrationTestBase {
                 Arrays.asList("Merge.kif", "Mid-level-ontology.kif");
         for (String s : reqFiles) {
             if (!KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).containsFile(s)) {
-                System.out.println("Error in KBcacheTest.requiredKB() required file " + s + " missing");
+                System.err.println("Error in KBcacheTest.requiredKB() required file " + s + " missing");
                 System.out.println("only have files " +
                         KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname")).constituents);
-                System.exit(-1);
+                fail();
             }
         }
     }
@@ -32,7 +32,7 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testIsParentOf1() {
 
-        KBcache cache = SigmaTestBase.kb.kbCache;
+//        KBcache cache = SigmaTestBase.kb.kbCache;
         //System.out.println("parents of Shirt (as instance): " + cache.getParentClassesOfInstance("Shirt"));
         //System.out.println("parents of Shirt: " + cache.parents.get("subclass").get("Shirt"));
         //System.out.println("childOfP(\"Shirt\", \"WearableItem\"): " + cache.childOfP("subclass", "WearableItem","Shirt"));
@@ -318,27 +318,18 @@ public class KBcacheTest extends IntegrationTestBase {
         System.out.println("\n============= testPredicates ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
         Set<String> rels = cache.getChildInstances("Relation");
+        boolean isInstanceOf;
         for (String rel : rels) {
             if (!rel.endsWith("Fn")) {
-                if (!cache.isInstanceOf(rel, "Predicate")) {
-                    System.out.println("fail - " + rel + " not instance of Predicate");
-                    System.out.println("parents of " + rel + " " + cache.instanceOf.get(rel));
+                isInstanceOf = cache.isInstanceOf(rel, "Predicate");
+                if (!isInstanceOf) {
+                    System.err.println("fail - " + rel + " not instance of Predicate");
+                    System.err.println("parents of " + rel + ": " + cache.instanceOf.get(rel));
                 }
                 else
                     System.out.println("success for predicate: " + rel);
+                assertTrue(rel + " is not an instance of Predicate", isInstanceOf);
             }
         }
-        for (String rel : rels) {
-            if (!rel.endsWith("Fn")) {
-                if (!cache.isInstanceOf(rel, "Predicate")) {
-                    System.out.println("fail - " + rel + " not instance of Predicate");
-                    System.out.println("parents of " + rel + " " + cache.instanceOf.get(rel));
-                }
-                else
-                    System.out.println("success for predicate: " + rel);
-                assertTrue(cache.isInstanceOf(rel, "Predicate"));
-            }
-        }
-        System.out.println("Success");
     }
 }

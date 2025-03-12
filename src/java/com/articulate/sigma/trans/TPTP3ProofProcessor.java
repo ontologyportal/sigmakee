@@ -26,6 +26,10 @@ import com.igormaznitsa.prologparser.terms.*;
 import com.igormaznitsa.prologparser.tokenizer.Op;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -1139,18 +1143,17 @@ public class TPTP3ProofProcessor {
     /**
      * *************************************************************
      */
-    private void createProofDotGraphImage(String filename) throws IOException {
+    public static String createProofDotGraphImage(String filename) throws IOException {
 
         String graphVizDir = KBmanager.getMgr().getPref("graphVizDir");
         String imageExt = "png";
-        File file = new File(filename + ".dot." + imageExt);
+        File file = new File(filename + "." + imageExt);
 
         List<String> cmd = new ArrayList<>();
         cmd.add(graphVizDir + File.separator + "dot");
         cmd.add("-T" + imageExt);
-        cmd.add("-Kdot");
         cmd.add("-O");
-        cmd.add(filename + ".dot");
+        cmd.add(filename);
         try {
 
             // Build a proof image from an input file
@@ -1169,27 +1172,28 @@ public class TPTP3ProofProcessor {
             throw new IOException(err);
         }
         System.out.println("TPTP3ProofProcessor.createProofDotGraphImage(): write image file: " + file);
+        return file.getAbsolutePath();
     }
 
     /**
      * *************************************************************
      * Create a proof in a format suitable for GraphViz' input format
-     * http://www.graphviz.org/. Generate a GIF from the .dot output with a
-     * command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
+     * http://www.graphviz.org/. Generate a proof imate from the .dot output
+     * with a command like <code>dot SUMO-graph.dot -Tgif > graph.gif</code>
      */
     public String createProofDotGraph() throws IOException {
 
         String sep = File.separator;
-        String link = "graph" + sep + "proof.gif";
         String dir = System.getenv("CATALINA_HOME") + sep + "webapps"
                 + sep + "sigma" + sep + "graph";
         File dirfile = new File(dir);
         if (!dirfile.exists())
             dirfile.mkdirs();
-        String filename = dirfile.getPath() + sep + "proof";
+        String filename = dirfile.getPath() + sep + "proof.dot";
 
-        try (Writer fw = new FileWriter(filename + ".dot"); PrintWriter pw = new PrintWriter(fw)) {
-            System.out.println("TPTP3ProofProcessor.createProofDotGraph(): creating file: " + filename + ".dot");
+        Path path = Paths.get(filename);
+        try (Writer bw = Files.newBufferedWriter(path, StandardCharsets.UTF_8); PrintWriter pw = new PrintWriter(bw, true)) {
+            System.out.println("TPTP3ProofProcessor.createProofDotGraph(): creating file: " + path);
 
             Set<String> result = new HashSet<>();
             result.addAll(createProofDotGraphBody());
@@ -1200,12 +1204,11 @@ public class TPTP3ProofProcessor {
             for (String s : result)
                 pw.println(s);
             pw.println("}");
-            createProofDotGraphImage(filename);
         } catch (IOException e) {
-            String err = "Error writing file " + filename + ".dot\n" + e.getMessage();
+            String err = "Error writing file " + path + "\n" + e.getMessage();
             throw new IOException(err);
         }
-        return link;
+        return createProofDotGraphImage(path.toString());
     }
 
     /**
