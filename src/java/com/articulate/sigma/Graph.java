@@ -616,7 +616,7 @@ public class Graph {
             String relation = args[2];
             String fileRestrict = "";
             try {
-                g.createDotGraph(kb, term, relation, 1, 2, 100, "proof", fileRestrict);
+                g.createDotGraph(kb, term, relation, 1, 1, 100, "proof", fileRestrict);
             }
             catch (IOException e) {
                 System.err.println(e.getMessage());
