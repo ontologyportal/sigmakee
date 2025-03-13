@@ -136,7 +136,9 @@ public class NLGUtils implements Serializable {
 
     /** ***************************************************************
      *  save serialized version.
+     * @deprecated as of OCT 2024, use {@link #encoder(java.lang.Object)} instead
      */
+    @Deprecated(since = "OCT 2024", forRemoval = true)
     public static void serialize() {
 
         try {
