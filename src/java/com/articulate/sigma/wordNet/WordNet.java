@@ -1734,7 +1734,7 @@ public class WordNet implements Serializable {
     }
 
     /** ***************************************************************
-     *  Load the most recently save serialized version.
+     *  Loads the most recently saved serialized version.
      */
     public static void loadSerialized() {
 
@@ -1745,7 +1745,7 @@ public class WordNet implements Serializable {
             //ObjectInputStream in = new ObjectInputStream(file);
             // Method for deserialization of object
             if (serializedOld()) {
-                System.out.println("WordNet.loadSerialized(): serialized file is older than sources, " +
+                System.out.println("INFO: in WordNet.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
@@ -1854,19 +1854,15 @@ public class WordNet implements Serializable {
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
                 System.out.println("WordNet.initOnce(): disable: " + disable);
                 baseDirFile = new File(WordNet.baseDir);
-//                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
+                if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
                     System.out.println("WordNet.initOnce(): loading WordNet source files ");
                     loadFresh(); // <- will serialize
-                    // FIXME: a deserialized WN instance does not load the MultiWords.multiWord map.
-                    //        only a loadFresh() does this, so, even though we have a serialized
-                    //        WN file, we must do a loadFresh() to get the mappings anyway.
-                    //        2/15/25 tdn
-//                }
-//                else {
-//                    loadSerialized();
-//                    if (wn == null)
-//                        loadFresh();
-//                }
+                }
+                else {
+                    loadSerialized();
+                    if (wn == null)
+                        loadFresh();
+                }
                 DB.readSentimentArray();
             }
         }
