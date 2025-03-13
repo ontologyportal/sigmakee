@@ -262,6 +262,7 @@
              webxml="${web.dir}/web.xml"
              manifest="${manifest.mf}">
             <metainf file="LICENSE"/>
+            <metainf file="${web.dir}/context.xml"/>
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
