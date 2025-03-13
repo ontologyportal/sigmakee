@@ -9,12 +9,14 @@
   <preference name="holdsPrefix" value="no" />
   <preference name="hostname" value="localhost" />
   <preference name="https" value="false" />
+  <preference name="imageFormat" value="png"/>
   <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
   <preference name="jedit" value="jedit" />
   <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
   <preference name="leoExecutable" value="/home/theuser/leo" />
   <preference name="lineNumberCommand" value="" />
   <preference name="loadCELT" value="no" />
+  <preference name="loadFresh" value="false" />
   <preference name="logDir" value="/home/theuser/.sigmakee/logs" />
   <preference name="logLevel" value="warning" />
   <preference name="port" value="8080" />
