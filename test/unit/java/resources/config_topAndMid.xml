@@ -16,6 +16,7 @@
   <preference name="leoExecutable" value="/home/theuser/leo" />
   <preference name="lineNumberCommand" value="" />
   <preference name="loadCELT" value="no" />
+  <preference name="loadFresh" value="false" />
   <preference name="logDir" value="/home/theuser/.sigmakee/logs" />
   <preference name="logLevel" value="warning" />
   <preference name="port" value="8080" />
