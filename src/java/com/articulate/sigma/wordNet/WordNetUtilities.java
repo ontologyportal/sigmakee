@@ -2835,6 +2835,7 @@ public class WordNetUtilities {
         System.out.println("  h - show this help screen");
         System.out.println("  w \"word\" - show WordNet display page");
         System.out.println("  t \"term\" - get words from SUMO Term");
+        System.out.println("  s \"word\" - get synsets from word");
     }
 
     /** ***************************************************************
@@ -2857,6 +2858,11 @@ public class WordNetUtilities {
                 String term = StringUtil.removeEnclosingQuotes(args[1]);
                 System.out.println("term: " +  term);
                 System.out.println(WordNet.wn.getWordsFromTerm(term).keySet());
+            }
+            else if (args != null && args.length > 1 && args[0].equals("-s")) {
+                String word = StringUtil.removeEnclosingQuotes(args[1]);
+                System.out.println("word: " +  word);
+                System.out.println(WordNet.wn.getSynsetsFromWord(word));
             }
             else {
                 System.out.println("no such option or no option : " + Arrays.toString(args));

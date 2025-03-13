@@ -2212,9 +2212,12 @@ public class WordNet implements Serializable {
      */
     public Map<String,List<String>> getSenseKeysFromWord(String word) {
 
+        if (debug) System.out.println("getSenseKeysFromWord(): word: " + word);
         Map<String,List<String>> result = new TreeMap<>();
         String verbRoot = verbRootForm(word,word.toLowerCase());
+        if (debug) System.out.println("getSenseKeysFromWord(): verbRoot: " + verbRoot);
         String nounRoot = nounRootForm(word,word.toLowerCase());
+        if (debug) System.out.println("getSenseKeysFromWord(): nounRoot: " + nounRoot);
         List<String> senseKeys = wordsToSenseKeys.get(verbRoot);
         String senseKey, POS, synset, newword;
         List<String> words, al;
@@ -2250,6 +2253,40 @@ public class WordNet implements Serializable {
             }
         }
         senseKeys = wordsToSenseKeys.get(nounRoot);
+        if (senseKeys != null) {
+            for (int i = 0; i < senseKeys.size(); i++) {
+                senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
+                if (!isValidKey(senseKey)) {
+                    System.err.println("Error in WordNet.getSenseKeysFromWord: invalid key: " + senseKey);
+                    senseKey = null;
+                }
+                if (senseKey != null) {
+                    POS = WordNetUtilities.getPOSfromKey(senseKey);
+                    if (POS != null) {
+                        synset = WordNetUtilities.posLettersToNumber(POS) + ((String) senseIndex.get(senseKey));
+                        if (synset != null) {
+                            words = synsetsToWords.get(synset);
+                            if (words != null) {
+                                it2 = words.iterator();
+                                while (it2.hasNext()) {
+                                    newword = (String) it2.next();
+                                    al = result.get(newword);
+                                    if (al == null) {
+                                        al = new ArrayList<>();
+                                        result.put(newword,al);
+                                    }
+                                    al.add(synset);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (result.size() > 0)
+          return result;
+        senseKeys = wordsToSenseKeys.get(word);
+        if (debug) System.out.println("getSenseKeysFromWord(): " + senseKeys);
         if (senseKeys != null) {
             for (int i = 0; i < senseKeys.size(); i++) {
                 senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
