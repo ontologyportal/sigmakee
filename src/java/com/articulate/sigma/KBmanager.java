@@ -320,7 +320,7 @@ public class KBmanager implements Serializable {
 
             File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
             if (!graphDir.exists())
-                graphDir.mkdir();
+                graphDir.mkdirs();
             preferences.put("graphDir", graphDir.getCanonicalPath());
 
             // There is no foolproof way to determine the actual
