@@ -534,6 +534,7 @@
              webxml="${web.dir}/web.xml"
              manifest="${manifest.mf}">
             <metainf file="${project.license}"/>
+            <metainf file="${web.dir}/context.xml"/>
         </war>
         <jar destfile="${dist.jar}"
              basedir="${build.classes.dir}"
