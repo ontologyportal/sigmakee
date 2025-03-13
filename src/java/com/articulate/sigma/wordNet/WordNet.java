@@ -1740,18 +1740,12 @@ public class WordNet implements Serializable {
 
         wn = null;
         try {
-            // Reading the object from a file
-            //FileInputStream file = new FileInputStream(baseDir + File.separator + "wn.ser");
-            //ObjectInputStream in = new ObjectInputStream(file);
-            // Method for deserialization of object
             if (serializedOld()) {
                 System.out.println("INFO: in WordNet.loadSerialized(): serialized file is older than sources, " +
                         "reloding from sources.");
                 return;
             }
             wn = decoder();
-            //in.close();
-            //file.close();
             System.out.println("WordNet.loadSerialized(): WN has been deserialized ");
             initNeeded = false;
             System.out.println("INFO in WordNet.loadSerialized(): origMaxNounSynsetID: " +

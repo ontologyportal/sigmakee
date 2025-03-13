@@ -258,14 +258,6 @@ public class KBmanager implements Serializable {
     public static void serialize() {
 
         try {
-            // Reading the object from a file
-            //String kbDir = SIGMA_HOME + File.separator + "KBs";
-            //FileOutputStream file = new FileOutputStream(kbDir + File.separator + "kbmanager.ser");
-            //ObjectOutputStream out = new ObjectOutputStream(file);
-
-            //out.writeObject(manager);
-            //out.close();
-            //file.close();
             encoder(manager);
             System.out.println("KBmanager.serialize(): KBmanager has been serialized");
         }
@@ -735,7 +727,7 @@ public class KBmanager implements Serializable {
                     preferences.keySet().size());
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
-            if (serializedExists() && !serializedOld(configuration)) {
+            if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
                 if (loaded) {
