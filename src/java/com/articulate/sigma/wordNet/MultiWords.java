@@ -21,23 +21,25 @@
 
 package com.articulate.sigma.wordNet;
 
-import com.articulate.sigma.utils.StringUtil;
 import com.google.common.base.Strings;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class MultiWords implements Serializable {
 
     /** A Multimap of String keys and String values.
      * The String key is the first word of a multi-word WordNet "word", such as "table_tennis",
      * where words are separated by underscores.  The values are
-     * the whole multi-word. The same head word can appear in many multi-words.*/
-    public Multimap<String, String> multiWord = HashMultimap.create();
+     * the whole multi-word. The same head word can appear in many multi-words.
+     */
+    public Map<String, Set<String>> multiWordSerialized = new HashMap<>();
 
     public static boolean debug = false;
 
@@ -48,17 +50,19 @@ public class MultiWords implements Serializable {
     public void addMultiWord(String word, char wordDelimit) {
 
         if (debug) System.out.println("INFO in WordNet.addMultiWord(): word: " + word);
-        if (StringUtil.emptyString(word)) {
+        if (Strings.isNullOrEmpty(word)) {
             System.err.println("Error in MultiWords.addMultiWord(): word is null");
             return;
         }
         if (word.indexOf(wordDelimit) >= 0) {
             String firstWord = word.substring(0, word.indexOf(wordDelimit));
             String newWord = word.replace(wordDelimit,'_');
-            multiWord.put(firstWord, newWord);
+            if (multiWordSerialized.get(firstWord) == null)
+                multiWordSerialized.put(firstWord, new HashSet<>());
+            multiWordSerialized.get(firstWord).add(newWord);
         }
         else {
-            System.out.println("Error in MultiWords.addMultiWord(): Not a multi-word: " + word);
+            System.err.println("Error in MultiWords.addMultiWord(): Not a multi-word: " + word);
             Thread.dumpStack();
         }
     }
@@ -113,20 +117,20 @@ public class MultiWords implements Serializable {
      */
     public int findMultiWord(String multiWordKey, String nonRoot, List<String> multiWordTail, List<String> synset) {
 
-        if (!multiWord.containsKey(multiWordKey))
+        if (!multiWordSerialized.containsKey(multiWordKey))
             multiWordKey = nonRoot;
         int wordIndex = 0;
-        if (multiWord.containsKey(multiWordKey) && !multiWordTail.isEmpty()) {
+        if (multiWordSerialized.containsKey(multiWordKey) && !multiWordTail.isEmpty()) {
             String foundMultiWord = multiWordKey + "_" + multiWordTail.get(wordIndex);
-            Collection<String> candidates = multiWord.get(multiWordKey);
-            List<String> newCandidates;
+            Collection<String> candidates = multiWordSerialized.get(multiWordKey);
+            List<String> newCandidates = new ArrayList<>();
             String sense;
             while (!candidates.isEmpty()) {
-                newCandidates = new ArrayList<>();
+                newCandidates.clear();
                 for (String candidate : candidates) {
                     if (candidate.equals(foundMultiWord)) {
                         sense = WSD.getBestDefaultSense(foundMultiWord);
-                        if (!StringUtil.emptyString(sense)) { // only declare success if the multiword has a synset (trapping errors in the DB)
+                        if (!Strings.isNullOrEmpty(sense)) { // only declare success if the multiword has a synset (trapping errors in the DB)
                             synset.add(sense);
                             return wordIndex + 2;
                         }
@@ -140,7 +144,7 @@ public class MultiWords implements Serializable {
                         candidates.clear(); // ran out of words, trigger an exit
                     }
                     else {
-                        candidates = newCandidates;
+                        candidates.addAll(newCandidates);
                         wordIndex++;
                         if (wordIndex < multiWordTail.size())
                             foundMultiWord = foundMultiWord + "_" + multiWordTail.get(wordIndex);
