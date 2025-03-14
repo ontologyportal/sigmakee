@@ -41,12 +41,11 @@ Note: Installing ant and/or tomcat will also install the latest openjdk
 
 Add the following lines in your ~/.zshrc and make sure to have all these
 variables created before any next steps. Replace /Users/user with your home
-directory:
+directory.   NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
+~/workspace is just a default suggestion
 
   # For SIGMA
   export SIGMA_HOME=/Users/user/.sigmakee
-  NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
-        ~/workspace is just a default suggestion
   export ONTOLOGYPORTAL_GIT=~/workspace
   export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee
   export CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
