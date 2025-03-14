@@ -286,8 +286,8 @@ August 9, Acapulco, Mexico.
 
         File serfile = new File(WordNet.baseDir + File.separator + "omw.ser");
         Date saveDate = new Date(serfile.lastModified());
+        System.out.println("OMWordnet.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         String kbDir = KBmanager.getMgr().getPref("kbDir");
-        System.out.println("INFO in OMWordnet.readOMWfiles(): reading files: ");
         String filename;
         Date fileDate;
         File file;
