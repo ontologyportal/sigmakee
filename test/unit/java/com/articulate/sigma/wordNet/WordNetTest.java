@@ -1,8 +1,6 @@
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.UnitTestBase;
-import com.articulate.sigma.wordNet.WordNet;
-import com.articulate.sigma.wordNet.WordNetUtilities;
 import org.junit.Test;
 import java.util.*;
 
@@ -78,5 +76,18 @@ public class WordNetTest extends UnitTestBase {
         System.out.println("labor " + WordNet.wn.wordsToSenseKeys.get("labor"));
         System.out.println("phase " + WordNet.wn.wordsToSenseKeys.get("phase"));
         System.out.println("craft " + WordNet.wn.wordsToSenseKeys.get("craft"));
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testGetWordsFromTerm() {
+
+        System.out.println("========================");
+        String label = "testGetWordsFromTerm";
+        System.out.println("WordNetTest: " + label);
+        String term = "SocialInteraction";
+        System.out.println("term: " +  term);
+        assertTrue(!WordNet.wn.getWordsFromTerm(term).keySet().isEmpty());
     }
 }
