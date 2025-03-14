@@ -3,7 +3,6 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -43,21 +42,12 @@ public class NLGUtils implements Serializable {
 
     /** ***************************************************************
      */
-    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false); //No need to pre-register the class
-        kryo.setReferences(true);
-        return kryo;
-    });
-
-    /** ***************************************************************
-     */
     public static void encoder(Object object) {
 
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         Path path = Paths.get(kbDir, "NLGUtils.ser");
         try (Output output = new Output(Files.newOutputStream(path))) {
-            kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -72,7 +62,7 @@ public class NLGUtils implements Serializable {
         String kbDir = KBmanager.getMgr().getPref("kbDir");
         Path path = Paths.get(kbDir, "NLGUtils.ser");
         try (Input input = new Input(Files.newInputStream(path))) {
-            ob = kryoLocal.get().readObject(input,NLGUtils.class);
+            ob = KButilities.kryoLocal.get().readObject(input,NLGUtils.class);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -205,7 +195,7 @@ public class NLGUtils implements Serializable {
         int dl;
 //        int digit;
         String termName, displayName;
-        StringBuilder rsb;
+        StringBuilder rsb = new StringBuilder();
         int rsblen;
         // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
         while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
@@ -227,7 +217,7 @@ public class NLGUtils implements Serializable {
             displayName = sb.substring(dj, dk);
             if (StringUtil.emptyString(displayName))
                 displayName = termName;
-            rsb = new StringBuilder();
+            rsb.setLength(0); // reset
             rsb.append(anchorStart);
             rsb.append(termName);
             rsb.append("\">");
@@ -245,11 +235,6 @@ public class NLGUtils implements Serializable {
             ti = (ti + rsblen);
             if (ti >= sblen)
                 break;
-            tj = -1;
-            di = -1;
-            dj = -1;
-            dk = -1;
-            dl = -1;
         }
         return sb.toString();
     }

@@ -25,7 +25,6 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 
-import com.esotericsoftware.kryo.*;
 import com.esotericsoftware.kryo.io.*;
 
 import py4j.GatewayServer;
@@ -215,21 +214,12 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      */
-    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false); //No need to pre-register the class
-        kryo.setReferences(true);
-        return kryo;
-    });
-
-    /** ***************************************************************
-     */
     public static void encoder(Object object) {
 
         String kbDir = SIGMA_HOME + File.separator + "KBs";
         Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Output output = new Output(Files.newOutputStream(path))) {
-            kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.get().writeObject(output, object);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -244,7 +234,7 @@ public class KBmanager implements Serializable {
         String kbDir = SIGMA_HOME + File.separator + "KBs";
         Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Input input = new Input(Files.newInputStream(path))) {
-            ob = kryoLocal.get().readObject(input,KBmanager.class);
+            ob = KButilities.kryoLocal.get().readObject(input,KBmanager.class);
         }
         catch (IOException e) {
             e.printStackTrace();

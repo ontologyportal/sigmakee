@@ -5,8 +5,8 @@ import java.util.*;
 
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.KButilities;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -244,20 +244,11 @@ August 9, Acapulco, Mexico.
 
     /** ***************************************************************
      */
-    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false); //No need to pre-register the class
-        kryo.setReferences(true);
-        return kryo;
-    });
-
-    /** ***************************************************************
-     */
     public static void encoder(Object object) {
 
         Path path = Paths.get(WordNet.baseDir + File.separator + "omw.ser");
         try (Output output = new Output(Files.newOutputStream(path))) {
-            kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -271,7 +262,7 @@ August 9, Acapulco, Mexico.
         OMWordnet ob = null;
         Path path = Paths.get(WordNet.baseDir + File.separator + "omw.ser");
         try (Input input = new Input(Files.newInputStream(path))) {
-            ob = kryoLocal.get().readObject(input,OMWordnet.class);
+            ob = KButilities.kryoLocal.get().readObject(input,OMWordnet.class);
         }
         catch (Exception e) {
             e.printStackTrace();

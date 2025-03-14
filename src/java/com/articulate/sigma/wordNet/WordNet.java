@@ -21,9 +21,8 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
-import static com.articulate.sigma.wordNet.WordNetUtilities.isValidKey;
+import com.articulate.sigma.wordNet.WordNetUtilities;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -50,7 +49,7 @@ public class WordNet implements Serializable {
 
     public static boolean disable = false;
     public static boolean debug = false;
-    public static WordNet wn  = new WordNet();
+    public static WordNet wn;
 
     /* A map of language name to wordnets */
     //public static HashMap<String,WordNet> wns = new HashMap<String,WordNet>();
@@ -1666,23 +1665,13 @@ public class WordNet implements Serializable {
         return result;
     }
 
-
-    /** ***************************************************************
-     */
-    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false); //No need to pre-register the class
-        kryo.setReferences(true);
-        return kryo;
-    });
-
     /** ***************************************************************
      */
     public static void encoder(Object object) {
 
         Path path = Paths.get(baseDir, "wn.ser");
         try (Output output = new Output(Files.newOutputStream(path))) {
-            kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -1696,7 +1685,7 @@ public class WordNet implements Serializable {
         WordNet ob = null;
         Path path = Paths.get(baseDir, "wn.ser");
         try (Input input = new Input(Files.newInputStream(path))) {
-            ob = kryoLocal.get().readObject(input,WordNet.class);
+            ob = KButilities.kryoLocal.get().readObject(input,WordNet.class);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -1752,7 +1741,7 @@ public class WordNet implements Serializable {
                     wn.origMaxNounSynsetID + " maxNounSynsetID: " +
                     wn.maxNounSynsetID);
         }
-        catch(Exception ex) {
+        catch (Exception ex) {
             System.err.println("Error in WordNet.loadSerialized()");
             ex.printStackTrace();
         }
@@ -1772,7 +1761,7 @@ public class WordNet implements Serializable {
             System.out.println("WordNet.serialize(): WN has been serialized ");
             initNeeded = false;
         }
-        catch(Exception ex) {
+        catch (Exception ex) {
             System.err.println("Error in WordNet.serialize():");
             ex.printStackTrace();
         }
@@ -2211,7 +2200,7 @@ public class WordNet implements Serializable {
         if (senseKeys != null) {
             for (int i = 0; i < senseKeys.size(); i++) {
                 senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
-                if (!isValidKey(senseKey)) {
+                if (!WordNetUtilities.isValidKey(senseKey)) {
                     System.err.println("Error in WordNet.getSenseKeysFromWord: invalid key: " + senseKey);
                     senseKey = null;
                 }
@@ -2242,7 +2231,7 @@ public class WordNet implements Serializable {
         if (senseKeys != null) {
             for (int i = 0; i < senseKeys.size(); i++) {
                 senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
-                if (!isValidKey(senseKey)) {
+                if (!WordNetUtilities.isValidKey(senseKey)) {
                     System.err.println("Error in WordNet.getSenseKeysFromWord: invalid key: " + senseKey);
                     senseKey = null;
                 }
@@ -2276,7 +2265,7 @@ public class WordNet implements Serializable {
         if (senseKeys != null) {
             for (int i = 0; i < senseKeys.size(); i++) {
                 senseKey = (String) senseKeys.get(i);                // returns a word_POS_num
-                if (!isValidKey(senseKey)) {
+                if (!WordNetUtilities.isValidKey(senseKey)) {
                     System.err.println("Error in WordNet.getSenseKeysFromWord: invalid key: " + senseKey);
                     senseKey = null;
                 }
@@ -3385,8 +3374,6 @@ public class WordNet implements Serializable {
 
         int counter = 0;
         int totalcount = 0;
-        //System.out.println("INFO in WordNet.termFormatsToSynsets()");
-        long millis2 = System.currentTimeMillis();
         List<Formula> forms = kb.ask("arg", 0, "termFormat");
         System.out.println("WordNet.termFormatsToSynsets(): just the ask in seconds: " + (System.currentTimeMillis() - millis) / 1000);
         System.out.println("WordNet.termFormatsToSynsets(): termFormats: " + forms.size());

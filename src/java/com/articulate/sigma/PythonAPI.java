@@ -10,7 +10,6 @@ Authors:
 Adam Pease apease@articulatesoftware.com
 */
 
-import com.articulate.sigma.*;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.wordNet.*;
@@ -34,7 +33,7 @@ public class PythonAPI {
 
     public String query(String q, int timeout) {
 
-        TPTP3ProofProcessor tpp = null;
+        TPTP3ProofProcessor tpp;
         kb.loadVampire();
         Vampire vamp = kb.askVampire(q, timeout, 1);
         System.out.println("KB.main(): completed query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
