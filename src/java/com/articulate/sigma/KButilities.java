@@ -26,13 +26,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-//import com.articulate.sigma.dataProc.Infrastructure;
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNet;
+
+import com.esotericsoftware.kryo.Kryo;
 
 import com.google.common.collect.Sets;
 
@@ -46,6 +47,14 @@ public class KButilities {
 
     /** Uses the number of available processors to set the thread pool count */
     public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
+
+    /** A thread local pool for the Kryo serializer */
+    public static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
+        Kryo kryo = new Kryo();
+        kryo.setRegistrationRequired(false); // No need to pre-register classes
+        kryo.setReferences(true);
+        return kryo;
+    });
 
     public static boolean debug = false;
 

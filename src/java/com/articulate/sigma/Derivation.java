@@ -2,10 +2,12 @@ package com.articulate.sigma;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.List;
 
 public class Derivation implements Serializable {
+
     public String operator = "input";
-    public ArrayList<Formula> parents = new ArrayList<>();
+    public List<Formula> parents = new ArrayList<>();
 
     /** ***************************************************************
      */
@@ -13,7 +15,7 @@ public class Derivation implements Serializable {
 
     /** ***************************************************************
      */
-    public Derivation(String op, ArrayList<Formula> par) {
+    public Derivation(String op, List<Formula> par) {
 
         operator = op;
         if (par != null)
@@ -26,7 +28,7 @@ public class Derivation implements Serializable {
 
         Derivation result = new Derivation();
         result.operator = this.operator;
-        result.parents = new ArrayList<Formula>();
+        result.parents = new ArrayList<>();
         if (parents != null) {
             for (Formula f : parents)
                 result.parents.add(f.deepCopy());
@@ -42,12 +44,12 @@ public class Derivation implements Serializable {
         if (operator.equals("input"))
             return "input";
         else {
-            StringBuffer sb = new StringBuffer();
-            sb.append("inference(" + operator + ", ");
+            StringBuilder sb = new StringBuilder();
+            sb.append("inference(").append(operator).append(", ");
             for (Formula f : parents) {
-                sb.append(f.getFormula().toString());
-                sb.append(":" + f.derivation.toString() + ")");
-            };
+                sb.append(f.getFormula());
+                sb.append(":").append(f.derivation.toString()).append(")");
+            }
             return sb.toString();
         }
     }
@@ -56,12 +58,12 @@ public class Derivation implements Serializable {
      * Return a list of all derived objects that are used in this
      * derivation.
      */
-    public ArrayList<Formula> getParents() {
+    public List<Formula> getParents() {
 
         if (operator.equals("input"))
             return new ArrayList<>();
         else {
-            ArrayList<Formula> res = new ArrayList<>();
+            List<Formula> res = new ArrayList<>();
             for (Formula p : parents)
                 res.addAll(p.derivation.parents);
             return res;

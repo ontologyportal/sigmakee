@@ -3,7 +3,6 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 
-import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 
@@ -22,7 +21,6 @@ import java.util.logging.Logger;
  */
 public class NLGUtils implements Serializable {
 
-    private static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
     private static final String PHRASES_FILENAME = "Translations/language.txt";
     private static NLGUtils nlg = null;
     private Map<String, Map<String, String>> keywordMap;
@@ -44,21 +42,12 @@ public class NLGUtils implements Serializable {
 
     /** ***************************************************************
      */
-    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false); //No need to pre-register the class
-        kryo.setReferences(true);
-        return kryo;
-    });
-
-    /** ***************************************************************
-     */
     public static void encoder(Object object) {
 
-        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
         Path path = Paths.get(kbDir, "NLGUtils.ser");
         try (Output output = new Output(Files.newOutputStream(path))) {
-            kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.get().writeObject(output, object);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -70,10 +59,10 @@ public class NLGUtils implements Serializable {
     public static <T> T decoder() {
 
         NLGUtils ob = null;
-        String kbDir = SIGMA_HOME + File.separator + "KBs";
+        String kbDir = KBmanager.getMgr().getPref("kbDir");
         Path path = Paths.get(kbDir, "NLGUtils.ser");
         try (Input input = new Input(Files.newInputStream(path))) {
-            ob = kryoLocal.get().readObject(input,NLGUtils.class);
+            ob = KButilities.kryoLocal.get().readObject(input,NLGUtils.class);
         }
         catch (Exception e) {
             e.printStackTrace();
@@ -117,14 +106,12 @@ public class NLGUtils implements Serializable {
 
         nlg = null;
         try {
-            // Reading the object from a file
-            //String kbDir = KBmanager.getMgr().getPref("kbDir");
-            //FileInputStream file = new FileInputStream(kbDir + File.separator + "NLGUtils.ser");
-            //ObjectInputStream in = new ObjectInputStream(file);
-            // Method for deserialization of object
+            if (serializedOld()) {
+                System.out.println("NLGutils.loadSerialized(): serialized file is older than sources, " +
+                        "reloding from sources.");
+                return;
+            }
             nlg = decoder();
-            //in.close();
-            //file.close();
             System.out.println("NLGUtils.loadSerialized(): NLGUtils has been deserialized ");
         }
         catch (Exception ex) {
@@ -136,7 +123,9 @@ public class NLGUtils implements Serializable {
 
     /** ***************************************************************
      *  save serialized version.
+     * @deprecated as of OCT 2024, use {@link #encoder(java.lang.Object)} instead
      */
+    @Deprecated(since = "OCT 2024", forRemoval = true)
     public static void serialize() {
 
         try {
@@ -206,7 +195,7 @@ public class NLGUtils implements Serializable {
         int dl;
 //        int digit;
         String termName, displayName;
-        StringBuilder rsb;
+        StringBuilder rsb = new StringBuilder();
         int rsblen;
         // The indexed positions: &%termNameString$"termDisplayString"  ti tj   di dj  dk dl
         while (((ti = sb.indexOf(titok, ti)) != -1) && (prevti != ti)) {
@@ -228,7 +217,7 @@ public class NLGUtils implements Serializable {
             displayName = sb.substring(dj, dk);
             if (StringUtil.emptyString(displayName))
                 displayName = termName;
-            rsb = new StringBuilder();
+            rsb.setLength(0); // reset
             rsb.append(anchorStart);
             rsb.append(termName);
             rsb.append("\">");
@@ -246,11 +235,6 @@ public class NLGUtils implements Serializable {
             ti = (ti + rsblen);
             if (ti >= sblen)
                 break;
-            tj = -1;
-            di = -1;
-            dj = -1;
-            dk = -1;
-            dl = -1;
         }
         return sb.toString();
     }
@@ -312,7 +296,7 @@ public class NLGUtils implements Serializable {
      *  Each phrase must appear on a new line with alternatives separated by '|'.
      *  The first entry should be a set of two letter language identifiers.
      *
-     *  @return a HashMap of HashMaps where the first HashMap has a key of the
+     *  Creates a HashMap of HashMaps where the first HashMap has a key of the
      *  English phrase, and the interior HashMap has a key of the two letter
      *  language identifier.
      */
@@ -327,7 +311,7 @@ public class NLGUtils implements Serializable {
         }
         System.out.println("NLGUtils.readKeywordMap():");
         nlg = null;
-        if (serializedExists() && !serializedOld())
+        if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists())
             loadSerialized();
         if (nlg != null)
             return;
@@ -611,10 +595,6 @@ public class NLGUtils implements Serializable {
                         for (int k = 0 ; k < argsToPrint.length ; k++) {
                             argsToPrint[k] = false;
                         }
-                        lowStr = null;
-                        highStr = null;
-                        low = -1;
-                        high = -1;
                         delim = " ";
                         nArgsSet = 0;
                         lb = null;

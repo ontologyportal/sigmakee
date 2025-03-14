@@ -12,7 +12,7 @@ import org.junit.runners.Suite;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
-//    VerbNetTest.class
+//    VerbNetTest.class // VerbNet currently not setup
 })
 public class IntegrationVerbNetTestSuite extends IntegrationTestBase {
 

@@ -25,7 +25,6 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.OMWordnet;
 import com.articulate.sigma.wordNet.WordNet;
 
-import com.esotericsoftware.kryo.*;
 import com.esotericsoftware.kryo.io.*;
 
 import py4j.GatewayServer;
@@ -215,21 +214,12 @@ public class KBmanager implements Serializable {
 
     /** ***************************************************************
      */
-    private static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
-        Kryo kryo = new Kryo();
-        kryo.setRegistrationRequired(false); //No need to pre-register the class
-        kryo.setReferences(true);
-        return kryo;
-    });
-
-    /** ***************************************************************
-     */
     public static void encoder(Object object) {
 
         String kbDir = SIGMA_HOME + File.separator + "KBs";
         Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Output output = new Output(Files.newOutputStream(path))) {
-            kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.get().writeObject(output, object);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -244,7 +234,7 @@ public class KBmanager implements Serializable {
         String kbDir = SIGMA_HOME + File.separator + "KBs";
         Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Input input = new Input(Files.newInputStream(path))) {
-            ob = kryoLocal.get().readObject(input,KBmanager.class);
+            ob = KButilities.kryoLocal.get().readObject(input,KBmanager.class);
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -258,14 +248,6 @@ public class KBmanager implements Serializable {
     public static void serialize() {
 
         try {
-            // Reading the object from a file
-            //String kbDir = SIGMA_HOME + File.separator + "KBs";
-            //FileOutputStream file = new FileOutputStream(kbDir + File.separator + "kbmanager.ser");
-            //ObjectOutputStream out = new ObjectOutputStream(file);
-
-            //out.writeObject(manager);
-            //out.close();
-            //file.close();
             encoder(manager);
             System.out.println("KBmanager.serialize(): KBmanager has been serialized");
         }
@@ -320,7 +302,7 @@ public class KBmanager implements Serializable {
 
             File graphDir = new File(tomcatRootDir, "webapps" + sep + "sigma" + sep + "graph");
             if (!graphDir.exists())
-                graphDir.mkdir();
+                graphDir.mkdirs();
             preferences.put("graphDir", graphDir.getCanonicalPath());
 
             // There is no foolproof way to determine the actual
@@ -735,7 +717,7 @@ public class KBmanager implements Serializable {
                     preferences.keySet().size());
             if (configuration == null)
                 throw new Exception("Error reading configuration file in KBmanager.initializeOnce()");
-            if (serializedExists() && !serializedOld(configuration)) {
+            if (!KBmanager.getMgr().getPref("loadFresh").equals("true") && serializedExists() && !serializedOld(configuration)) {
                 if (debug) System.out.println("KBmanager.initializeOnce(): serialized exists and is not old");
                 loaded = loadSerialized();
                 if (loaded) {

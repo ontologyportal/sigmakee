@@ -21,10 +21,12 @@
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.UnitTestBase;
+
 import com.google.common.collect.Lists;
-import org.junit.Test;
 
 import java.util.List;
+
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -36,7 +38,6 @@ public class MultiWordsTest extends UnitTestBase {
     public void testVerbMultiWordKickBucket1() {
 
         List<String> input = Lists.newArrayList("kick", "the", "bucket");
-        List<String> synset = Lists.newArrayList();
         String w = WordNet.wn.getMultiWords().findMultiWord(input);
         String s = WordNetUtilities.wordsToSynsets(w).iterator().next();
         assertEquals("200358431", s);
@@ -48,7 +49,6 @@ public class MultiWordsTest extends UnitTestBase {
     public void testVerbMultiWordKickBucket2() {
 
         List<String> input = Lists.newArrayList("kick", "the", "bucket", "down", "the", "road");
-        List<String> synset = Lists.newArrayList();
         String w = WordNet.wn.getMultiWords().findMultiWord(input);
         String s = WordNetUtilities.wordsToSynsets(w).iterator().next();
         assertEquals("200358431", s);
@@ -114,7 +114,6 @@ public class MultiWordsTest extends UnitTestBase {
     public void testVerbMultiWordCatsAndDogs5() {
 
         List<String> input = Lists.newArrayList("raining", "cats", "and", "dogs", "and", "sheep");
-        List<String> synset = Lists.newArrayList();
         // Incorrect root form
         String result = WordNet.wn.getMultiWords().findMultiWord(input);
 

@@ -1,12 +1,11 @@
 package com.articulate.sigma.wordNet;
 
 import com.articulate.sigma.UnitTestBase;
-import com.articulate.sigma.wordNet.WordNet;
-import com.articulate.sigma.wordNet.WordNetUtilities;
 import org.junit.Test;
 import java.util.*;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 // TODO: Test the WordNet class more thoroughly. Start with the test methods called in main( ).
@@ -78,5 +77,49 @@ public class WordNetTest extends UnitTestBase {
         System.out.println("labor " + WordNet.wn.wordsToSenseKeys.get("labor"));
         System.out.println("phase " + WordNet.wn.wordsToSenseKeys.get("phase"));
         System.out.println("craft " + WordNet.wn.wordsToSenseKeys.get("craft"));
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testGetWordsFromTerm() {
+
+        System.out.println("========================");
+        String label = "testGetWordsFromTerm";
+        System.out.println("WordNetTest: " + label);
+        String term = "SocialInteraction";
+        System.out.println("term: " +  term);
+        assertTrue(!WordNet.wn.getWordsFromTerm(term).keySet().isEmpty());
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testGetPOS() {
+
+        System.out.println("========================");
+        String label = "testGetPOS";
+        System.out.println("WordNetTest: " + label);
+
+        String s = "four-lane_AS_1";
+        String POS = WordNetUtilities.getPOSfromKey(s);
+        String posWord = WordNetUtilities.posAlphaKeyToWord(POS);
+        assertEquals("AS", POS);
+        assertEquals("adjective_satellite", posWord);
+    }
+
+    /****************************************************************
+     */
+    @Test
+    public void testWord() {
+
+        System.out.println("========================");
+        String label = "testWord";
+        System.out.println("WordNetTest: " + label);
+
+        assertTrue(WordNetUtilities.sensoryOrMentalWord("burning"));
+        assertTrue(WordNetUtilities.sensoryOrMentalWord("audible"));
+        assertTrue(WordNetUtilities.sensoryOrMentalWord("chug"));
+        assertFalse(WordNetUtilities.sensoryOrMentalWord("pianola"));
     }
 }

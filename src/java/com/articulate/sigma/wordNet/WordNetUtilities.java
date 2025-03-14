@@ -31,6 +31,7 @@ import com.google.common.collect.*;
 
 import static com.articulate.sigma.wordNet.WSD.readFileIntoArray;
 import java.io.Reader;
+import java.io.Writer;
 
 /** ***************************************************************
  *  @author Adam Pease
@@ -69,7 +70,7 @@ public class WordNetUtilities {
      */
     public static boolean isValidSynset8(String synset) {
 
-        return !(!StringUtil.isInteger(synset) || synset.length() != 8); //System.out.println("Error in WordNetUtilities.isValidSynset8(): bad synset: " + synset);
+        return !(!StringUtil.isInteger(synset) || synset.length() != 8); //System.err.println("Error in WordNetUtilities.isValidSynset8(): bad synset: " + synset);
     }
 
     /** ***************************************************************
@@ -85,7 +86,7 @@ public class WordNetUtilities {
      */
     public static boolean isValidSynset9(String synset) {
 
-        return !(!StringUtil.isInteger(synset) || synset.length() != 9); //System.out.println("Error in WordNetUtilities.isValidSynset9(): bad synset: " + synset);
+        return !(!StringUtil.isInteger(synset) || synset.length() != 9); //System.err.println("Error in WordNetUtilities.isValidSynset9(): bad synset: " + synset);
     }
 
     /** ***************************************************************
@@ -192,9 +193,9 @@ public class WordNetUtilities {
      * Extract the info in a word%num:num:num sense key.
      *     colonp = Pattern.compile("([^%]+)%([^:]*):([^:]*):([^:]*):([^:]*)");
      */
-    public static ArrayList<String> parseColonKey (String colonKey) {
+    public static List<String> parseColonKey (String colonKey) {
 
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         Pattern p = Pattern.compile("([^%]+)%([^:]*):([^:]*):([^:]*)");
         Matcher m = p.matcher(colonKey);
         if (m.matches()) {
@@ -206,7 +207,7 @@ public class WordNetUtilities {
             result.add(sensenum);
         }
         else
-            System.out.println("Error in WordNetUtilities.parseColonKey(): improper key: " + colonKey);
+            System.err.println("Error in WordNetUtilities.parseColonKey(): improper key: " + colonKey);
         return result;
     }
 
@@ -215,9 +216,9 @@ public class WordNetUtilities {
      */
     public static String getWordFromColonKey (String key) {
 
-        ArrayList<String> result = parseColonKey(key);
+        List<String> result = parseColonKey(key);
         if (result.size() < 3) {
-            System.out.println("Info in WordNetUtilities.getWordFromColonKey(): missing word: " + key);
+            System.err.println("Error in WordNetUtilities.getWordFromColonKey(): missing word: " + key);
             new Exception().printStackTrace();
             return "";
         }
@@ -229,9 +230,9 @@ public class WordNetUtilities {
      */
     public static String getPOSNumFromColonKey (String key) {
 
-        ArrayList<String> result = parseColonKey(key);
+        List<String> result = parseColonKey(key);
         if (result.size() < 3) {
-            System.out.println("Info in WordNetUtilities.getPOSNumFromColonKey(): missing num: " + key);
+            System.err.println("Error in WordNetUtilities.getPOSNumFromColonKey(): missing num: " + key);
             new Exception().printStackTrace();
             return "";
         }
@@ -243,9 +244,9 @@ public class WordNetUtilities {
      */
     public static String getSenseFromColonKey (String key) {
 
-        ArrayList<String> result = parseColonKey(key);
+        List<String> result = parseColonKey(key);
         if (result.size() < 3) {
-            System.out.println("Info in WordNetUtilities.getSenseFromColonKey(): missing or bad key: " + key);
+            System.err.println("Error in WordNetUtilities.getSenseFromColonKey(): missing or bad key: " + key);
             new Exception().printStackTrace();
             return "";
         }
@@ -269,7 +270,7 @@ public class WordNetUtilities {
             if (!StringUtil.emptyString(key))
                 return key;
             if (errorCount < 20) {
-                System.out.println("Error in WordNetUtilities.getKeyFromSense(): no result for " + synset);
+                System.err.println("Error in WordNetUtilities.getKeyFromSense(): no result for " + synset);
                 errorCount++;
                 if (errorCount >= 20)
                     System.out.println("surpressing further errors...");
@@ -288,12 +289,12 @@ public class WordNetUtilities {
 
         int index1 = onKey.indexOf('-');
         if (index1 == -1) {
-            System.out.println("Error in WordNetUtilities.synsetFromOntoNotes(): bad key format: " + onKey);
+            System.err.println("Error in WordNetUtilities.synsetFromOntoNotes(): bad key format: " + onKey);
             return null;
         }
         int index2 = onKey.indexOf('.');
         if (index2 == -1) {
-            System.out.println("Error in WordNetUtilities.synsetFromOntoNotes(): bad key format: " + onKey);
+            System.err.println("Error in WordNetUtilities.synsetFromOntoNotes(): bad key format: " + onKey);
             return null;
         }
         String word = onKey.substring(0,index1);
@@ -304,7 +305,7 @@ public class WordNetUtilities {
         String eightDigit = WordNet.wn.senseIndex.get(senseKey);
         if (eightDigit == null) {
             if (errorCount < 20) {
-                System.out.println("Error in WordNetUtilities.synsetFromOntoNotes(): no synset for sense key: " + senseKey);
+                System.err.println("Error in WordNetUtilities.synsetFromOntoNotes(): no synset for sense key: " + senseKey);
                 errorCount++;
                 if (errorCount >= 20)
                     System.out.println("surpressing further errors...");
@@ -326,12 +327,12 @@ public class WordNetUtilities {
      * Convert a list of Terms in the format "&%term1 &%term2" to an ArrayList
      * of bare term Strings
      */
-    public static ArrayList<String> convertTermList (String termList) {
+    public static List<String> convertTermList (String termList) {
 
-        ArrayList<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         String[] list = termList.split(" ");
-        for (int i = 0; i < list.length; i++) {
-            String t = getBareSUMOTerm(list[i]);
+        for (String list1 : list) {
+            String t = getBareSUMOTerm(list1);
             if (!StringUtil.emptyString(t))
                 result.add(t);
         }
@@ -393,7 +394,7 @@ public class WordNetUtilities {
         case 'r': return '4';
         case 's': return '5';
         }
-        System.out.println("Error in WordNetUtilities.posLetterToNumber(): bad letter: " + POS);
+        System.err.println("Error in WordNetUtilities.posLetterToNumber(): bad letter: " + POS);
         return '1';
     }
 
@@ -408,7 +409,7 @@ public class WordNetUtilities {
         case '4': return 'r';
         case '5': return 's';
         }
-        System.out.println("Error in WordNetUtilities.posNumberToLetter(): bad number: " + POS);
+        System.err.println("Error in WordNetUtilities.posNumberToLetter(): bad number: " + POS);
         return 'n';
     }
 
@@ -416,45 +417,88 @@ public class WordNetUtilities {
      */
     public static char posPennToNumber(String penn) {
 
-        if (penn.equals("CC")) return '0';	// Coordinating conjunction
-        else if (penn.equals("CD")) return '0';	//     CD	Cardinal number
-        else if (penn.equals("DT")) return '0';	//     3.	DT	Determiner
-        else if (penn.equals("EX")) return '0';	// 4.	EX	Existential there
-        else if (penn.equals("FW")) return '0';	// 5.	FW	Foreign word
-        else if (penn.equals("IN")) return '0';	// 6.	IN	Preposition or subordinating conjunction
-        else if (penn.equals("JJ")) return '3';	// 7.	JJ	Adjective
-        else if (penn.equals("JJR")) return '3';	// 8.	JJR	Adjective, comparative
-        else if (penn.equals("JJS")) return '3';	// 9.	JJS	Adjective, superlative
-        else if (penn.equals("LS")) return '0';	// 10.	LS	List item marker
-        else if (penn.equals("MD")) return '0';	// 11.	MD	Modal
-        else if (penn.equals("NN")) return '1';	// 12.	NN	Noun, singular or mass
-        else if (penn.equals("NNS")) return '1';	// 13.	NNS	Noun, plural
-        else if (penn.equals("NNP")) return '1';	// 14.	NNP	Proper noun, singular
-        else if (penn.equals("NNPS")) return '1';	// 15.	NNPS	Proper noun, plural
-        else if (penn.equals("PDT")) return '0';	// 16.	PDT	Predeterminer
-        else if (penn.equals("POS")) return '0';	// 17.	POS	Possessive ending
-        else if (penn.equals("PRP")) return '0';	// 18.	PRP	Personal pronoun
-        else if (penn.equals("PRP$")) return '0';	// 19.	PRP$	Possessive pronoun
-        else if (penn.equals("RB")) return '4';	// 20.	RB	Adverb
-        else if (penn.equals("RBR")) return '4';	// 21.	RBR	Adverb, comparative
-        else if (penn.equals("RBS")) return '4';	// 22.	RBS	Adverb, superlative
-        else if (penn.equals("RP")) return '0';	// 23.	RP	Particle
-        else if (penn.equals("SYM")) return '0';	// 24.	SYM	Symbol
-        else if (penn.equals("TO")) return '0';	// 25.	TO	to
-        else if (penn.equals("UH")) return '0';	// 26.	UH	Interjection
-        else if (penn.equals("VB")) return '2';	// 27.	VB	Verb, base form
-        else if (penn.equals("VBD")) return '2';	// 28.	VBD	Verb, past tense
-        else if (penn.equals("VBG")) return '2';	// 29.	VBG	Verb, gerund or present participle
-        else if (penn.equals("VBN")) return '2';	// 30.	VBN	Verb, past participle
-        else if (penn.equals("VBP")) return '2';	// 31.	VBP	Verb, non-3rd person singular present
-        else if (penn.equals("VBZ")) return '2';	// 32.	VBZ	Verb, 3rd person singular present
-        else if (penn.equals("WDT")) return '0';	// 33.	WDT	Wh-determiner
-        else if (penn.equals("WP")) return '0';	// 34.	WP	Wh-pronoun
-        else if (penn.equals("WP$")) return '0';	// 35.	WP$	Possessive wh-pronoun
-        else if (penn.equals("WRB")) return '0';	// 36.	WRB	Wh-adverb
-        else if (penn.equals("``")) return '0';
-        else if (penn.equals("''")) return '0';
-        else { System.out.println("Error in WordNetUtilities.posPennToNumber(): bad tag: " + penn); new Throwable().printStackTrace(System.out); }
+        switch (penn) {
+            case "CC":
+                return '0';	// Coordinating conjunction
+            case "CD":
+                return '0';	//     CD	Cardinal number
+            case "DT":
+                return '0';	//     3.	DT	Determiner
+            case "EX":
+                return '0';	// 4.	EX	Existential there
+            case "FW":
+                return '0';	// 5.	FW	Foreign word
+            case "IN":
+                return '0';	// 6.	IN	Preposition or subordinating conjunction
+            case "JJ":
+                return '3';	// 7.	JJ	Adjective
+            case "JJR":
+                return '3';	// 8.	JJR	Adjective, comparative
+            case "JJS":
+                return '3';	// 9.	JJS	Adjective, superlative
+            case "LS":
+                return '0';	// 10.	LS	List item marker
+            case "MD":
+                return '0';	// 11.	MD	Modal
+            case "NN":
+                return '1';	// 12.	NN	Noun, singular or mass
+            case "NNS":
+                return '1';	// 13.	NNS	Noun, plural
+            case "NNP":
+                return '1';	// 14.	NNP	Proper noun, singular
+            case "NNPS":
+                return '1';	// 15.	NNPS	Proper noun, plural
+            case "PDT":
+                return '0';	// 16.	PDT	Predeterminer
+            case "POS":
+                return '0';	// 17.	POS	Possessive ending
+            case "PRP":
+                return '0';	// 18.	PRP	Personal pronoun
+            case "PRP$":
+                return '0';	// 19.	PRP$	Possessive pronoun
+            case "RB":
+                return '4';	// 20.	RB	Adverb
+            case "RBR":
+                return '4';	// 21.	RBR	Adverb, comparative
+            case "RBS":
+                return '4';	// 22.	RBS	Adverb, superlative
+            case "RP":
+                return '0';	// 23.	RP	Particle
+            case "SYM":
+                return '0';	// 24.	SYM	Symbol
+            case "TO":
+                return '0';	// 25.	TO	to
+            case "UH":
+                return '0';	// 26.	UH	Interjection
+            case "VB":
+                return '2';	// 27.	VB	Verb, base form
+            case "VBD":
+                return '2';	// 28.	VBD	Verb, past tense
+            case "VBG":
+                return '2';	// 29.	VBG	Verb, gerund or present participle
+            case "VBN":
+                return '2';	// 30.	VBN	Verb, past participle
+            case "VBP":
+                return '2';	// 31.	VBP	Verb, non-3rd person singular present
+            case "VBZ":
+                return '2';	// 32.	VBZ	Verb, 3rd person singular present
+            case "WDT":
+                return '0';	// 33.	WDT	Wh-determiner
+            case "WP":
+                return '0';	// 34.	WP	Wh-pronoun
+            case "WP$":
+                return '0';	// 35.	WP$	Possessive wh-pronoun
+            case "WRB":
+                return '0';	// 36.	WRB	Wh-adverb
+            case "``":
+                return '0';
+            case "''":
+                return '0';
+            default:
+                System.err.println("Error in WordNetUtilities.posPennToNumber(): bad tag: " + penn);
+                new Throwable().printStackTrace(System.out);
+                break;
+        }
         return '0';
     }
 
@@ -469,7 +513,7 @@ public class WordNetUtilities {
         if (pos.equalsIgnoreCase("3")) return "JJ";
         if (pos.equalsIgnoreCase("4")) return "RB";
         if (pos.equalsIgnoreCase("5")) return "AS";
-        System.out.println("Error in WordNetUtilities.posNumberToLetters(): bad number: " + pos);
+        System.err.println("Error in WordNetUtilities.posNumberToLetters(): bad number: " + pos);
         return "NN";
     }
 
@@ -495,31 +539,31 @@ public class WordNetUtilities {
      */
     public static int sensePOS(String sense) {
 
-        if (sense.indexOf("_NN_") != -1)
+        if (sense.contains("_NN_"))
             return WordNet.NOUN;
-        if (sense.indexOf("_VB_") != -1)
+        if (sense.contains("_VB_"))
             return WordNet.VERB;
-        if (sense.indexOf("_JJ_") != -1)
+        if (sense.contains("_JJ_"))
             return WordNet.ADJECTIVE;
-        if (sense.indexOf("_RB_") != -1)
+        if (sense.contains("_RB_"))
             return WordNet.ADVERB;
-        if (sense.indexOf("_AS_") != -1)
+        if (sense.contains("_AS_"))
             return WordNet.ADJECTIVE_SATELLITE;
-        if (sense.indexOf("NNP") != -1)
+        if (sense.contains("NNP"))
             return WordNet.NOUN;
-        if (sense.indexOf("JJ") != -1)
+        if (sense.contains("JJ"))
             return WordNet.ADJECTIVE;
-        if (sense.indexOf("VBG") != -1)
+        if (sense.contains("VBG"))
             return WordNet.VERB;
-        if (sense.indexOf("VBZ") != -1)
+        if (sense.contains("VBZ"))
             return WordNet.VERB;
-        if (sense.indexOf("RB") != -1)
+        if (sense.contains("RB"))
             return WordNet.ADVERB;
-        if (sense.indexOf("AS") != -1)
+        if (sense.contains("AS"))
             return WordNet.ADJECTIVE_SATELLITE;
-        if (sense.indexOf("NN") != -1)
+        if (sense.contains("NN"))
             return WordNet.NOUN;
-        System.out.println("Error in WordNetUtilities.sensePOS(): Unknown part of speech type in sense code: " + sense);
+        System.err.println("Error in WordNetUtilities.sensePOS(): Unknown part of speech type in sense code: " + sense);
         return 0;
     }
 
@@ -529,18 +573,24 @@ public class WordNetUtilities {
 
         String mapping = "";
         switch (mappingType) {
-        case '=': mapping = "equivalent";
-        break;
-        case ':': mapping = "anti-equivalent";
-        break;
-        case '+': mapping = "subsuming";
-        break;
-        case '[': mapping = "negated subsuming";
-        break;
-        case '@': mapping = "instance";
-        break;
-        case ']': mapping = "negated instance";
-        break;
+            case '=':
+                mapping = "equivalent";
+                break;
+            case ':':
+                mapping = "anti-equivalent";
+                break;
+            case '+':
+                mapping = "subsuming";
+                break;
+            case '[':
+                mapping = "negated subsuming";
+                break;
+            case '@':
+                mapping = "instance";
+                break;
+            case ']':
+                mapping = "negated instance";
+                break;
         }
         return mapping;
     }
@@ -723,33 +773,30 @@ public class WordNetUtilities {
      * Routine called by mergeUpdates which does the bulk of the work.
      * Should not be called during normal interactive running of Sigma.
      */
-    private static void processMergers (HashMap<String,String> hm, String fileName,
+    private static void processMergers (Map<String,String> hm, String fileName,
                                         String pattern, String posNum) throws IOException {
 
-        FileWriter fw = null;
-        PrintWriter pw = null;
-        LineNumberReader lr = null;
-        try {
-            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
-            pw = new PrintWriter(fw);
-
-            FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
-            lr = new LineNumberReader(r);
-            String line;
+        KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
+             PrintWriter pw = new PrintWriter(fw);
+             Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
+             LineNumberReader lr = new LineNumberReader(r)) {
+            String line, oldTerm, bareOldTerm, mapType, synset, newTerm;
+            Pattern p;
+            Matcher m;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
-                Pattern p = Pattern.compile(pattern);
+                p = Pattern.compile(pattern);
                 line = line.trim();
-                Matcher m = p.matcher(line);
+                m = p.matcher(line);
                 if (m.matches()) {
-                    String oldTerm = m.group(4);
-                    String bareOldTerm = getBareSUMOTerm(oldTerm);
-                    String mapType = oldTerm.substring(oldTerm.length()-1);
-                    String synset = posNum + m.group(1);
-                    String newTerm = hm.get(synset);
-                    if (bareOldTerm.indexOf("&%") < 0 && newTerm != null && newTerm != "" && !newTerm.equals(bareOldTerm) && kb.childOf(newTerm,bareOldTerm)) {
+                    oldTerm = m.group(4);
+                    bareOldTerm = getBareSUMOTerm(oldTerm);
+                    mapType = oldTerm.substring(oldTerm.length()-1);
+                    synset = posNum + m.group(1);
+                    newTerm = hm.get(synset);
+                    if (!bareOldTerm.contains("&%") && newTerm != null && !"".equals(newTerm) && !newTerm.equals(bareOldTerm) && kb.childOf(newTerm,bareOldTerm)) {
                         pw.println(m.group(1) + m.group(2) + "| " + m.group(3) + " &%" + newTerm + mapType);
                         System.out.println("INFO in WordNet.processMergers(): synset, oldTerm, newterm: " +
                                 synset + " " + oldTerm + " " + newTerm);
@@ -761,19 +808,8 @@ public class WordNetUtilities {
                     pw.println(line.trim());
             }
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
-        }
-        finally {
-            if (pw != null) {
-                pw.close();
-            }
-            if (fw != null) {
-                fw.close();
-            }
-            if (lr != null) {
-                lr.close();
-            }
         }
     }
 
@@ -785,16 +821,16 @@ public class WordNetUtilities {
      */
     public static void mergeUpdates() throws IOException {
 
-        HashMap<String,String> hm = new HashMap<String,String>();
+        Map<String,String> hm = new HashMap<>();
 
-        String dir = "/Program Files/Apache Software Foundation/Tomcat 5.5/KBs";
+        String dir = KBmanager.getMgr().getPref("kbDir");
         FileReader r = new FileReader(dir + File.separator + "newMappings20.dat");
         LineNumberReader lr = new LineNumberReader(r);
-        String line;
+        String line, synset, SUMOterm;
         while ((line = lr.readLine()) != null) {
             if (line.length() > 11) {
-                String synset = line.substring(0,9);
-                String SUMOterm = line.substring (10);
+                synset = line.substring(0,9);
+                SUMOterm = line.substring (10);
                 hm.put(synset,SUMOterm);
             }
         }
@@ -829,16 +865,15 @@ public class WordNetUtilities {
 
         List<AVPair> rels = WordNet.wn.relations.get(synset);   // relations requires prefixes
         if (rels != null) {
-            String mappingChar;
+            String mappingChar, targetSynset, targetSUMO;
             for (AVPair avp : rels) {
                 if (avp.attribute.equals("hypernym") || avp.attribute.equals("instance hypernym")) {
-                    mappingChar = "";
                     if (avp.attribute.equals("instance hypernym"))
                         mappingChar = "@";
                     else
                         mappingChar = "+";
-                    String targetSynset = avp.value;
-                    String targetSUMO = (String) WordNet.wn.getSUMOMapping(targetSynset);
+                    targetSynset = avp.value;
+                    targetSUMO = (String) WordNet.wn.getSUMOMapping(targetSynset);
                     if (targetSUMO != null && !"".equals(targetSUMO)) {
                         if (targetSUMO.charAt(targetSUMO.length()-1) == '[')
                             mappingChar = "[";
@@ -863,29 +898,26 @@ public class WordNetUtilities {
      */
     public static void processMissingLinks(String fileName, String pattern, String posNum) throws IOException {
 
-        FileWriter fw = null;
-        PrintWriter pw = null;
-        LineNumberReader lr = null;
-        try {
-            fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
-            pw = new PrintWriter(fw);
-
-            FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
-            lr = new LineNumberReader(r);
-            String line;
+        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new.txt");
+            PrintWriter pw = new PrintWriter(fw);
+            Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + ".txt");
+            LineNumberReader lr = new LineNumberReader(r)) {
+            String line, synset, newTerm;
+            Pattern p;
+            Matcher m;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
-                Pattern p = Pattern.compile(pattern);
+                p = Pattern.compile(pattern);
                 line = line.trim();
-                Matcher m = p.matcher(line);
-                if (line.indexOf("&%") > -1)
+                m = p.matcher(line);
+                if (line.contains("&%"))
                     pw.println(line.trim());
                 else {
                     if (m.matches()) {
-                        String synset = posNum + m.group(1);
-                        String newTerm = findMappingFromHypernym(synset);
-                        if (newTerm != null && newTerm != "") {
+                        synset = posNum + m.group(1);
+                        newTerm = findMappingFromHypernym(synset);
+                        if (newTerm != null && !"".equals(newTerm)) {
                             pw.println(m.group(1) + m.group(2) + "| " + m.group(3) + " " + newTerm);
                             //                            System.out.println("INFO in WordNet.processMissingLinks(): synset, newterm: " +
                             //                                               synset + " " + " " + newTerm);
@@ -902,19 +934,8 @@ public class WordNetUtilities {
                 m = p.matcher(line);
             }
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
-        }
-        finally {
-            if (pw != null) {
-                pw.close();
-            }
-            if (fw != null) {
-                fw.close();
-            }
-            if (lr != null) {
-                lr.close();
-            }
         }
     }
 
@@ -952,37 +973,34 @@ public class WordNetUtilities {
      */
     public static void updateWNversionProcess(String fileName, String pattern, String posNum) throws IOException {
 
-        FileWriter fw = null;
-        PrintWriter pw = null;
-        LineNumberReader lr = null;
-        try {
-            fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new");
-            pw = new PrintWriter(fw);
-
-            FileReader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
-            lr = new LineNumberReader(r);
-            String line;
+        try (Writer fw = new FileWriter(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName + "-new");
+            PrintWriter pw = new PrintWriter(fw);
+            Reader r = new FileReader(KBmanager.getMgr().getPref("kbDir") + File.separator + fileName);
+            LineNumberReader lr = new LineNumberReader(r)) {
+            String line, newsynset, oldsynset, term;
+            Pattern p;
+            Matcher m;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
-                Pattern p = Pattern.compile(pattern);
+                p = Pattern.compile(pattern);
                 line = line.trim();
-                Matcher m = p.matcher(line);
+                m = p.matcher(line);
                 if (m.matches()) {
-                    String newsynset = posNum + m.group(1);
-                    String oldsynset = (String) mappings.get(newsynset);
+                    newsynset = posNum + m.group(1);
+                    oldsynset = (String) mappings.get(newsynset);
                     if (oldsynset != null && oldsynset != "") {
-                        String term = "";
+                        term = "";
                         oldsynset = oldsynset.substring(1);
                         switch (posNum.charAt(0)) {
-                        case '1': term = (String) WordNet.wn.nounSUMOHash.get(oldsynset); break;
-                        case '2': term = (String) WordNet.wn.verbSUMOHash.get(oldsynset); break;
-                        case '3': term = (String) WordNet.wn.adjectiveSUMOHash.get(oldsynset); break;
-                        case '4': term = (String) WordNet.wn.adverbSUMOHash.get(oldsynset); break;
+                            case '1': term = (String) WordNet.wn.nounSUMOHash.get(oldsynset); break;
+                            case '2': term = (String) WordNet.wn.verbSUMOHash.get(oldsynset); break;
+                            case '3': term = (String) WordNet.wn.adjectiveSUMOHash.get(oldsynset); break;
+                            case '4': term = (String) WordNet.wn.adverbSUMOHash.get(oldsynset); break;
                         }
                         if (term == null) {
                             pw.println(line.trim());
-                            System.out.println("Error in WordNetUtilities.updateWNversionProcess(): No term for synsets (old, new): " +
+                            System.err.println("Error in WordNetUtilities.updateWNversionProcess(): No term for synsets (old, new): " +
                                     posNum + oldsynset + " " + posNum + newsynset);
                         }
                         else
@@ -990,26 +1008,15 @@ public class WordNetUtilities {
                     }
                     else {
                         pw.println(line.trim());
-                        System.out.println("Error in WordNetUtilities.updateWNversionProcess(): No mapping for synset: " + newsynset);
+                        System.err.println("Error in WordNetUtilities.updateWNversionProcess(): No mapping for synset: " + newsynset);
                     }
                 }
                 else
                     pw.println(line.trim());
             }
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
-        }
-        finally {
-            if (pw != null) {
-                pw.close();
-            }
-            if (fw != null) {
-                fw.close();
-            }
-            if (lr != null) {
-                lr.close();
-            }
         }
     }
 
@@ -1020,33 +1027,28 @@ public class WordNetUtilities {
      */
     public static void readWNversionMap(String fileName, String pattern, String posNum) throws IOException {
 
-        LineNumberReader lr = null;
-        try {
-            FileReader r = new FileReader(fileName);
-            lr = new LineNumberReader(r);
-            String line;
+        try (Reader r = new FileReader(fileName);
+            LineNumberReader lr = new LineNumberReader(r)) {
+            String line, newsynset, oldsynset;
+            Pattern p;
+            Matcher m;
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
                     System.out.print('.');
-                Pattern p = Pattern.compile(pattern);
+                p = Pattern.compile(pattern);
                 line = line.trim();
-                Matcher m = p.matcher(line);
+                m = p.matcher(line);
                 if (m.matches()) {
-                    String newsynset = posNum + m.group(1);
-                    String oldsynset = posNum + m.group(2);
+                    newsynset = posNum + m.group(1);
+                    oldsynset = posNum + m.group(2);
                     mappings.put(newsynset,oldsynset);
                 }
                 else
                     System.out.println("INFO in WordNetUtilities.updateWNversionReading(): no match for line: " + line);
             }
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error writing file " + fileName + "\n" + e.getMessage());
-        }
-        finally {
-            if (lr != null) {
-                lr.close();
-            }
         }
     }
 
@@ -1126,7 +1128,7 @@ public class WordNetUtilities {
             case '3': return WordNet.wn.adjectiveDocumentationHash.keySet().size();
             case '4': return WordNet.wn.adverbDocumentationHash.keySet().size();
         }
-        System.out.println("Error in WordNetUtilities.numSynsets(): bad pos: " + pos);
+        System.err.println("Error in WordNetUtilities.numSynsets(): bad pos: " + pos);
         return 0;
     }
 
@@ -1134,7 +1136,7 @@ public class WordNetUtilities {
      */
     public static String printStatistics() {
 
-        HashSet<String> mappedSUMOterms = new HashSet<String>();
+        Set<String> mappedSUMOterms = new HashSet<>();
         int totalInstanceMappings = 0;
         int totalSubsumingMappings = 0;
         int totalEquivalenceMappings = 0;
@@ -1143,10 +1145,9 @@ public class WordNetUtilities {
         int equivalenceMappings = 0;
         StringBuilder result = new StringBuilder();
         result.append("<table><tr><td></td><td>instance</td><td>equivalence</td><td>subsuming</td><td></td></tr>\n");
-        Iterator<String> it = WordNet.wn.nounSUMOHash.keySet().iterator();
-        while (it.hasNext()) {
-            String key = it.next();
-            String value = (String) WordNet.wn.nounSUMOHash.get(key);
+        String value;
+        for (String key : WordNet.wn.nounSUMOHash.keySet()) {
+            value = (String) WordNet.wn.nounSUMOHash.get(key);
             if (value.endsWith("="))
                 equivalenceMappings++;
             if (value.endsWith("+"))
@@ -1155,8 +1156,7 @@ public class WordNetUtilities {
                 instanceMappings++;
             mappedSUMOterms.add(value.substring(0,value.length()-1));
         }
-        result.append("<tr><td>noun</td><td>" + instanceMappings + "</td><td>" +
-                equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+        result.append("<tr><td>noun</td><td>").append(instanceMappings).append("</td><td>").append(equivalenceMappings).append("</td><td>").append(subsumingMappings).append("</td><td></td></tr>\n");
 
         totalInstanceMappings = totalInstanceMappings + instanceMappings;
         totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
@@ -1164,10 +1164,8 @@ public class WordNetUtilities {
         instanceMappings = 0;
         subsumingMappings = 0;
         equivalenceMappings = 0;
-        it = WordNet.wn.verbSUMOHash.keySet().iterator();
-        while (it.hasNext()) {
-            String key = (String) it.next();
-            String value = (String) WordNet.wn.verbSUMOHash.get(key);
+        for (String key : WordNet.wn.verbSUMOHash.keySet()) {
+            value = (String) WordNet.wn.verbSUMOHash.get(key);
             if (value.endsWith("="))
                 equivalenceMappings++;
             if (value.endsWith("+"))
@@ -1176,8 +1174,7 @@ public class WordNetUtilities {
                 instanceMappings++;
             mappedSUMOterms.add(value.substring(0,value.length()-1));
         }
-        result.append("<tr><td>verb</td><td>" + instanceMappings + "</td><td>" +
-                equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+        result.append("<tr><td>verb</td><td>").append(instanceMappings).append("</td><td>").append(equivalenceMappings).append("</td><td>").append(subsumingMappings).append("</td><td></td></tr>\n");
 
         totalInstanceMappings = totalInstanceMappings + instanceMappings;
         totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
@@ -1185,10 +1182,8 @@ public class WordNetUtilities {
         instanceMappings = 0;
         subsumingMappings = 0;
         equivalenceMappings = 0;
-        it = WordNet.wn.adjectiveSUMOHash.keySet().iterator();
-        while (it.hasNext()) {
-            String key = (String) it.next();
-            String value = (String) WordNet.wn.adjectiveSUMOHash.get(key);
+        for (String key : WordNet.wn.adjectiveSUMOHash.keySet()) {
+            value = (String) WordNet.wn.adjectiveSUMOHash.get(key);
             if (value.endsWith("="))
                 equivalenceMappings++;
             if (value.endsWith("+"))
@@ -1197,8 +1192,7 @@ public class WordNetUtilities {
                 instanceMappings++;
             mappedSUMOterms.add(value.substring(0,value.length()-1));
         }
-        result.append("<tr><td>adjective</td><td>" + instanceMappings + "</td><td>" +
-                equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+        result.append("<tr><td>adjective</td><td>").append(instanceMappings).append("</td><td>").append(equivalenceMappings).append("</td><td>").append(subsumingMappings).append("</td><td></td></tr>\n");
 
         totalInstanceMappings = totalInstanceMappings + instanceMappings;
         totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
@@ -1206,10 +1200,8 @@ public class WordNetUtilities {
         instanceMappings = 0;
         subsumingMappings = 0;
         equivalenceMappings = 0;
-        it = WordNet.wn.adverbSUMOHash.keySet().iterator();
-        while (it.hasNext()) {
-            String key = (String) it.next();
-            String value = (String) WordNet.wn.adverbSUMOHash.get(key);
+        for (String key : WordNet.wn.adverbSUMOHash.keySet()) {
+            value = (String) WordNet.wn.adverbSUMOHash.get(key);
             if (value.endsWith("="))
                 equivalenceMappings++;
             if (value.endsWith("+"))
@@ -1218,18 +1210,15 @@ public class WordNetUtilities {
                 instanceMappings++;
             mappedSUMOterms.add(value.substring(0,value.length()-1));
         }
-        result.append("<tr><td>adverb</td><td>" + instanceMappings + "</td><td>" +
-                equivalenceMappings + "</td><td>" + subsumingMappings + "</td><td></td></tr>\n");
+        result.append("<tr><td>adverb</td><td>").append(instanceMappings).append("</td><td>").append(equivalenceMappings).append("</td><td>").append(subsumingMappings).append("</td><td></td></tr>\n");
 
         totalInstanceMappings = totalInstanceMappings + instanceMappings;
         totalSubsumingMappings = totalSubsumingMappings + subsumingMappings;
         totalEquivalenceMappings = totalEquivalenceMappings + equivalenceMappings;
         int grandTotal =  totalInstanceMappings +  totalSubsumingMappings + totalEquivalenceMappings;
-        result.append("<tr><td><b>total</b></td><td>" + totalInstanceMappings + "</td><td>" +
-                totalEquivalenceMappings + "</td><td>" + totalSubsumingMappings + "</td><td><b>" +
-                grandTotal + "</b></td></tr>\n");
+        result.append("<tr><td><b>total</b></td><td>").append(totalInstanceMappings).append("</td><td>").append(totalEquivalenceMappings).append("</td><td>").append(totalSubsumingMappings).append("</td><td><b>").append(grandTotal).append("</b></td></tr>\n");
         result.append("</table><P>\n");
-        result.append("Mapped unique SUMO terms: " + mappedSUMOterms.size() + "<p>\n");
+        result.append("Mapped unique SUMO terms: ").append(mappedSUMOterms.size()).append("<p>\n");
         return result.toString();
     }
 
@@ -1241,17 +1230,15 @@ public class WordNetUtilities {
     public void imageNetLinks() throws IOException {
 
         String filename = "nounLinks.txt";
-        LineNumberReader lr = null;
         System.out.println("In WordNetUtilities.imageNetLinks()");
-        try {
-            FileReader r = new FileReader(filename);
-            lr = new LineNumberReader(r);
-            String l;
+        try (Reader r = new FileReader(filename);
+            LineNumberReader lr = new LineNumberReader(r)) {
+            String l, synset, url, term;
             while ((l = lr.readLine()) != null) {
                 //System.out.println(";; " + l);
-                String synset = l.substring(1,9);
-                String url = l.substring(10);
-                String term = (String) WordNet.wn.nounSUMOHash.get(synset);
+                synset = l.substring(1,9);
+                url = l.substring(10);
+                term = (String) WordNet.wn.nounSUMOHash.get(synset);
                 //System.out.println(synset);
                 //System.out.println(term);
                 //if (term.endsWith("=")) {
@@ -1260,16 +1247,11 @@ public class WordNetUtilities {
                 //}
             }
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
         catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
-            if (lr != null) {
-                lr.close();
-            }
         }
     }
 
@@ -1339,28 +1321,29 @@ public class WordNetUtilities {
         String id = "";
         int count = 0;
         int total = 0;
-        try {
-            File f = new File(fileWithPath);
-            FileReader r = new FileReader(f);
-            LineNumberReader lr = new LineNumberReader(r);
+        File f = new File(fileWithPath);
+        try (Reader r = new FileReader(f);
+            LineNumberReader lr = new LineNumberReader(r)) {
+            int tabIndex, l;
+            String uid, t;
             while ((line = lr.readLine()) != null) {
                 //System.out.println(line);
-                int tabIndex = line.indexOf("\t");
+                tabIndex = line.indexOf("\t");
                 if (tabIndex > -1) {
-                    String uid = line.substring(0,tabIndex);
+                    uid = line.substring(0,tabIndex);
                     tabIndex = line.indexOf("\t",tabIndex+1);
-                    String t = line.substring(tabIndex + 1, line.length());
+                    t = line.substring(tabIndex + 1, line.length());
                     //System.out.println("Found tab: t, uid, id, lastT: " + t + " " + uid
                     //                    + " " + id+ " " + lastT);
                     if (!id.equals(uid)) {
-                        if (id != "" && count != 0)
+                        if (!"".equals(id) && count != 0)
                             System.out.println("***** Total for " + id + " is " + total/count);
                         count = 0;
                         total = 0;
                         id = uid;
                     }
-                    if (lastT != "") {
-                        int l = Mapping.getLevenshteinDistance(lastT,t);
+                    if (!"".equals(lastT)) {
+                        l = Mapping.getLevenshteinDistance(lastT,t);
                         if (l != 0) {  // exclude searches with no changes
                             total = total + l;
                             count++;
@@ -1369,11 +1352,11 @@ public class WordNetUtilities {
                     lastT = t;
                 }
             }
-            if (id != "" && count != 0)
+            if (!"".equals(id) && count != 0)
                 System.out.println("***** Total for " + id + " is " + total/count);
         }
         catch (IOException ioe) {
-            System.out.println(ioe.getMessage());
+            System.err.println(ioe.getMessage());
             ioe.printStackTrace();
         }
     }
@@ -1382,21 +1365,20 @@ public class WordNetUtilities {
      */
     public static void commentSentiment(String fileWithPath) {
 
-        String line;
-        try {
-            File f = new File(fileWithPath);
-            FileReader r = new FileReader(f);
-            LineNumberReader lr = new LineNumberReader(r);
+        String line, comment, uid;
+        File f = new File(fileWithPath);
+        try (Reader r = new FileReader(f);
+            LineNumberReader lr = new LineNumberReader(r)) {
+            int tabIndex;
             while ((line = lr.readLine()) != null) {
                 //System.out.println(line);
-                int tabIndex = line.indexOf("\t");
+                tabIndex = line.indexOf("\t");
                 if (tabIndex > -1) {
-                    String comment = line.substring(0,tabIndex);
-                    String uid = line.substring(tabIndex + 1, line.length());
+                    comment = line.substring(0,tabIndex);
+                    uid = line.substring(tabIndex + 1, line.length());
                     System.out.println("UID: " + uid + " Sentiment: " + DB.computeSentiment(comment));
                 }
             }
-            lr.close();
         }
         catch (IOException ioe) {
             System.out.println(ioe.getMessage());
@@ -1408,14 +1390,15 @@ public class WordNetUtilities {
      */
     private static void writeTPTPWordNetClassDefinitions(PrintWriter pw) throws IOException {
 
-        ArrayList<String> WordNetClasses =
-            new ArrayList<String>(Arrays.asList("s__Synset","s__NounSynset","s__VerbSynset","s__AdjectiveSynset","s__AdverbSynset"));
+        List<String> WordNetClasses =
+            new ArrayList<>(Arrays.asList("s__Synset","s__NounSynset","s__VerbSynset","s__AdjectiveSynset","s__AdverbSynset"));
         Iterator<String> it = WordNetClasses.iterator();
+        String term, POS;
         while (it.hasNext()) {
-            String term = (String) it.next();
+            term = (String) it.next();
             if (!term.equals("s__Synset")) {
                 pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__subclass(" + term + ",s__Synset))).");
-                String POS = term.substring(0,term.indexOf("Synset"));
+                POS = term.substring(0,term.indexOf("Synset"));
                 pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
                         ",axiom,(s__documentation(" + term + ",s__EnglishLanguage,\"A group of " + POS +
                         "s having the same meaning.\"))).");
@@ -1433,9 +1416,10 @@ public class WordNetUtilities {
      */
     private static void writeTPTPVerbFrames(PrintWriter pw) throws IOException {
 
+        String frame, numString;
         for (int i = 0; i < WordNet.VerbFrames.size(); i ++) {
-            String frame = WordNet.VerbFrames.get(i);
-            String numString = String.valueOf(i);
+            frame = WordNet.VerbFrames.get(i);
+            numString = String.valueOf(i);
             if (numString.length() == 1)
                 numString = "0" + numString;
             pw.println("fof(kb_WordNet_" + TPTPidCounter++ +
@@ -1443,7 +1427,7 @@ public class WordNetUtilities {
         }
     }
 
-    protected static ArrayList<String> WordNetRelations = new ArrayList<String>(Arrays.asList("antonym",
+    protected static List<String> WordNetRelations = new ArrayList<>(Arrays.asList("antonym",
             "hypernym", "instance_hypernym", "hyponym", "instance_hyponym",
             "member_holonym", "substance_holonym", "part_holonym", "member_meronym",
             "substance_meronym", "part_meronym", "attribute", "derivationally_related",
@@ -1456,9 +1440,10 @@ public class WordNetUtilities {
     private static void writeTPTPWordNetRelationDefinitions(PrintWriter pw) throws IOException {
 
         Iterator<String> it = WordNetRelations.iterator();
+        String rel, tag;
         while (it.hasNext()) {
-            String rel = (String) it.next();
-            String tag = null;
+            rel = (String) it.next();
+            tag = null;
             if (rel.equals("antonym") || rel.equals("similar-to") ||
                 rel.equals("verb-group") || rel.equals("derivationally-related"))
                 pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__" + rel + "__m,s__SymmetricRelation))).");
@@ -1548,13 +1533,14 @@ public class WordNetUtilities {
             }
             pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__instance(s__WN30_" +
                     synset + ",s__" + parent + "))).\n");
+            String word, wordAsID;
             for (int i = 0; i < al.size(); i++) {
-                String word = al.get(i);
-                String wordAsID = StringUtil.StringToPrologID(word);
+                word = al.get(i);
+                wordAsID = StringUtil.StringToPrologID(word);
                 pw.println("fof(kb_WordNet_" + TPTPidCounter++ + ",axiom,(s__word(s__WN30_" +
                         synset + ",s__WN30Word_" + wordAsID + "))).\n");
             }
-            String doc = null;
+            String doc;
             switch (synset.charAt(0)) {
               case '1': doc = (String) WordNet.wn.nounDocumentationHash.get(synset.substring(1)); break;
               case '2': doc = (String) WordNet.wn.verbDocumentationHash.get(synset.substring(1)); break;
@@ -1628,7 +1614,7 @@ public class WordNetUtilities {
             }
         }
         else
-            System.out.println("Error in WordNetUtilities.writeTPTPOneWordToSenses(): no senses for word: " + word);
+            System.err.println("Error in WordNetUtilities.writeTPTPOneWordToSenses(): no senses for word: " + word);
     }
 
     /** ***************************************************************
@@ -1636,8 +1622,9 @@ public class WordNetUtilities {
     private static void writeTPTPWordsToSenses(PrintWriter pw) throws IOException {
 
         Iterator<String> it = WordNet.wn.wordsToSenseKeys.keySet().iterator();
+        String word;
         while (it.hasNext()) {
-            String word = (String) it.next();
+            word = (String) it.next();
             writeTPTPOneWordToSenses(pw, word);
         }
     }
@@ -1765,7 +1752,7 @@ public class WordNetUtilities {
             List<String> path;
             for (AVPair link : links) {
                 if (link == null)
-                    System.out.println("Error in WordNetUtilities.findPathsToRoot(): null link");
+                    System.err.println("Error in WordNetUtilities.findPathsToRoot(): null link");
                 else if (link.attribute.equals("hypernym") || link.attribute.equals("instance hypernym")) {
                     //System.out.println("WordNetUtilities.findPathsToRoot(): link: " + link);
                     path = new ArrayList<>();
@@ -1909,7 +1896,7 @@ public class WordNetUtilities {
             System.out.println("====================================");
         }
         catch (Exception e) {
-            System.out.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
+            System.err.println("Error in WordNetUtilities.main(): Exception: " + e.getMessage());
         }
     }
 
@@ -1921,7 +1908,7 @@ public class WordNetUtilities {
         Set<String> result = new HashSet<>();
         List<String> sensekeys = WordNet.wn.wordsToSenseKeys.get(word);
         if (sensekeys == null) {
-            //System.out.println("Error in WordNetUtilities.wordsToSynsets(): no synset for : " + word);
+            //System.err.println("Error in WordNetUtilities.wordsToSynsets(): no synset for : " + word);
             return null;
         }
         for (String s : sensekeys) {
@@ -2083,7 +2070,7 @@ public class WordNetUtilities {
         StringBuilder doc = new StringBuilder();
         File nounFile = new File(filename);
         if (nounFile == null) {
-            System.out.println("Error in WordNetUtilities.generateHyponymSets(): The file does not exist ");
+            System.err.println("Error in WordNetUtilities.generateHyponymSets(): The file does not exist ");
             return;
         }
         long t1 = System.currentTimeMillis();
@@ -2187,7 +2174,7 @@ public class WordNetUtilities {
 
         List<String> res = new ArrayList<>();
         if (synset.length() == 8) {
-            System.out.println("Error in WordNetUtilities.getVerbFramesForSynset(): 8 digit synset");
+            System.err.println("Error in WordNetUtilities.getVerbFramesForSynset(): 8 digit synset");
             return res;
         }
         List<String> numbers = WordNet.wn.verbFrames.get(synset.substring(1));
@@ -2204,7 +2191,7 @@ public class WordNetUtilities {
 
         List<String> res = new ArrayList<>();
         if (synset.length() < 9) {
-            System.out.println("Error in WordNetUtilities.getVerbFramesForWord(): 8 digit synset: " + synset);
+            System.err.println("Error in WordNetUtilities.getVerbFramesForWord(): 8 digit synset: " + synset);
             return res;
         }
         if (WordNet.wn.verbFrames.containsKey(synset.substring(1)))
@@ -2223,14 +2210,16 @@ public class WordNetUtilities {
                                                             List<String> words) {
 
         List<String> result = new ArrayList<>();
+        int index;
+        String frame;
         for (String w : map.keySet()) {
             if (w.equals("all")) {
                 for (String word : words) {
                     for (String f : map.get(w)) {
                         if (!StringUtil.isNumeric(f))
                             continue;
-                        int index = Integer.parseInt(f);
-                        String frame = WordNet.wn.VerbFrames.get(index);
+                        index = Integer.parseInt(f);
+                        frame = WordNet.wn.VerbFrames.get(index);
                         frame = frame.replace("----",word);
                         result.add(frame);
                     }
@@ -2238,8 +2227,8 @@ public class WordNetUtilities {
             }
             else {
                 for (String f : map.get(w)) {
-                    int index = Integer.parseInt(f);
-                    String frame = WordNet.wn.VerbFrames.get(index);
+                    index = Integer.parseInt(f);
+                    frame = WordNet.wn.VerbFrames.get(index);
                     frame = frame.replace("----", w);
                     result.add(frame);
                 }
@@ -2313,7 +2302,7 @@ public class WordNetUtilities {
             return null;
         }
         if (sumo == null || "".equals(sumo)) {
-            System.out.println("Error in getEquivalentVerbSynsetsFromSUMO(): null input");
+            System.err.println("Error in getEquivalentVerbSynsetsFromSUMO(): null input");
             return null;
         }
         List<String> synlist = WordNet.wn.SUMOHash.get(sumo);
@@ -2341,11 +2330,11 @@ public class WordNetUtilities {
 
         List<String> result = new ArrayList<>();
         if (WordNet.wn == null || WordNet.wn.SUMOHash == null) {
-            System.out.println("Error in getVerbSynsetsFromSUMO(): WordNet not loaded");
+            System.err.println("Error in getVerbSynsetsFromSUMO(): WordNet not loaded");
             return null;
         }
         if (sumo == null || "".equals(sumo)) {
-            System.out.println("Error in getVerbSynsetsFromSUMO(): null input");
+            System.err.println("Error in getVerbSynsetsFromSUMO(): null input");
             return null;
         }
         List<String> synlist = WordNet.wn.SUMOHash.get(sumo);
@@ -2370,14 +2359,16 @@ public class WordNetUtilities {
             return null;
         }
         if (sumo == null || "".equals(sumo)) {
-            System.out.println("Error in getEquivalentSynsetsFromSUMO(): null input");
+            System.err.println("Error in getEquivalentSynsetsFromSUMO(): null input");
             return null;
         }
         List<String> synlist = WordNet.wn.SUMOHash.get(sumo);
         if (synlist == null) return result;
+        String SUMO;
+        char suffix;
         for (String s : synlist) {
-            String SUMO = WordNet.wn.getSUMOMapping(s);
-            char suffix = WordNetUtilities.getSUMOMappingSuffix(SUMO);
+            SUMO = WordNet.wn.getSUMOMapping(s);
+            suffix = WordNetUtilities.getSUMOMappingSuffix(SUMO);
             if (suffix == '=')
                 result.add(s);
         }
@@ -2464,7 +2455,7 @@ public class WordNetUtilities {
      */
     private static void addTermAndSubs(KB kb, Set<String> orig, String term) {
 
-        Set<String> newterms = null;
+        Set<String> newterms;
         if (kb.isAttribute(term))
             newterms = kb.getAllSub(term,"subAttribute");
         else
@@ -2590,13 +2581,14 @@ public class WordNetUtilities {
         System.out.println();
         List<List<String>> lieversFile = readFileIntoArray(System.getenv("CORPORA") +
                 File.separator + "LieversLexiconList.txt");
-        TreeSet<String> lievers = new TreeSet<>();
-        TreeSet<String> lieversRoots = new TreeSet<>();
+        Set<String> lievers = new TreeSet<>();
+        Set<String> lieversRoots = new TreeSet<>();
         for (List<String> al : lieversFile) {
             lievers.addAll(al);
         }
+        String root;
         for (String s : lievers) {
-            String root = MultiWords.rootFormOf(s);
+            root = MultiWords.rootFormOf(s);
             if (WordNet.wn.containsWord(removeIsh(root)))
                 root = removeIsh(root);
             if (root != null && !lievers.contains(root) && WordNet.wn.containsWord(root))
@@ -2607,7 +2599,7 @@ public class WordNetUtilities {
         lievers = new TreeSet<>();
         lievers.addAll(lieversRoots);
 
-        TreeSet<String> sumo = new TreeSet<>();
+        Set<String> sumo = new TreeSet<>();
         for (Set<String> hs : words.values()) {
             sumo.addAll(hs);
         }
@@ -2617,20 +2609,20 @@ public class WordNetUtilities {
         System.out.println("synesthesiaCompare(): sumo list: " + sumo);
         System.out.println("count of sumo list: " + sumo.size());
 
-        TreeSet<String> lieversOverlap = new TreeSet<>();
+        Set<String> lieversOverlap = new TreeSet<>();
         lieversOverlap.addAll(lievers);
         System.out.println();
         System.out.println("synesthesiaCompare(): lievers list overlap: " + lieversOverlap.retainAll(sumo));
         System.out.println("count: " + lieversOverlap.size());
 
-        TreeSet<String> sumoDiff = new TreeSet<>();
+        Set<String> sumoDiff = new TreeSet<>();
         sumoDiff.addAll(sumo);
         sumoDiff.removeAll(lievers);
         System.out.println();
         System.out.println("synesthesiaCompare(): sumo not in lievers: " + sumoDiff);
         System.out.println("count: " + sumoDiff.size());
 
-        TreeSet<String> lieversSynNonOverlap = new TreeSet<>();
+        Set<String> lieversSynNonOverlap = new TreeSet<>();
         lieversSynNonOverlap.addAll(lievers);
         lieversSynNonOverlap.removeAll(synwords);
         System.out.println();
@@ -2638,7 +2630,7 @@ public class WordNetUtilities {
         System.out.println("count: " + lieversSynNonOverlap.size());
 
         lievers.removeAll(sumo);
-        TreeSet<String> newlievers = new TreeSet<>();
+        Set<String> newlievers = new TreeSet<>();
         for (String s : lievers)
             if (!sensoryOrMentalWord(s))
                 newlievers.add(s);
@@ -2657,7 +2649,7 @@ public class WordNetUtilities {
         // showAllRoots();
         try {
             KBmanager.getMgr().initializeOnce();
-            ArrayList<String> base = new ArrayList<String>();
+            List<String> base = new ArrayList<>();
             List<List<String>> result = findPathsToRoot(base, "102858304");
             int count;
             for (List<String> path : result) {
@@ -2850,22 +2842,22 @@ public class WordNetUtilities {
         else {
             KBmanager.getMgr().initializeOnce();
             String kbName = KBmanager.getMgr().getPref("sumokbname");
-            if (args != null && args.length > 1 && args[0].equals("-w")) {
+            if (args.length > 1 && args[0].equals("-w")) {
                 String result = WordNet.wn.page(StringUtil.removeEnclosingQuotes(args[1]), 0, kbName, "", "");
                 System.out.println(StringUtil.removeHTML(result));
             }
-            else if (args != null && args.length > 1 && args[0].equals("-t")) {
+            else if (args.length > 1 && args[0].equals("-t")) {
                 String term = StringUtil.removeEnclosingQuotes(args[1]);
                 System.out.println("term: " +  term);
                 System.out.println(WordNet.wn.getWordsFromTerm(term).keySet());
             }
-            else if (args != null && args.length > 1 && args[0].equals("-s")) {
+            else if (args.length > 1 && args[0].equals("-s")) {
                 String word = StringUtil.removeEnclosingQuotes(args[1]);
                 System.out.println("word: " +  word);
                 System.out.println(WordNet.wn.getSynsetsFromWord(word));
             }
             else {
-                System.out.println("no such option or no option : " + Arrays.toString(args));
+                System.err.println("no such option or no option : " + Arrays.toString(args));
                 showHelp();
             }
         }
