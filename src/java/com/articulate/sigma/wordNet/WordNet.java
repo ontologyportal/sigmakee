@@ -418,7 +418,7 @@ public class WordNet implements Serializable {
      */
     public static List<String> splitToArrayListSentence(String st) {
 
-        if (st.equals("") || st == null) {
+        if (st == null || st.isBlank()) {
             System.err.println("Error in WordNet.splitToArrayList(): empty string input");
             return null;
         }
@@ -1720,7 +1720,7 @@ public class WordNet implements Serializable {
 
         File serfile = new File(baseDir + File.separator + "wn.ser");
         Date saveDate = new Date(serfile.lastModified());
-        System.out.println("KBmanager.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
+        System.out.println("WordNet.serializedOld(): " + serfile.getName() + " save date: " + saveDate.toString());
         File file;
         Date fileDate;
         for (String f : wnFilenames.values()) {
@@ -1768,14 +1768,7 @@ public class WordNet implements Serializable {
         if (StringUtil.emptyString(wn.origMaxNounSynsetID))
             System.err.println("Error in WordNet.serialize(): empty max synset id");
         try {
-            // Reading the object from a file
-            //FileOutputStream file = new FileOutputStream(baseDir + File.separator + "wn.ser");
-            //ObjectOutputStream out = new ObjectOutputStream(file);
-            // Method for deserialization of object
-            //out.writeObject(wn);
             encoder(wn);
-            //out.close();
-            //file.close();
             System.out.println("WordNet.serialize(): WN has been serialized ");
             initNeeded = false;
         }
@@ -1846,7 +1839,6 @@ public class WordNet implements Serializable {
                 if (("".equals(WordNet.baseDir)) || (WordNet.baseDir == null))
                     WordNet.baseDir = KBmanager.getMgr().getPref("kbDir") + File.separator + "WordNetMappings";
                 System.out.println("WordNet.initOnce(): using baseDir = " + WordNet.baseDir);
-                System.out.println("WordNet.initOnce(): disable: " + disable);
                 baseDirFile = new File(WordNet.baseDir);
                 if (KBmanager.getMgr().getPref("loadFresh").equals("true") || !serializedExists()) {
                     System.out.println("WordNet.initOnce(): loading WordNet source files ");
