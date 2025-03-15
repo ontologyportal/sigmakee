@@ -17,8 +17,8 @@ with read-only functions enabled linked from http://www.ontologyportal.org
 
 # Installation Instructions
 ## Recommended Methods
-* [Linux installation](https://github.com/ontologyportal/sigmakee/wiki/Linux)
-* [MacOS installation](https://github.com/ontologyportal/sigmakee/blob/master/INSTALL.MacOS)
+* [Linux installation](https://github.com/ontologyportal/sigmakee/wiki/Linux-installation)
+* [MacOS installation](https://github.com/ontologyportal/sigmakee/wiki/MacOS-installation)
 * [Windows installation](https://github.com/ontologyportal/sigmakee/wiki/Windows-installation)
 
 ## Other methods (power users)
@@ -31,9 +31,10 @@ with read-only functions enabled linked from http://www.ontologyportal.org
 * [Common problems with installation](https://github.com/ontologyportal/sigmakee/wiki/Common-problems-with-installation)
 
 After installing, recommended reading is the Sigma manual
-https://github.com/ontologyportal/sigmakee/blob/master/doc/manual/SigmaManual.pdf
+* [Sigma Manual](https://github.com/ontologyportal/sigmakee/blob/master/doc/manual/SigmaManual.pdf)
+
 There is a video on installing Sigma, as well as many others about related tools at
-https://www.youtube.com/playlist?list=PLpBQIgki3izeUmFD8c65INdmxRNjjxOzP
+* [Ontology Talk - Sigma Installation](https://www.youtube.com/playlist?list=PLpBQIgki3izeUmFD8c65INdmxRNjjxOzP)
 
 ## Running Sigma
 Sigma is hosted on a Tomcat server. To start Tomcat, execute:
