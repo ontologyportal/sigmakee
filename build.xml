@@ -92,7 +92,7 @@
     <property name="app.name" value="sigma"/>
     <property name="web.app.name" value="${app.name}kee"/>
     <property name="build.home" value="build"/>
-    <property name="build.classes.dir" value="${build.home}/WEB-INF/classes"/>
+    <property name="build.classes.dir" value="${build.home}/classes"/>
     <property name="build.lib" value="${build.home}/lib"/>
     <property name="build.test.classes.dir" value="${build.home}/test/classes"/>
     <property name="dist.javadoc.dir" value="doc"/>
@@ -179,26 +179,13 @@
         </tstamp>
     </target>
 
-    <target name="deploy_prepare" depends="init" description="Prepare for deploying code to sigma.war">
-        <mkdir dir="${build.classes.dir}"/>
-
-        <!-- Copy all the *.jsp, *.xsl, *.html, pixmaps, etc. -->
-        <copy todir="${build.home}" overwrite="yes">
-            <fileset dir="${web.dir}/jsp"/>
-            <fileset file="${web.dir}/simple.css"/>
-        </copy>
-        <copy todir="${build.home}/pixmaps">
-            <fileset dir="${web.dir}/pixmaps"/>
-        </copy>
-    </target>
-
     <!--
     ============
     BUILD / DIST
     ============
     -->
 
-    <target name="TPTP" depends="deploy_prepare">
+    <target name="TPTP" depends="init">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
@@ -212,6 +199,7 @@
     </target>
 
     <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes.dir}.">
+        <mkdir dir="${build.classes.dir}"/>
         <javac destdir="${build.classes.dir}"
                debug="on"
                optimize="on"
@@ -274,9 +262,9 @@
             <classes dir="${build.classes.dir}"/>
         </war>
         <jar destfile="${build.home}/${web.app.name}.jar"
-             manifest="${manifest.mf}">
+             manifest="${manifest.mf}"
+             basedir="${build.classes.dir}">
             <metainf file="LICENSE"/>
-            <fileset dir="${build.classes.dir}"/>
         </jar>
     </target>
 
