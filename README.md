@@ -7,35 +7,7 @@
 ![badge](https://github.com/ontologyportal/sigmakee/actions/workflows/test-report.yml/badge.svg)
 
 # Notice
-
-2024 November 2 - We're making some improvements to clean up the configuration and code of Sigma and its associated projects. For existing installations, some changes are needed to stay in sync. OpenJDK is now supported, eliminating the dependency on Oracle JDK. Tomcat 9 is now required. A new environment variable SIGMA_CP is now required in your .bashrc (or similar for non-Linux). Please let us know if you have any issues!
-
-To upgrade to Tomcat 9 and add the SIGMA_CP:
-
-```sh
-cd ~
-echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
-cd Programs
-rm -r apache-tomcat-8.5.23/
-wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip'
-unzip apache-tomcat-9.0.97.zip
-rm apache-tomcat-9.0.97.zip
-cd ~/Programs/apache-tomcat-9.0.97/bin
-chmod 777 *
-cd ../webapps
-chmod 777 *
-```
-
-update CATALINA_HOME in your ~/.bashrc file
-```
-CATALINA_HOME=~/Programs/apache-tomcat-9.0.97
-```
-Recompile sigmakee
-
-```
-cd ~/workspace/sigmakee/
-ant
-```
+[Version notes](https://github.com/ontologyportal/sigmakee/wiki/Version-notes)
 
 # Introduction
 
@@ -43,385 +15,28 @@ Sigma is an integrated development environment for logical theories that
 extend the Suggested Upper Merged Ontology (SUMO).  There is a public installation
 with read-only functions enabled linked from http://www.ontologyportal.org
 
-> **Warning**
-> Please read these notes thoroughly if you want to do a native install not
-> with a container.  Most installation issues result from not
-> carefully following the instructions.
+# Installation Instructions
+## Recommended Methods
+* [Linux installation](https://github.com/ontologyportal/sigmakee/wiki/Linux)
+* [MacOS installation](https://github.com/ontologyportal/sigmakee/blob/master/INSTALL.MacOS)
+* [Windows installation](https://github.com/ontologyportal/sigmakee/wiki/Windows-installation)
 
-You can follow the steps below to do a manual installation on linux or Mac. This
-procedure assumes that you start from your home directory and are happy with
-having directories created there. The sed command below attempts to modify
-`~/.sigmakee/KBs/config.xml` to conform to your local paths.  If your paths
-differ, then you may need to edit your config.xml manually. If you are running
-tomcat on vagrant or another VM, you may need to change the port value from 8080.
-If you are running on a server, rather than your localhost you'll need to set
-the hostname parameter in your config.xml file. E will only work if your $TMPDIR
-is set correctly.  Tomcat V9 is required. Later versions of Tomcat are not yet
-supported. Be sure to change `$CATALINA_HOME` and your paths to conform to the
-version. If you use a different mirror or version you'll need to change the wget
-commend below. Change "theuser" below to your user name.
+## Other methods (power users)
+* [Container-Based installation (Docker)](https://github.com/ontologyportal/sigmakee/wiki/Container%E2%80%90Based-installation)
+* [Vagrant Virtual Machine installation](https://github.com/ontologyportal/sigmakee/wiki/Vagrant-Virtual-Machine-installation)
+* [Old Installation Notes (depracated)](https://github.com/ontologyportal/sigmakee/wiki/Old-Installation-notes)
 
-If your installation isn't working and you're getting funny "null"s in your paths
-try opening permissions on your `$SIGMA_HOME`, `$CATALINA_HOME` and `$SIGMA_SRC` directories.
+## Miscellaneous
+* [Optional Vampire manual installation](https://github.com/ontologyportal/sigmakee/wiki/Vampire-installation)
+* [Common problems with installation](https://github.com/ontologyportal/sigmakee/wiki/Common-problems-with-installation)
 
 After installing, recommended reading is the Sigma manual
 https://github.com/ontologyportal/sigmakee/blob/master/doc/manual/SigmaManual.pdf
 There is a video on installing Sigma, as well as many others about related tools at
 https://www.youtube.com/playlist?list=PLpBQIgki3izeUmFD8c65INdmxRNjjxOzP
 
-## Container-Based installation
-
-First, install docker if you don't have it already
-
-```sh
-sudo apt-get update
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get update
-sudo apt-get install docker-ce
-```
-
-Then get the docker image and run it
-
-Pull with
-```sh
-sudo docker pull apease/sigmakee:latest
-```
-
-Run with
-```sh
-sudo docker run -it -d -p 8080:8080 --name trial04 apease/sigmakee:latest
-```
-Access from a browser with http://localhost:8080/sigma/login.html . Use admin for username and admin for password
-
-
-## Vagrant Virtual Machine installation
-
-> **Warning**
-> Vagrant build is not maintained.
-Original vagrant files can be found in [attic](attic)
-
-## Build a New Docker Image
-
-Please note that the Docker container version of Sigma is several years out of date.  A native install of Sigma is
-recommended.
-
-To build a new docker container follow these steps where `$SIGMA_SRC` is your sigmakee git repo path.
-First, download Linux/x64 from https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37/GPL/openjdk-23_linux-x64_bin.tar.gz
-Note that if you don't download that exact version, you'll need to edit sigmastart.sh so that the filename
-matches.  You'll also need to make changes to track the latest Tomcat, in the bashrc and Dockerfile
-
-```sh
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get update
-sudo apt-get install docker-ce
-mkdir images
-cd images
-cp $SIGMA_SRC/docker/* .
-sudo docker build -t sigmakee2018:latest .
-```
-
-to push the image to dockerhub
-
-```sh
->:~/images$ sudo docker login
-Login with your Docker ID to push and pull images from Docker Hub. If you don't have a Docker ID, head over to https://hub.docker.com to create one.
-Username (apease):
-Password:
-Login Succeeded
-
->:~/images$ sudo docker ps
-CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS                    NAMES
-1f7d0cef7874        51a041125329        "./sigmastart.sh"   56 minutes ago      Up 56 minutes       0.0.0.0:4000->8080/tcp   trial11
->:~/images$ sudo docker tag 51a041125329 apease/sigmakee2018:latest
->:~/images$ sudo docker push apease/sigmakee2018:latest
-The push refers to a repository [docker.io/apease/sigmakee2018]
-ab5e94769be7: Pushed
-1c15947f83dc: Pushed
-c2007c9776df: Pushed
-829ef5b0378d: Pushed
-6fd852e99bda: Pushed
-85c7d96adccb: Pushed
-6b2f14c09222: Pushed
-9a9a3d9cc4bc: Pushed
-38c81b36edfb: Pushed
-bcc97fbfc9e1: Pushed
-latest: digest: sha256:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx size: 2417
-```
-
-
-## System preparation on Linux
-
-Make sure that throughout the commands below that you replace "theuser" with \
-your desired user name. Also, if you know you already have sudo priviledges, you
-can skip to "Install unzip"
-
-create user theuser
-```sh
-sudo useradd theuser
-```
-add password for theuser
-```sh
-sudo passwd theuser
-```
-add to sudoers file
-```sh
-sudo usermod -aG sudo theuser
-```
-switch over to the new user
-```sh
-su theuser
-cd /home
-sudo mkdir theuser
-sudo chown theuser theuser
-cd theuser
-```
-make sure you're running bash (and answer /bin/bash)
-```sh
-chsh
-```
-
-Install unzip
-```sh
-sudo apt-get install unzip
-sudo apt-get update
-```
-
-Install git
-```sh
-sudo apt-get install git
-```
-
-Install ant
-```sh
-sudo apt-get install ant
-```
-
-Install make
-```sh
-sudo apt-get install make
-```
-
-Install cmake
-```sh
-sudo apt-get install cmake
-```
-
-Install gcc
-```sh
-sudo apt-get install gcc
-```
-
-Install graphViz
-```sh
-sudo apt-get install graphviz
-```
-
-You may need to install build-essential to compile Vampire
-```sh
-sudo apt-get install build-essential
-```
-
-Update apt-get
-```sh
-sudo add-apt-repository universe
-sudo apt-get update
-```
-
-may need to create a .bashrc
-```sh
-touch .bashrc
-```
-handy to add stuff to .bashrc
-```sh
-echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
-echo "export HISTSIZE=10000 HISTFILESIZE=100000" >> .bashrc
-echo "export JAVA_HOME=/home/theuser/Programs/jdk-23" >> .bashrc
-```
-
-mandatory additions to .bashrc
-NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
-      ~/workspace is the recommendation
-```sh
-echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=$CATALINA_OPTS -Xmx10g -Xss1m" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
-echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
-echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
-```
-
-load the definitions into your environment
-```sh
-source .bashrc
-```
-
-then you can add the last one
-```sh
-echo "export PATH=$PATH:$JAVA_HOME/bin" >> .bashrc
-source .bashrc
-```
-
-```sh
-mkdir /home/theuser/Programs
-cd Programs
-```
-
-Install a Java Development Kit (JDK) from OpenJDK, at least version 21 or greater.
-** Avoid JDK 17 **
-
-The following command line version may work but you may need to update the name of the jdk zipfile
-
-```sh
-wget https://download.java.net/java/GA/jdk23/3c5b90190c68498b986a97f276efd28a/37/GPL/openjdk-23_linux-x64_bin.tar.gz
-  gunzip openjdk-23_linux-x64_bin.tar.gz
-```
-
-Copy the download link into this command.  Then you need two commands to install\
-the new Java (check that the paths conform to the java version you downloaded)
-
-```sh
-sudo update-alternatives --install "/usr/bin/java" "java" "/home/theuser/Programs/jdk-23/bin/java" 1
-sudo update-alternatives --set java /home/theuser/Programs/jdk-23/bin/java
-```
-
-Verify that it's installed correctly with
-
-```sh
-java -version
-```
-You should see something like -
-
-```
-openjdk version "23" 2024-09-17
-OpenJDK Runtime Environment (build 23+37-2369)
-OpenJDK 64-Bit Server VM (build 23+37-2369, mixed mode, sharing)
-```
-
-Verify that you see the same Java version when you startup Apache Tomcat that you do when you\
-run java -version . It's also a good idea to run javac -version to verify that you have installed\
-the full JDK and not just te JRE.
-
-On AWS it helps to be reminded of which server you're on.  I use machine size as a reminder with
-
-```sh
-export HOST_TYPE=`curl http://169.254.169.254/latest/meta-data/instance-type`
-PS1="$HOST_TYPE:"PS1
-```
-or on Vagrant, something like
-
-```sh
-PS1=Vagrant:$PS1
-```
-
-## Linux Installation
-
-First, comply with System preparation on Linux above
-
-Clone SigmaKEE. First, ensure the below exports are contained in your ~/.bashrc.
-If not, then perform the exports before cloning SigmaKEE.
-NOTE: ONTOLOGYPORTAL_GIT can be anywhere you wish to store the git repos.
-      ~/workspace is just a default suggestion
-```sh
-cd ~
-echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=$CATALINA_OPTS -Xmx10g -Xss1m" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
-echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
-echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
-source .bashrc
-mkdir workspace
-cd workspace
-git clone https://github.com/ontologyportal/sigmakee
-```
-
-Then,
-```sh
-cd sigmakee
-ant install
-ant
-```
-
-To keep this repository updated
-```sh
-ant update.sigmakee
-```
-
-The following steps are now legacy. The call to ant install above will perform\
-these steps more efficiently.
-
-```sh
-cd ~
-mkdir workspace
-mkdir Programs
-cd Programs
-wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip'
-wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
-wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
-tar -xvzf E.tgz
-unzip apache-tomcat-9.0.97.zip
-rm apache-tomcat-9.0.97.zip
-cd ~/Programs/apache-tomcat-9.0.97/bin
-chmod 777 *
-cd ../webapps
-chmod 777 *
-cd ~/workspace/
-git clone https://github.com/ontologyportal/sigmakee
-git clone https://github.com/ontologyportal/sumo
-git clone https://github.com/ontologyportal/TPTP-ANTLR
-git clone https://github.com/ontologyportal/SigmaUtils
-cd ~
-mkdir .sigmakee
-cd .sigmakee
-mkdir KBs
-cp -R ~/workspace/sumo/* KBs
-me="$(whoami)"
-cp ~/workspace/sigmakee/config.xml ~/.sigmakee/KBs
-sed -i "s/theuser/$me/g" KBs/config.xml
-cd ~/Programs
-gunzip WordNet-3.0.tar.gz
-tar -xvf WordNet-3.0.tar
-cp WordNet-3.0/dict/* ~/.sigmakee/KBs/WordNetMappings/
-cd ~/Programs/E
-./configure
-make
-make install
-cd ~
-echo "export SIGMA_HOME=~/.sigmakee" >> .bashrc
-echo "export ONTOLOGYPORTAL_GIT=~/workspace" >> .bashrc
-echo "export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/sigmakee" >> .bashrc
-echo "export CATALINA_OPTS=\"$CATALINA_OPTS -Xmx10g -Xss1m\"" >> .bashrc
-echo "export CATALINA_HOME=~/Programs/apache-tomcat-9.0.97" >> .bashrc
-echo "export PATH=$CATALINA_HOME/bin:$PATH" >> .bashrc
-echo "export SIGMA_CP=$SIGMA_SRC/build/sigmakee.jar:$SIGMA_SRC/lib/*" >> .bashrc
-source .bashrc
-cd ~/workspace/sigmakee
-ant
-```
-End legacy Linux install
-
-To test run
-
-```sh
-java -Xmx10g -Xss1m -cp $SIGMA_CP \
-    com.articulate.sigma.KB -c Object Transaction
-```
-If you want to monitor the server's condition and if it started successfully you can run:
-```sh
-tail -f $CATALINA_HOME/logs/catalina.out
-```
-
-To start Tomcat, execute:
+## Running Sigma
+Sigma is hosted on a Tomcat server. To start Tomcat, execute:
 ```sh
 $CATALINA_HOME/bin/startup.sh
 ```
@@ -434,95 +49,28 @@ since $CATALINA_HOME/bin is on your PATH
 Point your browser at http://localhost:8080/sigma/login.html\
 Default credentials are: admin/admin
 
-Debugging
 
+
+#### Test run
+```sh
+java -Xmx10g -Xss1m -cp $SIGMA_CP \
+    com.articulate.sigma.KB -c Object Transaction
+```
+
+
+#### Debugging
 - If login.html redirects you to init.jsp that means the system is still initializing.
 Wait a minute or two and try again.
 - If you get an initial login error, try turning off your network card and try again.
 Some intranets block server requests that are not recognized.
 
-
-# Vampire
-
-If you want to use Vampire instead of or in addition to E, follow these
-[instructions](https://github.com/vprover/vampire/wiki/Source-Build-for-Users).
-Please note that the command:
+If you want to monitor the server's condition and if it started successfully you can run:
 ```sh
-ant install
-```
-will also install Vampire w/ matched z3
-
-
-## Legacy Vampire instructions
-You may need to install the Zlib library if you don't have it already installed
-```sh
-sudo apt-get install libz-dev
-```
-and also possibly
-
-```sh
-sudo apt-get install g++
-```
-then execute the following:
-
-```sh
-mkdir ~/Programs && cd ~/Programs
-git clone https://github.com/vprover/vampire
-cd vampire
-make vampire_rel
-mv vampire_rel_master* vampire
+tail -f $CATALINA_HOME/logs/catalina.out
 ```
 
-You'll then need to edit your config.xml file to point to the vampire executable. Add the line
 
-```xml
-  <preference name="vampire" value="/home/theuser/workspace/vampire/vampire" />
-```
-editing the path to conform to your system
 
-If you want to use Vampire with options different from Avatar or the latest CASC strategy, for
-example, an older CASC strategy, you can set an environment variable, as in the assignment below,
-being sure to terminate with -t for the timeout
-
-```aidl
-VAMPIRE_OPTS="--mode portfolio --avatar off -qa answer_literal --schedule casc_2019 --proof tptp -t"
-```
-
-## macOS install notes
-
-See INSTALL.MacOS
-
-## Windows Subsystem for Linux (WSL) Install Notes
-(Make sure you are installing WSL 2 vice WSL 1)
-
-Open up CMD prompt (replace "/home/theuser" with your particular path)
-
-```
-    wsl –-install
-    .bashrc already existed in home directory. Did not update path.
-    echo "alias dir='ls --color=auto --format=vertical -la'" >> .bashrc
-    Manually changed with "nano .bashrc" HISTSIZE=10000 and HISTFILESIZE=100000
-    mkdir /home/theuser/Programs
-    cd Programs
-    sudo apt-get install openjdk-23-jdk
-    (This step might not be necessary, I'd try without it first) echo "export JAVA_HOME=/usr/lib/jvm/java-23-openjdk-amd64/jre" >> .bashrc
-```
-
-Follow Linux install instructions on:
-```
-https://github.com/ontologyportal/sigmakee
-```
-
-Modify the following files, replace "theuser" with your username
-```
-me="$(whoami)"
-sed -i "s/theuser/$me/g" ~/workspace/sigmakee/config.xml
-sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/unit/java/resources/config_all.xml
-sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/unit/java/resources/config_topAndMid.xml
-sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/config_all.xml
-sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/config_topAndMid.xml
-sed -i "s/theuser/$me/g" ~/workspace/sigmakee/test/integration/java/resources/config_topOnly.xml
-```
 
 
 ## jEdit Integration (optional)
@@ -681,19 +229,6 @@ and you'll need to change JDBCstring in PasswordService.java to your path instea
 and recompile
 
 
-## Old Installation Notes
-
-Install via script from source on Linux or Mac OS with
-```sh
-bash <(curl -L https://raw.githubusercontent.com/ontologyportal/sigmakee/master/install.sh)
-```
-Note that you need to enter the entire statement above, including calling "bash".
-
-Users should also see
-
-https://sourceforge.net/p/sigmakee/wiki/required_data_files/
-Mac instructions - https://sourceforge.net/p/sigmakee/wiki/Sigma%20Setup%20on%20Mac/
-Ubuntu - https://sourceforge.net/p/sigmakee/wiki/Setting%20up%20Sigma%20on%20Ubuntu/
 
 ## To build/run/debug/test using the NetBeans IDE
 Define a nbproject/private/private.properties file with these keys:
