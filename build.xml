@@ -85,7 +85,6 @@
     <property name="web.app.name" value="${app.name}kee"/>
     <property name="build.home" value="build"/>
     <property name="build.classes" value="${build.home}/classes"/>
-    <property name="build.lib" value="${build.home}/lib"/>
     <property name="build.test.classes" value="${build.home}/test/classes"/>
     <property name="dist.javadoc.dir" value="doc"/>
     <property name="web.dir" value="web"/>
