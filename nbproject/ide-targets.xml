@@ -586,7 +586,7 @@
         <delete file="${dist_war}"/>
         <antcall target="delete.catalina.logs"/>
     </target>
-    <target name="clean.kbs" depends="clean">
+    <target name="clean.kbs">
         <delete>
             <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
@@ -599,7 +599,7 @@
             </fileset>
         </delete>
     </target>
-    <target name="delete.catalina.logs" depends="init">
+    <target name="delete.catalina.logs">
         <delete>
             <fileset dir="${catalina.logs.dir}">
                 <include name="*.*"/>
