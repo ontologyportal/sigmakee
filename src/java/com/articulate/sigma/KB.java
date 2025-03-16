@@ -149,12 +149,22 @@ public class KB implements Serializable {
 
     /* The natural language formatting strings for relations in the KB. It is a
      * HashMap of language keys and HashMap values. The interior HashMap is term
-     * name keys and String values.     */
+     * name keys and String values of a format.     */
     private Map<String, Map<String, String>> formatMap = new HashMap<>();
 
     /* language keys and HashMap values. The interior HashMap is term name keys
-     * and String values.     */
+     * and String values of a termFormat.     */
     private Map<String, Map<String, String>> termFormatMap = new HashMap<>();
+
+    /* Language keys and HashMap values for relations in the KB. The interior
+    *  HashMap is term name keys and a list of all the associated format strings.
+     */
+    private Map<String, Map<String, List<String>>> formatMapAll = new HashMap<>();
+
+    /* language keys and HashMap values for termFormats. The interior HashMap is
+    *  is term name keys and a list of all associated termFormat strings.
+     */
+    private Map<String, Map<String, List<String>>> termFormatMapAll = new HashMap<>();
 
     /** Errors found during loading of the KB constituents. */
     public Set<String> errors = new TreeSet<>();
@@ -2596,7 +2606,7 @@ public class KB implements Serializable {
         if (!loadFormatMapsAttempted.contains(lang)) {
             List<Formula> col = askWithRestriction(0, "format", 1, lang);
             if ((col == null) || col.isEmpty())
-                System.err.println("Error in KB.loadFormatMaps(): No relation format file loaded for language " + lang);
+                System.err.println("Error in KB.loadFormatMaps(): No relation formats found in the Knowledge Base for language " + lang);
             else {
                 Map<String, String> langFormatMap = formatMap.get(lang);
                 for (Formula f : col) {
@@ -2608,7 +2618,7 @@ public class KB implements Serializable {
             }
             col = askWithRestriction(0, "termFormat", 1, lang);
             if ((col == null) || col.isEmpty())
-                System.err.println("Error in KB.loadFormatMaps(): No term format file loaded for language: " + lang);
+                System.err.println("Error in KB.loadFormatMaps(): No term formats found in the Knowledge Base for language: " + lang);
             else {
                 Map<String, String> langTermFormatMap = termFormatMap.get(lang);
                 for (Formula f : col) {
@@ -2687,6 +2697,78 @@ public class KB implements Serializable {
             loadFormatMaps(lang);
         return formatMap.get(lang);
     }
+
+    /********************************************************************
+     * Loads ALL the termFormats for each associated term for a given language
+     *      (as opposed to just a single termFormat per term).
+     *      Does not load all languages
+     *
+     * @param lang The language that will be loaded into the map
+     * @param type One of either "format" or "termFormat" that will
+     *             be loaded.
+     *
+     */
+    private void loadFormatMapsAll(String lang, String type, Map<String, Map<String, List<String>>> refFormatMapAll) {
+
+        if (!StringUtil.isNonEmptyString(lang))
+            lang = "EnglishLanguage";
+
+        Map<String, List<String>> langRefFormatMap = refFormatMapAll.get(lang);
+        if ((langRefFormatMap == null) || langRefFormatMap.isEmpty()) {
+            langRefFormatMap = new HashMap<>();
+            refFormatMapAll.put(lang, langRefFormatMap);
+            List<Formula> col = askWithRestriction(0, type, 1, lang);
+            if ((col == null) || col.isEmpty())
+                System.err.println("Error in KB.loadFormatMaps(): No " + type + " found in the Knowledge Base for language: " + lang);
+            else {
+                String key, format;
+                for (Formula f : col) {
+                    key = f.getStringArgument(2);
+                    format = f.getStringArgument(3);
+                    format = StringUtil.removeEnclosingQuotes(format);
+
+                    List<String> formatList = langRefFormatMap.get(key);
+                    if (formatList == null) {
+                        formatList = new ArrayList<>();
+                        langRefFormatMap.put(key, formatList);
+                    }
+                    formatList.add(format);
+                }
+            }
+        }
+    }
+
+    /*****************************************************************
+     * This method creates a dictionary (Map) of SUO-KIF term symbols -- the keys --
+     * and a natural language list of strings for each key that is all the names for
+     * the term -- the values -- in the context denoted by lang. If the Map has
+     * already been built and the language hasn't changed, just return the
+     * existing map. This is a case of "lazy evaluation".
+     *
+     * @return An instance of Map where the keys are terms and the values are
+     *         a list of format strings.
+     */
+    public Map<String, List<String>> getTermFormatMapAll(String lang) {
+
+        loadFormatMapsAll(lang, "termFormat", termFormatMapAll);
+        return termFormatMapAll.get(lang);
+    }
+
+    /*****************************************************************
+     * This method creates an association list (Map) of the natural language format
+     * string and a list of the relation name for which that format string applies. If the
+     * map has already been built and the language hasn't changed, just return
+     * the existing map. This is a case of "lazy evaluation".
+     *
+     * @return An instance of Map where the keys are relation names and the
+     *         values are format strings.
+     */
+    public Map<String, List<String>> getFormatMapAll(String lang) {
+
+        loadFormatMapsAll(lang, "format", formatMapAll);
+        return formatMapAll.get(lang);
+    }
+
 
     /*****************************************************************
      * Get the termFormat entry for a given term and language
@@ -3895,8 +3977,21 @@ public class KB implements Serializable {
         try {
             KBmanager.getMgr().initializeOnce();
             kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-            System.out.println("KB.test(): " + kb.getAllSub("ColorAttribute","subAttribute"));
 
+            System.out.println("Testing  kb.termFormatMapAll('EnglishLanguage')");
+            Map<String, List<String>> termFormats = kb.getTermFormatMapAll("EnglishLanguage");
+            List<String> motherTermFormats = termFormats.get("mother");
+            for (String termFormat : motherTermFormats) {
+                System.out.println("Term Format for mother: " + termFormat);
+            }
+            System.out.println("Testing  kb.formatMapAll('EnglishLanguage')");
+            Map<String, List<String>> allFormats = kb.getFormatMapAll("EnglishLanguage");
+            List<String> motherFormats = allFormats.get("mother");
+            for (String format : motherFormats) {
+                System.out.println("Format for mother: " + format);
+            }
+
+            System.out.println("KB.test(): " + kb.getAllSub("ColorAttribute","subAttribute"));
             String contents = "(subclass ?X Entity)";
             System.out.println("KB.test(): query Vampire with: " + contents);
             String dir = KBmanager.getMgr().getPref("kbDir") + File.separator;
@@ -4010,8 +4105,10 @@ public class KB implements Serializable {
                 System.out.println("KB.main() eqrel " + eqrel);
                 System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
             }
-            if (args != null && args.length > 0 && args[0].contains("t"))
+            if (args != null && args.length > 0 && args[0].contains("t")) {
                 test();
+                System.exit(0);
+            }
             if (args != null && args.length > 1 && args[0].contains("v")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
             }
