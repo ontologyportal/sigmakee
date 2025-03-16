@@ -53,15 +53,6 @@
         <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
         <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
-        <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
-        <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <fileset dir="${lib.dir}">
-                <include name="*.jar"/>
-                <exclude name="junit*"/>
-                <exclude name="hamcrest*"/>
-                <exclude name="tomcat-servlet-api*"/>
-            </fileset>
-        </copy>
     </target>
 
     <!--
@@ -507,7 +498,7 @@
     =====
     -->
 
-    <target name="dist" depends="clean,compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
+    <target name="dist" depends="compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
