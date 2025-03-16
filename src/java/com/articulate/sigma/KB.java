@@ -1458,7 +1458,7 @@ public class KB implements Serializable {
                 addAllSafe(temp,kbCache.getInstancesForType(s));
             }
             result.addAll(temp);
-            temp = new ArrayList<>();
+            temp.clear();
             temp.addAll(result);
         }
         return result;
@@ -2722,12 +2722,13 @@ public class KB implements Serializable {
                 System.err.println("Error in KB.loadFormatMaps(): No " + type + " found in the Knowledge Base for language: " + lang);
             else {
                 String key, format;
+                List<String> formatList;
                 for (Formula f : col) {
                     key = f.getStringArgument(2);
                     format = f.getStringArgument(3);
                     format = StringUtil.removeEnclosingQuotes(format);
 
-                    List<String> formatList = langRefFormatMap.get(key);
+                    formatList = langRefFormatMap.get(key);
                     if (formatList == null) {
                         formatList = new ArrayList<>();
                         langRefFormatMap.put(key, formatList);
