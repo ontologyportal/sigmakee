@@ -22,8 +22,7 @@ COPY --from=builder \
 
 COPY ./sigmakee-runtime/KBs/config.xml /root/sigmakee-runtime/KBs/
 
-COPY ./sigmakee/build/lib/*.jar /root/sigmakee/
-
+COPY ./sigmakee/lib/*.jar /root/sigmakee/
 COPY ./sigmakee/build/sigmakee.jar /root/sigmakee/
 
 ENV SIGMA_HOME=/root/sigmakee-runtime
