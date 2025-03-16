@@ -533,10 +533,10 @@
                 <exclude name="hamcrest*"/>
                 <exclude name="tomcat-servlet-api*"/>
             </lib>
-            <classes dir="${build.classes.dir}"/>
+            <classes dir="${build.classes}"/>
         </war>
         <jar destfile="${dist.jar}"
-             basedir="${build.classes.dir}"
+             basedir="${build.classes}"
              manifest="${manifest.mf}">
             <metainf file="${project.license}"/>
         </jar>
