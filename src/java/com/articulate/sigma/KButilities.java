@@ -37,13 +37,18 @@ import com.esotericsoftware.kryo.Kryo;
 
 import com.google.common.collect.Sets;
 
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+import javax.servlet.annotation.WebListener;
+
 import org.json.simple.JSONAware;
 import org.json.simple.JSONValue;
 
 /** *****************************************************************
  *  Contains utility methods for KBs
  */
-public class KButilities {
+@WebListener
+public class KButilities implements ServletContextListener {
 
     /** Uses the number of available processors to set the thread pool count */
     public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
@@ -63,6 +68,25 @@ public class KButilities {
 
     /** Warnings found during processing formulas */
 //    public static Set<String> warnings = new TreeSet<>();
+
+    public static boolean insideWebContext = false;
+    private static KButilities me;
+
+    public static KButilities getInstance() {
+        if (me == null)
+            me = new KButilities();
+        return me;
+    }
+
+    @Override
+    public void contextInitialized(ServletContextEvent servletContextEvent) {
+        insideWebContext = true;
+    }
+
+    @Override
+    public void contextDestroyed(ServletContextEvent servletContextEvent) {
+        shutDownExecutorService();
+    }
 
     /** *************************************************************
      */
@@ -1436,7 +1460,6 @@ public class KButilities {
      * of any main class where the executor is invoked.
      */
     public static void shutDownExecutorService() {
-
         EXECUTOR_SERVICE.shutdown();
         try {
             if (!EXECUTOR_SERVICE.awaitTermination(10, TimeUnit.SECONDS)) {

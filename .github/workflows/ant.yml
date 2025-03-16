@@ -155,7 +155,7 @@ jobs:
         with:
           name: sigma-base
           path: |
-            ./sigmakee/build/WEB-INF/lib/*.jar
+            ./sigmakee/lib/*.jar
             ./sigmakee/build/sigmakee.jar
             ./sigmakee/config.xml
             ./sigmakee-runtime

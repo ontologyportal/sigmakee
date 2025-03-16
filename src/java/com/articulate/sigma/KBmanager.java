@@ -220,6 +220,7 @@ public class KBmanager implements Serializable {
         Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Output output = new Output(Files.newOutputStream(path))) {
             KButilities.kryoLocal.get().writeObject(output, object);
+            KButilities.kryoLocal.remove();
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -235,6 +236,7 @@ public class KBmanager implements Serializable {
         Path path = Paths.get(kbDir, KB_MANAGER_SER);
         try (Input input = new Input(Files.newInputStream(path))) {
             ob = KButilities.kryoLocal.get().readObject(input,KBmanager.class);
+            KButilities.kryoLocal.remove();
         }
         catch (IOException e) {
             e.printStackTrace();
@@ -677,9 +679,9 @@ public class KBmanager implements Serializable {
      */
     public void initializeOnce() {
 
-        if (!initialized)
+        if (!initialized && !KButilities.insideWebContext)
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("Shutdown hook executed");
+                System.out.println("ExecutorService shutdown hook executed");
                 // Perform cleanup tasks here
                 KButilities.shutDownExecutorService();
             }));

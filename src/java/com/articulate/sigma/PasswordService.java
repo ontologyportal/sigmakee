@@ -62,7 +62,7 @@ public final class PasswordService implements ServletContextListener {
 
     @Override
     public void contextInitialized(ServletContextEvent servletContextEvent) {
-        System.out.println("Creating Sigma Context...");
+        System.out.println("Starting " + PasswordService.class.getName() + "...");
     }
 
     // H2 shutdown guidance from: https://github.com/spring-projects/spring-boot/issues/21221
@@ -70,7 +70,7 @@ public final class PasswordService implements ServletContextListener {
     // Fix for issue #135
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
-        System.out.println("Destroying Sigma Context...");
+        System.out.println("Shutting down " + PasswordService.class.getName() + "...");
         org.h2.Driver.unload();
         System.out.println("Deregistering and shutting down: " + H2_DRIVER);
         try (Statement stmt = conn.createStatement()) {

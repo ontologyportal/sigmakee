@@ -46,22 +46,13 @@
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
-    <target name="TPTP" depends="deploy_prepare">
+    <target name="TPTP" depends="init">
         <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
         <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
         <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
-        <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
-        <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <fileset dir="${lib.dir}">
-                <include name="*.jar"/>
-                <exclude name="junit*"/>
-                <exclude name="hamcrest*"/>
-                <exclude name="tomcat-servlet-api*"/>
-            </fileset>
-        </copy>
     </target>
 
     <!--
@@ -507,7 +498,7 @@
     =====
     -->
 
-    <target name="dist" depends="clean,compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
+    <target name="dist" depends="compile" description="Prepare and distribute the ${app.name}.war and ${web.app.name}.jar files and place in ${dist.dir}.">
         <manifest file="${manifest.mf}">
             <attribute name="Built-By" value="${my.name} ${my.email}"/>
             <attribute name="Specification-Title"
@@ -530,14 +521,22 @@
                        value="${main.class}"/>
         </manifest>
         <war destfile="${dist.dir}/${app.name}.war"
-             basedir="${build.home}"
              webxml="${web.dir}/web.xml"
              manifest="${manifest.mf}">
             <metainf file="${project.license}"/>
             <metainf file="${web.dir}/context.xml"/>
+            <zipfileset dir="${web.dir}/jsp"/>
+            <zipfileset file="${web.dir}/simple.css"/>
+            <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
+            <lib dir="${basedir}/lib">
+                <exclude name="junit*"/>
+                <exclude name="hamcrest*"/>
+                <exclude name="tomcat-servlet-api*"/>
+            </lib>
+            <classes dir="${build.classes}"/>
         </war>
         <jar destfile="${dist.jar}"
-             basedir="${build.classes.dir}"
+             basedir="${build.classes}"
              manifest="${manifest.mf}">
             <metainf file="${project.license}"/>
         </jar>
@@ -587,7 +586,7 @@
         <delete file="${dist_war}"/>
         <antcall target="delete.catalina.logs"/>
     </target>
-    <target name="clean.kbs" depends="clean">
+    <target name="clean.kbs">
         <delete>
             <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
@@ -600,7 +599,7 @@
             </fileset>
         </delete>
     </target>
-    <target name="delete.catalina.logs" depends="init">
+    <target name="delete.catalina.logs">
         <delete>
             <fileset dir="${catalina.logs.dir}">
                 <include name="*.*"/>
