@@ -192,10 +192,6 @@
         <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
         <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
-        <!-- Create WEB-INF/lib/ and copy over the needed jar files. -->
-        <copy todir="${build.home}/WEB-INF/lib" flatten="true">
-            <path refid="runtime.classpath"/>
-        </copy>
     </target>
 
     <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes.dir}.">
@@ -583,8 +579,8 @@
     <target name="append.bashrc" if="isUnixNotMac">
         <echo file="${user.home}/.bashrc" append="true">
 # For SIGMA
-export SIGMA_HOME=${user.home}/.${web.app.name}
-export ONTOLOGYPORTAL_GIT=${git.home}
+export SIGMA_HOME=$HOME/.${web.app.name}
+export ONTOLOGYPORTAL_GIT=$HOME/workspace
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
@@ -596,8 +592,8 @@ export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
     <target name="append.zshrc" unless="isUnixNotMac">
         <echo file="${user.home}/.zshrc" append="true">
 # For SIGMA
-export SIGMA_HOME=${user.home}/.${web.app.name}
-export ONTOLOGYPORTAL_GIT=${git.home}
+export SIGMA_HOME=$HOME/.${web.app.name}
+export ONTOLOGYPORTAL_GIT=$HOME/workspace
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
 export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
