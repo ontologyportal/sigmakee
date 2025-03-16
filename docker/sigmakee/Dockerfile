@@ -28,7 +28,7 @@ COPY ./sigmakee-runtime/KBs/WordNetMappings /root/sigmakee-runtime/KBs/WordNetMa
 COPY ./sigmakee-runtime/KBs/development /root/sigmakee-runtime/KBs/development/
 
 # Not necessary since everything is in the WAR
-COPY ./sigmakee/build/WEB-INF/lib/*.jar /root/sigmakee/
+COPY ./sigmakee/build/lib/*.jar /root/sigmakee/
 COPY ./sigmakee/build/sigmakee.jar /root/sigmakee/
 
 COPY ./sigma.war $CATALINA_HOME/webapps/sigma.war
