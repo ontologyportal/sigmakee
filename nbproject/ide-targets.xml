@@ -105,6 +105,20 @@
     ===================
     -->
 
+    <!-- Load top, MILO and ENG KBs for integration tests -->
+    <target name="check.config" depends="get.length,copy.milo.config"/>
+    <target name="get.length">
+        <condition property="is.milo">
+            <length mode="all" when="eq" length="2543">
+                <fileset file="${kbs.dir}/config.xml"/>
+            </length>
+        </condition>
+        <echo message="confix.xml size is 2.543KB: ${is.milo}"/>
+    </target>
+    <target name="copy.milo.config" unless="is.milo">
+        <antcall target="prep.integration.config"/>
+    </target>
+
     <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
@@ -124,7 +138,7 @@
         </junit>
         <antcall target="junit.report"/>
     </target>
-    <target name="test.integration" depends="clean,prep.integration.config,compile.test" description="Runs the IntegrationTestSuite">
+    <target name="test.integration" depends="clean,check.config,compile.test" description="Runs the IntegrationTestSuite">
         <junit printsummary="yes"
                showoutput="yes"
                fork="yes">
@@ -165,7 +179,7 @@
         </junit>
         <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
-    <target name="run-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="run-selected-test-in-integration" depends="clean,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -204,7 +218,7 @@
             </test>
         </junit>
     </target>
-    <target name="run-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="run-single-test-method-in-integration" depends="clean,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -399,7 +413,7 @@
     =====================
     -->
 
-    <target name="debug-selected-test-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="debug-selected-test-in-integration" depends="clean,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -444,7 +458,7 @@
             </test>
         </junit>
     </target>
-    <target name="debug-single-test-method-in-integration" depends="clean,prep.integration.config,compile.test">
+    <target name="debug-single-test-method-in-integration" depends="clean,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -616,9 +630,7 @@
     =========
     -->
 
-    <!-- Check that MILO is loaded for the config.xml. If not, run
-         prep.integration.config -->
-    <target name="run.ontology.process">
+    <target name="run.ontology.process" depends="check.config">
         <!-- Generate TPTP by translating the KB to FOF or TFF -->
         <antcall target="run">
             <!-- FOF -->
