@@ -8,6 +8,7 @@ import com.google.common.collect.Sets;
 import java.util.Set;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -57,36 +58,36 @@ public class KBTest extends UnitTestBase {
     }
 
     /** ***************************************************************
-     * test deleteUserAssertionsAndReload()
+     * test deleteUserAssertionsAndReload() -- with Vampire
      */
     @Test
-    public void testDeleteUserAssVamp() {
+    public void testDeleteUserAssertionsAndReloadWithVampire() {
 
-        System.out.println("============== testDeleteUserAssVamp =====================");
+        System.out.println("============== testDeleteUserAssertionsAndReloadWithVampire =====================");
         SigmaTestBase.kb.tell("(instance JohnJacob Human)");
         String query = "(instance JohnJacob Human)";
         Vampire vamp = SigmaTestBase.kb.askVampire(query,10,1);
         if (vamp != null)
-            System.out.println("testDeleteUserAssVamp(): results: " + vamp.output);
+            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + vamp.output);
         else
-            System.out.println("testDeleteUserAssVamp(): results: " + null);
+            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results: " + null);
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         if (vamp != null)
             tpp.parseProofOutput(vamp.output,query,kb,new StringBuilder());
         if (tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")))
-            System.out.println("testDeleteUserAssVamp(1): success");
+            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(1): success");
         else
-            System.err.println("testDeleteUserAssVamp(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
+            System.err.println("testDeleteUserAssertionsAndReloadWithVampire(1): fail, proof size: "+ tpp.proof.size() + " '" + tpp.status + "'");
         assertTrue(tpp.proof != null && (tpp.status.equals("Refutation") || tpp.status.equals("Theorem")));
         SigmaTestBase.kb.deleteUserAssertionsAndReload();
         vamp = SigmaTestBase.kb.askVampire(query,10,1);
         tpp.parseProofOutput(vamp.output, query, kb, new StringBuilder());
         System.out.println("User assertions deleted");
-        System.out.println("testDeleteUserAssVamp(): results after delete: " + vamp);
+        System.out.println("testDeleteUserAssertionsAndReloadWithVampire(): results after delete: " + vamp);
         if (tpp.proof == null || tpp.status.equals("Timeout"))
-            System.out.println("testDeleteUserAssVamp(2): success");
+            System.out.println("testDeleteUserAssertionsAndReloadWithVampire(2): success");
         else
-            System.err.println("testDeleteUserAssVamp(2): fail, proof size: " + tpp.proof.size() + " '" + tpp.status + "'");
+            System.err.println("testDeleteUserAssertionsAndReloadWithVampire(2): fail, proof size: " + tpp.proof.size() + " '" + tpp.status + "'");
         assertTrue(tpp.proof == null || tpp.status.equals("Timeout"));
     }
 
@@ -94,17 +95,17 @@ public class KBTest extends UnitTestBase {
      * test deleteUserAssertionsAndReload()
      */
     @Test
-    public void testDeleteUserAss() {
+    public void testDeleteUserAssertionsAndReload() {
 
-        System.out.println("============== testDeleteUserAss =====================");
+        System.out.println("============== testDeleteUserAssertionsAndReload =====================");
         SigmaTestBase.kb.tell("(instance JohnJacob Human)");
         List<Formula> results = SigmaTestBase.kb.ask("arg",1,"JohnJacob");
-        System.out.println("testDeleteUserAss(): results: " + results);
+        System.out.println("testDeleteUserAssertionsAndReload(): results: " + results);
         assertEquals(1, results.size());
         SigmaTestBase.kb.deleteUserAssertionsAndReload();
         results = SigmaTestBase.kb.ask("arg",1,"JohnJacob");
         System.out.println("User assertions deleted");
-        System.out.println("testDeleteUserAss(): results after delete: " + results);
+        System.out.println("testDeleteUserAssertionsAndReload(): results after delete: " + results);
         assertEquals(0, results.size());
     }
 
@@ -212,6 +213,36 @@ public class KBTest extends UnitTestBase {
         Set<String> actualSet = SigmaTestBase.kb.removeSuperClasses(inputSet);
         Set<String> expectedSet = Sets.newHashSet("Man", "Woman");
         assertEquals(expectedSet, actualSet);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testTermFormatMapAll() {
+
+        System.out.println("============== testTermFormatMapAll =====================");
+        System.out.println("Testing  kb.termFormatMapAll('EnglishLanguage')");
+        Map<String, List<String>> termFormats = kb.getTermFormatMapAll("EnglishLanguage");
+        List<String> motherTermFormats = termFormats.get("mother");
+        for (String termFormat : motherTermFormats) {
+            System.out.println("Term Format for mother: " + termFormat);
+        }
+        assertFalse(motherTermFormats.isEmpty());
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testFormatMapAll() {
+
+        System.out.println("============== testFormatMapAll =====================");
+        System.out.println("Testing  kb.formatMapAll('EnglishLanguage')");
+        Map<String, List<String>> allFormats = kb.getFormatMapAll("EnglishLanguage");
+        List<String> motherFormats = allFormats.get("mother");
+        for (String format : motherFormats) {
+            System.out.println("Format for mother: " + format);
+        }
+        assertFalse(motherFormats.isEmpty());
     }
 
 }

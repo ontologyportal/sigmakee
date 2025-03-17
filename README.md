@@ -24,7 +24,7 @@ with read-only functions enabled linked from http://www.ontologyportal.org
 ## Other methods (power users)
 * [Container-Based installation (Docker)](https://github.com/ontologyportal/sigmakee/wiki/Container%E2%80%90Based-installation)
 * [Vagrant Virtual Machine installation](https://github.com/ontologyportal/sigmakee/wiki/Vagrant-Virtual-Machine-installation)
-* [Old Installation Notes (depracated)](https://github.com/ontologyportal/sigmakee/wiki/Old-Installation-notes)
+* [Old Installation Notes (deprecated)](https://github.com/ontologyportal/sigmakee/wiki/Old-Installation-notes)
 
 ## Miscellaneous
 * [Optional Vampire manual installation](https://github.com/ontologyportal/sigmakee/wiki/Vampire-installation)
