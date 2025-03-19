@@ -13,7 +13,7 @@
 
 Sigma is an integrated development environment for logical theories that
 extend the Suggested Upper Merged Ontology (SUMO).  There is a public installation
-with read-only functions enabled linked from http://www.ontologyportal.org
+with read-only functions enabled linked from http://www.ontologyportal.org - click on the "Browse" link
 
 # Installation Instructions
 ## Recommended Methods
