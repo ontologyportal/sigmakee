@@ -536,7 +536,7 @@ public class KBmanager implements Serializable {
         }
         catch (Exception e) {
             System.err.println("Error in KBmanager.loadKB(): Unable to save configuration: " + e.getMessage());
-        	e.printStackTrace();
+            e.printStackTrace();
             retVal = false;
         }
 
