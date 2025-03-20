@@ -1035,7 +1035,7 @@ public class WordNet implements Serializable {
      */
     public void readWordCoFrequencies() {
 
-        System.out.println("INFO in WordNet.readWordFrequencies(): Reading WordNet word frequencies");
+        System.out.println("INFO in WordNet.readWordCoFrequencies(): Reading WordNet word frequencies");
         wordCoFrequencies = new HashMap<>();
         int counter = 0;
         File wfFile;
@@ -1043,7 +1043,7 @@ public class WordNet implements Serializable {
 
         wfFile = getWnFile("word_frequencies",null);
         if (wfFile == null) {
-            System.err.println("Error in WordNet.readWordFrequencies(): The word frequencies file does not exist in " + baseDir);
+            System.err.println("Error in WordNet.readWordCoFrequencies(): The word frequencies file does not exist in " + baseDir);
             return;
         }
         long t1 = System.currentTimeMillis();
@@ -1055,6 +1055,7 @@ public class WordNet implements Serializable {
             String line, key, values, word, freq;
             String[] words;
             Map<String,Integer> frequencies;
+            StringBuilder sb = new StringBuilder();
             while ((line = lr.readLine()) != null) {
                 line = line.trim();
                 // 17: Pattern p = Pattern.compile("^Word: ([^ ]+) Values: (.*)");
@@ -1083,18 +1084,20 @@ public class WordNet implements Serializable {
                     wordCoFrequencies.put(key.intern(),frequencies);
                     counter++;
                     if (counter == 1000) {
-                        System.out.print(".");
+//                        System.out.print(".");
+                        sb.append(".");
                         counter = 0;
                     }
                 }
             }
-            System.out.println("x");
+            System.out.print(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + canonicalPath);
         }
         catch (Exception i) {
             System.out.println();
-            System.err.println("Error in WordNet.readWordFrequencies() reading file "
+            System.err.println("Error in WordNet.readWordCoFrequencies() reading file "
                     + canonicalPath + ": " + i.getMessage());
             i.printStackTrace();
         }

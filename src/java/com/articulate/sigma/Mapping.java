@@ -10,8 +10,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
+import java.io.Reader;
+import java.io.Writer;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -34,8 +38,7 @@ ad-hoc formats to KIF
    */
 public class Mapping {
 
-    public static TreeMap<String,TreeMap<Integer,String>> mappings =
-        new TreeMap<>();
+    public static Map<String,TreeMap<Integer,String>> mappings = new TreeMap<>();
     public static char termSeparator = '!';
 
     /** *************************************************************
@@ -47,35 +50,35 @@ public class Mapping {
      *
      *  @return error messages if necessary
      */
-    public static String writeEquivalences(TreeSet cbset, String kbname1, String kbname2) throws IOException {
+    public static String writeEquivalences(Set cbset, String kbname1, String kbname2) throws IOException {
 
         System.out.println("INFO in Mapping.writeEquivalences(): size: " + cbset.size());
-        FileWriter fw = null;
-        PrintWriter pw = null;
         String dir = (String) KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname1 + "-" + kbname2 + "-links";
 
         if (mappings.keySet().size() < 1)
             return "Error: No mappings found";
 
-        try {
-            File f = new File(filename + ".kif");
-            int fileCounter = 0;
-            while (f.exists()) {
-                fileCounter++;
-                f = new File(filename + fileCounter + ".kif");
-            }
-            if (fileCounter == 0)
-                filename = filename + ".kif";
-            else
-                filename = filename + fileCounter + ".kif";
 
-            fw = new FileWriter(filename);
-            pw = new PrintWriter(fw);
+        File f = new File(filename + ".kif");
+        int fileCounter = 0;
+        while (f.exists()) {
+            fileCounter++;
+            f = new File(filename + fileCounter + ".kif");
+        }
+        if (fileCounter == 0)
+            filename = filename + ".kif";
+        else
+            filename = filename + fileCounter + ".kif";
+
+        try (Writer fw = new FileWriter(filename);
+             PrintWriter pw = new PrintWriter(fw)) {
             Iterator it = cbset.iterator();
+            String st, term1, term2;
+            boolean subcheckbox;
             while (it.hasNext()) {
-                String st = (String) it.next();
-                boolean subcheckbox = false;
+                st = (String) it.next();
+                subcheckbox = false;
                 if (st.startsWith("sub_checkbox_")) {
                     st = st.substring(13);
                     subcheckbox = true;
@@ -92,8 +95,8 @@ public class Mapping {
                 int i = st.indexOf(termSeparator);
                 if (i < 0)
                     return "Error in Mapping.writeEquivalences(): malformed string (no '" + termSeparator + "') " + st;
-                String term1 = st.substring(0,i);
-                String term2 = st.substring(i+1);
+                term1 = st.substring(0,i);
+                term2 = st.substring(i+1);
                 if (!subcheckbox)
                     pw.println("(synonymousExternalConcept \"" + term2 +
                                "\" " + term1 + " " + kbname2 + ")");
@@ -106,15 +109,6 @@ public class Mapping {
         catch (java.io.IOException e) {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
-        finally {
-            if (pw != null) {
-                pw.flush();
-                pw.close();
-            }
-            if (fw != null) {
-                fw.close();
-            }
-        }
         return "Wrote: " + filename;
     }
 
@@ -122,7 +116,7 @@ public class Mapping {
      *  rename terms in KB kbname2 to conform to names in kbname1
      *  @return error messages if necessary
      */
-    public static String merge(TreeSet cbset, String kbname1, String kbname2) {
+    public static String merge(Set cbset, String kbname1, String kbname2) {
 
         System.out.println("INFO in Mapping.merge()");
         if (mappings.keySet().size() < 1)
@@ -130,21 +124,25 @@ public class Mapping {
 
         KB kb1 = KBmanager.getMgr().getKB(kbname1);
         KB kb2 = KBmanager.getMgr().getKB(kbname2);
+        Map value;
+        Iterator it2;
+        Integer score;
+        String term2, topScoreFlag, cbName, subName;
         for (String term1 : mappings.keySet()) {
-            TreeMap value = (TreeMap) mappings.get(term1);
+            value = (TreeMap) mappings.get(term1);
             // System.out.println("INFO in Mapping.merge(): outer loop, examining " + term1);
-            Iterator it2 = value.keySet().iterator();
+            it2 = value.keySet().iterator();
             int counter = 0;
             while (it2.hasNext()) {
                 counter++;
-                Integer score = (Integer) it2.next();
-                String term2 = (String) value.get(score);
+                score = (Integer) it2.next();
+                term2 = (String) value.get(score);
                 // System.out.println("INFO in Mapping.merge(): inner loop, examining " + term2);
-                String topScoreFlag = "";
+                topScoreFlag = "";
                 if (counter == 1)
                     topScoreFlag = "T_";
-                String cbName = "checkbox_" + topScoreFlag + term1 + termSeparator + term2;
-                String subName = "sub_checkbox_" + topScoreFlag + term1 + termSeparator + term2;
+                cbName = "checkbox_" + topScoreFlag + term1 + termSeparator + term2;
+                subName = "sub_checkbox_" + topScoreFlag + term1 + termSeparator + term2;
                 if (cbset.contains(cbName) && !term2.equals(term1))
                     kb2.rename(term2,term1);
                 if (cbset.contains(subName)) {
@@ -193,20 +191,22 @@ public class Mapping {
                                 + "The file " + file + " does not exist" );
             return;
         }
-        FileReader r = new FileReader(f);
-        LineNumberReader lr = new LineNumberReader(r);
-        String line;
-        while ((line = lr.readLine()) != null) {
-            line = line.trim();
-            if (line != null && line.length() > 0) {
-                int tab1 = line.indexOf("\t");
-                int tab2 = line.indexOf("\t",tab1+1);
-                int tab3 = line.indexOf("\t",tab2+1);
-                String term1 = line.substring(tab1+1,tab2);
-                String term2 = line.substring(tab2+1,tab3);
-                term1 = StringUtil.stringToKIFid(term1);
-                term2 = StringUtil.stringToKIFid(term2);
-                System.out.println("(" + relName + " " + term1 + " " + term2 + ")");
+        try (Reader r = new FileReader(f);
+            LineNumberReader lr = new LineNumberReader(r)) {
+            String line, term1, term2;
+            int tab1, tab2, tab3;
+            while ((line = lr.readLine()) != null) {
+                line = line.trim();
+                if (line != null && line.length() > 0) {
+                    tab1 = line.indexOf("\t");
+                    tab2 = line.indexOf("\t",tab1+1);
+                    tab3 = line.indexOf("\t",tab2+1);
+                    term1 = line.substring(tab1+1,tab2);
+                    term2 = line.substring(tab2+1,tab3);
+                    term1 = StringUtil.stringToKIFid(term1);
+                    term2 = StringUtil.stringToKIFid(term2);
+                    System.out.println("(" + relName + " " + term1 + " " + term2 + ")");
+                }
             }
         }
     }
@@ -275,7 +275,7 @@ public class Mapping {
                     matchMethod + ". Defaulting to substring match.");
         }
 
-        TreeMap result = new TreeMap();
+        Map result = new TreeMap();
         int counter = 0;
         KB kb1,kb2;
         kb1 = KBmanager.getMgr().getKB(kbName1);
@@ -286,24 +286,27 @@ public class Mapping {
             synchronized (kb1.getTerms()) {
                 synchronized (kb2.getTerms()) {
                     Iterator it1 = kb1.getTerms().iterator();
+                    String term1, normTerm1, normLabel1, normTerm2, normLabel2;
+                    Map tm;
+                    int score;
                     while (it1.hasNext()) {
                         counter++;
                         if (counter > 100) {
                             System.out.print(".");
                             counter = 0;
                         }
-                        String term1 = (String) it1.next();
+                        term1 = (String) it1.next();
                         if (isValidTerm(term1)) {
-                            String normTerm1 = normalize(term1);
-                            String normLabel1 = normalize(getTermFormat(kb1,term1));
-                            TreeMap tm = (TreeMap) result.get(term1);
+                            normTerm1 = normalize(term1);
+                            normLabel1 = normalize(getTermFormat(kb1,term1));
+                            tm = (TreeMap) result.get(term1);
                             if (tm == null)
                                 tm = new TreeMap();
                             for (String term2 : kb2.getTerms()) {
                                 if (isValidTerm(term2)) {
-                                    String normTerm2 = normalize(term2);
-                                    String normLabel2 = normalize(getTermFormat(kb2,term2));
-                                    int score = Integer.MAX_VALUE;
+                                    normTerm2 = normalize(term2);
+                                    normLabel2 = normalize(getTermFormat(kb2,term2));
+                                    score = Integer.MAX_VALUE;
                                     score = min(score,stringMatch(normTerm1, normTerm2,matchMethod));
                                     //System.out.println(normTerm1 + " " + normTerm2);
                                     if (normLabel1 != null && isValidTerm(normLabel1))
@@ -394,10 +397,10 @@ public class Mapping {
 
         if (term1.equals(term2))
             return 1;
-        else if (term1.indexOf(term2) > -1)
+        else if (term1.contains(term2))
             return term1.indexOf(term2) +
                     (term1.length() - term2.length());
-        else if (term2.indexOf(term1) > -1)
+        else if (term2.contains(term1))
             return term2.indexOf(term1) + (term2.length() - term1.length());
         else
             return Integer.MAX_VALUE;
@@ -481,11 +484,13 @@ public class Mapping {
         int maxDistance = (len1 >= 4) ? (int) Math.floor(len1 / 2) - 1 : 0;
         boolean[] s1Matches = new boolean[len1]; // initialized to false
         boolean[] s2Matches = new boolean[len2]; // initialized to false
-        int nMatches = 0;
+        int nMatches = 0, jStart, jEnd;
+        char c;
+
         for (int i = 0; i < len2; i++) { // index in s2
-            char c = s2.charAt(i);
-            int jStart = (i > maxDistance) ? i - maxDistance : 0;
-            int jEnd = i + maxDistance + 1;
+            c = s2.charAt(i);
+            jStart = (i > maxDistance) ? i - maxDistance : 0;
+            jEnd = i + maxDistance + 1;
             if (jEnd > len1)
                 jEnd = len1;
             for (int j = jStart; j < jEnd; j++) { // possible matching positions within s1

@@ -1117,7 +1117,7 @@ public class Hotel {
 
           // a list of attribute value pairs where the count is in
           // the attribute and the SUMO term is the value
-        ArrayList<AVPair> SUMO = DB.topSUMOInReviews(feed);
+        List<AVPair> SUMO = DB.topSUMOInReviews(feed);
 
         hotelAsArray.add("name");
         hotelAsArray.add("address");
@@ -1174,11 +1174,11 @@ public class Hotel {
         DB.SUMOReviews(feed);
         hotelSentiment(feed);
         System.out.println("INFO in Hotel.hotelReviewSUMOSentimentAsSparseMatrix(): Completed sentiment calculation");
-        ArrayList<String> hotelAsArray = new ArrayList<String>();
+        ArrayList<String> hotelAsArray = new ArrayList<>();
 
           // a list of attribute value pairs where the count is in
           // the attribute and the SUMO term is the value
-        ArrayList<AVPair> SUMO = DB.topSUMOInReviews(feed);
+        List<AVPair> SUMO = DB.topSUMOInReviews(feed);
         hotelAmenitySentiment(feed);
 
         hotelAsArray.add("name");

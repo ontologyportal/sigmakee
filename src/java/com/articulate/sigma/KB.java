@@ -437,7 +437,7 @@ public class KB implements Serializable {
     public void checkArity() {
 
         long millis = System.currentTimeMillis();
-        System.out.print("INFO in KB.checkArity(): Performing Arity Check");
+        System.out.print("INFO in KB.checkArity(): Performing Arity Check\n");
 
         if (!SUMOKBtoTPTPKB.rapidParsing)
             _checkArity();
@@ -480,12 +480,17 @@ public class KB implements Serializable {
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
+            StringBuilder sb = new StringBuilder();
             for (Formula f : formulaMap.values()) {
                 Runnable r = () -> {
                     if (counter++ % 10 == 0)
-                        System.out.print(".");
-                    if (counter % 400 == 0)
+//                        System.out.print(".");
+                        sb.append(".");
+                    if (counter % 400 == 0) {
+                        System.out.print(sb.toString() + "x");
+                        sb.setLength(0);
                         System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
+                    }
                     String term = PredVarInst.hasCorrectArity(f, this);
                     if (!StringUtil.emptyString(term)) {
                         errors.add("Formula in " + f.sourceFile + " rejected due to arity error of predicate " + term
@@ -2895,11 +2900,16 @@ public class KB implements Serializable {
         //System.out.println("INFO in KB.addConstituent(): add keys");
         List<String> newlist, list;
         int total = file.formulas.keySet().size();
+        StringBuilder sb = new StringBuilder();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
-                System.out.print(".");
-            if ((count % 4000) == 1)
+//                System.out.print(".");
+                sb.append(".");
+            if ((count % 4000) == 1) {
+                System.out.print(sb.toString() + "x");
+                sb.setLength(0);
                 System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
+            }
             newlist = file.formulas.get(key);
             list = formulas.get(key);
             if (list != null) {
@@ -2917,9 +2927,13 @@ public class KB implements Serializable {
             f = (Formula) it2.next();
             internedFormula = f.getFormula().intern();
             if ((count++ % 100) == 1)
-                System.out.print(".");
-            if ((count % 4000) == 1)
+//                System.out.print(".");
+                sb.append(".");
+            if ((count % 4000) == 1) {
+                System.out.print(sb.toString() + "x");
+                sb.setLength(0);
                 System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
+            }
             if (!formulaMap.containsKey(internedFormula))
                 formulaMap.put(internedFormula, f);
         }
@@ -3756,18 +3770,22 @@ public class KB implements Serializable {
         if (!tptpParseP)
             return newTreeSet;
         Iterator<String> it = forms.iterator();
-        int counter = 0;
         FormulaPreprocessor fp = new FormulaPreprocessor();
         String form;
         Formula f;
         Set<Formula> processed;
         Set<String> tptp;
+        StringBuilder sb = new StringBuilder();
         while (it.hasNext()) {
             form = it.next();
             if ((counter++ % 100) == 1)
-                System.out.print(".");
-            if ((counter % 4000) == 1)
+//                System.out.print(".");
+                sb.append(".");
+            if ((counter % 4000) == 1) {
+                System.out.print(sb.toString());
+                sb.setLength(0);
                 System.out.println("\nINFO in KB.preProcess(): : still working");
+            }
             f = formulaMap.get(form);
             if (f == null) {
                 String warn = "Warning in KB.preProcess(): No formula for : " + form;
@@ -3800,6 +3818,7 @@ public class KB implements Serializable {
         // kbCache.clearSortalTypeCache();
         System.out.println("INFO in KB.preProcess(): completed in " +
                 (System.currentTimeMillis() - millis) / 1000 + " seconds");
+        counter = 0;
         return newTreeSet;
     }
 

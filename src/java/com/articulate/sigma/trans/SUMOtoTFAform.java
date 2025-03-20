@@ -2420,9 +2420,12 @@ public class SUMOtoTFAform {
             return _process(suoString, query);
         else
             // This must be used for threaded parsing to keep deep recursion synchronized
-            return _tProcess(suoString, query);
+            return _t_process(suoString, query);
     }
 
+    /** *************************************************************
+     * Conventional version
+     */
     private static String _process(String s, boolean q) {
 
         filterMessage = "";
@@ -2439,7 +2442,7 @@ public class SUMOtoTFAform {
      * Synchronized to keep to keep deep recursion synchronized during
      * threaded operations.
      */
-    private static synchronized String _tProcess(String s, boolean q) {
+    private static synchronized String _t_process(String s, boolean q) {
         return _process(s, q);
     }
 
