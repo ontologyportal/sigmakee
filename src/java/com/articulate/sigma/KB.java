@@ -192,6 +192,9 @@ public class KB implements Serializable {
 
     public static boolean debug = false;
 
+    /** Progress bar text capture */
+    private StringBuilder progressSb = new StringBuilder();
+
     /***************************************************************
      */
     public KB() {
@@ -480,15 +483,14 @@ public class KB implements Serializable {
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
-            StringBuilder sb = new StringBuilder();
             for (Formula f : formulaMap.values()) {
                 Runnable r = () -> {
                     if (counter++ % 10 == 0)
 //                        System.out.print(".");
-                        sb.append(".");
+                        progressSb.append(".");
                     if (counter % 400 == 0) {
-                        System.out.print(sb.toString() + "x");
-                        sb.setLength(0);
+                        System.out.print(progressSb.toString() + "x");
+                        progressSb.setLength(0);
                         System.out.printf("%nINFO in KB.checkArity(): Still performing Arity Check. %d%% done%n", counter*100/total);
                     }
                     String term = PredVarInst.hasCorrectArity(f, this);
@@ -2900,14 +2902,13 @@ public class KB implements Serializable {
         //System.out.println("INFO in KB.addConstituent(): add keys");
         List<String> newlist, list;
         int total = file.formulas.keySet().size();
-        StringBuilder sb = new StringBuilder();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
 //                System.out.print(".");
-                sb.append(".");
+                progressSb.append(".");
             if ((count % 4000) == 1) {
-                System.out.print(sb.toString() + "x");
-                sb.setLength(0);
+                System.out.print(progressSb.toString() + "x");
+                progressSb.setLength(0);
                 System.out.printf("%nINFO in KB.addConstituent(): still adding keys. %d%% done.%n", count*100/total);
             }
             newlist = file.formulas.get(key);
@@ -2928,10 +2929,10 @@ public class KB implements Serializable {
             internedFormula = f.getFormula().intern();
             if ((count++ % 100) == 1)
 //                System.out.print(".");
-                sb.append(".");
+                progressSb.append(".");
             if ((count % 4000) == 1) {
-                System.out.print(sb.toString() + "x");
-                sb.setLength(0);
+                System.out.print(progressSb.toString() + "x");
+                progressSb.setLength(0);
                 System.out.printf("\nINFO in KB.addConstituent(): still adding values. %d%% done.%n", count*100/total);
             }
             if (!formulaMap.containsKey(internedFormula))
@@ -3775,15 +3776,14 @@ public class KB implements Serializable {
         Formula f;
         Set<Formula> processed;
         Set<String> tptp;
-        StringBuilder sb = new StringBuilder();
         while (it.hasNext()) {
             form = it.next();
             if ((counter++ % 100) == 1)
 //                System.out.print(".");
-                sb.append(".");
+                progressSb.append(".");
             if ((counter % 4000) == 1) {
-                System.out.print(sb.toString());
-                sb.setLength(0);
+                System.out.print(progressSb.toString() + "x");
+                progressSb.setLength(0);
                 System.out.println("\nINFO in KB.preProcess(): : still working");
             }
             f = formulaMap.get(form);

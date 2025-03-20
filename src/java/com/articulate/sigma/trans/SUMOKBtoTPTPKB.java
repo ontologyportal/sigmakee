@@ -36,6 +36,9 @@ public class SUMOKBtoTPTPKB {
 
     public Set<String> alreadyWrittenTPTPs = new HashSet<>();
 
+    /** Progress bar text capture */
+    private StringBuilder progressSb = new StringBuilder();
+
     /** *************************************************************
      */
     public SUMOKBtoTPTPKB() {
@@ -356,9 +359,12 @@ public class SUMOKBtoTPTPKB {
                     pw.println("% not higher order");
                 if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
                     continue;
-                if (counter++ % 100 == 0) System.out.print(".");
-                if ((counter % 4000) == 1)
+                if (counter++ % 100 == 0) /*System.out.print(".");*/ progressSb.append(".");
+                if ((counter % 4000) == 1) {
+                    System.out.print(progressSb.toString() + "x");
+                    progressSb.setLength(0);
                     System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
+                }
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                 processed = fp.preProcess(f,false,kb);
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
