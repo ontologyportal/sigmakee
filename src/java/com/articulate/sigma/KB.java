@@ -429,7 +429,7 @@ public class KB implements Serializable {
 
     private int counter = 0;
 
-    /***************************************************************
+    /** *************************************************************
      * Arity errors should already have been trapped in addConstituent() unless a
      * relation is used before it is defined. This routine is a comprehensive
      * re-check.
@@ -442,12 +442,15 @@ public class KB implements Serializable {
         if (!SUMOKBtoTPTPKB.rapidParsing)
             _checkArity();
         else
-            _tCheckArity();
+            _t_checkArity();
 
         counter = 0; // reset
         System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
     }
 
+    /** *************************************************************
+     * Conventional version
+     */
     private void _checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
@@ -468,7 +471,10 @@ public class KB implements Serializable {
         }
     }
 
-    private void _tCheckArity() {
+    /** ***************************************************************
+     * Threaded version
+     */
+    private void _t_checkArity() {
 
         if (formulaMap != null && !formulaMap.isEmpty()) {
             Future<?> future;
