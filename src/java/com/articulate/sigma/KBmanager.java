@@ -379,8 +379,8 @@ public class KBmanager implements Serializable {
             for (int i = 0; i < configuration.getChildElements().size(); i++) {
                 element = (SimpleElement) configuration.getChildElements().get(i);
                 if (element.getTagName().equals("preference")) {
-                    name = (String) element.getAttribute("name");
-                    value = (String) element.getAttribute("value");
+                    name = element.getAttribute("name");
+                    value = element.getAttribute("value");
                     //System.out.println("KBmanager.preferencesFromXML(): Adding: " + name + " " + value);
                     if (name != null && value != null && name.equals("holdsPrefix") && value.equals("yes"))
                         System.out.println("Warning: KBmanager.preferencesFromXML(): holds prefixing is deprecated.");
@@ -413,7 +413,7 @@ public class KBmanager implements Serializable {
             for (int i = 0; i < configuration.getChildElements().size(); i++) {
                 element = (SimpleElement) configuration.getChildElements().get(i);
                 if (element.getTagName().equals("kb")) {
-                    kbName = (String) element.getAttribute("name");
+                    kbName = element.getAttribute("name");
                     if (kbName.equals(getMgr().getPref("sumokbname")))
                         SUMOKBexists = true;
                     KBmanager.getMgr().addKB(kbName);
@@ -423,7 +423,7 @@ public class KBmanager implements Serializable {
                         kbConst = (SimpleElement) element.getChildElements().get(j);
                         if (!kbConst.getTagName().equals("constituent"))
                         	System.err.println("Error in KBmanager.kbsFromXML(): Bad tag: " + kbConst.getTagName());
-                        filename = (String) kbConst.getAttribute("filename");
+                        filename = kbConst.getAttribute("filename");
                         if (!filename.startsWith((File.separator)))
                             filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
