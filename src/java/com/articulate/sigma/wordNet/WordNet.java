@@ -188,6 +188,9 @@ public class WordNet implements Serializable {
      * part of speech character.  Values are words in the target language. */
     public Map<String,Map<String,String>> OMW = new HashMap<>();
 
+    /** Progress bar text capture */
+    StringBuilder sb = new StringBuilder();
+
     /**  This array contains all of the regular expression strings that
      * will be compiled to Pattern objects for use in the methods in
      * this file. */
@@ -648,7 +651,8 @@ public class WordNet implements Serializable {
              LineNumberReader lr = new LineNumberReader(new BufferedReader(r))) {
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
-                    System.out.print('.');
+//                    System.out.print('.');
+                        sb.append(".");
                 line = line.trim();
                 if (!processNounLine(line)) {
                     System.out.println();
@@ -656,7 +660,8 @@ public class WordNet implements Serializable {
                             + nounFile.getCanonicalPath() + " for line " + line );
                 }
             }
-            System.out.println("x");
+            System.out.println(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + nounFile.getCanonicalPath() +
                     " with " + lr.getLineNumber() + " lines");
@@ -782,7 +787,8 @@ public class WordNet implements Serializable {
              LineNumberReader lr = new LineNumberReader(new BufferedReader(r))) {
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
-                    System.out.print('.');
+//                    System.out.print('.');
+                    sb.append(".");
                 line = line.trim();
                 // 10: p = Pattern.compile("^([0-9]{8})([^\\|]+)\\|\\s([\\S\\s]+?)\\s(\\(?\\&\\%\\S+[\\S\\s]+)$");
                 m = regexPatterns[10].matcher(line);
@@ -810,7 +816,8 @@ public class WordNet implements Serializable {
                     }
                 }
             }
-            System.out.println("x");
+            System.out.println(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + verbFile.getCanonicalPath()  +
                     " with " + lr.getLineNumber() + " lines");
@@ -872,7 +879,8 @@ public class WordNet implements Serializable {
              LineNumberReader lr = new LineNumberReader(new BufferedReader(r))) {
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
-                    System.out.print('.');
+//                    System.out.print('.');
+                        sb.append(".");
                 line = line.trim();
                 // 13: p = Pattern.compile("^([0-9]{8})([\\S\\s]+)\\|\\s([\\S\\s]+?)\\s(\\(?\\&\\%\\S+[\\S\\s]+)$");
                 m = regexPatterns[13].matcher(line);
@@ -898,7 +906,8 @@ public class WordNet implements Serializable {
                     }
                 }
             }
-            System.out.println("x");
+            System.out.println(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + adjFile.getCanonicalPath() +
                     " with " + lr.getLineNumber() + " lines");
@@ -929,7 +938,8 @@ public class WordNet implements Serializable {
              LineNumberReader lr = new LineNumberReader(new BufferedReader(r))) {
             while ((line = lr.readLine()) != null) {
                 if (lr.getLineNumber() % 1000 == 0)
-                    System.out.print('.');
+//                    System.out.print('.');
+                        sb.append(".");
                 line = line.trim();
                 // 15: p = Pattern.compile("^([0-9]{8})([\\S\\s]+)\\|\\s([\\S\\s]+)\\s(\\(?\\&\\%\\S+[\\S\\s]+)$");
                 m = regexPatterns[15].matcher(line);
@@ -955,7 +965,8 @@ public class WordNet implements Serializable {
                     }
                 }
             }
-            System.out.println("x");
+            System.out.println(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + advFile.getCanonicalPath() +
                     " with " + lr.getLineNumber() + " lines");
@@ -1055,7 +1066,6 @@ public class WordNet implements Serializable {
             String line, key, values, word, freq;
             String[] words;
             Map<String,Integer> frequencies;
-            StringBuilder sb = new StringBuilder();
             while ((line = lr.readLine()) != null) {
                 line = line.trim();
                 // 17: Pattern p = Pattern.compile("^Word: ([^ ]+) Values: (.*)");
@@ -1188,13 +1198,15 @@ public class WordNet implements Serializable {
                     if (counter == 1000) {
                         //System.out.println("INFO in WordNet.readSenseIndex().  Read word sense: " + key);
                         //System.out.println(word + " " + pos  + " " + synset  + " "  + sensenum);
-                        System.out.print('.');
+//                        System.out.print('.');
+                        sb.append(".");
                         totalcount = totalcount + counter;
                         counter = 0;
                     }
                 }
             }
-            System.out.println("x");
+            System.out.println(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + canonicalPath + " with " + totalcount + " senses.");
         }
@@ -1269,12 +1281,14 @@ public class WordNet implements Serializable {
                 if (counter == 1000) {
                     //System.out.println("INFO in WordNet.readSenseIndex().  Read word sense: " + key);
                     //System.out.println(word + " " + pos  + " " + synset  + " "  + sensenum);
-                    System.out.print('.');
+//                    System.out.print('.');
+                    sb.append(".");
                     totalcount = totalcount + counter;
                     counter = 0;
                 }
             }
-            System.out.println("x");
+            System.out.println(sb.toString() + "x");
+            sb.setLength(0);
             System.out.println("  " + ((System.currentTimeMillis() - t1) / 1000.0)
                     + " seconds to process " + canonicalPath + " with " + totalcount + " senses.");
         }
@@ -3392,7 +3406,8 @@ public class WordNet implements Serializable {
                 continue;
             counter++;
             if (counter == 1000) {
-                System.out.print('.');
+//                System.out.print('.');
+                sb.append(".");
                 totalcount = totalcount + counter;
                 counter = 0;
             }
@@ -3413,6 +3428,8 @@ public class WordNet implements Serializable {
             }
             synsetFromTermFormat(form,tf,SUMOterm,kb);
         }
+        System.out.println(sb.toString() + "x");
+        sb.setLength(0);
         System.out.println("\nINFO in WordNet.termFormatsToSynsets(): result (orig,max): " +
                 origMaxNounSynsetID + " and: " + maxNounSynsetID);
         System.out.println("WordNet.termFormatsToSynsets(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
