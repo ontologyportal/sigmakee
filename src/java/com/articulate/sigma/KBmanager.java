@@ -43,22 +43,80 @@ import java.util.concurrent.Future;
  */
 public class KBmanager implements Serializable {
 
-    public static final List<String> configKeys =
-            Arrays.asList("cwa", "sumokbname", "testOutputDir", "TPTPDisplay", "semRewrite",
-                    "eprover", "inferenceTestDir", "baseDir", "hostname",
-                    "logLevel", "systemsDir", "dbUser", "loadFresh", "userBrowserLimit",
-                    "adminBrowserLimit", "https", "graphWidth", "overwrite", "typePrefix",
-                    "graphDir", "nlpTools","TPTP","TPTPlang","cache","editorCommand","graphVizDir",
-                    "kbDir","loadCELT","celtdir","lineNumberCommand","prolog","port",
-                    "tptpHomeDir","showcached","leoExecutable","holdsPrefix","logDir",
-                    "englishPCFG","multiWordAnnotatorType","dbpediaSrcDir", "vampire",
-                    "reportDup", "reportFnError", "verbnet", "jedit", "editdir", "termFormats",
-                    "loadLexicons", "cacheDisjoint");
+    /** Master key cache for the config */
+    public static final List<String> CONFIG_KEYS =
+            Arrays.asList(
+                    "adminBrowserLimit",
+                    "baseDir",
+                    "cache",
+                    "cacheDisjoint",
+                    "celtdir",
+                    "cwa",
+                    "dbpediaSrcDir",
+                    "dbUser",
+                    "editorCommand",
+                    "editDir",
+                    "englishPCFG",
+                    "eprover",
+                    "graphDir",
+                    "graphVizDir",
+                    "graphWidth",
+                    "holdsPrefix",
+                    "hostname",
+                    "https",
+                    "imageFormat",
+                    "inferenceTestDir",
+                    "jedit",
+                    "kbDir",
+                    "lineNumberCommand",
+                    "loadCELT",
+                    "loadFresh",
+                    "loadLexicons",
+                    "leoExecutable",
+                    "logDir",
+                    "logLevel",
+                    "multiWordAnnotatorType",
+                    "nlpTools",
+                    "overwrite",
+                    "port",
+                    "prolog",
+                    "reportDup",
+                    "reportFnError",
+                    "semRewrite",
+                    "showcached",
+                    "sumokbname",
+                    "systemsDir",
+                    "termFormats",
+                    "testOutputDir",
+                    "tptpHomeDir",
+                    "TPTP",
+                    "TPTPlang",
+                    "TPTPDisplay",
+                    "typePrefix",
+                    "userBrowserLimit",
+                    "vampire",
+                    "verbnet"
+            );
 
-    public static final List<String> fileKeys =
-            Arrays.asList("testOutputDir", "eprover", "inferenceTestDir", "baseDir",
-                    "systemsDir","graphVizDir", "kbDir", "celtdir", "tptpHomeDir", "logDir",
-                    "englishPCFG");
+    /** Master file key cache for the config */
+    public static final List<String> FILE_KEYS =
+            Arrays.asList(
+                    "baseDir",
+                    "celtdir",
+                    "dbpediaSrcDir",
+                    "editDir",
+                    "englishPCFG",
+                    "eprover",
+                    "graphDir",
+                    "graphVizDir",
+                    "inferenceTestDir",
+                    "kbDir",
+                    "logDir",
+                    "systemsDir",
+                    "testOutputDir",
+                    "tptpHomeDir",
+                    "vampire"
+            );
 
     protected static final String CONFIG_FILE = "config.xml";
     protected static final String KB_MANAGER_SER = "kbmanager.ser";
@@ -604,7 +662,9 @@ public class KBmanager implements Serializable {
      }
 
     /** ***************************************************************
+     * @deprecated
      */ // TODO: Not used
+    @Deprecated(forRemoval = true)
     private void fromXML(SimpleElement configuration) {
 
         if (!configuration.getTagName().equals("configuration"))
@@ -618,7 +678,7 @@ public class KBmanager implements Serializable {
                 element = (SimpleElement) configuration.getChildElements().get(i);
                 if (element.getTagName().equals("preference")) {
                     name = (String) element.getAttribute("name");
-                    if (!configKeys.contains(name)) {
+                    if (!CONFIG_KEYS.contains(name)) {
                         System.err.println("Error in KBmanager.fromXML(): Bad key: " + name);
                         // continue; // set it anyway
                     }
@@ -695,13 +755,13 @@ public class KBmanager implements Serializable {
         try {
             String kbDirStr = configDirPath;
             if (StringUtil.emptyString(kbDirStr)) {
-                kbDirStr = (String) preferences.get("kbDir");
+                kbDirStr = preferences.get("kbDir");
                 if (StringUtil.emptyString(kbDirStr))
                     kbDirStr = System.getProperty("user.dir");
             }
             File kbDir = new File(kbDirStr);
             if (!kbDir.exists()) {
-                kbDir.mkdir();
+                kbDir.mkdirs();
                 preferences.put("kbDir", kbDir.getCanonicalPath());
             }
             String config_file = CONFIG_FILE;
@@ -968,7 +1028,7 @@ public class KBmanager implements Serializable {
         for (Map.Entry<String, String> element : preferences.entrySet()) {
             key = element.getKey();
             value = element.getValue();
-            if (fileKeys.contains(key))
+            if (FILE_KEYS.contains(key))
                 value = escapeFilename(value);
             if (!Arrays.asList("userName", "userRole").contains(key)) {
                 preference = new SimpleElement("preference");
@@ -983,8 +1043,7 @@ public class KBmanager implements Serializable {
             configXML.addChildElement(kbXML);
         }
         try (FileWriter fw = new FileWriter(file);
-             PrintWriter pw = new PrintWriter(fw)
-        ) {
+             PrintWriter pw = new PrintWriter(fw)) {
             pw.println(configXML.toFileString());
         }
         catch (IOException e) {
@@ -1082,8 +1141,8 @@ public class KBmanager implements Serializable {
      */
     public String getPref(String key) {
 
-        if (!configKeys.contains(key)) {
-            System.err.println("Error in KBmanager.getPref(): bad key: " + key);
+        if (!CONFIG_KEYS.contains(key)) {
+            System.err.println("Error in KBmanager.getPref(): not in CONFIG_KEYS: " + key);
             return "";
         }
         String ans = (String) preferences.get(key);
@@ -1097,11 +1156,11 @@ public class KBmanager implements Serializable {
      */
     public boolean prefEquals(String key, String value) {
 
-        if (!configKeys.contains(key)) {
-            System.err.println("Error in KBmanager.getPref(): bad key: " + key);
+        if (!CONFIG_KEYS.contains(key)) {
+            System.err.println("Error in KBmanager.getPref(): not in CONFIG_KEYS: " + key);
             return false;
         }
-        String ans = (String) preferences.get(key);
+        String ans = preferences.get(key);
         if (ans == null)
             ans = "";
         return ans.equals(value);
@@ -1112,8 +1171,8 @@ public class KBmanager implements Serializable {
      */
     public void setPref(String key, String value) {
 
-        if (!configKeys.contains(key)) {
-            System.err.println("Error in KBmanager.setPref(): bad key: " + key);
+        if (!CONFIG_KEYS.contains(key)) {
+            System.err.println("Error in KBmanager.setPref(): not in CONFIG_KEYS: " + key);
             return;
         }
         preferences.put(key,value);
