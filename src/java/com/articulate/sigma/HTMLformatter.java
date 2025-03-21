@@ -722,12 +722,9 @@ public class HTMLformatter {
             if (!StringUtil.emptyString(git))
                 editDir = git + File.separator + "sumo";
         }
-        String jeditcmd = "jedit";
-        if (StringUtil.emptyString(jeditcmd)) {
-            String jeditconfig = KBmanager.getMgr().getPref("jedit");
-            if (!StringUtil.emptyString(jeditconfig))
-                jeditcmd = jeditconfig;
-        }
+        String jeditcmd = KBmanager.getMgr().getPref("jedit");
+        if (StringUtil.emptyString(jeditcmd))
+                jeditcmd = "/user/share/jedit/jedit"; // default
         List<String> commands = new ArrayList<>(Arrays.asList(
                 jeditcmd, editDir + File.separator + file, " +line:" + line,
                 "-norestore", "-reuseview"));
