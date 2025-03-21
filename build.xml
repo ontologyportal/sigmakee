@@ -350,22 +350,22 @@
         <mkdir dir="${sigma.home}"/>
         <mkdir dir="${sigma.home}/KBs"/>
 
+        <!-- Clone the supporting sigma tools -->
+        <antcall target="clone.sigmautils"/>
+        <antcall target="clone.tptpantlr"/>
+        <antcall target="clone.sumo"/>
+
         <!-- Install Tomcat -->
         <antcall target="install.tomcat"/>
 
         <!-- Retrieve WordNet -->
         <antcall target="retrieve.wordnet"/>
 
-        <!-- Retrieve E prover -->
-        <antcall target="retrieve.E"/>
-
-        <!-- Clone the sigma tools -->
-        <antcall target="clone.sigmautils"/>
-        <antcall target="clone.tptpantlr"/>
-        <antcall target="clone.sumo"/>
-
         <!-- Copy config.xml, sumo and WordNet files to ${sigma.home}/KBs -->
         <antcall target="setup.sigma.home"/>
+
+        <!-- Retrieve E prover -->
+        <antcall target="retrieve.E"/>
 
         <!-- Build E theorem prover -->
         <antcall target="build.E"/>
@@ -376,48 +376,11 @@
         <antcall target="build.z3"/>
         <antcall target="build.vampire"/>
 
+        <!-- perms -->
         <chmod dir="${git.home}" perm="ugo+rw" includes="**/*"/>
         <chmod dir="${programs.dir}" perm="ugo+rw" includes="**/*"/>
         <chmod dir="${sigma.home}" perm="ugo+rw" includes="**/*"/>
     </target>
-
-    <target name="retrieve.wordnet">
-        <get src="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
-        <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
-    </target>
-
-    <target name="retrieve.E">
-        <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
-        <delete file="${programs.dir}/E.tgz"/>
-    </target>
-
-    <target name="setup.sigma.home" description="Copy WordNetMappings, sumo kbs and config.xml to ~/.sigmakee/KBs -> ($SIGMA_HOME)/KBs">
-        <antcall target="refresh.kbs"/>
-        <copy todir="${sigma.home}/KBs">
-            <fileset file="${sigma.src}/config.xml"/>
-        </copy>
-        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}" excludes="/home/theuser/workspace/sumo"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
-        <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
-        <copy todir="${sigma.home}/KBs/WordNetMappings">
-            <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
-        </copy>
-    </target>
-
-    <!-- When the SUMO KB files get updated, do this frequently -->
-    <target name="refresh.kbs" depends="update.sumo" description="Copy updated KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
-        <copy todir="${sigma.home}/KBs">
-            <fileset dir="${kbs.home}">
-                <exclude name=".github/**"/>
-                <exclude name="SimpleFacts/**"/>
-                <exclude name="mappings/**"/>
-                <exclude name="tests/**"/>
-            </fileset>
-        </copy>
-    </target>
-
     <target name="clone.sigmautils">
         <mkdir dir="${git.home}/SigmaUtils"/>
         <git command="clone" dir="${git.home}/SigmaUtils">
@@ -426,14 +389,6 @@
                 <arg value="--verbose"/>
                 <arg value="https://github.com/ontologyportal/SigmaUtils"/>
                 <arg value="${git.home}/SigmaUtils"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.sigmautils">
-        <git command="pull" dir="${git.home}/SigmaUtils">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
             </args>
         </git>
     </target>
@@ -448,14 +403,6 @@
             </args>
         </git>
     </target>
-    <target name="update.tptpantlr">
-        <git command="pull" dir="${git.home}/TPTP-ANTLR">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
     <target name="clone.sumo">
         <mkdir dir="${kbs.home}"/>
         <git command="clone" dir="${kbs.home}">
@@ -467,21 +414,60 @@
             </args>
         </git>
     </target>
-    <target name="update.sumo">
-        <git command="pull" dir="${kbs.home}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
+    <target name="install.tomcat">
+        <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
+        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>
+        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/webapps" perm="ugo+rx" includes="**/*.sh"/>
+        <delete file="${programs.dir}/apache-tomcat-${tomcat.version}.zip"/>
     </target>
-    <target name="update.sigmakee">
-        <git command="pull" dir="${user.dir}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
+    <target name="retrieve.wordnet">
+        <get src="https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <untar src="${programs.dir}/WordNet-3.0.tar.gz" dest="${programs.dir}" compression="gzip"/>
+        <delete file="${programs.dir}/WordNet-3.0.tar.gz"/>
+    </target>
+    <target name="setup.sigma.home" description="Copy WordNetMappings, sumo kbs and config.xml to ~/.sigmakee/KBs -> ($SIGMA_HOME)/KBs">
+        <antcall target="refresh.kbs"/>
+        <copy todir="${sigma.home}/KBs/WordNetMappings">
+            <fileset dir="${programs.dir}/WordNet-3.0/dict"/>
+        </copy>
+        <antcall target="sigma.config"/>
+    </target>
+
+    <!-- When online SUMO KB files get comitted do this frequently -->
+    <target name="refresh.kbs" depends="update.sumo" description="Copy refreshed KBs from SUMO to ~/.sigmakee -> ($SIGMA_HOME)">
+        <copy todir="${sigma.home}/KBs">
+            <fileset dir="${kbs.home}">
+                <exclude name=".github/**"/>
+                <exclude name="SimpleFacts/**"/>
+                <exclude name="mappings/**"/>
+                <exclude name="tests/**"/>
+            </fileset>
+        </copy>
+    </target>
+    <target name="sigma.config">
+        <copy tofile="${sigma.home}/KBs/config.xml" file="${sigma.src}/test/unit/java/resources/config_topAndMid.xml" overwrite="true"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/workspace/sumo" value="${kbs.home}"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser" value="${user.home}"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="/usr/local/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests" value="${programs.dir}/tomcat/apache-tomcat-${tomcat.version}/webapps/sigma/tests"/>
+        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/Programs/vampire/build/vampire" value="${programs.dir}/vampire/build/vampire"/>
+    </target>
+    <target name="retrieve.E">
+        <get src="http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz" dest="${programs.dir}" tryGzipEncoding="true"/>
+        <untar src="${programs.dir}/E.tgz" dest="${programs.dir}" compression="gzip"/>
+        <delete file="${programs.dir}/E.tgz"/>
+    </target>
+    <target name="build.E">
+        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="./configure"/>
+        </exec>
+        <exec executable="sh" dir="${programs.dir}/E">
+            <arg value="-c"/>
+            <arg value="make"/>
+        </exec>
     </target>
     <target name="clone.vampire">
         <mkdir dir="${programs.dir}/vampire"/>
@@ -502,42 +488,6 @@
             </args>
         </git>
     </target>
-
-    <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
-    <macrodef name="git">
-        <attribute name="command"/>
-        <attribute name="dir" default="${git.home}"/>
-        <element name="args" optional="true"/>
-        <sequential>
-            <echo message="git @{command}"/>
-            <exec executable="git" dir="@{dir}">
-                <arg value="@{command}"/>
-                <args/>
-            </exec>
-        </sequential>
-    </macrodef>
-
-    <target name="install.tomcat">
-        <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
-        <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
-        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>
-        <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/webapps" perm="ugo+rx" includes="**/*.sh"/>
-        <delete file="${programs.dir}/apache-tomcat-${tomcat.version}.zip"/>
-    </target>
-
-    <target name="build.E">
-        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="./configure"/>
-        </exec>
-        <exec executable="sh" dir="${programs.dir}/E">
-            <arg value="-c"/>
-            <arg value="make"/>
-        </exec>
-        <replace file="${sigma.home}/KBs/config.xml" token="${user.home}/E/bin/e_ltb_runner" value="${programs.dir}/E/PROVER/e_ltb_runner"/>
-    </target>
-
     <target name="build.z3">
         <mkdir dir="${programs.dir}/vampire/z3/build"/>
         <exec executable="cmake" dir="${programs.dir}/vampire/z3/build">
@@ -549,7 +499,6 @@
             <arg value="make"/>
         </exec>
     </target>
-
     <target name="build.vampire">
         <mkdir dir="${programs.dir}/vampire/build"/>
         <exec executable="cmake" dir="${programs.dir}/vampire/build">
@@ -559,7 +508,6 @@
             <arg value="-c"/>
             <arg value="make"/>
         </exec>
-        <replace file="${sigma.home}/KBs/config.xml" token="/home/theuser/Programs/vampire/build/vampire" value="${programs.dir}/vampire/build/vampire"/>
     </target>
 
     <!-- If Vampire fails to build on Hamming, here is an alternate source of the binary, but may not work due to sys arch type differences -->
@@ -574,6 +522,51 @@
     =====
     -->
 
+    <!-- git macro utils setup from: https://tonyyan.wordpress.com/2017/03/10/integrate-git-into-ant-targets/-->
+    <macrodef name="git">
+        <attribute name="command"/>
+        <attribute name="dir" default="${git.home}"/>
+        <element name="args" optional="true"/>
+        <sequential>
+            <echo message="git @{command}"/>
+            <exec executable="git" dir="@{dir}">
+                <arg value="@{command}"/>
+                <args/>
+            </exec>
+        </sequential>
+    </macrodef>
+    <target name="update.sigmautils">
+        <git command="pull" dir="${git.home}/SigmaUtils">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.tptpantlr">
+        <git command="pull" dir="${git.home}/TPTP-ANTLR">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sumo">
+        <git command="pull" dir="${kbs.home}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sigmakee">
+        <git command="pull" dir="${user.dir}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
     <target name="stop.tomcat" description="stop web application in tomcat">
         <exec executable="sh">
             <arg value="-c"/>
@@ -592,7 +585,6 @@
     <target name="refresh.sigma"
             depends="clean,clear.kbs,clear.tomcat.logs,refresh.kbs,update.sigmautils,update.tptpantlr,update.sigmakee,update.sigmanlp,update.sumojedit,update.sigmaantlr,update.sigmarest"
             description="Refreshes (updates) the entire Simga Enterprise Suite (SES)"/>
-    <available file="${git.home}/sigmanlp/build.xml" property="sigmanlp.present"/>
     <target name="clear.kbs" description="Clears out all of the serialized KBs and translations">
         <delete includeemptydirs="true" failonerror="false">
             <fileset dir="${sigma.home}/KBs">
@@ -613,6 +605,7 @@
             </fileset>
         </delete>
     </target>
+    <available file="${git.home}/sigmanlp/build.xml" property="sigmanlp.present"/>
     <target name="update.sigmanlp" if="sigmanlp.present">
         <git command="pull" dir="${git.home}/sigmanlp">
             <args>
