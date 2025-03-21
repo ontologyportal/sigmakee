@@ -157,6 +157,9 @@ jobs:
           name: sigma-base
           path: |
             $SIGMA_SRC/lib/*.jar
+            !$SIGMA_SRC/lib/hamcrest-core*.jar
+            !$SIGMA_SRC/lib/junit*.jar
+            !$SIGMA_SRC/lib/tomcat-servlet-api*.jar
             $SIGMA_SRC/build/sigmakee.jar
             $SIGMA_HOME/KBs/config.xml
             $SIGMA_HOME
