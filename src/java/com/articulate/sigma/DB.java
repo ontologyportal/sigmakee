@@ -30,6 +30,8 @@ import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.PrintWriter;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -57,35 +59,38 @@ public class DB {
       // a map of word keys, broken down by POS, listing whether it's a positive or negative word
       // keys are pre-defined as type, POS, stemmed, polarity
     public static Map<String,Map<String,String>> sentiment = new HashMap<>();
-    public static HashSet<String> amenityTerms = new HashSet<>();
-    public static HashSet<String> stopConcepts = new HashSet<>();
+    public static Set<String> amenityTerms = new HashSet<>();
+    public static Set<String> stopConcepts = new HashSet<>();
 
     /** ***************************************************************
      *  Print statistics in a summary form for TPTP test run
      *  data
      */
-    public HashMap printTPTPDataInCSV(HashMap byProver) throws IOException {
+    public Map printTPTPDataInCSV(Map byProver) throws IOException {
 
         // get header from any entry
-        HashMap header = (HashMap) byProver.values().iterator().next();
-        TreeSet problemNames = new TreeSet();
+        Map header = (HashMap) byProver.values().iterator().next();
+        Set problemNames = new TreeSet();
         problemNames.addAll(header.keySet());
         Iterator it2 = problemNames.iterator();
         System.out.print(",");
+        String problemName;
         while (it2.hasNext()) {
-            String problemName = (String) it2.next();
+            problemName = (String) it2.next();
             System.out.print(problemName.substring(0,8) + ",");
         }
         System.out.println();
         Iterator it1 = byProver.keySet().iterator();
+        String proverName, value;
+        Map problems;
         while (it1.hasNext()) {
-            String proverName = (String) it1.next();
+            proverName = (String) it1.next();
             System.out.print(proverName + ", ");
-            HashMap problems = (HashMap) byProver.get(proverName);
+            problems = (HashMap) byProver.get(proverName);
             it2 = problemNames.iterator();
             while (it2.hasNext()) {
-                String problemName = (String) it2.next();
-                String value = (String) problems.get(problemName);
+                problemName = (String) it2.next();
+                value = (String) problems.get(problemName);
                 System.out.print(value + ", ");
             }
             System.out.println();
@@ -97,21 +102,22 @@ public class DB {
      *  Reorganize statistics in a summary form for TPTP test run
      *  data
      */
-    public HashMap resortTPTPData(HashMap stats) throws IOException {
+    public Map resortTPTPData(Map stats) throws IOException {
 
-        HashMap byProver = new HashMap();
+        Map byProver = new HashMap();
         // A HashMap where keys are prover names and values are HashMaps
         // The interior HashMap keys are problem name and values are times
         // with 0 if the problem failed.
+        String problemName, proverName, value;
+        Map problem, proverPerformance;
         for (Iterator it1 = stats.keySet().iterator(); it1.hasNext();) {
-            String problemName = (String) it1.next();
-            HashMap problem = (HashMap) stats.get(problemName);
+            problemName = (String) it1.next();
+            problem = (HashMap) stats.get(problemName);
             for (Iterator it2 = problem.keySet().iterator(); it2.hasNext();) {
-                String proverName = (String) it2.next();
-                String value = (String) problem.get(proverName);
+                proverName = (String) it2.next();
+                value = (String) problem.get(proverName);
                 if (value.equals("F"))
                     value = "600";
-                HashMap proverPerformance = null;
                 if (byProver.containsKey(proverName))
                     proverPerformance = (HashMap) byProver.get(proverName);
                 else {
@@ -127,21 +133,23 @@ public class DB {
     /** ***************************************************************
      *  Read statistics for TPTP test run data
      */
-    public HashMap processTPTPData() throws IOException {
+    public Map processTPTPData() throws IOException {
 
-        HashMap problemSet = new HashMap();
+        Map problemSet = new HashMap();
         // a HashMap of HashMaps where the key is the problem name
         // The interior HashMap has a key of prover name and a String
         // representation of the time to proof or "F" if no proof.
-        String problemName = "";
+        String problemName;
         List al = readSpreadsheet("TPTPresults.csv", null,true);
         //System.out.println("INFO in DB.processTPTPData: " + al.size() + " lines");
-        HashMap problem = null;
+        Map problem = null;
+        List row;
+        String cell, proverName, success, time;
         for (int i = 0; i < al.size(); i++) {
-            ArrayList row = (ArrayList) al.get(i);
+            row = (ArrayList) al.get(i);
             //System.out.println("INFO in DB.processTPTPData line: " + row);
-            if (row.size() > 0) {
-                String cell = (String) row.get(0);
+            if (!row.isEmpty()) {
+                cell = (String) row.get(0);
                 //System.out.println(cell);
                 if (cell.startsWith("CSR")) {
                     problem = new HashMap();
@@ -149,9 +157,9 @@ public class DB {
                     problemSet.put(problemName,problem);
                 }
                 else {
-                    String proverName = cell;
-                    String success = (String) row.get(1);
-                    String time = (String) row.get(3);
+                    proverName = cell;
+                    success = (String) row.get(1);
+                    time = (String) row.get(3);
                     if (!success.equals("T"))
                         time = "F";
                     problem.put(proverName,time);
@@ -186,9 +194,11 @@ public class DB {
             System.out.println("insert into " + element + "(documentation) values ('" + doc + "');");
         }
         List subs = kb.askWithRestriction(0,"HasDatabaseColumn",1,element);
+        Formula f;
+        String t;
         for (int i = 0; i < subs.size(); i++) {
-            Formula f = (Formula) subs.get(i);
-            String t = f.getStringArgument(2);
+            f = (Formula) subs.get(i);
+            t = f.getStringArgument(2);
             System.out.println("alter table " + element + " add column " + t + " varchar(255);");
         }
     }
@@ -203,9 +213,11 @@ public class DB {
 
         System.out.println("create database " + kb.name + ";");
         List composites = kb.askWithRestriction(0,"instance",2,"DatabaseTable");
+        Formula f;
+        String element;
         for (int i = 0; i < composites.size(); i++) {
-            Formula f = (Formula) composites.get(i);
-            String element = f.getStringArgument(1);
+            f = (Formula) composites.get(i);
+            element = f.getStringArgument(1);
             System.out.println("create table " + element + ";");
             generateDBElement(kb, element);
         }
@@ -223,20 +235,19 @@ public class DB {
      * @param quote signifies whether to retain quotes in elements
      * @return An ArrayList of ArrayLists
      */
-    public static ArrayList<ArrayList<String>> readSpreadsheet(Reader inReader, List<String> lineStartTokens, boolean quote, char delimiter) {
+    public static List<List<String>> readSpreadsheet(Reader inReader, List<String> lineStartTokens, boolean quote, char delimiter) {
 
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
-        ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
-        String line = null;
+        List<List<String>> rows = new ArrayList<>();
+        String line = null, cellVal;
         StringBuilder cell = null;
-        String cellVal = null;
-        try {
-            LineNumberReader lr = new LineNumberReader(inReader);
-            ArrayList<String> textrows = new ArrayList<String>();
+        try (LineNumberReader lr = new LineNumberReader(inReader)) {
+            List<String> textrows = new ArrayList<>();
             int trLen = 0;
             boolean areTokensListed = ((lineStartTokens != null) && !lineStartTokens.isEmpty());
-            boolean skippingHeader = true;
+            boolean skippingHeader = true, concat;
+            String unquoted, token, previousLine;
             while ((line = lr.readLine()) != null) {
                 if (skippingHeader) {
                     skippingHeader = line.startsWith(";") || line.trim().isEmpty();
@@ -248,10 +259,10 @@ public class DB {
                         line += " ";
                         // concatenate lines not starting with one of the
                         // tokens in lineStartTokens.
-                        boolean concat = false;
+                        concat = false;
                         if (areTokensListed) {
-                            String unquoted = StringUtil.unquote(line);
-                            String token = null;
+                            unquoted = StringUtil.unquote(line);
+                            token = null;
                             for (Iterator<String> it = lineStartTokens.iterator(); it.hasNext();) {
                                 token = (String) it.next();
                                 if (unquoted.startsWith(token)) {
@@ -262,7 +273,7 @@ public class DB {
                         }
                         if (concat && !textrows.isEmpty()) {
                             trLen = textrows.size();
-                            String previousLine = (String) textrows.get(trLen - 1);
+                            previousLine = (String) textrows.get(trLen - 1);
                             line = previousLine + line;
                             textrows.remove(trLen - 1);
                             textrows.add(line);
@@ -271,9 +282,9 @@ public class DB {
                             textrows.add(line);
                     }
                     catch (Exception ex1) {
-                        System.out.println("ERROR in ENTER DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
-                        System.out.println("  approx. line # == " + lr.getLineNumber());
-                        System.out.println("  line == " + line);
+                        System.err.println("ERROR in ENTER DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
+                        System.err.println("  approx. line # == " + lr.getLineNumber());
+                        System.err.println("  line == " + line);
                         ex1.printStackTrace();
                     }
                 }
@@ -281,17 +292,20 @@ public class DB {
             try {
                 if (lr != null) { lr.close(); } // Close the input stream.
             }
-            catch (Exception lre) {
+            catch (IOException lre) {
                 lre.printStackTrace();
             }
             cell = new StringBuilder();
+            int linelen;
+            List<String> row;
+            boolean inString;
             for (Iterator<String> itr = textrows.iterator(); itr.hasNext();) {
                 // parse comma delimited cells into an ArrayList
                 line = (String) itr.next();
-                int linelen = line.length();
+                linelen = line.length();
                 cell.setLength(0);
-                ArrayList<String> row = new ArrayList<String>();
-                boolean inString = false;
+                row = new ArrayList<>();
+                inString = false;
                 for (int j = 0; j < linelen; j++) {
                     if ((line.charAt(j) == delimiter) && !inString) {
                         cellVal = cell.toString();
@@ -321,10 +335,10 @@ public class DB {
             }
         }
         catch (Exception e) {
-            System.out.println("ERROR in DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
-            System.out.println("  line == " + line);
-            System.out.println("  cell == " + cell.toString());
-            System.out.println(e.getMessage());
+            System.err.println("ERROR in DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
+            System.err.println("  line == " + line);
+            System.err.println("  cell == " + cell.toString());
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         System.out.println("EXIT DB.readSpreadsheet(" + inReader + ", " + lineStartTokens + ")");
@@ -425,22 +439,20 @@ public class DB {
      *
      * @return An ArrayList of ArrayLists
      */
-    public static ArrayList<ArrayList> readDataInterchangeFormatFile(Reader inReader) {
+    public static List<List> readDataInterchangeFormatFile(Reader inReader) {
 
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DB.readDataInterchangeFormatFile(" + inReader + ")");
-        LineNumberReader lr = null;
-        ArrayList<ArrayList> rows = new ArrayList<ArrayList>();
-        try {
-            lr = new LineNumberReader(inReader);
-            ArrayList row = new ArrayList();
+        List<List> rows = new ArrayList<>();
+        try (LineNumberReader lr = new LineNumberReader(inReader)) {
+            List row = new ArrayList();
             String token = "";
             String val = "";
-            String prevVal = "";
+            String prevVal;
             boolean beginningOfTuple = false;
             boolean inHeader = false;
             StringBuilder sb = new StringBuilder();
-            String line = null;
+            String line;
             while ((line = lr.readLine()) != null) {
                 try {
                     if (StringUtil.containsNonAsciiChars(line))
@@ -510,29 +522,18 @@ public class DB {
                     if (token.equals("1,0")) {
                         if (sb.length() > 0) sb.append(" ");
                         sb.append(val);
-                        continue;
                     }
                 }
                 catch (Exception ex1) {
-                    System.out.print("ERROR in DB.readDataInterchangeFormatFile(");
-                    System.out.println(inReader + ")");
-                    System.out.println("  approx. line # == " + lr.getLineNumber());
+                    System.err.print("ERROR in DB.readDataInterchangeFormatFile(");
+                    System.err.println(inReader + ")");
+                    System.err.println("  approx. line # == " + lr.getLineNumber());
                     ex1.printStackTrace();
                 }
             }
         }
         catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
-            // Close the input stream.
-            try {
-                if (lr != null)
-                    lr.close();
-            }
-            catch (Exception lre) {
-                lre.printStackTrace();
-            }
         }
         System.out.println("EXIT DB.readDataInterchangeFormatFile(" + inReader + ")");
         System.out.println("  rows == [list of " + rows.size() + " rows]");
@@ -548,12 +549,11 @@ public class DB {
      *
      * @return An ArrayList of ArrayLists
      */
-    public static ArrayList<ArrayList> readDataInterchangeFormatFile(String fname) {
+    public static List<List> readDataInterchangeFormatFile(String fname) {
 
         System.out.println("ENTER DB.readDataInterchangeFormatFile(" + fname + ")");
-        ArrayList<ArrayList> rows = new ArrayList<ArrayList>();
-        try {
-            FileReader fr = new FileReader(fname);
+        List<List> rows = new ArrayList<>();
+        try (Reader fr = new FileReader(fname)) {
             rows = readDataInterchangeFormatFile(fr);
         }
         catch (Exception e) {
@@ -565,7 +565,7 @@ public class DB {
 
     /** ***************************************************************
      */
-    private void processForRDFExport(ArrayList rows) {
+    private void processForRDFExport(List rows) {
 
         //System.out.println("<!-- Begin Export -->");
         //System.out.println(rows.size());
@@ -573,12 +573,13 @@ public class DB {
         System.out.println("  xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"");
         String kbName = KBmanager.getMgr().getPref("sumokbname");
         System.out.println("  xmlns:op=\"http://ontologyportal.org/" + kbName + ".owl.txt\">");
-        String domain = "";
-        String subject = "";
-        String relator = "";
-        String range = "";
+        String domain;
+//        String subject;
+        String relator;
+        String range;
+        List row;
         for (int rowNum = 0; rowNum < rows.size(); rowNum++) {
-            ArrayList row = (ArrayList) rows.get(rowNum);
+            row = (ArrayList) rows.get(rowNum);
             if (row.size() > 7) {
                 domain = (String) row.get(4);
                 relator = (String) row.get(5);
@@ -605,7 +606,7 @@ public class DB {
         try {
             if (!statements.isEmpty()) {
                 System.out.println("  writing ");
-                String stmt = null;
+                String stmt;
                 Formula printF = new Formula();
                 for (Iterator it = statements.iterator(); it.hasNext(); n++) {
                     stmt = StringUtil.normalizeSpaceChars((String) it.next());
@@ -652,11 +653,11 @@ public class DB {
             String canonicalPath = sourceFile.getCanonicalPath();
             System.out.print("  writing " + canonicalPath + " ");
             Formula printF = new Formula();
-            Formula f = null;
-            String stmt = null;
+            Formula f;
+            String stmt, pathname;
             for (Iterator it = kb.formulaMap.values().iterator(); it.hasNext();) {
                 f = (Formula) it.next();
-                String pathname = f.getSourceFile();
+                pathname = f.getSourceFile();
                 if (pathname.equals(canonicalPath)) {
                     if (!foundFirstOne) {
                         pw = new PrintWriter(new FileWriter(canonicalPath));
@@ -673,8 +674,8 @@ public class DB {
             }
             System.out.println("x: " + count + " statements written");
         }
-        catch (Exception ex) {
-            System.out.println("Error writing file " + sourceFilePath);
+        catch (IOException ex) {
+            System.err.println("Error writing file " + sourceFilePath);
             ex.printStackTrace();
         }
         finally {
@@ -698,9 +699,9 @@ public class DB {
      *
      *  @return The set of relations in the knowledge base.
      */
-    private ArrayList getRelations(KB kb) {
+    private List getRelations(KB kb) {
 
-        ArrayList relations = new ArrayList();
+        List relations = new ArrayList();
         synchronized (kb.getTerms()) {
             for (String term : kb.getTerms()) {
                 if (kb.isInstanceOf(term, "Predicate"))
@@ -719,24 +720,26 @@ public class DB {
      *
      * @param relations - the relations that form the column header
      */
-    public void printSpreadsheet(TreeMap rows, ArrayList relations) {
+    public void printSpreadsheet(Map rows, List relations) {
 
         StringBuilder line = new StringBuilder();
         line.append("Domain/Range,");
+        String relation, term;
         for (int i = 0; i < relations.size(); i++) {
-            String relation = (String) relations.get(i);
+            relation = (String) relations.get(i);
             line.append(relation);
             if (i < relations.size()-1)
                 line.append(",");
         }
         System.out.println(line);
         Iterator it = rows.keySet().iterator();
+        Map row;
         while (it.hasNext()) {
-            String term = (String) it.next();
-            TreeMap row = (TreeMap) rows.get(term);
+            term = (String) it.next();
+            row = (TreeMap) rows.get(term);
             System.out.print(term + ",");
             for (int i = 0; i < relations.size(); i++) {
-                String relation = (String) relations.get(i);
+                relation = (String) relations.get(i);
                 if (row.get(relation) == null)
                     System.out.print(",");
                 else {
@@ -748,7 +751,6 @@ public class DB {
                     System.out.println();
             }
         }
-        return;
     }
 
     /** ***************************************************************
@@ -760,22 +762,25 @@ public class DB {
      */
     public void exportTable(KB kb) {
 
-        ArrayList relations = getRelations(kb);
-        ArrayList usedRelations = new ArrayList();
-        TreeMap rows = new TreeMap();
-        TreeMap row;
+        List relations = getRelations(kb);
+        List usedRelations = new ArrayList();
+        Map rows = new TreeMap();
+        Map row;
+        String term, arg1, arg2, element;
+        List statements;
+        Formula f;
         for (Iterator itr = relations.iterator(); itr.hasNext();) {
-            String term = (String) itr.next();
-            List statements = kb.ask("arg",0,term);
+            term = (String) itr.next();
+            statements = kb.ask("arg",0,term);
             if (statements != null) {
-                row = new TreeMap();
+//                row = new TreeMap();
                 for (Iterator its = statements.iterator(); its.hasNext();) {
-                    Formula f = (Formula) its.next();
-                    String arg1 = f.getStringArgument(1);
+                    f = (Formula) its.next();
+                    arg1 = f.getStringArgument(1);
                     if (Character.isUpperCase(arg1.charAt(0)) && !arg1.endsWith("Fn")) {
                         if (!usedRelations.contains(term))
                             usedRelations.add(term);
-                        String arg2 = f.getStringArgument(2);
+                        arg2 = f.getStringArgument(2);
                         if (rows.get(f.getArgument(1)) == null) {
                             row = new TreeMap();
                             rows.put(arg1,row);
@@ -785,7 +790,7 @@ public class DB {
                         if (row.get(term) == null)
                             row.put(term,f.getArgument(2));
                         else {
-                            String element = (String) row.get(term);
+                            element = (String) row.get(term);
                             element = element + "/" + f.getArgument(2);
                             row.put(term,element);
                         }
@@ -818,27 +823,26 @@ public class DB {
     }
 
     /** *******************************************************************
-     */
+     */ // TODO: not used
     public static void RearDBtoKIF() {
 
         LineNumberReader lnr = null;
         PrintWriter pw = null;
         // key is table name, value is a list of relation names for the table
-        TreeMap<String,ArrayList> tables = new TreeMap<String,ArrayList>();
+        Map<String,List> tables = new TreeMap<>();
         // key is relation name, value is table names that share the relation name
-        TreeMap<String,ArrayList<String>> ids = new TreeMap<String,ArrayList<String>>();
+        Map<String,List<String>> ids = new TreeMap<>();
         // Each of the fields in the table, indexed by tableName+fieldName
-        TreeMap<String,String> fields = new TreeMap<String,String>();
+        Map<String,String> fields = new TreeMap<>();
         try {
             File fin  = new File("RearDB.csv");
-            FileReader fr = new FileReader(fin);
+            Reader fr = new FileReader(fin);
             File fout  = new File("Rear.kif");
             pw = new PrintWriter(fout);
             if (fr != null) {
                 lnr = new LineNumberReader(fr);
-                String line = null;
-                String oldCell = "";
-                String newCell = "";
+                String line;
+                String oldCell, newCell;
                 int count = 0;
                 while ((line = lnr.readLine()) != null) {
                     line = line.trim();
@@ -859,11 +863,11 @@ public class DB {
                         fields.put(table + "|" + relation,comment);
                         if (!StringUtil.emptyString(table)) {
                             if (tables.keySet().contains(table)) {
-                                ArrayList al = tables.get(table);
+                                List al = tables.get(table);
                                 al.add(relation);
                             }
                             else {
-                                ArrayList al = new ArrayList();
+                                List al = new ArrayList();
                                 al.add(relation);
                                 tables.put(table,al);
                             }
@@ -871,11 +875,11 @@ public class DB {
                                 if (relation.endsWith("_ID")) {
                                     pw.println(";; ID relation: " + relation);
                                     if (ids.keySet().contains(relation)) {
-                                        ArrayList al = ids.get(relation);
+                                        List al = ids.get(relation);
                                         al.add(table);
                                     }
                                     else {
-                                        ArrayList al = new ArrayList();
+                                        List al = new ArrayList();
                                         al.add(table);
                                         ids.put(relation,al);
                                     }
@@ -888,20 +892,16 @@ public class DB {
                 }
                 pw.println(";; " + count + " lines read from .csv file");
                 pw.println(";; class defs");
-                Iterator it = tables.keySet().iterator();
-                while (it.hasNext()) {
-                    String key = (String) it.next();
-                    ArrayList value = (ArrayList) tables.get(key);
+                for (String key : tables.keySet()) {
+                    List value = (ArrayList) tables.get(key);
                     pw.println("(subclass " + key + " Entity)");
                     for (int i = 0; i < value.size(); i++) {
                         String field = (String) value.get(i);
                     }
                 }
                 pw.println(";; related");
-                it = ids.keySet().iterator();
-                while (it.hasNext()) {
-                    String key = (String) it.next();
-                    ArrayList value = (ArrayList) ids.get(key);
+                for (String key : ids.keySet()) {
+                    List value = (ArrayList) ids.get(key);
                     pw.print("(" + key);
                     for (int i = 0; i < value.size(); i++) {
                         String t = (String) value.get(i);
@@ -915,20 +915,20 @@ public class DB {
             pw.flush();
         }
         catch (IOException ioe) {
-            System.out.println("File error: " + ioe.getMessage());
+            System.err.println("File error: " + ioe.getMessage());
         }
         finally {
             try {
                 if (lnr != null) lnr.close();
             }
-            catch (Exception e) {
-                System.out.println("Exception in RearDBtoKIF()");
+            catch (IOException e) {
+                System.err.println("Exception in RearDBtoKIF()");
             }
             try {
                 if (pw != null) pw.close();
             }
             catch (Exception e) {
-                System.out.println("Exception in RearDBtoKIF()");
+                System.err.println("Exception in RearDBtoKIF()");
             }
         }
     }
@@ -940,10 +940,8 @@ public class DB {
         StringBuilder result = new StringBuilder();
         cuisine = StringUtil.removeEnclosingQuotes(cuisine);
         String[] al = cuisine.split(",");
-        for (int i = 0; i < al.length; i++) {
-            result.append("(=>\n  (and\n    (instance ?X Eating)\n    (located ?X Rest-" + RST_RESTAURANTNAME + "-" + RST_RESTAURANTID + ")\n" +
-                    "    (instance ?Y (FoodForFn Human))\n    (patient ?X ?Y))\n" +
-                    "  (attribute ?Y " + StringUtil.stringToKIF(al[i].trim(),true) + "Cuisine))\n");
+        for (String al1 : al) {
+            result.append("(=>\n  (and\n    (instance ?X Eating)\n    (located ?X Rest-").append(RST_RESTAURANTNAME).append("-").append(RST_RESTAURANTID).append(")\n    (instance ?Y (FoodForFn Human))\n    (patient ?X ?Y))\n  (attribute ?Y ").append(StringUtil.stringToKIF(al1.trim(), true)).append("Cuisine))\n");
         }
         return result.toString();
     }
@@ -954,51 +952,52 @@ public class DB {
      * @return a list of attribute value pairs where the count is in
      * the attribute and the SUMO term is the value
      */
-    public static ArrayList<AVPair> topSUMOInReviews(ArrayList<Hotel> reviews) {
+    public static List<AVPair> topSUMOInReviews(List<Hotel> reviews) {
 
         System.out.println("INFO in topSUMOInReviews()");
-        ArrayList<AVPair> result = new ArrayList<AVPair>();
-        HashMap<String,Integer> countMap = wordSensesInReviews(reviews);
-        HashMap<String,Integer> newCountMap = new HashMap<String,Integer>();
-        Iterator i = countMap.keySet().iterator();
-        while (i.hasNext()) {
-            String s = (String) i.next();
-            String SUMO = WordNet.wn.getSUMOMapping(s);
+        List<AVPair> result = new ArrayList<>();
+        Map<String,Integer> countMap = wordSensesInReviews(reviews);
+        Map<String,Integer> newCountMap = new HashMap<>();
+        String SUMO;
+        int val1, val2;
+        for (String s : countMap.keySet()) {
+            SUMO = WordNet.wn.getSUMOMapping(s);
             SUMO = WordNetUtilities.getBareSUMOTerm(SUMO);
-            if (!StringUtil.emptyString(SUMO) && SUMO.indexOf("&%") < 0 && !stopConcepts.contains(SUMO)) {
+            if (!StringUtil.emptyString(SUMO) && !SUMO.contains("&%") && !stopConcepts.contains(SUMO)) {
                 if (newCountMap.keySet().contains(SUMO)) {
-                    int val1 = newCountMap.get(SUMO).intValue();
-                    int val2 = countMap.get(s).intValue();
-                    newCountMap.put(SUMO,Integer.valueOf(val1 + val2));
+                    val1 = newCountMap.get(SUMO);
+                    val2 = countMap.get(s);
+                    newCountMap.put(SUMO, val1 + val2);
                 }
                 else {
-                    int val2 = countMap.get(s).intValue();
-                    newCountMap.put(SUMO,Integer.valueOf(val2));
+                    val2 = countMap.get(s);
+                    newCountMap.put(SUMO, val2);
                 }
             }
             if (newCountMap.keySet().size() % 100 == 0)
                 System.out.print('.');
         }
         System.out.println();
-        HashSet<String> resultSet = new HashSet<String>(); // set of synsets that have been examined
+        Set<String> resultSet = new HashSet<>(); // set of synsets that have been examined
+        int max, count;
+        String maxSUMO;
+        AVPair avp;
         while (resultSet.size() < newCountMap.keySet().size()) {
-            int max = 0;
-            String maxSUMO = "";
-            Iterator it = newCountMap.keySet().iterator();
-            while (it.hasNext()) {
-                String SUMO = (String) it.next();
-                if (!resultSet.contains(SUMO)) {
-                    int count = newCountMap.get(SUMO).intValue();
+            max = 0;
+            maxSUMO = "";
+            for (String SMO : newCountMap.keySet()) {
+                if (!resultSet.contains(SMO)) {
+                    count = newCountMap.get(SMO);
                     if (count > max) {
                         max = count;
-                        maxSUMO = SUMO;
+                        maxSUMO = SMO;
                     }
                 }
             }
             resultSet.add(maxSUMO);
             //System.out.println("INFO in topSUMOInReviews(): " + maxSUMO);
             if (!StringUtil.emptyString(maxSUMO)) {
-                AVPair avp = new AVPair();
+                avp = new AVPair();
                 avp.attribute = String.valueOf(max);
                 avp.value = maxSUMO;
                 result.add(avp);
@@ -1011,27 +1010,23 @@ public class DB {
      * @return a map of all the word senses used in the reviews and
      * a count of their appearances
      */
-    public static HashMap<String,Integer> wordSensesInReviews(ArrayList<Hotel> reviews) {
+    public static Map<String,Integer> wordSensesInReviews(List<Hotel> reviews) {
 
         System.out.println("INFO in wordSensesInReviews()");
         disambigReviews(reviews);
-        HashMap<String,Integer> countMap = new HashMap<String,Integer>();  // synset, count of usages
+        Map<String,Integer> countMap = new HashMap<>();  // synset, count of usages
         int i = 0;
-        Iterator it = reviews.iterator();
-        while (it.hasNext()) {
-            Hotel h = (Hotel) it.next();
+        for (Hotel h : reviews) {
             if (h != null && h.senses != null) {
-                Iterator<String> it2 = h.senses.keySet().iterator();
-                while (it2.hasNext()) {
-                    String synset = it2.next();
+                for (String synset : h.senses.keySet()) {
                     if (countMap.keySet().contains(synset)) {
                         Integer in = countMap.get(synset);
-                        countMap.put(synset,Integer.valueOf(in.intValue() + h.senses.get(synset).intValue()));
+                        countMap.put(synset, in + h.senses.get(synset));
                     }
                     else
-                        countMap.put(synset,Integer.valueOf(1));
+                        countMap.put(synset, 1);
                     if (i % 100 == 0)
-                        System.out.print('.');
+                        System.out.println('.');
                     i++;
                 }
             }
@@ -1041,22 +1036,22 @@ public class DB {
     }
 
     /** *************************************************************
-     * @return a side effect on reviews of setting the SUMO list
+     * process a side effect on reviews of setting the SUMO list
      */
-    public static void SUMOReviews(ArrayList<Hotel> reviews) {
+    public static void SUMOReviews(List<Hotel> reviews) {
 
+        Hotel h;
+        String SUMO;
         for (int i = 0; i < reviews.size(); i++) {
-            Hotel h = reviews.get(i);
-            Iterator<String> it = h.senses.keySet().iterator();
-            while (it.hasNext()) {
-                String s = it.next();
-                String SUMO = WordNet.wn.getSUMOMapping(s);
+            h = reviews.get(i);
+            for (String s : h.senses.keySet()) {
+                SUMO = WordNet.wn.getSUMOMapping(s);
                 SUMO = WordNetUtilities.getBareSUMOTerm(SUMO);
                 if (!StringUtil.emptyString(SUMO)) {
                     if (!h.SUMO.keySet().contains(SUMO))
                         h.SUMO.put(SUMO,h.senses.get(s));
                     else
-                        h.SUMO.put(SUMO,Integer.valueOf(h.senses.get(s).intValue() + h.SUMO.get(SUMO).intValue()));
+                        h.SUMO.put(SUMO, h.senses.get(s) + h.SUMO.get(SUMO));
                 }
             }
         }
@@ -1064,9 +1059,9 @@ public class DB {
 
     /** *************************************************************
      * @param hotels an ArrayList of Hotel with reviews as text
-     * @return set synset values as a side effect
+     * process synset values as a side effect
      */
-    public static void disambigReviews(ArrayList<Hotel> hotels) {
+    public static void disambigReviews(List<Hotel> hotels) {
 
         /*
         System.out.println("INFO in disambigReviews()");
@@ -1149,7 +1144,7 @@ public class DB {
     }
 
     /** *******************************************************************
-     */
+     */ // TODO: not used
     public static void DiningDBImport() {
 
         List<List<String>> f = DB.readSpreadsheet("dining.csv",null,false);
@@ -1200,12 +1195,13 @@ public class DB {
      * @return a list of SUMO terms that are the best guess at classes for
      * each word
      */
-    public static ArrayList<String> getWordSenses(ArrayList<String> al) {
+    public static List<String> getWordSenses(List<String> al) {
 
         //System.out.println("INFO in DB.getWordSenses()");
-        ArrayList<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
+        String term;
         for (int i = 0; i < al.size(); i++) {
-            String term = WordNet.wn.getSUMOMapping(WSD.findWordSenseInContext(al.get(i),al));
+            term = WordNet.wn.getSUMOMapping(WSD.findWordSenseInContext(al.get(i),al));
             if (!DB.emptyString(term))
                 result.add(term);
             else {
@@ -1310,7 +1306,7 @@ public class DB {
         Matcher m2;
         String description;
         String[] words;
-        List<String> al, terms;
+        List<String> al = new ArrayList<>(), terms;
         while (m.find()) {
             code = m.group(1);
             content = m.group(2);
@@ -1337,7 +1333,7 @@ public class DB {
                 //System.out.println("INFO in DB.parseRestaurantMenu(): content: " + content);
                 //System.out.println("INFO in DB.parseRestaurantMenu(): words: " + words);
                 //System.out.println("INFO in DB.parseRestaurantMenu(): num words: " + words.length);
-                al = new ArrayList<>();
+                al.clear();
                 al.addAll(Arrays.asList(words));
                 //System.out.println("INFO in DB.parseRestaurantMenu(): al: " + al);
                 terms = getFoodWordSenses(al);
@@ -1377,38 +1373,36 @@ public class DB {
      * lat/lon, which is returned as an ArrayList of two String elements
      * containing a real-number format latitude and longitude.
      */
-    public static ArrayList<String> geocode(String address) {
+    public static List<String> geocode(String address) {
 
-        ArrayList<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         String urlStart = "http://maps.googleapis.com/maps/api/geocode/xml?address=";
         String urlEnd = "&sensor=false";
-        String encoded = "";
+        String encoded;
         try {
             encoded = URLEncoder.encode(address,"US-ASCII");
         }
-        catch (Exception e) {
+        catch (UnsupportedEncodingException e) {
             e.printStackTrace();
             return result;
         }
-        URL url = null;
-        InputStream is = null;
-        LineNumberReader lnr = null;
-        String line;
+        URL url;
         try {
             url = new URL(urlStart + encoded + urlEnd);
-            is = url.openStream();  // throws an IOException
-            SimpleDOMParser sdp = new SimpleDOMParser();
-            SimpleElement se = sdp.parse(new LineNumberReader(new InputStreamReader(is)));
-            SimpleElement res = se.getChildByFirstTag("result");
-            if (res != null) {
-                SimpleElement geo = res.getChildByFirstTag("geometry");
-                if (geo != null) {
-                    SimpleElement loc = geo.getChildByFirstTag("location");
-                    if (loc != null) {
-                        SimpleElement lat = loc.getChildByFirstTag("lat");
-                        result.add(lat.getText());
-                        SimpleElement lng = loc.getChildByFirstTag("lng");
-                        result.add(lng.getText());
+            try (InputStream is = url.openStream()) {  // throws an IOException
+                SimpleDOMParser sdp = new SimpleDOMParser();
+                SimpleElement se = sdp.parse(new LineNumberReader(new InputStreamReader(is)));
+                SimpleElement res = se.getChildByFirstTag("result");
+                if (res != null) {
+                    SimpleElement geo = res.getChildByFirstTag("geometry");
+                    if (geo != null) {
+                        SimpleElement loc = geo.getChildByFirstTag("location");
+                        if (loc != null) {
+                            SimpleElement lat = loc.getChildByFirstTag("lat");
+                            result.add(lat.getText());
+                            SimpleElement lng = loc.getChildByFirstTag("lng");
+                            result.add(lng.getText());
+                        }
                     }
                 }
             }
@@ -1418,13 +1412,6 @@ public class DB {
         }
         catch (IOException ioe) {
              ioe.printStackTrace();
-        }
-        finally {
-            try {
-                is.close();
-            } catch (IOException ioe) {
-                ioe.printStackTrace();
-            }
         }
         //System.out.println("INFO in DB.geocode(): " + address);
         if (result != null && result.size() == 2 &&
@@ -1439,12 +1426,13 @@ public class DB {
 
     /** *************************************************************
      */
-    public static String printTopSUMOInReviews(ArrayList<AVPair> topSUMO) {
+    public static String printTopSUMOInReviews(List<AVPair> topSUMO) {
 
         StringBuilder result = new StringBuilder();
+        AVPair avp;
         for (int i = 0; i < topSUMO.size(); i++) {
-            AVPair avp = topSUMO.get(i);
-            result.append(avp.attribute + " " + avp.value + "\n");
+            avp = topSUMO.get(i);
+            result.append(avp.attribute).append(" ").append(avp.value).append("\n");
         }
         return result.toString();
     }
@@ -1522,7 +1510,7 @@ public class DB {
     /** *************************************************************
      *  Fill out from a CSV file a set of concepts that should be ignored
      *  during content extraction
-        @return void side effect on static variable "stopConcept"
+     *  process side effect on static variable "stopConcept"
      */
     public static void readStopConceptArray() {
 
@@ -1662,7 +1650,7 @@ public class DB {
             }
         }
         catch (IOException ioe) {
-            System.out.println("Error in DB.computeConceptSentimentFromFile() reading : " + filename);
+            System.err.println("Error in DB.computeConceptSentimentFromFile() reading : " + filename);
             ioe.printStackTrace();
         }
         return result;
@@ -1778,7 +1766,7 @@ public class DB {
      */
     public static void textSentiment() {
 
-    	Map<String,Integer> totalSent = new HashMap<String,Integer>();
+    	Map<String,Integer> totalSent = new HashMap<>();
         List<List<String>> f = DB.readSpreadsheet("t_filtered.csv",null,false,'\t');
         System.out.println("INFO in DB.textSentiment() : read spreadsheet with " + f.size() + " rows");
         List<String> al;
@@ -1802,41 +1790,29 @@ public class DB {
      */
     public static void textFileSentiment(String fname, boolean neg) {
 
-        LineNumberReader lnr = null;
-        try {
-            File fin  = new File(fname);
-            FileReader fr = new FileReader(fin);
-            if (fr != null) {
-                lnr = new LineNumberReader(fr);
-                String line = null;
-                while ((line = lnr.readLine()) != null) {
-                    line = StringUtil.removePunctuation(line);
-                    int sent = computeSentiment(line);
-                    if (neg) {
-                        if (sent < 0)
-                            System.out.println(line + ", " + sent + ", 1");
-                        else
-                            System.out.println(line + ", " + sent + ", 0");
-                    }
-                    else {
-                        if (sent > 0)
-                            System.out.println(line + ", " + sent + ", 1");
-                        else
-                            System.out.println(line + ", " + sent + ", 0");
-                    }
+       File fin  = new File(fname);
+       try (Reader fr = new FileReader(fin);
+            LineNumberReader lnr = new LineNumberReader(fr)) {
+            String line;
+            while ((line = lnr.readLine()) != null) {
+                line = StringUtil.removePunctuation(line);
+                int sent = computeSentiment(line);
+                if (neg) {
+                    if (sent < 0)
+                        System.out.println(line + ", " + sent + ", 1");
+                    else
+                        System.out.println(line + ", " + sent + ", 0");
+                }
+                else {
+                    if (sent > 0)
+                        System.out.println(line + ", " + sent + ", 1");
+                    else
+                        System.out.println(line + ", " + sent + ", 0");
                 }
             }
         }
         catch (IOException ioe) {
-            System.out.println("File error: " + ioe.getMessage());
-        }
-        finally {
-            try {
-                if (lnr != null) lnr.close();
-            }
-            catch (Exception e) {
-                System.out.println("Exception in textFileSentiment()" + e.getMessage());
-            }
+            System.err.println("File error: " + ioe.getMessage());
         }
     }
 
@@ -1924,7 +1900,7 @@ public class DB {
      */
     public static void main (String args[]) {
         /*
-    TreeSet<String> result = new TreeSet<String>();
+    Set<String> result = new TreeSet<>();
     */
 
         if (args[0].equals("-help") || StringUtil.emptyString(args[0]) ) {

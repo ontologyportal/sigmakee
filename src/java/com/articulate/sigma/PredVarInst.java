@@ -407,7 +407,7 @@ public class PredVarInst {
         }
         catch (IllegalArgumentException e){
             System.err.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
-            return e.getMessage();
+            res = e.getMessage();
         }
         return res;
     }

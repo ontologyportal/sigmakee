@@ -36,6 +36,9 @@ public class SUMOKBtoTPTPKB {
 
     public Set<String> alreadyWrittenTPTPs = new HashSet<>();
 
+    /** Progress bar text capture */
+    private StringBuilder progressSb = new StringBuilder();
+
     /** *************************************************************
      */
     public SUMOKBtoTPTPKB() {
@@ -306,9 +309,10 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
+     * Conventional version
      * @deprecated
      */
-    @Deprecated
+    @Deprecated(forRemoval = true)
     private String _writeFile(String fileName, Formula conjecture,
                             boolean isQuestion, PrintWriter pw) {
 
@@ -355,9 +359,12 @@ public class SUMOKBtoTPTPKB {
                     pw.println("% not higher order");
                 if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
                     continue;
-                if (counter++ % 100 == 0) System.out.print(".");
-                if ((counter % 4000) == 1)
+                if (counter++ % 100 == 0) /*System.out.print(".");*/ progressSb.append(".");
+                if ((counter % 4000) == 1) {
+                    System.out.print(progressSb.toString() + "x");
+                    progressSb.setLength(0);
                     System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
+                }
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                 processed = fp.preProcess(f,false,kb);
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
@@ -459,7 +466,7 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * Experimental threading of the main loop
+     * Threaded execution of the main loop
      * @return the name of the KB translation to TPTP file
      */
     private String _tWriteFile(String fileName, Formula conjecture,
@@ -482,6 +489,7 @@ public class SUMOKBtoTPTPKB {
             Future<?> future;
             int total = orderedFormulae.size();
             List<Future<?>> futures = new ArrayList<>();
+            StringBuilder sb = new StringBuilder();
             for (Formula formula : orderedFormulae) {
                 Runnable r = () -> {
                     Formula f = formula;
@@ -515,9 +523,13 @@ public class SUMOKBtoTPTPKB {
 
                         if (!KBmanager.getMgr().prefEquals("cache","yes") && f.isCached())
                             return;
-                        if (counter++ % 100 == 0) System.out.print(".");
-                        if ((counter % 4000) == 1)
+                        if (counter++ % 100 == 0) /*System.out.print(".");*/ sb.append(".");
+                        if ((counter % 4000) == 1) {
+                            System.out.print(sb.toString() + "x");
+                            sb.setLength(0);
+//                            System.out.println("x");
                             System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
+                        }
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                         processed = fp.preProcess(f,false,kb);
                         if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : processed: " + processed);
