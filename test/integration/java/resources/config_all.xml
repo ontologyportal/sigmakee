@@ -11,7 +11,7 @@
   <preference name="https" value="false" />
   <preference name="imageFormat" value="png"/>
   <preference name="inferenceTestDir" value="/home/theuser/.sigmakee/KBs/tests" />
-  <preference name="jedit" value="jedit" />
+  <preference name="jedit" value="/usr/share/jedit/jedit" />
   <preference name="kbDir" value="/home/theuser/.sigmakee/KBs" />
   <preference name="leoExecutable" value="/home/theuser/leo" />
   <preference name="lineNumberCommand" value="" />
