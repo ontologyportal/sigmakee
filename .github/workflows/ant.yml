@@ -104,8 +104,8 @@ jobs:
         run: |
           find $SIGMA_HOME/KBs -name '*.ser' -delete
           cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
-          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_HOME/KBs/config.xml
           sed -i '/<kb name/,/<\/kb>/d' $SIGMA_HOME/KBs/config.xml
@@ -139,9 +139,7 @@ jobs:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
         working-directory: ${{ github.workspace }}
         run: |
-          find $SIGMA_HOME/KBs -name '*.ser' -delete
-          find $SIGMA_HOME/KBs -name '*.tff' -delete
-          rm -rf $SIGMA_HOME/KBs/tests
+          find $SIGMA_HOME/KBs -name '**/*.ser' -delete
 
       - name: Upload Test Results
         uses: actions/upload-artifact@v4
@@ -151,14 +149,17 @@ jobs:
             ./sigmakee/build/test/results/*
 
       - name: Upload sigmakee jars
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+          SIGMA_SRC: ${{ github.workspace }}/sigmakee
         uses: actions/upload-artifact@v4
         with:
           name: sigma-base
           path: |
-            ./sigmakee/lib/*.jar
-            ./sigmakee/build/sigmakee.jar
-            ./sigmakee/config.xml
-            ./sigmakee-runtime
+            $SIGMA_SRC/lib/*.jar
+            $SIGMA_SRC/build/sigmakee.jar
+            $SIGMA_HOME/KBs/config.xml
+            $SIGMA_HOME
 
       - name: Upload sigmakee war
         uses: actions/upload-artifact@v4
@@ -192,14 +193,6 @@ jobs:
         uses: actions/download-artifact@v4.1.7
         with:
           name: sigma-webapp
-
-      - name: Setup SigmaKEE
-        run: |
-          ls .
-          sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" ./sigmakee/config.xml
-          cp ./sigmakee/config.xml ./sigmakee-runtime/KBs
 
       - name: Set image account name
         env:
