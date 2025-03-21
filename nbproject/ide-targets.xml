@@ -544,7 +544,7 @@
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
             <lib dir="${basedir}/lib">
                 <exclude name="junit*"/>
-                <exclude name="hamcrest*"/>
+                <exclude name="hamcrest-core*"/>
                 <exclude name="tomcat-servlet-api*"/>
             </lib>
             <classes dir="${build.classes}"/>
