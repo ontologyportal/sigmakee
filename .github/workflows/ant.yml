@@ -7,7 +7,7 @@ on:
     branches: [ "master", "main" ]
   pull_request:
     branches: [ "master", "main" ]
-    
+
 env:
   DEFAULT_DOCKER_ACCOUNT: apease
 
@@ -110,8 +110,6 @@ jobs:
       - name: Setup KB for integration tests
         env:
           SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
-          SIGMA_SRC: ${{ github.workspace }}/sigmakee
-          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
         working-directory: ${{ github.workspace }}
         run: >
           sed -i '/<\/configuration>/i\
