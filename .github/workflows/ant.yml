@@ -195,10 +195,10 @@ jobs:
         run: |
           ls .
           # Debug
-#          cat ./sigmakee-runtime/KBs/config.xml
+          #cat ./sigmakee-runtime/KBs/config.xml
           sed -i "s|/__w/sigmakee/sigmakee|/root|g" ./sigmakee-runtime/KBs/config.xml
           # Debug
-#          cat ./sigmakee-runtime/KBs/config.xml
+          #cat ./sigmakee-runtime/KBs/config.xml
 
       - name: Set image account name
         env:
