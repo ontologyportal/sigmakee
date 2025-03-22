@@ -35,4 +35,4 @@ COPY ./sigma.war $CATALINA_HOME/webapps/sigma.war
 
 ENV SIGMA_HOME=/root/sigmakee-runtime
 ENV LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
-ENV CATALINA_OPTS="$CATALINA_OPTS -Xmx10g -Xss1m"
+ENV CATALINA_OPTS="-Xmx10g -Xss1m"
