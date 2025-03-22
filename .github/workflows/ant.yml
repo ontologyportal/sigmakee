@@ -155,7 +155,6 @@ jobs:
             ./sigmakee/lib/*.jar
             !./sigmakee/lib/hamcrest-core*.jar
             !./sigmakee/lib/junit*.jar
-            !./sigmakee/lib/tomcat-servlet-api*.jar
             ./sigmakee-runtime
 
       - name: Upload sigmakee war
