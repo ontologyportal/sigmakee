@@ -648,7 +648,7 @@
 export SIGMA_HOME=$HOME/.${web.app.name}
 export ONTOLOGYPORTAL_GIT=$HOME/workspace
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
-export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
+export CATALINA_OPTS="${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
 export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
@@ -661,7 +661,7 @@ export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
 export SIGMA_HOME=$HOME/.${web.app.name}
 export ONTOLOGYPORTAL_GIT=$HOME/workspace
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
-export CATALINA_OPTS="$CATALINA_OPTS ${run.jvmargs}"
+export CATALINA_OPTS="${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
 export PATH=$CATALINA_HOME/bin:$PATH
 export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
