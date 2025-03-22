@@ -193,6 +193,9 @@ jobs:
 
       - name: Setup config
         run: |
+          # Debug
+          cat config.xml
+          cat ./sigmakee-runtime/KBs/config.xml
           ls .
           sed -i "s|/home/theuser/workspace/sumo|/root/sigmakee-runtime/KBs|g" config.xml
           sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" config.xml
@@ -212,7 +215,12 @@ jobs:
           <\/kb>' config.xml
 
       - name: Copy config
-        run: cp -f config.xml ./sigmakee-runtime/KBs
+        run: |
+          # Debug
+          cat config.xml
+          cat ./sigmakee-runtime/KBs/config.xml
+          rm -f ./sigmakee-runtime/KBs/config.xml
+          cp -f config.xml ./sigmakee-runtime/KBs
 
       - name: Set image account name
         env:
