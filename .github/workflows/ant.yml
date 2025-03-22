@@ -108,6 +108,7 @@ jobs:
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser|/root|g" $SIGMA_HOME/KBs/config.xml
           sed -i '/<kb name/,/<\/kb>/d' $SIGMA_HOME/KBs/config.xml
 
       - name: Setup KB for integration tests
@@ -199,7 +200,8 @@ jobs:
 
       - name: Setup config
         run: |
-          sed -i "s|/__w/sigmakee/sigmakee|/root|g" ./sigmakee-runtime/config.xml
+          sed -i "s|/__w/sigmakee/sigmakee/sigmakee-runtime|/root/sigmakee-runtime|g" ./sigmakee-runtime/config.xml
+          sed -i "s|/__w/sigmakee/sigmakee/sumo|/root/sigmakee-runtime/KBs|g" ./sigmakee-runtime/config.xml
 
       - name: Set image account name
         env:
