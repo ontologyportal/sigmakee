@@ -156,13 +156,13 @@ jobs:
         with:
           name: sigma-base
           path: |
-            $SIGMA_SRC/lib/*.jar
-            !$SIGMA_SRC/lib/hamcrest-core*.jar
-            !$SIGMA_SRC/lib/junit*.jar
-            !$SIGMA_SRC/lib/tomcat-servlet-api*.jar
-            $SIGMA_SRC/build/sigmakee.jar
-            $SIGMA_HOME/KBs/config.xml
-            $SIGMA_HOME
+            ./sigmakee/build/sigmakee.jar
+            ./sigmakee/lib/*.jar
+            !./sigmakee/lib/hamcrest-core*.jar
+            !./sigmakee/lib/junit*.jar
+            !./sigmakee/lib/tomcat-servlet-api*.jar
+            ./sigmakee-runtime/KBs/config.xml
+            ./sigmakee-runtime
 
       - name: Upload sigmakee war
         uses: actions/upload-artifact@v4
