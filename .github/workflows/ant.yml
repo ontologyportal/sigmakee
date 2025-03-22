@@ -56,8 +56,8 @@ jobs:
           cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
           cp -R $ONTOLOGYPORTAL_GIT/sumo/* $SIGMA_HOME/KBs
           cp /opt/WordNet-3.0/dict/* $SIGMA_HOME/KBs/WordNetMappings/
+          sed -i "s|/home/theuser/workspace/sumo|$SIGMA_HOME/KBs|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
-          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
 
       - name: Set up JDK 21 for x64
@@ -81,8 +81,8 @@ jobs:
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
         working-directory: ./sigmakee
         run: |
+          sed -i "s|/home/theuser/workspace/sumo|$SIGMA_HOME/KBs|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
-          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
           sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_SRC/test/unit/java/resources/config_topOnly.xml
 
@@ -104,7 +104,7 @@ jobs:
         run: |
           find $SIGMA_HOME/KBs -name '*.ser' -delete
           cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
-          sed -i "s|/home/theuser/workspace/sumo|$ONTOLOGYPORTAL_GIT/sumo|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/home/theuser/workspace/sumo|$SIGMA_HOME/KBs|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" $SIGMA_HOME/KBs/config.xml
@@ -119,12 +119,12 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: >
           sed -i '/<\/configuration>/i\
-          <kb name="SUMO">\n
-          <constituent filename="Merge.kif"\/>\n
-          <constituent filename="Mid-level-ontology.kif"\/>\n
-          <constituent filename="english_format.kif"\/>\n
-          <constituent filename="domainEnglishFormat.kif"\/>\n
-          <\/kb>' $SIGMA_HOME/KBs/config.xml
+            <kb name="SUMO">\n
+              <constituent filename="Merge.kif"\/>\n
+              <constituent filename="Mid-level-ontology.kif"\/>\n
+              <constituent filename="english_format.kif"\/>\n
+              <constituent filename="domainEnglishFormat.kif"\/>\n
+            <\/kb>' $SIGMA_HOME/KBs/config.xml
 
       - name: Run integration tests
         env:
@@ -175,9 +175,6 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-test-upload
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Login to Docker Hub
         if: github.event_name == 'push'
         uses: docker/login-action@v3
@@ -200,10 +197,9 @@ jobs:
 
       - name: Setup config
         env:
-          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
         run: |
-          sed -i "s|/__w/sigmakee/sigmakee/sigmakee-runtime|/root/sigmakee-runtime|g" $SIGMA_HOME/KBs/config.xml
-          sed -i "s|/__w/sigmakee/sigmakee/sumo|/root/sigmakee-runtime/KBs|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|/__w/sigmakee/sigmakee/sigmakee-runtime|/root/sigmakee-runtime|g" ./sigmakee-runtime/KBs/config.xml
+          sed -i "s|/__w/sigmakee/sigmakee/sumo|/root/sigmakee-runtime/KBs|g" ./sigmakee-runtime/KBs/config.xml
 
       - name: Set image account name
         env:
