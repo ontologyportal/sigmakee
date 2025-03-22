@@ -197,6 +197,10 @@ jobs:
         with:
           name: sigma-webapp
 
+      - name: Setup config
+        run: |
+          sed -i "s|/__w/sigmakee/sigmakee|/root|g" ./sigmakee-runtime/config.xml
+
       - name: Set image account name
         env:
           DOCKER_ACCOUNT: ${{ secrets.DOCKERHUB_USERNAME }}
