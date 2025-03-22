@@ -195,31 +195,9 @@ jobs:
         run: |
           ls .
           # Debug
-          cat ./sigmakee-runtime/KBs/config.xml
+#          cat ./sigmakee-runtime/KBs/config.xml
           sed -i "s|/__w/sigmakee/sigmakee|/root|g" ./sigmakee-runtime/KBs/config.xml
-          cat ./sigmakee-runtime/KBs/config.xml
-#          sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" ./sigmakee-runtime/KBs/config.xml
-#          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" ./sigmakee-runtime/KBs/config.xml
-#          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" ./sigmakee-runtime/KBs/config.xml
-#          sed -i "s|/home/theuser|/root|g" ./sigmakee-runtime/KBs/config.xml
-#          sed -i '/<kb name/,/<\/kb>/d' ./sigmakee-runtime/KBs/config.xml
-
-#      - name: Setup KBs in config
-#        run: >
-#          sed -i '/<\/configuration>/i\
-#          <kb name="SUMO">\n
-#          <constituent filename="Merge.kif"\/>\n
-#          <constituent filename="Mid-level-ontology.kif"\/>\n
-#          <constituent filename="english_format.kif"\/>\n
-#          <constituent filename="domainEnglishFormat.kif"\/>\n
-#          <\/kb>' config.xml
-#
-#      - name: Copy config
-#        run: |
-#          # Debug
-#          cat config.xml
-#          rm -f ./sigmakee-runtime/KBs/config.xml
-#          cp -f config.xml ./sigmakee-runtime/KBs
+          # Debug
 #          cat ./sigmakee-runtime/KBs/config.xml
 
       - name: Set image account name
