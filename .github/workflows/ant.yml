@@ -202,9 +202,6 @@ jobs:
           sed -i '/<kb name/,/<\/kb>/d' config.xml
 
       - name: Setup KBs in config
-        env:
-          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
-        working-directory: ${{ github.workspace }}
         run: >
           sed -i '/<\/configuration>/i\
           <kb name="SUMO">\n
@@ -213,7 +210,9 @@ jobs:
           <constituent filename="english_format.kif"\/>\n
           <constituent filename="domainEnglishFormat.kif"\/>\n
           <\/kb>' config.xml
-          cp config.xml ./sigmakee-runtime/KBs
+
+      - name: Copy config
+        run: cp ./config.xml ./sigmakee-runtime/KBs
 
       - name: Set image account name
         env:
