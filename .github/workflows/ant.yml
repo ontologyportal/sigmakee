@@ -196,7 +196,6 @@ jobs:
           name: sigma-webapp
 
       - name: Setup config
-        env:
         run: |
           sed -i "s|/__w/sigmakee/sigmakee/sigmakee-runtime|/root/sigmakee-runtime|g" ./sigmakee-runtime/KBs/config.xml
           sed -i "s|/__w/sigmakee/sigmakee/sumo|/root/sigmakee-runtime/KBs|g" ./sigmakee-runtime/KBs/config.xml
