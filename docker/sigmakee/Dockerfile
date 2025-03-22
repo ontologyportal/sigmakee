@@ -12,9 +12,6 @@ COPY --from=builder \
     /usr/local/bin/e_ltb_runner /usr/local/bin/e_ltb_runner
 
 COPY --from=builder \
-    /opt/WordNet-3.0 /opt/WordNet-3.0
-
-COPY --from=builder \
     /usr/local/bin/vampire /usr/local/bin/vampire
 
 COPY --from=builder \
