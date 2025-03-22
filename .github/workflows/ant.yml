@@ -119,12 +119,12 @@ jobs:
         working-directory: ${{ github.workspace }}
         run: >
           sed -i '/<\/configuration>/i\
-            <kb name="SUMO">\n
-              <constituent filename="Merge.kif"\/>\n
-              <constituent filename="Mid-level-ontology.kif"\/>\n
-              <constituent filename="english_format.kif"\/>\n
-              <constituent filename="domainEnglishFormat.kif"\/>\n
-            <\/kb>' $SIGMA_HOME/KBs/config.xml
+          <kb name="SUMO">\n
+          <constituent filename="Merge.kif"\/>\n
+          <constituent filename="Mid-level-ontology.kif"\/>\n
+          <constituent filename="english_format.kif"\/>\n
+          <constituent filename="domainEnglishFormat.kif"\/>\n
+          <\/kb>' $SIGMA_HOME/KBs/config.xml
 
       - name: Run integration tests
         env:
