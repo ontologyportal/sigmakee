@@ -156,7 +156,6 @@ jobs:
             !./sigmakee/lib/hamcrest-core*.jar
             !./sigmakee/lib/junit*.jar
             !./sigmakee/lib/tomcat-servlet-api*.jar
-            ./sigmakee/config.xml
             ./sigmakee-runtime
 
       - name: Upload sigmakee war
@@ -201,6 +200,12 @@ jobs:
           sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" ./sigmakee/config.xml
           sed -i "s|/home/theuser|/root|g" ./sigmakee/config.xml
           sed -i '/<kb name/,/<\/kb>/d' ./sigmakee/config.xml
+
+      - name: Setup KBs in config
+        env:
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
+        working-directory: ${{ github.workspace }}
+        run: >
           sed -i '/<\/configuration>/i\
           <kb name="SUMO">\n
           <constituent filename="Merge.kif"\/>\n
