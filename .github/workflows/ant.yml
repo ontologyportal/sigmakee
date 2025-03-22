@@ -53,12 +53,8 @@ jobs:
           echo "SIGMA_SRC: $SIGMA_SRC"
           echo "ONTOLOGYPORTAL_GIT: $ONTOLOGYPORTAL_GIT"
           mkdir -p $SIGMA_HOME/KBs/WordNetMappings
-          cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
           cp -R $ONTOLOGYPORTAL_GIT/sumo/* $SIGMA_HOME/KBs
           cp /opt/WordNet-3.0/dict/* $SIGMA_HOME/KBs/WordNetMappings/
-          sed -i "s|/home/theuser/workspace/sumo|$SIGMA_HOME/KBs|g" $SIGMA_HOME/KBs/config.xml
-          sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
-          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" $SIGMA_HOME/KBs/config.xml
 
       - name: Set up JDK 21 for x64
         uses: actions/setup-java@v4
@@ -102,7 +98,7 @@ jobs:
           ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
         working-directory: ${{ github.workspace }}
         run: |
-          find $SIGMA_HOME/KBs -name '*.ser' -delete
+          find $SIGMA_HOME/KBs -name '**/*.ser' -delete
           cp $SIGMA_SRC/config.xml $SIGMA_HOME/KBs
           sed -i "s|/home/theuser/workspace/sumo|$SIGMA_HOME/KBs|g" $SIGMA_HOME/KBs/config.xml
           sed -i "s|/home/theuser/.sigmakee|$SIGMA_HOME|g" $SIGMA_HOME/KBs/config.xml
@@ -198,9 +194,12 @@ jobs:
           name: sigma-webapp
 
       - name: Setup config
+        env:
+          ONTOLOGYPORTAL_GIT: ${{ github.workspace }}
+          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
         run: |
-          sed -i "s|/__w/sigmakee/sigmakee/sigmakee-runtime|/root/sigmakee-runtime|g" ./sigmakee-runtime/KBs/config.xml
-          sed -i "s|/__w/sigmakee/sigmakee/sumo|/root/sigmakee-runtime/KBs|g" ./sigmakee-runtime/KBs/config.xml
+          sed -i "s|$SIGMA_HOME|/root/sigmakee-runtime|g" $SIGMA_HOME/KBs/config.xml
+          sed -i "s|$ONTOLOGYPORTAL_GIT/sumo|/root/sigmakee-runtime/KBs|g" $SIGMA_HOME/KBs/config.xml
 
       - name: Set image account name
         env:
