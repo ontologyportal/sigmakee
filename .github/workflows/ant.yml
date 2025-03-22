@@ -212,7 +212,7 @@ jobs:
           <\/kb>' config.xml
 
       - name: Copy config
-        run: cp ./config.xml ./sigmakee-runtime/KBs
+        run: cp -f config.xml ./sigmakee-runtime/KBs
 
       - name: Set image account name
         env:
