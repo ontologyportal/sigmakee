@@ -194,12 +194,12 @@ jobs:
       - name: Setup config
         run: |
           ls .
-          sed -i "s|/home/theuser/workspace/sumo|/root/sigmakee-runtime/KBs|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" ./sigmakee/config.xml
-          sed -i "s|/home/theuser|/root|g" ./sigmakee/config.xml
-          sed -i '/<kb name/,/<\/kb>/d' ./sigmakee/config.xml
+          sed -i "s|/home/theuser/workspace/sumo|/root/sigmakee-runtime/KBs|g" config.xml
+          sed -i "s|/home/theuser/.sigmakee|/root/sigmakee-runtime|g" config.xml
+          sed -i "s|/home/theuser/E/bin/e_ltb_runner|/usr/local/bin/e_ltb_runner|g" config.xml
+          sed -i "s|/home/theuser/Programs/vampire/build/vampire|/usr/local/bin/vampire|g" config.xml
+          sed -i "s|/home/theuser|/root|g" config.xml
+          sed -i '/<kb name/,/<\/kb>/d' config.xml
 
       - name: Setup KBs in config
         env:
@@ -212,7 +212,8 @@ jobs:
           <constituent filename="Mid-level-ontology.kif"\/>\n
           <constituent filename="english_format.kif"\/>\n
           <constituent filename="domainEnglishFormat.kif"\/>\n
-          <\/kb>' ./sigmakee/config.xml
+          <\/kb>' config.xml
+          cp config.xml ./sigmakee-runtime/KBs
 
       - name: Set image account name
         env:
