@@ -144,9 +144,6 @@ jobs:
             ./sigmakee/build/test/results/*
 
       - name: Upload sigmakee jars
-        env:
-          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
-          SIGMA_SRC: ${{ github.workspace }}/sigmakee
         uses: actions/upload-artifact@v4
         with:
           name: sigma-base
