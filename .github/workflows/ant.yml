@@ -207,8 +207,6 @@ jobs:
         with:
           context: .
           file: docker/sumo-ci/Dockerfile
-          build-args: |
-            IMAGE_ACCOUNT=${{ env.IMAGE_ACCOUNT }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.IMAGE_ACCOUNT }}/sumo-ci:latest
           platforms: linux/amd64,linux/arm64
@@ -220,8 +218,6 @@ jobs:
         with:
           context: .
           file: docker/sigmakee/Dockerfile
-          build-args: |
-            IMAGE_ACCOUNT=${{ env.IMAGE_ACCOUNT }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.IMAGE_ACCOUNT }}/sigmakee:latest
           platforms: linux/amd64,linux/arm64
