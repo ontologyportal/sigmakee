@@ -10,6 +10,8 @@ cd $ONTOLOGYPORTAL_GIT/sigmakee
 git pull
 cd $ONTOLOGYPORTAL_GIT/TPTP-ANTLR
 git pull
+cd $ONTOLOGYPORTAL_GIT/sigmaAntlr
+git pull
 $CATALINA_HOME/bin/shutdown.sh
 echo "waiting 10 seconds"
 sleep 10
