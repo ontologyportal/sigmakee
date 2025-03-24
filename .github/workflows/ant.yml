@@ -225,6 +225,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Docker Hub Description
+        if: github.event_name == 'push'
         uses: peter-evans/dockerhub-description@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
