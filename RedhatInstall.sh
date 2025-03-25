@@ -1,4 +1,7 @@
 #!/bin/bash
+#################################
+# NOTE! This is experimental and has only been tested on one RedHat server
+#################################
 
 echo "Installing Sigma"
 echo "Downloading prerequisites"
@@ -9,8 +12,7 @@ sudo yum install -y unzip
 # Install git
 sudo yum install -y git
 
-# Install ant
-sudo yum install -y ant
+# Install ant - must be manual on Redhat since yum ant requires JDK 1.8
 
 # Install make
 sudo yum install -y make
@@ -24,14 +26,21 @@ sudo yum install -y gcc
 # Install graphviz
 sudo yum install -y graphviz
 
+sudo yum install -y httpd
+
 # Install build-essential (required for compiling Vampire)
 sudo yum groupinstall "Development Tools"
 
-# Install OpenJDK 23
-sudo yum install -y default-jdk
+# Install OpenJDK 21
+sudo yum install java-21-openjdk-devel
+
+# uncomment to have a web server for installation on a server
+# sudo yum install -y httpd
+# sudo systemctl enable httpd  # For CentOS/RHEL
+# echo '<h1>default page</h1>' > /home/www/html/index.html
 
 # Add universe repository and update
-sudo add-apt-repository -y universe
+# sudo add-apt-repository -y universe # not for RedHat
 sudo yum update
 
 echo "Pre-requisites have been installed."
@@ -64,7 +73,6 @@ add_to_bashrc "export ONTOLOGYPORTAL_GIT=\"\$HOME/workspace\""
 add_to_bashrc "export SIGMA_SRC=\"\$ONTOLOGYPORTAL_GIT/sigmakee\""
 add_to_bashrc "export CATALINA_OPTS=\"\$CATALINA_OPTS -Xmx10g -Xss1m\""
 add_to_bashrc "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.97\""
-add_to_bashrc "export PATH=\"\$CATALINA_HOME/bin:\$PATH\""
 add_to_bashrc "export SIGMA_CP=\"\$SIGMA_SRC/build/sigmakee.jar:\$SIGMA_SRC/lib/*\""
 
 # Source the .bashrc file to apply changes
@@ -79,6 +87,15 @@ else
     echo "Programs directory already exists in $HOME."
 fi
 cd "$HOME/Programs"
+
+#install ant
+
+wget https://dlcdn.apache.org//ant/binaries/apache-ant-1.10.15-bin.zip
+unzip apache-ant-1.10.15-bin.zip 
+
+add_to_bashrc "export JAVA_HOME=\"/usr/lib/jvm/java-21-openjdk-21.0.6.0.7-1.el8.x86_64\""
+add_to_bashrc "export ANT_HOME=\"/home/apease/Programs/apache-ant-1.10.15\""
+add_to_bashrc "export PATH=\"\$CATALINA_HOME/bin:\$ANT_HOME/bin:\$PATH\""
 
 # Create the workspace directory and navigate into it
 if [ ! -d "$HOME/workspace" ]; then
