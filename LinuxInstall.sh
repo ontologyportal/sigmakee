@@ -104,6 +104,7 @@ REPOS=(
     "https://github.com/ontologyportal/sigmakee"
     "https://github.com/ontologyportal/sumo"
     "https://github.com/ontologyportal/TPTP-ANTLR"
+    "https://github.com/ontologyportal/sigmaAntlr"
     "https://github.com/ontologyportal/SigmaUtils"
 )
 
