@@ -22,7 +22,6 @@ import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
 import java.util.*;
-import tptp_parser.TPTPFormula;
 
 /**
  * Class for invoking the latest research version of Vampire from Java
