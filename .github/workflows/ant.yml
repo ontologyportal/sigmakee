@@ -144,9 +144,6 @@ jobs:
             ./sigmakee/build/test/results/*
 
       - name: Upload sigmakee jars
-        env:
-          SIGMA_HOME: ${{ github.workspace }}/sigmakee-runtime
-          SIGMA_SRC: ${{ github.workspace }}/sigmakee
         uses: actions/upload-artifact@v4
         with:
           name: sigma-base
@@ -210,8 +207,6 @@ jobs:
         with:
           context: .
           file: docker/sumo-ci/Dockerfile
-          build-args: |
-            IMAGE_ACCOUNT=${{ env.IMAGE_ACCOUNT }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.IMAGE_ACCOUNT }}/sumo-ci:latest
           platforms: linux/amd64,linux/arm64
@@ -223,10 +218,16 @@ jobs:
         with:
           context: .
           file: docker/sigmakee/Dockerfile
-          build-args: |
-            IMAGE_ACCOUNT=${{ env.IMAGE_ACCOUNT }}
           push: ${{ github.event_name == 'push' }}
           tags: ${{ env.IMAGE_ACCOUNT }}/sigmakee:latest
           platforms: linux/amd64,linux/arm64
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      - name: Docker Hub Description
+        if: github.event_name == 'push'
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: ${{ env.IMAGE_ACCOUNT }}/sigmakee
