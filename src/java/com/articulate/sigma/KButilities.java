@@ -127,7 +127,7 @@ public class KButilities implements ServletContextListener {
         if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
         Map<String, Set<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
-//        KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
+        KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
             error = "inconsistent types in " + SUMOtoTFAform.varmap;
