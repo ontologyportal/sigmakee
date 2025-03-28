@@ -2982,6 +2982,7 @@ public class KB implements Serializable {
             capterms.clear();
             clearFormatMaps();
             errors.clear();
+            warnings.clear();
             Iterator<String> nci = newConstituents.iterator();
             if (nci.hasNext())
                 System.out.println("INFO in KB.reload()");

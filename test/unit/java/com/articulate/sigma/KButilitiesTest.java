@@ -6,7 +6,7 @@ import org.junit.Ignore;
 
 /**
  *
- * @author <a href="mailto:tdnorbra@nps.edu?subject=com.articulate.sigma.KIFTest">Terry Norbraten, NPS MOVES</a>
+ * @author <a href="mailto:tdnorbra@nps.edu?subject=com.articulate.sigma.KButilitiesTest">Terry Norbraten, NPS MOVES</a>
  */
 public class KButilitiesTest extends UnitTestBase {
 
@@ -26,6 +26,17 @@ public class KButilitiesTest extends UnitTestBase {
 
     String stmt2 = "(WhenFn(?STH2))"; // arg in parens
 
+    String stmt3 = "(=> " +
+                   "  (instance ?AW AmphibiousWarfare) " +
+                   "  (exists (?O ?D ?WA ?LA) " +
+                   "    (and " +
+                   "      (origin ?AW ?O) " +
+                   "      (destination ?AW ?D) " +
+                   "      (subclass ?WA WaterArea) " + // type error
+                   "      (instance ?LA LandArea) " +
+                   "      (orientation ?O ?WA On) " +
+                   "      (orientation ?D ?LA On))))";
+
     @Test // TODO: KIF won't complain about this syntax error
     @Ignore
     public void testIsValidFormula() {
@@ -39,6 +50,13 @@ public class KButilitiesTest extends UnitTestBase {
 
         System.out.println("============= KButilitiesTest.testIsValidFormula2 ==================");
         assertFalse(KButilities.isValidFormula(kb, stmt2));
+    }
+
+    @Test
+    public void testIsValidFormula3() {
+
+        System.out.println("============= KButilitiesTest.testIsValidFormula3 ==================");
+        assertFalse(KButilities.isValidFormula(kb, stmt3));
     }
 
 } // end class file KIFTest.java

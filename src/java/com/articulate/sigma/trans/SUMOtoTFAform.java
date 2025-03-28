@@ -2159,8 +2159,9 @@ public class SUMOtoTFAform {
     public static boolean inconsistentVarTypes() {
 
         String msg;
+        Set<String> types;
         for (String s : varmap.keySet()) {
-            Set<String> types = varmap.get(s);
+            types = varmap.get(s);
             for (String c1 : types) {
                 for (String c2 : types) {
                     if (!c1.equals(c2)) {

@@ -868,9 +868,9 @@ public class TPTP3ProofProcessor {
             }
             if ((status.equals("Refutation") || status.equals("CounterSatisfiable")) && noConjecture) {
                 inconsistency = true;
-                System.out.println("*****************************************");
-                System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): Danger! possible inconsistency!");
-                System.out.println("*****************************************");
+                System.err.println("*****************************************");
+                System.err.println("TPTP3ProofProcessor.parseProofOutput(ar): Danger! possible inconsistency!");
+                System.err.println("*****************************************");
             }
         } catch (Exception ex) {
             System.err.println(ex.getMessage());

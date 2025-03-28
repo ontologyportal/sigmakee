@@ -491,7 +491,7 @@ public class SUMOformulaToTPTPformula {
         }
         if (f.atom())
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(),f.getFormula().charAt(0),false);
-        if (f != null && f.listP()) {
+        if (f.listP()) {
             String result = processRecurse(f);
             if (debug) System.out.println("SUMOformulaToTPTPformula.process(): result 1: " + result);
             generateQList(f);

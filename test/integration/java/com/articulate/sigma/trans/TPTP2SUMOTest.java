@@ -34,6 +34,7 @@ public class TPTP2SUMOTest {
             tptp_parser.TPTPVisitor sv = new tptp_parser.TPTPVisitor();
             sv.parseString(input);
             Map<String, tptp_parser.TPTPFormula> hm = sv.result;
+            assertTrue(!sv.result.isEmpty());
             for (String s : hm.keySet()) {
                 System.out.println(hm.get(s));
                 System.out.println("\t" + hm.get(s).sumo + "\n");
