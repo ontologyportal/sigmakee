@@ -18,3 +18,6 @@ lib
 /MANIFEST.MF
 .DS_Store
 /file.bin
+/docker/sumo-ci/seccomp.json
+/docker/sumo-ci/sigmakee/
+/docker/sumo-ci/sigmakee-runtime/
