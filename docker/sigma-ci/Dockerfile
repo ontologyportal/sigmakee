@@ -1,4 +1,4 @@
-FROM tomcat:9.0.97-jdk21-temurin-noble AS builder
+FROM ubuntu:latest AS builder
 
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling the latest vampire w/ latest z3
@@ -82,21 +82,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz
 
 COPY --from=builder \
-    /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
-
+    ./E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
 COPY --from=builder \
-    /usr/local/tomcat/WordNet-3.0 /opt/WordNet-3.0
+    ./WordNet-3.0 /opt/WordNet-3.0
 
 #COPY --from=builder \
 #    /usr/local/tomcat/vampire-4.9casc2024/vampire /usr/local/bin/vampire
-
 #COPY --from=builder \
 #    /usr/local/tomcat/vampire-4.9casc2024/z3/build/libz3.* /usr/local/bin/
 
 COPY --from=builder \
-    /usr/local/tomcat/vampire/vampire /usr/local/bin/vampire
-
+    ./vampire/vampire /usr/local/bin/vampire
 COPY --from=builder \
-    /usr/local/tomcat/vampire/z3/build/libz3.* /usr/local/bin/
+    ./vampire/z3/build/libz3.* /usr/local/bin/
 
 ENV LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
