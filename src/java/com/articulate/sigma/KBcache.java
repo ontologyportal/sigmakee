@@ -1528,7 +1528,7 @@ public class KBcache implements Serializable {
     /** *************************************************************
      * Delete and writes the cache .kif file then call addConstituent() so
      * that the file can be processed and loaded by the inference engine.
-     * This is not needed since we have storeCacheAsFormulas()
+     * @deprecated This is not needed since we have storeCacheAsFormulas()
      */
     @Deprecated
     public void writeCacheFile() {
