@@ -96,7 +96,7 @@ else {
         }
         if (StringUtil.isNonEmptyString(errStr)) {
             mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
-            System.out.println(errStr);
+            System.err.println(errStr);
             isError = true;
             response.sendRedirect("KBs.jsp");
         }
@@ -124,7 +124,7 @@ else {
                 kb.checkArity();
                 if (mgr.getPref("cache").equalsIgnoreCase("yes")) {
                     kb.kbCache.buildCaches();
-                    kb.kbCache.writeCacheFile();
+//                    kb.kbCache.writeCacheFile();
                 }
                 kb.loadEProver();
                 KBmanager.getMgr().writeConfiguration();
