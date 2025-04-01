@@ -306,9 +306,11 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
   if ((kbNames != null) && !(kbNames.isEmpty())) {
       if (reload) {
           it = kbNames.iterator();
+          String akbName;
+          KB akb;
           while (it.hasNext()) {
-              String akbName = (String) it.next();
-              KB akb = KBmanager.getMgr().getKB(akbName);
+              akbName = (String) it.next();
+              akb = KBmanager.getMgr().getKB(akbName);
               if (akb != null) {
                   System.out.println("INFO in Properties.jsp: reloading the entire KB");
                   akb.reload();
