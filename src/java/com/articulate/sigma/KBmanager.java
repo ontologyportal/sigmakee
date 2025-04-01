@@ -571,7 +571,7 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Loads the constituents of the of the KB from config.xml
+     * Loads the constituents of the KB from config.xml
      * @param kbName the name of the KB
      * @param constituents a list of constituents to load
      * @return true if the loading was successful
