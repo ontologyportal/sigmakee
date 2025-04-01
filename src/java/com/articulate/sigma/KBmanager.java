@@ -607,8 +607,10 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Conventional version
+     * Conventional/sequential version
+     * @deprecated
      */
+    @Deprecated(forRemoval = true)
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
         for (String filename : constituents) {
             try {
