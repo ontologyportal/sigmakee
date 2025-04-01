@@ -2833,7 +2833,7 @@ public class KB implements Serializable {
 
         String cname;
         for (int i = 0; i < constituents.size(); i++) {
-            cname = (String) constituents.get(i);
+            cname = constituents.get(i);
             if (cname.endsWith(_userAssertionsString)) {
                 try {
                     constituents.remove(i);
