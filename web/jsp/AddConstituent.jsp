@@ -136,9 +136,9 @@ else {
     catch (Exception e) {
         String errStr = "ERROR in AddConstituent.jsp: " + e.getMessage();
         mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
-        System.out.println(errStr);
-        System.out.println("  kbName == " + kbName);
-        System.out.println("  fileName == " + fileName);
+        System.err.println(errStr);
+        System.err.println("  kbName == " + kbName);
+        System.err.println("  fileName == " + fileName);
         e.printStackTrace();
         response.sendRedirect("KBs.jsp");
     }
