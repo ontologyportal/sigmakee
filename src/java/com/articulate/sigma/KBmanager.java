@@ -571,7 +571,7 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Loads the constituents of the of the KB from config.xml
+     * Loads the constituents of the KB from config.xml
      * @param kbName the name of the KB
      * @param constituents a list of constituents to load
      * @return true if the loading was successful
@@ -607,8 +607,10 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Conventional version
+     * Conventional/sequential version
+     * @deprecated
      */
+    @Deprecated(forRemoval = true)
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
         for (String filename : constituents) {
             try {

@@ -15,7 +15,7 @@
 */
 
 if (!role.equalsIgnoreCase("admin"))
-    response.sendRedirect("KBs.jsp");     
+    response.sendRedirect("KBs.jsp");
 else {
     String kbDir = mgr.getPref("kbDir");
     File kbDirFile = new File(kbDir);
@@ -32,22 +32,26 @@ else {
     File outfile = null;
     long writeCount = -1L;
 
-    try {  
+    try {
         boolean isError = false;
         mpp = new MultipartParser(request, postSize, true, true);
+        String paramName;
+        ParamPart pp;
+        FilePart fp;
+        int lidx;
         while ((requestPart = mpp.readNextPart()) != null) {
-            String paramName = requestPart.getName();
-            if (paramName == null) 
+            paramName = requestPart.getName();
+            if (paramName == null)
                 paramName = "";
             if (requestPart.isParam()) {
-                ParamPart pp = (ParamPart) requestPart;
+                pp = (ParamPart) requestPart;
                 if (paramName.equalsIgnoreCase("kb"))
                     kbName = pp.getStringValue();
             }
             else if (requestPart.isFile()) {
-                FilePart fp = (FilePart) requestPart;
+                fp = (FilePart) requestPart;
                 fileName = fp.getFileName();
-                int lidx = fileName.lastIndexOf(".");
+                lidx = fileName.lastIndexOf(".");
                 baseName = ((lidx != -1)
                             ? fileName.substring(0, lidx)
                             : fileName);
@@ -58,16 +62,12 @@ else {
 
                 System.out.println("INFO in AddConstituent.jsp: filename: " + fileName);
                 outfile = StringUtil.renameFileIfExists(existingFile);
-                FileOutputStream fos = new FileOutputStream(outfile);
-                BufferedOutputStream bos = new BufferedOutputStream(fos);
-                writeCount = -1L;
-                try {
+                try (OutputStream fos = new FileOutputStream(outfile);
+                    BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                    writeCount = -1L;
                     writeCount = fp.writeTo(bos);
-                    bos.flush();
-                    bos.close();
-                    fos.close();
                 }
-                catch (Exception ioe) {
+                catch (IOException ioe) {
                     ioe.printStackTrace();
                 }
             }
@@ -90,57 +90,57 @@ else {
         }
         if (StringUtil.emptyString(errStr)) {
             if (StringUtil.emptyString(kbName))
-                errStr = "Error in AddConstituent.jsp: No knowledge base name specified";              
-            else if ((outfile == null) || !outfile.canRead()) 
+                errStr = "Error in AddConstituent.jsp: No knowledge base name specified";
+            else if ((outfile == null) || !outfile.canRead())
                 errStr = "Error in AddConstituent.jsp: The constituent file could not be saved or cannot be read";
         }
         if (StringUtil.isNonEmptyString(errStr)) {
             mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
-            System.out.println(errStr);
+            System.err.println(errStr);
             isError = true;
-            response.sendRedirect("KBs.jsp"); 
+            response.sendRedirect("KBs.jsp");
         }
         else {
-            boolean newKB = false;          
-            if (!mgr.existsKB(kbName))  
+            boolean newKB = false;
+            if (!mgr.existsKB(kbName))
                 newKB = true;
             else
                 kb = mgr.getKB(kbName);
-                           
+
             if (newKB) {
-                ArrayList<String> list = new ArrayList<String>();
+                List<String> list = new ArrayList<String>();
                 list.add(outfile.getCanonicalPath());
                 mgr.loadKB(kbName, list);
-            } 
-            else { // Remove the constituent, if it is already present.    
+            }
+            else { // Remove the constituent, if it is already present.
                 //ListIterator<String> lit = kb.constituents.listIterator();
                 //while (lit.hasNext()) {
                 //    String constituent = lit.next();
                 //    if (StringUtil.isNonEmptyString(baseName) && constituent.contains(baseName))
                 //        lit.remove();
-                //}                         
+                //}
                 //kb.addNewConstituent(outfile.getCanonicalPath());
-                kb.addConstituent(outfile.getCanonicalPath());           
+                kb.addConstituent(outfile.getCanonicalPath());
                 kb.checkArity();
                 if (mgr.getPref("cache").equalsIgnoreCase("yes")) {
-                    kb.kbCache.buildCaches();      
-                    kb.kbCache.writeCacheFile();
+                    kb.kbCache.buildCaches();
+//                    kb.kbCache.writeCacheFile();
                 }
                 kb.loadEProver();
-                KBmanager.getMgr().writeConfiguration();              
-            }              
+                KBmanager.getMgr().writeConfiguration();
+            }
         }
-        if (!isError) 
-            response.sendRedirect("Manifest.jsp?kb=" + kbName);          
+        if (!isError)
+            response.sendRedirect("Manifest.jsp?kb=" + kbName);
     }
     catch (Exception e) {
         String errStr = "ERROR in AddConstituent.jsp: " + e.getMessage();
         mgr.setError(mgr.getError() + "\n<br/>" + errStr + "\n<br/>");
-        System.out.println(errStr);
-        System.out.println("  kbName == " + kbName);
-        System.out.println("  fileName == " + fileName);
+        System.err.println(errStr);
+        System.err.println("  kbName == " + kbName);
+        System.err.println("  fileName == " + fileName);
         e.printStackTrace();
-        response.sendRedirect("KBs.jsp"); 
+        response.sendRedirect("KBs.jsp");
     }
 }
 %>

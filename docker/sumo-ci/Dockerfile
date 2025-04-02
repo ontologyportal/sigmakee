@@ -30,3 +30,5 @@ COPY ./sigmakee/build/sigmakee.jar /root/sigmakee/
 
 ENV SIGMA_HOME=/root/sigmakee-runtime
 ENV LD_LIBRARY_PATH=/usr/local/bin
+
+CMD ["/bin/bash"]

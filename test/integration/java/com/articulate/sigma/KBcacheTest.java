@@ -69,23 +69,23 @@ public class KBcacheTest extends IntegrationTestBase {
     @Test
     public void testBuildChildrenRealNumber() {
 
-        System.out.println("\n============= testBuildChildren2 ==================");
+        System.out.println("\n============= testBuildChildrenRealNumber ==================");
         KBcache cache = SigmaTestBase.kb.kbCache;
         String parent = "RealNumber";
 
-        TreeSet<String> expected = new TreeSet<>(Arrays.asList("RationalNumber","Integer","EvenInteger",
+        Set<String> expected = new TreeSet<>(Arrays.asList("RationalNumber","Integer","EvenInteger",
                 "OddInteger","PrimeNumber","NonnegativeInteger","PositiveInteger","NegativeInteger",
                 "IrrationalNumber","NonnegativeRealNumber","PositiveRealNumber","PositiveInteger",
                 "NegativeRealNumber","NegativeInteger","BinaryNumber"));
 
-        TreeSet<String> actual = new TreeSet<>(cache.getChildClasses(parent));
+        Set<String> actual = new TreeSet<>(cache.getChildClasses(parent));
 
-        System.out.println("KBcacheTest.testBuildChildren2(): actual: " + actual);
-        System.out.println("KBcacheTest.testBuildChildren2(): expected: " + expected);
+        System.out.println("KBcacheTest.testBuildChildrenRealNumber():   actual: " + actual);
+        System.out.println("KBcacheTest.testBuildChildrenRealNumber(): expected: " + expected);
         if (actual.equals(expected))
-            System.out.println("KBcacheTest.testBuildChildren2(): pass");
+            System.out.println("KBcacheTest.testBuildChildrenRealNumber(): pass");
         else
-            System.out.println("KBcacheTest.testBuildChildren2(): fail");
+            System.err.println("KBcacheTest.testBuildChildrenRealNumber(): fail");
         assertEquals(expected, actual);
     }
 

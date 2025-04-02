@@ -730,7 +730,7 @@ public class SUMOtoTFATest extends UnitTestBase {
 
         kb.addConstituent(KBmanager.getMgr().getPref("kbDir") + "/Demographics.kif");
         if (!kb.terms.contains("avgWorkHours")) {
-            System.out.println("test6AvgWork(): Demographics.kif not loaded");
+            System.err.println("testAvgWork(): Demographics.kif not loaded");
             return;
         }
         kb.kbCache.buildCaches();

@@ -309,7 +309,7 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * Conventional version
+     * Conventional/sequential version
      * @deprecated
      */
     @Deprecated(forRemoval = true)
