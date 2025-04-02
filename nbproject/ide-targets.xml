@@ -116,7 +116,7 @@
         <echo message="confix.xml size is 2.543KB: ${is.milo}"/>
     </target>
     <target name="copy.milo.config" unless="is.milo">
-        <antcall target="prep.integration.config"/>
+        <antcall target="prep.top.mid.config"/>
     </target>
 
     <target name="test.unit" depends="clean,prep.unit.config,compile.test" description="Runs the UnitTestSuite">
@@ -157,7 +157,6 @@
         </junit>
         <antcall target="junit.report"/>
         <echo message="Now, manually run thorough.clean to purge KBs and restore the main config"/>
-        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="run-selected-test-in-corpus" depends="clean,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -177,7 +176,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="run-selected-test-in-integration" depends="clean,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -197,7 +195,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="run-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -236,7 +233,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="run-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -435,7 +431,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="debug-selected-test-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -480,7 +475,6 @@
                 <formatter type="xml"/>
             </test>
         </junit>
-        <!--<antcall target="prep.main.config"/>  restore the main config -->
     </target>
     <target name="debug-single-test-method-in-unit" depends="clean,prep.unit.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
@@ -558,18 +552,17 @@
     </target>
 
     <!-- Copy customized config files for testing -->
-    <target name="prep.main.config">
-        <!-- Restore main config post integration testing -->
-        <copy todir="${sigma_home}/KBs" file="${main.config}" overwrite="true"/>
+    <target name="prep.full.config">
+        <copy todir="${sigma_home}/KBs" file="${full.config}" overwrite="true"/>
     </target>
     <!-- SUMO, MILO and domain only -->
-    <target name="prep.integration.config">
+    <target name="prep.top.mid.config">
         <!-- Comment out to conduct tests with all KB files listed in config.xml -->
-        <copy tofile="${sigma_home}/KBs/config.xml" file="${integration.config}" overwrite="true"/>
+        <copy tofile="${sigma_home}/KBs/config.xml" file="${top.mid.config}" overwrite="true"/>
     </target>
     <!-- SUMO and domain only -->
     <target name="prep.unit.config">
-        <copy todir="${test.unit.resources.dir}" file="${unit.config}" overwrite="true"/>
+        <copy todir="${test.unit.resources.dir}" file="${top.config}" overwrite="true"/>
     </target>
     <!-- SUMO and domain only -->
     <target name="prep.top.only.config">
