@@ -61,6 +61,8 @@ public class KButilities implements ServletContextListener {
         return kryo;
     });
 
+    public static final int ONE_K = 1000;
+
     public static boolean debug = false;
 
     /** Errors found during processing formulas */
