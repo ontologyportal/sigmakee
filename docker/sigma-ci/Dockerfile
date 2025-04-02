@@ -1,4 +1,4 @@
-FROM tomcat:9.0.97-jdk21-temurin-noble AS builder
+FROM ubuntu:latest AS builder
 
 # Follow instructions from: https://github.com/vprover/vampire/wiki/Source-Build-for-Users
 # for buildling the latest vampire w/ latest z3
@@ -14,12 +14,13 @@ ARG VAMPIRE_GIT='https://github.com/vprover/vampire'
 ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
 ARG WORD_NET='https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 
-# We're in /usr/local/tomcat
+# We're in / ${root}
 RUN apt-get update && apt-get install -y --install-recommends \
     build-essential \
     cmake \
     git \
-    python3 ;\
+    python3 \
+    wget ;\
     wget $E_PROVER && tar xf E.tgz ;\
     cd E ;\
     ./configure && make -j`nproc` ;\
@@ -45,7 +46,8 @@ RUN apt-get update && apt-get install -y --install-recommends \
 #    clang \
 #    cmake \
 #    git \
-#    python3 ;\
+#    python3 \
+#    wget ;\
 #    wget $E_PROVER &&\
 #    tar xf E.tgz ;\
 #    cd E ;\
@@ -82,21 +84,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     graphviz
 
 COPY --from=builder \
-    /usr/local/tomcat/E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
-
+    /E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
 COPY --from=builder \
-    /usr/local/tomcat/WordNet-3.0 /opt/WordNet-3.0
-
+    /WordNet-3.0 /opt/WordNet-3.0
+COPY --from=builder \
+    /vampire/vampire /usr/local/bin/vampire
+COPY --from=builder \
+    /vampire/z3/build/libz3.* /usr/local/bin/
 #COPY --from=builder \
-#    /usr/local/tomcat/vampire-4.9casc2024/vampire /usr/local/bin/vampire
-
+#    /vampire-4.9casc2024/vampire /usr/local/bin/vampire
 #COPY --from=builder \
-#    /usr/local/tomcat/vampire-4.9casc2024/z3/build/libz3.* /usr/local/bin/
+#    /vampire-4.9casc2024/z3/build/libz3.* /usr/local/bin/
 
-COPY --from=builder \
-    /usr/local/tomcat/vampire/vampire /usr/local/bin/vampire
-
-COPY --from=builder \
-    /usr/local/tomcat/vampire/z3/build/libz3.* /usr/local/bin/
-
-ENV LD_LIBRARY_PATH=/usr/local/bin:$LD_LIBRARY_PATH
+ENV LD_LIBRARY_PATH=/usr/local/bin
