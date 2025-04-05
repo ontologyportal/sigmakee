@@ -214,7 +214,7 @@ public class InferenceTestSuite {
         File[] newfiles = inferenceTestDir.listFiles();
         System.out.println("INFO in InferenceTestSuite.getTestFiles(): number of files: " + newfiles.length);
         if (newfiles.length == 0) {
-            System.out.println("Error in InferenceTestSuite.getTestFiles(): No test files found in " +
+            System.err.println("Error in InferenceTestSuite.getTestFiles(): No test files found in " +
                     inferenceTestDir.getCanonicalPath());
             return("No test files found in " + inferenceTestDir.getCanonicalPath());
         }
@@ -224,7 +224,7 @@ public class InferenceTestSuite {
                 files.add(f);
         }
         if (files.size() < 1) {
-            System.out.println("INFO in InferenceTestSuite.getTestFiles(): No test files found in " +
+            System.err.println("INFO in InferenceTestSuite.getTestFiles(): No test files found in " +
                     inferenceTestDir.getCanonicalPath());
             return("No test files found in " + inferenceTestDir.getCanonicalPath());
         }
