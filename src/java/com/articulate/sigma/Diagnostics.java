@@ -797,24 +797,20 @@ public class Diagnostics {
             KBmanager.getMgr().removeKB(kbName);
         }
         File dir = new File( kbDir );
-        File emptyCFile = new File( dir, "emptyConstituent.txt" );
+        File emptyCFile = new File( dir, "emptyConstituent.txt");
         String emptyCFilename = emptyCFile.getAbsolutePath();
-        FileWriter fw = null;
-        PrintWriter pw = null;
         KBmanager.getMgr().addKB(kbName);
         KB empty = KBmanager.getMgr().getKB(kbName);
         System.out.println("empty = " + empty);
 
-        try { // Fails elsewhere if no constituents, or empty constituent, thus...
-            fw = new FileWriter( emptyCFile );
-            pw = new PrintWriter(fw);
+        // Fails elsewhere if no constituents, or empty constituent, thus...
+        try (Writer fw = new FileWriter( emptyCFile );
+             PrintWriter pw = new PrintWriter(fw)) {
             pw.println("(instance instance BinaryPredicate)\n");
-            if (pw != null) pw.close();
-            if (fw != null) fw.close();
             empty.addConstituent(emptyCFilename);
         }
         catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
             e.printStackTrace();
         }
         return empty;
