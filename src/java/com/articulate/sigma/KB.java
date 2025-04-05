@@ -448,7 +448,7 @@ public class KB implements Serializable {
             _t_checkArity();
 
         counter = 0; // reset
-        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 
     /** *************************************************************
@@ -2960,7 +2960,7 @@ public class KB implements Serializable {
         addConstituentInfo(file);
         System.out.println("\nINFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
                 + file.terms.size() + " terms.");
-        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
 
     }
 
@@ -3669,7 +3669,7 @@ public class KB implements Serializable {
                             pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
                         stff.printTFFNumericConstants(pw);
                     }
-                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
                 }
             }
             catch (Exception e) {
@@ -3818,7 +3818,7 @@ public class KB implements Serializable {
         System.out.println();
         // kbCache.clearSortalTypeCache();
         System.out.println("INFO in KB.preProcess(): completed in " +
-                (System.currentTimeMillis() - millis) / 1000 + " seconds");
+                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
         counter = 0;
         return newTreeSet;
     }
