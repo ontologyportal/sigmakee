@@ -865,7 +865,7 @@ public class KBmanager implements Serializable {
                 }
             }
             if (!loaded) { // if there was an error loading the serialized file, or there is none,
-                            // then reload from sources
+                           // then reload from sources
                 System.out.println("Info in KBmanager.initializeOnce(): reading from sources");
                 if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
                         preferences.keySet().size());
