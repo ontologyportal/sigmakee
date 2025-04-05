@@ -105,7 +105,6 @@ public class KBcacheUnitTest {
 
     /** ***************************************************************
      */
-//    @Ignore("Not sure why we'd expect var, rel and relsub")
     @Test
     public void testPredicates() {
 
