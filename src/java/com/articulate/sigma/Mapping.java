@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /** This code is copyright Articulate Software (c) 2004.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -28,17 +27,17 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 This class maps ontologies. It includes embedded subclasses that
 implement specific mapping heuristics.
 
 This class also includes utilities for converting other
 ad-hoc formats to KIF
-   */
+*/
 public class Mapping {
 
-    public static Map<String,TreeMap<Integer,String>> mappings = new TreeMap<>();
+    public static Map<String,Map<Integer,String>> mappings = new TreeMap<>();
     public static char termSeparator = '!';
 
     /** *************************************************************
@@ -53,12 +52,11 @@ public class Mapping {
     public static String writeEquivalences(Set cbset, String kbname1, String kbname2) throws IOException {
 
         System.out.println("INFO in Mapping.writeEquivalences(): size: " + cbset.size());
-        String dir = (String) KBmanager.getMgr().getPref("baseDir");
+        String dir = KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname1 + "-" + kbname2 + "-links";
 
         if (mappings.keySet().size() < 1)
             return "Error: No mappings found";
-
 
         File f = new File(filename + ".kif");
         int fileCounter = 0;
@@ -181,7 +179,7 @@ public class Mapping {
     }
 
     /** *************************************************************
-    *   Convert a YAGO file into KIF
+     *  Convert a YAGO file into KIF
      */
     public static void convertYAGO(String file, String relName) throws IOException {
 
