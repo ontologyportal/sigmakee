@@ -972,7 +972,7 @@ public class KBmanager implements Serializable {
 
     public void addKB(String name, boolean isVisible) {
 
-        KB kb = new KB(name,(String) preferences.get("kbDir"), isVisible);
+        KB kb = new KB(name, preferences.get("kbDir"), isVisible);
         kbs.put(name.intern(),kb);
     }
 
@@ -982,7 +982,7 @@ public class KBmanager implements Serializable {
      */
     public String removeKB(String name) {
 
-        KB kb = (KB) kbs.get(name);
+        KB kb = kbs.get(name);
         if (kb == null)
             return "KB " + name + " does not exist and cannot be removed.";
         try {
@@ -1117,7 +1117,7 @@ public class KBmanager implements Serializable {
         KB kb;
         while (it.hasNext()) {
             kbName = (String) it.next();
-            kb = (KB) getKB(kbName);
+            kb = getKB(kbName);
             result.addAll(kb.availableLanguages());
         }
         return result;
