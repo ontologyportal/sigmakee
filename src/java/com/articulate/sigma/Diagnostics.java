@@ -27,10 +27,10 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List LOG_OPS = Arrays.asList("and","or","not","exists",
+    public static List<String> LOG_OPS = Arrays.asList("and","or","not","exists",
                                                 "forall","=>","<=>","holds");
 
-    private static int resultLimit = 100;
+    private static final int RESULT_LIMIT = 100;
 
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not
@@ -76,8 +76,8 @@ public class Diagnostics {
                         result.add(term);
                 }
             }
-            if (resultLimit > 0 && result.size() > resultLimit) {
-                result.add("limited to " + resultLimit + " results");
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
+                result.add("limited to " + RESULT_LIMIT + " results");
                 break;
             }
         }
@@ -104,7 +104,7 @@ public class Diagnostics {
         String term, key;
         double dval;
         if (!forms.isEmpty()) {
-            boolean isNaN = true;
+            boolean isNaN;
             for (Formula f : forms) {
                 term = f.getStringArgument(1);   // Append term and language to make a key.
                 isNaN = true;
@@ -121,7 +121,7 @@ public class Diagnostics {
                     else
                         withDoc.add(key);
                 }
-                if (resultLimit > 0 && result.size() > resultLimit) {
+                if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
                     result.add("limited to 100 results");
                     break;
                 }
@@ -158,7 +158,7 @@ public class Diagnostics {
         if (LOG_OPS.contains(term) || term.equals("equal") || term.equals("Entity") || StringUtil.isNumeric(term))
             return false;
         else if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity"))
-                return true;
+            return true;
         return false;
     }
 
@@ -172,15 +172,15 @@ public class Diagnostics {
         int count = 0;
         String term;
         Iterator<String> it = kb.getTerms().iterator();
-        while (it.hasNext() && (resultLimit < 1 || count < resultLimit)) {
+        while (it.hasNext() && (RESULT_LIMIT < 1 || count < RESULT_LIMIT)) {
             term = it.next();
             if (!termNotBelowEntity(term,kb))
                 continue;
             else {
-                    result.add(term);
-                    count++;
+                result.add(term);
+                count++;
             }
-            if (resultLimit > 0 && count > resultLimit)
+            if (RESULT_LIMIT > 0 && count > RESULT_LIMIT)
                 result.add("limited to 100 results");
         }
         return result;
@@ -248,7 +248,7 @@ public class Diagnostics {
      */
     public static List<String> membersNotInAnyPartitionClass(KB kb) {
 
-        List<String> result = new ArrayList<String>();
+        List<String> result = new ArrayList<>();
         try {
             Set<String> reduce = new TreeSet<>();
             // Use all partition statements and all
@@ -273,9 +273,6 @@ public class Diagnostics {
                 partition = form.argumentsToArrayListString(2);
                 instances = kb.getTermsViaPredicateSubsumption("instance",2,parent,1,true);
                 if ((instances != null) && !instances.isEmpty()) {
-                    isInstanceSubsumed = false;
-                    isNaN = true;
-                    inst = null;
                     it2 = instances.iterator();
                     while (go && it2.hasNext()) {
                         isInstanceSubsumed = false;
@@ -299,13 +296,13 @@ public class Diagnostics {
                             else
                                 reduce.add(inst);
                         }
-                        if (resultLimit < 1 || reduce.size() > resultLimit)
+                        if (RESULT_LIMIT < 1 || reduce.size() > RESULT_LIMIT)
                             go = false;
                     }
                 }
             }
             result.addAll(reduce);
-            if (resultLimit > 0 && result.size() > resultLimit)
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
                 result.add("limited to 100 results");
         }
         catch (Exception ex) {
@@ -320,8 +317,9 @@ public class Diagnostics {
     public static List<String> relationsWithoutFormat(KB kb) {
 
         List<String> result = new ArrayList<>();
+        List<Formula> forms;
         for (String rel : kb.kbCache.relations) {
-            List<Formula> forms = kb.askWithRestriction(0,"format",2,rel);
+            forms = kb.askWithRestriction(0,"format",2,rel);
             if (forms == null || forms.isEmpty())
                 result.add(rel);
         }
@@ -357,14 +355,11 @@ public class Diagnostics {
 
         boolean isNaN = true;
         List<String> result = new ArrayList<>();
-        Iterator<String> it = kb.getTerms().iterator();
-        String term;
-        while (it.hasNext()) {
-            term = it.next();
+        for (String term : kb.getTerms()) {
             isNaN = true;
             if (termWithoutRules(kb,term))
                 result.add(term);
-            if (resultLimit > 0 && result.size() > resultLimit) {
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT) {
                 result.add("limited to 100 results");
                 break;
             }
@@ -379,9 +374,10 @@ public class Diagnostics {
 
         Set<String> result = new HashSet<>();
         Set<String> vars = f.collectAllVariables();
+        int index, index2;
         for (String v : vars) {
-            int index = f.getFormula().indexOf(v);
-            int index2 = f.getFormula().indexOf(v,index+v.length());
+            index = f.getFormula().indexOf(v);
+            index2 = f.getFormula().indexOf(v,index+v.length());
             if (index2 == -1)
                 result.add(v);
         }
@@ -395,9 +391,9 @@ public class Diagnostics {
      * the interior consequent has a variable not found in the interior
      * antecedent
      */
-    public static HashSet<String> unquantInConsequent(Formula f) {
+    public static Set<String> unquantInConsequent(Formula f) {
 
-        HashSet<String> result = new HashSet<String>();
+        Set<String> result = new HashSet<>();
         if (!f.isRule())
             return result;
         Formula ante = new Formula(FormulaUtil.antecedent(f));
@@ -414,18 +410,16 @@ public class Diagnostics {
 
     /** *****************************************************************
      */
-    public static ArrayList<Formula> unquantsInConseq(KB kb) {
+    public static List<Formula> unquantsInConseq(KB kb) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
-        Iterator<Formula> it = kb.formulaMap.values().iterator();
-        while (it.hasNext()) {
-            Formula form = (Formula) it.next();
-            if ((form.getFormula().indexOf("forall") != -1)
-                    || (form.getFormula().indexOf("exists") != -1)) {
+        List<Formula> result = new ArrayList<>();
+        for (Formula form : kb.formulaMap.values()) {
+            if ((form.getFormula().contains("forall"))
+                    || (form.getFormula().contains("exists"))) {
                 if (!unquantInConsequent(form).isEmpty())
                     result.add(form);
             }
-            if (resultLimit > 0 && result.size() > resultLimit)
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
                 return result;
         }
         return result;
@@ -464,9 +458,10 @@ public class Diagnostics {
                 if (quantifierNotInStatement(restForm))
                     return true;
             }
+            String var;
             if (qList != null) {
                 for (int i = 0; i < qList.size(); i++) {
-                    String var = (String) qList.get(i);
+                    var = (String) qList.get(i);
                     if (!body.contains(var))
                         return true;
                 }
@@ -481,20 +476,21 @@ public class Diagnostics {
      * (exists (?FOO) (bar ?FLOO Shmoo))
      * @return an ArrayList of Formula(s).
      */
-    public static ArrayList<Formula> quantifierNotInBody(KB kb, String fname) {
+    public static List<Formula> quantifierNotInBody(KB kb, String fname) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
+        List<Formula> result = new ArrayList<>();
         Iterator<Formula> it = kb.formulaMap.values().iterator();
+        Formula form;
         while (it.hasNext()) {
-            Formula form = (Formula) it.next();
+            form = (Formula) it.next();
             if (!FileUtil.noPath(form.sourceFile).equals(fname))
                 continue;
-            if ((form.getFormula().indexOf("forall") != -1)
-                    || (form.getFormula().indexOf("exists") != -1)) {
+            if ((form.getFormula().contains("forall"))
+                    || (form.getFormula().contains("exists"))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
-            if (resultLimit > 0 && result.size() > resultLimit)
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
                 return result;
         }
         return result;
@@ -506,20 +502,21 @@ public class Diagnostics {
      * (exists (?FOO) (bar ?FLOO Shmoo))
      * @return an ArrayList of Formula(s).
      */
-    public static ArrayList<Formula> quantifierNotInBody(KB kb) {
+    public static List<Formula> quantifierNotInBody(KB kb) {
 
-        ArrayList<Formula> result = new ArrayList<Formula>();
-		Iterator<Formula> it = kb.formulaMap.values().iterator();
-		while (it.hasNext()) {
-			Formula form = (Formula) it.next();
-			if ((form.getFormula().indexOf("forall") != -1)
-					|| (form.getFormula().indexOf("exists") != -1)) {
-				if (quantifierNotInStatement(form))
-					result.add(form);
-			}
-            if (resultLimit > 0 && result.size() > resultLimit)
-				return result;
-		}
+        List<Formula> result = new ArrayList<>();
+        Iterator<Formula> it = kb.formulaMap.values().iterator();
+        Formula form;
+        while (it.hasNext()) {
+            form = (Formula) it.next();
+            if ((form.getFormula().contains("forall"))
+                || (form.getFormula().contains("exists"))) {
+                if (quantifierNotInStatement(form))
+                        result.add(form);
+            }
+            if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
+                return result;
+        }
         return result;
     }
 
@@ -527,11 +524,11 @@ public class Diagnostics {
      * Add a key to a map and a value to the ArrayList corresponding
      * to the key.  Results are a side effect.
      */
-    public static void addToMapList(TreeMap m, String key, String value) {
+    public static void addToMapList(Map<String,List<String>> m, String key, String value) {
 
-        ArrayList al = (ArrayList) m.get(key);
+        List<String> al = m.get(key);
         if (al == null) {
-            al = new ArrayList();
+            al = new ArrayList<>();
             m.put(key,al);
         }
         if (!al.contains(value))
@@ -542,11 +539,11 @@ public class Diagnostics {
      * Add a key to a map and a key, value to the map
      * corresponding to the key.  Results are a side effect.
      */
-    public static void addToDoubleMapList(TreeMap m, String key1, String key2, String value) {
+    public static void addToDoubleMapList(Map<String,Map<String,List<String>>> m, String key1, String key2, String value) {
 
-        TreeMap tm = (TreeMap) m.get(key1);
+        Map<String,List<String>> tm = m.get(key1);
         if (tm == null) {
-            tm = new TreeMap();
+            tm = new TreeMap<>();
             m.put(key1,tm);
         }
         addToMapList(tm,key2,value);
@@ -556,20 +553,23 @@ public class Diagnostics {
      * Find all the terms used and defined in a KB.  Terms are defined by
      * their appearance in definitionalRelations
      */
-    private static void termLinks(KB kb, TreeMap termsUsed, TreeMap termsDefined) {
+    private static void termLinks(KB kb, Map<String,List<String>> termsUsed, Map<String,List<String>> termsDefined) {
 
         List<String> definitionalRelations = Arrays.asList("instance", "subclass",
                 "subAttribute", "domain", "domainSubclass", "range",
                 "rangeSubclass", "documentation", "subrelation");
 
+        List<Formula> forms, newform;
+        String relation, filename;
+        Formula form;
         for (String term : kb.getTerms()) {
-            List<Formula> forms = kb.ask("arg",1,term);
+            forms = kb.ask("arg",1,term);
             // Get every formula with the term as arg 1
             // Only definitional uses are in the arg 1 position
             if (forms != null && !forms.isEmpty()) {
                 for (Formula formula : forms) {
-                    String relation = formula.getStringArgument(0);
-                    String filename = formula.sourceFile;
+                    relation = formula.getStringArgument(0);
+                    filename = formula.sourceFile;
                     if (definitionalRelations.contains(relation))
                         addToMapList(termsDefined,term,filename);
                     else
@@ -577,7 +577,6 @@ public class Diagnostics {
                 }
             }
             forms = kb.ask("arg",2,term);
-            List<Formula> newform;
             for (int i = 3; i < 7; i++) {
                 newform = kb.ask("arg",i,term);
                 if (newform != null)
@@ -594,8 +593,8 @@ public class Diagnostics {
                 forms.addAll(newform);
             if (forms != null && !forms.isEmpty()) {
                 for (int i = 0; i < forms.size(); i++) {
-                    Formula formula = (Formula) forms.get(i);
-                    String filename = formula.sourceFile;
+                    form = (Formula) forms.get(i);
+                    filename = form.sourceFile;
                     addToMapList(termsUsed,term,filename);
                 }
             }
@@ -604,24 +603,26 @@ public class Diagnostics {
 
     /** *****************************************************************
      */
-    private static void fileLinks(KB kb, TreeMap fileDefines, TreeMap fileUses,
-                                  TreeMap termsUsed, TreeMap termsDefined) {
+    private static void fileLinks(KB kb, Map<String,List<String>> fileDefines, Map<String,List<String>> fileUses,
+                                  Map<String,List<String>> termsUsed, Map<String,List<String>> termsDefined) {
 
-        Iterator it = termsUsed.keySet().iterator();
+        Iterator<String> it = termsUsed.keySet().iterator();
+        String key, value;
+        List<String> values;
         while (it.hasNext()) {
-            String key = (String) it.next();
-            ArrayList values = (ArrayList) termsUsed.get(key);
+            key = it.next();
+            values = termsUsed.get(key);
             for (int i = 0; i < values.size(); i++) {
-                String value = (String) values.get(i);
+                value = (String) values.get(i);
                 addToMapList(fileUses,value,key);
             }
         }
         it = termsDefined.keySet().iterator();
         while (it.hasNext()) {
-            String key = (String) it.next();
-            ArrayList values = (ArrayList) termsDefined.get(key);
+            key = it.next();
+            values = termsDefined.get(key);
             for (int i = 0; i < values.size(); i++) {
-                String value = (String) values.get(i);
+                value = (String) values.get(i);
                 addToMapList(fileDefines,value,key);
             }
         }
@@ -638,43 +639,44 @@ public class Diagnostics {
      *         name keys index ArrayLists of terms.  file -depends
      *         on->filenames -that defines-> terms
      */
-    private static TreeMap termDependency(KB kb) {
+    private static Map<String,Map<String,List<String>>> termDependency(KB kb) {
 
         System.out.println("INFO in Diagnostics.termDependency()");
 
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is used.
-        TreeMap<String,ArrayList<String>> termsUsed = new TreeMap();
+        Map<String,List<String>> termsUsed = new TreeMap<>();
 
         // A map of terms keys with an ArrayList as values listing files
         // in which the term is defined (meaning appearance in an
         // instance, subclass, domain, subrelation, or documentation statement).
         //
-        TreeMap<String,ArrayList<String>> termsDefined = new TreeMap();
+        Map<String,List<String>> termsDefined = new TreeMap<>();
 
         // A map of file names and ArrayList values listing term names defined
         // in the file;
-        TreeMap<String,ArrayList<String>> fileDefines = new TreeMap();
+        Map<String,List<String>> fileDefines = new TreeMap<>();
 
         // A map of file names and ArrayList values listing term names used but not defined
         // in the file;
-        TreeMap<String,ArrayList<String>> fileUses = new TreeMap();
+        Map<String,List<String>> fileUses = new TreeMap<>();
 
         // A map of file name keys and TreeMap values listing file names
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
-        TreeMap<String,TreeMap<String,ArrayList<String>>> fileDepends = new TreeMap();
+        Map<String,Map<String,List<String>>> fileDepends = new TreeMap<>();
 
         termLinks(kb,termsUsed,termsDefined);
         fileLinks(kb,fileDefines,fileUses,termsUsed,termsDefined);
 
+        List<String> termUsedNames, fileDependencies;
+        String term, fileDepend;
         for (String fileUsesName : fileUses.keySet()) {
-            ArrayList termUsedNames = fileUses.get(fileUsesName);
+            termUsedNames = fileUses.get(fileUsesName);
             for (int i = 0; i < termUsedNames.size(); i++) {
-                String term = (String) termUsedNames.get(i);
-                ArrayList fileDependencies = termsDefined.get(term);
+                term = (String) termUsedNames.get(i);
+                fileDependencies = termsDefined.get(term);
                 if (fileDependencies != null) {
-                    String fileDepend = null;
                     for (int j = 0; j < fileDependencies.size(); j++) {
                         fileDepend = (String) fileDependencies.get(j);
                         if (!fileDepend.equals(fileUsesName))
@@ -694,15 +696,16 @@ public class Diagnostics {
      *               index ArrayLists of terms. file -depends on->
      *               filename -that defines-> terms
      */
-    private static int dependencySize(TreeMap depend, String f, String f2) {
+    private static int dependencySize(Map<String,Map<String,List<String>>> depend, String f, String f2) {
 
-        TreeMap tm = (TreeMap) depend.get(f2);
+        Map<String,List<String>> tm = depend.get(f2);
+        List<String> al;
         if (tm != null) {
-            ArrayList al = (ArrayList) tm.get(f);
+            al = (ArrayList) tm.get(f);
             if (al != null)
                 return al.size();
         }
-		return 0;
+	return 0;
     }
 
     /** *****************************************************************
@@ -715,72 +718,72 @@ public class Diagnostics {
         // A list of String of filename1-filename2 of pairs already examined so that
         // the routine doesn't waste time examining filename2-filename1
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
 
         // A map of file name keys and TreeMap values listing file names
         // on which the given file depends.  The interior TreeMap file name
         // keys index ArrayLists of terms.  file -depends on-> filenames -that defines-> terms
-        TreeMap fileDepends = Diagnostics.termDependency(kb);
-		System.out.println(fileDepends);
-        Iterator it = fileDepends.keySet().iterator();
-        while (it.hasNext()) {
-            String f = (String) it.next();
+        Map<String,Map<String,List<String>>> fileDepends = Diagnostics.termDependency(kb);
+        System.out.println(fileDepends);
+        Map<String,List<String>> tm;
+        List<String> al;
+        String term;
+        int i;
+        for (String f : fileDepends.keySet()) {
             // result.append("File " + f + " depends on: ");
-            TreeMap tm = (TreeMap) fileDepends.get(f);
-            Iterator it2 = tm.keySet().iterator();
-            while (it2.hasNext()) {
-                String f2 = (String) it2.next();
-                ArrayList al = (ArrayList) tm.get(f2);
+            tm = fileDepends.get(f);
+            for (String f2 : tm.keySet()) {
+                al = tm.get(f2);
 
-				if (al != null && al.size() < 40) {
-					result.append("<br/>File " + f + " dependency size on file " + f2 + " is " + al.size() + " with terms:<br/>");
-					for (int i = 0; i < al.size(); i++) {
-						String term = (String) al.get(i);
-						result.append("<a href=\"" + kbHref + "&term=" + term + "\">" + term + "</a>");
-						if (i < al.size() - 1)
-							result.append(", ");
-					}
-					result.append("<P>");
+                if (al != null && al.size() < 40) {
+                    result.append("<br/>File ").append(f).append(" dependency size on file ").append(f2).append(" is ").append(al.size()).append(" with terms:<br/>");
+                    for (int ix = 0; ix < al.size(); ix++) {
+                        term = (String) al.get(ix);
+                        result.append("<a href=\"").append(kbHref).append("&term=").append(term).append("\">").append(term).append("</a>");
+                        if (ix < al.size() - 1)
+                            result.append(", ");
+                    }
+                    result.append("<P>");
                 }
                 else {
-					int i = dependencySize(fileDepends, f, f2);
-					if (i > 0)
-						result.append("<br/>File " + f + " dependency size on file " + f2 + " is " + i + "<P>");
+                    i = dependencySize(fileDepends, f, f2);
+                    if (i > 0)
+                        result.append("<br/>File ").append(f).append(" dependency size on file ").append(f2).append(" is ").append(i).append("<P>");
                 }
-				// if (al != null
-				// && (dependencySize(fileDepends, f, f2) > al.size() || al
-				// .size() < 40))
-				// !examined.contains(f + "-" + f2) && !examined.contains(f2 +
-				// "-" + f)
-				// { // show mutual dependencies of comparable size
-				// result.append("\nFile " + f2 + " dependency size on file " +
-				// f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
-				// result.append("\nFile " + f + " dependency size on file " +
-				// f2 + " is " + al.size() + "\n");
-				// result.append(" with terms:<br>\n ");
-				// for (int i = 0; i < al.size(); i++) {
-				// String term = (String) al.get(i);
-				// result.append("<a href=\"" + kbHref + "&term=" + term + "\">"
-				// + term + "</a>");
-				// if (i < al.size()-1)
-				// result.append(", ");
-				// }
-				// result.append("<P>\n");
-				// }
-				// else {
-				// int i = dependencySize(fileDepends,f,f2);
-				// int j = dependencySize(fileDepends,f2,f);
-				// // && !examined.contains(f + "-" + f2) &&
-				// !examined.contains(f2 + "-" + f)
-				// if (i > 0 )
-				// result.append("\nFile " + f2 + " dependency size on file " +
-				// f + " is " + i + "<P>\n");
-				// if (j > 0 )
-				// result.append("\nFile " + f + " dependency size on file " +
-				// f2 + " is " + j + "<P>\n");
-				// }
-				// if (!examined.contains(f + "-" + f2))
-				// examined.add(f + "-" + f2);
+                // if (al != null
+                // && (dependencySize(fileDepends, f, f2) > al.size() || al
+                // .size() < 40))
+                // !examined.contains(f + "-" + f2) && !examined.contains(f2 +
+                // "-" + f)
+                // { // show mutual dependencies of comparable size
+                // result.append("\nFile " + f2 + " dependency size on file " +
+                // f + " is " + dependencySize(fileDepends,f,f2) + "<br>\n");
+                // result.append("\nFile " + f + " dependency size on file " +
+                // f2 + " is " + al.size() + "\n");
+                // result.append(" with terms:<br>\n ");
+                // for (int i = 0; i < al.size(); i++) {
+                // String term = (String) al.get(i);
+                // result.append("<a href=\"" + kbHref + "&term=" + term + "\">"
+                // + term + "</a>");
+                // if (i < al.size()-1)
+                // result.append(", ");
+                // }
+                // result.append("<P>\n");
+                // }
+                // else {
+                // int i = dependencySize(fileDepends,f,f2);
+                // int j = dependencySize(fileDepends,f2,f);
+                // // && !examined.contains(f + "-" + f2) &&
+                // !examined.contains(f2 + "-" + f)
+                // if (i > 0 )
+                // result.append("\nFile " + f2 + " dependency size on file " +
+                // f + " is " + i + "<P>\n");
+                // if (j > 0 )
+                // result.append("\nFile " + f + " dependency size on file " +
+                // f2 + " is " + j + "<P>\n");
+                // }
+                // if (!examined.contains(f + "-" + f2))
+                // examined.add(f + "-" + f2);
             }
             result.append("\n\n");
         }
@@ -834,9 +837,9 @@ public class Diagnostics {
         String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
         StringBuffer html = new StringBuffer();
 
-        if (proof.indexOf("Syntax error detected") != -1) {
+        if (proof.contains("Syntax error detected")) {
             html = html.append("Syntax error in formula : <br><br>");
-            html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
+            html = html.append(query.format(kbHref,"&nbsp;","<br>")).append("<br><br>");
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(result, kb);
             result = HTMLformatter.formatTPTP3ProofResult(tpp,query.getFormula(), lineHtml,kbName,language);
@@ -849,8 +852,8 @@ public class Diagnostics {
         String ansstr = null;
         //ansstr = pp.returnAnswer(0);
         if (!ansstr.equalsIgnoreCase("no")) {
-            html = html.append(testType + ": <br><br>");
-            html = html.append(query.format(kbHref,"&nbsp;","<br>") + "<br><br>");
+            html = html.append(testType).append(": <br><br>");
+            html = html.append(query.format(kbHref,"&nbsp;","<br>")).append("<br><br>");
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(result, kb);
             result = HTMLformatter.formatTPTP3ProofResult(tpp,query.getFormula(), lineHtml,kbName,language);
@@ -869,40 +872,36 @@ public class Diagnostics {
         int timeout = 10;
         int maxAnswers = 1;
         String proof;
-        String result = null;
 
-        StringBuffer answer = new StringBuffer();
+        StringBuilder answer = new StringBuilder();
         KB empty = makeEmptyKB("consistencyCheck");
 
         System.out.println("=================== Consistency Testing ===================");
         try {
-            Formula theQuery = new Formula();
-            Collection allFormulas = kb.formulaMap.values();
-            Iterator it = allFormulas.iterator();
-            while (it.hasNext()) {
-                Formula query = (Formula) it.next();
-                FormulaPreprocessor fp = new FormulaPreprocessor();
-                Set<Formula> processedQueries = fp.preProcess(query,false,kb); // may be multiple because of row vars.
+            FormulaPreprocessor fp;
+            String processedQuery;
+            Set<Formula> processedQueries;
+            StringBuilder a, negatedQuery;
+            Collection<Formula> allFormulas = kb.formulaMap.values();
+            for (Formula query : allFormulas) {
+                fp = new FormulaPreprocessor();
+                processedQueries = fp.preProcess(query,false,kb); // may be multiple because of row vars.
                 //System.out.println(" query = " + query);
                 //System.out.println(" processedQueries = " + processedQueries);
 
-                String processedQuery = null;
-                Iterator q = processedQueries.iterator();
-
                 System.out.println("INFO in Diagnostics.kbConsistencyCheck(): size = " + processedQueries.size());
-                while (q.hasNext()) {
-                    Formula f = (Formula) q.next();
+                for (Formula f : processedQueries) {
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): formula = " + f.getFormula());
                     processedQuery = f.makeQuantifiersExplicit(false);
                     System.out.println("INFO in Diagnostics.kbConsistencyCheck(): processedQuery = " + processedQuery);
                     proof = empty.askEProver(processedQuery,timeout,maxAnswers) + " ";
-                    StringBuffer a = new StringBuffer();
+                    a = new StringBuilder();
                     a.append(reportAnswer(kb,proof,query,processedQuery,"Redundancy"));
                     //  if (answer.length() != 0) return answer;
                     answer.append(a);
 
-                    StringBuffer negatedQuery = new StringBuffer();
-                    negatedQuery.append("(not " + processedQuery + ")");
+                    negatedQuery = new StringBuilder();
+                    negatedQuery.append("(not ").append(processedQuery).append(")");
                     proof = empty.askEProver(negatedQuery.toString(),timeout,maxAnswers) + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {
@@ -913,7 +912,7 @@ public class Diagnostics {
                 empty.tell(query.getFormula());
             }
         }
-        catch ( Exception ex ) {
+        catch (Exception ex) {
             return("Error in Diagnostics.kbConsistencyCheck() while executing query: " + ex.getMessage());
         }
         return "No contradictions or redundancies found.";
@@ -924,27 +923,31 @@ public class Diagnostics {
      */
     public static void termDefsByFile(KB kb) {
 
-        HashSet<String> alreadyCounted = new HashSet<>();
-        TreeMap<String,ArrayList<String>> termsUsed = new TreeMap<>();
-        TreeMap<String,ArrayList<String>> termsDefined = new TreeMap<>();
+        Set<String> alreadyCounted = new HashSet<>();
+        Map<String,List<String>> termsUsed = new TreeMap<>();
+        Map<String,List<String>> termsDefined = new TreeMap<>();
+        List<Formula> tforms;
+        Set<String> tformstrs;
+        String simpleName;
         termLinks(kb, termsUsed, termsDefined);
+        String str;
         for (String t : termsDefined.keySet()) {
             for (String fname : termsDefined.get(t)) {
                 if (KButilities.isCacheFile(fname) || alreadyCounted.contains(t))
                     continue;
                 alreadyCounted.add(t);
-                List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, t);
-                HashSet<String> tformstrs = new HashSet<>();
+                tforms = kb.askWithRestriction(0, "termFormat", 2, t);
+                tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
-                    String str = f.getStringArgument(3);
+                    str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
-                String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
+                simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
                 System.out.print(t + "\t" + simpleName + "\t");
                 int i = 0;
-                for (String str : tformstrs) {
+                for (String st : tformstrs) {
                     if (i < 3)
-                        System.out.print(str + "\t");
+                        System.out.print(st + "\t");
                     i++;
                 }
                 System.out.println();
@@ -955,20 +958,23 @@ public class Diagnostics {
     /** ***************************************************************
      * Make a table of terms and the files in which they are defined
      */
-    public static void termDefsByGivenFile(KB kb, HashSet<String> files) {
+    public static void termDefsByGivenFile(KB kb, Set<String> files) {
 
         System.out.println("termDefsByGivenFile(): files: " + files);
-        HashSet<String> alreadyCounted = new HashSet<>();
-        HashMap<String,HashSet<String>> termsByFile = new HashMap<>();
+        Set<String> alreadyCounted = new HashSet<>();
+        Map<String,Set<String>> termsByFile = new HashMap<>();
+        String fname, simpleName, str;
+        Set<String> terms, goodTerms, ts, tformstrs;
+        List<Formula> tforms;
         for (Formula f : kb.formulaMap.values()) {
             if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): " + f);
-            String fname = f.sourceFile;
-            String simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
+            fname = f.sourceFile;
+            simpleName = fname.substring(fname.lastIndexOf('/')+1,fname.length());
             if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): simple name: " + simpleName);
-            HashSet<String> terms = (HashSet) f.collectTerms();
-            HashSet<String> goodTerms = new HashSet<>();
+            terms = f.collectTerms();
+            goodTerms = new HashSet<>();
             if (debug) if (f.getFormula().contains("AppleComputerCorporation"))
                 System.out.println("termDefsByGivenFile(): terms: " + terms);
             for (String t : terms) {
@@ -976,7 +982,7 @@ public class Diagnostics {
                     goodTerms.add(t);
             }
             if (termsByFile.keySet() != null && termsByFile.keySet().contains(simpleName)) {
-                HashSet<String> ts = termsByFile.get(simpleName);
+                ts = termsByFile.get(simpleName);
                 ts.addAll(goodTerms);
             }
             else {
@@ -984,18 +990,18 @@ public class Diagnostics {
                 termsByFile.put(simpleName, goodTerms);
             }
         }
-        for (String fname : termsByFile.keySet()) {  // make all terms not in file set already counted
-            if (files.contains(fname) || fname.equals("domainEnglishFormat.kif") &&
-                    fname.equals("english_format.kif") || KButilities.isCacheFile(fname))
+        for (String fnam : termsByFile.keySet()) {  // make all terms not in file set already counted
+            if (files.contains(fnam) || fnam.equals("domainEnglishFormat.kif") &&
+                    fnam.equals("english_format.kif") || KButilities.isCacheFile(fnam))
                 continue;
-            for (String term : termsByFile.get(fname)) {
+            for (String term : termsByFile.get(fnam)) {
                 if (debug) if (term.equals("AppleComputerCorporation"))
-                    System.out.println("termDefsByGivenFile(): adding to already counted: " + term + " from file: " + fname);
+                    System.out.println("termDefsByGivenFile(): adding to already counted: " + term + " from file: " + fnam);
                 alreadyCounted.add(term);
             }
         }
-        for (String fname : termsByFile.keySet()) {
-            for (String term : termsByFile.get(fname)) {
+        for (String fnam : termsByFile.keySet()) {
+            for (String term : termsByFile.get(fnam)) {
                 if (debug) if (term.equals("AppleComputerCorporation"))
                     System.out.println("termDefsByGivenFile(): found term: " + term);
                 if (alreadyCounted.contains(term))
@@ -1003,17 +1009,17 @@ public class Diagnostics {
                 alreadyCounted.add(term);
                 if (debug) if (term.equals("AppleComputerCorporation"))
                     System.out.println("termDefsByGivenFile(): added to already counted (2): " + term);
-                List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
-                HashSet<String> tformstrs = new HashSet<>();
+                tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+                tformstrs = new HashSet<>();
                 for (Formula f : tforms) {
-                    String str = f.getStringArgument(3);
+                    str = f.getStringArgument(3);
                     tformstrs.add(str);
                 }
-                System.out.print(term + "\t" + fname + "\t");
+                System.out.print(term + "\t" + fnam + "\t");
                 int i = 0;
-                for (String str : tformstrs) {
+                for (String st : tformstrs) {
                     if (i < 3)
-                        System.out.print(str + "\t");
+                        System.out.print(st + "\t");
                     i++;
                 }
                 System.out.println();
@@ -1024,20 +1030,24 @@ public class Diagnostics {
     /** ***************************************************************
      * Make a table of terms and the files in which they are defined
      */
-    public static void addLabels(KB kb, HashSet<String> file) {
+    public static void addLabels(KB kb, Set<String> file) {
 
+        List<Formula> tforms;
+        Set<String> tformstrs;
+        String str;
+        int i;
         for (String term : file) {
-            List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
-            HashSet<String> tformstrs = new HashSet<>();
+            tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+            tformstrs = new HashSet<>();
             for (Formula f : tforms) {
-                String str = f.getStringArgument(3);
+                str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
             System.out.print(term + "\t");
-            int i = 0;
-            for (String str : tformstrs) {
+            i = 0;
+            for (String st : tformstrs) {
                 if (i < 3)
-                    System.out.print(str + "\t");
+                    System.out.print(st + "\t");
                 i++;
             }
             System.out.println();
@@ -1055,12 +1065,12 @@ public class Diagnostics {
     /** ***************************************************************
      * Find all terms that differ only in capitalization
      */
-    public static ArrayList<String> termCapDiff(KB kb) {
+    public static List<String> termCapDiff(KB kb) {
 
-        ArrayList<String> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (String t1 : kb.terms) {
             for (String t2 : kb.terms) {
-                if (t1 != t2 && t1.equalsIgnoreCase(t2))
+                if ((t1 == null ? t2 != null : !t1.equals(t2)) && t1.equalsIgnoreCase(t2))
                     result.add(t1 + " " + t2);
             }
         }
@@ -1073,23 +1083,26 @@ public class Diagnostics {
      */
     public static void diffTerms(KB kb, String f1, String f2) {
 
-        HashSet<String> small = new HashSet<>();
+        Set<String> small = new HashSet<>();
         small.addAll(FileUtil.readLines(f1,false));
-        HashSet<String> big = new HashSet<>();
+        Set<String> big = new HashSet<>();
         big.addAll(FileUtil.readLines(f2,false));
         big.removeAll(small);
+        List<Formula> tforms;
+        Set<String> tformstrs;
+        String str;
         for (String term : big) {
-            List<Formula> tforms = kb.askWithRestriction(0, "termFormat", 2, term);
-            HashSet<String> tformstrs = new HashSet<>();
+            tforms = kb.askWithRestriction(0, "termFormat", 2, term);
+            tformstrs = new HashSet<>();
             for (Formula f : tforms) {
-                String str = f.getStringArgument(3);
+                str = f.getStringArgument(3);
                 tformstrs.add(str);
             }
             System.out.print(term + "\t"); //  + fname + "\t");
             int i = 0;
-            for (String str : tformstrs) {
+            for (String st : tformstrs) {
                 if (i < 3)
-                    System.out.print(str + "\t");
+                    System.out.print(st + "\t");
                 i++;
             }
             System.out.println();
