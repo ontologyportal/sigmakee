@@ -356,12 +356,12 @@ public class KBcache implements Serializable {
 
     	Map<String,Set<String>> prentsForRel = parents.get("subclass");
     	if (prentsForRel != null) {
-	    	Set<String> prents = prentsForRel.get(child);
-	        if (prents != null)
-	            return prents.contains(parent);
-	        else
-	            return false;
-	    	}
+            Set<String> prents = prentsForRel.get(child);
+            if (prents != null)
+                return prents.contains(parent);
+            else
+                return false;
+        }
     	return false;
     }
 
