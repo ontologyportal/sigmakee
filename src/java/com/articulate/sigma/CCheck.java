@@ -54,7 +54,7 @@ public class CCheck implements Runnable {
         this(kb, fileName);
         timeOut = timeout;
         if (setInferenceEngine(chosenEngine) == false) {
-            System.out.println("Unable to create CCheck for kb: " + kb.name +
+            System.err.println("Unable to create CCheck for kb: " + kb.name +
                     "; Error setting up inference engine = " + inferenceEngine);
             throw new Exception("Could not set inference engine with the following params for KB " +
                     kb.name + ". Inference Engine chosen = " + chosenEngine);
@@ -257,7 +257,7 @@ public class CCheck implements Runnable {
             fw.flush();
         }
         catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -302,7 +302,7 @@ public class CCheck implements Runnable {
             fw.flush();
         }
         catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -343,7 +343,7 @@ public class CCheck implements Runnable {
                     }
                     catch(Exception e) {
                         reportError(e.getMessage(), query, processedQuery, sourceFile);
-                        System.out.println("Error from inference engine: " + e.getMessage());
+                        System.err.println("Error from inference engine: " + e.getMessage());
                     }
                     negatedQuery = new StringBuilder();
                     negatedQuery.append("(not ").append(processedQuery).append(")");
@@ -353,7 +353,7 @@ public class CCheck implements Runnable {
                     }
                     catch(Exception e) {
                         reportError(e.getMessage(), query, processedQuery, sourceFile);
-                        System.out.println("Error from inference engine: " + e.getMessage());
+                        System.err.println("Error from inference engine: " + e.getMessage());
                     }
                 }
                 empty.tell(query.getFormula());
