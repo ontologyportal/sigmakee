@@ -3608,7 +3608,7 @@ public class KB implements Serializable {
         InferenceEngine res = null;
         try {
             if (!formulaMap.isEmpty()) {
-                Set<String> forms = preProcess((HashSet<String>) formulaMap.keySet());
+                Set<String> forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = !StringUtil.emptyString(filename);
                 if (!vFileSaved)
