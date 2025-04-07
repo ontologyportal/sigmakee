@@ -792,8 +792,10 @@ public class Diagnostics {
 
     /** *****************************************************************
      * Make an empty KB for use in Diagnostics.
+     *
+     * @param kbName the name of the empty KB to make
      */
-    private static KB makeEmptyKB(String kbName) {
+    public static KB makeEmptyKB(String kbName) {
 
         String kbDir = (String)KBmanager.getMgr().getPref("kbDir");
         if (KBmanager.getMgr().existsKB(kbName)) {
