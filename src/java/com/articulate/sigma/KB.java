@@ -4081,7 +4081,7 @@ public class KB implements Serializable {
         System.out.println("  h - show this help screen");
         System.out.println("  t - run test");
         System.out.println("  a \"<query>\"- ask query");
-        System.out.println("  l - load KB files");
+        System.out.println("  l - load/rebuild KB files");
         System.out.println("  v - ask query of Vampire");
         System.out.println("  e - ask query of EProver");
         System.out.println("  L - ask query of LEO-IIIr");
