@@ -121,11 +121,11 @@ else {
                 //}
                 //kb.addNewConstituent(outfile.getCanonicalPath());
                 kb.addConstituent(outfile.getCanonicalPath());
-                kb.checkArity();
                 if (mgr.getPref("cache").equalsIgnoreCase("yes")) {
                     kb.kbCache.buildCaches();
 //                    kb.kbCache.writeCacheFile();
                 }
+                kb.checkArity();
                 kb.loadEProver();
                 KBmanager.getMgr().writeConfiguration();
             }
