@@ -25,7 +25,7 @@
  if (StringUtil.emptyString(term))
     term = "";
  if (StringUtil.emptyString(nonRelTerm))
- 	nonRelTerm = "";
+    nonRelTerm = "";
  if (StringUtil.emptyString(relTerm))
     relTerm = "";
  if (flang.equals("OWL")) {
@@ -40,7 +40,7 @@
 
 <%
  String parentPage = "Browse.jsp";
- StringBuffer show = null;
+ StringBuilder show = null;
 %>
 
 <%@ include file="BrowseBody.jsp"%>
@@ -50,7 +50,7 @@
 <%@ include file="BrowseHeader.jsp" %>
 
 <br>
- <%=show.toString() %><BR>
+ <%=show.toString() %><br>
 
 <%@ include file="Postlude.jsp" %>
 </body>

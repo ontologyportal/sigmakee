@@ -58,10 +58,10 @@ if (!role.equals("admin") && !role.equals("user")) {
   SUMOtoTFAform.errors.clear();
   for (Formula f : kb.formulaMap.values()) {
       if (!KButilities.hasCorrectTypes(kb,f)) {
-	      out.println(f.htmlFormat(kbHref) + "<br>");
-	      out.println(KButilities.errors + "<P>");
-	  }
-	  KButilities.clearErrors();
+          out.println(f.htmlFormat(kbHref) + "<br>");
+          out.println(KButilities.errors + "<P>");
+      }
+      KButilities.clearErrors();
       kb.kbCache.errors.clear();
       SUMOtoTFAform.errors.clear();
   }

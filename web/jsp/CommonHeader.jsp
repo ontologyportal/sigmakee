@@ -41,14 +41,14 @@
         ]&nbsp;
         <b>KB:&nbsp;
 <%
-        List kbnames = new ArrayList();
+        List<String> kbnames = new ArrayList<>();
         kbnames.addAll(KBmanager.getMgr().getKBnames());
         out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
 %>
         </b>
         <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>&nbsp;
-        <P><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
-      <BR>
-      </TD>
+        <p><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
+      <br>
+      </td>
   </TR>
-</TABLE><br>
+</TABLE>

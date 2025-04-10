@@ -35,21 +35,21 @@
      term = TaxoModel.defaultTerm;
 
  if (StringUtil.emptyString(nonRelTerm))
- 	nonRelTerm = "";
+    nonRelTerm = "";
  if (StringUtil.emptyString(relTerm))
     relTerm = "";
- 	
+
  String contract = request.getParameter("contract");
- if (StringUtil.isNonEmptyString(contract)) 
+ if (StringUtil.isNonEmptyString(contract))
      TaxoModel.collapseNode(contract);
  String expand = request.getParameter("expand");
- if (StringUtil.isNonEmptyString(expand)) 
+ if (StringUtil.isNonEmptyString(expand))
      TaxoModel.expandNode(expand);
  String up = request.getParameter("up");
- if (StringUtil.isNonEmptyString(up)) 
+ if (StringUtil.isNonEmptyString(up))
      TaxoModel.expandParentNodes(up);
  String down = request.getParameter("down");
- if (StringUtil.isNonEmptyString(down)) 
+ if (StringUtil.isNonEmptyString(down))
      TaxoModel.collapseParentNodes(down);
 
  String https = KBmanager.getMgr().getPref("https");
@@ -64,9 +64,9 @@
 %>
   <TITLE>TreeView Knowledge Base Browser - <%=term%></TITLE>
 <%
-  StringBuffer show = null;
+  StringBuilder show = null;
   String parentPage = "TreeView.jsp";
-  
+
   if (StringUtil.isNonEmptyString(simple) && simple.equals("yes")) {
 %>
     <%@ include file="SimpleBrowseBody.jsp" %>
