@@ -5533,7 +5533,7 @@ public class DocGen {
                 String dirpath = "";
                 switch (i) {
                 case 0 :
-                    dirpath = System.getenv("SIGMA_HOME");
+                    dirpath = KButilities.SIGMA_HOME;
                     break;
                 case 1 :
                     dirpath = KBmanager.getMgr().getPref("baseDir");
