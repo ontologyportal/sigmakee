@@ -285,6 +285,38 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Experimental: Utility method to perform a merge with the KB input
+     *
+     * @param kbIn the KB to merge
+     */
+    public void mergeKBs(KB kbIn) {
+
+        if (kbIn.capterms != null)
+            this.capterms.putAll(kbIn.capterms);
+        if (kbIn.constituents != null)
+            this.constituents.addAll(kbIn.constituents);
+        if (kbIn.formatMap != null)
+            this.formatMap.putAll(kbIn.formatMap);
+        if (kbIn.formatMapAll != null)
+            this.formatMapAll.putAll(kbIn.formatMapAll);
+        if (kbIn.formulaMap != null)
+            this.formulaMap.putAll(kbIn.formulaMap);
+        if (kbIn.formulas != null)
+            this.formulas.putAll(kbIn.formulas);
+        if (kbIn.termDepthCache != null)
+            this.termDepthCache.putAll(kbIn.termDepthCache);
+        if (kbIn.termFormatMap != null)
+            this.termFormatMap.putAll(kbIn.termFormatMap);
+        if (kbIn.termFormatMapAll != null)
+            this.termFormatMapAll.putAll(kbIn.termFormatMapAll);
+        if (kbIn.termFrequency != null)
+            this.termFrequency.putAll(kbIn.termFrequency);
+        if (kbIn.terms != null)
+            this.terms.addAll(kbIn.terms);
+        this.kbCache.mergeCaches(kbCache);
+    }
+
+    /***************************************************************
      */
     public boolean isVisible() {
         return isVisible;
@@ -2880,12 +2912,11 @@ public class KB implements Serializable {
             System.err.println("Error in KB.readConstituent(): " + error.toString());
             ex1.printStackTrace();
         }
-        file.filename = filename;
         return file;
     }
 
     /***************************************************************
-     * A a formula or formulas into the KB
+     * Adds a formula or formulas into the KB
      */
     public void addConstituentInfo(KIF file) {
 
@@ -4134,7 +4165,6 @@ public class KB implements Serializable {
             }
             if (args != null && args.length > 0 && args[0].contains("t")) {
                 test();
-                System.exit(0);
             }
             if (args != null && args.length > 1 && args[0].contains("v")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
