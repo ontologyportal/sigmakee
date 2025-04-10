@@ -432,7 +432,7 @@ public class KB implements Serializable {
             Formula f;
             String lang;
             for (int i = 0; i < col.size(); i++) {
-                f = (Formula) col.get(i);
+                f = col.get(i);
                 lang = f.getStringArgument(1);
                 if (!al.contains(lang.intern()))
                     al.add(lang.intern());
