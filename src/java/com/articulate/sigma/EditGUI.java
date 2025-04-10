@@ -263,11 +263,11 @@ public class EditGUI {
         List<String> parents = genAllParentList(kb,term);
 
         // show the instance and its class
-        sb.append("Instance relations for: <font size=+3><a href=\"").append(kbHref).append(term).append("\">").append(term).append("</a></font>:");
+        sb.append("Instance relations for: <font size=+3><a href=\"").append(kbHref).append("&term=").append(term).append("\">").append(term).append("</a></font>:");
         String parent;
         for (int i = 0; i < parents.size(); i++) {
             parent = parents.get(i);
-            sb.append("<a href=\"").append(kbHref).append(parent).append("\">").append(parent).append("</a>,");
+            sb.append("<a href=\"").append(kbHref).append("&term=").append(parent).append("\">").append(parent).append("</a>,");
         }
         sb.append("<P>\n");
         sb.append("<table>\n");
@@ -277,7 +277,7 @@ public class EditGUI {
         List<String> fillers;
         for (String relation : instList.keySet()) {
             if (allowedTerms.size() < 1 || allowedTerms.contains(relation)) {
-                sb.append("<tr><td><a href=\"").append(kbHref).append(relation).append("\">").append(relation).append("</a>:</td><td>");
+                sb.append("<tr><td><a href=\"").append(kbHref).append("&term=").append(relation).append("\">").append(relation).append("</a>:</td><td>");
                 arguments = instList.get(relation);
                 for (int i = 0; i < arguments.size(); i++) {
                     fillers = arguments.get(i);
@@ -308,11 +308,11 @@ public class EditGUI {
         List<String> parents = genAllParentList(kb,term);
 
         // show the instance and its class
-        sb.append("Class relations for: <font size=+3><a href=\"").append(kbHref).append(term).append("\">").append(term).append("</a></font>:");
+        sb.append("Class relations for: <font size=+3><a href=\"").append(kbHref).append("&term=").append(term).append("\">").append(term).append("</a></font>:");
         String parent;
         for (int i = 0; i < parents.size(); i++) {
             parent = parents.get(i);
-            sb.append("<a href=\"").append(kbHref).append(parent).append("\">").append(parent).append("</a>,");
+            sb.append("<a href=\"").append(kbHref).append("&term=").append(parent).append("\">").append(parent).append("</a>,");
         }
         sb.append("<P>\n");
         sb.append("<table>\n");
@@ -322,7 +322,7 @@ public class EditGUI {
         List<String> fillers;
         for (String relation : instList.keySet()) {
             if (allowedTerms.size() < 1 || allowedTerms.contains(relation)) {
-                sb.append("<tr><td><a href=\"").append(kbHref).append(relation).append("\">").append(relation).append("</a>:</td><td>");
+                sb.append("<tr><td><a href=\"").append(kbHref).append("&term=").append(relation).append("\">").append(relation).append("</a>:</td><td>");
                 arguments = instList.get(relation);
                 for (int i = 0; i < arguments.size(); i++) {
                     fillers = arguments.get(i);
