@@ -65,7 +65,6 @@
               if (action.equals("dotGraph")) {
                   Graph g = new Graph();
                   g.createDotGraph(kb, term, relation, 2, 2, 100, filename, "");
-
               }
           }
       }
