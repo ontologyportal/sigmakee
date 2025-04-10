@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,33 +41,21 @@ public class EditGUI {
     public static void initOnce() {
 
         if (initOnce) return;
-        LineNumberReader lnr = null;
-        String fname = "allowedTerms.txt";
+        String fname = "allowedTerms.txt"; // TODO: where might we find this file? (tdn)
         String kbDir = KBmanager.getMgr().getPref("kbDir");
 
-        try {
-            File fin  = new File(kbDir + File.separator + fname);
-            FileReader fr = new FileReader(fin);
-            if (fr != null) {
-                lnr = new LineNumberReader(fr);
-                String line;
-                while ((line = lnr.readLine()) != null) {
-                    line = line.trim();
-                    allowedTerms.add(line);
-                }
+        File fin  = new File(kbDir + File.separator + fname);
+        try (Reader fr = new FileReader(fin);
+             LineNumberReader lnr = new LineNumberReader(fr)) {
+            String line;
+            while ((line = lnr.readLine()) != null) {
+                line = line.trim();
+                allowedTerms.add(line);
             }
         }
         catch (IOException ioe) {
-            System.err.println("Error in EditGUI.readConfig() reading file: " + kbDir + File.separator + fname);
-            System.out.println(ioe.getMessage());
-        }
-        finally {
-            try {
-                if (lnr != null) lnr.close();
-            }
-            catch (IOException e) {
-                System.out.println("Exception in EditGUI.readConfig()");
-            }
+            System.err.println("Error in EditGUI.initOnce() reading file: " + fin.getName());
+            System.err.println(ioe.getMessage());
         }
         initOnce = true;
     }
@@ -88,11 +77,11 @@ public class EditGUI {
 
         StringBuilder sb = new StringBuilder();
 
-        Set ts = kb.getAllInstances(className);
-        Iterator it = ts.iterator();
+        Set<String> ts = kb.getAllInstances(className);
+        Iterator<String> it = ts.iterator();
         String term;
         while (it.hasNext()) {
-            term = (String) it.next();
+            term = it.next();
             sb.append(term);
             if (it.hasNext()) sb.append(", ");
         }
