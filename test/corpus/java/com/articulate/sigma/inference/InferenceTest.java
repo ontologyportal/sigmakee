@@ -111,11 +111,11 @@ public class InferenceTest {
         System.out.println("expected: " + itd.expectedAnswers);
         System.out.println("actual: " + itd.actualAnswers);
         if (itd.inconsistent)
-            System.out.println("Failure (**inconsistent**) in " + fInput);
+            System.err.println("Failure (**inconsistent**) in " + fInput);
         else if (itd.expectedAnswers.equals(itd.actualAnswers))
             System.out.println("Success in " + fInput);
         else
-            System.out.println("Failure in " + fInput);
+            System.err.println("Failure in " + fInput);
         System.out.println("\n\n");
         assertEquals(itd.expectedAnswers, itd.actualAnswers);
     }

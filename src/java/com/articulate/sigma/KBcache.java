@@ -139,6 +139,8 @@ public class KBcache implements Serializable {
 
     public boolean initialized = false;
 
+    private static final float LOAD_FACTOR = 0.75f;
+
     /****************************************************************
      * empty constructor for testing only
      */
@@ -150,22 +152,22 @@ public class KBcache implements Serializable {
      */
     public KBcache(KB kbin) {
 
-        relations = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
-        functions = new HashSet<>(kbin.getCountTerms()/9,(float) 0.75);
-        predicates = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
-        transRels = new HashSet<>(60,(float) 0.75);
+        relations = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        functions = new HashSet<>(kbin.getCountTerms()/9,LOAD_FACTOR);
+        predicates = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        transRels = new HashSet<>(60,LOAD_FACTOR);
         // instRels = new HashSet<String>();
-        instTransRels = new HashSet<>(50,(float) 0.75);
-        parents = new HashMap<>(60,(float) 0.75);
-        instanceOf = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
-        instances = new HashMap<>(kbin.getCountTerms(),(float) 0.75);
-        insts = new HashSet<>(kbin.getCountTerms(),(float) 0.75);
-        children = new HashMap<>(60,(float) 0.75);
-        signatures = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
-        valences = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
-        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,(float) 0.75);
-        disjoint = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
-        disjointRelations = new HashSet<>(kbin.getCountTerms()/3,(float) 0.75);
+        instTransRels = new HashSet<>(50,LOAD_FACTOR);
+        parents = new HashMap<>(60,LOAD_FACTOR);
+        instanceOf = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        instances = new HashMap<>(kbin.getCountTerms(),LOAD_FACTOR);
+        insts = new HashSet<>(kbin.getCountTerms(),LOAD_FACTOR);
+        children = new HashMap<>(60,LOAD_FACTOR);
+        signatures = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        valences = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        disjoint = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        disjointRelations = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
         this.kb = kbin;
     }
 
@@ -257,6 +259,70 @@ public class KBcache implements Serializable {
         }
     }
 
+    /***************************************************************
+     * Experimental: Utility method to perform a merge with the KBcache input
+     *
+     * @param kbCacheIn the incoming cache to merge
+     */
+    public void mergeCaches(KBcache kbCacheIn) {
+
+        if (kbCacheIn.children != null)
+            this.children.putAll(kbCacheIn.children);
+        if (kbCacheIn.disjoint != null)
+            this.disjoint.addAll(kbCacheIn.disjoint);
+        if (kbCacheIn.disjointRelations != null)
+            this.disjointRelations.addAll(kbCacheIn.disjointRelations);
+        if (kbCacheIn.explicitDisjoint != null)
+            this.explicitDisjoint.putAll(kbCacheIn.explicitDisjoint);
+        if (kbCacheIn.functions != null)
+            this.functions.addAll(kbCacheIn.functions);
+        if (kbCacheIn.instRels != null)
+            this.instRels.addAll(kbCacheIn.instRels);
+        if (kbCacheIn.instTransRels != null)
+            this.instTransRels.addAll(kbCacheIn.instTransRels);
+        if (kbCacheIn.instanceOf != null)
+            this.instanceOf.putAll(kbCacheIn.instanceOf);
+        if (kbCacheIn.instances != null)
+            this.instances.putAll(kbCacheIn.instances);
+        if (kbCacheIn.insts != null)
+            this.insts.addAll(kbCacheIn.insts);
+        if (kbCacheIn.parents != null)
+            this.parents.putAll(kbCacheIn.parents);
+        if (kbCacheIn.predicates != null)
+            this.predicates.addAll(kbCacheIn.predicates);
+        if (kbCacheIn.relations != null)
+            this.relations.addAll(kbCacheIn.relations);
+        if (kbCacheIn.signatures != null)
+            this.signatures.putAll(kbCacheIn.signatures);
+        if (kbCacheIn.transRels != null)
+            this.transRels.addAll(kbCacheIn.transRels);
+        if (kbCacheIn.valences != null)
+            this.valences.putAll(kbCacheIn.valences);
+    }
+
+    /***************************************************************
+     * Experimental: Utility method to clear the KBcache
+     */
+    public void clearCaches() {
+
+        children.clear();
+        disjoint.clear();
+        disjointRelations.clear();
+        explicitDisjoint.clear();
+        functions.clear();
+        instRels.clear();
+        instTransRels.clear();
+        instanceOf.clear();
+        instances.clear();
+        insts.clear();
+        parents.clear();
+        predicates.clear();
+        relations.clear();
+        signatures.clear();
+        transRels.clear();
+        valences.clear();
+    }
+
     /**************************************************************
      * An ArrayList utility method
      */
@@ -289,7 +355,8 @@ public class KBcache implements Serializable {
 
     /** ***************************************************************
      * Find whether the given child has the given parent for the given
-     * transitive relation.  Return false if they are equal
+     * transitive relation.
+     * @return false if they are equal
      */
     public boolean childOfP(String rel, String parent, String child) {
 
@@ -356,12 +423,12 @@ public class KBcache implements Serializable {
 
     	Map<String,Set<String>> prentsForRel = parents.get("subclass");
     	if (prentsForRel != null) {
-	    	Set<String> prents = prentsForRel.get(child);
-	        if (prents != null)
-	            return prents.contains(parent);
-	        else
-	            return false;
-	    	}
+            Set<String> prents = prentsForRel.get(child);
+            if (prents != null)
+                return prents.contains(parent);
+            else
+                return false;
+        }
     	return false;
     }
 
@@ -746,7 +813,7 @@ public class KBcache implements Serializable {
                 }
             }
         }
-        buildDirectInstances();
+        buildDirectInstances(); // TODO: This was called already earlier in the buildCaches() parent method
     }
 
     /** ***************************************************************
@@ -1034,7 +1101,6 @@ public class KBcache implements Serializable {
         while (!rels.isEmpty()) {
             relSubs = new HashSet<>();
             for (String rel : rels) {
-                relSubs = new HashSet<>();
                 forms = kb.askWithRestriction(0, "subclass", 2, rel);
                 if (forms != null && !forms.isEmpty()) {
                     if (debug) System.out.println("INFO in KBcache.buildTransitiveRelationsSet(): subclasses: " + forms);
@@ -1049,7 +1115,7 @@ public class KBcache implements Serializable {
                 if (forms != null && !forms.isEmpty())
                     transRels.addAll(collectArgFromFormulas(1,forms));
             }
-            rels = new HashSet<>();
+            rels.clear();
             rels.addAll(relSubs);
         }
     }
@@ -1089,7 +1155,7 @@ public class KBcache implements Serializable {
                 }
             }
             if (debug) System.out.println("INFO in KBcache.buildRelationsSet(): relSubs: " + relSubs);
-            rels = new HashSet<>();
+            rels.clear();
             rels.addAll(relSubs);
         }
     }
@@ -1099,9 +1165,8 @@ public class KBcache implements Serializable {
     public void buildFunctionsSet() {
 
         for (String s : relations)
-            if (isInstanceOf(s,"Function")) { // can't use isFunction since that checks KBcache.functions
+            if (isInstanceOf(s,"Function")) // can't use isFunction since that checks KBcache.functions
                 functions.add(s);
-            }
             else
                 predicates.add(s);
     }
@@ -1258,25 +1323,24 @@ public class KBcache implements Serializable {
         if (debug) System.out.println("buildChildrenNew(): " + kb.ask("arg",0,"subrelation"));
         List<Formula> forms = kb.askWithRestriction(0,rel,2,term); // argument 2 is the "parent" in any binary relation
         if (debug) System.out.println("buildChildrenNew(): forms  " + forms);
-        if (forms == null || forms.isEmpty()) {
+        if (forms == null || forms.isEmpty())
             return new HashSet<>();
-        }
         Set<String> collectedChildren = new HashSet<>();
         String newTerm;
-        Set<String> children;
+        Set<String> lclChildren;
         for (Formula f : forms) {
             if (f.isCached() || StringUtil.emptyString(f.sourceFile))
                 continue;
             //System.out.println(f.sourceFile);
             newTerm = f.getStringArgument(1);// argument 1 is the "child" in any binary relation
             if (debug) System.out.println("buildChildrenNew(): new term " + newTerm);
-            children = buildChildrenNew(newTerm, rel);
-            if (debug) System.out.println("buildChildrenNew(): children of " + newTerm + " are " + children);
+            lclChildren = buildChildrenNew(newTerm, rel);
+            if (debug) System.out.println("buildChildrenNew(): children of " + newTerm + " are " + lclChildren);
             if (allChildren.containsKey(newTerm) && allChildren.get(newTerm) != null)
-                children.addAll(allChildren.get(newTerm));
-            allChildren.put(newTerm, children);
-            if (children != null)
-                collectedChildren.addAll(children);
+                lclChildren.addAll(allChildren.get(newTerm));
+            allChildren.put(newTerm, lclChildren);
+            if (lclChildren != null)
+                collectedChildren.addAll(lclChildren);
             collectedChildren.add(newTerm);
         }
         //collectedChildren.add(term);
@@ -1290,7 +1354,7 @@ public class KBcache implements Serializable {
      */
     public void buildInsts() {
 
-        Set<String> rels = new HashSet<>(50,(float) 0.75);
+        Set<String> rels = new HashSet<>(50,LOAD_FACTOR);
         rels.add("instance");
         rels.add("subAttribute");
         rels.add("subField");
@@ -1315,22 +1379,16 @@ public class KBcache implements Serializable {
     public void buildParents() {
 
         if (debug) System.out.println("INFO in KBcache.buildParents():");
-//        Iterator<String> it = transRels.iterator();
         Map<String,Set<String>> value;
         Set<String> roots;
-        Iterator<String> it1;
-        String root;
         for (String rel : transRels) {
-            value = new HashMap<>(50, (float) 0.75);
+            value = new HashMap<>(50, LOAD_FACTOR);
             roots = findRoots(rel);
             if (debug) System.out.println("INFO in KBcache.buildParents(): roots for rel: " +
                     rel + "\n" + roots);
             parents.put(rel, value);
-            it1 = roots.iterator();
-            while (it1.hasNext()) {
-                root = it1.next();
-                breadthFirstBuildParents(root,rel);
-            }
+            for(String root : roots)
+                breadthFirstBuildParents(root, rel);
         }
     }
 
@@ -1347,12 +1405,12 @@ public class KBcache implements Serializable {
         Set<String> roots, c;
         for (String rel : transRels) {
             if (debug) System.out.println("INFO in KBcache.buildChildren(): rel: " + rel);
-            value = new HashMap<>(50,(float) 0.75);
+            value = new HashMap<>(50,LOAD_FACTOR);
             roots = findRoots(rel);
             if (debug) System.out.println("INFO in KBcache.buildChildren(): roots: " + roots);
             children.put(rel, value);
             for (String root : roots) {
-                visited = new HashSet<>(); // reset the visited list for each new root and relation
+                visited.clear(); // reset the visited list for each new root and relation
                 c = buildChildrenNew(root, rel);
                 if (c != null)
                     value.put(root,c);
@@ -1400,6 +1458,7 @@ public class KBcache implements Serializable {
         String[] domainArray;
         int maxIndex, arg;
         List<Formula> forms;
+        List<String> domains;
         Formula form;
         String arg2, type;
         for (String rel : relations) {
@@ -1460,7 +1519,7 @@ public class KBcache implements Serializable {
             }
 
             fillArray("Entity",domainArray,1,maxIndex); // set default arg type of Entity in case user forgets
-            List<String> domains = new ArrayList<>();
+            domains = new ArrayList<>();
             for (int i = 0; i <= maxIndex; i++)
                 domains.add(domainArray[i]);
             if (debug) System.out.println("INFO in KBcache.collectDomains(): rel: " + rel);
@@ -1571,11 +1630,11 @@ public class KBcache implements Serializable {
                     }
                 }
             }
-            System.out.printf("KBcache.writeCacheFile(): done writing cache file, in %d seconds\n", (System.currentTimeMillis() - millis) / KButilities.ONE_K);
+            System.out.printf("KBcache.writeCacheFile(): done writing cache file, in %d seconds%n", (System.currentTimeMillis() - millis) / KButilities.ONE_K);
             millis = System.currentTimeMillis();
             kb.constituents.remove(filename);
             kb.addConstituent(filename);
-            System.out.printf("KBcache.writeCacheFile(): add cache file, in %d seconds\n", (System.currentTimeMillis() - millis) / KButilities.ONE_K);
+            System.out.printf("KBcache.writeCacheFile(): add cache file, in %d seconds%n", (System.currentTimeMillis() - millis) / KButilities.ONE_K);
         }
         catch (IOException ex) {
             ex.printStackTrace();
@@ -1583,7 +1642,7 @@ public class KBcache implements Serializable {
     }
 
     /** *************************************************************
-     * Add the cached formulas as though there were from a file
+     * Add the cached formulas as though they were from a file.
      * There's no need to write the file since if it hasn't been created,
      * it must be created new.  If it has been created already, then it
      * will be written out as part of the serialized info.
@@ -1623,14 +1682,17 @@ public class KBcache implements Serializable {
                 }
             }
         }
-        try (StringReader r = new StringReader(sb.toString())) {
+        try (Reader r = new StringReader(sb.toString())) {
             kif.parse(r);
+        } catch (IOException ioe) {
+            System.err.println("Error in KBcache.storeCacheAsFormulas(): " + ioe.getMessage());
+            return;
         }
         if (KBmanager.getMgr().getPref("cache").equals("yes"))
             kb.addConstituentInfo(kif);
 
-        System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s\n", (System.currentTimeMillis() - millis));
-        System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d\n", cacheCount);
+        System.out.printf("KBcache.storeCacheAsFormulas(): done creating cache formulas, in %d m/s%n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.storeCacheAsFormulas(): cached statements: %d%n", cacheCount);
     }
 
     /** ***************************************************************
@@ -1653,13 +1715,13 @@ public class KBcache implements Serializable {
 
         List<String> sig;
         String signatureElement;
+        boolean instrel;
         for (String rel : transRels) {
             //System.out.println("KBcache.buildInstTransRels(): -------------------: " + rel);
-            boolean instrel = true;
+            instrel = true;
             sig = signatures.get(rel);
-            if (sig == null) {
+            if (sig == null)
                 System.err.println("Error in KBcache.buildInstTransRels(): Error " + rel + " not found.");
-            }
             else {
                 for (int i = 0; i < sig.size(); i++) {
                     signatureElement = sig.get(i);
@@ -1681,6 +1743,7 @@ public class KBcache implements Serializable {
      */
     public void buildCaches() {
 
+        clearCaches(); // ensure a clean slate
         if (!SUMOKBtoTPTPKB.rapidParsing)
             _buildCaches();
         else
@@ -1701,50 +1764,50 @@ public class KBcache implements Serializable {
         Runnable r = () -> {
             long millis = System.currentTimeMillis();
             buildInsts();
-            System.out.printf("KBcache.buildCaches(): buildInsts:                  %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildInsts:                  %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildRelationsSet();
-            System.out.printf("KBcache.buildCaches(): buildRelationsSet:           %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildRelationsSet:           %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildTransitiveRelationsSet();
-            System.out.printf("KBcache.buildCaches(): buildTransitiveRelationsSet: %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildTransitiveRelationsSet: %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildParents();
-            System.out.printf("KBcache.buildCaches(): buildParents:                %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildParents:                %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildChildren(); // note that buildTransInstOf() depends on this
-            System.out.printf("KBcache.buildCaches(): buildChildren:               %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildChildren:               %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             collectDomains();  // note that buildInstTransRels() depends on this
-            System.out.printf("KBcache.buildCaches(): collectDomains:              %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): collectDomains:              %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildInstTransRels();
-            System.out.printf("KBcache.buildCaches(): buildInstTransRels:          %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildInstTransRels:          %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildDirectInstances();
-            System.out.printf("KBcache.buildCaches(): buildDirectInstances:        %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildDirectInstances:        %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             addTransitiveInstances();
-            System.out.printf("KBcache.buildCaches(): addTransitiveInstances:      %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): addTransitiveInstances:      %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildTransInstOf();
             correctValences(); // correct VariableArityRelation valences
-            System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildExplicitDisjointMap(); // find relations under partition definition
-            System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
             if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
                 millis = System.currentTimeMillis();
 //            buildExplicitDisjointMap();
                 buildDisjointMap();
-                System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s\n", (System.currentTimeMillis() - millis));
+                System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
             }
             millis = System.currentTimeMillis();
             buildFunctionsSet();
-            System.out.printf("KBcache.buildCaches(): buildFunctionsSet:           %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildFunctionsSet:           %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             storeCacheAsFormulas();
-            System.out.printf("KBcache.buildCaches(): store cached formulas:       %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): store cached formulas:       %d m/s%n", (System.currentTimeMillis() - millis));
         };
         future = KButilities.EXECUTOR_SERVICE.submit(r);
         futures.add(future);
@@ -1753,12 +1816,12 @@ public class KBcache implements Serializable {
             try {
                 f.get(); // waits for task completion
             } catch (InterruptedException | ExecutionException ex) {
-                System.err.printf("Error in KBcache.buildCaches(): %s", ex.getMessage());
+                System.err.printf("Error in KBcache.buildCaches(): %s%n", ex.getMessage());
                 ex.printStackTrace();
             }
 
-        System.out.printf("INFO in KBcache.buildCaches(): size: %d\n", instanceOf.keySet().size());
-        System.out.printf("KBcache.buildCaches():                              %d total seconds\n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
+        System.out.printf("INFO in KBcache.buildCaches(): size: %d%n", instanceOf.keySet().size());
+        System.out.printf("KBcache.buildCaches():                              %d total seconds%n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
         initialized = true;
     }
 
@@ -1771,54 +1834,54 @@ public class KBcache implements Serializable {
         long startMillis = millis;
         if (debug) System.out.println("INFO in KBcache.buildCaches()");
         buildInsts();
-        System.out.printf("KBcache.buildCaches(): buildInsts:                  %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildInsts:                  %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildRelationsSet();
-        System.out.printf("KBcache.buildCaches(): buildRelationsSet:           %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildRelationsSet:           %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildTransitiveRelationsSet();
-        System.out.printf("KBcache.buildCaches(): buildTransitiveRelationsSet: %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildTransitiveRelationsSet: %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildParents();
-        System.out.printf("KBcache.buildCaches(): buildParents:                %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildParents:                %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildChildren(); // note that buildTransInstOf() depends on this
-        System.out.printf("KBcache.buildCaches(): buildChildren:               %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildChildren:               %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         collectDomains();  // note that buildInstTransRels() depends on this
-        System.out.printf("KBcache.buildCaches(): collectDomains:              %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): collectDomains:              %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildInstTransRels();
-        System.out.printf("KBcache.buildCaches(): buildInstTransRels:          %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildInstTransRels:          %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildDirectInstances();
-        System.out.printf("KBcache.buildCaches(): buildDirectInstances:        %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildDirectInstances:        %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         addTransitiveInstances();
-        System.out.printf("KBcache.buildCaches(): addTransitiveInstances:      %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): addTransitiveInstances:      %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildTransInstOf();
         correctValences(); // correct VariableArityRelation valences
-        System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         buildExplicitDisjointMap(); // find relations under partition definition
-        System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
         if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
             millis = System.currentTimeMillis();
 //            buildExplicitDisjointMap();
             buildDisjointMap();
-            System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s\n", (System.currentTimeMillis() - millis));
+            System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
         }
         millis = System.currentTimeMillis();
         buildFunctionsSet();
-        System.out.printf("KBcache.buildCaches(): buildFunctionsSet:           %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): buildFunctionsSet:           %d m/s%n", (System.currentTimeMillis() - millis));
         millis = System.currentTimeMillis();
         //writeCacheFile();
         storeCacheAsFormulas();
-        System.out.printf("KBcache.buildCaches(): store cached formulas:       %d m/s\n", (System.currentTimeMillis() - millis));
+        System.out.printf("KBcache.buildCaches(): store cached formulas:       %d m/s%n", (System.currentTimeMillis() - millis));
 
-        System.out.printf("INFO in KBcache.buildCaches(): size: %d\n", instanceOf.keySet().size());
-        System.out.printf("KBcache.buildCaches():                              %d total seconds\n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
+        System.out.printf("INFO in KBcache.buildCaches(): size: %d%n", instanceOf.keySet().size());
+        System.out.printf("KBcache.buildCaches():                              %d total seconds%n", (System.currentTimeMillis() - startMillis) / KButilities.ONE_K);
         initialized = true;
     }
 
@@ -2047,7 +2110,7 @@ public class KBcache implements Serializable {
         System.out.println("  -a - show All cache contents");
         System.out.println("  -s - show size of cache elements");
         System.out.println("  -c term - show children of term");
-        System.out.println("  -t - show complete sTate of cache");
+        System.out.println("  -t - show complete state of cache");
     }
 
     /** ***************************************************************
@@ -2062,7 +2125,7 @@ public class KBcache implements Serializable {
                 KBmanager.getMgr().initializeOnce();
             }
             catch (Exception e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("**** Finished loading KB ***");

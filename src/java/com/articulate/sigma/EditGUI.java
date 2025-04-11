@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.LineNumberReader;
+import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,33 +41,21 @@ public class EditGUI {
     public static void initOnce() {
 
         if (initOnce) return;
-        LineNumberReader lnr = null;
-        String fname = "allowedTerms.txt";
+        String fname = "allowedTerms.txt"; // TODO: where might we find this file? (tdn)
         String kbDir = KBmanager.getMgr().getPref("kbDir");
 
-        try {
-            File fin  = new File(kbDir + File.separator + fname);
-            FileReader fr = new FileReader(fin);
-            if (fr != null) {
-                lnr = new LineNumberReader(fr);
-                String line;
-                while ((line = lnr.readLine()) != null) {
-                    line = line.trim();
-                    allowedTerms.add(line);
-                }
+        File fin  = new File(kbDir + File.separator + fname);
+        try (Reader fr = new FileReader(fin);
+             LineNumberReader lnr = new LineNumberReader(fr)) {
+            String line;
+            while ((line = lnr.readLine()) != null) {
+                line = line.trim();
+                allowedTerms.add(line);
             }
         }
         catch (IOException ioe) {
-            System.err.println("Error in EditGUI.readConfig() reading file: " + kbDir + File.separator + fname);
-            System.out.println(ioe.getMessage());
-        }
-        finally {
-            try {
-                if (lnr != null) lnr.close();
-            }
-            catch (IOException e) {
-                System.out.println("Exception in EditGUI.readConfig()");
-            }
+            System.err.println("Error in EditGUI.initOnce() reading file: " + fin.getName());
+            System.err.println(ioe.getMessage());
         }
         initOnce = true;
     }
@@ -88,11 +77,11 @@ public class EditGUI {
 
         StringBuilder sb = new StringBuilder();
 
-        Set ts = kb.getAllInstances(className);
-        Iterator it = ts.iterator();
+        Set<String> ts = kb.getAllInstances(className);
+        Iterator<String> it = ts.iterator();
         String term;
         while (it.hasNext()) {
-            term = (String) it.next();
+            term = it.next();
             sb.append(term);
             if (it.hasNext()) sb.append(", ");
         }
@@ -274,11 +263,11 @@ public class EditGUI {
         List<String> parents = genAllParentList(kb,term);
 
         // show the instance and its class
-        sb.append("Instance relations for: <font size=+3><a href=\"").append(kbHref).append(term).append("\">").append(term).append("</a></font>:");
+        sb.append("Instance relations for: <font size=+3><a href=\"").append(kbHref).append("&term=").append(term).append("\">").append(term).append("</a></font>:");
         String parent;
         for (int i = 0; i < parents.size(); i++) {
             parent = parents.get(i);
-            sb.append("<a href=\"").append(kbHref).append(parent).append("\">").append(parent).append("</a>,");
+            sb.append("<a href=\"").append(kbHref).append("&term=").append(parent).append("\">").append(parent).append("</a>,");
         }
         sb.append("<P>\n");
         sb.append("<table>\n");
@@ -288,7 +277,7 @@ public class EditGUI {
         List<String> fillers;
         for (String relation : instList.keySet()) {
             if (allowedTerms.size() < 1 || allowedTerms.contains(relation)) {
-                sb.append("<tr><td><a href=\"").append(kbHref).append(relation).append("\">").append(relation).append("</a>:</td><td>");
+                sb.append("<tr><td><a href=\"").append(kbHref).append("&term=").append(relation).append("\">").append(relation).append("</a>:</td><td>");
                 arguments = instList.get(relation);
                 for (int i = 0; i < arguments.size(); i++) {
                     fillers = arguments.get(i);
@@ -319,11 +308,11 @@ public class EditGUI {
         List<String> parents = genAllParentList(kb,term);
 
         // show the instance and its class
-        sb.append("Class relations for: <font size=+3><a href=\"").append(kbHref).append(term).append("\">").append(term).append("</a></font>:");
+        sb.append("Class relations for: <font size=+3><a href=\"").append(kbHref).append("&term=").append(term).append("\">").append(term).append("</a></font>:");
         String parent;
         for (int i = 0; i < parents.size(); i++) {
             parent = parents.get(i);
-            sb.append("<a href=\"").append(kbHref).append(parent).append("\">").append(parent).append("</a>,");
+            sb.append("<a href=\"").append(kbHref).append("&term=").append(parent).append("\">").append(parent).append("</a>,");
         }
         sb.append("<P>\n");
         sb.append("<table>\n");
@@ -333,7 +322,7 @@ public class EditGUI {
         List<String> fillers;
         for (String relation : instList.keySet()) {
             if (allowedTerms.size() < 1 || allowedTerms.contains(relation)) {
-                sb.append("<tr><td><a href=\"").append(kbHref).append(relation).append("\">").append(relation).append("</a>:</td><td>");
+                sb.append("<tr><td><a href=\"").append(kbHref).append("&term=").append(relation).append("\">").append(relation).append("</a>:</td><td>");
                 arguments = instList.get(relation);
                 for (int i = 0; i < arguments.size(); i++) {
                     fillers = arguments.get(i);

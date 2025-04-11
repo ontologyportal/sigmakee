@@ -722,7 +722,7 @@ public class SUMOtoTFATest extends UnitTestBase {
 
     /** ***************************************************************
      */
-    @Ignore // requires loading a new kif file
+    @Ignore // requires loading an unavailable kif file
     @Test
     public void testAvgWork() {
 

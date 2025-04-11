@@ -12,26 +12,27 @@ import com.articulate.sigma.utils.StringUtil;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**  *****************************************************************
  * <code>SimpleElement</code> is the only node type for
  * simplified DOM model.  Note that all CDATA values are stored with
- * reserved any characters '>' '<' converted to &gt; and &lt;
+ * reserved characters &gt; and &lt; converted to entity types
  * respectively.
  */
 public class SimpleElement {
 
     private String tagName;
     private String text;
-    private HashMap<String,String> attributes;
-    private ArrayList<SimpleElement> childElements;
+    private final Map<String,String> attributes;
+    private final List<SimpleElement> childElements;
 
     public SimpleElement(String tagName) {
         this.tagName = tagName;
-        attributes = new HashMap<String,String>();
-        childElements = new ArrayList<SimpleElement>();
+        attributes = new HashMap<>();
+        childElements = new ArrayList<>();
     }
 
     public String getTagName() {
@@ -44,7 +45,7 @@ public class SimpleElement {
 
     public String getText() {
 
-        if (text != null && text != "")
+        if (text != null && !"".equals(text))
             return SimpleDOMParser.convertToReservedCharacters(text);
         else
             return text;
@@ -61,7 +62,7 @@ public class SimpleElement {
     public String getAttribute(String name) {
 
         String attribute = (String) attributes.get(name);
-        if (attribute != null && attribute != "")
+        if (attribute != null && !"".equals(attribute))
             return SimpleDOMParser.convertToReservedCharacters(attribute);
         else
             return attribute;
@@ -82,19 +83,23 @@ public class SimpleElement {
         childElements.add(element);
     }
 
-    public ArrayList<SimpleElement> getChildElements() {
+    public List<SimpleElement> getChildElements() {
         return childElements;
     }
 
     /** *****************************************************************
+     * Retrieves the first child element by name
+     *
+     * @param tag an element name to search for
      * @return the first child with the given tag name, null if none
      */
      public SimpleElement getChildByFirstTag(String tag) {
 
          if (childElements == null || childElements.size() < 1)
              return null;
+         SimpleElement se;
          for (int i = 0; i < childElements.size(); i++) {
-             SimpleElement se = childElements.get(i);
+             se = childElements.get(i);
              if (se.tagName.equals(tag))
                  return se;
          }
@@ -105,28 +110,28 @@ public class SimpleElement {
     */
     public String toString(int indent, boolean forFile) {
 
-        StringBuffer strindent = new StringBuffer();
+        StringBuilder strindent = new StringBuilder();
         for (int i = 0; i < indent; i++) {
             strindent.append("  ");
         }
-        StringBuffer result = new StringBuffer();
-        result.append(strindent.toString() + "<" + getTagName() + " ");
-        HashSet names = new HashSet();
+        StringBuilder result = new StringBuilder();
+        result.append(strindent.toString()).append("<").append(getTagName()).append(" ");
+        Set<String> names = new HashSet<>();
         names.addAll(getAttributeNames());
-        Iterator it = names.iterator();
-        while (it.hasNext()) {
-            String attName = (String) it.next();
-            String value = getAttribute(attName);
+        String value;
+        for (String attName : names) {
+            value = getAttribute(attName);
             if (forFile)
                 value = SimpleDOMParser.convertFromReservedCharacters(value);
-            result.append(attName + "=\"" + value + "\" ");
+            result.append(attName).append("=\"").append(value).append("\" ");
         }
-        ArrayList children = getChildElements();
-        if (children.size() == 0 && (getText() == null || getText().equals("null")))
+        List<SimpleElement> children = getChildElements();
+        SimpleElement element;
+        if (children.isEmpty() && (getText() == null || getText().equals("null")))
             result.append("/>\n");
         else {
             result.append(">\n");
-            if (getText() != null && getText() != "" && !getText().equals("null")) {
+            if (getText() != null && !"".equals(getText()) && !getText().equals("null")) {
                 if (forFile)
                     result.append(SimpleDOMParser.convertFromReservedCharacters(getText()));
                 else
@@ -134,17 +139,16 @@ public class SimpleElement {
                 result.append("\n");
             }
             for (int i = 0; i < children.size(); i++) {
-                SimpleElement element = (SimpleElement) children.get(i);
+                element = children.get(i);
                 result.append(element.toString(indent+1,forFile));
             }
-            result.append(strindent.toString() + "</"  + getTagName() + ">\n");
+            result.append(strindent.toString()).append("</").append(getTagName()).append(">\n");
         }
 
         return result.toString();
     }
 
-    /** *****************************************************************
-    */
+    @Override
     public String toString() {
 
         return toString(0,false);
@@ -156,6 +160,7 @@ public class SimpleElement {
 
         return toString(0,true);
     }
+
     /** *****************************************************************
     */
     public String toFileString(int indent) {

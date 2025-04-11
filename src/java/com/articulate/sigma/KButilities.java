@@ -61,6 +61,8 @@ public class KButilities implements ServletContextListener {
         return kryo;
     });
 
+    public static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
+
     public static final int ONE_K = 1000;
 
     public static boolean debug = false;

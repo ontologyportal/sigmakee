@@ -12,7 +12,7 @@
     http://github.com/ontologyportal
 */
 
- show = new StringBuffer();       // Variable to contain the HTML page generated.
+ show = new StringBuilder();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
  term = request.getParameter("term");
  nonRelTerm = request.getParameter("nonrelation");
@@ -74,19 +74,19 @@
      boolean isArabic = (language.matches(".*(?i)arabic.*")
                          || language.equalsIgnoreCase("ar"));
      if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-         Map fm = kb.getFormatMap(language);
+         Map<String, String> fm = kb.getFormatMap(language);
          String fmValue = null;
          if (fm != null)
-             fmValue = (String) fm.get(term);
+             fmValue = fm.get(term);
          if (fmValue == null)
              System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" +
                                 term + "\" in language " + language);
      }
      else {
-         Map tfm = kb.getTermFormatMap(language);
+         Map<String, String> tfm = kb.getTermFormatMap(language);
          String tfmValue = null;
          if (tfm != null)
-             tfmValue = (String) tfm.get(term);
+             tfmValue = tfm.get(term);
          if (tfmValue != null) {
              if (isArabic)
                  tfmValue = "<span dir=\"rtl\">" + tfmValue + "</span>";

@@ -30,7 +30,7 @@ if (!role.equalsIgnoreCase("admin")) {
         var check = false;
         if (cb.checked) {
             check = true;
-        } 
+        }
         for (i = 0; i < theForm.length; i++) {
             var e = theForm.elements[i];
             if (e.name.substring(0,9) == "checkbox_") {
@@ -46,7 +46,7 @@ if (!role.equalsIgnoreCase("admin")) {
         var check = false;
         if (cb.checked) {
             check = true;
-        } 
+        }
         for (i = 0; i < theForm.length; i++) {
             var e = theForm.elements[i];
             if (e.name.substring(0,11) == "checkbox_T_") {
@@ -61,7 +61,7 @@ if (!role.equalsIgnoreCase("admin")) {
         var check = false;
         if (cb.checked) {
             check = true;
-        } 
+        }
         for (i = 0; i < theForm.length; i++) {
             var e = theForm.elements[i];
             if (e.name.substring(0,13) == "sub_checkbox_") {
@@ -77,7 +77,7 @@ if (!role.equalsIgnoreCase("admin")) {
         var check = false;
         if (cb.checked) {
             check = true;
-        } 
+        }
         for (i = 0; i < theForm.length; i++) {
             var e = theForm.elements[i];
             if (e.name.substring(0,13) == "sub_checkbox_" && e.name.substring(0,15) != "sub_checkbox_T_") {
@@ -102,7 +102,7 @@ if (!role.equalsIgnoreCase("admin")) {
             }
         %>
 
-        if (theForm.elements["kbname1"].value != "Select%20a%20KB" && 
+        if (theForm.elements["kbname1"].value != "Select%20a%20KB" &&
             theForm.elements["kbname2"].value != "Select%20a%20KB") {
             total = termSize[theForm.elements["kbname1"].value] * termSize[theForm.elements["kbname2"].value] / 10000;
             if (theForm.elements["matchMethod"].value == "JaroWinkler") {
@@ -124,35 +124,36 @@ if (!role.equalsIgnoreCase("admin")) {
     TreeSet cbset = new TreeSet();
     String status = null;
     Enumeration params = request.getParameterNames();
+    String elem;
     while (params.hasMoreElements()) {
-         String elem = (String) params.nextElement();
-         if (elem.startsWith("checkbox") || elem.startsWith("sub_checkbox")) 
-             cbset.add(elem);         
+         elem = (String) params.nextElement();
+         if (elem.startsWith("checkbox") || elem.startsWith("sub_checkbox"))
+             cbset.add(elem);
     }
     System.out.println("INFO in Mapping.jsp");
     String matchMethod = request.getParameter("matchMethod");
-    if (matchMethod == null) 
+    if (matchMethod == null)
         matchMethod = "Substring";
     String timeEst = request.getParameter("timeEst");
-    if (timeEst == null) 
+    if (timeEst == null)
         timeEst = "";
     String thresholdSt = request.getParameter("threshold");
     int threshold = 10;
-    if (thresholdSt != null) 
-        threshold = Integer.valueOf(thresholdSt).intValue();    
+    if (thresholdSt != null)
+        threshold = Integer.valueOf(thresholdSt).intValue();
     String kbname1 = request.getParameter("kbname1");
     String kbname2 = request.getParameter("kbname2");
     String find = request.getParameter("find");
     String save = request.getParameter("save");
     String merge = request.getParameter("merge");
-    if (kbname1 == null) 
+    if (kbname1 == null)
         kbname1 = "Select a KB";
-    if (kbname2 == null) 
+    if (kbname2 == null)
         kbname2 = "Select a KB";
     if (!kbname1.equals("Select a KB") && !kbname2.equals("Select a KB")) {
-        if (find != null && find.startsWith("Find")) 
-            Mapping.mapOntologies(kbname1,kbname2,threshold,matchMethod);        
-        if (save != null && save.startsWith("Save")) 
+        if (find != null && find.startsWith("Find"))
+            Mapping.mapOntologies(kbname1,kbname2,threshold,matchMethod);
+        if (save != null && save.startsWith("Save"))
             status = Mapping.writeEquivalences(cbset,kbname1,kbname2);
         if (merge != null && merge.startsWith("Merge")) {
             status = Mapping.merge(cbset,kbname1,kbname2);
@@ -185,22 +186,22 @@ if (!role.equalsIgnoreCase("admin")) {
     out.println(HTMLformatter.createMenu("kbname2",kbname2,kbnames,"onChange=SetEstimate(document.kbmapper)"));
     out.println("</td></tr></table>");
 %>
-  <P>Match Threshold (lower is more strict): 
+  <P>Match Threshold (lower is more strict):
      <INPUT type="text" size="5" name="threshold" value="<%=threshold%>">
      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
      Estimated completion time: <input type="text" size="5" name="timeEst" value=<%=timeEst%>> (seconds)
-  <p>String match method: 
-     <input type="radio" name="matchMethod" value="Substring" <%=matchMethod.equals("Substring") ? "checked" : ""%>>Substring 
+  <p>String match method:
+     <input type="radio" name="matchMethod" value="Substring" <%=matchMethod.equals("Substring") ? "checked" : ""%>>Substring
      <input type="radio" name="matchMethod" value="JaroWinkler" <%=matchMethod.equals("JaroWinkler") ? "checked" : ""%>>JaroWinkler
      <input type="radio" name="matchMethod" value="Levenshtein" <%=matchMethod.equals("Levenshtein") ? "checked" : ""%>>Levenshtein<br>
 <%
     out.println("<P><INPUT type=\"submit\" NAME=\"find\" VALUE=\"Find Mappings\"><P><hr align=left width=\"30%\">");
     out.println("<P>");
-    if (Mapping.mappings != null && Mapping.mappings.keySet().size() > 0 && 
-        kbname1 != null && !kbname1.equals("Select a KB") && 
+    if (Mapping.mappings != null && Mapping.mappings.keySet().size() > 0 &&
+        kbname1 != null && !kbname1.equals("Select a KB") &&
         kbname2 != null && !kbname2.equals("Select a KB") ) {
-        out.println("<table><tr><td><b>KB#1: " + kbname1 + 
-                    "</b></td><td>equiv.</td><td>subclass</td><td><b>KB#2: " + 
+        out.println("<table><tr><td><b>KB#1: " + kbname1 +
+                    "</b></td><td>equiv.</td><td>subclass</td><td><b>KB#2: " +
                       kbname2 + "</b></td></tr>\n");
         out.print("<tr><td></td><td><input type=\"checkbox\" name=\"toggleAll\"" +
                   " title=\"ToggleAllEq\" onclick=\"ToggleAllEq(document.kbmapper, this);\" />" +
@@ -219,13 +220,13 @@ if (!role.equalsIgnoreCase("admin")) {
         while (it.hasNext()) {
             String term1 = (String) it.next();
             even = !even;
-            if (even) 
+            if (even)
                 out.println("<tr bgcolor=#DDDDDD>");
             else
                 out.println("<tr>");
             KB kb1 = KBmanager.getMgr().getKB(kbname1);
             String name1 = Mapping.getTermFormat(kb1,term1);
-            if (name1 != null)                
+            if (name1 != null)
                 out.println("<td><a href=\"" + kbHref1 + term1 + "\">" + term1 + "</a> (" +
                             name1 + ")</td>");
             else
@@ -244,9 +245,9 @@ if (!role.equalsIgnoreCase("admin")) {
                 String topScoreFlag = "";
                 if (counter == 1)
                                          // Since we're iterating through a TreeSet we know
-                    topScoreFlag = "T_"; // the first element has the top score.                   
+                    topScoreFlag = "T_"; // the first element has the top score.
                 if (counter > 1) {
-                    if (even) 
+                    if (even)
                         out.println("<tr bgcolor=#DDDDDD>");
                     else
                         out.println("<tr>");
@@ -255,20 +256,20 @@ if (!role.equalsIgnoreCase("admin")) {
                 out.print("<td><input type=\"checkbox\" name=\"checkbox_" +
                           topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" id=\"checkbox_"+
                           topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" ");
-                if (((cbset == null || cbset.size() < 1) && counter == 1) || 
+                if (((cbset == null || cbset.size() < 1) && counter == 1) ||
                     ((cbset != null && cbset.contains("checkbox_" + topScoreFlag + term1 + Mapping.termSeparator + term2))))
                     out.print("checked");
                 out.println(" /></td>");
-                   
+
                 out.print("<td><input type=\"checkbox\" name=\"sub_checkbox_" +
                           topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" id=\"checkbox_"+
                           topScoreFlag + term1 + Mapping.termSeparator + term2 + "\" ");
 
-                if (((cbset == null || cbset.size() < 1) && counter != 1) || 
+                if (((cbset == null || cbset.size() < 1) && counter != 1) ||
                     ((cbset != null && cbset.contains("sub_checkbox_" + topScoreFlag + term1 + Mapping.termSeparator + term2))))
                     out.print("checked");
                 out.println(" /></td>");
-                if (name2 != null)                        
+                if (name2 != null)
                     out.println("<td><a href=\"" + kbHref2 + term2 + "\">" + term2 + "</a> (" +
                                 name2 + ") - " + score.toString() + "</td>");
                 else
@@ -280,7 +281,7 @@ if (!role.equalsIgnoreCase("admin")) {
         }
         out.println("</table>");
     }
-    if (status != null)        
+    if (status != null)
         out.println(status + "<P>");
 %>
   <P><INPUT type="submit" NAME="save" VALUE="Save Mappings"><P>

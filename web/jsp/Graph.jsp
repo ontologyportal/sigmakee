@@ -158,7 +158,8 @@ function setWidth(id) {
                   }
               }
               if (graphAvailable) {
-                  out.println("<img src='graph/" + fname + ".dot.png'/>");
+                  String imageExt = KBmanager.getMgr().getPref("imageFormat");
+                  out.println("<img src='graph/" + fname + ".dot." + imageExt + "'/>");
               }
               else {
                   out.println("<p><b>Error producing graph.</b></p>");

@@ -227,21 +227,21 @@ public class OWLtranslator {
     private static String getParentReference(SimpleElement se) {
 
         String value = null;
-        ArrayList children = se.getChildElements();
-        if (children.size() > 0) {
+        List children = se.getChildElements();
+        if (!children.isEmpty()) {
             SimpleElement child = (SimpleElement) children.get(0);
             if (child.getTagName().equals("owl:Class")) {
                 value = child.getAttribute("rdf:ID");
                 if (value == null)
                     value = child.getAttribute("rdf:about");
-                if (value != null && value.indexOf("#") > -1)
+                if (value != null && value.contains("#"))
                     value = value.substring(value.indexOf("#") + 1);
             }
         }
         else {
             value = se.getAttribute("rdf:resource");
             if (value != null) {
-                if (value.indexOf("#") > -1)
+                if (value.contains("#"))
                     value = value.substring(value.indexOf("#") + 1);
             }
         }
@@ -333,8 +333,8 @@ public class OWLtranslator {
                                        text + "\")",70));
         }
         else if (tag.equals("owl:inverseOf")) {
-            ArrayList children = se.getChildElements();
-            if (children.size() > 0) {
+            List children = se.getChildElements();
+            if (!children.isEmpty()) {
                 SimpleElement child = (SimpleElement) children.get(0);
                 if (child.getTagName().equals("owl:ObjectProperty") ||
                     child.getTagName().equals("owl:InverseFunctionalProperty")) {
@@ -343,7 +343,7 @@ public class OWLtranslator {
                         value = child.getAttribute("rdf:about");
                     if (value == null)
                         value = child.getAttribute("rdf:resource");
-                    if (value != null && value.indexOf("#") > -1)
+                    if (value != null && value.contains("#"))
                         value = value.substring(value.indexOf("#") + 1);
                 }
             }
@@ -407,14 +407,14 @@ public class OWLtranslator {
                         pw.println(indent + "(" + tag + " " + parentTerm + " " + text + ")");
                 }
                 else {
-                    ArrayList children = se.getChildElements();
-                    if (children.size() > 0) {
+                    List children = se.getChildElements();
+                    if (!children.isEmpty()) {
                         SimpleElement child = (SimpleElement) children.get(0);
                         if (child.getTagName().equals("owl:Class")) {
                             value = child.getAttribute("rdf:ID");
                             if (value == null)
                                 value = child.getAttribute("rdf:about");
-                            if (value != null && value.indexOf("#") > -1)
+                            if (value != null && value.contains("#"))
                                 value = value.substring(value.indexOf("#") + 1);
                             if (value != null && parentTerm != null)
                                 pw.println(indent + "(" + tag + " " + parentTerm + " " + value + ")");

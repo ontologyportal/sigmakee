@@ -11,6 +11,7 @@ import java.util.LinkedHashSet;
 import java.util.StringTokenizer;
 
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.KButilities;
 import com.articulate.sigma.tp.Vampire;
 
 import edu.dlsu.SUMOs.obj.Input;
@@ -25,7 +26,7 @@ public class PictureEditor {
     private static ArrayList<String> multipleAttributes;
     private static int MAXDAYS = 1;
     private static int days = 0;
-    
+
     //for statistics only
     private static String timeBegin = "";
     private static String timeEnd = "";
@@ -35,24 +36,24 @@ public class PictureEditor {
     private static int conflict_count = 0;
     private static int query_count = 0;
     private static int assert_count = 0;
-    
+
     // vampire query parameters
     private final static int TIME_lIMIT = 30;
     private final static int RESULTS_LIMIT = 10;
-    
+
     // print in console
     //        isPrint = print queries and results
     //        isPrint2 = print assertions
     public static boolean isPrint = true;
     public static boolean isPrint2 = true;
-    
+
     // themes
     private final static int THEME_BEHONEST = 1;
     //private final static int THEME_EATGOODFOOD = 2;
     private final static int THEME_SLEEPEARLY = 3;
     private final static int THEME_BEBRAVE = 4;
     private final static int THEME_BECAREFUL = 5;
-    
+
     // characters
     private final static int FEMALE_CHILD_RABBIT = 1;
     private final static int MALE_CHILD_RABBIT = 2;
@@ -60,17 +61,17 @@ public class PictureEditor {
     private final static int MALE_ADULT_RABBIT = 4;
     private final static int FEMALE_ADULT_ELEPHANT = 5;
     private final static int FEMALE_CHILD_ELEPHANT = 6;
-    
+
     //objects
     private final static int OBJECT_LAMP = 1;
     private final static int OBJECT_CANDY = 2;
     private final static int OBJECT_TOYS = 3;
     private final static int OBJECT_DRINKINGCUP = 4;
-    
+
     //backgrounds
-    private final static int BG_LIVINGROOM = 1; 
+    private final static int BG_LIVINGROOM = 1;
     private final static int BG_CLASSROOM = 2;
-    
+
     private boolean isChangePhase = false;
     private boolean reset = false;
     private String log = "";
@@ -83,7 +84,7 @@ public class PictureEditor {
     private ArrayList<String> phaseKnowledge;
     private String phase;
     private ArrayList<String> omissibleKnowledge;
-    private final String DATABASE = System.getenv("SIGMA_HOME")+"\\inference\\SUMO-v.kif";
+    private final String DATABASE = KButilities.SIGMA_HOME+"\\inference\\SUMO-v.kif";
     private String result;
     private ArrayList<String> resettableAttributes;
     private ArrayList<String> resettableKnowledge;
@@ -102,41 +103,41 @@ public class PictureEditor {
     private Instance background;
     private Instance story;
     private static boolean doneSomething = false;
-    
+
     public PictureEditor(final Input input) {
-        try {    
+        try {
             System.out.println("**********Picture Editor v0.4**********");
             initializeSettings();
             initializeStory(input);
             initializeTime(input);
             assertCharacters(input);
-            
+
             assertObjects(input);
             assertBackground(input.getBackground());
             obtainLocations();
-                 
+
             // introduction phase: introduce the names of the child characters
             for(int i=0;i<childCharacters.size();i++) {
                 submitQuery("name", ((Instance) childCharacters.toArray()[i]).getName(), "?X");
                 addStory("(name "+((Instance) childCharacters.toArray()[i]).getName()+" "+results.get(0).toString()+")");
-            }     
-            
+            }
+
 //             parent statement
-             checkPredicates();                
-            
+             checkPredicates();
+
             // problem phase: introduce the problem? problems could be accidents, etc.
-                // depending on the theme being chosen 
+                // depending on the theme being chosen
                 // step 1: Check what is the first capable action that can be done by the child character
                 // step 2: Check any problem / rules defied by the character
             allowDuplicates = false;
-            
-            changeStoryPhase("Problem");            
-            
+
+            changeStoryPhase("Problem");
+
             while(true) {
                 determineCapabilities(((Instance) childCharacters.toArray()[0]));
                 checkRuleDone();
                 submitQuery("instance", "?X", "ProblemEvent");
-                
+
                 if(!results.get(0).equals("no")) {
                     //check if we can still do something before moving on
                     while(true) {
@@ -146,9 +147,9 @@ public class PictureEditor {
                         }
                     }
                     break;
-                } 
-            } 
-            
+                }
+            }
+
             // rising action phase: these are the consequences to the problem
                 // depending on the theme being chosen
                 // step 1: check for any attribute changes for all things first; e.g. vase is broken and character is feeling anxiety - now it is in the changestoryphase method
@@ -158,12 +159,12 @@ public class PictureEditor {
                 // step 4: check again for any possible action the child may do when near adult
                 // step 5: check attribute changes; by now character is guilty for lying
             changeStoryPhase("RisingAction");
-            
+
             determineCapabilities((Instance) childCharacters.toArray()[0]);
-            
+
             // the adult character should be in the same room with child
             submitFormula("located",adultCharacter.getName(),background.getName());
-            int ctr = 0;    
+            int ctr = 0;
             do {
                 if(ctr==10) {
                     System.out.println("insufficient story knowledge.. skipping to next phase");
@@ -174,7 +175,7 @@ public class PictureEditor {
                 determineCapabilities((Instance) childCharacters.toArray()[0]);
                 submitQuery("instance", "?X", "RisingActionEvent");
             } while(results.get(0).equals("no"));
-                    
+
             // solution phase: the solution to the problem
                 // step 1: continue asking what the child can do until a solution event happens which could be:
                      // child has the good trait by now
@@ -182,7 +183,7 @@ public class PictureEditor {
                 // step 2: adult character tells child again of rule / gives a new rule
             changeStoryPhase("Solution");
             submitQuery("(attribute RabbitCharacter5 ?X)");
-            
+
             do
             {
                 for(int i=0;i<childCharacters.size();i++) {
@@ -190,25 +191,25 @@ public class PictureEditor {
                 }
                 submitQuery("instance", "?X", "SolutionEvent");
             } while (results.get(0).equals("no"));
-            
+
             // tell rule again
             if(rule!=null) {
                 tell(adultCharacter.getName(), ((Instance) childCharacters.toArray()[0]).getName(), rule.getOrig());
             }
-            
+
             determineCapabilities(adultCharacter);
             determineCapabilities((Instance) childCharacters.toArray()[0]);
-            
+
             // climax phase: the moral lesson learned by the child - it is assumed that he has changed his bad traits already when we got this far
                 // step 1: character will follow rule
                 // step 2: character will not experience consequence
                 // step 3: character will usually feel happy
             changeStoryPhase("Climax");
-            
+
             if(rule!=null) {
                 followRule();
             }
-            
+
             checkConflicts(this.phase);
 
             vampire.terminate();
@@ -224,10 +225,10 @@ public class PictureEditor {
             checkNewEvents();
         }
     }
-    
+
     private void obtainLocations() {
         System.out.println("*****obtainLocations()");
-        
+
         //child characters
         for(int i=0;i<childCharacters.size();i++) {
             submitQuery("located", ((Instance) childCharacters.toArray()[i]).getName(), "?X");
@@ -235,20 +236,20 @@ public class PictureEditor {
                 addStory("(located "+((Instance) childCharacters.toArray()[i]).getName()+" "+results.get(0)+")");
             }
         }
-        
+
         //adult character
         submitQuery("located", adultCharacter.getName(), "?X");
         if(!results.get(0).equals("no")) {
             addStory("(located "+adultCharacter.getName()+" "+results.get(0)+")");
         }
-        
+
         //object
         if(object!=null) {
             submitQuery("located", object.getName(), "?X");
             if(!results.get(0).equals("no")) {
                 addStory("(located "+object.getName()+" "+results.get(0)+")");
             }
-            
+
             //orientation of child characters to object
             for(int i=0;i<childCharacters.size();i++) {
                 submitQuery("orientation", ((Instance) childCharacters.toArray()[i]).getName(), object.getName(), "?X");
@@ -273,10 +274,10 @@ public class PictureEditor {
                 query = "(and (instance ?X "+rule.getInstance()+")";
                 if(rule.getAgent()!=null) {
                     query +=" (agent ?X "+rule.getAgent()+")";
-                } 
+                }
                 if(rule.getExperiencer()!=null) {
                     query +=" (agent ?X "+rule.getExperiencer()+")";
-                } 
+                }
                 if(rule.getManner()!=null) {
                     query +=" (agent ?X "+rule.getManner()+")";
                 }
@@ -318,14 +319,14 @@ public class PictureEditor {
             }
         }
     }
-    
+
     /**
      * checks the rules/statement/desire of adult
      * if the desire is done in the introduction phase it becomes the "rule"
      */
     private void checkPredicates() {
         System.out.println("*****checkPredicates()");
-        
+
         //adults
         submitQuery("(desires "+adultCharacter.getName()+" ?X)");
         if(!(results.get(0).equals("no")||(results.get(0).equals("yes")))) {
@@ -352,7 +353,7 @@ public class PictureEditor {
                 tell(adultCharacter.getName(), ((Instance) childCharacters.toArray()[0]).getName(), results.get(0).toString());
             }
         }
-        
+
         //children
         for(int a=0;a<childCharacters.size();a++) {
             try {
@@ -383,7 +384,7 @@ public class PictureEditor {
                         }
                     }
                 }
-                
+
                 // check beliefs of the characters
                 submitQuery("believes",((Instance) childCharacters.toArray()[a]).getName(),"?X");
                 if(!results.get(0).equals("no")) {
@@ -408,7 +409,7 @@ public class PictureEditor {
                     }
                 }
             } catch (Exception e) { }
-        }     
+        }
     }
 
     private void initializeSettings() {
@@ -432,7 +433,7 @@ public class PictureEditor {
     private void followRule() {
         System.out.println("*****follow rule*****");
         String instance = rule.getInstance();
-        
+
         // if rule is instance
         if(instance!=null) {
             submitFormula("instance", instance, instance);
@@ -477,7 +478,7 @@ public class PictureEditor {
         System.out.println("*****checkNewEvents()");
         // check any new instances
         submitQuery("instance", "?X", "StoryEvent");
-                
+
         if(!(results.get(0).equals("no"))) {
             ArrayList eventList = results;
             for(int j=0;j<eventList.size();j++) {
@@ -486,7 +487,7 @@ public class PictureEditor {
                 if(!(results.get(0).equals("yes"))) {
                     String line = "(instance "+eventList.get(j)+" "+results.get(0)+")";
                     String event = results.get(0);
-                    
+
                     boolean isNew = true;
                     if (oneTimeEventsAndAttributes.contains(event) && phaseKnowledge.contains(event)) {
                         isNew = false;
@@ -495,12 +496,12 @@ public class PictureEditor {
                     if(!operationalKnowledge.contains(line)) {
                         addStory(line);
                         String instance = results.get(0);
-                        
+
                         submitQuery("agent",eventList.get(j).toString(),"?X");
                         if(!results.get(0).equals("no"))
                             for(int a=0;a<results.size();a++)
                                 addStory("(agent "+eventList.get(j).toString()+" "+results.get(a)+")");
-                        
+
                         submitQuery("patient",eventList.get(j).toString(),"?X");
                         if(!results.get(0).equals("no"))
                             for(int a=0;a<results.size();a++)
@@ -564,7 +565,7 @@ public class PictureEditor {
         if(!results.get(0).equals("no")) {
             operationalKnowledge.remove("(instance "+results.get(0)+" Friday)");
             submitFormula("instance", "Saturday", "Saturday");
-            
+
             submitQuery("instance", "?X", "NightTime");
             if(!results.get(0).equals("no")) {
                 operationalKnowledge.remove("(instance "+results.get(0)+" NightTime)");
@@ -602,7 +603,7 @@ public class PictureEditor {
     }
 
     private void initializeStory(Input input) {
-        
+
         File file = new File(DATABASE);
         file.delete();
         try {
@@ -612,12 +613,12 @@ public class PictureEditor {
         }
         KBmanager.getMgr().initializeOnce();
         vampire = Vampire.getNewInstance(DATABASE);
-        
+
         instances = new ArrayList();
         childCharacters = new ArrayList<Instance>();
         operationalKnowledge = new LinkedHashSet();
         oldKnowledge = new ArrayList();
-                
+
         submitFormula("instance", "Story", "Story");
         story = new Instance("Story" + instanceCnt);
         setTheme(input);
@@ -648,18 +649,18 @@ public class PictureEditor {
         // check capability character
         submitQuery("(or (capability ?X experiencer "+instance.getName()+") (capability ?X agent "+instance.getName()+"))");
         if(!results.get(0).equals("no")) {
-            
+
             // check if he can only do it once in a phase
             String action = results.get(results.size() - 1).toString();
             boolean isNew = true;
             if (oneTimeEventsAndAttributes.contains(action) && phaseKnowledge.contains(action)) {
                 isNew = false;
             }
-            
+
             if(isNew) {
                 // choose one of the possible actions
                 submitFormula("instance", results.get(results.size() - 1).toString(), results.get(results.size() - 1).toString());
-                
+
                 // obtain the case roles from the capability chosen
                 if(getCaseRoles) {
                     //System.out.println("determining case roles for "+results.get(results.size() - 1).toString());
@@ -689,7 +690,7 @@ public class PictureEditor {
             e.printStackTrace();
         }
     }
- 
+
     /**
      * Check the attributes of all instances and creates a snapshot if any conflicts are found
      * Removes obsolete knowledge also if certain conditions are met (ex. a day passed)
@@ -737,7 +738,7 @@ public class PictureEditor {
             isChangePhase = false;
         } while (isConflict);
     }
-    
+
     /**
      * Obtains the different case roles of the capability chosen and submits it to the operational knowledge
      * @param item
@@ -778,7 +779,7 @@ public class PictureEditor {
                 }
             }
         }
-        
+
         //higher order assertions handling
         //orientation to object
         if(object!=null) {
@@ -787,7 +788,7 @@ public class PictureEditor {
                 submitFormula("(holdsDuring (WhenFn "+instance+") `(orientation "+childCharacter.getName()+" "+object.getName()+" "+results.get(0)+"))");
             }
         }
-        
+
         //attribute change during event
         if(hashmap.get("agent")!=null) {
             submitQuery("(holdsDuring (WhenFn "+instance+") `(attribute "+hashmap.get("agent")+" ?X))");
@@ -797,7 +798,7 @@ public class PictureEditor {
         }
         hashmap.clear();
     }
-    
+
     /**
      * Checks any changes to the list of attributes each instance has
      * @param object2
@@ -815,7 +816,7 @@ public class PictureEditor {
             for(int j=0;j<size;j++) {
                 String attribute = attributes.get(j);
                 System.out.print("checking if "+attribute+" is a new attribute");
-                
+
                 boolean skip = false;
                 boolean newAttribute = true;
                 for(int a=0;a<instance.getAttributes().size();a++) {
@@ -824,7 +825,7 @@ public class PictureEditor {
                         break;
                     }
                 }
-                
+
                 if(phaseKnowledge.contains("(attribute "+instance.getName()+" "+attribute+")") && oneTimeEventsAndAttributes.contains(attribute)) {
                     System.out.println(": skip");
                 } else if(!attribute.equals("yes")) {
@@ -833,9 +834,9 @@ public class PictureEditor {
                         addStory("(attribute "+instance.getName()+" "+attribute+")");
                         phaseKnowledge.add("(attribute "+instance.getName()+" "+attribute+")");
                         instance.getAttributes().add(attribute);
-                        
+
                         // check for conflicts
-                        
+
                         // multiple attribute type (e.g. TraitAttribute)
                         submitQuery("instance",attribute,"?X");
                         if(multipleAttributes.contains(results.get(0))) {
@@ -855,12 +856,12 @@ public class PictureEditor {
                                     }
                                 }
                             }
-                        } 
-                        
+                        }
+
                         // single attribute type
-                        else { 
+                        else {
                             submitQuery("subAttribute",attribute,"?X");
-    
+
                             if(!results.get(0).equals("no")) {
                                 // state of mind change
                                 submitQuery("(and (attribute "+instance.getName()+" ?X) (or (subAttribute ?X Anxiety) (subAttribute ?X Unhappiness) (subAttribute ?X Happiness)))");
@@ -873,7 +874,7 @@ public class PictureEditor {
                                     submitQuery("(and(attribute "+instance.getName()+" "+"?X) (or (instance ?X "+results.get(0)+") (instance ?X "+results.get(1)+")))");
                                 }
                             }
-                            
+
                             if(results.size()>1) {
                                 isConflict = true;
                                 boolean found = false;
@@ -903,8 +904,8 @@ public class PictureEditor {
                     }
                 }
             }
-            
-        }        
+
+        }
         for(int k=0;k<instance.getAttributes().size();k++) {
             for(int a=0;a<oldKnowledge.size();a++) {
                 if(instance.getAttributes().get(k).equals(oldKnowledge.get(a))) {
@@ -932,7 +933,7 @@ public class PictureEditor {
                 break;
         }
     }
-    
+
     /**
      * Converts chosen objects to SUMO and add to operational knowledge
      * @param input
@@ -958,7 +959,7 @@ public class PictureEditor {
             submitFormula("instance", objectName, objectName);
             object = new Instance(objectName + instanceCnt);
             obtainAttributes(object);
-        } 
+        }
     }
 
     private void addStory(String text) {
@@ -975,7 +976,7 @@ public class PictureEditor {
             operationalKnowledge.add(text);
         }
     }
-    
+
     /**
      * Obtains the the attributes of the instance and stores it in the attribute list of the class
      * @param instance
@@ -989,7 +990,7 @@ public class PictureEditor {
             }
         }
     }
-    
+
     /**
      * Converts chosen characters to SUMO and add to operational knowledge
      * @param input
@@ -1060,10 +1061,10 @@ public class PictureEditor {
             addStory(string);
         }
     }
-    
+
     /**
      * Resubmit all operation knowledge to SIGMA
-     * 
+     *
      * @param par1
      * @param par2
      * @param par3
@@ -1080,10 +1081,10 @@ public class PictureEditor {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Delegate method to assertFormula of SIGMA
-     * 
+     *
      * @param par1
      * @param par2
      * @param par3
@@ -1111,7 +1112,7 @@ public class PictureEditor {
 
     /**
      * Delegate method to assertFormula of SIGMA
-     * 
+     *
      * @param par1
      * @param par2
      * @param par3
@@ -1125,7 +1126,7 @@ public class PictureEditor {
                     par2 += instanceCnt;
                     instances.add(par2);
                     getCaseRoles = true;
-                    doneSomething = true;                    
+                    doneSomething = true;
                 }
                 if(isPrint2)
                 System.err.println("operation knowledge added to SIGMA: " + "(" + par1 + " "
@@ -1144,7 +1145,7 @@ public class PictureEditor {
 
     /**
      * Delegate method to submitQuery of SIGMA
-     * 
+     *
      * @param par1
      * @param par2
      * @param par3
@@ -1171,7 +1172,7 @@ public class PictureEditor {
 
     /**
      * Delegate method to submitQuery of SIGMA
-     * 
+     *
      * @param par1
      * @param par2
      * @param par3
@@ -1193,10 +1194,10 @@ public class PictureEditor {
             e.printStackTrace();
         }
     }
-    
+
     /**
      * Delegate method to submitQuery of SIGMA
-     * 
+     *
      * @param par1
      * @param par2
      * @param par3
@@ -1245,7 +1246,7 @@ public class PictureEditor {
         timeEnd = DateUtils.now("H:mm:ss:SSS");
         printData();
     }
-    
+
     private static void printData() {
         System.out.println("General queries: "+general_count);
         System.out.println("Conflict queries: "+conflict_count);

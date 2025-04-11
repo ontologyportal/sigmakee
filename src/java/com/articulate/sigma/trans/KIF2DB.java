@@ -6,8 +6,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.*;
 
 /*
@@ -48,19 +50,20 @@ public class KIF2DB {
     //     relation name
     //       list of values
     // Class-level information is put under the class "Class"
-    public static HashMap<String,HashMap<String,HashMap<String,HashSet<String>>>> tables = new HashMap<>();
+    public static Map<String,Map<String,Map<String,Set<String>>>> tables = new HashMap<>();
 
     /** ***************************************************************
      */
     public String getAllRels(Collection<Formula> forms) {
 
-        HashSet<String> result = new HashSet();
+        Set<String> result = new HashSet();
+        String rel;
         for (Formula f : forms) {
-            String rel = f.getStringArgument(0);
+            rel = f.getStringArgument(0);
             result.add(rel + " varchar(255)");
         }
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (String s : result) {
             if (!first)
@@ -83,6 +86,10 @@ public class KIF2DB {
         //if (Character.isUpperCase(term.charAt(0))) {
         Collection<Formula> forms = kb.ask("arg",1,term);
         System.out.println("INFO in KIF2DB.writeSUMOTerm(): formulas " + forms);
+        Map<String,Map<String,Set<String>>> table;
+        Map<String, Set<String>> rels;
+        Set<String> vals;
+        String rel, arg;
         for (Formula f : forms) {
             if (!f.isBinary()) {
                 if (f.getArgument(0).equals("domain")) { // convert domain statements to a binary relation
@@ -91,13 +98,12 @@ public class KIF2DB {
                 }
                 continue;
             }
-            String rel = f.getStringArgument(0);
+            rel = f.getStringArgument(0);
             if (f.complexArgumentsToArrayList(0).size() > 1) {
-                String arg = f.getStringArgument(2);
+                arg = f.getStringArgument(2);
                 if (!inst) {
-                    HashMap<String,HashMap<String,HashSet<String>>> table = null;
                     if (!tables.keySet().contains("Class")) {
-                        table = new HashMap<String,HashMap<String,HashSet<String>>>();
+                        table = new HashMap<>();
                         tables.put("Class", table);
                     }
                     else {
@@ -105,9 +111,8 @@ public class KIF2DB {
                         //String s = "create table " + term + "(" + rel + ")";
                     }
 
-                    HashMap<String, HashSet<String>> rels = null;
                     if (!table.keySet().contains(term)) {
-                        rels = new HashMap<String, HashSet<String>>();
+                        rels = new HashMap<>();
                         table.put(term, rels);
                     }
                     else {
@@ -115,9 +120,8 @@ public class KIF2DB {
                         //String s = "create table " + term + "(" + rel + ")";
                     }
 
-                    HashSet<String> vals = null;
                     if (!rels.keySet().contains(rel)) {
-                        vals = new HashSet<String>();
+                        vals = new HashSet<>();
                         rels.put(rel, vals);
                     }
                     else {
@@ -128,21 +132,18 @@ public class KIF2DB {
                 }
                 else {
                     System.out.println("INFO in KIF2DB.writeSUMOTerm(): it's an instance: " + term);
-
                     System.out.println("INFO in KIF2DB.writeSUMOTerm(): parents: " + parents);
                     for (String p : parents) {
-                        HashMap<String,HashMap<String,HashSet<String>>> table = null;
                         if (!tables.keySet().contains(p)) {
-                            table = new HashMap<String,HashMap<String,HashSet<String>>>();
+                            table = new HashMap<>();
                             tables.put(p, table);
                         }
                         else {
                             table = tables.get(p);
                             //String s = "create table " + term + "(" + rel + ")";
                         }
-                        HashMap<String, HashSet<String>> rels = null;
                         if (!table.keySet().contains(term)) {
-                            rels = new HashMap<String, HashSet<String>>();
+                            rels = new HashMap<>();
                             table.put(term, rels);
                         }
                         else {
@@ -150,9 +151,8 @@ public class KIF2DB {
                             //String s = "create table " + term + "(" + rel + ")";
                         }
 
-                        HashSet<String> vals = null;
                         if (!rels.keySet().contains(rel)) {
-                            vals = new HashSet<String>();
+                            vals = new HashSet<>();
                             rels.put(rel, vals);
                         }
                         else {
@@ -176,12 +176,15 @@ public class KIF2DB {
      */
     public void writeCSVfile(PrintWriter pw) {
 
+        Map<String,Map<String,Set<String>>> insts;
+        Map<String,Set<String>> rels;
+        Set<String> vals;
         for (String c : tables.keySet()) {
-            HashMap<String,HashMap<String,HashSet<String>>> insts = tables.get(c);
+            insts = tables.get(c);
             for (String i : insts.keySet()) {
-                HashMap<String,HashSet<String>> rels = insts.get(i);
+                rels = insts.get(i);
                 for (String rel : rels.keySet()) {
-                    HashSet<String> vals = rels.get(rel);
+                    vals = rels.get(rel);
                     for (String val : vals)
                         pw.println(i + ", " + rel + ", " + val);
                 }
@@ -200,10 +203,10 @@ public class KIF2DB {
         for (String term : kbterms) {
             writeSUMOTerm(conn,term);
         }
-        FileWriter fw = new FileWriter(path);
-        PrintWriter pw = new PrintWriter(fw);
-        writeCSVfile(pw);
-        pw.close();
+        try (Writer fw = new FileWriter(path);
+             PrintWriter pw = new PrintWriter(fw)) {
+            writeCSVfile(pw);
+        }
     }
 
     /** *****************************************************************
@@ -220,11 +223,11 @@ public class KIF2DB {
             Class.forName("org.h2.Driver");
             kif2db.conn = DriverManager.getConnection(JDBCString, UserName, "");
             System.out.println("main(): Opened DB " + JDBCString);
-            String path = System.getenv("SIGMA_HOME") + File.separator + kbName + "DB.csv";
+            String path = KButilities.SIGMA_HOME + File.separator + kbName + "DB.csv";
             kif2db.writeKB(kif2db.conn,path);
         }
-        catch (Exception e) {
-            System.out.println("Error in KIF2DB(): " + e.getMessage());
+        catch (IOException | ClassNotFoundException | SQLException e) {
+            System.err.println("Error in KIF2DB(): " + e.getMessage());
             e.printStackTrace();
         }
     }
