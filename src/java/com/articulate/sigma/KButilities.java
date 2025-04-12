@@ -1572,7 +1572,7 @@ public class KButilities implements ServletContextListener {
             }
             else if (args != null && args.length > 1 && args[0].equals("-v")) {
                 boolean valid = isValidFormula(kb,args[1]);
-                String s = "Formula " + args[1] + "\nis valid: ";
+                String s = "Formula: " + args[1] + "\nis valid: ";
                 StringBuilder sb = new StringBuilder();
                 sb.append(s);
                 if (valid)
