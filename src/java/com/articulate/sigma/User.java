@@ -21,14 +21,14 @@ import java.util.*;
 public class User {
 
     public String username;
-      /** Encrypted password */
+    /** Encrypted password */
     public String password;
-      /** A String which is one of: user, registered, administrator */
+    /** A String which is one of: user, registered, administrator. */
     public String role = "user";
-      /** A HashMap of String keys and String values */
+    /** A HashMap of String keys and String values. */
     public Map<String,String> attributes = new HashMap<>();
-      /** An ArrayList of String keys consisting of unique project names. */
-    public List<String> projects = new ArrayList();
+    /** A List of String keys consisting of unique project names. */
+    public List<String> projects = new ArrayList<>();
 
     /** *****************************************************************
      */
@@ -114,7 +114,7 @@ public class User {
             return user;
         }
         catch (SQLException e) {
-            System.err.println("Error in fromDB(): " + e.getMessage());
+            System.err.println("Error in User.fromDB(): " + e.getMessage());
             e.printStackTrace();
         }
         return null;
@@ -147,7 +147,7 @@ public class User {
             stmt.close();
         }
         catch (SQLException e) {
-            System.err.println("Error in toDB(): " + e.getMessage());
+            System.err.println("Error in User.toDB(): " + e.getMessage());
             e.printStackTrace();
         }
     }
