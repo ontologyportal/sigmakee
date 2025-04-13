@@ -70,6 +70,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <arg line="${run.args}"/>
         </java>
     </target>
@@ -83,19 +87,11 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${sigma_src}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <arg line="${run.args}"/>
-        </java>
-    </target>
-    <target name="password.service" depends="clean,compile" description="Performs account management services">
-        <java classname="com.articulate.sigma.PasswordService"
-              classpathref="rcp"
-              fork="true">
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <arg line="${pword.props}"/>
         </java>
     </target>
 
@@ -128,6 +124,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -147,6 +147,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -168,6 +172,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -187,6 +195,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -206,6 +218,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -225,6 +241,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -244,6 +264,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -281,6 +305,10 @@
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_OPS" value="${catalina.ops}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <arg value="-c"/>
             <arg value="'${catalina.base}/bin/${startup}'"/>
         </exec>
@@ -301,6 +329,10 @@
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_OPS" value="${catalina.ops}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <env key="JPDA_OPTS" value="${agent.lib.args}"/>
             <arg value="-c"/>
             <arg value="'${catalina.base}/bin/${catalina}' jpda start"/>
@@ -368,6 +400,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <arg line="${run.args}"/>
         </java>
     </target>
@@ -385,6 +421,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <arg line="${run.args}"/>
         </java>
     </target>
@@ -401,6 +441,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <arg line="${pword.props}"/>
         </java>
     </target>
@@ -425,6 +469,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -448,6 +496,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath refid="tcp"/>
             <test name="${test.class}" haltonfailure="no" todir="${reports.dir}">
@@ -469,6 +521,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>
@@ -492,6 +548,10 @@
             <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
             <env key="SIGMA_SRC" value="${basedir}"/>
             <env key="CATALINA_HOME" value="${catalina.base}"/>
+            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
+            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
+            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
             <formatter type="plain" usefile="false"/>
             <classpath>
                 <path refid="tcp"/>

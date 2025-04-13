@@ -496,7 +496,7 @@ public class KBmanager implements Serializable {
             }
         }
         System.out.println("kbsFromXML(): Completed loading KBs");
-        System.out.println("kbsFromXML(): seconds: " + (System.currentTimeMillis() - milis) / 1000);
+        System.out.println("kbsFromXML(): seconds: " + (System.currentTimeMillis() - milis) / KButilities.ONE_K);
         if (!SUMOKBexists)
             System.err.println("Error in KBmanager.kbsFromXML(): no SUMO kb.  Some Sigma functions will not work.");
     }
@@ -513,23 +513,20 @@ public class KBmanager implements Serializable {
                     + configuration.getTagName() + ". expected <configuration>");
         }
         else {
-            SimpleElement element, kbConst;
             List<String> kb;
             String filename;
             boolean useCacheFile;
-            for (int i = 0; i < configuration.getChildElements().size(); i++) {
-                element = (SimpleElement) configuration.getChildElements().get(i);
+            for (SimpleElement element : configuration.getChildElements()) {;
                 if (element.getTagName().equals("kb")) {
                     kb = new ArrayList<>();
                     result.add(kb);
                     useCacheFile = KBmanager.getMgr().getPref("cache").equalsIgnoreCase("yes");
-                    for (int j = 0; j < element.getChildElements().size(); j++) {
-                        kbConst = (SimpleElement) element.getChildElements().get(j);
+                    for (SimpleElement kbConst : element.getChildElements()) {
                         if (!kbConst.getTagName().equals("constituent")) {
                             System.err.println("Error in KBmanager.kbsFilenamesFromXML(): Bad tag: "
                                     + kbConst.getTagName() + ". expected <constituent>");
                         }
-                        filename = (String) kbConst.getAttribute("filename");
+                        filename = kbConst.getAttribute("filename");
                         if (!filename.startsWith((File.separator)))
                             filename = KBmanager.getMgr().getPref("kbDir") + File.separator + filename;
                         if (!StringUtil.emptyString(filename)) {
@@ -597,7 +594,7 @@ public class KBmanager implements Serializable {
         kb.kbCache = new KBcache(kb);
         kb.kbCache.buildCaches();
         kb.checkArity();
-        System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
         return retVal;
     }
 
@@ -883,7 +880,7 @@ public class KBmanager implements Serializable {
         System.out.println("Info in KBmanager.initializeOnce(): initialized is " + initialized);
         if (debug) System.out.println("KBmanager.initializeOnce(): number of preferences: " +
                 preferences.keySet().size());
-        System.out.println("KBmanager.initializeOnce(): total init time in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("KBmanager.initializeOnce(): total init time in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 
     /** ***************************************************************
@@ -908,7 +905,7 @@ public class KBmanager implements Serializable {
         }
         String cwa = preferences.get("cwa");
         SUMOKBtoTPTPKB.CWA = !StringUtil.emptyString(cwa) && cwa.equals("true");
-        System.out.println("KBmanager.setConfiguration(): linguistics load time: " + (System.currentTimeMillis() - milis) / 1000);
+        System.out.println("KBmanager.setConfiguration(): linguistics load time: " + (System.currentTimeMillis() - milis) / KButilities.ONE_K);
         if (kbs != null && !kbs.isEmpty() && !WordNet.initNeeded) {
             File f3, f4;
             for (String kbName : kbs.keySet()) {

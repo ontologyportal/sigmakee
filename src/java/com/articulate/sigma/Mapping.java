@@ -156,7 +156,7 @@ public class Mapping {
                 }
             }
         }
-        String dir = (String) KBmanager.getMgr().getPref("baseDir");
+        String dir = KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname2 + "-merged-" + kbname1;
         try {
             File f = new File(filename + ".kif");
@@ -219,7 +219,7 @@ public class Mapping {
         if (kb != null) {
             List<Formula> al = kb.askWithRestriction(0,"termFormat",2,term);
             if (al != null && !al.isEmpty()) {
-                Formula f = (Formula) al.get(0);
+                Formula f = al.get(0);
                 String t = f.getStringArgument(3);
                 t = OWLtranslator.removeQuotes(t);
                 return t;
@@ -270,7 +270,7 @@ public class Mapping {
                 !matchMethod.equals("Levenshtein") &&
                 !matchMethod.equals("Substring")) {
             matchMethod = "Substring";
-            System.out.println("Error in Mapping.mapOntologies(): Invalid match method " +
+            System.err.println("Error in Mapping.mapOntologies(): Invalid match method " +
                     matchMethod + ". Defaulting to substring match.");
         }
 

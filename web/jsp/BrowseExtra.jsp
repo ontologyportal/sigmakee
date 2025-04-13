@@ -22,7 +22,7 @@
   @param lang is the language in which to generate paraphrases
 */
 
- StringBuffer show = new StringBuffer();       // Variable to contain the HTML page generated.
+ StringBuilder show = new StringBuilder();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
  int start = 0;
  String startString = request.getParameter("start");
@@ -39,7 +39,7 @@
 
  if (kb != null && (term == null || term.equals("")))        // Show statistics only when no term is specified.
     show.append(HTMLformatter.showStatistics(kb));
- else if (kb != null && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in                                                         
+ else if (kb != null && kb.containsTerm(term)) {                // Build the HTML format for all the formulas in
     show.append("<title>Sigma KEE - " + term + "</title>\n");   // which the given term appears.
     show.append("<table width='95%'><tr><td width='50%'><FONT face='Arial,helvetica' size=+3><b>");
     if (term != null) {
@@ -47,24 +47,24 @@
         show.append(term);
         show.append("</b></FONT>");
     	if (Character.isLowerCase(term.charAt(0)) || term.endsWith("Fn")) {
-    	    Map fm = kb.getFormatMap(language);
+    	    Map<String, String> fm = kb.getFormatMap(language);
     	    String fmValue = null;
     	    if (fm != null)
-                fmValue = (String) fm.get(term); 
+                fmValue = fm.get(term);
     	    if (fmValue == null)
                 System.out.println("INFO in BrowseBody.jsp: No format map entry for \"" +
-                                   term + "\" in language " + language);	   
+                                   term + "\" in language " + language);
     	}
     	else {
-    	    Map tfm = kb.getTermFormatMap(language);
+    	    Map<String, String> tfm = kb.getTermFormatMap(language);
     	    String tfmValue = null;
     	    if (tfm != null)
-                tfmValue = (String) tfm.get(term);
-    	    if (tfmValue != null) 
-                show.append("(" + tfmValue + ")");	    
+                tfmValue = tfm.get(term);
+    	    if (tfmValue != null)
+                show.append("(" + tfmValue + ")");
     	    else
                 System.out.println("INFO in BrowseBody.jsp: No term format map entry for \"" +
-                                   term + "\" in language " + language);	   
+                                   term + "\" in language " + language);
     	}
         show.append("</td>");
         show.append("</tr></table>\n");
