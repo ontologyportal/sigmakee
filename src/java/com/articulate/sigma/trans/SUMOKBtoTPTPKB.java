@@ -735,9 +735,9 @@ public class SUMOKBtoTPTPKB {
     }
 
     /** *************************************************************
-     * Will first write out SUMO.tptp, if it hasn't yet been written,
-     * or is old, then, will write out SUMO.fof if it hasn't yet been
-     * written, or is old.
+     * Will first write out SUMO.tptp, if the KB had not yet been
+     * serialized, or serialized files are older than the sources,
+     * then, will write out a fresh SUMO.fof.
      */
     public static void main(String[] args) {
 
