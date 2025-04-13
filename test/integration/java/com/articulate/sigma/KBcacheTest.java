@@ -66,7 +66,7 @@ public class KBcacheTest extends IntegrationTestBase {
 
     /** *************************************************************
      * TODO: enabling cacheDisjoint and rebuilding the KB will cause
-     * this test to fail
+     * this test to fail: extra element "RealNumber" in actual return.
      */
     @Test
     public void testBuildChildrenRealNumber() {
