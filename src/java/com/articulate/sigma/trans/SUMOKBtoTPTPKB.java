@@ -490,8 +490,9 @@ public class SUMOKBtoTPTPKB {
             int total = orderedFormulae.size();
             List<Future<?>> futures = new ArrayList<>();
             StringBuilder sb = new StringBuilder();
+            Runnable r;
             for (Formula formula : orderedFormulae) {
-                Runnable r = () -> {
+                r = () -> {
                     Formula f = formula;
                     f.theTptpFormulas.clear();
                     FormulaPreprocessor fp = new FormulaPreprocessor();
