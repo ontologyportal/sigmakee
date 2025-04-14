@@ -515,8 +515,9 @@ public class KB implements Serializable {
             Future<?> future;
             List<Future<?>> futures = new ArrayList<>();
             int total = formulaMap.values().size();
+            Runnable r;
             for (Formula f : formulaMap.values()) {
-                Runnable r = () -> {
+                r = () -> {
                     if (counter++ % 10 == 0)
 //                        System.out.print(".");
                         progressSb.append(".");
