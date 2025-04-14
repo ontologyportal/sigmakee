@@ -2,6 +2,7 @@
   <preference name="adminBrowserLimit" value="200" />
   <preference name="baseDir" value="/home/theuser/.sigmakee" />
   <preference name="cache" value="yes" />
+  <preference name="cacheDisjoint" value="true"/>
   <preference name="celtdir" value="" />
   <preference name="editDir" value="/home/theuser/workspace/sumo" />
   <preference name="eprover" value="/home/theuser/E/bin/e_ltb_runner" />
