@@ -76,7 +76,7 @@ public class KBcacheTest extends IntegrationTestBase {
         Set<String> expected = new TreeSet<>(Arrays.asList("RationalNumber","Integer","EvenInteger",
                 "OddInteger","PrimeNumber","NonnegativeInteger","PositiveInteger","NegativeInteger",
                 "IrrationalNumber","NonnegativeRealNumber","PositiveRealNumber","PositiveInteger",
-                "NegativeRealNumber","NegativeInteger","BinaryNumber"));
+                "NegativeRealNumber","NegativeInteger","BinaryNumber","RealNumber"));
 
         Set<String> actual = new TreeSet<>(cache.getChildClasses(parent));
 
