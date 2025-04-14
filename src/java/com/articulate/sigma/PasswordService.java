@@ -154,17 +154,6 @@ public final class PasswordService implements ServletContextListener {
 
     /** *****************************************************************
      */
-    public void addUser(User user) {
-
-        if (userExists(user.username)) {
-            System.out.println("Error in PasswordService.addUser():  User " + user.username + " already exists.");
-            return;
-        }
-        user.toDB(conn);
-    }
-
-    /** *****************************************************************
-     */
     public Set<String> userIDs() {
 
         Set<String> result = new HashSet<>();
@@ -217,13 +206,17 @@ public final class PasswordService implements ServletContextListener {
                 System.out.println("login successful");
             }
             else
-                System.out.println("Invalid username/password");
+                System.err.println("Invalid username/password");
         }
         else
             System.out.println("User " + login + " does not exist");
     }
 
     /** *****************************************************************
+     * Sends the moderator an email requesting a user to be registered a
+     * Sigma account
+     *
+     * @param user the user information to register an account for
      */
     public void mailModerator(User user) {
 
@@ -288,6 +281,7 @@ public final class PasswordService implements ServletContextListener {
     }
 
     /** *****************************************************************
+     * Command line initiated method for registering a Sigma user with role guest.
      */
     public void register() {
 
@@ -299,22 +293,47 @@ public final class PasswordService implements ServletContextListener {
         }
         String login = c.readLine("Enter your username: ");
         String password = new String(c.readPassword("Enter your password: "));
-        if (userExists(login))
-            System.out.println("User " + login + " already exists");
-        else {
-            String email = c.readLine("Enter your email address: ");
-            User u = new User();
-            u.username = login;
-            u.password = encrypt(password);
-            u.role = "guest";
-            u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
-            addUser(u);
+        String email = c.readLine("Enter your email address: ");
+        User u = addUser(login, password, email, "guest");
+        onlineRegister(u);
+    }
+
+    public void onlineRegister(User u) {
+
+        if (u != null)
             mailModerator(u);
-        }
+        else
+            System.err.println("Error in PasswordService.onlineRegister(): unable to create user");
     }
 
     /** *****************************************************************
+     * The working utility to add a user to the DB
+     *
+     * @param login the user name
+     * @param p user password (will be encrypted)
+     * @param e user email
+     * @param role user role
+     * @return an instance of the user to add to the DB
+     */
+    public User addUser(String login, String p, String e, String role) {
+
+        User u = null;
+        if (userExists(login)) {
+            System.err.println("Error in PasswordService.addUser():  User " + login + " already exists!");
+            return u;
+        }
+        u = new User();
+        u.username = login;
+        u.password = encrypt(p);
+        u.role = role;
+        u.attributes.put("email",e);
+        u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
+        u.toDB(conn);
+        return u;
+    }
+
+    /** *****************************************************************
+     * Creates an admin user using the console for user input
      */
     public void createAdmin() {
 
@@ -326,42 +345,27 @@ public final class PasswordService implements ServletContextListener {
         }
         String login = c.readLine("Enter your username: ");
         String password = new String(c.readPassword("Enter your password: "));
-        if (userExists(login))
-            System.out.println("User " + login + " already exists");
-        else {
-            String email = c.readLine("Enter your email address: ");
-            User u = new User();
-            u.username = login;
-            u.password = encrypt(password);
-            u.role = "admin";
-            u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
-            addUser(u);
-        }
+        String email = c.readLine("Enter your email address: ");
+        createAdmin3(login, password, email);
     }
 
     /** *****************************************************************
+     * Creates an admin user
+     *
+     * @param user the user name
+     * @param p user password (will be encrypted)
+     * @param e user email
      */
-    public void createAdmin3(String user, String p, String e) {
+    private void createAdmin3(String user, String p, String e) {
 
-        System.out.println("Create admin");
-        String login = user;
-        String password = p;
-        if (userExists(login))
-            System.err.println("Error: User " + login + " already exists");
-        else {
-            String email = e;
-            User u = new User();
-            u.username = login;
-            u.password = encrypt(password);
-            u.role = "admin";
-            u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
-            addUser(u);
-        }
+        System.out.println("Create admin " +user);
+        addUser(user, p, e, "admin");
     }
 
-    /** *****************************************************************
+    /** ******************************************************************
+     * Creates a new user with role user
+     *
+     * @param user the user name
      */
     public void createUser(String user) {
 
@@ -372,18 +376,8 @@ public final class PasswordService implements ServletContextListener {
             exit(1);
         }
         String password = new String(c.readPassword("Enter user password: "));
-        if (userExists(user))
-            System.err.println("User " + user + " already exists");
-        else {
-            String email = c.readLine("Enter your email address: ");
-            User u = new User();
-            u.username = user;
-            u.password = encrypt(password);
-            u.role = "user";
-            u.attributes.put("email",email);
-            u.attributes.put("registrId",encrypt(Long.toString(System.currentTimeMillis())));
-            addUser(u);
-        }
+        String email = c.readLine("Enter your email address: ");
+        addUser(user, password, email, "user");
     }
 
     /** *****************************************************************
@@ -411,21 +405,24 @@ public final class PasswordService implements ServletContextListener {
     public static void showHelp() {
 
         System.out.println("PasswordService: ");
-        System.out.println("-h    show this Help message");
-        System.out.println("-l    Login");
-        System.out.println("-c    Create db");
-        System.out.println("-a    create Admin user");
+        System.out.println("-h    show this help message");
+        System.out.println("-l    login");
+        System.out.println("-c    create db");
+        System.out.println("-a    create admin user");
+        System.out.println("-u    show user IDs");
+        System.out.println("-r    register a new guest username and password (fail if username taken)");
 
-        System.out.println("-u    show User IDs");
-        System.out.println("-r    Register a new username and password (fail if username taken)");
-        System.out.println("-a3 <u> <p> <e>  create Admin user");
+        System.out.println("-a3 <u> <p> <e>  create admin user");
         System.out.println("-o <id>          change user role");
-        System.out.println("-n <id>          create New guest user");
+        System.out.println("-n <id>          create new user");
         System.out.println("-f <id>          find user with given ID");
-        System.out.println("-d <id>          Delete user with given ID");
+        System.out.println("-d <id>          delete user with given ID");
     }
 
     /** *****************************************************************
+     * Command line entry point
+     *
+     * @param args given command line arguments
      */
     public static void main(String args[]) {
 
@@ -450,12 +447,14 @@ public final class PasswordService implements ServletContextListener {
                     ps.changeUserRole(args[1]);
                 else if (args.length > 1 && args[0].equals("-n"))
                     ps.createUser(args[1]);
-                else if (args.length > 1 && args[0].equals("-f"))
-                    System.out.println(User.fromDB(ps.conn, args[1]));
+                else if (args.length > 1 && args[0].equals("-f")) {
+                    User user = User.fromDB(ps.conn, args[1]);
+                    System.out.println(user == null ? "" : user);
+                }
                 else if (args.length > 1 && args[0].equals("-d"))
                     ps.deleteUser(args[1]);
                 else {
-                    System.out.println("unrecognized command:" + args[0] + "\n");
+                    System.err.println("unrecognized command:" + args[0] + "\n");
                     showHelp();
                 }
             }

@@ -12,6 +12,7 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 
 package com.articulate.sigma;
+
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -33,7 +34,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
@@ -5533,7 +5533,7 @@ public class DocGen {
                 String dirpath = "";
                 switch (i) {
                 case 0 :
-                    dirpath = System.getenv("SIGMA_HOME");
+                    dirpath = KButilities.SIGMA_HOME;
                     break;
                 case 1 :
                     dirpath = KBmanager.getMgr().getPref("baseDir");

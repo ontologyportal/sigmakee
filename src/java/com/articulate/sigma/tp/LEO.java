@@ -135,7 +135,7 @@ public class LEO {
         }
         File executable = new File(leoex);
         if (!executable.exists()) {
-            System.out.println("Error in Leo.run(): no executable " + leoex);
+            System.err.println("Error in Leo.run(): no executable " + leoex);
         }
         String[] cmds = createCommandList(executable, timeout, kbFile);
         System.out.println("Leo.run(): Initializing Leo with:\n" + Arrays.toString(cmds));

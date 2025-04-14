@@ -61,6 +61,8 @@ public class KButilities implements ServletContextListener {
         return kryo;
     });
 
+    public static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
+
     public static final int ONE_K = 1000;
 
     public static boolean debug = false;
@@ -1570,7 +1572,7 @@ public class KButilities implements ServletContextListener {
             }
             else if (args != null && args.length > 1 && args[0].equals("-v")) {
                 boolean valid = isValidFormula(kb,args[1]);
-                String s = "Formula " + args[1] + "\nis valid: ";
+                String s = "Formula: " + args[1] + "\nis valid: ";
                 StringBuilder sb = new StringBuilder();
                 sb.append(s);
                 if (valid)

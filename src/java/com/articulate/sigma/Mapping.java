@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
 /** This code is copyright Articulate Software (c) 2004.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
@@ -28,17 +27,17 @@ code.  Please cite the following article in any publication with references:
 
 Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.See also http://sigmakee.sourceforge.net
+August 9, Acapulco, Mexico. See also http://sigmakee.sourceforge.net
 
 This class maps ontologies. It includes embedded subclasses that
 implement specific mapping heuristics.
 
 This class also includes utilities for converting other
 ad-hoc formats to KIF
-   */
+*/
 public class Mapping {
 
-    public static Map<String,TreeMap<Integer,String>> mappings = new TreeMap<>();
+    public static Map<String,Map<Integer,String>> mappings = new TreeMap<>();
     public static char termSeparator = '!';
 
     /** *************************************************************
@@ -50,15 +49,14 @@ public class Mapping {
      *
      *  @return error messages if necessary
      */
-    public static String writeEquivalences(Set cbset, String kbname1, String kbname2) throws IOException {
+    public static String writeEquivalences(Set<String> cbset, String kbname1, String kbname2) throws IOException {
 
         System.out.println("INFO in Mapping.writeEquivalences(): size: " + cbset.size());
-        String dir = (String) KBmanager.getMgr().getPref("baseDir");
+        String dir = KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname1 + "-" + kbname2 + "-links";
 
         if (mappings.keySet().size() < 1)
             return "Error: No mappings found";
-
 
         File f = new File(filename + ".kif");
         int fileCounter = 0;
@@ -73,11 +71,11 @@ public class Mapping {
 
         try (Writer fw = new FileWriter(filename);
              PrintWriter pw = new PrintWriter(fw)) {
-            Iterator it = cbset.iterator();
+            Iterator<String> it = cbset.iterator();
             String st, term1, term2;
             boolean subcheckbox;
             while (it.hasNext()) {
-                st = (String) it.next();
+                st = it.next();
                 subcheckbox = false;
                 if (st.startsWith("sub_checkbox_")) {
                     st = st.substring(13);
@@ -106,7 +104,7 @@ public class Mapping {
 
             }
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error writing file " + filename + "\n" + e.getMessage());
         }
         return "Wrote: " + filename;
@@ -116,7 +114,7 @@ public class Mapping {
      *  rename terms in KB kbname2 to conform to names in kbname1
      *  @return error messages if necessary
      */
-    public static String merge(Set cbset, String kbname1, String kbname2) {
+    public static String merge(Set<String> cbset, String kbname1, String kbname2) {
 
         System.out.println("INFO in Mapping.merge()");
         if (mappings.keySet().size() < 1)
@@ -124,19 +122,20 @@ public class Mapping {
 
         KB kb1 = KBmanager.getMgr().getKB(kbname1);
         KB kb2 = KBmanager.getMgr().getKB(kbname2);
-        Map value;
-        Iterator it2;
+        Map<Integer,String> value;
+        Iterator<Integer> it2;
         Integer score;
         String term2, topScoreFlag, cbName, subName;
+        int counter;
         for (String term1 : mappings.keySet()) {
-            value = (TreeMap) mappings.get(term1);
+            value = mappings.get(term1);
             // System.out.println("INFO in Mapping.merge(): outer loop, examining " + term1);
             it2 = value.keySet().iterator();
-            int counter = 0;
+            counter = 0;
             while (it2.hasNext()) {
                 counter++;
-                score = (Integer) it2.next();
-                term2 = (String) value.get(score);
+                score = it2.next();
+                term2 = value.get(score);
                 // System.out.println("INFO in Mapping.merge(): inner loop, examining " + term2);
                 topScoreFlag = "";
                 if (counter == 1)
@@ -157,11 +156,11 @@ public class Mapping {
                 }
             }
         }
-        String dir = (String) KBmanager.getMgr().getPref("baseDir");
+        String dir = KBmanager.getMgr().getPref("baseDir");
         String filename = dir + File.separator + kbname2 + "-merged-" + kbname1;
         try {
             File f = new File(filename + ".kif");
-            int counter = 0;
+            counter = 0;
             while (f.exists()) {
                 counter++;
                 f = new File(filename + counter + ".kif");
@@ -174,14 +173,14 @@ public class Mapping {
             kb1.addConstituent(filename);
             KBmanager.getMgr().removeKB(kbname2);
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             return "Error writing file " + filename + "\n" + e.getMessage();
         }
         return "Successful renaming of terms in " + kbname2 + " to those in " + kbname1;
     }
 
     /** *************************************************************
-    *   Convert a YAGO file into KIF
+     *  Convert a YAGO file into KIF
      */
     public static void convertYAGO(String file, String relName) throws IOException {
 
@@ -218,9 +217,9 @@ public class Mapping {
     public static String getTermFormat(KB kb, String term) {
 
         if (kb != null) {
-            List al = kb.askWithRestriction(0,"termFormat",2,term);
+            List<Formula> al = kb.askWithRestriction(0,"termFormat",2,term);
             if (al != null && !al.isEmpty()) {
-                Formula f = (Formula) al.get(0);
+                Formula f = al.get(0);
                 String t = f.getStringArgument(3);
                 t = OWLtranslator.removeQuotes(t);
                 return t;
@@ -271,7 +270,7 @@ public class Mapping {
                 !matchMethod.equals("Levenshtein") &&
                 !matchMethod.equals("Substring")) {
             matchMethod = "Substring";
-            System.out.println("Error in Mapping.mapOntologies(): Invalid match method " +
+            System.err.println("Error in Mapping.mapOntologies(): Invalid match method " +
                     matchMethod + ". Defaulting to substring match.");
         }
 

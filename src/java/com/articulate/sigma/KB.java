@@ -285,6 +285,38 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Experimental: Utility method to perform a merge with the KB input
+     *
+     * @param kbIn the KB to merge
+     */
+    public void mergeKBs(KB kbIn) {
+
+        if (kbIn.capterms != null)
+            this.capterms.putAll(kbIn.capterms);
+        if (kbIn.constituents != null)
+            this.constituents.addAll(kbIn.constituents);
+        if (kbIn.formatMap != null)
+            this.formatMap.putAll(kbIn.formatMap);
+        if (kbIn.formatMapAll != null)
+            this.formatMapAll.putAll(kbIn.formatMapAll);
+        if (kbIn.formulaMap != null)
+            this.formulaMap.putAll(kbIn.formulaMap);
+        if (kbIn.formulas != null)
+            this.formulas.putAll(kbIn.formulas);
+        if (kbIn.termDepthCache != null)
+            this.termDepthCache.putAll(kbIn.termDepthCache);
+        if (kbIn.termFormatMap != null)
+            this.termFormatMap.putAll(kbIn.termFormatMap);
+        if (kbIn.termFormatMapAll != null)
+            this.termFormatMapAll.putAll(kbIn.termFormatMapAll);
+        if (kbIn.termFrequency != null)
+            this.termFrequency.putAll(kbIn.termFrequency);
+        if (kbIn.terms != null)
+            this.terms.addAll(kbIn.terms);
+        this.kbCache.mergeCaches(kbCache);
+    }
+
+    /***************************************************************
      */
     public boolean isVisible() {
         return isVisible;
@@ -400,7 +432,7 @@ public class KB implements Serializable {
             Formula f;
             String lang;
             for (int i = 0; i < col.size(); i++) {
-                f = (Formula) col.get(i);
+                f = col.get(i);
                 lang = f.getStringArgument(1);
                 if (!al.contains(lang.intern()))
                     al.add(lang.intern());
@@ -448,7 +480,7 @@ public class KB implements Serializable {
             _t_checkArity();
 
         counter = 0; // reset
-        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("KB.checkArity(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
     }
 
     /** *************************************************************
@@ -2880,12 +2912,11 @@ public class KB implements Serializable {
             System.err.println("Error in KB.readConstituent(): " + error.toString());
             ex1.printStackTrace();
         }
-        file.filename = filename;
         return file;
     }
 
     /***************************************************************
-     * A a formula or formulas into the KB
+     * Adds a formula or formulas into the KB
      */
     public void addConstituentInfo(KIF file) {
 
@@ -2960,7 +2991,7 @@ public class KB implements Serializable {
         addConstituentInfo(file);
         System.out.println("\nINFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
                 + file.terms.size() + " terms.");
-        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
 
     }
 
@@ -3608,7 +3639,7 @@ public class KB implements Serializable {
         InferenceEngine res = null;
         try {
             if (!formulaMap.isEmpty()) {
-                Set<String> forms = preProcess((HashSet<String>) formulaMap.keySet());
+                Set<String> forms = preProcess(formulaMap.keySet());
                 String filename = writeInferenceEngineFormulas(forms);
                 boolean vFileSaved = !StringUtil.emptyString(filename);
                 if (!vFileSaved)
@@ -3669,7 +3700,7 @@ public class KB implements Serializable {
                             pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(this)));
                         stff.printTFFNumericConstants(pw);
                     }
-                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / 1000);
+                    System.out.println("INFO in KB.loadVampire(): write " + lang + ", in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
                 }
             }
             catch (Exception e) {
@@ -3818,7 +3849,7 @@ public class KB implements Serializable {
         System.out.println();
         // kbCache.clearSortalTypeCache();
         System.out.println("INFO in KB.preProcess(): completed in " +
-                (System.currentTimeMillis() - millis) / 1000 + " seconds");
+                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
         counter = 0;
         return newTreeSet;
     }
@@ -4081,7 +4112,7 @@ public class KB implements Serializable {
         System.out.println("  h - show this help screen");
         System.out.println("  t - run test");
         System.out.println("  a \"<query>\"- ask query");
-        System.out.println("  l - load KB files");
+        System.out.println("  l - load/rebuild KB files");
         System.out.println("  v - ask query of Vampire");
         System.out.println("  e - ask query of EProver");
         System.out.println("  L - ask query of LEO-IIIr");
@@ -4134,7 +4165,6 @@ public class KB implements Serializable {
             }
             if (args != null && args.length > 0 && args[0].contains("t")) {
                 test();
-                System.exit(0);
             }
             if (args != null && args.length > 1 && args[0].contains("v")) {
                 KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;

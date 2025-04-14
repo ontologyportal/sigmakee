@@ -48,12 +48,12 @@ public class BasicXMLparser {
             elements = el.subelements;
         }
         catch (ParseException pe) {
-            System.out.print("Error in BasicXMLparser(): " + pe.getMessage() + " At line:");
-            System.out.println(pe.getErrorOffset());
+            System.err.print("Error in BasicXMLparser(): " + pe.getMessage() + " At line:");
+            System.err.println(pe.getErrorOffset());
             elements = null;
         }
         catch (IOException ioe) {
-            System.out.println("Error in BasicXMLparser(): " + ioe.getMessage());
+            System.err.println("Error in BasicXMLparser(): " + ioe.getMessage());
             elements = null;
         }
     }
@@ -151,9 +151,8 @@ public class BasicXMLparser {
         }
     }
 
-    /** ***************************************************************
-     * Convert the XML hierarchy to a String.
-     */
+    // Convert the XML hierarchy to a String
+    @Override
     public String toString() {
 
         StringBuilder result = new StringBuilder();

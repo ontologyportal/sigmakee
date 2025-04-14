@@ -24,7 +24,7 @@
     http://github.com/ontologyportal
 */
 
-List<String> userPages = new ArrayList<String>();
+List<String> userPages = new ArrayList<>();
 userPages.add("AllPictures.jsp");
 userPages.add("Browse.jsp");
 userPages.add("BrowseExtra.jsp");
@@ -86,8 +86,7 @@ if (StringUtil.emptyString(kbName)) {
         kbName = mgr.getPref("sumokbname");
 }
 
-KB kb = null;
-kb = mgr.getKB(kbName);
+KB kb = mgr.getKB(kbName);
 if (kb != null)
     TaxoModel.kbName = kbName;
 

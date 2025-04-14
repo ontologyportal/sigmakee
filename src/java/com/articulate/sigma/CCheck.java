@@ -54,7 +54,7 @@ public class CCheck implements Runnable {
         this(kb, fileName);
         timeOut = timeout;
         if (setInferenceEngine(chosenEngine) == false) {
-            System.out.println("Unable to create CCheck for kb: " + kb.name +
+            System.err.println("Unable to create CCheck for kb: " + kb.name +
                     "; Error setting up inference engine = " + inferenceEngine);
             throw new Exception("Could not set inference engine with the following params for KB " +
                     kb.name + ". Inference Engine chosen = " + chosenEngine);
@@ -165,29 +165,7 @@ public class CCheck implements Runnable {
     private KB makeEmptyKB() {
 
         ccheck_kb = "CCheck_" + kb.name;
-        String kbDir = (String) KBmanager.getMgr().getPref("kbDir");
-        if (KBmanager.getMgr().existsKB(ccheck_kb))
-            KBmanager.getMgr().removeKB(ccheck_kb);
-        File dir = new File( kbDir );
-        File emptyCFile = new File( dir, "emptyConstituent.txt" );
-        String emptyCFilename = emptyCFile.getAbsolutePath();
-        KBmanager.getMgr().addKB(ccheck_kb, false);
-        KB empty = KBmanager.getMgr().getKB(ccheck_kb);
-
-        try { // Fails elsewhere if no constituents, or empty constituent, thus...
-            empty.eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
-            try (Writer fwriter = new FileWriter(emptyCFile); PrintWriter pwriter = new PrintWriter(fwriter)) {
-                pwriter.println("(instance instance BinaryPredicate)\n");
-                empty.addConstituent(emptyCFilename);
-            } catch (IOException e) {
-                System.err.println("Error writing file " + emptyCFilename);
-            }
-
-        } catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
-        return empty;
+        return Diagnostics.makeEmptyKB(ccheck_kb);
     }
 
     /** *************************************************************
@@ -257,7 +235,7 @@ public class CCheck implements Runnable {
             fw.flush();
         }
         catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -302,7 +280,7 @@ public class CCheck implements Runnable {
             fw.flush();
         }
         catch (IOException ex) {
-            System.out.println(ex.getMessage());
+            System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -343,7 +321,7 @@ public class CCheck implements Runnable {
                     }
                     catch(Exception e) {
                         reportError(e.getMessage(), query, processedQuery, sourceFile);
-                        System.out.println("Error from inference engine: " + e.getMessage());
+                        System.err.println("Error from inference engine: " + e.getMessage());
                     }
                     negatedQuery = new StringBuilder();
                     negatedQuery.append("(not ").append(processedQuery).append(")");
@@ -353,7 +331,7 @@ public class CCheck implements Runnable {
                     }
                     catch(Exception e) {
                         reportError(e.getMessage(), query, processedQuery, sourceFile);
-                        System.out.println("Error from inference engine: " + e.getMessage());
+                        System.err.println("Error from inference engine: " + e.getMessage());
                     }
                 }
                 empty.tell(query.getFormula());

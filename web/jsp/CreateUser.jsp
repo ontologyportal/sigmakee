@@ -1,5 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=US-ASCII"
-    import="com.articulate.sigma.*,java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
+    import="com.articulate.sigma.*, com.articulate.sigma.utils.*, java.net.URLConnection, javax.servlet.http.HttpServletRequest, java.io.*"
     pageEncoding="US-ASCII"%>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -23,7 +23,6 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
 KBmanager.getMgr().initializeOnce();
 String firstName = request.getParameter("firstName");
 String lastName = request.getParameter("lastName");
@@ -44,17 +43,17 @@ if (StringUtil.emptyString(firstName) ||
 }
 else {
     PasswordService ps = new PasswordService();
-    User u = new User();
-    u.username = userName;
-    u.password = password;
-    u.role = "guest";
-    u.attributes.put("organization",organization);
-    u.attributes.put("email",email);
-    u.attributes.put("firstName",firstName);
-    u.attributes.put("lastName",lastName);
-    u.attributes.put("registrId",ps.encrypt(Long.valueOf(System.currentTimeMillis()).toString()));
-    u.toDB(ps.conn);
-    ps.mailModerator(u);
+    User u = ps.addUser(userName, password, email, "guest");
+    if (u != null) {
+        u.attributes.put("firstName",firstName);
+        u.attributes.put("lastName",lastName);
+        u.attributes.put("organization",organization);
+        ps.onlineRegister(u);
+    }
+    else {
+        String errStr = "\n<br/>Error: User: " + userName + " may already be registered!\n<br/>";
+        out.println(errStr);
+    }
     response.sendRedirect("KBs.jsp");
 }
 %>

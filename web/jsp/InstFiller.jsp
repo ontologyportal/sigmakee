@@ -23,13 +23,15 @@ if (!role.equalsIgnoreCase("admin")) {
   if (StringUtil.emptyString(term))
       term = "UnitedStates";
   Enumeration params = request.getParameterNames();
-  TreeMap<String, ArrayList<String>> cbset = new TreeMap<String, ArrayList<String>>();
+  Map<String, List<String>> cbset = new TreeMap<>();
+  String elem, arg;
+  List<String> al;
   while (params.hasMoreElements()) {
-      String elem = (String) params.nextElement();
+      elem = (String) params.nextElement();
       if (elem.startsWith("checkbox-") && request.getParameter(elem) != null) {
-          ArrayList<String> al = new ArrayList<String>();
+          al = new ArrayList<String>();
           for (int i = 0; i < 6; i++) {
-              String arg = request.getParameter(elem.substring(9) + "--" + Integer.toString(i));
+              arg = request.getParameter(elem.substring(9) + "--" + Integer.toString(i));
               if (arg != null)
                   al.add(arg);
           }

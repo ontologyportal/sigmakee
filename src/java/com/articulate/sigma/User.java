@@ -21,17 +21,16 @@ import java.util.*;
 public class User {
 
     public String username;
-      /** Encrypted password */
+    /** Encrypted password */
     public String password;
-      /** A String which is one of: user, registered, administrator */
+    /** A String which is one of: user, registered, administrator. */
     public String role = "user";
-      /** A HashMap of String keys and String values */
+    /** A HashMap of String keys and String values. */
     public Map<String,String> attributes = new HashMap<>();
-      /** An ArrayList of String keys consisting of unique project names. */
-    public List<String> projects = new ArrayList();
+    /** A List of String keys consisting of unique project names. */
+    public List<String> projects = new ArrayList<>();
 
-    /** *****************************************************************
-     */
+    @Override
     public String toString() {
 
         return username + "\n" + password + "\n" + role + "\n" + attributes.toString() + "\n" + projects.toString();
@@ -74,28 +73,32 @@ public class User {
 
     /** *****************************************************************
      *  Load the object from a relational DB
+     *
+     * @param conn the SQL connection
+     * @param username the user name to search for
+     * @return the register user from the DB
      */
     public static User fromDB(Connection conn, String username) {
 
+        User user = null;
         String str = "select * from users where username='" + username + "';";
         try {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery(str);
-            User user = new User();
-            user.username = username;
             if (!rs.next()) {
-                System.err.println("fromDB(): no user " + username);
+                System.err.println("User.fromDB(): no user " + username);
                 return null;
             }
             else {
+                user = new User();
+                user.username = username;
                 user.password = rs.getString("password");
                 user.role = rs.getString("role");
             }
             str = "select * from attributes where username='" + username + "';";
             stmt = conn.createStatement();
             rs = stmt.executeQuery(str);
-            String key;
-            String value;
+            String key, value;
             while (rs.next()) {
                 key = rs.getString("id");
                 value = rs.getString("email");
@@ -110,18 +113,19 @@ public class User {
                 user.projects.add(proj);
             }
             //System.out.println("fromDB(): " + user);
+            rs.close();
             stmt.close();
-            return user;
         }
         catch (SQLException e) {
-            System.err.println("Error in fromDB(): " + e.getMessage());
+            System.err.println("Error in User.fromDB(): " + e.getMessage());
             e.printStackTrace();
         }
-        return null;
+        return user;
     }
 
     /** *****************************************************************
-     *  save the object in the relational DB
+     * Save the object in the relational DB
+     * @param conn the SQL connection to interface with the DB
      */
     public void toDB(Connection conn) {
 
@@ -147,13 +151,14 @@ public class User {
             stmt.close();
         }
         catch (SQLException e) {
-            System.err.println("Error in toDB(): " + e.getMessage());
+            System.err.println("Error in User.toDB(): " + e.getMessage());
             e.printStackTrace();
         }
     }
 
     /** *****************************************************************
-     * toggle user role between 'guest' and 'user'
+     * Toggle user role between 'guest' and 'user'
+     * @param conn the SQL connection to interface with the DB
      */
     public void toggleRole(Connection conn) {
 
@@ -178,6 +183,7 @@ public class User {
     }
 
     /** *****************************************************************
+     * @return the role of this user
      */
     public String getRole() {
 

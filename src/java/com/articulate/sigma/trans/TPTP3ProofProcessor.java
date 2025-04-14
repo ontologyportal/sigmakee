@@ -1140,8 +1140,12 @@ public class TPTP3ProofProcessor {
         return lines;
     }
 
-    /**
-     * *************************************************************
+    /** *************************************************************
+     * Creates a specified formatted image from a generated *.dot file
+     * from GraphViz.
+     *
+     * @param filename the generated *.dot filename to create an image from
+     * @return the path to the generated image file
      */
     public static String createProofDotGraphImage(String filename) throws IOException {
 
