@@ -803,6 +803,9 @@ public class KBmanager implements Serializable {
      * configuration file, or uses the default parameters.  If
      * configFileDir is not null and a configuration file can be read
      * from the directory, reinitialization is forced.
+     *
+     * @param configFileDir the directory where the config.xml resides,
+     *        typically ~/.sigmakee/KBs
      */
     public void initializeOnce(String configFileDir) {
 
