@@ -535,38 +535,7 @@
             </exec>
         </sequential>
     </macrodef>
-    <target name="update.sigmautils">
-        <git command="pull" dir="${git.home}/SigmaUtils">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.tptpantlr">
-        <git command="pull" dir="${git.home}/TPTP-ANTLR">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.sumo">
-        <git command="pull" dir="${kbs.home}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <target name="update.sigmakee">
-        <git command="pull" dir="${user.dir}">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
+    
     <target name="stop.tomcat" description="stop web application in tomcat">
         <exec executable="sh">
             <arg value="-c"/>
@@ -583,7 +552,7 @@
     </target>
 
     <target name="refresh.sigma"
-            depends="clean,clear.kbs,clear.tomcat.logs,refresh.kbs,update.sigmautils,update.tptpantlr,update.sigmakee,update.sigmanlp,update.sumojedit,update.sigmaantlr,update.sigmarest"
+            depends="clean,clear.kbs,clear.tomcat.logs,refresh.kbs,update.sigmautils,update.tptpantlr,update.sigmaantlr,update.sigmakee,update.sigmanlp,update.sumojedit,update.sigmarest"
             description="Refreshes (updates) the entire Simga Enterprise Suite (SES)"/>
     <target name="clear.kbs" description="Clears out all of the serialized KBs and translations">
         <delete includeemptydirs="true" failonerror="false">
@@ -605,6 +574,47 @@
             </fileset>
         </delete>
     </target>
+    <target name="update.sumo">
+        <git command="pull" dir="${kbs.home}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sigmautils">
+        <git command="pull" dir="${git.home}/SigmaUtils">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.tptpantlr">
+        <git command="pull" dir="${git.home}/TPTP-ANTLR">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <available file="${git.home}/sigmaAntlr/build.xml" property="sigmaantlr.present"/>
+    <target name="update.sigmaantlr" if="sigmaantlr.present">
+        <git command="pull" dir="${git.home}/sigmaAntlr">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
+    <target name="update.sigmakee">
+        <git command="pull" dir="${user.dir}">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+            </args>
+        </git>
+    </target>
     <available file="${git.home}/sigmanlp/build.xml" property="sigmanlp.present"/>
     <target name="update.sigmanlp" if="sigmanlp.present">
         <git command="pull" dir="${git.home}/sigmanlp">
@@ -617,15 +627,6 @@
     <available file="${git.home}/SUMOjEdit/build.xml" property="sumojedit.present"/>
     <target name="update.sumojedit" if="sumojedit.present">
         <git command="pull" dir="${git.home}/SUMOjEdit">
-            <args>
-                <arg value="--progress"/>
-                <arg value="--verbose"/>
-            </args>
-        </git>
-    </target>
-    <available file="${git.home}/sigmaAntlr/build.xml" property="sigmaantlr.present"/>
-    <target name="update.sigmaantlr" if="sigmaantlr.present">
-        <git command="pull" dir="${git.home}/sigmaAntlr">
             <args>
                 <arg value="--progress"/>
                 <arg value="--verbose"/>
