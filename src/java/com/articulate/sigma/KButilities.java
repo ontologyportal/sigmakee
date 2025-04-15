@@ -1480,7 +1480,7 @@ public class KButilities implements ServletContextListener {
         } catch (InterruptedException e) {
             EXECUTOR_SERVICE.shutdownNow();
         }
-        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
+//        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
     }
 
     /** ***************************************************************

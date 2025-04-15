@@ -787,7 +787,7 @@ public class KBmanager implements Serializable {
 
         if (!initialized && !KButilities.insideWebContext)
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                System.out.println("ExecutorService shutdown hook executed");
+//                System.out.println("ExecutorService shutdown hook executed");
                 // Perform cleanup tasks here
                 KButilities.shutDownExecutorService();
             }));
