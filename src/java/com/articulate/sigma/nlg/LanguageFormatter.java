@@ -180,7 +180,7 @@ public class LanguageFormatter {
             theStack.pushNew();
             StackElement element = theStack.getCurrStackElement();
 
-            String template = paraphraseStatement(statement, false, 1);
+            String template = paraphraseStatement(statement, false, false, 1);
 
             // Check for successful informal NLG of the entire statement.
             if (doInformalNLG)  {
@@ -255,7 +255,7 @@ public class LanguageFormatter {
      *  @param depth An int indicating the level of nesting, for control of indentation.
      *  @return A String, which is the paraphrased statement.
      */
-    public String paraphraseStatement(String stmt, boolean isNegMode, int depth) {
+    public String paraphraseStatement(String stmt, boolean isNegMode, boolean isQuestionMode, int depth) {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseStatement(): stmt: " + stmt);
         if (Formula.empty(stmt)) {
@@ -353,7 +353,7 @@ public class LanguageFormatter {
                 variableToInstanceMapNLG.put(var, Sets.newHashSet(name));
                 // TODO: not needed? variableTypesNLG.put(var, Sets.newHashSet(name));
             }
-            ans = paraphraseWithFormat(stmt, isNegMode);
+            ans = paraphraseWithFormat(stmt, isNegMode, isQuestionMode);
             return ans;
         }
         else {                              // predicate has no paraphrase
@@ -373,7 +373,7 @@ public class LanguageFormatter {
                 if (Formula.atom(arg))
                     result.append(processAtom(arg, termMap));
                 else
-                    result.append(paraphraseStatement(arg, isNegMode, depth + 1));
+                    result.append(paraphraseStatement(arg, isNegMode, isQuestionMode, depth + 1));
                 if (!f.empty()) {
                     if (f.listLength() > 1)
                         result.append(", ");
@@ -522,7 +522,7 @@ public class LanguageFormatter {
 
             if (pred.equals("not")) {
                 theStack.setPolarity(VerbProperties.Polarity.NEGATIVE);
-                ans = paraphraseStatement(f.car(), true, depth + 1);
+                ans = paraphraseStatement(f.car(), true, false,depth + 1);
                 inElement.setProcessPolarity(VerbProperties.Polarity.NEGATIVE);
                 theStack.pushCurrSumoProcessDown();
 
@@ -540,7 +540,7 @@ public class LanguageFormatter {
                 String arg, result;
                 while (!f.empty()) {
                     arg = f.car();
-                    result = paraphraseStatement(arg, false, depth + 1);
+                    result = paraphraseStatement(arg, false, false,depth + 1);
                     if (StringUtil.isNonEmptyString(result))    {
                         args.add(result);
                         // Let the next element down in the stack know whether we've performed informal NLG.
@@ -784,7 +784,7 @@ public class LanguageFormatter {
      * @param isNegMode whether the statement is negated, and therefore requiring special formatting.
      * @return the paraphrased statement.
      */
-    private String paraphraseWithFormat(String stmt, boolean isNegMode) {
+    private String paraphraseWithFormat(String stmt, boolean isNegMode, boolean isQuestionMode) {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): Statement: " + stmt);
         //System.out.println("neg mode: " + isNegMode);
@@ -860,7 +860,7 @@ public class LanguageFormatter {
             if (Formula.isVariable(arg))
                 para = arg;
             else
-                para = paraphraseStatement(arg, isNegMode, 1);
+                para = paraphraseStatement(arg, isNegMode, isQuestionMode, 1);
             if (debug) System.out.println("para: " + para);
             //outputMap.add(new AVPair(pred + "-" + argPointer, para));
             //System.out.println("para: " + para);
@@ -1253,7 +1253,7 @@ public class LanguageFormatter {
         System.out.println("result: " + StringUtil.filterHtml(NLGUtils.htmlParaphrase("", stmt, kb.getFormatMap("EnglishLanguage"), kb.getTermFormatMap("EnglishLanguage"), kb, "EnglishLanguage")));
         //LanguageFormatter lf = new LanguageFormatter(stmt, kb.getFormatMap("EnglishLanguage"),
         //        kb.getTermFormatMap("EnglishLanguage"),kb,"EnglishLanguage");
-        //System.out.println(lf.paraphraseStatement(stmt,false,0));
+        //System.out.println(lf.paraphraseStatement(stmt,false,false,0));
         System.out.println();
 
         stmt = "(exists (?D ?H)\n" +
