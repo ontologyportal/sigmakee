@@ -939,14 +939,14 @@ public class Formula implements Comparable, Serializable {
             location = "near line " + lineNo + " in " + filename;
         if (pred.equals(AND) || pred.equals(OR)) {
             if (argCount < 2) {
-                String errString = "Too few arguments for 'and' or 'or' at " + location + ": " + f.toString();
+                String errString = "Too few arguments for 'and' or 'or' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(UQUANT) || pred.equals(EQUANT)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for quantifer at " + location + ": " + f.toString();
+                String errString = "Wrong number of arguments for quantifer " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -954,7 +954,7 @@ public class Formula implements Comparable, Serializable {
                 Formula quantF = new Formula();
                 quantF.read(rest);
                 if (!listP(quantF.car())) {
-                    String errString = "No var list for quantifier at " + location + ": " + f.toString();
+                    String errString = "No var list for quantifier " + location + ": " + f.toString();
                     errors.add(errString);
                     return errString;
                 }
@@ -962,14 +962,14 @@ public class Formula implements Comparable, Serializable {
         }
         else if (pred.equals(IFF) || pred.equals(IF)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for '<=>' or '=>' at " + location + ": " + f.toString();
+                String errString = "Wrong number of arguments for '<=>' or '=>' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(EQUAL)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for 'equals' at " + location + ": " + f.toString();
+                String errString = "Wrong number of arguments for 'equals' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -977,7 +977,7 @@ public class Formula implements Comparable, Serializable {
         else if (!(isVariable(pred)) && (argCount > (MAX_PREDICATE_ARITY + 1))) {
             //System.out.println("info in KIF.parse(): pred: " + pred);
             //System.out.println("info in KIF.parse(): " + this);
-			String errString = "Maybe too many arguments at " + location + ": " + f.toString();
+			String errString = "Maybe too many arguments " + location + ": " + f.toString();
             errors.add(errString);
             return errString;
         }
