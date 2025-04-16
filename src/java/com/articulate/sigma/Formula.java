@@ -2652,6 +2652,58 @@ public class Formula implements Comparable, Serializable {
         return (this.isHigherOrder(kb) && this.getFormula().contains("holdsDuring"));
     }
 
+    /** *****************************************************************
+        The purpose is to take simple HOL formula with temporal aspects
+        and remove temporal aspects of it in an attempt to take it to FOL.
+
+        Note: This may change the semantic meaning of the formal logic.
+     */
+    public static String removeTemporalRelations(String p_f, KB kb) {
+        Formula f = new Formula(p_f);
+        String newFormula = "";
+        String nextCar = f.car();
+
+        while (nextCar != null && !nextCar.equals("")) {
+            String nextCdr = f.cdr();
+            if (kb.isChildOf(nextCar, "TemporalRelation")) {
+                return "";
+            }
+            else if(nextCar.matches("^\\s*\\(\\s*and.*")) {
+                String subFormula = removeTemporalRelations(nextCar, kb);
+                Formula subF = new Formula("("+subFormula+")");
+                if (subF.cddr() == null || subF.cddr().isEmpty() || subF.cddr().equals("()")) {
+                    subFormula = subFormula.replaceFirst("^\\s*and\\s+", "");
+                }
+                else {
+                    subFormula = "(" + subFormula + ")";
+                }
+                return newFormula + " " + subFormula;
+            }
+            else if (nextCar.startsWith("(")) {
+                String subFormula = removeTemporalRelations(f.car(), kb);
+                if (!subFormula.equals("")) {
+                    newFormula += "(" + subFormula + ")";
+                    if (newFormula.endsWith(" )")) {
+                        newFormula = newFormula.substring(0, newFormula.length() - 2) + ")";
+                    }
+                }
+            }
+            else if(nextCar.equals("holdsDuring")) {
+                String formulaArg = f.cddr();
+                if (formulaArg != null && formulaArg.length() >= 2 && formulaArg.startsWith("(") && formulaArg.endsWith(")")) {
+                    return removeTemporalRelations(formulaArg.substring(1, formulaArg.length()-1), kb);
+                }
+                return removeTemporalRelations(formulaArg, kb);
+            }
+            else {
+                newFormula += nextCar + " " + removeTemporalRelations(nextCar, kb);
+            }
+            f = new Formula(nextCdr);
+            nextCar = f.car();
+        }
+        return newFormula;
+    }
+
     /** ***************************************************************
      */
     public boolean isOtherHOL(KB kb) {
@@ -3297,6 +3349,7 @@ public class Formula implements Comparable, Serializable {
         System.out.println("  h - show this help screen");
         System.out.println("  t \"<formula\" - formula type");
         System.out.println("  x \"<formula\" - format a formula");
+        System.out.println("  r \"<formula\" - remove temporal relations on formulas");
     }
 
     /** ***************************************************************
@@ -3320,6 +3373,10 @@ public class Formula implements Comparable, Serializable {
             }
             else if (args != null && args.length > 1 && args[0].contains("x")) {
                 System.out.println(Formula.textFormat(args[1]));
+            }
+            else if (args != null && args.length > 1 && args[0].contains("r")) {
+                // The opening and closing parentheses are because it expects a lisp list.
+                System.out.println(Formula.removeTemporalRelations("("+args[1]+")", kb));
             }
             else
                 showHelp();
