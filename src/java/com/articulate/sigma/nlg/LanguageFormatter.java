@@ -800,47 +800,66 @@ public class LanguageFormatter {
             strFormat = strFormat.replaceAll("&%(\\w+)","&%" + pred + "\\$\"$1\"");
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 2 format: " + strFormat);
-        if (isNegMode) {                                    // handle negation
-            if (!strFormat.contains("%n")) {
-                strFormat = NLGUtils.getKeyword("not", language) + " " + strFormat;
-            }
-            else {
-                if (!strFormat.contains("%n{")) {
-                    strFormat = strFormat.replace("%n", NLGUtils.getKeyword("not", language));
+        if (isNegMode) {                                  // handle negation
+            if (isQuestionMode) {
+                if (strFormat.contains("%qn{")) {
+                    int start = strFormat.indexOf("%qn{") + 4;
+                    int end = strFormat.indexOf("}", start);
+                    strFormat = (strFormat.substring(0, start - 4)
+                            + strFormat.substring(start, end)
+                            + strFormat.substring(end + 1, strFormat.length()));
                 }
-                else {
-                    int start = strFormat.indexOf("%n{") + 3;
-                    int end = strFormat.indexOf("}",start);
-                    strFormat = (strFormat.substring(0,start-3)
-                            + strFormat.substring(start,end)
-                            + strFormat.substring(end+1,strFormat.length()));
+            } else {
+                if (!strFormat.contains("%n")) {
+                    strFormat = NLGUtils.getKeyword("not", language) + " " + strFormat;
+                } else {
+                    if (!strFormat.contains("%n{")) {
+                        strFormat = strFormat.replace("%n", NLGUtils.getKeyword("not", language));
+                    } else {
+                        int start = strFormat.indexOf("%n{") + 3;
+                        int end = strFormat.indexOf("}", start);
+                        strFormat = (strFormat.substring(0, start - 3)
+                                + strFormat.substring(start, end)
+                                + strFormat.substring(end + 1, strFormat.length()));
+                    }
                 }
             }
             // delete all the unused positive commands
             isNegMode = false;
-            // strFormat = strFormat.replace("%p ","");
-            // strFormat = strFormat.replaceAll(" %p\\{[\\w\\']+\\} "," ");
-            // strFormat = strFormat.replaceAll("%p\\{[\\w\\']+\\} "," ");
-            strFormat = strFormat.replaceAll(" %p\\{.+?\\} "," ");
-            strFormat = strFormat.replaceAll("%p\\{.+?\\} "," ");
         }
         else {
-            // delete all the unused negative commands
-            strFormat = strFormat.replace(" %n "," ");
-            strFormat = strFormat.replace("%n "," ");
-            // strFormat = strFormat.replaceAll(" %n\\{[\\w\\']+\\} "," ");
-            // strFormat = strFormat.replaceAll("%n\\{[\\w\\']+\\} "," ");
-            strFormat = strFormat.replaceAll(" %n\\{.+?\\} "," ");
-            strFormat = strFormat.replaceAll("%n\\{.+?\\} "," ");
-
-            if (strFormat.contains("%p{")) {
-                int start = strFormat.indexOf("%p{") + 3;
-                int end = strFormat.indexOf("}", start);
-                strFormat = (strFormat.substring(0, start-3)
-                        + strFormat.substring(start, end)
-                        + strFormat.substring(end+1, strFormat.length()));
+            if (isQuestionMode) {
+                if (strFormat.contains("%qp{")) {
+                    int start = strFormat.indexOf("%qp{") + 4;
+                    int end = strFormat.indexOf("}", start);
+                    strFormat = (strFormat.substring(0, start - 4)
+                            + strFormat.substring(start, end)
+                            + strFormat.substring(end + 1, strFormat.length()));
+                }
+            } else {
+                if (strFormat.contains("%p{")) {
+                    int start = strFormat.indexOf("%p{") + 3;
+                    int end = strFormat.indexOf("}", start);
+                    strFormat = (strFormat.substring(0, start - 3)
+                            + strFormat.substring(start, end)
+                            + strFormat.substring(end + 1, strFormat.length()));
+                }
             }
         }
+        // delete all the unused negative commands
+        strFormat = strFormat.replace(" %n "," ");
+        strFormat = strFormat.replace("%n "," ");
+        strFormat = strFormat.replaceAll(" %n\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%n\\{.+?\\} "," ");
+        // delete all unused positive commands
+        strFormat = strFormat.replaceAll(" %p\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%p\\{.+?\\} "," ");
+        // delete all unused positive question commands
+        strFormat = strFormat.replaceAll(" %qp\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%qp\\{.+?\\} "," ");
+        // delete all unused negative question commands
+        strFormat = strFormat.replaceAll(" %qn\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%qn\\{.+?\\} "," ");
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 3 format: " + strFormat);
         if (strFormat.contains("%*"))
