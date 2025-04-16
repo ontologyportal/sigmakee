@@ -1364,9 +1364,13 @@ the concept being visualized.
 representation of the concept’s respective argument.
 
 \item \%n{text} – will be replaced either with an empty string, if a predicate
-is being rendered as positive, or "text" otherwise; the \%n tag can be used as a
-shortcut for \%n{not}. \%p{text} – will be replaced with "text" for positive
-rendering and with an empty string for negative rendering.
+is being rendered as positive statement, or "text" otherwise; the \%n tag can be
+used as a shortcut for \%n{not}. \%p{text} – will be replaced with "text" for
+positive statement rendering and with an empty string for negative rendering.
+
+\item \%qn{text} - will be replaced with "text if a predicate is rendered as a
+negative question, and the empty string otherwise. Similarly, \%qp{text} will be
+replaced with "text" if is rendered as a positive question.
 
 \item \%*{range}[delim] – will be replaced with a list of natural-language
 representations of a subset of arguments; range specifies which arguments will

@@ -214,8 +214,9 @@ extends java.lang.Object</pre>
 </tr>
 <tr id="i3" class="rowColor">
 <td class="colFirst"><code>java.lang.String</code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/articulate/sigma/nlg/LanguageFormatter.html#paraphraseStatement-java.lang.String-boolean-int-">paraphraseStatement</a></span>(java.lang.String&nbsp;stmt,
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/articulate/sigma/nlg/LanguageFormatter.html#paraphraseStatement-java.lang.String-boolean-boolean-int-">paraphraseStatement</a></span>(java.lang.String&nbsp;stmt,
                    boolean&nbsp;isNegMode,
+                   boolean isQuestionMode,
                    int&nbsp;depth)</code>
 <div class="block">Create a natural language paraphrase of a logical statement.</div>
 </td>
@@ -358,7 +359,7 @@ extends java.lang.Object</pre>
 </dl>
 </li>
 </ul>
-<a name="paraphraseStatement-java.lang.String-boolean-int-">
+<a name="paraphraseStatement-java.lang.String-boolean-boolean-int-">
 <!--   -->
 </a>
 <ul class="blockList">
@@ -366,12 +367,14 @@ extends java.lang.Object</pre>
 <h4>paraphraseStatement</h4>
 <pre>public&nbsp;java.lang.String&nbsp;paraphraseStatement(java.lang.String&nbsp;stmt,
                                             boolean&nbsp;isNegMode,
+                                            boolean isQuestionMode,
                                             int&nbsp;depth)</pre>
 <div class="block">Create a natural language paraphrase of a logical statement.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>stmt</code> - The statement to be paraphrased.</dd>
 <dd><code>isNegMode</code> - Whether the statement is negated.</dd>
+<dd><code>isQuestionMode</code> - Whether the statement is a question.</dd>
 <dd><code>depth</code> - An int indicating the level of nesting, for control of indentation.</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>A String, which is the paraphrased statement.</dd>
