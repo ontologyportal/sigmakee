@@ -1079,6 +1079,8 @@ public class FormulaPreprocessor {
      * translating mathematical operators, quoting higher-order formulas,
      * expanding row variables and instantiating predicate variables
      *
+     * @param form a formula to process
+     *
      * @param isQuery If true the Formula is a query and should be
      *                existentially quantified, else the Formula is a
      *                statement and should be universally quantified
@@ -1092,7 +1094,7 @@ public class FormulaPreprocessor {
 
         if (debug) System.out.println("INFO in FormulaPreprocessor.preProcess(): form: " + form);
         Set<Formula> results = new HashSet<>();
-        FormulaPreprocessor fp = new FormulaPreprocessor();
+//        FormulaPreprocessor fp = new FormulaPreprocessor();
         if (!StringUtil.emptyString(form.getFormula())) {
             KBmanager mgr = KBmanager.getMgr();
             if (!form.isBalancedList()) {

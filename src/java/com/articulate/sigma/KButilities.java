@@ -118,6 +118,10 @@ public class KButilities implements ServletContextListener {
     }
 
     /** *************************************************************
+     * Checks for consistent typing in the given formula
+     *
+     * @param kb the knowledge base to check typing against
+     * @param f the formula to check
      */
     public static boolean hasCorrectTypes(KB kb, Formula f) {
 
@@ -152,6 +156,10 @@ public class KButilities implements ServletContextListener {
     }
 
     /** *************************************************************
+     * Checks for overall validity of the given formula
+     *
+     * @param kb the knowledge base to check typing against
+     * @param form the formula to check
      */
     public static boolean isValidFormula(KB kb, String form) {
 
@@ -1472,7 +1480,7 @@ public class KButilities implements ServletContextListener {
         } catch (InterruptedException e) {
             EXECUTOR_SERVICE.shutdownNow();
         }
-        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
+//        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
     }
 
     /** ***************************************************************

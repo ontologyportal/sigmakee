@@ -12,7 +12,6 @@ package com.articulate.sigma;
  August 9, Acapulco, Mexico.  See also sigmakee.sourceforge.net
  */
 
-import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 

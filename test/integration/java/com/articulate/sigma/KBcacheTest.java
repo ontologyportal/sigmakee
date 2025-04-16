@@ -64,10 +64,6 @@ public class KBcacheTest extends IntegrationTestBase {
         assertEquals(expected, actual);
     }
 
-    /** *************************************************************
-     * TODO: enabling cacheDisjoint and rebuilding the KB will cause
-     * this test to fail: extra element "RealNumber" in actual return.
-     */
     @Test
     public void testBuildChildrenRealNumber() {
 
@@ -78,7 +74,7 @@ public class KBcacheTest extends IntegrationTestBase {
         Set<String> expected = new TreeSet<>(Arrays.asList("RationalNumber","Integer","EvenInteger",
                 "OddInteger","PrimeNumber","NonnegativeInteger","PositiveInteger","NegativeInteger",
                 "IrrationalNumber","NonnegativeRealNumber","PositiveRealNumber","PositiveInteger",
-                "NegativeRealNumber","NegativeInteger","BinaryNumber"));
+                "NegativeRealNumber","NegativeInteger","BinaryNumber", "RealNumber"));
 
         Set<String> actual = new TreeSet<>(cache.getChildClasses(parent));
 

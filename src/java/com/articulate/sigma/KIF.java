@@ -202,6 +202,8 @@ public class KIF {
      * numbers if fatal errors are encountered during parsing. Keys in variable
      * "formulas" include the string representation of the formula.
      *
+     * @param r the Reader containing SUO-KIF text
+     *
      * @return a Set of warnings that may indicate syntax errors, but not fatal
      *         parse errors.
      */
@@ -234,7 +236,7 @@ public class KIF {
             // int lineStart = 0;
             boolean isEOL = false;
             List<String> list;
-            String key, fstr, validArgs, com;
+            String key, fstr, validArgs, com, warning;
             do {
                 lastTtype = st.ttype;
                 st.nextToken();
@@ -292,7 +294,7 @@ public class KIF {
                         fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.read(fstr.intern());
                         if (formulaMap.keySet().contains(f.getFormula()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
-                            String warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
+                            warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
                             System.err.println(warning);

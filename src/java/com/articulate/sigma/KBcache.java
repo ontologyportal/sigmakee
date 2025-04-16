@@ -1808,7 +1808,7 @@ public class KBcache implements Serializable {
             millis = System.currentTimeMillis();
             storeCacheAsFormulas();
             System.out.printf("KBcache.buildCaches(): store cached formulas:       %d m/s%n", (System.currentTimeMillis() - millis));
-        };
+        }; // end Runnable
         future = KButilities.EXECUTOR_SERVICE.submit(r);
         futures.add(future);
 
