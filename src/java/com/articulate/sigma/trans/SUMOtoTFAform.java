@@ -1405,15 +1405,15 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      * Constrain a list of arguments to be a given type
+     *
+     * @param type the type to constrain an argument to
+     * @param argTypes a List of arguments
      */
     private static List<String> constrainArgs(String type, List<String> argTypes) {
 
-        List<String> result = new ArrayList<>();
-
         if (debug) System.out.println("SUMOtoTFAform.constrainArgs(): " + type);
-        for (String argType : argTypes) {
-            result.add(type);
-        }
+        List<String> result = new ArrayList<>(argTypes);
+        setAll(result, type);
         return result;
     }
 
@@ -1839,7 +1839,7 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      */
-    private static void setAll(ArrayList<String> sig, String best) {
+    private static void setAll(List<String> sig, String best) {
 
         for (int i = 0; i < sig.size(); i++)
             sig.set(i,best);
@@ -2348,7 +2348,7 @@ public class SUMOtoTFAform {
             return "";
         }
         if (f.getFormula().startsWith("(instance equal")) { // || f.theFormula.contains("ListFn"))
-            System.out.println("SUMOtoTFAform.process(): rejected (instance equal: " + f);
+            System.err.println("Error in SUMOtoTFAform.process(): rejected (instance equal: " + f);
             return "";
         }
         if (debug) System.out.println("\nSUMOtoTFAform.process(): =======================");
@@ -2371,7 +2371,7 @@ public class SUMOtoTFAform {
         //if (debug) System.out.println("SUMOtoTFAform.process(): f so far: " + f);
         varmap = fp.findAllTypeRestrictions(f, kb);
         if (inconsistentVarTypes()) {
-            System.err.println("SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
+            System.err.println("Error in SUMOtoTFAform.process(): rejected inconsistent variable types: " + varmap + " in : " + f);
             return "";
         }
         counter = 0;
@@ -2388,7 +2388,7 @@ public class SUMOtoTFAform {
             Set<String> UqVars = f.collectUnquantifiedVariables();
             String result = processRecurse(f, "Entity"); // no enclosing required type
             StringBuilder qlist = new StringBuilder();
-            String t = "", oneVar;
+            String t, oneVar;
             for (String s : UqVars) {
                 oneVar = SUMOformulaToTPTPformula.translateWord(s,s.charAt(0),false);
                 if (varmap.keySet().contains(s) && !StringUtil.emptyString(varmap.get(s))) {
