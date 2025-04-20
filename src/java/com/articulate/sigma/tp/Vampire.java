@@ -244,6 +244,13 @@ public class Vampire {
      * Creates a running instance of Vampire adding a set of statements
      * in TFF or TPTP language to a file and then calling Vampire.
      * Note that any query must be given as a "conjecture"
+     *
+     * @param kb the current knowledge base
+     * @param kbFile the current knowledge base TPTP file
+     * @param timeout the timeout given to Vampire to find a proof
+     * @param stmts a Set of user assertions
+     *
+     * @throws Exception of something goes south
      */
     public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
 
