@@ -48,7 +48,7 @@ import java.util.regex.Pattern;
  *
  *  (holdsDuring ?X (and (?Y Mary Cooking) (wants ?Z Mary)))
  *
- * is tranlated into the THF problem:
+ * is translated into the THF problem:
  *
  *  %%% The extracted Signature %%%
  *   thf(holdsDuring,type,(holdsDuring: ($i>$o>$o))).
@@ -227,11 +227,12 @@ public class THF {
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
         Set<Formula> result = new LinkedHashSet<>();
+        Collection<Formula> forms;
         for (Formula ax : col) {
             if (debug) System.out.println("### " + ax.getFormula() + " " + ax.sourceFile + " line: " + ax.startLine);
             //RowVars rv = new RowVars();
             //result.addAll(rv.expandRowVars(kb,ax));
-            Collection<Formula> forms = fp.preProcess(ax,isQuery,kb);
+            forms = fp.preProcess(ax,isQuery,kb);
             for (Formula form : forms)
                 if (!hasMathOp(form,kb))
                     result.add(form);
@@ -564,7 +565,7 @@ public class THF {
 
     /** ***************************************************************
      * A function that grounds a THF type, that is replaces all occurrences
-     * of 'unknownTp' by $iinformation into a THF type
+     * of 'unknownTp' by $information into a THF type
      *
      * @param intype is the THF type
      *

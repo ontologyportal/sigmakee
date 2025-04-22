@@ -105,7 +105,7 @@
     <target name="check.config" depends="get.length,copy.milo.config"/>
     <target name="get.length">
         <condition property="is.milo">
-            <length mode="all" when="eq" length="2543">
+            <length mode="all" when="eq" length="2593"> <!-- Check the size every now and then for addtions of preferences -->
                 <fileset file="${kbs.dir}/config.xml"/>
             </length>
         </condition>
