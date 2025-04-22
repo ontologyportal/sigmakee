@@ -1744,14 +1744,15 @@ public class KBcache implements Serializable {
     public void buildCaches() {
 
         clearCaches(); // ensure a clean slate
-        if (!SUMOKBtoTPTPKB.rapidParsing)
+//        if (!SUMOKBtoTPTPKB.rapidParsing)
             _buildCaches();
-        else
-            _t_buildCaches();
+//        else
+//            _t_buildCaches();
     }
 
     /** ***************************************************************
-     * Threaded version
+     * Threaded version.
+     * Not much help timewise
      */
     private void _t_buildCaches() {
 
