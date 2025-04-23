@@ -12,9 +12,9 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.assertEquals;
+import org.junit.After;
 import static org.junit.Assert.assertFalse;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -43,6 +43,14 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @After
+    public void tearDown() {
+
+        SUMOtoTFAform.debug = false;
+        SUMOformulaToTPTPformula.debug = false;
+        SUMOKBtoTFAKB.debug = false;
     }
 
     /** *************************************************************
@@ -656,6 +664,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
+        assertTrue(result.isBlank());
         boolean inc = SUMOtoTFAform.inconsistentVarTypes();
         System.out.println("SUMOtoTFAformTest.testTypeConflict3(): varmap: " + SUMOtoTFAform.varmap);
         if (inc)
