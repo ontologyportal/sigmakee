@@ -850,27 +850,22 @@ public class KB implements Serializable {
     }
 
     /* *************************************************************
-     * TODO: Not used and causes issues with FormulaProcessorTest 2/6/25 tdn
-     * Converts
-     * all Strings in the input List to Formula objects.
+     * Converts all atoms in the input List to Formula objects.
      *
-     * @param strings A list of Strings.
-     * @return An ArrayList of Formulas, or an empty ArrayList.
+     * @param strings A list of atoms in String form
+     * @return A List of Formulas, or an empty List
      */
-//    public static List<Formula> stringsToFormulas(List<String> strings) {
-//
-//        List<Formula> ans = new ArrayList<>();
-//        if (strings instanceof List) {
-//            Iterator<String> it = strings.iterator();
-//            Formula f;
-//            while (it.hasNext()) {
-//                f = new Formula();
-//                f.read(it.next());
-//                ans.add(f);
-//            }
-//        }
-//        return ans;
-//    }
+    public static List<Formula> atomsToFormulas(List<String> strings) {
+
+        List<Formula> ans = new ArrayList<>();
+        Formula f;
+        for(String s : strings) {
+            f = new Formula();
+            f.read(s);
+            ans.add(f);
+        }
+        return ans;
+    }
 
     /***************************************************************
      * Converts a
@@ -1186,8 +1181,12 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Retrieves Formulas with a given list of keys
+     *
+     * @param strings a list of Formula keys
+     * @return a List of Formulas from a given list of keys
      */
-    private List<Formula> stringsToFormulas(List<String> strings) {
+    private List<Formula> keysToFormulas(List<String> strings) {
 
         List<Formula> result = new ArrayList<>();
         if (strings == null)
@@ -1236,7 +1235,7 @@ public class KB implements Serializable {
             key = kind + "-" + term;
         List<String> alstr = formulas.get(key);
 
-        tmp = stringsToFormulas(alstr);
+        tmp = keysToFormulas(alstr);
         if (tmp != null)
             result.addAll(tmp);
         return result;
@@ -1531,8 +1530,6 @@ public class KB implements Serializable {
         Set<String> keys = kif.formulas.keySet();
         List<String> newFormulas, oldFormulas;
         Formula newFormula, oldFormula, f;
-        Iterator<String> it2;
-        String newformulaStr;
         for (String key : keys) {
             newFormulas = new ArrayList<>(kif.formulas.get(key));
             if (formulas.containsKey(key)) {
@@ -1560,9 +1557,7 @@ public class KB implements Serializable {
             }
             else {
                 formulas.put(key, newFormulas);
-                it2 = newFormulas.iterator();
-                while (it2.hasNext()) {
-                    newformulaStr = it2.next();
+                for(String newformulaStr : newFormulas) {
                     newFormula = kif.formulaMap.get(newformulaStr);
                     f = formulaMap.get(newformulaStr);
                     if (f == null) // If kb.formulaMap does not contain the new
@@ -2918,6 +2913,8 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Adds a formula or formulas into the KB
+     *
+     * @param file the KIF file to add to this KB
      */
     public void addConstituentInfo(KIF file) {
 
@@ -2936,7 +2933,6 @@ public class KB implements Serializable {
         int total = file.formulas.keySet().size();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
-//                System.out.print(".");
                 progressSb.append(".");
             if ((count % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
@@ -2952,15 +2948,12 @@ public class KB implements Serializable {
         }
 
         count = 2;
-        Iterator<Formula> it2 = file.formulaMap.values().iterator();
-        Formula f;
         String internedFormula;
+        total = file.formulaMap.values().size();
         //System.out.println("INFO in KB.addConstituent(): add values");
-        while (it2.hasNext()) { // Iterate through values
-            f = (Formula) it2.next();
+        for (Formula f : file.formulaMap.values()) { // Iterate through values
             internedFormula = f.getFormula().intern();
             if ((count++ % 100) == 1)
-//                System.out.print(".");
                 progressSb.append(".");
             if ((count % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
