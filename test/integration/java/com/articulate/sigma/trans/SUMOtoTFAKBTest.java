@@ -6,6 +6,7 @@ import java.util.*;
 
 import static junit.framework.TestCase.assertTrue;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -16,17 +17,23 @@ import org.junit.Test;
 
 public class SUMOtoTFAKBTest extends IntegrationTestBase {
 
-    private static SUMOKBtoTFAKB skbtfakb = null;
-
     /****************************************************************
      */
     @BeforeClass
     public static void init() {
 
-        skbtfakb = new SUMOKBtoTFAKB();
-        SUMOformulaToTPTPformula.lang = "tff";
+        System.out.println("\n======================== SUMOtoTFAKBTest.init(): ");
+        SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
+        SUMOformulaToTPTPformula.lang = "tff";
         SUMOtoTFAform.setNumericFunctionInfo();
+    }
+
+    @AfterClass
+    public static void postClass() {
+        KBmanager.initialized = false;
+        SUMOKBtoTFAKB.initialized = false;
+        SUMOtoTFAform.initialized = false;
     }
 
     @After
