@@ -644,6 +644,7 @@
                 <include name="junit*.properties"/>
                 <include name="*.owl"/>
                 <include name="*.tab"/>
+                <include name="prover_out.txt"/>
             </fileset>
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.ser"/>
