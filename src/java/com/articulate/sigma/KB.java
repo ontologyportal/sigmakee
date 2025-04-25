@@ -1771,19 +1771,6 @@ public class KB implements Serializable {
      */
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
-        try {
-            if (eprover == null) {
-                String lang = "tff";
-                if (SUMOKBtoTPTPKB.lang.equals("fof"))
-                    lang = "tptp";
-                eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                        KBmanager.getMgr().getPref("kbDir") + "/" + name + "." + lang);
-            }
-        }
-        catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
             if (this.eprover == null)
                 loadEProver();
@@ -1792,14 +1779,8 @@ public class KB implements Serializable {
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                // set timeout in EBatchConfig file and reload eprover
-//                try {
-                    EProver.addBatchConfig(null, timeout);
-//                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"), maxAnswers < 1 ? 1 : maxAnswers);
-//                }
-//                catch (IOException e) {
-//                    e.printStackTrace();
-//                }
+                // set timeout in EBatchConfig file
+                EProver.addBatchConfig(null, timeout);
                 String strQuery = processedStmts.iterator().next().getFormula();
                 eprover.submitQuery(strQuery, this);
             }
@@ -2995,7 +2976,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Reload all the KB constituents.
      */
-    public String reload() {
+    public void reload() {
 
         List<String> newConstituents = new ArrayList<>();
         synchronized (this.getTerms()) {
@@ -3040,7 +3021,6 @@ public class KB implements Serializable {
             if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
                 loadVampire();
         }
-        return "";
     }
 
     /*****************************************************************
@@ -3753,8 +3733,8 @@ public class KB implements Serializable {
                 if (eprover != null) {
                     System.out.println("INFO in KB.loadEProver(): terminating old process first");
                     eprover.terminate();
+                    eprover = null;
                 }
-                eprover = null;
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "" +
