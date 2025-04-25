@@ -60,10 +60,7 @@ public class TPTP3ProofProcessor {
     public TPTP3ProofProcessor() {
     }
 
-    /**
-     * ***************************************************************
-     * Convert bindings in list to string
-     */
+    /* Convert bindings in list to string */
     @Override
     public String toString() {
 
