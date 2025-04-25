@@ -788,7 +788,7 @@ public class KBmanager implements Serializable {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 //                System.out.println("ExecutorService shutdown hook executed");
                 // Perform cleanup tasks here
-                KButilities.shutDownExecutorService();
+                KButilities.getInstance().contextDestroyed(null);
             }));
 
         System.out.println("Info in KBmanager.initializeOnce()");
@@ -967,6 +967,7 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      * Remove a knowledge base.
      * @param name - the name of the KB
+     * @return indication of KB removal
      */
     public String removeKB(String name) {
 
@@ -974,21 +975,16 @@ public class KBmanager implements Serializable {
         if (kb == null)
             return "KB " + name + " does not exist and cannot be removed.";
         try {
-            if (kb.eprover != null)
+            if (kb.eprover != null) {
                 kb.eprover.terminate();
+                kb.eprover = null;
+            }
         }
         catch (IOException ioe) {
             System.err.println("Error in KBmanager.removeKB(): ");
             System.err.println("  Error terminating inference engine: " + ioe.getMessage());
         }
         kb = kbs.remove(name);
-//        try {
-//            writeConfiguration();
-//        }
-//        catch (Exception ioe) {
-//            System.err.println("Error in KBmanager.removeKB(): ");
-//            System.err.println("  Error writing configuration file: " + ioe.getMessage());
-//        }
         return "KB " + kb.name + " successfully removed.";
     }
 

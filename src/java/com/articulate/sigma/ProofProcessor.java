@@ -52,30 +52,30 @@ public class ProofProcessor {
     public boolean equalsAnswer(int answerNum, String expectedAnswer) {
 
     	StringBuilder result = new StringBuilder();
-    	List<BasicXMLelement> queryResponseElements = ((BasicXMLelement) xml.get(0)).subelements;
+    	List<BasicXMLelement> queryResponseElements = xml.get(0).subelements;
     	BasicXMLelement answer = queryResponseElements.get(answerNum);
     	if (((String) answer.attributes.get("result")).equalsIgnoreCase("no"))
     		return false;
     	if (((String) answer.attributes.get("result")).equalsIgnoreCase("yes") &&
     			(expectedAnswer.equalsIgnoreCase("yes")))
     		return true;
-    	BasicXMLelement bindingSet = (BasicXMLelement) answer.subelements.get(0);
-    	if ( bindingSet != null ) {
-    		String attr =  (String) bindingSet.attributes.get("type");
-    		if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) )
-    			return false;
-    		BasicXMLelement binding = (BasicXMLelement) bindingSet.subelements.get(0);
-                BasicXMLelement variableBinding;
-                String variable, value;
-    		// The bindingSet element should just have one subelement, since non-definite answers are rejected.
-    		for (int j = 0; j < binding.subelements.size(); j++) {
-    			variableBinding = (BasicXMLelement) binding.subelements.get(j);
-    			variable = (String) variableBinding.attributes.get("name");
-    			value = (String) variableBinding.attributes.get("value");
-    			result = result.append("(").append(variable).append(" ").append(value).append(")");
-    			if (j < binding.subelements.size()-1)
-    				result = result.append(" ");
-    		}
+    	BasicXMLelement bindingSet = answer.subelements.get(0);
+    	if (bindingSet != null) {
+            String attr =  bindingSet.attributes.get("type");
+            if ( (attr == null) || !(attr.equalsIgnoreCase("definite")) )
+                return false;
+            BasicXMLelement binding = bindingSet.subelements.get(0);
+            BasicXMLelement variableBinding;
+            String variable, value;
+            // The bindingSet element should just have one subelement, since non-definite answers are rejected.
+            for (int j = 0; j < binding.subelements.size(); j++) {
+                variableBinding = binding.subelements.get(j);
+                variable = variableBinding.attributes.get("name");
+                value = variableBinding.attributes.get("value");
+                result = result.append("(").append(variable).append(" ").append(value).append(")");
+                if (j < binding.subelements.size()-1)
+                    result = result.append(" ");
+            }
     	}
     	return result.toString().equalsIgnoreCase(expectedAnswer);
     }
@@ -195,7 +195,7 @@ public class ProofProcessor {
 
     	if (xml == null || xml.isEmpty())
     		return 0;
-    	BasicXMLelement queryResponse = (BasicXMLelement) xml.get(0);
+    	BasicXMLelement queryResponse = xml.get(0);
     	if (queryResponse.tagname.equalsIgnoreCase("queryResponse"))
     		return queryResponse.subelements.size()-1;
     	// Note that there is a <summary> element under the queryResponse element that shouldn't be counted, hence the -1
@@ -347,7 +347,7 @@ public class ProofProcessor {
 			String query = "";
 			StringBuilder answerVars = new StringBuilder("");
 			TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-			tpp.parseProofOutput((ArrayList<String>) lines, query, kb,answerVars);
+			tpp.parseProofOutput(lines, query, kb,answerVars);
 			String result = HTMLformatter.formatTPTP3ProofResult(tpp,"","<hr>\n",
 					KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");
 			System.out.println(result);
@@ -376,14 +376,14 @@ public class ProofProcessor {
 	   System.out.println("INFO in ProofProcessor.main()");
 	   System.out.println("args:" + args.length + " : " + Arrays.toString(args));
 	   if (args == null) {
-		   System.out.println("no command given");
-		   showHelp();
+		System.out.println("no command given");
+		showHelp();
 	   }
 	   else if (args != null && args.length > 0 && args[0].equals("-h"))
-		   showHelp();
+		showHelp();
 	   else {
-		   if (args.length > 1 && args[0].equals("-f"))
-		   		testFormatProof2(args[1]);
+                if (args.length > 1 && args[0].equals("-f"))
+                    testFormatProof2(args[1]);
 	   }
 	}
 }
