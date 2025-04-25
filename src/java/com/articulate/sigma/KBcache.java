@@ -604,9 +604,10 @@ public class KBcache implements Serializable {
 
         if (debug) System.out.println("buildExplicitDisjointMap()");
         List<Formula> explicitDisjointFormulae = new ArrayList<>();
-        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "partition"));
-        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjoint"));
-        explicitDisjointFormulae.addAll(kb.ask("arg", 0, "disjointDecomposition"));
+        explicitDisjointFormulae.addAll(kb.ask("arg",0,"partition"));
+        explicitDisjointFormulae.addAll(kb.ask("arg",0,"disjoint"));
+        explicitDisjointFormulae.addAll(kb.ask("arg",0,"disjointDecomposition"));
+        explicitDisjointFormulae.addAll(kb.ask("arg",0,"exhaustiveDecomposition"));
         //System.out.println("buildExplicitDisjointMap(): all explicit: " + explicitDisjointFormulae);
         List<String> arguments;
         Set<String> vals;
@@ -2115,6 +2116,9 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
+     * Command line entry point for the class
+     *
+     * @param args command line arguments
      */
     public static void main(String[] args) {
 

@@ -60,10 +60,7 @@ public class TPTP3ProofProcessor {
     public TPTP3ProofProcessor() {
     }
 
-    /**
-     * ***************************************************************
-     * Convert bindings in list to string
-     */
+    /* Convert bindings in list to string */
     @Override
     public String toString() {
 
@@ -779,9 +776,9 @@ public class TPTP3ProofProcessor {
                     + lines);
         }
         try {
-            String bracketedAnswers;
+            String bracketedAnswers, szs_status = "SZS status", scratch;
             boolean inProof = false, finishAnswersTuple = false;
-            int end;
+            int end, idx;
             TPTPVisitor sv;
             TPTPFormula step;
             for (String line : lines) {
@@ -802,8 +799,15 @@ public class TPTP3ProofProcessor {
                     inProof = true;
                     continue;
                 }
-                if (line.contains("SZS status")) {
-                    status = line.substring(13, line.indexOf(" ", 14));
+                if (line.contains(szs_status)) {
+                    idx = line.indexOf(szs_status);
+                    scratch = line.substring(idx + szs_status.length()).trim();
+                    if (scratch.contains(" ")) {
+                        idx = scratch.indexOf(" ");
+                        status = scratch.substring(0, idx);
+                    }
+                    else
+                        status = scratch;
                     if (debug) {
                         System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): tpp.status: " + status);
                     }

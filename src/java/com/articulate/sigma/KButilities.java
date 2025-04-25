@@ -90,6 +90,11 @@ public class KButilities implements ServletContextListener {
     @Override
     public void contextDestroyed(ServletContextEvent servletContextEvent) {
         shutDownExecutorService();
+        for (KB kb : KBmanager.getMgr().kbs.values())
+            if (kb.eprover != null)
+                try {
+                    kb.eprover.terminate();
+                } catch (IOException ex) {}
     }
 
     /** *************************************************************

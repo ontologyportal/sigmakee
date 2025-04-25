@@ -35,10 +35,10 @@
   <preference name="userBrowserLimit" value="25" />
   <preference name="vampire" value="/home/theuser/Programs/vampire/build/vampire" />
   <kb name="SUMO" >
-    <constituent filename="Merge.kif" />
-    <constituent filename="Mid-level-ontology.kif" />
     <constituent filename="english_format.kif" />
     <constituent filename="domainEnglishFormat.kif" />
+    <constituent filename="Merge.kif" />
+    <constituent filename="Mid-level-ontology.kif" />
   </kb>
 </configuration>
 

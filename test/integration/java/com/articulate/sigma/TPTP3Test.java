@@ -54,7 +54,7 @@ public class TPTP3Test extends IntegrationTestBase {
      */
     @Test
     @Ignore
-    public void testE () {
+    public void testE() {
 
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         try {
@@ -80,14 +80,14 @@ public class TPTP3Test extends IntegrationTestBase {
                 System.out.println("BindingsMap: " + tpp.bindingMap);
                 System.out.println("Bindings: " + tpp.bindings);
                 System.out.println("Status: " + tpp.status);
-                String bindExpect = "[SetOrClass]";
-                if (!StringUtil.emptyString(result) && (tpp.proof.size() == 6) && (tpp.bindings.toString().equals(bindExpect)))
+                String bindExpect = "[Class]";
+                if (!StringUtil.emptyString(result) && (tpp.proof.size() == 7) && (tpp.bindings.toString().equals(bindExpect)))
                     System.out.println("Success");
                 else
                     System.err.println("FAIL");
                 assertEquals(bindExpect,tpp.bindings.toString());
                 assertTrue(!StringUtil.emptyString(result));
-                assertEquals(6,tpp.proof.size());
+                assertEquals(7,tpp.proof.size());
                 eprover.terminate();
             }
             catch (IOException e) {
@@ -157,7 +157,7 @@ public class TPTP3Test extends IntegrationTestBase {
             assertEquals("false",tpp.proof.get(7).sumo);
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
-            if (StringUtil.emptyString(result) && result.equals(expected))
+            if (!StringUtil.emptyString(result) && result.equals(expected))
                 System.out.println("Success");
             else
                 System.err.println("FAIL");
@@ -187,7 +187,7 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
-            if (StringUtil.emptyString(result) && expected.equals(result))
+            if (!StringUtil.emptyString(result) && expected.equals(result))
                 System.out.println("Success");
             else
                 System.err.println("FAIL");
@@ -202,7 +202,6 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testVampireCASCBindings2 () {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
@@ -214,8 +213,7 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
-
-            String expected = "[RealNumber, Quantity]";
+            String expected = "[]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);

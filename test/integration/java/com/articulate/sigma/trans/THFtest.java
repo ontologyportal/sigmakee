@@ -2,8 +2,6 @@ package com.articulate.sigma.trans;
 
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.IntegrationTestBase;
-import com.articulate.sigma.KB;
-import com.articulate.sigma.KBmanager;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -16,7 +14,6 @@ import org.junit.Ignore;
 public class THFtest extends IntegrationTestBase {
 
     private static THF thf = null;
-    private static KB kb = null;
 
     /****************************************************************
      */
@@ -24,8 +21,6 @@ public class THFtest extends IntegrationTestBase {
     public static void init() {
 
         thf = new THF();
-        KBmanager.getMgr().initializeOnce();
-        kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     }
 
     /** *************************************************************
@@ -34,13 +29,13 @@ public class THFtest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== " + msg);
-        String result = thf.oneKIF2THF(new Formula(f),false,kb);
+        String result = thf.oneKIF2THF(new Formula(f),false, kb);
         System.out.println("THFtest.test(): result: " + result);
         System.out.println("THFtest.test(): expect: " + expected);
         if (expected.equals(result))
             System.out.println("THFtest.test(): Success!");
         else
-            System.out.println("THFtest.test(): fail");
+            System.err.println("THFtest.test(): fail");
         assertTrue(expected.equals(result));
     }
 

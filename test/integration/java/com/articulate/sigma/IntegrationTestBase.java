@@ -51,7 +51,6 @@ public class IntegrationTestBase extends SigmaTestBase {
     public static void setup() throws IOException {
 
         System.out.println("IntegrationTestBase.startUp(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
-
         long startTime = System.currentTimeMillis();
 
         //SigmaTestBase.doSetUp(xmlReader);

@@ -10,11 +10,12 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 
+import static org.junit.Assert.assertFalse;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertFalse;
+import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 
 //This software is released under the GNU Public License
 //<http://www.gnu.org/copyleft/gpl.html>.
@@ -23,14 +24,13 @@ import org.junit.Ignore;
 
 public class SUMOtoTFAformTest extends IntegrationTestBase {
 
-    private static SUMOKBtoTFAKB skbtfakb = null;
-
     /****************************************************************
      */
     @BeforeClass
     public static void init() {
 
-        skbtfakb = new SUMOKBtoTFAKB();
+        System.out.println("\n======================== SUMOtoTFAformTest.init(): ");
+        SUMOKBtoTFAKB skbtfakb = new SUMOKBtoTFAKB();
         skbtfakb.initOnce();
         if (!kb.containsFile("Merge.kif") || !kb.containsFile("Mid-level-ontology.kif"))
             System.out.println("!!!!!!!! error in init(): missing KB files !!!!!!!!!!!!");
@@ -43,6 +43,21 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    @AfterClass
+    public static void postClass() {
+        KBmanager.initialized = false;
+        SUMOKBtoTFAKB.initialized = false;
+        SUMOtoTFAform.initialized = false;
+    }
+
+    @After
+    public void tearDown() {
+
+        SUMOtoTFAform.debug = false;
+        SUMOformulaToTPTPformula.debug = false;
+        SUMOKBtoTFAKB.debug = false;
     }
 
     /** *************************************************************
@@ -112,7 +127,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
 
         System.out.println();
         System.out.println("\n======================== SUMOtoTFAformTest.testSorts(): ");
-        List<String> actual = skbtfakb.kb.kbCache.getSignature("AbsoluteValueFn__0Re1ReFn");
+        List<String> actual = kb.kbCache.getSignature("AbsoluteValueFn__0Re1ReFn");
         String expectedRes = "[RealNumber, RealNumber]";
         System.out.println("testSorts(): expected: " + expectedRes);
         System.out.println("testSorts(): actual:    " + actual);
@@ -656,6 +671,7 @@ public class SUMOtoTFAformTest extends IntegrationTestBase {
         Formula f = new Formula(sf);
         System.out.println("formula: " + f);
         String result = SUMOtoTFAform.process(f,false);
+        assertTrue(result.isBlank());
         boolean inc = SUMOtoTFAform.inconsistentVarTypes();
         System.out.println("SUMOtoTFAformTest.testTypeConflict3(): varmap: " + SUMOtoTFAform.varmap);
         if (inc)

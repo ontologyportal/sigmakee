@@ -1723,7 +1723,8 @@ public class KB implements Serializable {
                                 eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
                                         !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                 EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
-                                eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
+                                if (this.eprover == null)
+                                    eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
                                 result += " and inference";
                                 break;
                             case VAMPIRE:
@@ -1770,34 +1771,16 @@ public class KB implements Serializable {
      */
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
-        try {
-            if (eprover == null) {
-                String lang = "tff";
-                if (SUMOKBtoTPTPKB.lang.equals("fof"))
-                    lang = "tptp";
-                eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                        KBmanager.getMgr().getPref("kbDir") + "/" + name + "." + lang);
-            }
-        }
-        catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadEProver();
+            if (this.eprover == null)
+                loadEProver();
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                // set timeout in EBatchConfig file and reload eprover
-                try {
-                    EProver.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"), maxAnswers < 1 ? 1 : maxAnswers);
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
+                // set timeout in EBatchConfig file
+                EProver.addBatchConfig(null, timeout);
                 String strQuery = processedStmts.iterator().next().getFormula();
                 eprover.submitQuery(strQuery, this);
             }
@@ -2005,7 +1988,8 @@ public class KB implements Serializable {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     EProver.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
+                    if (this.eprover == null)
+                        eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
                 }
                 catch (IOException e) {
                     e.printStackTrace();
@@ -2992,7 +2976,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Reload all the KB constituents.
      */
-    public String reload() {
+    public void reload() {
 
         List<String> newConstituents = new ArrayList<>();
         synchronized (this.getTerms()) {
@@ -3037,7 +3021,6 @@ public class KB implements Serializable {
             if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
                 loadVampire();
         }
-        return "";
     }
 
     /*****************************************************************
@@ -3747,13 +3730,11 @@ public class KB implements Serializable {
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
         try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
             if (!formulaMap.isEmpty()) {
-//                HashSet<String> formulaStrings = new HashSet<String>();
-//                formulaStrings.addAll(formulaMap.keySet());
                 if (eprover != null) {
                     System.out.println("INFO in KB.loadEProver(): terminating old process first");
                     eprover.terminate();
+                    eprover = null;
                 }
-                eprover = null;
                 SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
                 skb.kb = this;
                 String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "" +
@@ -4084,8 +4065,6 @@ public class KB implements Serializable {
          */
     }
 
-    /** ***************************************************************
-     */
     @Override
     public String toString() {
 
@@ -4124,6 +4103,9 @@ public class KB implements Serializable {
     }
 
     /** ***************************************************************
+     * Command line entry point for this class
+     *
+     * @param args command line arguments (examples from showHelp)
      */
     public static void main(String[] args) throws IOException {
 
@@ -4204,14 +4186,12 @@ public class KB implements Serializable {
                     contradictionHelp(kb,args,timeout);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                    kb.loadEProver();
                     EProver eprover = kb.askEProver(args[1], timeout, 1);
                     System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(eprover.output, args[1], kb, eprover.qlist);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                    kb.loadVampire();
                     Vampire vamp = kb.askVampire(args[1], timeout, 1);
                     System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                     tpp = new TPTP3ProofProcessor();
