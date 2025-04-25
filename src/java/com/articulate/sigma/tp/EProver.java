@@ -33,8 +33,6 @@ public class EProver {
     public List<String> output = new ArrayList<>();
     public StringBuilder qlist = null;
 
-    /** *************************************************************
-     */
     @Override
     public String toString() {
 
@@ -45,45 +43,13 @@ public class EProver {
     }
 
     /** *************************************************************
-     * Create a new batch specification file.
+     * Create or update batch specification file.
      *
      * e_ltb_runner processes a batch specification file; it contains
      * a specification of the background theory, some options, and a
      * number of individual job requests. It is used with the option
      * --interactive.
-     *
-     * @param inputFilename contains TPTP assertions
-     * @param timeout time limit in E
-     *  */
-    public static void writeBatchConfig(String inputFilename, int timeout) {
-
-        System.out.println("INFO in EProver.writeBatchFile(): writing EBatchConfig.txt with KB file " + inputFilename);
-        File initFile = new File(kbdir, "EBatchConfig.txt");
-        try (PrintWriter pw = new PrintWriter(initFile)) {
-
-            pw.println("% SZS start BatchConfiguration");
-            pw.println("division.category LTB.SMO");
-            pw.println("output.required Assurance");
-            pw.println("output.desired Proof Answer");
-            pw.println("limit.time.problem.wc " + timeout);
-            pw.println("% SZS end BatchConfiguration");
-            pw.println("% SZS start BatchIncludes");
-            pw.println("include('" + inputFilename + "').");
-            pw.println("% SZS end BatchIncludes");
-            pw.println("% SZS start BatchProblems");
-            pw.println("% SZS end BatchProblems");
-        }
-        catch (Exception e1) {
-            e1.printStackTrace();
-            System.err.println("Error in EProver.writeBatchFile()");
-            System.out.println(e1.getMessage());
-        }
-    }
-
-    /** *************************************************************
-     * Update batch specification file.
-     *
-     * "inputFilename" is added into existing batch specification file
+     * "inputFilename" is added into an existing batch specification file
      * for inference.
      *
      * @param inputFilename contains TPTP assertions
@@ -92,31 +58,32 @@ public class EProver {
     public static void addBatchConfig(String inputFilename, int timeout) {
 
         File initFile = new File(kbdir, "EBatchConfig.txt");
-        HashSet<String> ebatchfiles = new HashSet<>();
+        Set<String> ebatchfiles = new HashSet<>();
         if (inputFilename != null && !inputFilename.isEmpty())
             ebatchfiles.add(inputFilename);
 
         // Collect existing TPTP files
-        try (InputStream fis = new FileInputStream(initFile);
-            Reader isr = new InputStreamReader(fis);
-            BufferedReader in = new BufferedReader(isr)) {
-            String line = in.readLine();
-            String split;
-            int isEbatchFile;
-            while (line != null) {
-                split = "include('";
-                isEbatchFile = line.indexOf(split);
-                if (isEbatchFile != -1) {
-                    String ebatchfile = line.substring(split.length(), line.lastIndexOf("')"));
-                    ebatchfiles.add(ebatchfile);
+        if (initFile.exists()) {
+            try (InputStream fis = new FileInputStream(initFile);
+                Reader isr = new InputStreamReader(fis);
+                BufferedReader in = new BufferedReader(isr)) {
+                String line = in.readLine(), split, ebatchfile;
+                int isEbatchFile;
+                while (line != null) {
+                    split = "include('";
+                    isEbatchFile = line.indexOf(split);
+                    if (isEbatchFile != -1) {
+                        ebatchfile = line.substring(split.length(), line.lastIndexOf("')"));
+                        ebatchfiles.add(ebatchfile);
+                    }
+                    line = in.readLine();
                 }
-                line = in.readLine();
             }
-        }
-        catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("Error in EProver.addBatchConfig()");
-            System.out.println(e.getMessage());
+            catch (Exception e) {
+                e.printStackTrace(System.err);
+                System.err.println("Error in EProver.addBatchConfig()");
+                System.err.println(e.getMessage());
+            }
         }
 
         // write existing TPTP files and new tptp files (inputFilename) into EBatchConfig.txt
@@ -136,9 +103,9 @@ public class EProver {
             pw.println("% SZS end BatchProblems");
         }
         catch (FileNotFoundException e) {
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             System.err.println("Error in EProver.addBatchConfig()");
-            System.out.println(e.getMessage());
+            System.err.println(e.getMessage());
         }
     }
 
@@ -153,57 +120,53 @@ public class EProver {
      * @throws IOException should not normally be thrown unless either
      *         EProver executable or database file name are incorrect
      *
-     * e_ltb_runner -- interactive LTBSampleInput-AP.txt
+     * e_ltb_runner --interactive LTBSampleInput-AP.txt
      */
-    public EProver (String executable, String kbFile) throws IOException {
+    public EProver(String executable, String kbFile) throws IOException {
 
-        this(executable);
+        terminate();
+        kbdir = KBmanager.getMgr().getPref("kbDir");
+        addBatchConfig(kbFile, 60);
+        System.out.println("INFO in EProver(): executable: " + executable);
         System.out.println("INFO in EProver(): kbFile: " + kbFile);
-        writeBatchConfig(kbFile, 60);
         if (!(new File(kbFile)).exists()) {
             System.out.println("EProver(): no such file: " + kbFile + ". Creating it.");
             KBmanager.getMgr().getKB(kbFile);
         }
+        // To make sigma work on windows.
+        // If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+        String eproverPath = null;
+        String _OS = System.getProperty("os.name");
+        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")) {
+            eproverPath=KBmanager.getMgr().getPref("eproverPath");
+        }
+        eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+                        : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
+        String batchPath = kbdir + File.separator + "EBatchConfig.txt";
+        List<String> commands = new ArrayList<>(Arrays.asList(
+                executable, "--interactive", batchPath,
+                eproverPath));
+        System.out.println("EProver(): command: " + commands);
+        _builder = new ProcessBuilder(commands);
+        _builder.redirectErrorStream(false);
+        _eprover = _builder.start();
+        System.out.println("EProver(): new process: " + _eprover);
+        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
+        _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
 
     /** *************************************************************
      * Create a running instance of EProver based on existing batch
-     * specification file.
+     * specification file with a max answer of 1.
      *
      * @param executable A File object denoting the platform-specific
      * EProver executable.
      * @throws IOException
      */
-    public EProver (String executable) throws IOException {
+    public EProver(String executable) throws IOException {
 
-        System.out.println("INFO in EProver(): executable: " + executable);
-        if (this._eprover != null)
-            this.terminate();
-
-        kbdir = KBmanager.getMgr().getPref("kbDir");
-
-        // To make sigma work on windows
-        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
-        String eproverPath = null;
-        String _OS = System.getProperty("os.name");
-        if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
-            eproverPath=KBmanager.getMgr().getPref("eproverPath");
-        }
-        eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
-                            : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", kbdir + File.separator + "EBatchConfig.txt",
-                eproverPath));
-
-        System.out.println("EProver(): command: " + commands);
-        _builder = new ProcessBuilder(commands);
-        _builder.redirectErrorStream(false);
-        _eprover = _builder.start();
-        System.out.println("EProver(): process: " + _eprover);
-        _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
-        _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
+        this(executable, 1);
     }
-
 
     /** *************************************************************
      * Create a running instance of EProver based on existing batch
@@ -214,32 +177,31 @@ public class EProver {
      * @param maxAnswers - Limit the answers up to maxAnswers only
      * @throws IOException
      */
-    public EProver (String executable,int maxAnswers) throws IOException {
+    public EProver(String executable, int maxAnswers) throws IOException {
 
-        if (this._eprover != null)
-            this.terminate();
+        terminate();
         kbdir = KBmanager.getMgr().getPref("kbDir");
         // To make sigma work on windows
-        //If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
+        // If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
         String eproverPath = null;
         String _OS = System.getProperty("os.name");
         if (StringUtil.isNonEmptyString(_OS) && _OS.matches("(?i).*win.*")){
             eproverPath = KBmanager.getMgr().getPref("eproverPath");
         }
-            eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
-				: executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
-        //ArrayList<String> commands = new ArrayList<>(Arrays.asList(
-        //        executable,"--answers=" + maxAnswers, "--interactive", __dummyKBdir + File.separator + "EBatchConfig.txt",
-       //        eproverPath));
+        eproverPath = eproverPath != null && eproverPath.length() != 0 ? eproverPath
+                            : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         String batchPath = kbdir + File.separator + "EBatchConfig.txt";
         List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", batchPath,
+                executable, "--answers=" + maxAnswers, "--interactive", batchPath,
                 eproverPath));
-        System.out.println("EProver(): command: " + commands);
+//        List<String> commands = new ArrayList<>(Arrays.asList(
+//                executable, "--interactive", batchPath,
+//                eproverPath));
+        System.out.println("EProver(): commands: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
         _eprover = _builder.start();
-        System.out.println("EProver(): process: " + _eprover);
+        System.out.println("EProver(): new process: " + _eprover);
         _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()));
         _writer = new BufferedWriter(new OutputStreamWriter(_eprover.getOutputStream()));
     }
@@ -349,15 +311,15 @@ public class EProver {
 
         System.out.println();
         System.out.println("TERMINATING " + this);
-        try {
-            try (_reader; _writer) {
-                _writer.write("quit.\n");
-                _writer.write("go.\n");
-                _writer.flush();
-            }
+        try (_reader; _writer) {
+            _writer.write("quit.\n");
+            _writer.write("go.\n");
+            _writer.flush();
             System.out.println("DESTROYING the Process " + _eprover);
             System.out.println();
             _eprover.destroy();
+            output.clear();
+            qlist.setLength(0);
         }
         catch (IOException ex) {
             ex.printStackTrace();
