@@ -124,7 +124,6 @@ public class EProver {
      */
     public EProver(String executable, String kbFile) throws IOException {
 
-        terminate();
         kbdir = KBmanager.getMgr().getPref("kbDir");
         addBatchConfig(kbFile, 60);
         System.out.println("INFO in EProver(): executable: " + executable);
@@ -179,7 +178,6 @@ public class EProver {
      */
     public EProver(String executable, int maxAnswers) throws IOException {
 
-        terminate();
         kbdir = KBmanager.getMgr().getPref("kbDir");
         // To make sigma work on windows
         // If OS is not detected as Windows it will use the same directory as set in "inferenceEngine".
