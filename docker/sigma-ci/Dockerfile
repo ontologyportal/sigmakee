@@ -87,6 +87,8 @@ COPY --from=builder \
     /E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
 COPY --from=builder \
     /E/PROVER/eprover /usr/local/bin/eprover
+COPY --from=builder \
+    /E/PROVER/epclextract /usr/local/bin/epclextract
 
 COPY --from=builder \
     /WordNet-3.0 /opt/WordNet-3.0
