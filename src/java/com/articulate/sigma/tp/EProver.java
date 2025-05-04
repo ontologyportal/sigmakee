@@ -90,6 +90,7 @@ public class EProver {
         try (PrintWriter pw = new PrintWriter(initFile)) {
             pw.println("% SZS start BatchConfiguration");
             pw.println("division.category LTB.SMO");
+            pw.println("execution.order ordered");
             pw.println("output.required Assurance");
             pw.println("output.desired Proof Answer");
             pw.println("limit.time.problem.wc " + timeout);
@@ -143,8 +144,7 @@ public class EProver {
                         : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         String batchPath = kbdir + File.separator + "EBatchConfig.txt";
         List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--interactive", batchPath,
-                eproverPath));
+                executable, batchPath,eproverPath,"--interactive"));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -190,11 +190,7 @@ public class EProver {
                             : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         String batchPath = kbdir + File.separator + "EBatchConfig.txt";
         List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, "--answers=" + maxAnswers, "--interactive", batchPath,
-                eproverPath));
-//        List<String> commands = new ArrayList<>(Arrays.asList(
-//                executable, "--interactive", batchPath,
-//                eproverPath));
+                executable, batchPath, eproverPath, "--answers=" + maxAnswers, "--interactive"));
         System.out.println("EProver(): commands: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
