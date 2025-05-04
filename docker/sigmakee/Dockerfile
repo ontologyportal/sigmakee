@@ -12,8 +12,6 @@ COPY --from=builder \
     /usr/local/bin/e_ltb_runner /usr/local/bin/e_ltb_runner
 COPY --from=builder \
     /usr/local/bin/eprover /usr/local/bin/eprover
-COPY --from=builder \
-    /usr/local/bin/epclextract /usr/local/bin/epclextract
 
 COPY --from=builder \
     /usr/local/bin/vampire /usr/local/bin/vampire
