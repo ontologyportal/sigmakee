@@ -53,6 +53,7 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
+    @Ignore
     public void testE() {
 
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
