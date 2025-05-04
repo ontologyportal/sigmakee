@@ -144,7 +144,7 @@ public class EProver {
                         : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         String batchPath = kbdir + File.separator + "EBatchConfig.txt";
         List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, batchPath,eproverPath,"--interactive"));
+                executable, batchPath,eproverPath, "--interactive"));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
