@@ -211,29 +211,27 @@ public class CCheck implements Runnable {
     private void reportAnswer(String proof, Formula query, String testType,
             String processedQ, String sourceFile) {
 
-        if (proof.contains("Syntax error detected"))
-            printReport(query,processedQ,sourceFile,true,proof,testType);
-        else if (inferenceEngine.equals("EProver")) {
-    		StringReader sr = new StringReader(proof);
-    		LineNumberReader lnr = new LineNumberReader(sr);
-            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-            tpp.parseProofOutput(lnr, kb);
-            if (tpp.proof != null && !tpp.proof.isEmpty())
-                printReport(query,processedQ,sourceFile,false,proof,testType);
-        }
-        else if (inferenceEngine.equals("SoTPTP")) {
-            proof = proof.replaceAll("<", "%3C");
-            proof = proof.replaceAll(">", "%3E");
-            proof = proof.replaceAll("/n", "");
-            if (proof.contains("[yes]") || proof.contains("[Theorem]")
-                    || proof.contains("[definite]"))
-                printReport(query,processedQ,sourceFile,false,proof,testType);
-        }
         try {
-            pw.flush();
-            fw.flush();
-        }
-        catch (IOException ex) {
+            if (proof.contains("Syntax error detected")) {
+                printReport(query, processedQ, sourceFile, true, proof, testType);
+            } else if (inferenceEngine.equals("EProver")) {
+                try (StringReader sr = new StringReader(proof); LineNumberReader lnr = new LineNumberReader(sr)) {
+                    TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                    tpp.parseProofOutput(lnr, kb);
+                    if (tpp.proof != null && !tpp.proof.isEmpty()) {
+                        printReport(query, processedQ, sourceFile, false, proof, testType);
+                    }
+                }
+            } else if (inferenceEngine.equals("SoTPTP")) {
+                proof = proof.replaceAll("<", "%3C");
+                proof = proof.replaceAll(">", "%3E");
+                proof = proof.replaceAll("/n", "");
+                if (proof.contains("[yes]") || proof.contains("[Theorem]")
+                        || proof.contains("[definite]")) {
+                    printReport(query, processedQ, sourceFile, false, proof, testType);
+                }
+            }
+        } catch (IOException ex) {
             System.err.println(ex.getMessage());
             ex.printStackTrace();
         }

@@ -628,7 +628,7 @@
     </target>
     <!-- SUMO and domain only -->
     <target name="prep.top.only.config">
-        <copy tofile="${sigma_home}/KBs/config.xml" file="${unit.config}" overwrite="true"/>
+        <copy tofile="${sigma_home}/KBs/config.xml" file="${top.config}" overwrite="true"/>
     </target>
     <target name="prep.tiny.sumo.config">
         <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>

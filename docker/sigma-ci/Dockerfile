@@ -11,7 +11,7 @@ ARG VAMPIRE_GIT='https://github.com/vprover/vampire'
 #ARG Z3_GIT='https://github.com/Z3Prover/z3/archive/refs/tags/z3-4.12.3.tar.gz'
 
 # Latest E Theorem Prover (2024-05-01)
-ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_3.1/E.tgz'
+ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz'
 ARG WORD_NET='https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 
 # We're in / ${root}
@@ -87,8 +87,6 @@ COPY --from=builder \
     /E/PROVER/e_ltb_runner /usr/local/bin/e_ltb_runner
 COPY --from=builder \
     /E/PROVER/eprover /usr/local/bin/eprover
-COPY --from=builder \
-    /E/PROVER/epclextract /usr/local/bin/epclextract
 
 COPY --from=builder \
     /WordNet-3.0 /opt/WordNet-3.0
