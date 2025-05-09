@@ -144,7 +144,7 @@ public class EProver {
                         : executable.substring(0, executable.lastIndexOf(File.separator)) + File.separator + "eprover";
         String batchPath = kbdir + File.separator + "EBatchConfig.txt";
         List<String> commands = new ArrayList<>(Arrays.asList(
-                executable, batchPath,eproverPath, "--interactive"));
+                executable, batchPath,eproverPath, "-i"));
         System.out.println("EProver(): command: " + commands);
         _builder = new ProcessBuilder(commands);
         _builder.redirectErrorStream(false);
@@ -306,7 +306,7 @@ public class EProver {
         System.out.println();
         System.out.println("TERMINATING " + this);
         try (_reader; _writer) {
-            _writer.write("quit.\n");
+            _writer.write("quit\n");
             _writer.write("go.\n");
             _writer.flush();
             System.out.println("DESTROYING the Process " + _eprover);
@@ -336,15 +336,16 @@ public class EProver {
             this.qlist = SUMOformulaToTPTPformula.qlist;
             String conjecture = "fof(conj1,conjecture, " + query + ").";
             System.out.println("\nINFO in EProver.submitQuery() write: " + conjecture + "\n");
-            _writer.write(conjecture + "\n");
             System.out.println("\nINFO in EProver.submitQuery() write: go.");
+            _writer.write("job sigma_1.\n");
+            _writer.write(conjecture + "\n");
             _writer.write("go.\n");
             _writer.flush();
             output = new ArrayList<>();
             String line = _reader.readLine();
             System.out.println("INFO in EProver.submitQuery(1): line: " + line);
-            line = _reader.readLine();
-            System.out.println("INFO in EProver.submitQuery(1): line: " + line);
+//            line = _reader.readLine();
+//            System.out.println("INFO in EProver.submitQuery(1): line: " + line);
             boolean inProof = false;
             while (line != null) {
                 output.add(line);
@@ -376,7 +377,7 @@ public class EProver {
      *   <li>make an assertion;</li>
      *   <li>submit a query;</li>
      *   <li>terminate E</li>
-     *</ol>
+     * </ol>
      */
     public static void main(String[] args) throws Exception {
 
@@ -395,7 +396,7 @@ public class EProver {
             EProver eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
                     KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
             System.out.println("------------- INFO in EProver.main() completed init of E --------");
-            System.out.println("Result:\n " + eprover.submitQuery("(subclass ?X Object)",kb));
+            System.out.println("Result:\n " + eprover.submitQuery("(subclass ?X Object)", kb));
             eprover.terminate();
         }
         catch (IOException e) {
@@ -408,4 +409,3 @@ public class EProver {
         // System.out.print(eprover.submitQuery("(holds instance ?X Human)", 5, 2));
     }
 }
-
