@@ -4,10 +4,10 @@ import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.utils.FileUtil;
 import java.io.BufferedWriter;
 import java.io.File;
 
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.LineNumberReader;
@@ -15,6 +15,7 @@ import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.StringReader;
 import java.io.Writer;
+import java.util.List;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -30,23 +31,22 @@ public class TPTP3Test extends IntegrationTestBase {
 
         System.out.println("-----------------------testParseProofFile--------------------------");
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        String expected = "6. (exists (?X1)\n" +
+                          "  (subclass ?X1 Entity)) []";
         File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
         file.deleteOnExit();
-        try (Reader r = new FileReader(file);
-            LineNumberReader lnr = new LineNumberReader(r)) {
-            tpp.parseProofOutput(lnr, kb);
+        List<String> lines = FileUtil.readLines(file.getPath(), true);
+        String result;
+        for (String line : lines) {
+            result = tpp.parseProofStep(line).toString().trim();
+            System.out.println("Result: " + result);
+            if (!StringUtil.emptyString(result) && result.equals(expected))
+                System.out.println("Success");
+            else
+                System.err.println("FAIL");
+            assertTrue(!StringUtil.emptyString(result));
+            assertTrue(result.equals(expected));
         }
-        catch (IOException ex) {
-            System.err.println(ex.getMessage());
-        }
-        String result = tpp.proof.toString().trim();
-        System.out.println("Result: " + result);
-        if (!StringUtil.emptyString(result) && (tpp.proof.size() == 22))
-            System.out.println("Success");
-        else
-            System.err.println("FAIL");
-        assertTrue(!StringUtil.emptyString(result));
-        assertEquals(tpp.proof.size(),22);
         System.out.println("\n\n");
     }
 
@@ -90,14 +90,12 @@ public class TPTP3Test extends IntegrationTestBase {
                 assertEquals(7,tpp.proof.size());
                 eprover.terminate();
             }
-            catch (IOException e) {
-                System.err.println(e.getMessage());
-            }
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
         }
         System.out.println("\n\n");
+        testParseProofFile();
     }
 
     /** ***************************************************************

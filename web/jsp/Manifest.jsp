@@ -80,8 +80,8 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
             }
             if (StringUtil.isNonEmptyString(tptpFile))
             	result = ("Wrote the TPTP file " + tptpFile);
-           	else
-  				result = "Could not write a TPTP file";
+            else
+  		result = "Could not write a TPTP file";
         }
         else if (saveAs.equalsIgnoreCase("OWL")) {
             com.articulate.sigma.trans.OWLtranslator ot = new com.articulate.sigma.trans.OWLtranslator();
@@ -122,7 +122,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
             kb.constituents.remove(i);
             KBmanager.getMgr().writeConfiguration();
         }
-	    result = kb.reload();
+	kb.reload();
     }
     else if (constituent != null) {
         kb.addConstituent(constituent);
@@ -135,7 +135,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
 	    kb.loadEProver();
     }
     else if (reload != null)
-        result = kb.reload();
+        kb.reload();
     else if (refetch != null) {
         /* collect all the dirs the constituents appear in */
         Map<String, Integer> dirs = new HashMap<String, Integer>();
