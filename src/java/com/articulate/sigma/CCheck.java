@@ -52,7 +52,7 @@ public class CCheck implements Runnable {
 
         this(kb, fileName);
         timeOut = timeout;
-        if (setInferenceEngine(chosenEngine) == false) {
+        if (!setInferenceEngine(chosenEngine)) {
             System.err.println("Unable to create CCheck for kb: " + kb.name +
                     "; Error setting up inference engine = " + inferenceEngine);
             throw new Exception("Could not set inference engine with the following params for KB " +
