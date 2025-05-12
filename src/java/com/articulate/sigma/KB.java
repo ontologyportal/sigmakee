@@ -3709,9 +3709,10 @@ public class KB implements Serializable {
         }
         String lang = "thf";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (new File(infFilename).exists() || !KBmanager.getMgr().infFileOld()) {
+        if (new File(infFilename).exists() && !KBmanager.getMgr().infFileOld())
             System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + "file " + infFilename);
-        }
+        else
+            loadVampire(); // if SUMO.tptp is missing, this will generate it
     }
 
     /***************************************************************
