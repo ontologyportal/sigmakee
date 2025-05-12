@@ -10,10 +10,7 @@ import java.io.File;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
 import java.io.Writer;
 import java.util.List;
 
@@ -26,7 +23,7 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
+    @Ignore // gets called from testE as testE must happen first to produce prover_out.txt
     public void testParseProofFile () {
 
         System.out.println("-----------------------testParseProofFile--------------------------");
@@ -53,43 +50,36 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testE() {
 
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         try {
             System.out.println("----------------------testE---------------------------");
-            EProver eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                    KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
-            System.out.println("testE(): E completed initialization");
             String query = "(subclass ?X Entity)";
-            String result = eprover.submitQuery(query, kb);
-            try (Reader sr = new StringReader(result);
-                LineNumberReader lnr = new LineNumberReader(sr)) {
-                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                tpp.parseProofOutput(lnr, kb);
-                result = tpp.proof.toString().trim();
-                File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
-                file.setWritable(true);
-                file.createNewFile();
-                try (Writer w = new FileWriter(file); Writer pw = new PrintWriter(new BufferedWriter(w))) {
-                    pw.write(result);
-                }
-                System.out.println("Proof: " + result);
-                //System.out.println("HTML Proof: " + HTMLformatter.formatTPTP3ProofResult(tpp,query, "", "SUMO", "EnglishLanguage"));
-                System.out.println("BindingsMap: " + tpp.bindingMap);
-                System.out.println("Bindings: " + tpp.bindings);
-                System.out.println("Status: " + tpp.status);
-                String bindExpect = "[Class]";
-                if (!StringUtil.emptyString(result) && (tpp.proof.size() == 7) && (tpp.bindings.toString().equals(bindExpect)))
-                    System.out.println("Success");
-                else
-                    System.err.println("FAIL");
-                assertEquals(bindExpect,tpp.bindings.toString());
-                assertTrue(!StringUtil.emptyString(result));
-                assertEquals(7,tpp.proof.size());
-                eprover.terminate();
+            EProver eprover = kb.askEProver(query, 30, 1);
+            String result;
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(eprover.output, "?X", kb, eprover.qlist);
+            result = tpp.proof.toString().trim();
+            File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
+            file.setWritable(true);
+            file.createNewFile();
+            try (Writer w = new FileWriter(file); Writer pw = new PrintWriter(new BufferedWriter(w))) {
+                pw.write(result);
             }
+            System.out.println("Proof: " + result);
+            //System.out.println("HTML Proof: " + HTMLformatter.formatTPTP3ProofResult(tpp,query, "", "SUMO", "EnglishLanguage"));
+            System.out.println("BindingsMap: " + tpp.bindingMap);
+            System.out.println("Bindings: " + tpp.bindings);
+            System.out.println("Status: " + tpp.status);
+            String bindExpect = "[Class]";
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 7) && (tpp.bindings.toString().equals(bindExpect)))
+                System.out.println("Success");
+            else
+                System.err.println("FAIL");
+            assertEquals(bindExpect,tpp.bindings.toString());
+            assertTrue(!StringUtil.emptyString(result));
+            assertEquals(7,tpp.proof.size());
         }
         catch (IOException e) {
             System.err.println(e.getMessage());

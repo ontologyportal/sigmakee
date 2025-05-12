@@ -754,8 +754,10 @@ public class TPTP3ProofProcessor {
      * Compute binding and proof from the theorem prover's response. Leave out
      * the statements of relation sorts that is part of the TFF proof output.
      *
+     * @param lines these are proof lines fof/cnf returned by the inference engine
+     * @param kifQuery is the order Vampire and EProver will follow when reporting
+     * @param kb the given knowledge base to process a proof from
      * @param qlist is the list of quantified variables in order of the original
-     * query, which is the order Vampire and Eprover will follow when reporting
      * answers
      */
     public void parseProofOutput(List<String> lines, String kifQuery, KB kb, StringBuilder qlist) {

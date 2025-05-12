@@ -344,8 +344,6 @@ public class EProver {
             output = new ArrayList<>();
             String line = _reader.readLine();
             System.out.println("INFO in EProver.submitQuery(1): line: " + line);
-//            line = _reader.readLine();
-//            System.out.println("INFO in EProver.submitQuery(1): line: " + line);
             boolean inProof = false;
             while (line != null) {
                 output.add(line);
