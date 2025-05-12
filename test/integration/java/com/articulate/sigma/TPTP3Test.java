@@ -26,7 +26,6 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testParseProofFile () {
 
         System.out.println("-----------------------testParseProofFile--------------------------");
@@ -53,7 +52,6 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testE() {
 
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
