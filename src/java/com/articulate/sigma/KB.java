@@ -1759,15 +1759,14 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Submits a
-     * query to the inference engine.
+     * Submits a query to the E inference engine.
      *
      * @param suoKifFormula The String representation of the SUO-KIF query.
      * @param timeout       The number of seconds after which the inference engine should
      *                      give up.
      * @param maxAnswers    The maximum number of answers (binding sets) the inference
      *                      engine should return.
-     * @return A String indicating the status of the ask operation.
+     * @return an instance of the EProver with results
      */
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
@@ -3700,17 +3699,17 @@ public class KB implements Serializable {
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         KBmanager.getMgr().prover = KBmanager.Prover.LEO;
         if (StringUtil.emptyString(leoex)) {
-            System.err.println("Error in loadLeo: no executable string in preferences");
+            System.err.println("Error in loadLeo(): no executable string in preferences");
             return;
         }
         File executable = new File(leoex);
         if (!executable.exists()) {
-            System.err.println("Error in loadLeo: no executable " + leoex);
+            System.err.println("Error in loadLeo(): no executable " + leoex);
             return;
         }
         String lang = "thf";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+        if (new File(infFilename).exists() || !KBmanager.getMgr().infFileOld()) {
             System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + "file " + infFilename);
         }
     }
@@ -3723,37 +3722,42 @@ public class KB implements Serializable {
 
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
-        KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+        String e_prover_x = mgr.getPref("eprover");
+        if (StringUtil.emptyString(e_prover_x)) {
+            System.err.println("Error in loadEProver(): no executable string in preferences");
+            return;
+        }
+        File executable = new File(e_prover_x);
+        if (!executable.exists()) {
+            System.err.println("Error in loadEProver(): no executable " + e_prover_x);
+            return;
+        }
+        mgr.prover = KBmanager.Prover.EPROVER;
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
-        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
+        String infFilename = mgr.getPref("kbDir") + File.separator + this.name + "." + lang;
+        try {
             if (!formulaMap.isEmpty()) {
                 if (eprover != null) {
                     System.out.println("INFO in KB.loadEProver(): terminating old process first");
                     eprover.terminate();
                     eprover = null;
                 }
-                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                skb.kb = this;
-                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "" +
-                        "" +
-                        ".tptp";
-                if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+                if (!(new File(infFilename).exists()) || mgr.infFileOld()) {
                     System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                    skb.writeFile(tptpFilename,null, false,pw);
+                    loadVampire(); // if SUMO.tptp is missing, this will generate it
                 }
                 if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
-                    eprover = new EProver(mgr.getPref("eprover"), tptpFilename);
+                    eprover = new EProver(mgr.getPref("eprover"), infFilename);
             }
         }
-        catch (Exception e) {
+        catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
         if (eprover == null) {
-            mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
+            mgr.setError(mgr.getError() + "\n<br/>No local E inference engine available\n<br/>");
             System.err.println("Error in KB.loadEProver(): EProver not loaded");
         }
     }
