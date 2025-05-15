@@ -141,7 +141,7 @@ public class Vampire {
      * @throws IOException should not normally be thrown unless either
      *         Vampire executable or database file name are incorrect
      */
-    private void run(File kbFile, int timeout) throws Exception {
+    public void run(File kbFile, int timeout) throws Exception {
 
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
@@ -152,6 +152,53 @@ public class Vampire {
             System.err.println("Error in Vampire.run(): no executable " + vampex);
         }
         String[] cmds = createCommandList(executable, timeout, kbFile);
+        System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
+
+        ProcessBuilder _builder = new ProcessBuilder(cmds);
+        _builder.redirectErrorStream(true);
+
+        Process _vampire = _builder.start();
+        //System.out.println("Vampire.run(): process: " + _vampire);
+
+        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
+            String line;
+            while ((line = _reader.readLine()) != null) {
+                output.add(line);
+            }
+        }
+        int exitValue = _vampire.waitFor();
+        if (exitValue != 0) {
+            System.err.println("Error in Vampire.run(): Abnormal process termination");
+            System.err.println(output);
+        }
+        System.out.println("Vampire.run() done executing");
+    }
+
+    /** *************************************************************
+     * Creates a running instance of Vampire with custom command line
+     * options.
+     *
+     * @param kbFile A File object denoting the initial knowledge base
+     * to be loaded by the Vampire executable.
+     *
+     * @throws IOException should not normally be thrown unless either
+     *         Vampire executable or database file name are incorrect
+     */
+    public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
+
+        String vampex = KBmanager.getMgr().getPref("vampire");
+        if (StringUtil.emptyString(vampex)) {
+            System.err.println("Error in Vampire.run(): no executable string in preferences");
+        }
+        File executable = new File(vampex);
+        if (!executable.exists()) {
+            System.err.println("Error in Vampire.run(): no executable " + vampex);
+        }
+        String[] cmds = createCommandList(executable, timeout, kbFile);
+        ArrayList<String> moreCommands = new ArrayList<>();
+        moreCommands.addAll(Arrays.asList(cmds));
+        moreCommands.addAll(commands);
+        cmds = moreCommands.toArray(cmds); // passes the type of the array to allow return of the right type
         System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
