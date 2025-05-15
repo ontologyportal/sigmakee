@@ -25,7 +25,11 @@
     String exFileDir = kbDir + File.separator + "exFiles";
 
     String numVars = request.getParameter("numVars");
+    if (StringUtil.emptyString(numVars))
+        numVars = "3";
     String depth = request.getParameter("depth");
+    if (StringUtil.emptyString(depth))
+        depth = "5";
     String action = request.getParameter("action");
 
 %>
