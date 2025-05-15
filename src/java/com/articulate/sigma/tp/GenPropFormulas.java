@@ -167,7 +167,7 @@ public class GenPropFormulas {
         String result = s.replace("<=>","<->");
         result = result.replace("=>","->");
         result = URLEncoder.encode(result);
-        return "https://mathlogic.lv/tableau.html?f=" + result;
+        return "https://www.emathhelp.net/calculators/discrete-mathematics/truth-table-calculator/?f=" + result;
     }
 
     /** ***************************************************************
@@ -177,8 +177,8 @@ public class GenPropFormulas {
     public static String encodeTab(String s) {
 
         String result = URLEncoder.encode(s);
-        return "https://www.emathhelp.net/calculators/discrete-mathematics/truth-table-calculator/?f=" + result;
-    }
+        return "https://mathlogic.lv/tableau.html?f=" + result;
+     }
 
     /** ***************************************************************
      */
