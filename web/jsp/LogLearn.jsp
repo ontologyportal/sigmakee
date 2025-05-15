@@ -62,8 +62,8 @@
 %>
     <b>Create logic problem with solutions<P>
     <table>
-        <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="%=numVars %"></td></tr>
-        <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="%=depth %"></td></tr>
+        <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="<%=numVars %>"></td></tr>
+        <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="<%=depth %>"></td></tr>
         <tr><td align="right"><input type="submit" name="action" value="action">&nbsp;&nbsp;</td><td>submit</td></tr>
     </table>
 
