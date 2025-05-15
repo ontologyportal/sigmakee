@@ -21,3 +21,4 @@ lib
 /docker/sumo-ci/seccomp.json
 /docker/sumo-ci/sigmakee/
 /docker/sumo-ci/sigmakee-runtime/
+/prover_out.txt

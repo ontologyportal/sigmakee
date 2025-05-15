@@ -60,6 +60,11 @@ jEdit can additionally be integrated into Sigmakee, which will allow you to clic
 ## jUnit testing on the command line
 * [jUnit testing on the command line](https://github.com/ontologyportal/sigmakee/wiki/jUnit-Testing-on-the-Command-Line)
 
+## JaveDoc
+
+* [Sigma JavaDoc](https://ontology.nps.edu/doc)
+
+  
 ## RESTful Interface
 * See the [SigmaRest project](https://github.com/ontologyportal/SigmaRest)
 

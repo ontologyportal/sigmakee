@@ -563,46 +563,43 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Loads the constituents of the KB from config.xml
+     * Loads the constituents of the KB from ~/.sigmakee/config.xml
+     *
      * @param kbName the name of the KB
      * @param constituents a list of constituents to load
      * @return true if the loading was successful
      */
     public boolean loadKB(String kbName, List<String> constituents) {
 
-        KB kb = null;
         boolean retVal = false;
         try {
             if (existsKB(kbName))
                 removeKB(kbName);
             addKB(kbName);
-            kb = getKB(kbName);
-            if (!(constituents.isEmpty())) {
-                if (!SUMOKBtoTPTPKB.rapidParsing)
-                    retVal = _loadKB(kbName, constituents, kb);
-                else
-                    retVal = _t_loadKB(kbName, constituents, kb);
-            }
+            KB kb = getKB(kbName);
+            if (!constituents.isEmpty())
+//                if (!SUMOKBtoTPTPKB.rapidParsing)
+                retVal = _loadKB(kbName, constituents, kb);
+//                else
+//                    retVal = _t_loadKB(kbName, constituents, kb);
+            long millis = System.currentTimeMillis();
+            kb.kbCache = new KBcache(kb);
+            kb.kbCache.buildCaches();
+            kb.checkArity();
+            System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
         }
         catch (Exception e) {
             System.err.println("Error in KBmanager.loadKB(): Unable to save configuration: " + e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace(System.err);
             retVal = false;
         }
 
-        long millis = System.currentTimeMillis();
-        kb.kbCache = new KBcache(kb);
-        kb.kbCache.buildCaches();
-        kb.checkArity();
-        System.out.println("KBmanager.loadKB(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
         return retVal;
     }
 
     /** ***************************************************************
      * Conventional/sequential version
-     * @deprecated
      */
-    @Deprecated(forRemoval = true)
     private boolean _loadKB(String kbName, List<String> constituents, KB kb) {
         for (String filename : constituents) {
             try {
@@ -618,7 +615,9 @@ public class KBmanager implements Serializable {
     }
 
     /** ***************************************************************
-     * Threaded version
+     * Threaded version.
+     * Turns out not to be much help timewise and even causes an out of order
+     * situation with many constituents being loaded (tdn) 4/22/25
      */
     private boolean _t_loadKB(String kbName, List<String> constituents, KB kb) {
         Future<Boolean> future;
@@ -789,7 +788,7 @@ public class KBmanager implements Serializable {
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 //                System.out.println("ExecutorService shutdown hook executed");
                 // Perform cleanup tasks here
-                KButilities.shutDownExecutorService();
+                KButilities.getInstance().contextDestroyed(null);
             }));
 
         System.out.println("Info in KBmanager.initializeOnce()");
@@ -968,6 +967,7 @@ public class KBmanager implements Serializable {
     /** ***************************************************************
      * Remove a knowledge base.
      * @param name - the name of the KB
+     * @return indication of KB removal
      */
     public String removeKB(String name) {
 
@@ -975,21 +975,16 @@ public class KBmanager implements Serializable {
         if (kb == null)
             return "KB " + name + " does not exist and cannot be removed.";
         try {
-            if (kb.eprover != null)
+            if (kb.eprover != null) {
                 kb.eprover.terminate();
+                kb.eprover = null;
+            }
         }
         catch (IOException ioe) {
             System.err.println("Error in KBmanager.removeKB(): ");
             System.err.println("  Error terminating inference engine: " + ioe.getMessage());
         }
         kb = kbs.remove(name);
-//        try {
-//            writeConfiguration();
-//        }
-//        catch (Exception ioe) {
-//            System.err.println("Error in KBmanager.removeKB(): ");
-//            System.err.println("  Error writing configuration file: " + ioe.getMessage());
-//        }
         return "KB " + kb.name + " successfully removed.";
     }
 

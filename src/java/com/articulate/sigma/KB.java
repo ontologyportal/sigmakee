@@ -850,27 +850,22 @@ public class KB implements Serializable {
     }
 
     /* *************************************************************
-     * TODO: Not used and causes issues with FormulaProcessorTest 2/6/25 tdn
-     * Converts
-     * all Strings in the input List to Formula objects.
+     * Converts all atoms in the input List to Formula objects.
      *
-     * @param strings A list of Strings.
-     * @return An ArrayList of Formulas, or an empty ArrayList.
+     * @param strings A list of atoms in String form
+     * @return A List of Formulas, or an empty List
      */
-//    public static List<Formula> stringsToFormulas(List<String> strings) {
-//
-//        List<Formula> ans = new ArrayList<>();
-//        if (strings instanceof List) {
-//            Iterator<String> it = strings.iterator();
-//            Formula f;
-//            while (it.hasNext()) {
-//                f = new Formula();
-//                f.read(it.next());
-//                ans.add(f);
-//            }
-//        }
-//        return ans;
-//    }
+    public static List<Formula> atomsToFormulas(List<String> strings) {
+
+        List<Formula> ans = new ArrayList<>();
+        Formula f;
+        for(String s : strings) {
+            f = new Formula();
+            f.read(s);
+            ans.add(f);
+        }
+        return ans;
+    }
 
     /***************************************************************
      * Converts a
@@ -1186,8 +1181,12 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Retrieves Formulas with a given list of keys
+     *
+     * @param strings a list of Formula keys
+     * @return a List of Formulas from a given list of keys
      */
-    private List<Formula> stringsToFormulas(List<String> strings) {
+    private List<Formula> keysToFormulas(List<String> strings) {
 
         List<Formula> result = new ArrayList<>();
         if (strings == null)
@@ -1236,7 +1235,7 @@ public class KB implements Serializable {
             key = kind + "-" + term;
         List<String> alstr = formulas.get(key);
 
-        tmp = stringsToFormulas(alstr);
+        tmp = keysToFormulas(alstr);
         if (tmp != null)
             result.addAll(tmp);
         return result;
@@ -1531,8 +1530,6 @@ public class KB implements Serializable {
         Set<String> keys = kif.formulas.keySet();
         List<String> newFormulas, oldFormulas;
         Formula newFormula, oldFormula, f;
-        Iterator<String> it2;
-        String newformulaStr;
         for (String key : keys) {
             newFormulas = new ArrayList<>(kif.formulas.get(key));
             if (formulas.containsKey(key)) {
@@ -1560,9 +1557,7 @@ public class KB implements Serializable {
             }
             else {
                 formulas.put(key, newFormulas);
-                it2 = newFormulas.iterator();
-                while (it2.hasNext()) {
-                    newformulaStr = it2.next();
+                for(String newformulaStr : newFormulas) {
                     newFormula = kif.formulaMap.get(newformulaStr);
                     f = formulaMap.get(newformulaStr);
                     if (f == null) // If kb.formulaMap does not contain the new
@@ -1728,7 +1723,8 @@ public class KB implements Serializable {
                                 eprover.assertFormula(tptpfile.getCanonicalPath(), this, eprover, parsedFormulas,
                                         !mgr.getPref("TPTP").equalsIgnoreCase("no"));
                                 EProver.addBatchConfig(tptpfile.getCanonicalPath(), 60); // 6. Add the new tptp file into EBatching.txt
-                                eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
+                                if (this.eprover == null)
+                                    eprover = new EProver(mgr.getPref("eprover")); // 7. Reload eprover
                                 result += " and inference";
                                 break;
                             case VAMPIRE:
@@ -1763,46 +1759,27 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
-     * Submits a
-     * query to the inference engine.
+     * Submits a query to the E inference engine.
      *
      * @param suoKifFormula The String representation of the SUO-KIF query.
      * @param timeout       The number of seconds after which the inference engine should
      *                      give up.
      * @param maxAnswers    The maximum number of answers (binding sets) the inference
      *                      engine should return.
-     * @return A String indicating the status of the ask operation.
+     * @return an instance of the EProver with results
      */
     public EProver askEProver(String suoKifFormula, int timeout, int maxAnswers) {
 
-        try {
-            if (eprover == null) {
-                String lang = "tff";
-                if (SUMOKBtoTPTPKB.lang.equals("fof"))
-                    lang = "tptp";
-                eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                        KBmanager.getMgr().getPref("kbDir") + "/" + name + "." + lang);
-            }
-        }
-        catch (IOException e) {
-            System.err.println(e.getMessage());
-            e.printStackTrace();
-        }
         if (StringUtil.isNonEmptyString(suoKifFormula)) {
-            loadEProver();
+            if (this.eprover == null)
+                loadEProver();
             Formula query = new Formula();
             query.read(suoKifFormula);
             FormulaPreprocessor fp = new FormulaPreprocessor();
             Set<Formula> processedStmts = fp.preProcess(query, true, this);
             if (!processedStmts.isEmpty() && this.eprover != null) {
-                // set timeout in EBatchConfig file and reload eprover
-                try {
-                    EProver.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"), maxAnswers < 1 ? 1 : maxAnswers);
-                }
-                catch (IOException e) {
-                    e.printStackTrace();
-                }
+                // set timeout in EBatchConfig file
+                EProver.addBatchConfig(null, timeout);
                 String strQuery = processedStmts.iterator().next().getFormula();
                 eprover.submitQuery(strQuery, this);
             }
@@ -2010,7 +1987,8 @@ public class KB implements Serializable {
                 // set timeout in EBatchConfig file and reload eprover
                 try {
                     EProver.addBatchConfig(null, timeout);
-                    eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
+                    if (this.eprover == null)
+                        eprover = new EProver(KBmanager.getMgr().getPref("eprover"));
                 }
                 catch (IOException e) {
                     e.printStackTrace();
@@ -2918,6 +2896,8 @@ public class KB implements Serializable {
 
     /***************************************************************
      * Adds a formula or formulas into the KB
+     *
+     * @param file the KIF file to add to this KB
      */
     public void addConstituentInfo(KIF file) {
 
@@ -2936,7 +2916,6 @@ public class KB implements Serializable {
         int total = file.formulas.keySet().size();
         for (String key : file.formulas.keySet()) { // Iterate through keys.
             if ((count++ % 100) == 1)
-//                System.out.print(".");
                 progressSb.append(".");
             if ((count % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
@@ -2952,15 +2931,12 @@ public class KB implements Serializable {
         }
 
         count = 2;
-        Iterator<Formula> it2 = file.formulaMap.values().iterator();
-        Formula f;
         String internedFormula;
+        total = file.formulaMap.values().size();
         //System.out.println("INFO in KB.addConstituent(): add values");
-        while (it2.hasNext()) { // Iterate through values
-            f = (Formula) it2.next();
+        for (Formula f : file.formulaMap.values()) { // Iterate through values
             internedFormula = f.getFormula().intern();
             if ((count++ % 100) == 1)
-//                System.out.print(".");
                 progressSb.append(".");
             if ((count % 4000) == 1) {
                 System.out.print(progressSb.toString() + "x");
@@ -2999,7 +2975,7 @@ public class KB implements Serializable {
     /*****************************************************************
      * Reload all the KB constituents.
      */
-    public String reload() {
+    public void reload() {
 
         List<String> newConstituents = new ArrayList<>();
         synchronized (this.getTerms()) {
@@ -3044,7 +3020,6 @@ public class KB implements Serializable {
             if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE)
                 loadVampire();
         }
-        return "";
     }
 
     /*****************************************************************
@@ -3724,19 +3699,20 @@ public class KB implements Serializable {
         String leoex = KBmanager.getMgr().getPref("leoExecutable");
         KBmanager.getMgr().prover = KBmanager.Prover.LEO;
         if (StringUtil.emptyString(leoex)) {
-            System.err.println("Error in loadLeo: no executable string in preferences");
+            System.err.println("Error in loadLeo(): no executable string in preferences");
             return;
         }
         File executable = new File(leoex);
         if (!executable.exists()) {
-            System.err.println("Error in loadLeo: no executable " + leoex);
+            System.err.println("Error in loadLeo(): no executable " + leoex);
             return;
         }
         String lang = "thf";
         String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+        if (new File(infFilename).exists() && !KBmanager.getMgr().infFileOld())
             System.out.println("INFO in KB.loadLeo(): no need to generate " + lang + "file " + infFilename);
-        }
+        else
+            loadVampire(); // if SUMO.tptp is missing, this will generate it
     }
 
     /***************************************************************
@@ -3747,39 +3723,42 @@ public class KB implements Serializable {
 
         System.out.println("INFO in KB.loadEProver(): Creating new process");
         KBmanager mgr = KBmanager.getMgr();
-        KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
+        String e_prover_x = mgr.getPref("eprover");
+        if (StringUtil.emptyString(e_prover_x)) {
+            System.err.println("Error in loadEProver(): no executable string in preferences");
+            return;
+        }
+        File executable = new File(e_prover_x);
+        if (!executable.exists()) {
+            System.err.println("Error in loadEProver(): no executable " + e_prover_x);
+            return;
+        }
+        mgr.prover = KBmanager.Prover.EPROVER;
         String lang = "tff";
         if (SUMOKBtoTPTPKB.lang.equals("fof"))
             lang = "tptp";
-        String infFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "." + lang;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
+        String infFilename = mgr.getPref("kbDir") + File.separator + this.name + "." + lang;
+        try {
             if (!formulaMap.isEmpty()) {
-//                HashSet<String> formulaStrings = new HashSet<String>();
-//                formulaStrings.addAll(formulaMap.keySet());
                 if (eprover != null) {
                     System.out.println("INFO in KB.loadEProver(): terminating old process first");
                     eprover.terminate();
+                    eprover = null;
                 }
-                eprover = null;
-                SUMOKBtoTPTPKB skb = new SUMOKBtoTPTPKB();
-                skb.kb = this;
-                String tptpFilename = KBmanager.getMgr().getPref("kbDir") + File.separator + this.name + "" +
-                        "" +
-                        ".tptp";
-                if (!(new File(tptpFilename).exists()) || KBmanager.getMgr().infFileOld()) {
+                if (!(new File(infFilename).exists()) || mgr.infFileOld()) {
                     System.out.println("INFO in KB.loadEProver(): generating TPTP file");
-                    skb.writeFile(tptpFilename,null, false,pw);
+                    loadVampire(); // if SUMO.tptp is missing, this will generate it
                 }
                 if (StringUtil.isNonEmptyString(mgr.getPref("eprover")))
-                    eprover = new EProver(mgr.getPref("eprover"), tptpFilename);
+                    eprover = new EProver(mgr.getPref("eprover"), infFilename);
             }
         }
-        catch (Exception e) {
+        catch (IOException e) {
             System.err.println(e.getMessage());
             e.printStackTrace();
         }
         if (eprover == null) {
-            mgr.setError(mgr.getError() + "\n<br/>No local inference engine is available\n<br/>");
+            mgr.setError(mgr.getError() + "\n<br/>No local E inference engine available\n<br/>");
             System.err.println("Error in KB.loadEProver(): EProver not loaded");
         }
     }
@@ -4091,8 +4070,6 @@ public class KB implements Serializable {
          */
     }
 
-    /** ***************************************************************
-     */
     @Override
     public String toString() {
 
@@ -4131,6 +4108,9 @@ public class KB implements Serializable {
     }
 
     /** ***************************************************************
+     * Command line entry point for this class
+     *
+     * @param args command line arguments (examples from showHelp)
      */
     public static void main(String[] args) throws IOException {
 
@@ -4211,14 +4191,12 @@ public class KB implements Serializable {
                     contradictionHelp(kb,args,timeout);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                    kb.loadEProver();
                     EProver eprover = kb.askEProver(args[1], timeout, 1);
                     System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
                     tpp = new TPTP3ProofProcessor();
                     tpp.parseProofOutput(eprover.output, args[1], kb, eprover.qlist);
                 }
                 else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                    kb.loadVampire();
                     Vampire vamp = kb.askVampire(args[1], timeout, 1);
                     System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
                     tpp = new TPTP3ProofProcessor();

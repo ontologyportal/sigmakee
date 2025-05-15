@@ -847,19 +847,24 @@ public class LanguageFormatter {
             }
         }
         // delete all the unused negative commands
-        strFormat = strFormat.replace(" %n "," ");
-        strFormat = strFormat.replace("%n "," ");
         strFormat = strFormat.replaceAll(" %n\\{.+?\\} "," ");
         strFormat = strFormat.replaceAll("%n\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%n\\{.+?\\}","");
+        strFormat = strFormat.replace(" %n "," ");
+        strFormat = strFormat.replace("%n "," ");
+        strFormat = strFormat.replace("%n","");
         // delete all unused positive commands
         strFormat = strFormat.replaceAll(" %p\\{.+?\\} "," ");
         strFormat = strFormat.replaceAll("%p\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%p\\{.+?\\}","");
         // delete all unused positive question commands
         strFormat = strFormat.replaceAll(" %qp\\{.+?\\} "," ");
         strFormat = strFormat.replaceAll("%qp\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%qp\\{.+?\\}","");
         // delete all unused negative question commands
         strFormat = strFormat.replaceAll(" %qn\\{.+?\\} "," ");
         strFormat = strFormat.replaceAll("%qn\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll("%qn\\{.+?\\}","");
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 3 format: " + strFormat);
         if (strFormat.contains("%*"))

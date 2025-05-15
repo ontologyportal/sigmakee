@@ -939,14 +939,14 @@ public class Formula implements Comparable, Serializable {
             location = "near line " + lineNo + " in " + filename;
         if (pred.equals(AND) || pred.equals(OR)) {
             if (argCount < 2) {
-                String errString = "Too few arguments for 'and' or 'or' at " + location + ": " + f.toString();
+                String errString = "Too few arguments for 'and' or 'or' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(UQUANT) || pred.equals(EQUANT)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for quantifer at " + location + ": " + f.toString();
+                String errString = "Wrong number of arguments for quantifer " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -954,7 +954,7 @@ public class Formula implements Comparable, Serializable {
                 Formula quantF = new Formula();
                 quantF.read(rest);
                 if (!listP(quantF.car())) {
-                    String errString = "No var list for quantifier at " + location + ": " + f.toString();
+                    String errString = "No var list for quantifier " + location + ": " + f.toString();
                     errors.add(errString);
                     return errString;
                 }
@@ -962,14 +962,14 @@ public class Formula implements Comparable, Serializable {
         }
         else if (pred.equals(IFF) || pred.equals(IF)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for '<=>' or '=>' at " + location + ": " + f.toString();
+                String errString = "Wrong number of arguments for '<=>' or '=>' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(EQUAL)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for 'equals' at " + location + ": " + f.toString();
+                String errString = "Wrong number of arguments for 'equals' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -977,7 +977,7 @@ public class Formula implements Comparable, Serializable {
         else if (!(isVariable(pred)) && (argCount > (MAX_PREDICATE_ARITY + 1))) {
             //System.out.println("info in KIF.parse(): pred: " + pred);
             //System.out.println("info in KIF.parse(): " + this);
-			String errString = "Maybe too many arguments at " + location + ": " + f.toString();
+			String errString = "Maybe too many arguments " + location + ": " + f.toString();
             errors.add(errString);
             return errString;
         }
@@ -1507,80 +1507,53 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
+     * Loads all of the arguments into both args and stringArgs
+     * datastructures.
+     */
+    private void loadArguments() {
+
+        if (debug) System.out.println("Formula.loadArgument(): formula to load" + this.theFormula);
+        args = new ArrayList<>();
+        stringArgs = new ArrayList<>();
+        String nextarg = "";
+        Formula form = this;
+        while (form.listP() && !form.empty()) {
+            nextarg = form.car();
+            stringArgs.add(nextarg);
+            args.add(new Formula(nextarg));
+            form = new Formula(form.cdr());
+        }
+        if (debug) System.out.println("Formula.loadArgument(): args loaded: " + args);
+    }
+
+    /** ***************************************************************
      * Return the numbered argument of the given formula.  The first
      * element of a formula (i.e. the predicate position) is number 0.
      * Returns the empty string if there is no such argument position.
      */
     public String getStringArgument(int argnum) {
 
-        //if (debug) System.out.println("Formula.getStringArgument(): " + this.theFormula);
-        //if (debug) System.out.println("Formula.getStringArgument(): args: " + stringArgs);
-        //if (debug) System.out.println("Formula.getStringArgument(): argnum: " + argnum);
-        if (stringArgs != null && stringArgs.size() > argnum)
-            return stringArgs.get(argnum);
-        String ans = "";
-        Formula form = new Formula();
-        form.read(theFormula);
-        int i = 0;
-        while (form.listP() && !form.empty()) {
-            ans = form.car();
-            if (stringArgs == null)
-                stringArgs = new ArrayList<>();
-            if (i >= stringArgs.size()) { // opportunistically fill the cache
-                stringArgs.add(ans);
-                //if (debug) System.out.println("Formula.getStringArgument(): adding: " + ans + " to " + stringArgs);
-            }
-            if (i == argnum) break;
-            if (i > argnum) return "";
-            String cdr = form.cdr();
-            form = new Formula();
-            form.read(cdr);
-            if (form.empty())
-                return "";
-            i++;
+        if (stringArgs == null || args == null || stringArgs.isEmpty() || args.isEmpty()) {
+            loadArguments();
         }
-        if (form.empty())
-            ans = "";
-        if (ans == null) ans = "";
-        return ans;
+        if (stringArgs.size() > argnum)
+            return stringArgs.get(argnum);
+        return "";
     }
 
     /** ***************************************************************
      * Return the numbered argument of the given formula.  The first
      * element of a formula (i.e. the predicate position) is number 0.
-     * Returns the null if there is no such argument position.
+     * Returns null if there is no such argument position.
      */
     public Formula getArgument(int argnum) {
 
-        if (debug) System.out.println("Formula.getArgument(): " + this.theFormula);
-        if (debug) System.out.println("Formula.getArgument(): args: " + args);
-        if (debug) System.out.println("Formula.getArgument(): argnum: " + argnum);
-        if (args != null && args.size() > argnum)
-            return args.get(argnum);
-        Formula ans = null;
-        Formula form = deepCopy();
-        int i = 0;
-        while (form.listP() && !form.empty()) {
-            ans = form.carAsFormula();
-            if (args == null)
-                args = new ArrayList<>();
-            if (i >= args.size()) { // opportunistically fill the cache
-                args.add(ans);
-                if (debug) System.out.println("Formula.getArgument(): adding: " + ans.theFormula + " to " + stringArgs);
-            }
-            if (debug) System.out.println("Formula.getArgument(): arg: " + ans.theFormula);
-            if (i == argnum) break;
-            if (i > argnum) return null;
-            if (debug) System.out.println("Formula.getArgument(): form: " + form.theFormula);
-            form = form.cdrAsFormula();
-            if (debug) System.out.println("Formula.getArgument(): cdr form: " + form.theFormula);
-            if (debug) System.out.println("Formula.getArgument(): list?: " + form.listP());
-            if (debug) System.out.println("Formula.getArgument(): empty?: " + form.empty());
-            if (form.empty())
-                return null;
-            i++;
+        if (stringArgs == null || args == null || stringArgs.isEmpty() || args.isEmpty()) {
+            loadArguments();
         }
-        return ans;
+        if (args.size() > argnum)
+            return args.get(argnum);
+        return null;
     }
 
     /** ***************************************************************
@@ -1617,7 +1590,7 @@ public class Formula implements Comparable, Serializable {
         if (debug) System.out.println("Formula.argumentsToArrayListString(): formula: " + getFormula());
         if (debug) System.out.println("Formula.argumentsToArrayListString(): stringArgs: " + stringArgs);
         List<String> result = new ArrayList<>();
-        if (args != null && !args.isEmpty()) {
+        if (stringArgs != null && !stringArgs.isEmpty()) {
             if (start == 0)
                 return stringArgs;
             if (start > stringArgs.size()) {

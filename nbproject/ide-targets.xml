@@ -105,7 +105,7 @@
     <target name="check.config" depends="get.length,copy.milo.config"/>
     <target name="get.length">
         <condition property="is.milo">
-            <length mode="all" when="eq" length="2543">
+            <length mode="all" when="eq" length="2593"> <!-- Check the size every now and then for addtions of preferences -->
                 <fileset file="${kbs.dir}/config.xml"/>
             </length>
         </condition>
@@ -628,7 +628,7 @@
     </target>
     <!-- SUMO and domain only -->
     <target name="prep.top.only.config">
-        <copy tofile="${sigma_home}/KBs/config.xml" file="${unit.config}" overwrite="true"/>
+        <copy tofile="${sigma_home}/KBs/config.xml" file="${top.config}" overwrite="true"/>
     </target>
     <target name="prep.tiny.sumo.config">
         <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>
@@ -644,6 +644,7 @@
                 <include name="junit*.properties"/>
                 <include name="*.owl"/>
                 <include name="*.tab"/>
+                <include name="prover_out.txt"/>
             </fileset>
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.ser"/>

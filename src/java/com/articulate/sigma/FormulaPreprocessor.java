@@ -715,12 +715,12 @@ public class FormulaPreprocessor {
             }
         }
         else { //if (f.isSimpleClause(kb)) { // simple clauses include functions
-            String pred = carstr;
+            String pred = carstr, errStr;
             if (debug) System.out.println("INFO in FormulaPreprocessor.computeVariableTypesRecurse(): simple clause ");
             if (f.getFormula().contains("?") && !Formula.isVariable(pred)) {
                 List<Formula> args = f.complexArgumentsToArrayList(1);
                 if (args == null) {
-                    String errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): no arguments found in: \n" + f;
+                    errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): no arguments found in: \n" + f;
                     System.err.println(errStr);
                     errors.add(errStr);
                 }
@@ -744,11 +744,12 @@ public class FormulaPreprocessor {
                             if (StringUtil.emptyString(cl)) {
                                 if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
                                         !pred.equals("equal")) {
-                                    System.err.println("Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
-                                            "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f);
+                                    errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
+                                            "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f;
+                                    System.err.println(errStr);
                                     System.err.println("sig: " + kb.kbCache.getSignature(pred));
                                     System.err.println("sig count: " + kb.kbCache.signatures.keySet().size());
-                                    // TODO: These should be reported to the errors log, but for now, there is a benign nature to these 3/5/25 tdn
+                                    errors.add(errStr);
                                 }
                             }
                             else

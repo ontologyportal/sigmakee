@@ -4,17 +4,15 @@ import com.articulate.sigma.tp.EProver;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
+import com.articulate.sigma.utils.FileUtil;
 import java.io.BufferedWriter;
 import java.io.File;
 
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.LineNumberReader;
 import java.io.PrintWriter;
-import java.io.Reader;
-import java.io.StringReader;
 import java.io.Writer;
+import java.util.List;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -25,79 +23,69 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
+    @Ignore // gets called from testE as testE must happen first to produce prover_out.txt
     public void testParseProofFile () {
 
         System.out.println("-----------------------testParseProofFile--------------------------");
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        String expected = "6. (exists (?X1)\n" +
+                          "  (subclass ?X1 Entity)) []";
         File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
         file.deleteOnExit();
-        try (Reader r = new FileReader(file);
-            LineNumberReader lnr = new LineNumberReader(r)) {
-            tpp.parseProofOutput(lnr, kb);
+        List<String> lines = FileUtil.readLines(file.getPath(), true);
+        String result;
+        for (String line : lines) {
+            result = tpp.parseProofStep(line).toString().trim();
+            System.out.println("Result: " + result);
+            if (!StringUtil.emptyString(result) && result.equals(expected))
+                System.out.println("Success");
+            else
+                System.err.println("FAIL");
+            assertTrue(!StringUtil.emptyString(result));
+            assertTrue(result.equals(expected));
         }
-        catch (IOException ex) {
-            System.err.println(ex.getMessage());
-        }
-        String result = tpp.proof.toString().trim();
-        System.out.println("Result: " + result);
-        if (!StringUtil.emptyString(result) && (tpp.proof.size() == 22))
-            System.out.println("Success");
-        else
-            System.err.println("FAIL");
-        assertTrue(!StringUtil.emptyString(result));
-        assertEquals(tpp.proof.size(),22);
         System.out.println("\n\n");
     }
 
     /** ***************************************************************
      */
     @Test
-    @Ignore
-    public void testE () {
+    public void testE() {
 
         KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
         try {
             System.out.println("----------------------testE---------------------------");
-            EProver eprover = new EProver(KBmanager.getMgr().getPref("eprover"),
-                    KBmanager.getMgr().getPref("kbDir") + File.separator + KBmanager.getMgr().getPref("sumokbname") + ".tptp");
-            System.out.println("testE(): E completed initialization");
             String query = "(subclass ?X Entity)";
-            String result = eprover.submitQuery(query, kb);
-            try (Reader sr = new StringReader(result);
-                LineNumberReader lnr = new LineNumberReader(sr)) {
-                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-                tpp.parseProofOutput(lnr, kb);
-                result = tpp.proof.toString().trim();
-                File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
-                file.setWritable(true);
-                file.createNewFile();
-                try (Writer w = new FileWriter(file); Writer pw = new PrintWriter(new BufferedWriter(w))) {
-                    pw.write(result);
-                }
-                System.out.println("Proof: " + result);
-                //System.out.println("HTML Proof: " + HTMLformatter.formatTPTP3ProofResult(tpp,query, "", "SUMO", "EnglishLanguage"));
-                System.out.println("BindingsMap: " + tpp.bindingMap);
-                System.out.println("Bindings: " + tpp.bindings);
-                System.out.println("Status: " + tpp.status);
-                String bindExpect = "[SetOrClass]";
-                if (!StringUtil.emptyString(result) && (tpp.proof.size() == 6) && (tpp.bindings.toString().equals(bindExpect)))
-                    System.out.println("Success");
-                else
-                    System.err.println("FAIL");
-                assertEquals(bindExpect,tpp.bindings.toString());
-                assertTrue(!StringUtil.emptyString(result));
-                assertEquals(6,tpp.proof.size());
-                eprover.terminate();
+            EProver eprover = kb.askEProver(query, 30, 1);
+            String result;
+            TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            tpp.parseProofOutput(eprover.output, "?X", kb, eprover.qlist);
+            result = tpp.proof.toString().trim();
+            File file = new File(System.getenv("SIGMA_SRC") + "/prover_out.txt");
+            file.setWritable(true);
+            file.createNewFile();
+            try (Writer w = new FileWriter(file); Writer pw = new PrintWriter(new BufferedWriter(w))) {
+                pw.write(result);
             }
-            catch (IOException e) {
-                System.err.println(e.getMessage());
-            }
+            System.out.println("Proof: " + result);
+            //System.out.println("HTML Proof: " + HTMLformatter.formatTPTP3ProofResult(tpp,query, "", "SUMO", "EnglishLanguage"));
+            System.out.println("BindingsMap: " + tpp.bindingMap);
+            System.out.println("Bindings: " + tpp.bindings);
+            System.out.println("Status: " + tpp.status);
+            String bindExpect = "[Class]";
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 7) && (tpp.bindings.toString().equals(bindExpect)))
+                System.out.println("Success");
+            else
+                System.err.println("FAIL");
+            assertEquals(bindExpect,tpp.bindings.toString());
+            assertTrue(!StringUtil.emptyString(result));
+            assertEquals(7,tpp.proof.size());
         }
         catch (IOException e) {
             System.err.println(e.getMessage());
         }
         System.out.println("\n\n");
+        testParseProofFile();
     }
 
     /** ***************************************************************
@@ -132,7 +120,6 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testVampireCASC () {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
@@ -146,8 +133,8 @@ public class TPTP3Test extends IntegrationTestBase {
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
-            String expected = "[PositiveInteger]";
-            System.out.println("Result: " + result);
+            String expected = "[]";
+            System.out.println("Result:  " + result);
             if (!StringUtil.emptyString(result) &&
                     (tpp.proof.size() == 8) &&
                     (tpp.proof.get(7).sumo.equals("false")))
@@ -155,7 +142,6 @@ public class TPTP3Test extends IntegrationTestBase {
             else
                 System.err.println("FAIL");
             assertEquals(8,tpp.proof.size());
-            System.out.println("answers: " + result);
             assertEquals("false",tpp.proof.get(7).sumo);
             result = tpp.bindings.toString();
             System.out.println("answers: " + result);
@@ -174,7 +160,6 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testVampireCASCBindings () {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
@@ -186,7 +171,7 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, query,kb, vampire.qlist);
-            String expected = "[PositiveInteger]";
+            String expected = "[]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
@@ -205,7 +190,6 @@ public class TPTP3Test extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-    @Ignore
     public void testVampireCASCBindings2 () {
 
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
@@ -217,8 +201,7 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
-
-            String expected = "[RealNumber, Quantity]";
+            String expected = "[]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);

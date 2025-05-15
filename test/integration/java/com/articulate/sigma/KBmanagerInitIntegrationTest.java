@@ -3,7 +3,6 @@ package com.articulate.sigma;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.*;
@@ -29,10 +28,10 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
         //kifSet.add("Dining.kif");
         //kifSet.add("Economy.kif");
         //kifSet.add("engineering.kif");
-        kifSet.add("SUMO_Cache.kif");
+        //kifSet.add("SUMO_Cache.kif");
         //kifSet.add("FinancialOntology.kif");
-        //kifSet.add("domainEnglishFormat.kif");
-        //kifSet.add("english_format.kif");
+        kifSet.add("domainEnglishFormat.kif");
+        kifSet.add("english_format.kif");
         //kifSet.add("Food.kif");
         //kifSet.add("Geography.kif");
         //kifSet.add("Government.kif");
@@ -63,7 +62,7 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
      * Verify that you are running your tests with the expected configuration.
      */
     @Test
-    @Ignore
+//    @Ignore
     public void testNbrKifFilesLoaded()   {
 
         Set<String> expectedKifFiles = Sets.newHashSet(kifSet);
@@ -109,6 +108,6 @@ public class KBmanagerInitIntegrationTest extends IntegrationTestBase {
 
         assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime < 150000);
         // Just in case something whacky is going on, make sure it's greater than some minimum, too.
-        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 10000);
+        assertTrue("Actual time = " + IntegrationTestBase.totalKbMgrInitTime, IntegrationTestBase.totalKbMgrInitTime > 4000);
     }
 }

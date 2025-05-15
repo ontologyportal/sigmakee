@@ -44,8 +44,6 @@ public class Vampire {
     public static ModeType mode = null;
     public static boolean debug = false;
 
-    /** *************************************************************
-     */
     @Override
     public String toString() {
 
@@ -59,14 +57,15 @@ public class Vampire {
      */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
-        String opts = "";
+        String space = " ";
+        StringBuilder opts = new StringBuilder("--output_axiom_names").append(space).append("on").append(space);
         if (mode == ModeType.AVATAR)
-            opts = "--proof tptp -t";
+            opts.append("-abs").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space).append("-t").append(space);
         if (mode == ModeType.CASC)
-            opts = "--mode casc -t"; // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
+            opts.append("--mode").append(space).append("casc").append(space).append("-t").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
         if (mode == ModeType.CUSTOM)
-            opts = System.getenv("VAMPIRE_OPTS");
-        String[] optar = opts.split(" ");
+            opts.append(System.getenv("VAMPIRE_OPTS"));
+        String[] optar = opts.toString().split(" ");
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();
         System.arraycopy(optar, 0, cmds, 1, optar.length);
@@ -92,19 +91,18 @@ public class Vampire {
 
         if (debug) System.out.println("INFO in Vampire.assertFormula(2):writing to file " + userAssertionTPTP);
         boolean allAdded = false;
-        FormulaPreprocessor fp;
-        Set<String> tptpFormulas;
+        Set<Formula> processedFormulas = new HashSet();
+        FormulaPreprocessor fp = new FormulaPreprocessor();
+        Set<String> tptpFormulas = new HashSet<>();
         String tptpStr;
         try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(userAssertionTPTP, true)))) {
-            Set<Formula> processedFormulas = new HashSet();
             for (Formula parsedF : parsedFormulas) {
                 processedFormulas.clear();
-                fp = new FormulaPreprocessor();
                 processedFormulas.addAll(fp.preProcess(parsedF,false, kb));
                 if (processedFormulas.isEmpty())
                     allAdded = false;
                 else {   // 2. Translate to TPTP/TFF.
-                    tptpFormulas = new HashSet<>();
+                    tptpFormulas.clear();
                     if (tptp) {
                         for (Formula p : processedFormulas) {
                             if (!p.isHigherOrder(kb)) {
@@ -133,12 +131,13 @@ public class Vampire {
     }
 
     /** *************************************************************
-     * Creates a running instance of Vampire.
+     * Creates a running instance of Vampire and collects its output
      *
      * @param kbFile A File object denoting the initial knowledge base
      * to be loaded by the Vampire executable.
+     * @param timeout the time given for Vampire to finish execution
      *
-     * @throws IOException should not normally be thrown unless either
+     * @throws Exception should not normally be thrown unless either
      *         Vampire executable or database file name are incorrect
      */
     public void run(File kbFile, int timeout) throws Exception {
@@ -146,10 +145,12 @@ public class Vampire {
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
             System.err.println("Error in Vampire.run(): no executable string in preferences");
+            return;
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
             System.err.println("Error in Vampire.run(): no executable " + vampex);
+            return;
         }
         String[] cmds = createCommandList(executable, timeout, kbFile);
         System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
@@ -162,9 +163,8 @@ public class Vampire {
 
         try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_vampire.getInputStream()))) {
             String line;
-            while ((line = _reader.readLine()) != null) {
+            while ((line = _reader.readLine()) != null)
                 output.add(line);
-            }
         }
         int exitValue = _vampire.waitFor();
         if (exitValue != 0) {
@@ -291,6 +291,13 @@ public class Vampire {
      * Creates a running instance of Vampire adding a set of statements
      * in TFF or TPTP language to a file and then calling Vampire.
      * Note that any query must be given as a "conjecture"
+     *
+     * @param kb the current knowledge base
+     * @param kbFile the current knowledge base TPTP file
+     * @param timeout the timeout given to Vampire to find a proof
+     * @param stmts a Set of user assertions
+     *
+     * @throws Exception of something goes south
      */
     public void run(KB kb, File kbFile, int timeout, Set<String> stmts) throws Exception {
 
