@@ -31,6 +31,7 @@ userPages.add("BrowseExtra.jsp");
 userPages.add("Graph.jsp");
 userPages.add("Intersect.jsp");
 userPages.add("KBs.jsp");
+userPages.add("LogLearn.jsp");
 userPages.add("Manifest.jsp");
 userPages.add("OWL.jsp");
 userPages.add("OMW.jsp");
