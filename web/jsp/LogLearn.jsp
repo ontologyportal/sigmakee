@@ -30,7 +30,8 @@
     String depth = request.getParameter("depth");
     if (StringUtil.emptyString(depth))
         depth = "5";
-    String action = request.getParameter("action");
+    String action = request.getParameter("submit");
+    String erase = request.getParameter("erase");
 
 %>
 <form action="LogLearn.jsp">
@@ -43,35 +44,44 @@
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
 
+
+    <b>Create logic problem with solutions</b><P>
+    <table>
+        <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="<%=numVars %>"></td></tr>
+        <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="<%=depth %>"></td></tr>
+        <tr><td align="right"><input type="submit" name="submit" value="submit">&nbsp;&nbsp;</td>
+        <td><input type="submit" name="erase" value="erase"></td></tr>
+    </table>
+
+</form><p>
+
 <%
-    if (action != null && action.equalsIgnoreCase("action")) {
+    if (action != null && action.equalsIgnoreCase("submit")) {
+        out.println("Generate formulas<br>");
         GenPropFormulas.generateFormulas(1);
         out.println();
         out.println("--------------------------<br>");
-        out.println("Contradictions:<br>");
+        out.println("<P><b>Contradictions</b>:<br>");
         for (String s : GenPropFormulas.contraResults) {
             out.println(s + "<br>");
             out.println("CNF: " + GenPropFormulas.CNF.get(s) + "<br>");
             out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
         }
-        out.println("Tautologies:<br>");
+        out.println("<P><b>Tautologies</b>:<br>");
         for (String s : GenPropFormulas.tautResults) {
             out.println(s + "<br>");
-            out.println("CNF: " + GenPropFormulas.CNF.get(s) + "<br>");
+            out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
             out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
         }
     }
+    if (erase != null && erase.equalsIgnoreCase("erase")) {
+        GenPropFormulas.init();
+    }
 %>
-    <b>Create logic problem with solutions<P>
-    <table>
-        <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="<%=numVars %>"></td></tr>
-        <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="<%=depth %>"></td></tr>
-        <tr><td align="right"><input type="submit" name="action" value="action">&nbsp;&nbsp;</td><td>submit</td></tr>
-    </table>
+<P>
 
-</form><p>
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>
