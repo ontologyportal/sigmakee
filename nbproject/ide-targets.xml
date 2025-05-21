@@ -749,7 +749,7 @@
         </java>
     </target>
 
-    <target name="-profile-check" depends="clean,compile" >
+    <target name="-profile-check" depends="clean,compile">
         <startprofiler freeform="true"/>
     </target>
     <target depends="-profile-check" description="Runs a main class with ${run.class} with ${run.args} set in build.properties" if="profiler.configured" name="profile-nb">
