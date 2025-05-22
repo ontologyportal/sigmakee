@@ -369,6 +369,64 @@ public class EProver {
     }
 
     /** *************************************************************
+     */
+    private static String[] createCommandList(File executable, int timeout, File kbFile) {
+
+        String[] cmds = new String[3];
+        cmds[0] = executable.toString();
+        cmds[1] = Integer.toString(timeout);
+        cmds[2] = kbFile.toString();
+        return cmds;
+    }
+
+    /** *************************************************************
+     * Creates a running instance of Eprover with custom command line
+     * options.
+     *
+     * @param kbFile A File object denoting the initial knowledge base
+     * to be loaded by the Eprover executable.
+     *
+     * @throws IOException should not normally be thrown unless either
+     *         Eprover executable or database file name are incorrect
+     */
+    public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
+
+        String eprover = KBmanager.getMgr().getPref("eprover");
+        if (StringUtil.emptyString(eprover)) {
+            System.err.println("Error in Eprover.run(): no executable string in preferences");
+        }
+        File executable = new File(eprover);
+        if (!executable.exists()) {
+            System.err.println("Error in Eprover.run(): no executable " + eprover);
+        }
+        String[] cmds = createCommandList(executable, timeout, kbFile);
+        ArrayList<String> moreCommands = new ArrayList<>();
+        moreCommands.addAll(Arrays.asList(cmds));
+        moreCommands.addAll(commands);
+        cmds = moreCommands.toArray(cmds); // passes the type of the array to allow return of the right type
+        System.out.println("Eprover.run(): Initializing Eprover with:\n" + Arrays.toString(cmds));
+
+        ProcessBuilder _builder = new ProcessBuilder(cmds);
+        _builder.redirectErrorStream(true);
+
+        Process _eprover = _builder.start();
+        //System.out.println("Eprover.run(): process: " + _eprover);
+
+        try (BufferedReader _reader = new BufferedReader(new InputStreamReader(_eprover.getInputStream()))) {
+            String line;
+            while ((line = _reader.readLine()) != null) {
+                output.add(line);
+            }
+        }
+        int exitValue = _eprover.waitFor();
+        if (exitValue != 0) {
+            System.err.println("Error in Eprover.run(): Abnormal process termination");
+            System.err.println(output);
+        }
+        System.out.println("Eprover.run() done executing");
+    }
+
+    /** *************************************************************
      * A simple test. Works as follows:
      * <ol>
      *   <li>start E;</li>
