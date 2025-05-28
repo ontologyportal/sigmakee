@@ -462,7 +462,7 @@ public class Formula implements Comparable, Serializable {
     		System.err.println("Error in Formula.compareTo(): null formula");
     		throw new ClassCastException("Error in Formula.compareTo(): null formula");
     	}
-        if (!f.getClass().getName().equalsIgnoreCase("com.articulate.sigma.Formula"))
+        if (!(f instanceof Formula))
             throw new ClassCastException("Error in Formula.compareTo(): "
                                          + "Class cast exception for argument of class: "
                                          + f.getClass().getName());
