@@ -28,7 +28,6 @@ being present in the ontology in order to function as intended.  They are:
 
 package com.articulate.sigma;
 
-import com.articulate.sigma.trans.SUMOKBtoTPTPKB;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.AVPair;
 import com.articulate.sigma.utils.StringUtil;
@@ -644,7 +643,7 @@ public class KBcache implements Serializable {
      */
     public void buildDisjointMap() {
 
-        long t1 = System.currentTimeMillis();
+//        long t1 = System.currentTimeMillis();
         Set<String> vals, children1, children2;
         for (String p1 : explicitDisjoint.keySet()) {
             vals = explicitDisjoint.get(p1);
@@ -837,7 +836,7 @@ public class KBcache implements Serializable {
     public String mostSpecificParent(Set<String> p1) {
 
         Map<String,Set<String>> subclasses = children.get("subclass");
-        TreeSet<AVPair> countIndex = new TreeSet<>();
+        Set<AVPair> countIndex = new TreeSet<>();
         Set<String> classes;
         int count;
         String countString;
@@ -854,7 +853,7 @@ public class KBcache implements Serializable {
                 countIndex.add(avp);
             }
         }
-        return countIndex.first().value;
+        return ((TreeSet<AVPair>)countIndex).first().value;
     }
 
     /** ***************************************************************
@@ -1604,7 +1603,7 @@ public class KBcache implements Serializable {
             if (f.exists())
                 f.delete();
             String filename = f.getCanonicalPath();
-            try (FileWriter fw = new FileWriter(f, true)) {
+            try (Writer fw = new FileWriter(f, true)) {
                 Map<String, Set<String>> valSet;
                 Set<String> prents, vSet;
                 String tuple;
