@@ -66,22 +66,23 @@ public class FormulaAST {
      */
     public boolean atom() {
 
-        return formula.getClass() != ListTerm.class;
+        return !(formula instanceof ListTerm);
     }
 
     /*****************************************************************
      */
     public boolean listP() {
 
-        return formula.getClass() == ListTerm.class;
+        return (formula instanceof ListTerm);
     }
+
     /*****************************************************************
      */
     public boolean isVariable() {
 
         if (this.formula == null)
             return false;
-        return this.formula.getClass() == Variable.class;
+        return (formula instanceof Variable);
     }
 
     /*****************************************************************
@@ -151,9 +152,10 @@ public class FormulaAST {
         if (elems == null || elems.size() < 1)
             return null;
         else {
+            Term t;
             sb.append("(");
             for (int i = 0; i < elems.size(); i++) {
-                Term t = elems.get(i);
+                t = elems.get(i);
                 sb.append(t.toString());
                 if (i < elems.size() - 1)
                     sb.append(" ");
@@ -200,12 +202,14 @@ public class FormulaAST {
         FormulaAST restF = new FormulaAST();
         restF.read(rest);
         int argCount = 0;
+        FormulaAST arg, argF;
+        String result;
         while (!restF.empty()) {
             argCount++;
-            FormulaAST arg = restF.car();
-            FormulaAST argF = new FormulaAST();
+            arg = restF.car();
+            argF = new FormulaAST();
             argF.read(arg);
-            String result = validArgsRecurse(argF, filename, lineNo);
+            result = validArgsRecurse(argF, filename, lineNo);
             if (!"".equals(result))
                 return result;
             restF.formula = restF.cdr().formula;
