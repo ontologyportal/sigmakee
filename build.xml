@@ -336,6 +336,7 @@
             <!-- Prune out of date dependencies -->
             <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
+                <exclude name="sigmaAntlr.jar"/>
             </fileset>
         </delete>
         <delete file="${dist.war}"/>
@@ -416,7 +417,8 @@
             </args>
         </git>
     </target>
-    <target name="install.tomcat">
+    <!-- If on macOS, install tomcat w/ Homebrew -->
+    <target name="install.tomcat" unless="isUnixNotMac">
         <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
         <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
         <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>
