@@ -46,13 +46,10 @@
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
-    <target name="TPTP" depends="init">
+    <target name="TPTP" depends="SigmaKEE.TPTP">
+        <!-- ${sigma.home} is queried in the main build
+             which is defined in ~/.zshrc -->
         <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
-        <echo message="TPTP is set to: ${tptp.home}"/>
-        <!-- TPTP already builds SigmaUtils -->
-        <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
-        <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
-        <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
     </target>
 
     <!--
@@ -634,7 +631,7 @@
         <copy tofile="${sigma_home}/KBs/config.xml" file="${tiny.sumo.config}" overwrite="true"/>
     </target>
     <target name="thorough.clean" depends="clean">
-        <antcall target="clean.kbs"/>
+        <antcall target="clear.kbs"/>
         <delete includeemptydirs="true" failonerror="false">
             <!-- Delete the old web code -->
             <fileset dir="${deploy_home}"/>
@@ -645,6 +642,7 @@
                 <include name="*.owl"/>
                 <include name="*.tab"/>
                 <include name="prover_out.txt"/>
+                <include name="*.p"/>
             </fileset>
             <fileset dir="${sigma_home}/KBs">
                 <include name="*.ser"/>
@@ -656,7 +654,7 @@
         <delete file="${dist_war}"/>
         <antcall target="delete.catalina.logs"/>
     </target>
-    <target name="clean.kbs">
+    <target name="clear.kbs">
         <delete>
             <!-- Prune KB after integration tests -->
             <fileset dir="${sigma_home}/KBs">
