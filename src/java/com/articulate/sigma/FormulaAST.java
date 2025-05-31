@@ -8,6 +8,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -24,19 +25,19 @@ public class FormulaAST {
 
     // An ArrayList of String messages with a message that has a reserved character of ':'
     // dividing the message from a formula or term that will be hyperlinked and formmated
-    public TreeSet<String> errors = new TreeSet<>();
+    public Set<String> errors = new TreeSet<>();
 
     /** Warnings found during execution. */
-    public TreeSet<String> warnings = new TreeSet<>();
+    public Set<String> warnings = new TreeSet<>();
 
     // caches of frequently computed sets of variables in the formula
-    public HashSet<String> allVarsCache = new HashSet<>();
-    public ArrayList<HashSet<String>> allVarsPairCache = new ArrayList<>();
-    public HashSet<String> quantVarsCache = new HashSet<>();
-    public HashSet<String> unquantVarsCache = new HashSet<>();
-    public HashSet<String> existVarsCache = new HashSet<>();
-    public HashSet<String> univVarsCache = new HashSet<>();
-    public HashSet<String> termCache = new HashSet<>();
+    public Set<String> allVarsCache = new HashSet<>();
+    public List<Set<String>> allVarsPairCache = new ArrayList<>();
+    public Set<String> quantVarsCache = new HashSet<>();
+    public Set<String> unquantVarsCache = new HashSet<>();
+    public Set<String> existVarsCache = new HashSet<>();
+    public Set<String> univVarsCache = new HashSet<>();
+    public Set<String> termCache = new HashSet<>();
 
     /*****************************************************************
      */
@@ -58,7 +59,7 @@ public class FormulaAST {
 
     public class ListTerm extends Term {
         // note a null list is different from an initialized but empty list - "()"
-        public ArrayList<Term> listElements = null;
+        public List<Term> listElements = null;
     }
 
     /*****************************************************************
@@ -146,7 +147,7 @@ public class FormulaAST {
             return null;
         if (formula.getClass().equals(Constant.class) || formula.getClass().equals(Variable.class))
             return formula.value;
-        ArrayList<Term> elems = ((ListTerm) formula).listElements;
+        List<Term> elems = ((ListTerm) formula).listElements;
         if (elems == null || elems.size() < 1)
             return null;
         else {
