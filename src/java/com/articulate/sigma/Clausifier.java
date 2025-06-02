@@ -219,7 +219,7 @@ public class Clausifier  {
             if ((clauses != null) && !clauses.isEmpty()) {
                 // System.out.println("\nclauses == " + clauses);
                 List newClauses = new ArrayList();
-                Formula clause = null, litF;
+                Formula clause, litF;
                 boolean isNegLit;
                 String lit;
 
@@ -462,8 +462,9 @@ public class Clausifier  {
                     List tuple = f.literalToArrayList();
                     sb.append(Formula.LP);
                     int i = 0;
+                    Formula nextF;
                     for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
-                        Formula nextF = new Formula();
+                        nextF = new Formula();
                         nextF.read((String) it.next());
                         if (i > 0) sb.append(Formula.SPACE);
                         sb.append(Clausifier.toCanonicalKifSpecialForm(nextF,false).getFormula());
@@ -815,8 +816,9 @@ public class Clausifier  {
         if (thisFormula.listP()) {
             theNewFormula = "";
             Formula f = thisFormula;
+            String element;
             while (!(f.empty())) {
-                String element = f.car();
+                element = f.car();
                 if (!StringUtil.emptyString(before))
                     element = (before + element);
                 if (!StringUtil.emptyString(after))
@@ -1170,7 +1172,7 @@ public class Clausifier  {
             Iterator<String> it = vars.iterator();
             String var;
             while (it.hasNext()) {
-                var = (String) it.next();
+                var = it.next();
                 ans += (Formula.SPACE + var);
             }
             ans = (Formula.LP + ans + Formula.RP);
@@ -1555,7 +1557,7 @@ public class Clausifier  {
                 List<String> conjuncts = new ArrayList<>();
                 Formula restF = thisFormula.cdrAsFormula();
                 String disjunct;
-                Formula disjunctF;
+                Formula disjunctF, rest2F;
                 while (!(restF.empty())) {
                     disjunct = restF.car();
                     disjunctF = new Formula();
@@ -1563,7 +1565,7 @@ public class Clausifier  {
                     if (disjunctF.listP()
                         && disjunctF.car().equals(Formula.AND)
                         && conjuncts.isEmpty()) {
-                        Formula rest2F = disjunctionsIn_1(disjunctF.cdrAsFormula());
+                        rest2F = disjunctionsIn_1(disjunctF.cdrAsFormula());
                         while (!(rest2F.empty())) {
                             conjuncts.add(rest2F.car());
                             rest2F = rest2F.cdrAsFormula();
@@ -1578,14 +1580,14 @@ public class Clausifier  {
 
                 Formula resultF = new Formula();
                 resultF.read("()");
-                String disjunctsString = "";
+                String disjunctsString = "", newDisjuncts;
                 for (int i = 0; i < disjuncts.size() ; i++)
                     disjunctsString += (Formula.SPACE + (String)disjuncts.get(i));
                 disjunctsString = (Formula.LP + disjunctsString.trim() + Formula.RP);
                 Formula disjunctsF = new Formula();
                 disjunctsF.read(disjunctsString);
                 for (int ci = 0 ; ci < conjuncts.size() ; ci++) {
-                    String newDisjuncts =
+                    newDisjuncts =
                         disjunctionsIn_1(disjunctsF.cons((String)conjuncts.get(ci)).cons(Formula.OR)).getFormula();
                     resultF = resultF.cons(newDisjuncts);
                 }
@@ -1707,11 +1709,11 @@ public class Clausifier  {
     private Formula standardizeApart(Map<String,String> renameMap) {
 
         Formula result = thisFormula;
-        Map<String,String> reverseRenames = null;
+        Map<String,String> reverseRenames;
         if (renameMap instanceof Map)
             reverseRenames = renameMap;
         else
-            reverseRenames = new HashMap();
+            reverseRenames = new HashMap<>();
         // First, break the Formula into separate clauses, if necessary.
         List<Formula> clauses = new ArrayList<>();
         if (!StringUtil.emptyString(thisFormula.getFormula())) {
@@ -1736,8 +1738,8 @@ public class Clausifier  {
             int n = clauses.size();
             Map<String, String> renames;
             for (int i = 0 ; i < n ; i++) {
-                renames = new HashMap<String, String>();
-                Formula oldClause = (Formula) clauses.remove(0);
+                renames = new HashMap<>();
+                Formula oldClause = clauses.remove(0);
                 clauses.add(standardizeApart_1(oldClause,renames,reverseRenames));
             }
 
@@ -1746,7 +1748,7 @@ public class Clausifier  {
             if (n > 1) {
                 String theNewFormula = "(and";
                 for (int i = 0 ; i < n ; i++) {
-                    f = (Formula) clauses.get(i);
+                    f = clauses.get(i);
                     theNewFormula += (Formula.SPACE + f.getFormula());
                 }
                 theNewFormula += Formula.RP;
@@ -2252,7 +2254,6 @@ public class Clausifier  {
 
         System.out.println();
         System.out.println("================== testClausificationSimple ======================");
-        Formula form = new Formula();
         Clausifier c = new Clausifier("(<=> (or (or (forall (?X) (a ?X))  (b ?X)) (exists (?X) (exists (?Y) (p ?X (f ?Y))))) (q (g a) ?X))");
 
         System.out.println("input: " + c.thisFormula);
