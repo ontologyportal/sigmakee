@@ -1124,7 +1124,7 @@ public class SUMOtoTFAform {
         if (argTypes1 == null || argTypes2 == null ||
             argTypes1.size() != argTypes2.size()) {
             if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith("equal"))
-                System.err.println("Error in equalTFFsig(): bad signatures " +
+                System.err.println("Error in SUMOtoTFAform.equalTFFsig(): bad signatures " +
                     argTypes1 + ", " + argTypes2 + " for " + pred);
             return false;
         }
@@ -1669,7 +1669,7 @@ public class SUMOtoTFAform {
 
         //if (debug) System.out.println("SUMOtoTFAform.mostSpecificSignature(): args1 args2: " + args1 + " " + args2);
         if (args1 == null || args2 == null || args1.size() != args2.size()) {
-            //if (debug) System.err.println("Error in mostSpecificSignature(): bad arguments: " + args1 + " " + args2);
+            //if (debug) System.err.println("Error in SUMOtoTFAform.mostSpecificSignature(): bad arguments: " + args1 + " " + args2);
             if (args1 == null)
                 return args2;
             if (args2 == null)
@@ -1699,7 +1699,7 @@ public class SUMOtoTFAform {
 
         if (debug) System.out.println("SUMOtoTFAform.bestSignature(): args1 args2: " + args1 + " " + args2);
         if (args1 == null || args2 == null || args1.size() != args2.size()) {
-            if (debug) System.err.println("Error in bestSignature(): bad arguments: " + args1 + " " + args2);
+            if (debug) System.err.println("Error in SUMOtoTFAform.bestSignature(): bad arguments: " + args1 + " " + args2);
             if (args1 == null)
                 return args2;
             if (args2 == null)
