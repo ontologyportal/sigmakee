@@ -46,7 +46,7 @@
             <format property="TODAY_US" pattern="EEE, d MMM yyyy HHmm Z" locale="en,US"/>
         </tstamp>
     </target>
-    <target name="TPTP" depends="SigmaKEE.TPTP">
+    <target name="build.antlr" depends="SigmaKEE.build.antlr">
         <!-- ${sigma.home} is queried in the main build
              which is defined in ~/.zshrc -->
         <echo message="SIGMA_HOME is set to: ${sigma_home}"/>
