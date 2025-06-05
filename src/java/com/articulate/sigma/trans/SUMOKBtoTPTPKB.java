@@ -4,6 +4,8 @@ import com.articulate.sigma.*;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -757,7 +759,7 @@ public class SUMOKBtoTPTPKB {
         skbtptpkb.kb = KBmanager.getMgr().getKB(kbName);
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
         String fileWritten = null;
-        try (PrintWriter pw = new PrintWriter(new BufferedWriter(new FileWriter(filename)))) {
+        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {
             fileWritten = skbtptpkb.writeFile(filename, null, false, pw);
         }
         catch (IOException e) {
