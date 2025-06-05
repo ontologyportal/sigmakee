@@ -710,8 +710,10 @@ public class FormulaPreprocessor {
             Formula farg;
             for (int i = start; i <= f.listLength(); i++) {
                 farg = f.getArgument(i);
-                if (farg != null)
-                    result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, new Formula(f.getArgument(i)), input), kb);
+                if (farg != null) {
+                    farg.sourceFile = f.sourceFile;
+                    result = KButilities.mergeToMap(result, computeVariableTypesRecurse(kb, farg, input), kb);
+                }
             }
         }
         else { //if (f.isSimpleClause(kb)) { // simple clauses include functions
@@ -747,6 +749,7 @@ public class FormulaPreprocessor {
                                     errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                             "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f;
                                     System.err.println(errStr);
+                                    System.err.printf("Formula origin: %s%n", f.sourceFile);
                                     System.err.println("sig: " + kb.kbCache.getSignature(pred));
                                     System.err.println("sig count: " + kb.kbCache.signatures.keySet().size());
                                     errors.add(errStr);

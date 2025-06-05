@@ -3,11 +3,11 @@
 copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Teknowledge in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment, 
+Pease, A., (2003). The Sigma Ontology Development Environment,
 in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
 August 9, Acapulco, Mexico.
 */
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 
 
@@ -32,12 +33,12 @@ public class KIFplus {
     String filename;
     String[] spcl = {"!" , "$" , "%" , "&" , "*" , "+" , "-" , "." , "/" , "<" , "=" , ">" , "?" , "@" , "_" , "~"};
     String[] wht = {" ", "\t", "\n"};
-    ArrayList special = new ArrayList(Arrays.asList(spcl));
+    List special = new ArrayList(Arrays.asList(spcl));
 /*
-upper ::= A | B | C | D | E | F | G | H | I | J | K | L | M | 
+upper ::= A | B | C | D | E | F | G | H | I | J | K | L | M |
           N | O | P | Q | R | S | T | U | V | W | X | Y | Z
 
-lower ::= a | b | c | d | e | f | g | h | i | j | k | l | m | 
+lower ::= a | b | c | d | e | f | g | h | i | j | k | l | m |
           n | o | p | q | r | s | t | u | v | w | x | y | z
 
 digit ::= 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
@@ -68,7 +69,7 @@ funword ::= initialchar wordchar*
 
 funterm ::= (funword term+)
 
-sentence ::= word | equation | inequality | 
+sentence ::= word | equation | inequality |
              relsent | logsent | quantsent
 
 equation ::= (= term term)
@@ -84,7 +85,7 @@ logsent ::= (not sentence) |
 quantsent ::= (forall (variable+) sentence) |
               (exists (variable+) sentence)
 */
-    
+
     /** *****************************************************************
      */
     private void readLogsent(FileReader fr) throws ParseException, IOException {
@@ -96,7 +97,7 @@ quantsent ::= (forall (variable+) sentence) |
 
         try {
             int ch = 0;
-            StringBuffer predicate = new StringBuffer();
+            StringBuilder predicate = new StringBuilder();
             while (fr.ready() && ch != ' ') {
                 ch = fr.read();
                 predicate = predicate.append(ch);
@@ -108,7 +109,7 @@ quantsent ::= (forall (variable+) sentence) |
         catch (ParseException pe) {
             throw new ParseException("Error in KIF.readFile(): " + pe.getMessage(),pe.getErrorOffset());
         }
-        catch (java.io.IOException e) {
+        catch (IOException e) {
             throw new IOException("Error in KIF.readFile(): IO exception parsing file " + filename);
         }
 
@@ -119,23 +120,23 @@ quantsent ::= (forall (variable+) sentence) |
 
         KIFplus k = new KIFplus();
         String fname = args[0];
-        try {
-            FileReader fr = new FileReader(fname);
+        try (FileReader fr = new FileReader(fname)) {
             int linenumber = 0;
             k.filename = fname;
+            int ch;
             while (fr.ready()) {
-                int ch = fr.read();
+                ch = fr.read();
                 if (ch == '(') {
                     k.start(fr);
                 }
             }
         }
         catch (ParseException pe) {
-            System.out.print("Error in KIF.readFile(): " + pe.getMessage());
-            System.out.println(pe.getErrorOffset());
+            System.err.print("Error in KIF.readFile(): " + pe.getMessage());
+            System.err.println(pe.getErrorOffset());
         }
-        catch (java.io.IOException e) {
-            System.out.println("Error in KIF.readFile(): IO exception parsing file " + filename);
+        catch (IOException e) {
+            System.err.println("Error in KIF.readFile(): IO exception parsing file " + filename);
         }
     }
 

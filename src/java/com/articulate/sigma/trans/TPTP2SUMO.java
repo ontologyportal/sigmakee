@@ -205,7 +205,7 @@ public class TPTP2SUMO {
                   formToSUMO(clause);
               }
               if (args.length > 1 && args[0].equals("-f")) {
-                  tptp_parser.TPTPVisitor sv = new TPTPVisitor();
+                  TPTPVisitor sv = new TPTPVisitor();
                   System.out.println("main parse file " + args[1]);
                   sv.parseFile(args[1]);
                   Map<String, TPTPFormula> hm = sv.result;

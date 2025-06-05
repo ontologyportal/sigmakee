@@ -5,6 +5,8 @@ import com.articulate.sigma.utils.MapUtils;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -699,7 +701,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         String filename = KBmanager.getMgr().getPref("kbDir") + File.separator + kbName + "." + SUMOKBtoTPTPKB.lang;
         System.out.println("SUMOKBtoTFAKB.main(): " + skbtfakb.kb.kbCache.getSignature("ListOrderFn"));
         String fileWritten = null;
-        try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
+        try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(filename)))) {
             skbtfakb.writeSorts(pw);
             System.out.println("---------------------------");
             System.out.println("SUMOKBtoTFAKB.main(): completed writing sorts");

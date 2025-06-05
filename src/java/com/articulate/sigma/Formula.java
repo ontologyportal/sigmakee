@@ -226,14 +226,14 @@ public class Formula implements Comparable, Serializable {
      */
     public Formula(Formula f) {
 
-		this.endLine = f.endLine;
-		this.startLine = f.startLine;
-		this.sourceFile = f.sourceFile;
-		this.theFormula = f.theFormula;
-		this.comment = f.comment;
-		if (f.higherOrder)
-		    this.higherOrder = true;
-		this.derivation = f.derivation;
+        this.endLine = f.endLine;
+        this.startLine = f.startLine;
+        this.sourceFile = f.sourceFile;
+        this.theFormula = f.theFormula;
+        this.comment = f.comment;
+        if (f.higherOrder)
+            this.higherOrder = true;
+        this.derivation = f.derivation;
         this.allVarsPairCache.addAll(f.allVarsPairCache);
         this.quantVarsCache.addAll(f.quantVarsCache);
         this.unquantVarsCache.addAll(f.unquantVarsCache);
@@ -250,7 +250,7 @@ public class Formula implements Comparable, Serializable {
         }
         this.varTypeCache.putAll(f.varTypeCache);
         this.isGround = f.isGround;
-	}
+    }
 
     /** *****************************************************************
      */
@@ -261,7 +261,7 @@ public class Formula implements Comparable, Serializable {
      * Just set the textual version of the formula
      */
     public Formula(String f) {
-            theFormula = f;
+        theFormula = f;
     }
 
     /** *****************************************************************

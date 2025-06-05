@@ -36,6 +36,12 @@ jobs:
           repository: 'ontologyportal/SigmaUtils'
           path: SigmaUtils
 
+      - name: checkout sigmaAntlr
+        uses: actions/checkout@v4
+        with:
+          repository: 'ontologyportal/sigmaAntlr'
+          path: sigmaAntlr
+
       - name: checkout sumo
         uses: actions/checkout@v4
         with:

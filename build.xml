@@ -105,6 +105,7 @@
     <property name="tptp.home" value="../TPTP-ANTLR"/>
     <property name="sigma.install.downloads" value="${sigma.home}/downloads"/>
     <property name="sigma.utils.home" value="../SigmaUtils"/>
+    <property name="sigma.antlr.home" value="../sigmaAntlr"/>
     <property name="kbs.home" value="${git.home}/sumo"/>
 
     <property name="javac.release" value="11"/>
@@ -176,16 +177,18 @@
     ============
     -->
 
-    <target name="TPTP" depends="init">
+    <target name="build.antlr" depends="init">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
         <!-- TPTP already builds SigmaUtils -->
         <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
         <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
+        <ant antfile="${sigma.antlr.home}/build.xml" inheritAll="false" target="all"/>
+        <copy todir="${basedir}/lib" file="${sigma.antlr.home}/sigmaAntlr.jar"/>
     </target>
 
-    <target name="compile" depends="TPTP" description="Compile the project and place in ${build.classes}.">
+    <target name="compile" depends="build.antlr" description="Compile the project and place in ${build.classes}.">
         <mkdir dir="${build.classes}"/>
         <javac destdir="${build.classes}"
                debug="on"
@@ -336,6 +339,7 @@
             <!-- Prune out of date dependencies -->
             <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
+                <exclude name="sigmaAntlr.jar"/>
             </fileset>
         </delete>
         <delete file="${dist.war}"/>
@@ -353,6 +357,7 @@
         <!-- Clone the supporting sigma tools -->
         <antcall target="clone.sigmautils"/>
         <antcall target="clone.tptpantlr"/>
+        <antcall target="clone.sigmaantlr"/>
         <antcall target="clone.sumo"/>
 
         <!-- Install Tomcat -->
@@ -405,6 +410,17 @@
             </args>
         </git>
     </target>
+    <target name="clone.sigmaantlr">
+        <mkdir dir="${git.home}/sigmaAntlr"/>
+        <git command="clone" dir="${git.home}/sigmaAntlr">
+            <args>
+                <arg value="--progress"/>
+                <arg value="--verbose"/>
+                <arg value="https://github.com/ontologyportal/sigmaAntlr"/>
+                <arg value="${git.home}/sigmaAntlr"/>
+            </args>
+        </git>
+    </target>
     <target name="clone.sumo">
         <mkdir dir="${kbs.home}"/>
         <git command="clone" dir="${kbs.home}">
@@ -416,7 +432,8 @@
             </args>
         </git>
     </target>
-    <target name="install.tomcat">
+    <!-- If on macOS, install tomcat w/ Homebrew -->
+    <target name="install.tomcat" unless="isUnixNotMac">
         <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
         <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
         <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>

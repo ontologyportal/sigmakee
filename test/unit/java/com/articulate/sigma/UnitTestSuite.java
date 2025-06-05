@@ -2,6 +2,7 @@ package com.articulate.sigma;
 
 import com.articulate.sigma.trans.*;
 import com.articulate.sigma.nlg.*;
+import com.articulate.sigma.parsing.*;
 import com.articulate.sigma.wordNet.*;
 
 import org.junit.runner.RunWith;
@@ -16,6 +17,7 @@ import org.junit.runners.Suite;
 @Suite.SuiteClasses({
     UnitSigmaTestSuite.class,
     UnitNLGTestSuite.class,
+    UnitParsingTestSuite.class,
     UnitTransTestSuite.class,
     UnitWordNetTestSuite.class
 })

@@ -159,9 +159,9 @@ public class PredVarInstTest extends UnitTestBase  {
             System.out.println("testPredVarArity(): failure");
         assertEquals(expected, actual);
 
-        System.out.println("PredVarInstTest.testPredVarArity(): actual arity: " + PredVarInst.predVarArity.get("?REL").intValue());
+        System.out.println("PredVarInstTest.testPredVarArity(): actual arity: " + PredVarInst.predVarArity.get("?REL"));
         System.out.println("PredVarInstTest.testPredVarArity(): expected arity: " + 2);
-        if (PredVarInst.predVarArity.get("?REL").intValue() == 2)
+        if (PredVarInst.predVarArity.get("?REL") == 2)
             System.out.println("testPredVarArity(): success!");
         else
             System.out.println("testPredVarArity(): failure");

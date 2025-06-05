@@ -72,6 +72,8 @@ import com.google.common.collect.Sets;
 import tptp_parser.TPTPFormula;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -3657,7 +3659,7 @@ public class KB implements Serializable {
         String fileWritten = null;
         if (!(new File(infFilename).exists()) || KBmanager.getMgr().infFileOld() || force) {
             System.out.println("INFO in KB.loadVampire(): generating " + lang + " file " + infFilename);
-            try (PrintWriter pw = new PrintWriter(new FileWriter(infFilename))) {
+            try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(infFilename)))) {
                 if (!formulaMap.isEmpty()) {
                     long millis = System.currentTimeMillis();
                     if (lang.equals("tptp")) {
