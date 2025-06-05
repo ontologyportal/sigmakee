@@ -49,8 +49,8 @@ public class PredVarInst {
     /** ***************************************************************
      * There are two type conditions:
      * one type condition is extracted from domain expression;
-     * second type condition is specifically define in the antecedent
-     * of a rule with an instance or subclass expression;
+     * second type condition is specifically defined in the antecedent
+     * of a rule with an instance or subclass expression
      *
      * @param input formula
      * @param types type condition extracted from domain expression.
@@ -98,8 +98,6 @@ public class PredVarInst {
      *     (?REL1 @ROW2))
      *   (not
      *     (?REL2 @ROW2)))
-     *
-
      */
     private static Set<Formula> handleDouble1(KB kb) {
 
@@ -108,7 +106,7 @@ public class PredVarInst {
         Set<Formula> result = new HashSet<>();
         String arg1, arg2;
         int arity1, arity2;
-        StringBuilder vars;
+        StringBuilder vars = new StringBuilder();
         Formula newf, orig;
         for (String s : kb.kbCache.disjointRelations) {
             arg1 = s.substring(0,s.indexOf("\t"));
@@ -117,10 +115,10 @@ public class PredVarInst {
             arity2 = kb.kbCache.getArity(arg2);
             if (arity1 != arity2)
                 continue;
-            vars = new StringBuilder();
+            vars.setLength(0);
             for (int i = 1; i <= arity1; i++)
                 vars.append(" ?ROW").append(i);
-            newf = new Formula("(=> (\" + arg1 + vars + \") (not (\" + arg2 + vars + \")))");
+            newf = new Formula("(=> (" + arg1 + vars + ") (not (" + arg2 + vars + ")))");
             newf.sourceFile = "Merge.kif";
             orig = kb.formulaMap.get(origForm);
             if (orig != null) {
@@ -149,6 +147,9 @@ public class PredVarInst {
                 "(instance ?REL2 Predicate) (?REL1 @ROW)) (?REL2 @ROW))";
         if (debug) System.out.println("PredVarInst.handleDouble2(): " + origForm);
         Set<Formula> result = new HashSet<>();
+        int arity1, arity2;
+        StringBuilder vars = new StringBuilder();
+        Formula newf, orig;
         for (String r1 : kb.kbCache.relations) {
             if (debug) System.out.println("handleDouble2(): relation: " + r1);
             if (debug) System.out.println("handleDouble2(): subrelation children: " + kb.kbCache.children.get("subrelation"));
@@ -158,20 +159,17 @@ public class PredVarInst {
                 continue;
             Set<String> children = kb.kbCache.children.get("subrelation").get(r1);
             if (children != null) {
-                int arity1, arity2;
-                StringBuilder vars;
-                Formula newf;
                 for (String r2 : children) {
                     arity1 = kb.kbCache.getArity(r1);
                     arity2 = kb.kbCache.getArity(r2);
                     if (arity1 != arity2)
                         continue;
-                    vars = new StringBuilder();
+                    vars.setLength(0);
                     for (int i = 1; i <= arity1; i++)
                         vars.append(" ?ROW").append(i);
                     newf = new Formula("(=> (" + r2 + vars + ") (" + r1 + vars + "))");
                     newf.sourceFile = "Merge.kif";
-                    Formula orig = kb.formulaMap.get(origForm);
+                    orig = kb.formulaMap.get(origForm);
                     if (orig != null) {
                         newf.startLine = orig.startLine;
                         newf.derivation.operator = "predvar";
@@ -252,6 +250,7 @@ public class PredVarInst {
         Integer arityInteger;
         boolean ok;
         Formula f, f2;
+        int arity;
         for (String var : varTypes.keySet()) {
             if (predVarArity == null || var == null || predVarArity.get(var) == null)
                 System.out.println("instantiatePredVars(): pred var arity null for: " + var +
@@ -277,7 +276,7 @@ public class PredVarInst {
                 }
                 if (predVarArity == null || var == null) System.out.println("instantiatePredVars(): pred var arity null for: " + var);
                 arityInteger = predVarArity.get(var);
-                int arity = 0;
+                arity = 0;
                 if (arityInteger != null)
                     arity = arityInteger;
                 if (kb.kbCache.valences.get(rel).equals(arity) || arity == 0) {  // 0 arity means "any"
@@ -481,8 +480,8 @@ public class PredVarInst {
         Set<String> predVars = gatherPredVars(kb,f);
         if (debug) System.out.println("findPredVarTypes(): predVars: " + predVars);
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        //HashMap<String,HashSet<String>> typeMap = fp.computeVariableTypes(f, kb);  // <- this skips explicit types
-        //HashMap<String,HashSet<String>> typeMap = fp.findTypeRestrictions(f, kb);  // <- won't get instance relations
+        //Map<String,Set<String>> typeMap = fp.computeVariableTypes(f, kb);  // <- this skips explicit types
+        //Map<String,Set<String>> typeMap = fp.findTypeRestrictions(f, kb);  // <- won't get instance relations
         Map<String,Set<String>> typeMap = fp.findAllTypeRestrictions(f, kb);
         if (debug) System.out.println("findPredVarTypes(): typeMap: " + typeMap);
         Map<String,Set<String>> result = new HashMap<>();
