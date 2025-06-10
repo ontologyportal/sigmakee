@@ -110,10 +110,7 @@ public class Preprocessor {
         end = (System.currentTimeMillis()-start)/1000;
         System.out.println("# Preprocessor.preprocess(): # time to reparse: " + end);
         start = System.currentTimeMillis();
-        long crossCheck = 0;
-        long sortalTimes = 0;
-        long reparseTimes = 0;
-        long addallTimes = 0;
+        long crossCheck = 0, sortalTimes = 0, reparseTimes = 0, addallTimes = 0;
         if (debug)
             System.out.println("Preprocessor.preprocess(): after reparse");
         long crossStart, sortalStart, reparseStart, addallStart;
@@ -141,11 +138,11 @@ public class Preprocessor {
         }
         end = (System.currentTimeMillis()-start)/1000;
         System.out.println("# Preprocessor.preprocess(): # time to add sortals and reparse again: " + end);
-        System.out.println("# Preprocessor.preprocess(): # of which, " + sortals.disjointTime + " millis was checking type disjointness");
-        System.out.println("# Preprocessor.preprocess(): # of which, " + sortalTimes + " millis was adding sortals");
-        System.out.println("# Preprocessor.preprocess(): # of which, " + reparseTimes + " millis was reparsing");
-        System.out.println("# Preprocessor.preprocess(): # of which, " + addallTimes + " millis was addall");
-        System.out.println("# Preprocessor.preprocess(): # of which, " + crossCheck + " millis cross-check");
+        System.out.println("# Preprocessor.preprocess(): # of which, " + sortals.disjointTime + " ms was checking type disjointness");
+        System.out.println("# Preprocessor.preprocess(): # of which, " + sortalTimes + " ms was adding sortals");
+        System.out.println("# Preprocessor.preprocess(): # of which, " + reparseTimes + " ms was reparsing");
+        System.out.println("# Preprocessor.preprocess(): # of which, " + addallTimes + " ms was addall");
+        System.out.println("# Preprocessor.preprocess(): # of which, " + crossCheck + " ms cross-check");
         start = System.currentTimeMillis();
         Map<String,FormulaAST> res = new HashMap<>();
         for (FormulaAST f : finalRuleSet)
