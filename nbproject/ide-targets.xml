@@ -663,6 +663,7 @@
                 <include name="*.tptp"/>
                 <include name="kbmanager.ser"/>
                 <include name="*UserAssertions.kif"/>
+                <include name="*_Cache.kif"/>
                 <include name="vamp-out.txt"/>
             </fileset>
         </delete>
