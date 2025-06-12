@@ -739,8 +739,14 @@
         </exec>
     </target>
 
-    <!-- Make sure to run removeMath.sh on *.tff files first -->
-    <target name="run.leo" description="Runs a check on a given TPTP file">
+    <target name="remove.math" description="Remove math(s) from a TFF file">
+        <exec executable="sh">
+            <arg value="-c"/>
+            <arg value="${basedir}/${remove.math} ${tptp.file}"/>
+        </exec>
+    </target>
+
+    <target name="run.leo" depends="remove.math" description="Runs a check on a given TPTP file">
         <echo message="Running leo with: [${leo.args}]"/>
         <java jar="${leo.jar}">
             <jvmarg line="${run.jvmargs}"/>
