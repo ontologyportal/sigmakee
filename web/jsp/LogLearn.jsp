@@ -61,15 +61,20 @@
         GenPropFormulas.generateFormulas(1);
         out.println();
         out.println("--------------------------<br>");
-        out.println("<P><b>Contradictions</b>:<br>");
+        out.println("<P><b>Proof found</b>:<br>");
         for (String s : GenPropFormulas.contraResults) {
             out.println(s + "<br>");
             out.println("CNF: " + GenPropFormulas.CNF.get(s) + "<br>");
             out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
         }
-        out.println("<P><b>Tautologies</b>:<br>");
         for (String s : GenPropFormulas.tautResults) {
+            out.println(s + "<br>");
+            out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
+        }
+        for (String s : GenPropFormulas.satResults) {
             out.println(s + "<br>");
             out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
             out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
