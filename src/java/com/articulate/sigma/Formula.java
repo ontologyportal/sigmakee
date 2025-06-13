@@ -76,35 +76,39 @@ public class Formula implements Comparable, Serializable {
 
     /** The SUO-KIF logical operators. */
     public static final List<String> LOGICAL_OPERATORS = Arrays.asList(UQUANT,
-                                                                        EQUANT,
-                                                                        AND,
-                                                                        OR,
-                                                                        NOT,
-                                                                        IF,
-                                                                        IFF);
+                                                                       EQUANT,
+                                                                       AND,
+                                                                       OR,
+                                                                       NOT,
+                                                                       IF,
+                                                                       IFF
+    );
 
     /** SUO-KIF mathematical comparison predicates. */
     public static final List<String> COMPARISON_OPERATORS = Arrays.asList(EQUAL,
-                                                                           GT,
-                                                                           GTET,
-                                                                           LT,
-                                                                           LTET);
+                                                                          GT,
+                                                                          GTET,
+                                                                          LT,
+                                                                          LTET
+    );
 
     /** SUO-KIF mathematical comparison predicates. */
     public static final List<String> INEQUALITIES = Arrays.asList(GT,
-            GTET,
-            LT,
-            LTET);
+                                                                  GTET,
+                                                                  LT,
+                                                                  LTET
+    );
 
     /** The SUO-KIF mathematical functions are implemented in Vampire, but not yet EProver. */
     public static final List<String> MATH_FUNCTIONS = Arrays.asList(PLUSFN,
-                                                                     MINUSFN,
-                                                                     TIMESFN,
-                                                                     DIVIDEFN,
-                                                                     FLOORFN,
-                                                                     ROUNDFN,
-                                                                     CEILINGFN,
-                                                                     REMAINDERFN);
+                                                                    MINUSFN,
+                                                                    TIMESFN,
+                                                                    DIVIDEFN,
+                                                                    FLOORFN,
+                                                                    ROUNDFN,
+                                                                    CEILINGFN,
+                                                                    REMAINDERFN
+    );
 
     public static final List<String> DOC_PREDICATES = Arrays.asList("documentation",
                                                                     "comment",
@@ -113,16 +117,16 @@ public class Formula implements Comparable, Serializable {
                                                                     "lexicon",
                                                                     "externalImage",
                                                                     "synonymousExternalConcept"
-                                                                    );
+    );
 
     public static final List<String> DEFN_PREDICATES = Arrays.asList("instance",
-            "subclass",
-            "domain",
-            "domainSubclass",
-            "range",
-            "rangeSubclass",
-            "subAttribute",
-            "subrelation"
+                                                                     "subclass",
+                                                                     "domain",
+                                                                     "domainSubclass",
+                                                                     "range",
+                                                                     "rangeSubclass",
+                                                                     "subAttribute",
+                                                                     "subrelation"
     );
 
     /** The source file in which the formula appears. */
@@ -2542,7 +2546,7 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Returns true if term the constant true or constant false, else
+     * Returns true if term is a constant true or constant false, else
      * returns false.
      *
      * @param term A String, assumed to be an atomic SUO-KIF term.
