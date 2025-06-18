@@ -339,7 +339,6 @@
             <!-- Prune out of date dependencies -->
             <fileset dir="${basedir}/lib"> <!-- keep ./lib -->
                 <include name="*.jar"/>
-                <exclude name="sigmaAntlr.jar"/>
             </fileset>
         </delete>
         <delete file="${dist.war}"/>
