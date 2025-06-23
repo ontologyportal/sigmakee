@@ -5,12 +5,10 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
-import java.io.BufferedWriter;
+
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.Writer;
 import java.nio.file.Files;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
@@ -521,6 +519,7 @@ public class TPTPWriter {
         System.out.println("  t - translate configured KB");
         System.out.println("  r - remove explosive multiple pred vars (can be combined with t)");
         System.out.println("    - <file> path of file to process");
+        System.out.println("    - <file> path of output file (fof)");
     }
 
     /** ***************************************************************
@@ -548,8 +547,10 @@ public class TPTPWriter {
         try (PrintWriter pw = new PrintWriter(Files.newBufferedWriter(Paths.get(args[2])))) {
             for (FormulaAST fast : SuokifVisitor.result.values()) {
                 if (!sv.rules.contains(fast) && !fast.isDoc && !fast.comment) {
-                    if (fast.parsedFormula == null)
+                    if (fast.parsedFormula == null) {
                         System.err.println("Error in TPTPWriter.translate(): non rules - null formula " + fast);
+                        continue;
+                    }
                     id = "kb_" + FileUtil.noExt(FileUtil.noPath(fast.sourceFile)) + "_" + fast.startLine + "_" + counter++;
                     // TODO this may not fit with proof processing that uses suffix to find original formula
                     tptp = tptpW.visitSentence(fast.parsedFormula);
@@ -567,8 +568,10 @@ public class TPTPWriter {
             System.out.println("INFO in TPTPWriter.translate(): # statements in rules after preprocess: " + rules.size());
             for (FormulaAST fast : rules) {
                 if (!fast.isDoc && !fast.comment) {
-                    if (fast.parsedFormula == null)
+                    if (fast.parsedFormula == null)  {
                         System.err.println("Error in TPTPWriter.translate(): rules - null formula " + fast);
+                        continue;
+                    }
                     id = "kb_" + FileUtil.noExt(FileUtil.noPath(fast.sourceFile)) + "_" + fast.startLine + "_" + counter++;
                     // TODO this may not fit with proof processing that uses suffix to find original formula
                     tptp = tptpW.visitSentence(fast.parsedFormula);
