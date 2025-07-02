@@ -83,7 +83,7 @@ public class DocGen {
     protected static String INDEX_FILE_NAME = "index.html";
     protected int localCounter = 0;
     protected static final String DEFAULT_KEY = "docgen_default";
-    protected static Hashtable DOC_GEN_INSTANCES = new Hashtable();
+    protected static Map DOC_GEN_INSTANCES = new Hashtable();
 
     public static DocGen getInstance() {
 
@@ -730,12 +730,12 @@ public class DocGen {
      * parsing or rendering problems (e.g., apparently, in XSD files).
      *
      */
-    protected Map stringReplacementMap = null;
+    protected Map<String, String> stringReplacementMap = null;
     /** *************************************************************
      * Sets the Map to be used for HTML character entity to ASCII
      * replacements.
      */
-    public void setStringReplacementMap(Map keyValPairs) {
+    public void setStringReplacementMap(Map<String, String> keyValPairs) {
         this.stringReplacementMap = keyValPairs;
     }
 
@@ -745,10 +745,10 @@ public class DocGen {
      * docGenCodeMapTranslation statements found in the KB if the Map
      * does not already exist.
      */
-    public Map getStringReplacementMap() {
+    public Map<String, String> getStringReplacementMap() {
         try {
             if (stringReplacementMap == null) {
-                Map srMap = new HashMap();
+                Map<String, String> srMap = new HashMap();
                 KB kb = getKB();
                 if (kb != null) {
                     List formulae = kb.ask("arg", 0, "docGenCodeMapTranslation");
@@ -790,9 +790,9 @@ public class DocGen {
 
         String toString = fromString;
         try {
-            Map replacements = getStringReplacementMap();
+            Map<String, String> replacements = getStringReplacementMap();
             if (replacements != null) {
-                String rep = (String) replacements.get(fromString);
+                String rep = replacements.get(fromString);
                 if (rep != null) {
                     toString = rep;
                 }
@@ -808,7 +808,7 @@ public class DocGen {
     protected Set inhibitDisplayRelations = null;
 
     /** *************************************************************
-     * Sets the predicates for which diplay should be suppressed to
+     * Sets the predicates for which display should be suppressed to
      * those contained in relations.
      *
      * @param relations A Set of predicate names
@@ -832,7 +832,7 @@ public class DocGen {
             if (inhibitDisplayRelations == null) {
                 KB kb = getKB();
                 String ontology = getOntology();
-                Set idr = new TreeSet();
+                Set<String> idr = new TreeSet<>();
                 if ((kb != null) && StringUtil.isNonEmptyString(ontology)) {
                     idr.addAll(kb.getTermsViaAskWithRestriction(0,
                                                                 "docGenInhibitDisplayRelation",
@@ -931,8 +931,8 @@ public class DocGen {
      * A Map in which each key is a KB name and the corresponding
      * value is a List of the Predicates defined in the KB.
      */
-    protected HashMap relationsByKB = new HashMap();
-    public HashMap getRelationsByKB() {
+    protected Map<KB, List<String>> relationsByKB = new HashMap();
+    public Map<KB, List<String>> getRelationsByKB() {
         return relationsByKB;
     }
 
@@ -990,7 +990,7 @@ public class DocGen {
                 }
             }
         }
-        catch (Exception ex) {
+        catch (IOException ex) {
             ex.printStackTrace();
         }
     }
@@ -1079,7 +1079,7 @@ public class DocGen {
                     Formula f = new Formula();
                     f.read(flist);
                     if (f.listP()) {
-                        ArrayList pathnameComponents = new ArrayList();
+                        List pathnameComponents = new ArrayList();
                         String comp = null;
                         for (int i = 0; f.listP() && !f.empty(); i++) {
                             comp = StringUtil.removeEnclosingQuotes(f.car());
@@ -1256,7 +1256,7 @@ public class DocGen {
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
      */
-    protected TreeMap alphaList = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+    protected final Map<String, Map<String, List<String>>> alphaList = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
     /** *************************************************************
      *  @return a TreeMap of TreeMaps of ArrayLists where the keys
@@ -1272,7 +1272,7 @@ public class DocGen {
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
      */
-    public TreeMap getAlphaList(KB kb) {
+    public Map<String, Map<String, List<String>>> getAlphaList(KB kb) {
 
         try {
             if (alphaList.isEmpty()) {
@@ -1317,7 +1317,7 @@ public class DocGen {
      *      letter->    formattedTerm1->term11,term12...term1N
      *                  formattedTerm2->term21,term22...term2N
      */
-    protected TreeMap createAlphaList(KB kb) { // , HashMap stringMap
+    protected Map<String, Map<String, List<String>>> createAlphaList(KB kb) { // , HashMap stringMap
         /*
           long t1 = System.currentTimeMillis();
           System.out.println("ENTER DocGen.createAlphaList("
@@ -1327,10 +1327,10 @@ public class DocGen {
         */
         try {
             alphaList.clear();
-            Set kbterms = kb.getTerms();
+            Set<String> kbterms = kb.getTerms();
             synchronized (kbterms) {
-                for (Iterator it = kbterms.iterator(); it.hasNext();) {
-                    String term = (String) it.next();
+                Map<String, List<String>> map;
+                for (String term : kbterms) {
                     if (isLegalForDisplay(StringUtil.w3cToKif(term))
                         && !getCodedIdentifiers(kb).contains(term)
                         // && !term.matches("^iso\\d+.*_.+")
@@ -1346,20 +1346,20 @@ public class DocGen {
                         if (StringUtil.isNonEmptyString(formattedTerm)) {
                             String firstLetter =
                                 Character.toString(Character.toUpperCase(formattedTerm.charAt(0)));
-                            Set alset = alphaList.keySet();
+                            Set<String> alset = alphaList.keySet();
                             if ((alset != null) && alset.contains(firstLetter)) {
-                                TreeMap map = (TreeMap) alphaList.get(firstLetter);
-                                ArrayList al = (ArrayList) map.get(formattedTerm);
+                                map = alphaList.get(firstLetter);
+                                List<String> al = map.get(formattedTerm);
                                 if (al == null) {
-                                    al = new ArrayList();
+                                    al = new ArrayList<>();
                                     map.put(formattedTerm,al);
                                 }
                                 al.add(term);
                                 //System.out.println(firstLetter + " " + formattedTerm + " " + term);
                             }
                             else {
-                                TreeMap map = new TreeMap(String.CASE_INSENSITIVE_ORDER);
-                                ArrayList al = new ArrayList();
+                                map = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                                List<String> al = new ArrayList<>();
                                 al.add(term);
                                 map.put(formattedTerm,al);
                                 alphaList.put(firstLetter,map);
@@ -1431,7 +1431,7 @@ public class DocGen {
         try {
             List<String> range = kb.getTermsViaAsk(0,predicate,2);
             if (!range.isEmpty()) {
-                String kifList = (String) range.get(0);
+                String kifList = range.get(0);
                 if (StringUtil.isNonEmptyString(kifList)) {
                     kifList = StringUtil.removeEnclosingQuotes(kifList);
                     Formula f = new Formula();
@@ -1502,12 +1502,12 @@ public class DocGen {
             }
         }
         DisplayFilter df = new DisplayFilter() {
-                Map boolMap = new HashMap();
+                Map<String, String> boolMap = new HashMap<>();
                 @Override
                 public boolean isLegalForDisplay(DocGen dg, String term) {
                     boolean ans = StringUtil.isNonEmptyString(term);
                     try {
-                        String boolStr = (String) boolMap.get(term);
+                        String boolStr = boolMap.get(term);
                         if (StringUtil.isNonEmptyString(boolStr)) {
                             ans = Boolean.parseBoolean(boolStr);
                         }
@@ -1576,7 +1576,7 @@ public class DocGen {
     public String createCompositePage(KB kb,
                                       String kbHref,
                                       String term,
-                                      TreeMap alphaList,
+                                      Map<String, Map<String, List<String>>> alphaList,
                                       int limit,
                                       String language,
                                       String formatToken) {
@@ -1724,7 +1724,7 @@ public class DocGen {
                             localElems.remove(0);
                             elems.addAll(localElems);
                         }
-                        ArrayList hier = new ArrayList(attrs);
+                        List hier = new ArrayList(attrs);
                         hier.addAll(elems);
                         result.append(formatCompositeHierarchy(kb, kbHref, hier, language));
                     }
@@ -1827,7 +1827,7 @@ public class DocGen {
     public String createPage(KB kb,
                              String kbHref,
                              String term,
-                             TreeMap alphaList,
+                             Map<String, Map<String, List<String>>> alphaList,
                              int limit,
                              String language,
                              String formatToken) {
@@ -2463,13 +2463,13 @@ public class DocGen {
      *
      * @return A List of BinaryPredicates (Strings)
      */
-    protected List getPredicates(KB kb, boolean requireNamespace) {
+    protected List<String> getPredicates(KB kb, boolean requireNamespace) {
 
-        List cached = null;
+        List<String> cached = null;
         try {
-            cached = (ArrayList) getRelationsByKB().get(kb);
+            cached = getRelationsByKB().get(kb);
             if (cached == null) {
-                TreeSet predSet = new TreeSet();
+                Set<String> predSet = new TreeSet();
                 Set classNames = kb.kbCache.instanceOf.get("Predicate");
                 if (classNames == null)
                     return null;
@@ -2619,9 +2619,9 @@ public class DocGen {
      * @return A List of Strings that denote SUO-KIF constants, or an
      * empty List
      */
-    protected List getSubComponents(KB kb, String term) {
+    protected List<String> getSubComponents(KB kb, String term) {
 
-        List ans = new ArrayList();
+        List<String> ans = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 ans.addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
@@ -2648,9 +2648,9 @@ public class DocGen {
      * @return A List of Strings that denote SUO-KIF constants, or an
      * empty List
      */
-    protected List getSuperComponents(KB kb, String term) {
+    protected List<String> getSuperComponents(KB kb, String term) {
 
-        List ans = new ArrayList();
+        List<String> ans = new ArrayList();
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 ans.addAll(kb.getTermsViaPredicateSubsumption("syntacticSubordinate",
@@ -2875,7 +2875,7 @@ public class DocGen {
         try {
             if (StringUtil.isNonEmptyString(term)) {
                 List<String> preds = Arrays.asList("subclass", "subrelation");
-                List<String> terms = null;
+                List<String> terms;
                 for (String p : preds) {
                     terms = kb.getTermsViaPredicateSubsumption(p,
                                                                1,
@@ -2918,7 +2918,7 @@ public class DocGen {
                                                    "syntacticComposite",
                                                    "subclass"
                                                    );
-                List<String> terms = null;
+                List<String> terms;
                 for (String p : preds) {
                     terms = kb.getTermsViaPredicateSubsumption(p,
                                                                1,
@@ -2991,7 +2991,7 @@ public class DocGen {
      */
     protected List<String> getFirstSpecificTerms(KB kb, String term) {
 
-        List<String> ans = new ArrayList<String>();
+        List<String> ans = new ArrayList<>();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -3030,7 +3030,7 @@ public class DocGen {
      */
     protected List<String> getSyntacticSubordinateTerms(KB kb, String term) {
 
-        List<String> ans = new ArrayList<String>();
+        List<String> ans = new ArrayList<>();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -3039,7 +3039,7 @@ public class DocGen {
                         "datatype",
                         "syntacticExtension",
                         "syntacticComposite");
-                Set<String> terms = new HashSet<String>();
+                Set<String> terms = new HashSet<>();
                 for (String p : preds) {
                     terms.addAll(kb.getTermsViaPredicateSubsumption(p,
                                                                     2,
@@ -3072,9 +3072,9 @@ public class DocGen {
      * @return A List of SUO-KIF terms, or an empty List
      *
      */
-    protected List getFirstInstances(KB kb, String term) {
+    protected List<String> getFirstInstances(KB kb, String term) {
 
-        List ans = new ArrayList();
+        List<String> ans = new ArrayList();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -3124,9 +3124,9 @@ public class DocGen {
      * @return A List of SUO-KIF Classes, or an empty List
      *
      */
-    protected List getFirstSubClasses(KB kb, String term) {
+    protected List<String> getFirstSubClasses(KB kb, String term) {
 
-        List ans = new ArrayList();
+        List<String> ans = new ArrayList();
         /*          */
         try {
             if (StringUtil.isNonEmptyString(term)) {
@@ -3220,7 +3220,7 @@ public class DocGen {
         if (isLegalForDisplay(term)) {
             List formulae = kb.askWithRestriction(0,"comment",1,term);
             if (formulae != null && !formulae.isEmpty()) {
-                Formula f = null;
+                Formula f;
                 List docs = new ArrayList();
                 for (int c = 0; c < formulae.size(); c++) {
                     f = (Formula) formulae.get(c);
@@ -3230,7 +3230,7 @@ public class DocGen {
                 result.append("<tr>");
                 result.append(StringUtil.getLineSeparator());
                 result.append("  <td valign=\"top\" class=\"label\">Comments</td>");
-                String docString = null;
+                String docString;
                 for (int i = 0; i < docs.size(); i++) {
                     docString = (String) docs.get(i);
                     docString = processDocString(kb, kbHref, language, docString, false, true);
@@ -3284,12 +3284,11 @@ public class DocGen {
                         String presentationName = getTermPresentationName(kb, term);
                         String basePresentationName = stripNamespacePrefix(kb, presentationName);
                         List<String> synonyms = new ArrayList<>();
-                        Formula f = null;
-                        String syn = null;
-                        String hwsuff = "_hw";
-                        int sidx = -1;
-                        String namespace = null;
-                        String prefix = null;
+                        Formula f;
+                        String syn, hwsuff = "_hw";
+                        int sidx;
+                        String namespace;
+                        String prefix;
                         for (Iterator it = alternates.iterator(); it.hasNext();) {
                             f = (Formula) it.next();
                             namespace = f.getStringArgument(1);
@@ -3656,8 +3655,8 @@ public class DocGen {
             if (StringUtil.emptyString(kbHref))
                 suffix = ".html";
             // System.out.println("4. forms == " + forms);
-            ArrayList forms = new ArrayList();
-            Set<String> parents = new HashSet<String>();
+            List<Formula> forms = new ArrayList();
+            Set<String> parents = new HashSet<>();
             List<String> relations = Arrays.asList("subclass",
                                                    "subrelation",
                                                    "subAttribute",
@@ -3666,8 +3665,8 @@ public class DocGen {
                 for (String pred : relations) {
                     forms.addAll(kb.askWithPredicateSubsumption(pred, 1, term));
                 }
-                String s = null;
-                Formula f = null;
+                String s;
+                Formula f;
                 for (Iterator it = forms.iterator(); it.hasNext();) {
                     f = (Formula) it.next();
                     if (!KButilities.isCacheFile(f.sourceFile)) {
@@ -3760,9 +3759,9 @@ public class DocGen {
             suffix = ".html";
         StringBuilder result = new StringBuilder();
         String[] relns = {"subclass", "subrelation", "subAttribute", "subentity"};
-        ArrayList forms = new ArrayList();
+        List<Formula> forms = new ArrayList();
         if (StringUtil.isNonEmptyString(term)) {
-            List tmp = null;
+            List<Formula> tmp;
             for (String reln : relns) {
                 tmp = kb.askWithPredicateSubsumption(reln, 2, term);
                 if ((tmp != null) && !tmp.isEmpty()) {
@@ -3772,11 +3771,11 @@ public class DocGen {
         }
         // System.out.println("5. forms == " + forms);
         if (forms != null && !forms.isEmpty()) {
-            ArrayList kids = new ArrayList();
-            Formula f = null;
-            String s = null;
-            for (Iterator it = forms.iterator(); it.hasNext();) {
-                f = (Formula) it.next();
+            List kids = new ArrayList();
+            Formula f;
+            String s;
+            for (Iterator<Formula> it = forms.iterator(); it.hasNext();) {
+                f = it.next();
                 if (!KButilities.isCacheFile(f.sourceFile)) {
                     s = f.getStringArgument(1);
                     if (isLegalForDisplay(s) && !kids.contains(s)) {
@@ -4119,7 +4118,7 @@ public class DocGen {
                             //     System.out.println("\n" + "statements == " + statements + "\n");
                             // }
                             if (!statements.isEmpty()) {
-                                ArrayList vals = new ArrayList();
+                                List vals = new ArrayList();
                                 for (Iterator its = statements.iterator(); its.hasNext();) {
                                     Formula f = (Formula) its.next();
                                     if (!KButilities.isCacheFile(f.sourceFile)) {
@@ -4350,7 +4349,7 @@ public class DocGen {
             sb.append(StringUtil.getLineSeparator());
             sb.append("  <td valign=\"top\" class=\"cell\">");
             sb.append(StringUtil.getLineSeparator());
-            ArrayList clist = new ArrayList();
+            List clist = new ArrayList();
             clist.add(language);
             String docString = getContextualDocumentation(kb, term, clist);
             docString = processDocString(kb, kbHref, language, docString, false, true);
@@ -4525,8 +4524,8 @@ public class DocGen {
 
         List pair = new ArrayList();
         try {
-            ArrayList attrs = new ArrayList();
-            ArrayList elems = new ArrayList();
+            List attrs = new ArrayList();
+            List elems = new ArrayList();
             pair.add(attrs);
             pair.add(elems);
             AVPair avp = new AVPair();
@@ -5153,12 +5152,12 @@ public class DocGen {
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    protected String generateTocHeader(KB kb, TreeMap alphaList, String allname) {
+    protected String generateTocHeader(KB kb, Map<String, Map<String, List<String>>> alphaList, String allname) {
 
         if (StringUtil.emptyString(getTocHeader())) {
             StringBuilder result = new StringBuilder();
             try {
-                ArrayList keyList = new ArrayList(alphaList.keySet());
+                List<String> keyList = new ArrayList(alphaList.keySet());
                 int klSize = keyList.size();
                 sortByPresentationName(kb, getDefaultNamespace(), keyList);
                 String title = getTitleText();
@@ -5174,7 +5173,7 @@ public class DocGen {
                 int colNum = 0;
                 StringBuilder sb2 = new StringBuilder();
                 // for (char c = 48; c < 58; c++) {                // numbers
-                String cString = null;
+                String cString;
                 for (int i = 0; i < klSize; i++) {
                     cString = (String) keyList.get(i);  //Character.toString(c);
                     if (Character.isDigit(cString.charAt(0))) {
@@ -5252,7 +5251,7 @@ public class DocGen {
      */
     protected String generateTOCPage(KB kb,
                                      String firstLetter,
-                                     TreeMap alphaList,
+                                     Map<String, Map<String, List<String>>> alphaList,
                                      String language) {
         /*
           System.out.println("INFO in generateTOCPage(" + kb
@@ -5265,11 +5264,11 @@ public class DocGen {
             int count = 0;
             StringBuilder sb = new StringBuilder();
             sb.append("<table width=\"100%\">");
-            TreeMap map = (TreeMap) alphaList.get(firstLetter);
-            ArrayList sorted = new ArrayList(map.keySet());
+            Map<String, List<String>> map = alphaList.get(firstLetter);
+            List<String> sorted = new ArrayList(map.keySet());
             sortByPresentationName(kb, language, sorted);
             String formattedTerm = null;
-            ArrayList al = null;
+            List al = null;
             Iterator it2 = null;
             String realTermName = null;
             String termToPrint = null;
@@ -5347,7 +5346,7 @@ public class DocGen {
      *                   createAlphaList()
      */
     protected void saveIndexPages(KB kb,
-                                  TreeMap alphaList,
+                                  Map<String, Map<String, List<String>>> alphaList,
                                   String dir,
                                   String language) {
 
@@ -5357,34 +5356,30 @@ public class DocGen {
                            + "[map with " + alphaList.size() + " entries}, "
                            + dir + ", "
                            + language + ")");
-        PrintWriter pw = null;
-        File outfile = null;
-        String outpath = null;
+        File outfile;
+        String outpath;
         try {
             String tocheader = generateTocHeader(kb,
                                                  alphaList,
                                                  INDEX_FILE_NAME);
             File parentDir = new File(dir);
             int count = 0;
-            for (Iterator it = alphaList.keySet().iterator(); it.hasNext();) {
-                String letter = (String) it.next();
+            String page;
+            for (String letter : alphaList.keySet()) {
                 outfile = new File(parentDir,
-                                   ((letter.compareTo("A") < 0) ? "number-" : "letter-")
-                                   + letter
-                                   + ".html");
+                        ((letter.compareTo("A") < 0) ? "number-" : "letter-")
+                                + letter
+                                + ".html");
                 outpath = outfile.getCanonicalPath();
-                pw = new PrintWriter(new FileWriter(outfile));
-                String page = generateTOCPage(kb, letter, alphaList, language);
-                pw.println(tocheader);
-                pw.println(page);
-                pw.println(generateHtmlFooter(""));
-                try {
-                    pw.close();
-                }
-                catch (Exception pwex) {
-                    System.out.println("Error writing \""
-                                       + outpath + "\": "
-                                       + pwex.getMessage());
+                try (PrintWriter pw = new PrintWriter(new FileWriter(outfile))) {
+                    page = generateTOCPage(kb, letter, alphaList, language);
+                    pw.println(tocheader);
+                    pw.println(page);
+                    pw.println(generateHtmlFooter(""));
+                } catch (Exception pwex) {
+                    System.err.println("Error writing \""
+                            + outpath + "\": "
+                            + pwex.getMessage());
                     pwex.printStackTrace();
                 }
                 if ((count++ % 100) == 1) System.out.print(".");
@@ -5394,16 +5389,6 @@ public class DocGen {
         catch (IOException ex) {
             ex.printStackTrace();
         }
-        finally {
-            try {
-                if (pw != null) {
-                    pw.close();
-                }
-            }
-            catch (Exception ioe) {
-                ioe.printStackTrace();
-            }
-        }
         System.out.println("EXIT DocGen.saveIndexPages("
                            + kb.name + ", "
                            + "[map with " + alphaList.size() + " entries}, "
@@ -5412,35 +5397,29 @@ public class DocGen {
         System.out.println("  "
                            + ((System.currentTimeMillis() - t1) / 1000.0)
                            + " seconds elapsed time");
-
     }
 
     /** *************************************************************
      *  Save pages below the KBs directory in a directory called
      *  HTML.  If that already exists, use HTML1, HTML2 etc.
      */
-    protected void printHTMLPages(TreeMap pageList, String dirpath) {
+    protected void printHTMLPages(Map<String, String> pageList, String dirpath) {
 
         long t1 = System.currentTimeMillis();
         System.out.println("ENTER DocGen.printHTMLPages("
                            + "[map with " + pageList.size() + " entries], "
                            + dirpath + ")");
-        FileWriter fw = null;
-        PrintWriter pw = null;
-        String term = null;
-        String page = null;
-        File outfile = null;
-        String filename = null;
+        String term, page, filename;
+        File outfile;
         try {
             File outdir = new File(dirpath);
             for (Iterator it = pageList.keySet().iterator(); it.hasNext();) {
                 term = (String) it.next();
-                page = (String) pageList.get(term);
+                page = pageList.get(term);
                 outfile = new File(outdir, StringUtil.toSafeNamespaceDelimiter(term) + ".html");
                 filename = outfile.getCanonicalPath();
                 //System.out.println("Info in DocGen.printPages(): filename == " + filename);
-                try {
-                    pw = new PrintWriter(new FileWriter(filename));
+                try (PrintWriter pw = new PrintWriter(new FileWriter(filename))) {
                     pw.println(page);
                 }
                 catch (IOException e) {
@@ -5452,16 +5431,6 @@ public class DocGen {
                                        + StringUtil.getLineSeparator() + ": "
                                        + e.getMessage());
                     e.printStackTrace();
-                }
-                finally {
-                    try {
-                        if (pw != null) {
-                            pw.close();
-                        }
-                    }
-                    catch (Exception e2) {
-                        e2.printStackTrace();
-                    }
                 }
             }
         }
@@ -5512,8 +5481,8 @@ public class DocGen {
                 if (StringUtil.isNonEmptyString(dirpath)) {
                     dirpath = StringUtil.removeEnclosingQuotes(dirpath);
                     parentDir = new File(dirpath);
-                    ArrayList<String> components =
-                        new ArrayList<String>(Arrays.asList("files",
+                    List<String> components =
+                        new ArrayList<>(Arrays.asList("files",
                                                             this.getKB().name.toLowerCase()));
                     String component = null;
                     for (Iterator it = components.iterator();
@@ -5567,8 +5536,8 @@ public class DocGen {
      * @param alphaList a TreeMap of TreeMaps of ArrayLists.  @see
      *                   createAlphaList()
      */
-    protected TreeMap generateHTMLPages(KB kb,
-                                        TreeMap alphaList,
+    protected Map<String, String> generateHTMLPages(KB kb,
+                                        Map<String, Map<String, List<String>>> alphaList,
                                         String language,
                                         String formatToken) {
 
@@ -5579,8 +5548,8 @@ public class DocGen {
                            // + "[map with " + inverseHeadwordMap.keySet().size() + " keys], "
                            + language + ", "
                            + formatToken + ")");
-        TreeMap pageList = new TreeMap();
-        TreeSet rejectedTerms = new TreeSet();
+        Map<String, String> pageList = new TreeMap();
+        Set rejectedTerms = new TreeSet();
         try {
             String formattedTerm = null;
             List termNames = null;
@@ -5660,7 +5629,7 @@ public class DocGen {
                            + formatToken + ")");
         try {
             // Keys are headwords, values are terms
-            TreeMap termMap = new TreeMap(String.CASE_INSENSITIVE_ORDER);
+            Map termMap = new TreeMap(String.CASE_INSENSITIVE_ORDER);
             // A HashMap where the keys are the term names and the values
             // are "headwords" (with quotes removed).
             /*
@@ -5678,7 +5647,7 @@ public class DocGen {
             this.defaultNamespace = context;
             // computeTermRelevance(kb, getOntology());
             // a TreeMap of TreeMaps of ArrayLists.  @see createAlphaList()
-            TreeMap alphaList = getAlphaList(kb); // headwordMap
+            Map<String, Map<String, List<String>>> alphaList = getAlphaList(kb); // headwordMap
             // Headword keys and ArrayList values (since the same headword can
             // be found in more than one term)
             // HashMap inverseHeadwordMap = createInverseHeadwordMap(kb, headwordMap);
@@ -5698,7 +5667,7 @@ public class DocGen {
             saveIndexPages(kb, alphaList, dir, context);
             // System.out.println("  INFO in DocGen.generateHTML(): generating HTML pages");
             // Keys are formatted term names, values are HTML pages
-            TreeMap pageList = generateHTMLPages(kb,
+            Map<String, String> pageList = generateHTMLPages(kb,
                                                  alphaList,
                                                  // inverseHeadwordMap,
                                                  context,
@@ -5734,7 +5703,7 @@ public class DocGen {
      */
     public void generateSingleHTML(KB kb,
                                    String dir,
-                                   TreeMap alphaList,
+                                   Map<String, Map<String, List<String>>> alphaList,
                                    String language,
                                    boolean simplified) {
 
@@ -5850,7 +5819,7 @@ public class DocGen {
 
         // HashMap headwordMap = createHeadwordMap(kb);
         String dirpath = getOutputDirectoryPath();
-        TreeMap alphaList = getAlphaList(kb); // headwordMap
+        Map alphaList = getAlphaList(kb); // headwordMap
         generateSingleHTML(kb, dirpath, alphaList, language, simplified);
     }
 
@@ -6260,7 +6229,7 @@ public class DocGen {
      * @param stringList The List of Strings to be sorted
      *
      */
-    public void sortByPresentationName(KB kb, String namespaceTerm, List stringList) {
+    public void sortByPresentationName(KB kb, String namespaceTerm, List<String> stringList) {
         /*
           System.out.println("ENTER DocGen.sortByPresentationName("
           + kb.name + ", "
@@ -6317,7 +6286,7 @@ public class DocGen {
      * Sorts the List terms by the length of the Strings it contains,
      * from longest to shortest.
      */
-    protected void sortByTermLength(List terms) {
+    protected void sortByTermLength(List<String> terms) {
 
         try {
             if (!terms.isEmpty() && (terms.size() > 1)) {
