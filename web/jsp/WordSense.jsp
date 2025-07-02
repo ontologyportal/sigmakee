@@ -17,18 +17,18 @@
 String sentence = request.getParameter("sentence");
 String sentCounter = request.getParameter("sentCounter");
 
-StringBuffer show = new StringBuffer();
+StringBuilder show = new StringBuilder();
 String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
 
 if (sentence != null && sentCounter == null) {
 	if (WordNet.wn.isFile(sentence) == false) // This will fail if the input is not supposed to be a file path but contains a / or \
 		show.append(WordNet.wn.sumoSentenceDisplay(sentence, sentence, params));
-	else 
+	else
 		show.append(WordNet.wn.sumoFileDisplay(sentence, "0", params));
 }
 
-if (sentence != null && sentCounter != null) 
-	show.append(WordNet.wn.sumoFileDisplay(sentence, sentCounter, params));	
+if (sentence != null && sentCounter != null)
+	show.append(WordNet.wn.sumoFileDisplay(sentence, sentCounter, params));
 %>
 
 <html>
@@ -58,12 +58,11 @@ if (sentence != null && sentCounter != null)
   <input type="file" name="textFile">
   <br>
   <input type="submit" value="Submit">
-</form> 
+</form>
 
 <br>
  <%=show.toString() %><BR>
- 
+
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>
-          

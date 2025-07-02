@@ -54,7 +54,7 @@ if (!role.equalsIgnoreCase("admin")) {
     if (kb.eprover == null && ep.exists())
         kb.eprover = new com.articulate.sigma.tp.EProver(eproverExec,tptpFile);
 
-    if (request.getParameter("maxAnswers") != null) 
+    if (request.getParameter("maxAnswers") != null)
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
     if (request.getParameter("timeout") != null)
         timeout = Integer.parseInt(request.getParameter("timeout"));
@@ -74,7 +74,7 @@ if (!role.equalsIgnoreCase("admin")) {
         String pageString = "Inference Test Suite";
     %>
     <%@include file="CommonHeader.jsp" %>
-    
+
     Query time limit:<input TYPE="TEXT" NAME="timeout" VALUE="<%=timeout%>">
     <input type="checkbox" id="overrideTimeout" name="overrideTimeout" value="yes">
     <label for="overrideTimeout">Override individual timeouts</label><br>
@@ -102,7 +102,7 @@ if (!role.equalsIgnoreCase("admin")) {
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
-  StringBuffer sb = new StringBuffer();
+  StringBuilder sb = new StringBuilder();
   String inferenceTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
   if (inferenceTestDir == null)
       sb = sb.append("Error: No inference test directory specified.  Set in <A href=\"Preferences.jsp\">Preferences</A>");

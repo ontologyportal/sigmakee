@@ -25,7 +25,7 @@ if (!role.equalsIgnoreCase("admin")) {
 </HEAD>
 <%
     System.out.println("INFO in TestStatement.jsp");
-    StringBuffer status = new StringBuffer();
+    StringBuilder status = new StringBuilder();
     ArrayList processedStmts = null;
     String stmt = request.getParameter("stmt");
     String req = request.getParameter("request");

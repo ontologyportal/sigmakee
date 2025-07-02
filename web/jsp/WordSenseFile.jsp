@@ -15,20 +15,20 @@
 */
 
  String params = "flang=" + flang + "&lang=" + language + "&kb=" + kbName;
- StringBuffer show = new StringBuffer();
- 
+ StringBuilder show = new StringBuilder();
+
  String kbDir = mgr.getPref("kbDir");
  File kbDirFile = new File(kbDir);
  Part requestPart = null;
  String filePath = null;
  MultipartParser mpp = null;
  int postSize = Integer.MAX_VALUE;
- 
+
  try {
    	//System.out.println("INFO in WordSenseFile.jsp: request == " + request);
 	mpp = new MultipartParser(request, postSize, true, true);
    	//System.out.println("INFO in WordSenseFile.jsp: mpp == " + mpp);
-	
+
 	while ((requestPart = mpp.readNextPart()) != null) {
 		String paramName = requestPart.getName();
 		if (paramName == null)
@@ -36,13 +36,13 @@
  		if (requestPart.isFile()) {
 	 		FilePart fp = (FilePart) requestPart;
             String fileName = fp.getFileName();
-            
+
             File targetFile = new File(kbDirFile, ("tempSenseFile.txt")); //if this file exists, it will always be deleted and remade.
-			if (targetFile.exists()) 
+			if (targetFile.exists())
 				targetFile.delete();
             //System.out.println("INFO in WordSenseFile.jsp: targetFile== " + targetFile.getCanonicalPath());
             filePath = targetFile.getCanonicalPath();
-            
+
             FileOutputStream fos = new FileOutputStream(targetFile);
             BufferedOutputStream bos = new BufferedOutputStream(fos);
             long writeCount = -1L;
@@ -54,7 +54,7 @@
             }
             catch (Exception ioe) {
                  ioe.printStackTrace();
-            }		
+            }
         }
 	}
 	show.append(WordNet.wn.sumoFileDisplay(filePath, "0", params));
@@ -87,7 +87,7 @@ catch (Exception e) {
 <form name="sentenceLoader" id="sentenceLoader" action="WordSense.jsp" method="GET">
   <font face="Arial,helvetica"><b>Sentence:&nbsp;</b></font>
   <input type="text" name="sentence" VALUE=<%= "\"" + (request.getParameter("sentence")==null?"":request.getParameter("sentence")) + "\"" %>>
-  
+
   <input type="submit" value="Submit">
 </form>
 
@@ -96,11 +96,11 @@ catch (Exception e) {
   <input type="file" name="textFile">
   <br>
   <input type="submit" value="Submit">
-</form> 
+</form>
 
 <br>
  <%=show.toString() %><BR>
- 
+
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>
