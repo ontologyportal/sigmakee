@@ -464,9 +464,9 @@ public class HTMLformatter {
 
             String relation, relationName, nonRelation, nonRelationName;
             for (int i = 0; i < 30; i++) {
-                relation = (String) relations.get(i);
+                relation = relations.get(i);
                 relationName = DocGen.getInstance(kb.name).showTermName(kb, relation, language);
-                nonRelation = (String) nonRelations.get(i);
+                nonRelation = nonRelations.get(i);
                 nonRelationName = DocGen.getInstance(kb.name).showTermName(kb, nonRelation, language);
                 if (!relation.isEmpty() || !nonRelation.isEmpty()) {
                     if (i == 0)
