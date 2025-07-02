@@ -56,10 +56,11 @@ import="com.articulate.sigma.*,com.articulate.sigma.wordNet.*,java.net.URLConnec
 
 <%
     out.println("<P><P>\n");
+    KB kb;
     for (String kbname : KBmanager.getMgr().kbs.keySet()) {
-        KB kb = KBmanager.getMgr().getKB(kbname);
+        kb = KBmanager.getMgr().getKB(kbname);
         out.println(kb.name + " : " + kb.constituents.size() + " constituents loaded<br>");
-        if (kb.kbCache.initialized)
+        if (kb.kbCache != null && kb.kbCache.initialized)
             out.println("cache initialized<br>");
         else
             out.println("cache not initialized<br>");
