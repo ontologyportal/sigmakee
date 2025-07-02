@@ -243,12 +243,12 @@
         <!--<antcall target="monitor.catalina.out"/>-->
     </target>
 
-    <!-- To debug Tomcat for a running web app in the NB IDE, make sure the
-         war is deployed. If Tomcat is running, stop Tomcat, the run this
-         target and attach a debugger with the Tomcat (java) PID found from the
-         activity monitor, or enter ps -ef on the command line and search for
-         apache-tomcat under the CMD column. Can set a breakpoint in the JSPs
-         under $CATALINA_HOME/work/Catalina/localhost/sigma/**
+    <!-- To debug the web app in the NB IDE, make sure the war is deployed. If
+         Tomcat is running, stop Tomcat, the run this target and attach a
+         debugger with the Tomcat (java) PID found from the activity monitor, or
+         enter ps -ef on the command line and search for apache-tomcat under the
+         CMD column. Can also debug the JSP by setting a breakpoint in the
+         compiled JSPs under $CATALINA_HOME/work/Catalina/localhost/sigma/**
     -->
     <target name="debug.sigma.web.app" description="debug web application in tomcat">
         <exec executable="sh">
