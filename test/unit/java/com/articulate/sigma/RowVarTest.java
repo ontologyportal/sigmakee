@@ -26,12 +26,12 @@ public class RowVarTest extends UnitTestBase  {
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
-        HashSet<String> vars = RowVars.findRowVars(f);
+        Set<String> vars = RowVars.findRowVars(f);
         assertTrue(vars != null && !vars.isEmpty());
         if (vars.contains("@ARGS") && vars.size() == 1)
             System.out.println("testFindRowVars(): success!");
         else
-            System.out.println("testFindRowVars(): failure");
+            System.err.println("testFindRowVars(): failure");
         assertTrue(vars.contains("@ARGS") && vars.size() == 1);
     }
 
@@ -54,13 +54,13 @@ public class RowVarTest extends UnitTestBase  {
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
-        HashMap<String, HashSet<String>> rels = RowVars.getRowVarRelations(f);
+        Map<String, Set<String>> rels = RowVars.getRowVarRelations(f);
         assertTrue(rels != null && !rels.keySet().isEmpty());
         System.out.println("testRowVarRels(): rels: " + rels);
         if (rels.get("@ARGS").contains("links"))
             System.out.println("testRowVarRels(): success!");
         else
-            System.out.println("testRowVarRels(): failure");
+            System.err.println("testRowVarRels(): failure");
         assertTrue(rels.get("@ARGS").contains("links"));
     }
 
@@ -83,8 +83,8 @@ public class RowVarTest extends UnitTestBase  {
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
-        HashMap<String,HashSet<String>> rels = RowVars.getRowVarRelations(f);
-        HashMap<String,Integer> rowVarMaxArities = RowVars.getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
+        Map<String,Set<String>> rels = RowVars.getRowVarRelations(f);
+        Map<String,Integer> rowVarMaxArities = RowVars.getRowVarMaxAritiesWithOtherArgs(rels, kb, f);
         int arity = kb.kbCache.valences.get("links");
         System.out.println("testLinks(): arity of 'links': " + arity);
         System.out.println("testLinks(): rels: " + rels);
@@ -117,7 +117,7 @@ public class RowVarTest extends UnitTestBase  {
         f.read(stmt1);
 
         //RowVars.DEBUG = true;
-        ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
+        List<Formula> results = RowVars.expandRowVars(kb,f);
         String result = results.get(0).getFormula();
         String expected = "(=>\n" +
                 "  (and\n" +
@@ -132,7 +132,7 @@ public class RowVarTest extends UnitTestBase  {
         if (expected.equals(result))
             System.out.println("testLinks2(): success!");
         else
-            System.out.println("testLinks2(): failure");
+            System.err.println("testLinks2(): failure");
         assertEquals(expected,result);
     }
 
@@ -147,7 +147,7 @@ public class RowVarTest extends UnitTestBase  {
         f.read(stmt);
 
         //RowVars.DEBUG = true;
-        ArrayList<Formula> results = RowVars.expandRowVars(kb,f);
+        List<Formula> results = RowVars.expandRowVars(kb,f);
         System.out.println("testRowVarExp(: input: " + stmt);
         System.out.println("testRowVarExp(): results: " + results);
         System.out.println("testRowVarExp(): results size: " + results.size());

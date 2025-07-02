@@ -421,7 +421,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         System.out.println("testArgNumsPreprocess: patient valence: " +
                 kb.kbCache.valences.get("patient"));
 
-        ArrayList<Formula> forms = RowVars.expandRowVars(kb,f);
+        List<Formula> forms = RowVars.expandRowVars(kb,f);
         System.out.println("testArgNumsPreprocess: forms: " + forms);
     }
 
