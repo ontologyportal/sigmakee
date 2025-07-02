@@ -62,8 +62,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     else
         show.append ("</b></FONT></td></tr></table>\n");
     int limit = Integer.decode(KBmanager.getMgr().getPref("userBrowserLimit")).intValue();
-    if (KBmanager.getMgr().getPref("userRole") != null &&
-        KBmanager.getMgr().getPref("userRole").equalsIgnoreCase("administrator")) {
+    if (role != null && role.equalsIgnoreCase("admin")) {
         limit = Integer.decode(KBmanager.getMgr().getPref("adminBrowserLimit")).intValue();
     }
 
@@ -71,7 +70,7 @@ August 9, Acapulco, Mexico.  See also http://github.com/ontologyportal
     String formatToken = kb.name;
     String defaultNS = language;
     DocGen gen = DocGen.getInstance();
-    TreeMap alphaList = gen.getAlphaList(kb); // tfm
+    Map<String, Map<String, List<String>>> alphaList = gen.getAlphaList(kb); // tfm
     show.append(DocGen.getInstance(kb.name).createPage(kb,HTMLformatter.kbHref,term,alphaList,limit,defaultNS,formatToken));
     show.append("<P><table ALIGN='LEFT' WIDTH='50%'><tr><TD BGCOLOR='#A8BACF'>" +
                 "<IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr>" +

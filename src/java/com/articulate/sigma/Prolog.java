@@ -5,41 +5,42 @@ import com.articulate.sigma.wordNet.WordNet;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.TreeSet;
 
 public class Prolog {
 
     public static KB kb = null;
-    
+
     /** *************************************************************
      */
     private static void writePrologFormulas(ArrayList<Formula> forms, PrintWriter pw) {
 
-        TreeSet<Formula> ts = new TreeSet<Formula>();
+        Set<Formula> ts = new TreeSet<>();
         ts.addAll(forms);
         if (forms != null) {
             Formula formula = null;
             String result = null;
-            Iterator<Formula> it = ts.iterator(); 
+            Iterator<Formula> it = ts.iterator();
             while (it.hasNext()) {
                 formula = it.next();
                 result = formula.toProlog();
-                if (result != null && result != "")
+                if (result != null && !"".equals(result))
                     pw.println(result);
             }
         }
-        return;
     }
 
     /** *************************************************************
      */
     private static void writeOneHornClause(Formula f, PrintWriter pw) {
-        
+
         System.out.println("INFO in Prolog.writeOneHornClause(): formula: " + f);
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Formula antecedent = f.cdrAsFormula().carAsFormula();
         System.out.println("INFO in Prolog.writeOneHornClause(): antecedent: " + antecedent);
         sb.append(" :- ");
@@ -53,7 +54,7 @@ public class Prolog {
             Formula consList = antecedent.cdrAsFormula();
             System.out.println("INFO in Prolog.writeOneHornClause(): consList: " + consList);
             while (!consList.empty()) {
-                Formula car = consList.carAsFormula();     
+                Formula car = consList.carAsFormula();
                 String clause = car.toProlog();
                 if (clause == null)
                     return;
@@ -77,31 +78,31 @@ public class Prolog {
               Formula consList = consequent.cdrAsFormula();
               boolean first = true;
               while (!consList.empty()) {
-                  Formula car = consList.carAsFormula();                  
+                  Formula car = consList.carAsFormula();
                   consList = consList.cdrAsFormula();
-                  String carst = car.toProlog();  
+                  String carst = car.toProlog();
                   if (carst == null)
                       return;
                   pw.println(carst + sb.toString() + ".");
               }
         }
     }
-    
+
     /** *************************************************************
      */
     private static void writeClauses(PrintWriter pw) {
-        
+
         Iterator<Formula> it = kb.formulaMap.values().iterator();
         while (it.hasNext()) {
             Formula f = it.next();
             if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains("exists") &&
                 !f.getFormula().contains("forall"))
-                writeOneHornClause(f,pw);  
+                writeOneHornClause(f,pw);
             else if (f.isSimpleClause(kb))
                 pw.println(f.toProlog() + ".");
         }
     }
-    
+
     /** *************************************************************
      * @param fname - the name of the file to write, including full path.
      */
@@ -123,8 +124,8 @@ public class Prolog {
             pw.flush();
             result = file.getCanonicalPath();
         }
-        catch (Exception e) {
-            System.out.println("Error in KB.writePrologFile(): " + e.getMessage());
+        catch (IOException e) {
+            System.err.println("Error in KB.writePrologFile(): " + e.getMessage());
             e.printStackTrace();
         }
         finally {
@@ -150,8 +151,8 @@ public class Prolog {
           pfcp = plFile.getCanonicalPath();
           Prolog.kb = kb;
           Prolog.writePrologFile(pfcp);
-       } 
-       catch (Exception pfe) {
+       }
+       catch (IOException pfe) {
            pfe.printStackTrace();
        }
        String result = ((StringUtil.isNonEmptyString(prologFile) && plFile.canRead())

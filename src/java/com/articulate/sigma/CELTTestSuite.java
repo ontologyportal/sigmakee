@@ -30,7 +30,7 @@ public class CELTTestSuite {
       */
     public static String test(KB kb) {
 
-        StringBuffer result = new StringBuffer();
+        StringBuilder result = new StringBuilder();
         boolean isSentence = false;
         boolean isAnswer = false;
         boolean isPair = false;

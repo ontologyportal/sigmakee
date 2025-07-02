@@ -2,11 +2,10 @@ package com.articulate.sigma.parsing;
 
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.UnitTestBase;
+import java.util.Map;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-
-import java.util.Map;
 
 public class SUOKIFparseTest extends UnitTestBase {
 

@@ -6,7 +6,7 @@ String relTerm = request.getParameter("relation");
 String relREmatch = request.getParameter("relREmatch");
 String nonRelREmatch = request.getParameter("nonRelREmatch");
 String KBPOS = request.getParameter("KBPOS");
- 
+
  if (StringUtil.emptyString(term))
      term = "";
  if (StringUtil.emptyString(nonRelTerm))
@@ -43,7 +43,7 @@ August 9, Acapulco, Mexico. See also http://github.com/ontologyportal
 
 <%
  String parentPage = "SimpleBrowse.jsp";
- StringBuffer show = null;
+ StringBuilder show = null;
  simple = "yes";
 %>
 

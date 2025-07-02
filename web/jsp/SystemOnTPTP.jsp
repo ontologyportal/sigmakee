@@ -266,7 +266,7 @@
                 //----Code for doing the query
                 String TPTP_QUESTION_SYSTEM = "SNARK---";
                 String TPTP_ANSWER_SYSTEM = "Metis---";
-                StringBuffer sbStatus = new StringBuffer();
+                StringBuilder sbStatus = new StringBuilder();
                 String kbFileName = null;
                 Formula conjectureFormula;
                 //----Result of query (passed to tptp4X then passed to HTMLformatter.formatProofResult)

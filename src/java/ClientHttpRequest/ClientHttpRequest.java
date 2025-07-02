@@ -36,7 +36,7 @@ import java.util.Iterator;
 public class ClientHttpRequest {
   URLConnection connection;
   OutputStream os = null;
-  Map<String,String> cookies = new HashMap<String,String>();
+  Map<String,String> cookies = new HashMap<>();
 
   protected void connect() throws IOException {
     if (os == null) os = connection.getOutputStream();
@@ -111,11 +111,11 @@ public class ClientHttpRequest {
 
 
   private void postCookies() {
-    StringBuffer cookieList = new StringBuffer();
+    StringBuilder cookieList = new StringBuilder();
 
     for (Iterator i = cookies.entrySet().iterator(); i.hasNext();) {
       Map.Entry entry = (Map.Entry)(i.next());
-      cookieList.append(entry.getKey().toString() + "=" + entry.getValue());
+      cookieList.append(entry.getKey().toString()).append("=").append(entry.getValue());
 
       if (i.hasNext()) {
         cookieList.append("; ");

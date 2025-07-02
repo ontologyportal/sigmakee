@@ -1,14 +1,12 @@
 
-/** This code is copyright Articulate Software (c) 2005.  
+/** This code is copyright Articulate Software (c) 2005.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Ted Gordon in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Ted Gordon in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  */
 package com.articulate.delphi;
 import java.util.*;
-import java.io.*;
-import java.text.*;
 import com.articulate.sigma.*;
 
 /** *****************************************************************
@@ -21,21 +19,23 @@ public class Project {
     public String description;
       /** String user names point to Table values.  */
     public HashMap tables = new HashMap();
-  
-    /** ***************************************************************** 
-     * Convert the project to an XML-formatted String.  Calls on 
+
+    /** *****************************************************************
+     * Convert the project to an XML-formatted String.  Calls on
      * Table.toXML()
      */
     public String toXML() {
 
-        StringBuffer result = new StringBuffer();
-        result.append("<project name=\"" + name + "\">\n");
-        result.append("  <description>\n  " + description + "\n  </description>\n");
+        StringBuilder result = new StringBuilder();
+        result.append("<project name=\"").append(name).append("\">\n");
+        result.append("  <description>\n  ").append(description).append("\n  </description>\n");
         Iterator it = tables.keySet().iterator();
+        String username;
+        Table t;
         while (it.hasNext()) {
-            String username = (String) it.next();
-            Table t = (Table) tables.get(username);
-            result.append("  <table username=\"" + username + "\">\n");
+            username = (String) it.next();
+            t = (Table) tables.get(username);
+            result.append("  <table username=\"").append(username).append("\">\n");
             result.append(t.toXML());
             result.append("  </table>\n");
         }
@@ -43,7 +43,7 @@ public class Project {
         return result.toString();
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      * Return a Table which is the average of the judgements of ever
      * user other than the given username.
      */
@@ -63,7 +63,7 @@ public class Project {
         return sum;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      *  Read in an XML-formatted String
      */
     public void fromXML(BasicXMLelement projectXML) {
@@ -83,18 +83,18 @@ public class Project {
                     tables.put(username,table);
                 }
                 else {
-                    if (tableXML.tagname.equalsIgnoreCase("description")) 
+                    if (tableXML.tagname.equalsIgnoreCase("description"))
                         description = tableXML.contents;
                     else
                         System.out.println("Error in Project.fromXML(): Bad element: " + tableXML.tagname);
                 }
-            }        
+            }
         }
         else
-            System.out.println("Error in Project.fromXML(): Bad element: " + projectXML.tagname);        
+            System.out.println("Error in Project.fromXML(): Bad element: " + projectXML.tagname);
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static void main(String args[]) {
 

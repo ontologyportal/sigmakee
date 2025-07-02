@@ -1,8 +1,8 @@
-/** This code is copyright Articulate Software (c) 2005.  
+/** This code is copyright Articulate Software (c) 2005.
 This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software
-and Ted Gordon in any writings, briefings, publications, presentations, or 
-other representations of any software which incorporates, builds on, or uses this 
+and Ted Gordon in any writings, briefings, publications, presentations, or
+other representations of any software which incorporates, builds on, or uses this
 code.  */
 package com.articulate.delphi;
 
@@ -20,7 +20,7 @@ public class Delphi {
       /** Relates String keys to Project values */
     public HashMap projects = new HashMap();
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static Delphi getInstance() {
 
@@ -36,17 +36,17 @@ public class Delphi {
         return delphi;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static boolean odd(int val) {
-        
-        if ((val / 2) * 2 == val) 
+
+        if ((val / 2) * 2 == val)
             return false;
         else
             return true;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static Integer[] fromObjectArray(Object[] ob) {
 
@@ -56,13 +56,13 @@ public class Delphi {
         }
         return in;
     }
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static int median(Integer[] distribution) {
 
         int length = distribution.length;
         int median = -1;
-        if (odd(length+1)) { 
+        if (odd(length+1)) {
             median = (distribution[(length / 2) - 1].intValue() + distribution[length / 2].intValue()) / 2;
         }
         else {
@@ -71,9 +71,9 @@ public class Delphi {
         return median;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      *  Determine whether an int is outside the interquartile range
-     *  of a distribution of int(s).  See 
+     *  of a distribution of int(s).  See
      *  http://www.statcan.ca/english/edu/power/ch12/range.htm
      *  This routine necessitates totally bogus type conversions because
      *   - there's no sort routine on Collections, just []arrays
@@ -91,11 +91,11 @@ public class Delphi {
         Object[] ob = distribution.toArray();
         Integer[] ar = new Integer[ob.length];
         ar = Delphi.fromObjectArray(ob);
-        Arrays.sort(ar);        
+        Arrays.sort(ar);
         int median = median(ar);
         int lowerMiddle = (ar.length / 2) - 1;
         int upperMiddle = -1;
-        if (odd(ar.length)) 
+        if (odd(ar.length))
             upperMiddle = lowerMiddle + 2;
         else
             upperMiddle = lowerMiddle + 1;
@@ -110,17 +110,17 @@ public class Delphi {
         }
         int lowerQuartile = median(lowerDistribution);
         int upperQuartile = median(upperDistribution);
-        System.out.println("INFO in Delphi.outsideInterquartile(): upperDistribution: " + Arrays.asList(upperDistribution)); 
-        System.out.println("INFO in Delphi.outsideInterquartile(): lowerDistribution: " + Arrays.asList(lowerDistribution)); 
-        System.out.println("INFO in Delphi.outsideInterquartile(): lowerQuartile: " + lowerQuartile + 
+        System.out.println("INFO in Delphi.outsideInterquartile(): upperDistribution: " + Arrays.asList(upperDistribution));
+        System.out.println("INFO in Delphi.outsideInterquartile(): lowerDistribution: " + Arrays.asList(lowerDistribution));
+        System.out.println("INFO in Delphi.outsideInterquartile(): lowerQuartile: " + lowerQuartile +
                            " upperQuartile: " + upperQuartile);
-        if ((value <= upperQuartile) && (value >= lowerQuartile)) 
+        if ((value <= upperQuartile) && (value >= lowerQuartile))
             return false;
         else
             return true;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public ArrayList getColumnNames(String projectName, String username) {
 
@@ -128,12 +128,12 @@ public class Delphi {
 
         Project p = (Project) projects.get(projectName);
         Table t = (Table) p.tables.get(username);
-        if (t != null && t.columnWeights != null) 
+        if (t != null && t.columnWeights != null)
             result.addAll(t.columnWeights.keySet());
         return result;
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public void save() throws IOException {
 
@@ -164,14 +164,14 @@ public class Delphi {
             }
         }
     }
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public void addColumn(String username, String projectName, String text) {
 
         Project project = (Project) projects.get(projectName);
         if (project != null) {
             Table table = (Table) project.tables.get(username);
-            if (table == null) { 
+            if (table == null) {
                 table = new Table();
                 table.username = username;
                 project.tables.put(username,table);
@@ -180,23 +180,23 @@ public class Delphi {
         }
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public void addRow(String username, String projectName, String text) {
 
         Project project = (Project) projects.get(projectName);
         if (project != null) {
             Table table = (Table) project.tables.get(username);
-            if (table == null) { 
+            if (table == null) {
                 table = new Table();
                 table.username = username;
                 project.tables.put(username,table);
-            }        
+            }
             table.addRow(text);
         }
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      * Set the value of a rating in a row and column of a specific project
      * and user's table.
      */
@@ -211,7 +211,7 @@ public class Delphi {
         row.put(column,value);
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      * Set the weight of a column of a specific project
      * and user's table.
      */
@@ -223,7 +223,7 @@ public class Delphi {
         table.columnWeights.put(column,value);
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public void fromXML(String xml) {
 
@@ -240,14 +240,14 @@ public class Delphi {
         }
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public void readProjects() throws IOException {
 
         String fname = System.getProperty("user.dir") + File.separator + "projects.xml";
-        StringBuffer xml = new StringBuffer();
+        StringBuilder xml = new StringBuilder();
         File f = new File(fname);
-        if (!f.exists()) 
+        if (!f.exists())
             return;
         System.out.println("INFO in Delphi.readProjects(): Reading: " + fname);
         BufferedReader br = new BufferedReader(new FileReader(fname));
@@ -262,14 +262,14 @@ public class Delphi {
             System.out.println("Error in Delphi.readProjects(): IO exception parsing file " + fname);
         }
         finally {
-            if (br != null) 
+            if (br != null)
                 br.close();
         }
-        //System.out.println(xml.toString()); 
+        //System.out.println(xml.toString());
         fromXML(xml.toString());
     }
 
-    /** ***************************************************************** 
+    /** *****************************************************************
      */
     public static void main(String args[]) {
 
@@ -280,7 +280,7 @@ public class Delphi {
         ar.add(Integer.valueOf(50)); ar.add(Integer.valueOf(28)); ar.add(Integer.valueOf(37));
 
         System.out.println(Delphi.outsideInterquartile(ar,6));
-        
+
         ar = new ArrayList();
         ar.add(Integer.valueOf(1)); ar.add(Integer.valueOf(3)); ar.add(Integer.valueOf(5));
         ar.add(Integer.valueOf(7)); ar.add(Integer.valueOf(9)); ar.add(Integer.valueOf(11));

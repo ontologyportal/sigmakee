@@ -1131,7 +1131,7 @@ public class KBmanager implements Serializable {
             System.err.println("Error in KBmanager.getPref(): not in CONFIG_KEYS: " + key);
             return "";
         }
-        String ans = (String) preferences.get(key);
+        String ans = preferences.get(key);
         if (ans == null)
             ans = "";
         return ans;
@@ -1143,7 +1143,7 @@ public class KBmanager implements Serializable {
     public boolean prefEquals(String key, String value) {
 
         if (!CONFIG_KEYS.contains(key)) {
-            System.err.println("Error in KBmanager.getPref(): not in CONFIG_KEYS: " + key);
+            System.err.println("Error in KBmanager.prefEquals(): not in CONFIG_KEYS: " + key);
             return false;
         }
         String ans = preferences.get(key);
