@@ -37,6 +37,7 @@ public class BrownCorpus {
 
         public String getTok() { return tok; }
         public String getType() { return type; }
+        @Override
         public String toString() {
             return tok + "/" + type + " ";
         }
@@ -45,6 +46,7 @@ public class BrownCorpus {
     public class Sentence {
         public ArrayList<Token> tokens = new ArrayList<>();
 
+        @Override
         public String toString() {
             return tokens.toString() + "\n";
         }
@@ -58,6 +60,7 @@ public class BrownCorpus {
     public class Para {
         public ArrayList<Sentence> sents = new ArrayList<>();
 
+        @Override
         public String toString() {
             return sents.toString() + "\n";
         }
@@ -66,6 +69,7 @@ public class BrownCorpus {
     public class Doc {
         public ArrayList<Para> paras = new ArrayList<>();
 
+        @Override
         public String toString() {
             return paras.toString() + "\n";
         }
@@ -77,7 +81,7 @@ public class BrownCorpus {
      */
     public Sentence parse(String st) {
 
-        StringBuffer sb = new StringBuffer();
+        StringBuilder sb = new StringBuilder();
         Sentence sent = new Sentence();
         int i = 0;
         while (i < st.length()-1) {
@@ -129,7 +133,7 @@ public class BrownCorpus {
                 String content = lnr.readLine();
                 //System.out.println("in BrownCorpus.parse(): content: " + content);
                 if (StringUtil.emptyString(content)) {
-                    if (para.sents.size() > 0)
+                    if (!para.sents.isEmpty())
                         doc.paras.add(para);
                     para = new Para();
                 }
@@ -143,8 +147,8 @@ public class BrownCorpus {
             //System.out.println("Info in BrownCorpus.parse():" + doc);
             return doc;
         }
-        catch (Exception ex) {
-            System.out.println("Error in BrownCorpus.readFile():" + ex.getMessage());
+        catch (IOException ex) {
+            System.err.println("Error in BrownCorpus.readFile():" + ex.getMessage());
             ex.printStackTrace();
             return null;
         }
@@ -195,7 +199,7 @@ public class BrownCorpus {
             });
         }
         catch (IOException ioe) {
-            System.out.println("Error in BrownCorpus.read(): " + ioe.getMessage());
+            System.err.println("Error in BrownCorpus.read(): " + ioe.getMessage());
             ioe.printStackTrace();
         }
     }
@@ -207,7 +211,7 @@ public class BrownCorpus {
         for (Doc doc : docs) {
             for (Para para : doc.paras) {
                 for (Sentence sent : para.sents) {
-                    if (sent.tokens.size() > 0) {
+                    if (!sent.tokens.isEmpty()) {
                         Token tok = sent.tokens.get(0);
                         if (tok.type.startsWith("vb") &&
                                 !tok.type.startsWith("vbg") &&

@@ -36,7 +36,7 @@ import java.util.Random;
 public class ClientHttpRequest {
   URLConnection connection;
   OutputStream os = null;
-  Map<String,String> cookies = new HashMap<String,String>();
+  Map<String,String> cookies = new HashMap<>();
 
   protected void connect() throws IOException {
     if (os == null) os = connection.getOutputStream();
@@ -111,11 +111,11 @@ public class ClientHttpRequest {
 
 
   private void postCookies() {
-    StringBuffer cookieList = new StringBuffer();
+    StringBuilder cookieList = new StringBuilder();
 
     for (Iterator i = cookies.entrySet().iterator(); i.hasNext();) {
       Map.Entry entry = (Map.Entry)(i.next());
-      cookieList.append(entry.getKey().toString() + "=" + entry.getValue());
+      cookieList.append(entry.getKey().toString()).append("=").append(entry.getValue());
 
       if (i.hasNext()) {
         cookieList.append("; ");
@@ -447,8 +447,8 @@ public class ClientHttpRequest {
 
   /**
    * post the POST request specified URL, with the specified parameter
-   * @param name parameter name
-   * @param value parameter value
+   * @param name1 parameter name
+   * @param value1 parameter value
    * @return input stream with the server response
    * @throws IOException
    * @see setParameter

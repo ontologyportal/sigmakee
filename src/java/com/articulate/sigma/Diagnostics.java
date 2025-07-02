@@ -837,7 +837,7 @@ public class Diagnostics {
             port = "8080";
         String kbHref = "http://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kbName;
         String lineHtml = "<table ALIGN='LEFT' WIDTH=40%%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
-        StringBuffer html = new StringBuffer();
+        StringBuilder html = new StringBuilder();
 
         if (proof.contains("Syntax error detected")) {
             html = html.append("Syntax error in formula : <br><br>");
