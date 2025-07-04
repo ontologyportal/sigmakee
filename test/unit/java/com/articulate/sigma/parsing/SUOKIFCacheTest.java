@@ -7,7 +7,7 @@ import org.junit.Test;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertFalse;
 
 public class SUOKIFCacheTest extends UnitTestBase {
 
@@ -104,12 +104,12 @@ public class SUOKIFCacheTest extends UnitTestBase {
     public void test4() {
 
         System.out.println("===================== SUOKIFCacheTest.test4() =====================");
-        String input = ";; I am a SUO-KIF comment";
-        Map<Integer,FormulaAST> hm = process(input);
+        String input = "(attribute ?SYLLABLE Stressed) ;; I am an in-line SUO-KIF comment\n";
+        Map<Integer, FormulaAST> hm = process(input);
         FormulaAST f = hm.values().iterator().next();
         f.printCaches();
 
-        assertTrue("Is not a comment",f.comment);
+        assertFalse("Is not a comment",f.comment);
         System.out.println();
     }
 }
