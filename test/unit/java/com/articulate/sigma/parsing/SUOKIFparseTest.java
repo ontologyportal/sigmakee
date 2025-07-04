@@ -27,6 +27,7 @@ public class SUOKIFparseTest extends UnitTestBase {
 
         System.out.println("===================== SUOKIFparseTest.test1() =====================");
         String input = "(likes John Mary)\n; and here's a comment\n(part Wheel1 Car2)\n";
+        String expected = "(likes John Mary)\n(part Wheel1 Car2)\n";
 
         Map<Integer,FormulaAST> hm = process(input);
         StringBuilder sb = new StringBuilder();
@@ -35,11 +36,11 @@ public class SUOKIFparseTest extends UnitTestBase {
             sb.append(f.getFormula()).append("\n");
         }
         System.out.println("result: " + sb);
-        if (input.trim().equals(sb.toString().trim()))
+        if (expected.trim().equals(sb.toString().trim()))
             System.out.println("test1(): success!");
         else
             System.err.println("test1(): fail!");
-        assertEquals(input,sb.toString());
+        assertEquals(expected.trim(),sb.toString().trim());
         System.out.println();
     }
 
