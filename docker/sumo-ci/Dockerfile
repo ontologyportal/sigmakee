@@ -7,8 +7,10 @@ FROM $IMAGE_ACCOUNT/sigma-ci:latest AS builder
 # runtime image.
 FROM tomcat:9.0.97-jdk21-temurin-noble AS runtime
 
-#RUN apt-get update && apt-get install -y --no-install-recommends \
-#    graphviz
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    ant \
+    ant-optional \
+    graphviz
 
 COPY --from=builder \
     /usr/local/bin/e_ltb_runner /usr/local/bin/e_ltb_runner
