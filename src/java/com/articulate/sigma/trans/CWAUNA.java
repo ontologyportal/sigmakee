@@ -37,7 +37,7 @@ public class CWAUNA {
     }
 
     /** ***************************************************************
-     * build the big axiom that creates the closed word for eqch closed
+     * build the big axiom that creates the closed word for each closed
      * relation
      */
     public static String buildExclusions(KB kb, String rel) {
@@ -137,7 +137,7 @@ public class CWAUNA {
      */
     public static void showHelp() {
 
-        System.out.println("KB class");
+        System.out.println("CWAUNA class");
         System.out.println("  options (with a leading '-'):");
         System.out.println("  h - show this help screen");
         System.out.println("  a - Add UNA/CWA axioms for KB");
