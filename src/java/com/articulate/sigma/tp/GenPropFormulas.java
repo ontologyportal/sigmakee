@@ -344,9 +344,10 @@ public class GenPropFormulas {
     public static void generateFormulas(int targetCount, int numvars, int depth) throws Exception {
 
         GenPropFormulas f = new GenPropFormulas("a",null,null,null);
+        int iter = 0;
         int count = 0;
 
-        while (count < targetCount) {
+        while (count < targetCount && iter < 200) {
             String form = f.generate("", numvars, depth).toString();
             System.out.println("\n*************************\ngenerateFormulas(): form: " + form);
             String wrappedForm = "fof(conj,axiom," + form + ").";
@@ -384,6 +385,7 @@ public class GenPropFormulas {
 
             generateCNFandLinks(form,filename.toString());
             generateCNFandLinks(negForm,negfilename.toString());
+            iter++;
         }
         printResults();
     }
