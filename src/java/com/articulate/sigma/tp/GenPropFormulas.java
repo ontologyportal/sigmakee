@@ -35,9 +35,11 @@ public class GenPropFormulas {
 
     private static Random random = new Random();
     public static Vampire vamp = new Vampire();
+    public static ECNF ecnf = new ECNF();
     public static TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
-    public static final List<String> cnfcmds = List.of("--mode","clausify","-updr","off");
+    public static final List<String> vcnfcmds = List.of("--mode","clausify","-updr","off");
+    public static final List<String> ecnfcmds = List.of("--cnf","--no-preprocessing");
 
     public static Set<String> contraResults = new HashSet<>();
     public static Set<String> tautResults = new HashSet<>();
@@ -76,6 +78,7 @@ public class GenPropFormulas {
 
         random = new Random();
         vamp = new Vampire();
+        ecnf = new ECNF();
         tpp = new TPTP3ProofProcessor();
 
         contraResults = new HashSet<>();
@@ -109,7 +112,7 @@ public class GenPropFormulas {
         StringBuilder sb = new StringBuilder();
         HashSet<String> seen = new HashSet<>();
         for (String s : l) {
-            System.out.println("formatCNF(): input: " + s);
+            //System.out.println("formatCNF(): input: " + s);
             if (!s.startsWith("%") && s.length() > 4) {
                 int firstComma = s.indexOf(",");
                 if (firstComma == -1)
@@ -121,16 +124,19 @@ public class GenPropFormulas {
                 int thirdComma = s.indexOf(",",secondComma+1);
                 if (thirdComma > -1)
                     end = thirdComma;
-                String firstParam = s.substring(s.indexOf("(")+1,firstComma);
-                String secondParam = s.substring(firstComma+1,secondComma);
+                String firstParam = s.substring(s.indexOf("(")+1,firstComma).trim();
+                String secondParam = s.substring(firstComma+1,secondComma).trim();
+                //System.out.println("formatCNF(): firstParam: " + firstParam);
+                //System.out.println("formatCNF(): secondParam: " + secondParam);
                 //System.out.println(firstComma + ", " + secondComma + ", " + thirdComma);
-                if (!secondParam.equals("axiom"))
+                // if (!secondParam.equals("axiom")) Vampire uses "axiom"
+                if (!secondParam.equals("plain")) // E uses "plain"
                     continue;
                 String clause = s.substring(secondComma+1,end).trim();
+                //System.out.println("formatCNF(): result: " + clause);
                 if (seen.contains(clause))
                     continue;
                 seen.add(clause);
-                System.out.println("formatCNF(): result: " + clause);
                 sb.append(clause).append(", ");
             }
         }
@@ -177,14 +183,19 @@ public class GenPropFormulas {
         KBmanager mgr = KBmanager.getMgr();
         SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
         for (SimpleElement el : config.getChildElements()) {
-            if (el.getTagName().equals("preference"))
+            if (el.getTagName().equals("preference")) {
                 if (el.getAttribute("name").contains("vampire"))
                     mgr.setPref("vampire", el.getAttribute("value"));
+                if (el.getAttribute("name").contains("eprover"))
+                    mgr.setPref("eprover", el.getAttribute("value"));
+            }
         }
         if (mgr.getPref("vampire").isEmpty())
             KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
         Vampire.mode = Vampire.ModeType.CASC; // default
         System.out.println("GenPropFormulas.run(): before vampire");
+        if (mgr.getPref("eprover").isEmpty())
+            KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
 
         boolean sat = false;
         vamp.run(f,5);
@@ -310,14 +321,17 @@ public class GenPropFormulas {
     public static void generateCNFandLinks(String form, String filename)  throws Exception {
 
         File fname = new File(filename);
-        //System.out.println("generateFormulas(): filename: " + filename);
+        //System.out.println("generateCNFandLinks(): filename: " + filename);
         //System.out.println("generateFormulas(): formula: " + form);
         //System.out.println("generateFormulas(): Run Vampire for CNF conversion with: " + cnfcmds);
-        vamp.runCustom(fname,0, cnfcmds);
+        //vamp.runCustom(fname,0, cnfcmds);
+        ecnf.runCustom(fname,0,ecnfcmds);
         String formStr = form;
-        vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-        String CNFresult = formatCNF(vamp.output);
-        System.out.println("generateFormulas(): CNF for " + form + " is " + CNFresult);
+        //ecnf.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+        String CNFresult = formatCNF(ecnf.output);
+        if (CNFresult.isEmpty())
+            CNFresult = form;
+        System.out.println("generateCNFandLinks(): CNF for " + form + " is " + CNFresult);
         CNF.put(form,CNFresult);
         String encoded = encodeTT(formStr);
         truthTables.put(formStr,encoded);
@@ -347,8 +361,8 @@ public class GenPropFormulas {
             System.out.println("generateFormulas(): neg form: " + negForm);
             System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
             negstmts.add(negWrappedForm);
-            filename = new StringBuilder();
-            SZSonto negresult = run(negstmts,filename);
+            StringBuilder negfilename = new StringBuilder();
+            SZSonto negresult = run(negstmts,negfilename);
 
             if (result == SZSonto.SAT && negresult == SZSonto.CONTRA) {
                 count++;
@@ -369,7 +383,7 @@ public class GenPropFormulas {
             }
 
             generateCNFandLinks(form,filename.toString());
-            generateCNFandLinks(negForm,filename.toString());
+            generateCNFandLinks(negForm,negfilename.toString());
         }
         printResults();
     }
@@ -399,7 +413,7 @@ public class GenPropFormulas {
             if (args.length > 2 && args[0].equals("-g") && args[1] != null && args[2] != null ) {
                 int numvars = Integer.parseInt(args[1]);
                 int depth = Integer.parseInt(args[2]);
-                generateFormulas(10,numvars,depth);  // generate 10 good formulas
+                generateFormulas(1,numvars,depth);  // generate 10 good formulas
 
                 System.out.println("Contradictions");
                 for (String s : GenPropFormulas.contraResults) {

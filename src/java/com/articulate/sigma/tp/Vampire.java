@@ -74,7 +74,6 @@ public class Vampire {
         return cmds;
     }
 
-
     /** *************************************************************
      * don't include a timeout if @param timeout is 0
      */
