@@ -74,6 +74,32 @@ public class Vampire {
         return cmds;
     }
 
+
+    /** *************************************************************
+     * don't include a timeout if @param timeout is 0
+     */
+    private static String[] createCustomCommandList(File executable,
+                                                    int timeout, File kbFile,
+                                                    Collection<String> commands) {
+
+        String space = " ";
+        StringBuilder opts = new StringBuilder();
+        if (mode == ModeType.CUSTOM)
+            opts.append(System.getenv("VAMPIRE_OPTS"));
+        for (String s : commands)
+            opts.append(s).append(space);
+        if (timeout != 0) {
+            opts.append("-t").append(space);
+            opts.append(timeout).append(space);
+        }
+        opts.append(kbFile.toString());
+        String[] optar = opts.toString().split(" ");
+        String[] cmds = new String[optar.length + 1];
+        cmds[0] = executable.toString();
+        System.arraycopy(optar, 0, cmds, 1, optar.length);
+        return cmds;
+    }
+
     /** *************************************************************
      * Add an assertion for inference.
      *
@@ -186,20 +212,26 @@ public class Vampire {
      */
     public void runCustom(File kbFile, int timeout, Collection<String> commands) throws Exception {
 
+        output = new ArrayList<>();
         String vampex = KBmanager.getMgr().getPref("vampire");
         if (StringUtil.emptyString(vampex)) {
-            System.err.println("Error in Vampire.run(): no executable string in preferences");
+            System.err.println("Error in Vampire.runCustom(): no executable string in preferences");
         }
         File executable = new File(vampex);
         if (!executable.exists()) {
-            System.err.println("Error in Vampire.run(): no executable " + vampex);
+            System.err.println("Error in Vampire.runCustom(): no executable " + vampex);
         }
-        String[] cmds = createCommandList(executable, timeout, kbFile);
-        ArrayList<String> moreCommands = new ArrayList<>();
-        moreCommands.addAll(Arrays.asList(cmds));
-        moreCommands.addAll(commands);
-        cmds = moreCommands.toArray(cmds); // passes the type of the array to allow return of the right type
-        System.out.println("Vampire.run(): Initializing Vampire with:\n" + Arrays.toString(cmds));
+        else
+            System.out.println("Vampire.runCustom(): vampire executable: " + vampex);
+        String[] cmds = createCustomCommandList(executable, timeout, kbFile, commands);
+        System.out.println("Vampire.runCustom(): Custom command list:\n" + Arrays.toString(cmds));
+        //ArrayList<String> moreCommands = new ArrayList<>();
+        //moreCommands.add(cmds[0]);
+        //moreCommands.addAll(commands);
+        //moreCommands.addAll(Arrays.asList(cmds));
+        //System.out.println("Vampire.runCustom():  more command:\n" + moreCommands);
+        //cmds = moreCommands.toArray(cmds); // passes the type of the array to allow return of the right type
+        //System.out.println("Vampire.runCustom(): Initializing Vampire with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(true);

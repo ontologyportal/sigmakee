@@ -58,22 +58,31 @@
 <%
     if (action != null && action.equalsIgnoreCase("submit")) {
         out.println("Generate formulas<br>");
-        GenPropFormulas.generateFormulas(1);
+        GenPropFormulas.init();
+        if (numVars == null)
+            numVars = "3";
+        if (depth == null)
+            depth = "5";
+        GenPropFormulas.generateFormulas(10,Integer.parseInt(numVars),Integer.parseInt(depth));
         out.println();
         out.println("--------------------------<br>");
-        out.println("<P><b>Proof found</b>:<br>");
+        out.println("<b>Contradiction</b>:<br> ");
         for (String s : GenPropFormulas.contraResults) {
             out.println(s + "<br>");
             out.println("CNF: " + GenPropFormulas.CNF.get(s) + "<br>");
             out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
         }
+        out.println("--------------------------<br>");
+        out.println("<b>Tautology</b>:<br>");
         for (String s : GenPropFormulas.tautResults) {
             out.println(s + "<br>");
             out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
             out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
         }
+        out.println("--------------------------<br>");
+        out.println("<b>Satisfiable</b>:<br>");
         for (String s : GenPropFormulas.satResults) {
             out.println(s + "<br>");
             out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
