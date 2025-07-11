@@ -33,20 +33,25 @@ public class GenPropFormulas {
 
     public enum SZSonto {CONTRA, SAT, OTHER};  // theorem prover status
 
-    private static Random random = new Random();
-    public static Vampire vamp = new Vampire();
-    public static ECNF ecnf = new ECNF();
-    public static TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+    private Random random = new Random();
+    public Vampire vamp = new Vampire();
+    public ECNF ecnf = new ECNF();
+    public TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
     public static final List<String> vcnfcmds = List.of("--mode","clausify","-updr","off");
     public static final List<String> ecnfcmds = List.of("--cnf","--no-preprocessing");
 
-    public static Set<String> contraResults = new HashSet<>();
-    public static Set<String> tautResults = new HashSet<>();
-    public static Set<String> satResults = new HashSet<>();
-    public static Map<String,String> CNF = new HashMap<>();
-    public static Map<String,String> truthTables = new HashMap<>();
-    public static Map<String,String> tableaux = new HashMap<>();
+    public Set<String> contraResults = new HashSet<>();
+    public Set<String> tautResults = new HashSet<>();
+    public Set<String> satResults = new HashSet<>();
+    public Map<String,String> CNF = new HashMap<>();
+    public Map<String,String> truthTables = new HashMap<>();
+    public Map<String,String> tableaux = new HashMap<>();
+
+    /** ***************************************************************
+     * constructor
+     */
+    public GenPropFormulas() {}
 
     /** ***************************************************************
      * constructor
@@ -74,7 +79,7 @@ public class GenPropFormulas {
     /** ***************************************************************
      * convert to a string
      */
-    public static void init() {
+    public void init() {
 
         random = new Random();
         vamp = new Vampire();
@@ -102,6 +107,34 @@ public class GenPropFormulas {
         if (operator == null ? NOT == null : operator.equals(NOT))
             return NOT + f1.toString();
         return f1.toString() + operator + f2.toString();
+    }
+
+    /** ***************************************************************
+     * Simplify clauses from a multiset of literals to sets of literals
+     */
+    public static String simplifyCNF(String cnf) {
+
+        System.out.println("simplifyCNF(): before: " + cnf);
+        HashSet<String> newclauseset = new HashSet<>();
+        String[] clauses = cnf.split(", ");
+        for (String s : clauses) {
+            System.out.println("simplifyCNF(): clause: " + s);
+            HashSet<String> newclause = new HashSet<>();
+            String clause = StringUtil.removeEnclosingCharPair(s.trim(),1,'(',')');
+            System.out.println("simplifyCNF(): without parens: " + clause);
+            if (!clause.contains("|")) {
+                newclauseset.add(clause);
+                continue;
+            }
+            String[] literals = clause.split("\\|");
+            System.out.println("simplifyCNF(): literals: " + Arrays.toString(literals));
+            for (String l : literals)
+                newclause.add(l);
+            String newClauseStr = newclause.toString().replace(",","|");
+            newclauseset.add("(" + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + ")");
+        }
+        System.out.println("simplifyCNF(): after: " + newclauseset);
+        return StringUtil.removeEnclosingCharPair(newclauseset.toString(),1,'[',']');
     }
 
     /** ***************************************************************
@@ -142,7 +175,7 @@ public class GenPropFormulas {
         }
         if (sb.length() > 3)
             sb.delete(sb.length()-2,sb.length());
-        return sb.toString();
+        return simplifyCNF(sb.toString());
     }
 
     /** ***************************************************************
@@ -155,7 +188,7 @@ public class GenPropFormulas {
      * @return a selection from the TPTP SZS ontology of contradiction,
      * saturation or "other"
      */
-    private static SZSonto run(Set<String> stmts, StringBuilder filename) throws Exception {
+    private SZSonto run(Set<String> stmts, StringBuilder filename) throws Exception {
 
         int count = 0;
         String fname = "prob" + count + ".p";
@@ -292,7 +325,7 @@ public class GenPropFormulas {
 
     /** ***************************************************************
      */
-    public static void printResults() {
+    public void printResults() {
 
         System.out.println();
         System.out.println("--------------------------");
@@ -318,7 +351,7 @@ public class GenPropFormulas {
 
     /** ***************************************************************
      */
-    public static void generateCNFandLinks(String form, String filename)  throws Exception {
+    public void generateCNFandLinks(String form, String filename)  throws Exception {
 
         File fname = new File(filename);
         //System.out.println("generateCNFandLinks(): filename: " + filename);
@@ -341,7 +374,7 @@ public class GenPropFormulas {
 
     /** ***************************************************************
      */
-    public static void generateFormulas(int targetCount, int numvars, int depth) throws Exception {
+    public void generateFormulas(int targetCount, int numvars, int depth) throws Exception {
 
         GenPropFormulas f = new GenPropFormulas("a",null,null,null);
         int iter = 0;
@@ -413,30 +446,31 @@ public class GenPropFormulas {
                 printHelp();
             }
             if (args.length > 2 && args[0].equals("-g") && args[1] != null && args[2] != null ) {
+                GenPropFormulas gpf = new GenPropFormulas();
                 int numvars = Integer.parseInt(args[1]);
                 int depth = Integer.parseInt(args[2]);
-                generateFormulas(1,numvars,depth);  // generate 10 good formulas
+                gpf.generateFormulas(1,numvars,depth);  // generate 10 good formulas
 
                 System.out.println("Contradictions");
-                for (String s : GenPropFormulas.contraResults) {
+                for (String s : gpf.contraResults) {
                     System.out.println("Formula: " + s);
-                    System.out.println("CNF: " + GenPropFormulas.CNF.get(s));
-                    System.out.println(GenPropFormulas.truthTables.get(s));
-                    System.out.println(GenPropFormulas.tableaux.get(s));
+                    System.out.println("CNF: " + gpf.CNF.get(s));
+                    System.out.println(gpf.truthTables.get(s));
+                    System.out.println(gpf.tableaux.get(s));
                 }
                 System.out.println("<P><b>Tautologies</b>:<br>");
-                for (String s : GenPropFormulas.tautResults) {
+                for (String s : gpf.tautResults) {
                     System.out.println("Formula: " + s);
-                    System.out.println("CNF: " + GenPropFormulas.CNF.get(s));
-                    System.out.println(GenPropFormulas.truthTables.get(s));
-                    System.out.println(GenPropFormulas.tableaux.get(s));
+                    System.out.println("CNF: " + gpf.CNF.get(s));
+                    System.out.println(gpf.truthTables.get(s));
+                    System.out.println(gpf.tableaux.get(s));
                 }
                 System.out.println("<P><b>Satisfiable but not a Tautology</b>:<br>");
-                for (String s : GenPropFormulas.satResults) {
+                for (String s : gpf.satResults) {
                     System.out.println("Formula: " + s);
-                    System.out.println("CNF: " + GenPropFormulas.CNF.get(s));
-                    System.out.println(GenPropFormulas.truthTables.get(s));
-                    System.out.println(GenPropFormulas.tableaux.get(s));
+                    System.out.println("CNF: " + gpf.CNF.get(s));
+                    System.out.println(gpf.truthTables.get(s));
+                    System.out.println(gpf.tableaux.get(s));
                 }
             }
             if (args.length > 0 && args[0].equals("-c")) {
