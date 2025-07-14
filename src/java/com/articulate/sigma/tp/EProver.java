@@ -380,6 +380,29 @@ public class EProver {
     }
 
     /** *************************************************************
+     * don't include a timeout if @param timeout is 0
+     */
+    private static String[] createCustomCommandList(File executable,
+                                                    int timeout, File kbFile,
+                                                    Collection<String> commands) {
+
+        String space = " ";
+        StringBuilder opts = new StringBuilder();
+        for (String s : commands)
+            opts.append(s).append(space);
+        if (timeout != 0) {
+            opts.append("-t").append(space);
+            opts.append(timeout).append(space);
+        }
+        opts.append(kbFile.toString());
+        String[] optar = opts.toString().split(" ");
+        String[] cmds = new String[optar.length + 1];
+        cmds[0] = executable.toString();
+        System.arraycopy(optar, 0, cmds, 1, optar.length);
+        return cmds;
+    }
+
+    /** *************************************************************
      * Creates a running instance of Eprover with custom command line
      * options.
      *
@@ -399,7 +422,8 @@ public class EProver {
         if (!executable.exists()) {
             System.err.println("Error in Eprover.run(): no executable " + eprover);
         }
-        String[] cmds = createCommandList(executable, timeout, kbFile);
+        String[] cmds = createCustomCommandList(executable, timeout, kbFile, commands);
+        System.out.println("EProver.runCustom(): Custom command list:\n" + Arrays.toString(cmds));
         ArrayList<String> moreCommands = new ArrayList<>();
         moreCommands.addAll(Arrays.asList(cmds));
         moreCommands.addAll(commands);

@@ -17,7 +17,7 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
+    GenPropFormulas gpf = new GenPropFormulas();
     String sigmaHome = System.getenv("SIGMA_HOME");
     if (StringUtil.emptyString(sigmaHome))
         sigmaHome = "SIGMA_HOME";
@@ -58,31 +58,40 @@
 <%
     if (action != null && action.equalsIgnoreCase("submit")) {
         out.println("Generate formulas<br>");
-        GenPropFormulas.generateFormulas(1);
+        gpf.init();
+        if (numVars == null)
+            numVars = "3";
+        if (depth == null)
+            depth = "5";
+        gpf.generateFormulas(10,Integer.parseInt(numVars),Integer.parseInt(depth));
         out.println();
-        out.println("--------------------------<br>");
-        out.println("<P><b>Proof found</b>:<br>");
-        for (String s : GenPropFormulas.contraResults) {
+        out.println("<hr><br>");
+        out.println("<b>Contradiction</b>:<br> ");
+        for (String s : gpf.contraResults) {
             out.println(s + "<br>");
-            out.println("CNF: " + GenPropFormulas.CNF.get(s) + "<br>");
-            out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
+            out.println("CNF: " + gpf.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
         }
-        for (String s : GenPropFormulas.tautResults) {
+        out.println("<hr><br>");
+        out.println("<b>Tautology</b>:<br>");
+        for (String s : gpf.tautResults) {
             out.println(s + "<br>");
-            out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
-            out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
+            out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
         }
-        for (String s : GenPropFormulas.satResults) {
+        out.println("<hr><br>");
+        out.println("<b>Satisfiable</b>:<br>");
+        for (String s : gpf.satResults) {
             out.println(s + "<br>");
-            out.println("<b>CNF</b>: " + GenPropFormulas.CNF.get(s) + "<br>");
-            out.println("<a href=\"" + GenPropFormulas.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + GenPropFormulas.tableaux.get(s) + "\">tableau</a><br>");
+            out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
         }
     }
     if (erase != null && erase.equalsIgnoreCase("erase")) {
-        GenPropFormulas.init();
+        gpf.init();
     }
 %>
 <P>

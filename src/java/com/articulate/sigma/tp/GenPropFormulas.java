@@ -31,17 +31,27 @@ public class GenPropFormulas {
     public GenPropFormulas f1 = null;
     public GenPropFormulas f2 = null;
 
-    private static Random random = new Random();
-    public static Vampire vamp = new Vampire();
-    public static TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+    public enum SZSonto {CONTRA, SAT, OTHER};  // theorem prover status
 
-    public static List<String> cmds = new ArrayList<>();
+    private Random random = new Random();
+    public Vampire vamp = new Vampire();
+    public ECNF ecnf = new ECNF();
+    public TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
 
-    public static Set<String> contraResults = new HashSet<>();
-    public static Set<String> tautResults = new HashSet<>();
-    public static Map<String,String> CNF = new HashMap<>();
-    public static Map<String,String> truthTables = new HashMap<>();
-    public static Map<String,String> tableaux = new HashMap<>();
+    public static final List<String> vcnfcmds = List.of("--mode","clausify","-updr","off");
+    public static final List<String> ecnfcmds = List.of("--cnf","--no-preprocessing");
+
+    public Set<String> contraResults = new HashSet<>();
+    public Set<String> tautResults = new HashSet<>();
+    public Set<String> satResults = new HashSet<>();
+    public Map<String,String> CNF = new HashMap<>();
+    public Map<String,String> truthTables = new HashMap<>();
+    public Map<String,String> tableaux = new HashMap<>();
+
+    /** ***************************************************************
+     * constructor
+     */
+    public GenPropFormulas() {}
 
     /** ***************************************************************
      * constructor
@@ -69,15 +79,15 @@ public class GenPropFormulas {
     /** ***************************************************************
      * convert to a string
      */
-    public static void init() {
+    public void init() {
 
         random = new Random();
         vamp = new Vampire();
+        ecnf = new ECNF();
         tpp = new TPTP3ProofProcessor();
 
-        cmds = new ArrayList<>();
-
         contraResults = new HashSet<>();
+        satResults = new HashSet<>();
         tautResults = new HashSet<>();
         CNF = new HashMap<>();
         truthTables = new HashMap<>();
@@ -100,14 +110,43 @@ public class GenPropFormulas {
     }
 
     /** ***************************************************************
+     * Simplify clauses from a multiset of literals to sets of literals
+     */
+    public static String simplifyCNF(String cnf) {
+
+        System.out.println("simplifyCNF(): before: " + cnf);
+        HashSet<String> newclauseset = new HashSet<>();
+        String[] clauses = cnf.split(", ");
+        for (String s : clauses) {
+            System.out.println("simplifyCNF(): clause: " + s);
+            HashSet<String> newclause = new HashSet<>();
+            String clause = StringUtil.removeEnclosingCharPair(s.trim(),1,'(',')');
+            System.out.println("simplifyCNF(): without parens: " + clause);
+            if (!clause.contains("|")) {
+                newclauseset.add(clause);
+                continue;
+            }
+            String[] literals = clause.split("\\|");
+            System.out.println("simplifyCNF(): literals: " + Arrays.toString(literals));
+            for (String l : literals)
+                newclause.add(l);
+            String newClauseStr = newclause.toString().replace(",","|");
+            newclauseset.add("(" + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + ")");
+        }
+        System.out.println("simplifyCNF(): after: " + newclauseset);
+        return StringUtil.removeEnclosingCharPair(newclauseset.toString(),1,'[',']');
+    }
+
+    /** ***************************************************************
      * convert to a string
      */
     public static String formatCNF(List<String> l) {
 
         StringBuilder sb = new StringBuilder();
+        HashSet<String> seen = new HashSet<>();
         for (String s : l) {
+            //System.out.println("formatCNF(): input: " + s);
             if (!s.startsWith("%") && s.length() > 4) {
-                //System.out.println("formatCNF(): input: " + s);
                 int firstComma = s.indexOf(",");
                 if (firstComma == -1)
                     continue;
@@ -118,21 +157,38 @@ public class GenPropFormulas {
                 int thirdComma = s.indexOf(",",secondComma+1);
                 if (thirdComma > -1)
                     end = thirdComma;
+                String firstParam = s.substring(s.indexOf("(")+1,firstComma).trim();
+                String secondParam = s.substring(firstComma+1,secondComma).trim();
+                //System.out.println("formatCNF(): firstParam: " + firstParam);
+                //System.out.println("formatCNF(): secondParam: " + secondParam);
                 //System.out.println(firstComma + ", " + secondComma + ", " + thirdComma);
-                //System.out.println("formatCNF(): result: " + s.substring(secondComma+1,end));
-                sb.append(s.substring(secondComma+1,end).trim()).append(", ");
+                // if (!secondParam.equals("axiom")) Vampire uses "axiom"
+                if (!secondParam.equals("plain")) // E uses "plain"
+                    continue;
+                String clause = s.substring(secondComma+1,end).trim();
+                //System.out.println("formatCNF(): result: " + clause);
+                if (seen.contains(clause))
+                    continue;
+                seen.add(clause);
+                sb.append(clause).append(", ");
             }
         }
-        sb.delete(sb.length()-2,sb.length());
-        return sb.toString();
+        if (sb.length() > 3)
+            sb.delete(sb.length()-2,sb.length());
+        return simplifyCNF(sb.toString());
     }
 
     /** ***************************************************************
-     * Write all the strings in @param stmts to a new file
-     * @param filename is a side effect that contains the filename on exit
-     * @return a boolean that is true when there is a proof of a contradiction
+     * Write all the strings in @param stmts to a new file. Run vampire
+     * to prove whether each string is a tautology, contradiction or
+     * satisfiable.
+     * @param filename is a side effect that contains the filename on exit.
+     *                 The system searches for a filename that doesn't exist
+     *                 already.
+     * @return a selection from the TPTP SZS ontology of contradiction,
+     * saturation or "other"
      */
-    private static boolean run(Set<String> stmts, StringBuilder filename) throws Exception {
+    private SZSonto run(Set<String> stmts, StringBuilder filename) throws Exception {
 
         int count = 0;
         String fname = "prob" + count + ".p";
@@ -143,15 +199,16 @@ public class GenPropFormulas {
             f = new File(fname);
         }
         filename.append(fname);
-        System.out.println("GenFormula.run(): filename: " + filename.toString());
+        System.out.println("GenPropFormulas.run(): filename: " + filename.toString());
+        System.out.println("GenPropFormulas.run(): stmts: " + stmts);
         try (Writer fw = new FileWriter(fname);
              PrintWriter pw = new PrintWriter(fw)) {
             for (String s : stmts)
                 pw.println(s);
         }
         catch (IOException e) {
-            System.err.println("run(): Error in writeStatements(): " + e.getMessage());
-            System.err.println("run(): Error writing file " + fname + "\n" + e.getMessage());
+            System.err.println("GenPropFormulas.run(): Error in writeStatements(): " + e.getMessage());
+            System.err.println("GenPropFormulas.run(): Error writing file " + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
         
@@ -159,32 +216,48 @@ public class GenPropFormulas {
         KBmanager mgr = KBmanager.getMgr();
         SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
         for (SimpleElement el : config.getChildElements()) {
-            if (el.getTagName().equals("preference"))
+            if (el.getTagName().equals("preference")) {
                 if (el.getAttribute("name").contains("vampire"))
                     mgr.setPref("vampire", el.getAttribute("value"));
+                if (el.getAttribute("name").contains("eprover"))
+                    mgr.setPref("eprover", el.getAttribute("value"));
+            }
         }
-//        KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
+        if (mgr.getPref("vampire").isEmpty())
+            KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
         Vampire.mode = Vampire.ModeType.CASC; // default
-        System.out.println("GenFormula.run(): before vampire");
+        System.out.println("GenPropFormulas.run(): before vampire");
+        if (mgr.getPref("eprover").isEmpty())
+            KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
 
+        boolean sat = false;
         vamp.run(f,5);
         boolean proof = false;
         for (String s : vamp.output) {
             if (s.contains("Refutation found"))
                 proof = true;
+            if (s.contains("Saturation"))
+                sat = true;
         }
         if (proof) {
-            System.out.println("Proof found");
+            System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-            return true;
+            return SZSonto.CONTRA;
+        }
+        else if (sat) {
+            System.out.println("run(): Saturation: statement " + stmts);
+            vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+            return SZSonto.SAT;
         }
         else {
-            System.out.println("no proof");
-            return false;
+            System.out.println("run(): no proof: statement " + stmts);
+            return SZSonto.OTHER;
         }
     }
 
     /** ***************************************************************
+     * Randomly generate a propositional formula with the given number of
+     * atoms and levels of nesting.
      */
     private GenPropFormulas generate(String parentOp, int atomCount, int levels) {
 
@@ -244,6 +317,7 @@ public class GenPropFormulas {
         String result = s.replace("~","¬");
         result = result.replace("|","∨");
         result = result.replace("&","∧");
+        result = result.replace("<=>","↔");
         result = result.replace("=>","→");
         result = URLEncoder.encode(result,Charset.defaultCharset());
         return "https://mathlogic.lv/tableau.html?f=" + result;
@@ -251,7 +325,7 @@ public class GenPropFormulas {
 
     /** ***************************************************************
      */
-    public static void printResults() {
+    public void printResults() {
 
         System.out.println();
         System.out.println("--------------------------");
@@ -260,6 +334,9 @@ public class GenPropFormulas {
             System.out.println(s);
         System.out.println("Tautologies:");
         for (String s : tautResults)
+            System.out.println(s);
+        System.out.println("Satisfiable but not Tautologies:");
+        for (String s : satResults)
             System.out.println(s);
         System.out.println("CNF:");
         for (String s : CNF.keySet())
@@ -274,58 +351,74 @@ public class GenPropFormulas {
 
     /** ***************************************************************
      */
-    public static void generateFormulas(int targetCount) throws Exception {
+    public void generateCNFandLinks(String form, String filename)  throws Exception {
+
+        File fname = new File(filename);
+        //System.out.println("generateCNFandLinks(): filename: " + filename);
+        //System.out.println("generateFormulas(): formula: " + form);
+        //System.out.println("generateFormulas(): Run Vampire for CNF conversion with: " + cnfcmds);
+        //vamp.runCustom(fname,0, cnfcmds);
+        ecnf.runCustom(fname,0,ecnfcmds);
+        String formStr = form;
+        //ecnf.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+        String CNFresult = formatCNF(ecnf.output);
+        if (CNFresult.isEmpty())
+            CNFresult = form;
+        System.out.println("generateCNFandLinks(): CNF for " + form + " is " + CNFresult);
+        CNF.put(form,CNFresult);
+        String encoded = encodeTT(formStr);
+        truthTables.put(formStr,encoded);
+        encoded = encodeTab(formStr);
+        tableaux.put(formStr,encoded);
+    }
+
+    /** ***************************************************************
+     */
+    public void generateFormulas(int targetCount, int numvars, int depth) throws Exception {
 
         GenPropFormulas f = new GenPropFormulas("a",null,null,null);
+        int iter = 0;
         int count = 0;
 
-        while (count < targetCount) {
-            GenPropFormulas form = f.generate("", 3, 6);
-            System.out.println("generateFormulas(): form: " + form);
-            String wrappedForm = "fof(conj,axiom," + form.toString() + ").";
+        while (count < targetCount && iter < 200) {
+            String form = f.generate("", numvars, depth).toString();
+            System.out.println("\n*************************\ngenerateFormulas(): form: " + form);
+            String wrappedForm = "fof(conj,axiom," + form + ").";
             System.out.println("generateFormulas(): wrapped: " + wrappedForm);
             Set<String> stmts = new HashSet<>();
             stmts.add(wrappedForm);
             StringBuilder filename = new StringBuilder();
-            boolean result = run(stmts,filename);
-            if (result) {
-                count++;
-                tautResults.add(form.toString());
-                File fname = new File(filename.toString());
-                System.out.println("generateFormulas(): filename: " + filename);
-                vamp.runCustom(fname,5,cmds);
-                String formStr = form.toString();
-                vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-                System.out.println("CNF proof: " + StringUtil.arrayListToCRLFString(vamp.output));
-                CNF.put(form.toString(),formatCNF(vamp.output));
-                String encoded = encodeTT(formStr);
-                truthTables.put(formStr,encoded);
-                encoded = encodeTab(formStr);
-                tableaux.put(formStr,encoded);
-            }
-            System.out.println();
+            SZSonto result = run(stmts,filename);
+            HashSet<String> negstmts = new HashSet<>();
+            String negWrappedForm = "fof(conj,axiom,~(" + form + ")).";
+            String negForm = "~(" + form + ")";
+            System.out.println("generateFormulas(): neg form: " + negForm);
+            System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
+            negstmts.add(negWrappedForm);
+            StringBuilder negfilename = new StringBuilder();
+            SZSonto negresult = run(negstmts,negfilename);
 
-            stmts = new HashSet<>();
-            wrappedForm = "fof(conj,axiom,~(" + form.toString() + ")).";
-            String formStr = "~(" + form.toString() + ")";
-            System.out.println(formStr);
-            stmts.add(wrappedForm);
-            filename = new StringBuilder();
-            result = run(stmts,filename);
-            if (result) {
+            if (result == SZSonto.SAT && negresult == SZSonto.CONTRA) {
                 count++;
-                contraResults.add(formStr);
-                File fname = new File(filename.toString());
-                System.out.println("generateFormulas(): filename: " + filename);
-                vamp.runCustom(fname,5,cmds);
-                vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-                System.out.println("CNF proof: " + StringUtil.arrayListToCRLFString(vamp.output));
-                CNF.put(form.toString(),formatCNF(vamp.output));
-                String encoded = encodeTT(formStr);
-                truthTables.put(formStr,encoded);
-                encoded = encodeTab(formStr);
-                tableaux.put(formStr,encoded);
+                tautResults.add(form);
+                contraResults.add(negForm);
             }
+
+            if (negresult == SZSonto.SAT && result == SZSonto.CONTRA) {
+                count++;
+                tautResults.add(negForm);
+                contraResults.add(form);
+            }
+
+            if (negresult == SZSonto.SAT && result == SZSonto.SAT) {
+                count++;
+                satResults.add(negForm);
+                satResults.add(form);
+            }
+
+            generateCNFandLinks(form,filename.toString());
+            generateCNFandLinks(negForm,negfilename.toString());
+            iter++;
         }
         printResults();
     }
@@ -337,7 +430,7 @@ public class GenPropFormulas {
         System.out.println("GenPropFormulas class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
-        System.out.println("  -g - generate formulas");
+        System.out.println("  -g numvars depth - generate formulas with these params");
         System.out.println("  -c - test format CNF ");
     }
 
@@ -349,27 +442,35 @@ public class GenPropFormulas {
             printHelp();
         }
         else {
-            cmds.add("--mode");
-            cmds.add("clausify");
-            cmds.add("-updr");
-            cmds.add("off");
             if (args.length > 0 && args[0].equals("-h")) {
                 printHelp();
             }
-            if (args.length > 0 && args[0].equals("-g")) {
-                generateFormulas(10);  // generate 10 good formulas
+            if (args.length > 2 && args[0].equals("-g") && args[1] != null && args[2] != null ) {
+                GenPropFormulas gpf = new GenPropFormulas();
+                int numvars = Integer.parseInt(args[1]);
+                int depth = Integer.parseInt(args[2]);
+                gpf.generateFormulas(1,numvars,depth);  // generate 10 good formulas
 
                 System.out.println("Contradictions");
-                for (String s : GenPropFormulas.contraResults) {
-                    System.out.println("CNF: " + GenPropFormulas.CNF.get(s));
-                    System.out.println(GenPropFormulas.truthTables.get(s));
-                    System.out.println(GenPropFormulas.tableaux.get(s));
+                for (String s : gpf.contraResults) {
+                    System.out.println("Formula: " + s);
+                    System.out.println("CNF: " + gpf.CNF.get(s));
+                    System.out.println(gpf.truthTables.get(s));
+                    System.out.println(gpf.tableaux.get(s));
                 }
                 System.out.println("<P><b>Tautologies</b>:<br>");
-                for (String s : GenPropFormulas.tautResults) {
-                    System.out.println("CNF: " + GenPropFormulas.CNF.get(s));
-                    System.out.println(GenPropFormulas.truthTables.get(s));
-                    System.out.println(GenPropFormulas.tableaux.get(s));
+                for (String s : gpf.tautResults) {
+                    System.out.println("Formula: " + s);
+                    System.out.println("CNF: " + gpf.CNF.get(s));
+                    System.out.println(gpf.truthTables.get(s));
+                    System.out.println(gpf.tableaux.get(s));
+                }
+                System.out.println("<P><b>Satisfiable but not a Tautology</b>:<br>");
+                for (String s : gpf.satResults) {
+                    System.out.println("Formula: " + s);
+                    System.out.println("CNF: " + gpf.CNF.get(s));
+                    System.out.println(gpf.truthTables.get(s));
+                    System.out.println(gpf.tableaux.get(s));
                 }
             }
             if (args.length > 0 && args[0].equals("-c")) {
