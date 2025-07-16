@@ -46,17 +46,17 @@ RUN cd /root/workspace \
 
 # Setup Apache, E and Wordnet
 RUN cd /root/Programs \
-    && wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.96/bin/apache-tomcat-9.0.96.zip' \
+    && wget 'https://archive.apache.org/dist/tomcat/tomcat-9/v9.0.97/bin/apache-tomcat-9.0.97.zip' \
     && wget 'https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz' \
-    && wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.0/E.tgz' \
+    && wget 'http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E.tgz' \
     && tar -xvzf E.tgz \
     && unzip apache-tomcat-9.0.96.zip \
     && rm apache-tomcat-9.0.96.zip
 
-RUN cd /root/Programs/apache-tomcat-9.0.96/bin \
+RUN cd /root/Programs/apache-tomcat-9.0.97/bin \
     && chmod 777 *
 
-RUN cd /root/Programs/apache-tomcat-9.0.96/webapps \
+RUN cd /root/Programs/apache-tomcat-9.0.97/webapps \
     && chmod 777 *
 
 # Setup E
@@ -88,4 +88,4 @@ RUN cd /root/workspace/sigmakee \
 RUN cp -R /root/workspace/sumo/* /root/.sigmakee/KBs
 COPY kbs /root/.sigmakee/KBs
 
-CMD cd /root && source .bashrc && /root/Programs/apache-tomcat-9.0.96/bin/startup.sh && tail -f /root/Programs/apache-tomcat-9.0.96/logs/catalina.out
+CMD cd /root && source .bashrc && /root/Programs/apache-tomcat-9.0.97/bin/startup.sh && tail -f /root/Programs/apache-tomcat-9.0.97/logs/catalina.out
