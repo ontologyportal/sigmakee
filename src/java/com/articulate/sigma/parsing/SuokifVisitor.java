@@ -193,12 +193,12 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                 f.endLine = ((SuokifParser.SentenceContext) c).stop.getLine();
                 f.sourceFile = ((SuokifParser.SentenceContext) c).start.getTokenSource().getSourceName();
                 result.put(counter++,f);
-                if (!f.predVarCache.isEmpty()) {
+                if (f.predVarCache != null && !f.predVarCache.isEmpty()) {
                     hasPredVar.add(f);
                     if (f.predVarCache.size() > 1)
                         multiplePredVar.add(f);
                 }
-                if (!f.rowVarCache.isEmpty()) {
+                if (f.rowVarCache != null && !f.rowVarCache.isEmpty()) {
                     hasRowVar.add(f);
                     if (f.rowVarCache.size() > 1)
                         multipleRowVar.add(f);
