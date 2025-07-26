@@ -9,7 +9,7 @@
 
 [Version notes](https://github.com/ontologyportal/sigmakee/wiki/Version-notes)
 
-# Introduction
+# Introduction (at least 16GB RAM required)
 
 Sigma is an integrated development environment for logical theories that extend the Suggested Upper Merged Ontology (SUMO).  There is a public installation with read-only functions enabled linked from http://www.ontologyportal.org - click on the "Browse" link.
 
