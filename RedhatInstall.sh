@@ -72,7 +72,7 @@ add_to_bashrc "export SIGMA_HOME=\"\$HOME/.sigmakee\""
 add_to_bashrc "export ONTOLOGYPORTAL_GIT=\"\$HOME/workspace\""
 add_to_bashrc "export SIGMA_SRC=\"\$ONTOLOGYPORTAL_GIT/sigmakee\""
 add_to_bashrc "export CATALINA_OPTS=\"\$CATALINA_OPTS -Xmx10g -Xss1m\""
-add_to_bashrc "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.97\""
+add_to_bashrc "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.107\""
 add_to_bashrc "export SIGMA_CP=\"\$SIGMA_SRC/build/sigmakee.jar:\$SIGMA_SRC/lib/*\""
 
 # Source the .bashrc file to apply changes
@@ -91,7 +91,7 @@ cd "$HOME/Programs"
 #install ant
 
 wget https://dlcdn.apache.org//ant/binaries/apache-ant-1.10.15-bin.zip
-unzip apache-ant-1.10.15-bin.zip 
+unzip apache-ant-1.10.15-bin.zip
 
 add_to_bashrc "export JAVA_HOME=\"/usr/lib/jvm/java-21-openjdk-21.0.6.0.7-1.el8.x86_64\""
 add_to_bashrc "export ANT_HOME=\"/home/apease/Programs/apache-ant-1.10.15\""

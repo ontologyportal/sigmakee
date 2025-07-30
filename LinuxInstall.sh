@@ -71,7 +71,7 @@ set_and_persist "export SIGMA_HOME=\"\$HOME/.sigmakee\""
 set_and_persist "export ONTOLOGYPORTAL_GIT=\"\$HOME/workspace\""
 set_and_persist "export SIGMA_SRC=\"\$ONTOLOGYPORTAL_GIT/sigmakee\""
 set_and_persist "export CATALINA_OPTS=\"\$CATALINA_OPTS -Xmx10g -Xss1m\""
-set_and_persist "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.97\""
+set_and_persist "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.107\""
 set_and_persist "export PATH=\"\$CATALINA_HOME/bin:\$PATH\""
 set_and_persist "export SIGMA_CP=\"\$SIGMA_SRC/build/sigmakee.jar:\$SIGMA_SRC/lib/*\""
 

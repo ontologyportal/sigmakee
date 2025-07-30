@@ -42,7 +42,7 @@ public class CELTTestSuite {
         result = result.append("<td><b>Expected</b></td><td><b>Actual</b></td><td><b>ok</b></td></tr>");
         String celtTestDir = KBmanager.getMgr().getPref("inferenceTestDir");
         if (celtTestDir == null)
-            celtTestDir = "~/Programs/apache-tomcat-9.0.97";
+            celtTestDir = System.getenv("$CATALINA_HOME");
         String celtTestFile = celtTestDir + File.separator + "celtTest.txt";
         KIF test = new KIF();
         try {
