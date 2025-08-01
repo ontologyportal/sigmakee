@@ -15,22 +15,24 @@ ARG E_PROVER='http://wwwlehre.dhbw-stuttgart.de/~sschulz/WORK/E_DOWNLOAD/V_2.6/E
 ARG WORD_NET='https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 
 # We're in / ${root}
+# install our tools
 RUN apt-get update && apt-get install -y --install-recommends \
     build-essential \
-    gcc-12 \
-    g++-12 \
     cmake \
     git \
     python3 \
-    wget ;\
-    wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 110 --slave /usr/bin/g++ g++ /usr/bin/g++-13 --slave /usr/bin/gcov gcov /usr/bin/gcov-13 ;\
-    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 120 --slave /usr/bin/g++ g++ /usr/bin/g++-12 --slave /usr/bin/gcov gcov /usr/bin/gcov-12 ;\
-    gcc --version ;\
-    wget $E_PROVER && tar xf E.tgz ;\
-    cd E ;\
-    ./configure && make -j`nproc` ;\
-    cd .. ;\
+    wget
+
+# Download WornNet and E
+RUN wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
+    wget $E_PROVER && tar xf E.tgz
+
+# Build E
+RUN cd E ;\
+    ./configure && make -j`nproc`
+
+# Build Vampire w/ Z3
+RUN cd .. ;\
     git clone $VAMPIRE_GIT ;\
     cd vampire ;\
     git submodule update --init ;\
