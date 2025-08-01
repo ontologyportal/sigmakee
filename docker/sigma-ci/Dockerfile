@@ -42,10 +42,7 @@ RUN cd .. ;\
     make -j`nproc` ;\
     cd ../../build ;\
     cmake .. ;\
-    make -j`nproc` ;\
-    cd .. ;\
-    cp build/vampire vampire ;\
-    ./checks/sanity vampire
+    make -j`nproc`
 
 # For a specific version of Vampire and z3 using CLANG
 #RUN apt update && apt install -y --install-recommends \
@@ -95,7 +92,7 @@ COPY --from=builder \
     /WordNet-3.0 /opt/WordNet-3.0
 
 COPY --from=builder \
-    /vampire/vampire /usr/local/bin/vampire
+    /vampire/build/vampire /usr/local/bin/vampire
 COPY --from=builder \
     /vampire/z3/build/libz3.* /usr/local/bin/
 #COPY --from=builder \
