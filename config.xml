@@ -28,7 +28,7 @@
   <preference name="sumokbname" value="SUMO" />
   <preference name="systemsDir" value="/home/theuser" />
   <preference name="termFormats" value="no" />
-  <preference name="testOutputDir" value="/usr/local/tomcat/apache-tomcat-9.0.97/webapps/sigma/tests" />
+  <preference name="testOutputDir" value="/usr/local/tomcat/apache-tomcat-9.0.107/webapps/sigma/tests" />
   <preference name="TPTPDisplay" value="no" />
   <preference name="tptpHomeDir" value="/home/theuser" />
   <preference name="TPTP" value="yes" />
@@ -45,6 +45,8 @@
     <constituent filename="Cars.kif" />
     <constituent filename="Catalog.kif" />
     <constituent filename="Communications.kif" />
+    <constituent filename="ComputerInput.kif" />
+    <constituent filename="ComputingBrands.kif" />
     <constituent filename="CountriesAndRegions.kif" />
     <constituent filename="Dining.kif" />
     <constituent filename="Economy.kif" />
@@ -68,6 +70,7 @@
     <constituent filename="MilitaryPersons.kif" />
     <constituent filename="MilitaryProcesses.kif" />
     <constituent filename="Music.kif" />
+    <constituent filename="development/Muscles.kif " />
     <constituent filename="naics.kif" />
     <constituent filename="People.kif" />
     <constituent filename="pictureList.kif" />
