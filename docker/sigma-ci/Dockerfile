@@ -23,6 +23,9 @@ RUN apt-get update && apt-get install -y --install-recommends \
     git \
     python3 \
     wget ;\
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-13 110 --slave /usr/bin/g++ g++ /usr/bin/g++-13 --slave /usr/bin/gcov gcov /usr/bin/gcov-13 \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 120 --slave /usr/bin/g++ g++ /usr/bin/g++-12 --slave /usr/bin/gcov gcov /usr/bin/gcov-12 ;\
+    gcc --version ;\
     wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
     wget $E_PROVER && tar xf E.tgz ;\
     cd E ;\
