@@ -17,7 +17,8 @@ ARG WORD_NET='https://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
 # We're in / ${root}
 RUN apt-get update && apt-get install -y --install-recommends \
     build-essential \
-    clang \
+    gcc-12 \
+    g++-12 \
     cmake \
     git \
     python3 \
@@ -25,7 +26,7 @@ RUN apt-get update && apt-get install -y --install-recommends \
     wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
     wget $E_PROVER && tar xf E.tgz ;\
     cd E ;\
-    ./configure && CC="clang" CXX="clang++" make -j`nproc` ;\
+    ./configure && make -j`nproc` ;\
     cd .. ;\
     git clone $VAMPIRE_GIT ;\
     cd vampire ;\
@@ -51,7 +52,7 @@ RUN apt-get update && apt-get install -y --install-recommends \
 #    wget ;\
 #    wget $E_PROVER && tar xf E.tgz ;\
 #    cd E ;\
-#    ./configure && CC="clang" CXX="clang++" make -j`nproc` ;\
+#    ./configure && make -j`nproc` CC="clang" CXX="clang++" ;\
 #    cd .. ;\
 #    wget $WORD_NET && tar xf WordNet-3.0.tar.gz ;\
 #    wget $VAMPIRE_GIT && tar -xzf v4.9casc2024.tar.gz ;\
