@@ -590,7 +590,7 @@ public class KIF {
             System.err.println(msg);
         }
         File outfile = new File(filename + ".tptp");
-        try (FileWriter fw = new FileWriter(outfile);
+        try (Writer fw = new FileWriter(outfile);
             PrintWriter pw = new PrintWriter(fw)) {
             Iterator<String> it = kifp.formulaMap.keySet().iterator();
             String form;
