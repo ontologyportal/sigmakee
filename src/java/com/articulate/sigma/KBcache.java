@@ -151,22 +151,22 @@ public class KBcache implements Serializable {
      */
     public KBcache(KB kbin) {
 
-        relations = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        functions = new HashSet<>(kbin.getCountTerms()/9,LOAD_FACTOR);
-        predicates = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        relations = new HashSet<>(kbin.getCountTerms()/17,LOAD_FACTOR);
+        functions = new HashSet<>(kbin.getCountTerms()/69,LOAD_FACTOR);
+        predicates = new HashSet<>(kbin.getCountTerms()/23,LOAD_FACTOR);
         transRels = new HashSet<>(60,LOAD_FACTOR);
         // instRels = new HashSet<String>();
         instTransRels = new HashSet<>(50,LOAD_FACTOR);
         parents = new HashMap<>(60,LOAD_FACTOR);
-        instanceOf = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        instances = new HashMap<>(kbin.getCountTerms(),LOAD_FACTOR);
-        insts = new HashSet<>(kbin.getCountTerms(),LOAD_FACTOR);
+        instanceOf = new HashMap<>(kbin.getCountTerms()/10,LOAD_FACTOR);
+        instances = new HashMap<>(40,LOAD_FACTOR);
+        insts = new HashSet<>(kbin.getCountTerms()/10,LOAD_FACTOR);
         children = new HashMap<>(60,LOAD_FACTOR);
-        signatures = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        valences = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        disjoint = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        signatures = new HashMap<>(kbin.getCountTerms()/16,LOAD_FACTOR);
+        valences = new HashMap<>(kbin.getCountTerms()/16,LOAD_FACTOR);
+        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/36,LOAD_FACTOR);
         disjointRelations = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        disjoint = new HashSet<>(kbin.getCountTerms() * 315,LOAD_FACTOR); // size expected for Merge and MILO only
         this.kb = kbin;
     }
 
@@ -2102,14 +2102,16 @@ public class KBcache implements Serializable {
         total = 0;
         for (Set<String> seconds : nkbc.instances.values())
             total = total + seconds.size();
-        System.out.println("KBcache.showSizes(): instances average values size (# instances ): " +
+        System.out.println("KBcache.showSizes(): instances average values size (# instances): " +
                 total / nkbc.instances.keySet().size());
+        System.out.println("KBcache.showSizes(): insts size: " + nkbc.insts.size());
         total = 0;
         for (Map<String, Set<String>> seconds : nkbc.children.values())
             total = total + seconds.keySet().size();
         System.out.println("KBcache.showSizes(): children average values size (# children for relations): " +
                 total / nkbc.children.keySet().size());
         System.out.println("KBcache.showSizes(): signature size: " + nkbc.signatures.size());
+        System.out.println("KBcache.showSizes(): valences size: " + nkbc.valences.size());
         System.out.println("KBcache.showSizes(): explicitDisjoint size: " + nkbc.explicitDisjoint.size());
         System.out.println("KBcache.showSizes(): disjointRelations size: " + nkbc.disjointRelations.size());
         System.out.println("KBcache.showSizes(): disjoint size: " + nkbc.disjoint.size());
