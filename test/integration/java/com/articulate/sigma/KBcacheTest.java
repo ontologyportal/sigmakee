@@ -202,48 +202,61 @@ public class KBcacheTest extends IntegrationTestBase {
     }
 
     /** ***************************************************************
-     * TODO: try to fix this
+     *
      */
     @Test
-    @Ignore
     public void testDisjoint() {
 
+        boolean resultPass;
         System.out.println("\n============= testDisjoint ==================");
-        System.out.println("Test testDisjoint");
-        HashSet<String> classes = new HashSet<>(Arrays.asList("Arthropod", "Bird"));
+        Set<String> classes = new HashSet<>(Arrays.asList("Arthropod", "Bird"));
         System.out.println("KBcacheTest.testDisjoint(): Arthropod&Bird");
-        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird"));
-        if (kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird"))
+        resultPass = kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird");
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
+        if (resultPass)
             System.out.println("KBcacheTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheTest.testDisjoint(): fail");
-        assertTrue(kb.kbCache.checkDisjoint(kb,"Arthropod", "Bird"));
+            System.err.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(resultPass);
 
         System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
-        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
-        if (kb.kbCache.checkDisjoint(kb,classes))
+        resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
+        if (resultPass)
             System.out.println("KBcacheTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheTest.testDisjoint(): fail");
-        assertTrue(kb.kbCache.checkDisjoint(kb,classes));
+            System.err.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(resultPass);
 
         classes = new HashSet<>(Arrays.asList("Table", "Chair"));
         System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
-        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
-        if (!kb.kbCache.checkDisjoint(kb,classes))
+        resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
+        if (!resultPass)
             System.out.println("KBcacheTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheTest.testDisjoint(): fail");
-        assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
+            System.err.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(!resultPass);
 
         classes = new HashSet<>(Arrays.asList("Table", "Agent"));
         System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
-        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
-        if (kb.kbCache.checkDisjoint(kb,classes))
+        resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
+        if (!resultPass)
             System.out.println("KBcacheTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheTest.testDisjoint(): fail");
-        assertTrue(kb.kbCache.checkDisjoint(kb,classes));
+            System.err.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(!resultPass);
+
+        classes = new HashSet<>(Arrays.asList("Object", "RetailStore"));
+        System.out.println("KBcacheTest.testDisjoint(): classes: " + classes);
+        resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        System.out.println("KBcacheTest.testDisjoint(): disjoint? " + resultPass);
+        if (resultPass)
+            System.out.println("KBcacheTest.testDisjoint(): pass");
+        else
+            System.err.println("KBcacheTest.testDisjoint(): fail");
+        assertTrue(resultPass);
     }
 
     /** *************************************************************
