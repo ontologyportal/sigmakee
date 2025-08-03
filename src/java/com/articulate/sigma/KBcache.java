@@ -692,8 +692,13 @@ public class KBcache implements Serializable {
     }
 
     /** ***************************************************************
-     * check if rel1 and rel2 are disjoint
-     * return true if rel1 and rel2 are disjoint; otherwise return false.
+     * Check if given classes are disjoint
+     *
+     * @param kb the current knowledge base
+     * @param c1 class #1
+     * @param c2 class #2
+     * @return true if c1 and c2 are disjoint; otherwise return false.
+     *
      * TODO: can find spurious type conflict when in scope of disjunctions
      */
     public boolean checkDisjoint(KB kb, String c1, String c2) {
@@ -1799,7 +1804,6 @@ public class KBcache implements Serializable {
             System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
             if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
                 millis = System.currentTimeMillis();
-//            buildExplicitDisjointMap();
                 buildDisjointMap();
                 System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
             }
@@ -1869,7 +1873,6 @@ public class KBcache implements Serializable {
         System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
         if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
             millis = System.currentTimeMillis();
-//            buildExplicitDisjointMap();
             buildDisjointMap();
             System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
         }
@@ -1934,10 +1937,12 @@ public class KBcache implements Serializable {
         while (it.hasNext())
             System.out.print(it.next() + " ");
         System.out.println();
+        System.out.println();
         System.out.println("-------------- transitives ----------------");
         it = nkbc.transRels.iterator();
         while (it.hasNext())
             System.out.print(it.next() + " ");
+        System.out.println();
         System.out.println();
         System.out.println("-------------- parents ----------------");
         it = nkbc.parents.keySet().iterator();
@@ -1953,6 +1958,7 @@ public class KBcache implements Serializable {
             System.out.println();
         }
         System.out.println();
+        System.out.println();
         System.out.println("-------------- children ----------------");
         it = nkbc.children.keySet().iterator();
         while (it.hasNext()) {
@@ -1965,8 +1971,14 @@ public class KBcache implements Serializable {
             System.out.println();
         }
         System.out.println();
-        System.out.println("-------------- disjoint ----------------");
+        System.out.println();
+        System.out.println("-------------- explicitDisjoint ----------------");
         System.out.println(nkbc.explicitDisjoint);
+        System.out.println();
+        System.out.println();
+        System.out.println("-------------- disjoint ----------------");
+        System.out.println(nkbc.disjoint);
+        System.out.println();
         System.out.println();
         System.out.println("-------------- domains ----------------");
         Iterator<String> it3 = nkbc.relations.iterator();
@@ -1977,6 +1989,7 @@ public class KBcache implements Serializable {
             System.out.println(rel + ": " + domains);
         }
         System.out.println();
+        System.out.println();
         System.out.println("-------------- valences ----------------");
         Integer arity;
         for (String r : nkbc.valences.keySet()) {
@@ -1984,12 +1997,14 @@ public class KBcache implements Serializable {
             System.out.println(r + ": " + arity);
         }
         System.out.println();
+        System.out.println();
         System.out.println("-------------- signatures ----------------");
         List<String> sig;
         for (String r : nkbc.signatures.keySet()) {
             sig = nkbc.signatures.get(r);
             System.out.println(r + ": " + sig);
         }
+        System.out.println();
         System.out.println();
         System.out.println("-------------- insts ----------------");
         for (String inst : nkbc.insts)
@@ -2099,6 +2114,7 @@ public class KBcache implements Serializable {
         System.out.println("KBcache.showSizes(): signature size: " + nkbc.signatures.size());
         System.out.println("KBcache.showSizes(): explicitDisjoint size: " + nkbc.explicitDisjoint.size());
         System.out.println("KBcache.showSizes(): disjointRelations size: " + nkbc.disjointRelations.size());
+        System.out.println("KBcache.showSizes(): disjoint size: " + nkbc.disjoint.size());
     }
 
     /** ***************************************************************
