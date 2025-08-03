@@ -14,7 +14,6 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
     /** ***************************************************************
      */
     @Test
-//    @Ignore
     public void testInstantiatePredVars1() {
 
         String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +

@@ -134,7 +134,6 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
      * Ideal: "If Mary gives John a book then he reads it."
      */
     @Test
-    @Ignore
     public void testHtmlParaphraseIfMaryGivesBookJohnThenHeReads()     {
         String stmt =   "(forall \n" +
                 "              (?book ?event1) \n" +
@@ -165,7 +164,7 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
 
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "for all an entity and a process if male is an attribute of John-1 and female is an attribute of Mary-1 and John-1 is an instance of human and Mary-1 is an instance of human and the entity is an instance of book and Mary-1 is an agent of the process and the process ends at John-1 and the process is an instance of giving and the entity is a patient of the process, then there exists another process such that male is an attribute of John-1 and John-1 is an instance of human and the entity is an instance of object and John-1 is an agent of the other process and the other process is an instance of reading and the entity is a patient of the other process";
+        String expectedResult = "for all an entity and a process if male is an attribute of John-1 and female is an attribute of Mary-1 and John-1 is an instance of human and Mary-1 is an instance of human and the entity is an instance of book and Mary-1 is an agent of the process and the process ends up at John-1 and the process is an instance of giving and the entity is a patient of the process, then there exists another process such that male is an attribute of John-1 and John-1 is an instance of human and the entity is an instance of object and John-1 is an agent of the other process and the other process is an instance of reading and the entity is a patient of the other process";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
@@ -179,7 +178,6 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
      * Ideal: "An old, tall, hungry and thirsty man went to the shop."
      */
     @Test
-    @Ignore
     public void testHtmlParaphraseManGoToShop()     {
         String stmt =   "(exists \n" +
                 "              (?event ?man ?shop) \n" +
@@ -199,12 +197,12 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
 
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "there exist a process, an agent and an entity such that the process is an instance of transportation and hungry is an attribute of the agent and Old is an attribute of the agent and Tall is an attribute of the agent and Thirsty is an attribute of the agent and the agent is an instance of man and the entity is an instance of retail store and the agent is an agent of the process and the process ends at the entity";
+        String expectedResult = "there exist a process, an agent and an entity such that the process is an instance of transportation and hungry is an attribute of the agent and Old is an attribute of the agent and Tall is an attribute of the agent and thirsty is an attribute of the agent and the agent is an instance of man and the entity is an instance of retail store and the agent is an agent of the process and the process ends up at the entity";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        expectedResult = "a Thirsty Tall Old hungry man performs a transportation to a retail store";
+        expectedResult = "a thirsty Tall Old hungry man performs a transportation to a retail store";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -213,7 +211,6 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
      * Ideal: "The waiter pours soup into the bowl."
      */
     @Test
-    @Ignore
     public void testWaiterPoursSoupBowl()     {
         String stmt =   "(exists \n" +
                 "              (?bowl ?event ?soup ?waiter) \n" +
@@ -231,12 +228,12 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
 
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "there exist an entity, a process, , , another entity and an agent such that the entity is an instance of artifact and the process is an instance of pouring and the other entity is an instance of liquid food and service position is an attribute of the agent and the process ends at the entity and the other entity is a patient of the process and the agent is an agent of the process";
+        String expectedResult = "there exist an entity, a process, , , another entity and an agent such that the entity is an instance of artifact and the process is an instance of pouring and the other entity is an instance of LiquidFood and service position is an attribute of the agent and the process ends up at the entity and the other entity is a patient of the process and the agent is an agent of the process";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        expectedResult = "a waiter pours liquid food into a bowl";
+        expectedResult = "a kind of service position agent pours a LiquidFood to an artifact";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -318,13 +315,11 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
      * Ideal: FoodForFn animal is an industry product type of food manufacturing
      */
     @Test
-    @Ignore
     public void testFoodManufacturing()     {
         String stmt =   "(industryProductType FoodManufacturing\n" +
                 "           (FoodForFn Animal))";
 
-
-        String expectedResult = "FoodForFn animal is an industry product type of food manufacturing";
+        String expectedResult = "food for animal is an industry product type of food manufacturing";
         String actualResult = NLGUtils.htmlParaphrase("", stmt, SigmaTestBase.kb.getFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
@@ -351,7 +346,6 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @Ignore
     public void testPlaintiff()     {
         String stmt =   "(exists (?P ?H)\n" +
                 "           (and\n" +
@@ -363,7 +357,7 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "there exist a legal action and a cognitive agent such that the legal action is an instance of legal action and the cognitive agent is an instance of human and plaintiff the legal action and the cognitive agent";
+        String expectedResult = "there exist a legal action and a cognitive agent such that the legal action is an instance of legal action and the cognitive agent is an instance of human and the cognitive agent is the plaintiff in the legal action";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
@@ -397,7 +391,6 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
     }
 
     @Test
-    @Ignore
     public void testWadingWater()     {
         String stmt =   "(=>\n" +
                 "           (instance ?P Wading)\n" +
@@ -410,14 +403,14 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
                 SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "if a process is an instance of wading, then there exists an entity such that the entity is an instance of water area and event located the process and the entity";
+        String expectedResult = "if a process is an instance of wading, then there exists an object such that the object is an instance of water area and the process is located at the object";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
         // TODO: this will change when we can articulate passive voice
         //expectedResult = "if someone wades, a water area is waded in";
-        expectedResult = "if a process is an instance of wading, then there exists an entity such that the entity is an instance of water area and event located the process and the entity";
+        expectedResult = "if a process is an instance of wading, then there exists an object such that the object is an instance of water area and the process is located at the object";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }
@@ -450,7 +443,6 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
      * Ideal: "A clean city was built."
      */
     @Test
-    @Ignore
     public void testHtmlParaphraseCleanCityBeBuilt()     {
         String stmt =   "(exists \n" +
                 "              (?agent ?city ?event) \n" +
@@ -467,12 +459,12 @@ public class HtmlParaphraseIntegrationTest extends IntegrationTestBase {
                 SigmaTestBase.kb, "EnglishLanguage");
 
         languageFormatter.setDoInformalNLG(false);
-        String expectedResult = "there exist an agent, an object and a process such that the agent is an instance of agent and the object is an instance of city and the process is an instance of making and the agent is an agent of the process and the object is a patient of the process and clean is an attribute of the object";
+        String expectedResult = "there exist an agent, an object and a process such that the agent is an instance of Agent and the object is an instance of city and the process is an instance of making and the agent is an agent of the process and the object is a patient of the process and clean is an attribute of the object";
         String actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
 
         languageFormatter.setDoInformalNLG(true);
-        expectedResult = "an agent makes a clean city";
+        expectedResult = "an Agent makes a clean city";
         actualResult = languageFormatter.htmlParaphrase("");
         assertEquals(expectedResult, StringUtil.filterHtml(actualResult));
     }

@@ -85,12 +85,12 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expected.equals(actual))
             System.out.println("testAddTypes1(): pass");
         else
-            System.out.println("testAddTypes1(): fail");
+            System.err.println("testAddTypes1(): fail");
         assertEquals(expected, actual);
         if (expected.logicallyEquals(actual))
             System.out.println("testAddTypes1(): pass");
         else
-            System.out.println("testAddTypes1(): fail");
+            System.err.println("testAddTypes1(): fail");
         assertTrue(expected.logicallyEquals(actual));
     }
 
@@ -120,8 +120,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expected.logicallyEquals(actual))
             System.out.println("testAddTypes2(): pass");
         else
-            System.out.println("testAddTypes2(): fail");
-        assertTrue(expected.logicallyEquals(actual));
+            System.err.println("testAddTypes2(): fail");
         assertTrue(expected.logicallyEquals(actual));
     }
 

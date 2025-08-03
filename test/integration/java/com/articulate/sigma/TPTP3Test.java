@@ -16,15 +16,12 @@ import java.util.List;
 
 import org.junit.Test;
 import static org.junit.Assert.*;
-import org.junit.Ignore;
 
 public class TPTP3Test extends IntegrationTestBase {
 
     /** ***************************************************************
      */
-    @Test
-    @Ignore // gets called from testE as testE must happen first to produce prover_out.txt
-    public void testParseProofFile () {
+    private void parseProofFile () {
 
         System.out.println("-----------------------testParseProofFile--------------------------");
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
@@ -84,7 +81,7 @@ public class TPTP3Test extends IntegrationTestBase {
             System.err.println(e.getMessage());
         }
         System.out.println("\n\n");
-        testParseProofFile();
+        parseProofFile();
     }
 
     /** ***************************************************************

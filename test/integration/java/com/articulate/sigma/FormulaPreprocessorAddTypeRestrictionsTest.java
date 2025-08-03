@@ -38,7 +38,7 @@ public class FormulaPreprocessorAddTypeRestrictionsTest extends IntegrationTestB
         if (!StringUtil.emptyString(actualTPTP) && actualTPTP.equals(expectedTPTP))
             System.out.println(label + " : Success");
         else
-            System.out.println(label + " : fail!");
+            System.err.println(label + " : fail!");
         assertEquals(expectedTPTP, actualTPTP);
     }
 
