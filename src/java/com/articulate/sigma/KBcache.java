@@ -1797,13 +1797,13 @@ public class KBcache implements Serializable {
             buildTransInstOf();
             correctValences(); // correct VariableArityRelation valences
             System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
-            millis = System.currentTimeMillis();
-            buildExplicitDisjointMap(); // find relations under partition definition
-            System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
-            millis = System.currentTimeMillis();
-            buildDisjointRelationsMap();
-            System.out.printf("KBcache.buildCaches(): buildDisjointRelationsMap:   %d m/s%n", (System.currentTimeMillis() - millis));
             if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+                millis = System.currentTimeMillis();
+                buildExplicitDisjointMap(); // find relations under partition definition
+                System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
+                millis = System.currentTimeMillis();
+                buildDisjointRelationsMap();
+                System.out.printf("KBcache.buildCaches(): buildDisjointRelationsMap:   %d m/s%n", (System.currentTimeMillis() - millis));
                 millis = System.currentTimeMillis();
                 buildDisjointMap();
                 System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
@@ -1869,13 +1869,13 @@ public class KBcache implements Serializable {
         buildTransInstOf();
         correctValences(); // correct VariableArityRelation valences
         System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
-        millis = System.currentTimeMillis();
-        buildExplicitDisjointMap(); // find relations under partition definition
-        System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
-        millis = System.currentTimeMillis();
-        buildDisjointRelationsMap();
-        System.out.printf("KBcache.buildCaches(): buildDisjointRelationsMap:   %d m/s%n", (System.currentTimeMillis() - millis));
         if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
+            millis = System.currentTimeMillis();
+            buildExplicitDisjointMap(); // find relations under partition definition
+            System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
+            millis = System.currentTimeMillis();
+            buildDisjointRelationsMap();
+            System.out.printf("KBcache.buildCaches(): buildDisjointRelationsMap:   %d m/s%n", (System.currentTimeMillis() - millis));
             millis = System.currentTimeMillis();
             buildDisjointMap();
             System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
