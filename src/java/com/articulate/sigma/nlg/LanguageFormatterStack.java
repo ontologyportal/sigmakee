@@ -130,7 +130,6 @@ public class LanguageFormatterStack {
      * Mark the given formula argument as having been processed. Note that this method
      * is called when the relevant args are not held at top of stack, but at top - 1.
      * @param theArg
-     * @return
      */
     public void markFormulaArgAsProcessed(String theArg) {
 
@@ -320,6 +319,8 @@ public class LanguageFormatterStack {
 
         // Collect the translations.
         List<String> translations = Lists.newArrayList();
+        if (element == null)
+            return translations;
         for (FormulaArg formula : element.formulaArgs)   {
             // If any element has not been translated, do nothing.
             // FIXME: Also allow processed?
@@ -365,7 +366,7 @@ public class LanguageFormatterStack {
         StackElement element = getCurrStackElement();
         boolean foundQuantified = false;
         boolean foundTranslated = false;
-        if (element.formulaArgs.size() == 2) {
+        if (element != null && element.formulaArgs.size() == 2) {
             for (FormulaArg arg : element.formulaArgs)   {
                 if (arg.state.equals(StackState.QUANTIFIED_VARS))    {
                     foundQuantified = true;
