@@ -635,7 +635,7 @@ public class TPTP3ProofProcessor {
                         types.add(l.get(2));
                     }
                 }
-                if (kb.kbCache.checkDisjoint(kb, types) == true) {
+                if (kb.kbCache.checkDisjoint(kb, types)) {
                     // check if there are contradiction among the types returned
                     //bindings.remove(binding);
                     result = "Type contradiction for " + binding + " in " + types;
