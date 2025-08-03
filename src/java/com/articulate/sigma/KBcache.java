@@ -682,10 +682,8 @@ public class KBcache implements Serializable {
             c1 = typeList.get(i);
             for (int j = i+1; j < size; j++) {
                 c2 = typeList.get(j);
-                if (checkDisjoint(kb,c1,c2)) {
-                    System.err.println("KBcache.checkDisjoint(): disjoint classes " + c1 + " and " + c2);
+                if (checkDisjoint(kb,c1,c2))
                     return true;
-                }
             }
         }
         return false;
@@ -728,7 +726,7 @@ public class KBcache implements Serializable {
             return true;
         }
         if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1)) {
-            String err = "KBcache.checkDisjoint(): disjoint terms: " + c1 + ", " + c2;
+            String err = "KBcache.checkDisjoint(): disjoint classes: " + c1 + ", " + c2;
             System.err.println(err);
             errors.add(err);
             return true;
