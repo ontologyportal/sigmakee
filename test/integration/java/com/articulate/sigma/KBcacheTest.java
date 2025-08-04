@@ -2,7 +2,6 @@ package com.articulate.sigma;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.Ignore;
 
 import java.util.*;
 
