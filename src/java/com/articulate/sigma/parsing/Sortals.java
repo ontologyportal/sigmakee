@@ -1,6 +1,7 @@
 package com.articulate.sigma.parsing;
 
 import com.articulate.sigma.KB;
+import com.articulate.sigma.KBcache;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.util.HashMap;
@@ -65,6 +66,7 @@ public class Sortals {
         long start = System.currentTimeMillis();
         if (kb.kbCache.checkDisjoint(kb,types)) {
             System.err.println("Error in Sortals.mostSpecificType(): disjoint type spec: " + types);
+            KBcache.errors.clear();
             return "";
         }
         long end = (System.currentTimeMillis()-start);

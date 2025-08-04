@@ -640,6 +640,7 @@ public class TPTP3ProofProcessor {
                     //bindings.remove(binding);
                     result = "Type contradiction for " + binding + " in " + types;
                     //bindings.add(binding);
+                    KBcache.errors.clear();
                 } else {
                     fp.winnowTypeList(types, kb);
                     if (types != null && !types.isEmpty()) {
