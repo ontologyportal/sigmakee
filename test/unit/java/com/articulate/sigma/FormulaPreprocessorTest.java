@@ -55,7 +55,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expectedMap.equals(actualMap))
             System.out.println("testGatherRelationships(): pass");
         else
-            System.out.println("testGatherRelationships(): fail");
+            System.err.println("testGatherRelationships(): fail");
         assertEquals(expectedMap, actualMap);
     }
 
@@ -143,7 +143,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         map2.put("?Obj", Sets.newHashSet("Object"));
         map2.put("?Hum", Sets.newHashSet("Human"));
 
-        HashMap<String, HashSet<String>> expectedMap = Maps.newHashMap();
+        Map<String, Set<String>> expectedMap = Maps.newHashMap();
         expectedMap.put("?Obj", Sets.newHashSet("CorpuscularObject"));
         expectedMap.put("?Hum", Sets.newHashSet("Man", "Woman"));
         expectedMap.put("?Time", Sets.newHashSet("Month"));
@@ -155,7 +155,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expectedMap.equals(actualMap))
             System.out.println("testMergeToMap1(): pass");
         else
-            System.out.println("testMergeToMap1(): fail");
+            System.err.println("testMergeToMap1(): fail");
         assertEquals(expectedMap, actualMap);
     }
 
@@ -193,7 +193,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (fExpected.deepEquals(fActual))
             System.out.println("test4(): pass");
         else
-            System.out.println("test4(): fail");
+            System.err.println("test4(): fail");
         assertTrue(fExpected.deepEquals(fActual));
     }
 
@@ -231,7 +231,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (fExpected.deepEquals(fActual))
             System.out.println("test5(): pass");
         else
-            System.out.println("test5(): fail");
+            System.err.println("test5(): fail");
         assertTrue(fExpected.deepEquals(fActual));
     }
 
@@ -263,7 +263,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expected.equals(actual))
             System.out.println("test6(): pass");
         else
-            System.out.println("test6(): fail");
+            System.err.println("test6(): fail");
         assertEquals(expected,actual);
     }
 
@@ -295,7 +295,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expected.equals(actual.iterator().next().toString()))
             System.out.println("test7(): pass");
         else
-            System.out.println("test7(): fail");
+            System.err.println("test7(): fail");
         assertEquals(expected,actual.iterator().next().toString());
     }
 
@@ -318,7 +318,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (expected.equals(actual.toString()))
             System.out.println("testAbsolute(): pass");
         else
-            System.out.println("testAbsolute(): fail");
+            System.err.println("testAbsolute(): fail");
         assertEquals(expected,actual.toString());
     }
 
@@ -348,7 +348,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (actual.size() > expectedSize)
             System.out.println("testInstantiatePredStmt4(): pass");
         else
-            System.out.println("testInstantiatePredStmt4(): fail");
+            System.err.println("testInstantiatePredStmt4(): fail");
         assertTrue(actual.size() > expectedSize);
     }
 
@@ -382,7 +382,7 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         if (actual.size() > expectedSize)
             System.out.println("testMinValuePreprocess(): pass");
         else
-            System.out.println("testMinValuePreprocess(): fail");
+            System.err.println("testMinValuePreprocess(): fail");
         assertTrue(actual.size() > expectedSize);
     }
 
@@ -414,11 +414,14 @@ public class FormulaPreprocessorTest extends UnitTestBase  {
         f.read(stmt);
 
         FormulaPreprocessor fp = new FormulaPreprocessor();
+        Set<Formula> preProcessSet = fp.preProcess(f, false, kb);
+        assertTrue(preProcessSet.iterator().next().varTypeCache.size() == 5);
         //PredVarInst.debug = true;
         //FormulaPreprocessor.debug = true;
         // RowVars.DEBUG = true;
         System.out.println("testArgNumsPreprocess: patient valence: " +
                 kb.kbCache.valences.get("patient"));
+        assertTrue(kb.kbCache.valences.get("patient") == 2);
 
         List<Formula> forms = RowVars.expandRowVars(kb,f);
         System.out.println("testArgNumsPreprocess: forms: " + forms);

@@ -23,7 +23,7 @@ import static org.junit.Assert.*;
 public class LanguageFormatterTest extends UnitTestBase {
 
     @Before
-    public void before() {
+    public void startUp() {
         LanguageFormatter.outputMap.clear();
     }
 

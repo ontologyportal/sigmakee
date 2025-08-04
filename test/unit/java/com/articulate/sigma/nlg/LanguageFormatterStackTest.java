@@ -2,17 +2,15 @@ package com.articulate.sigma.nlg;
 
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
-import com.articulate.sigma.nlg.LanguageFormatterStack;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.Stack;
 
 import static org.junit.Assert.*;
 
 public class LanguageFormatterStackTest extends SigmaMockTestBase {
-    private final KB kb = kbMock;
 
+    private final KB kb = kbMock;
 
     @Test
     public void testInsertQuantifier() {

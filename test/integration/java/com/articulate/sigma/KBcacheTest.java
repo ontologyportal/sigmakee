@@ -96,7 +96,7 @@ public class KBcacheTest extends IntegrationTestBase {
 
         String relation = "abbreviation";
         System.out.println("testbuildTransInstOf(): testing: " + relation);
-        HashSet<String> expected = new HashSet<>(Arrays.asList("Entity", "Relation", "InheritableRelation",
+        Set<String> expected = new HashSet<>(Arrays.asList("Entity", "Relation", "InheritableRelation",
                 "Abstract", "BinaryPredicate", "BinaryRelation", "Predicate"));
         Set<String> actual = cache.getParentClassesOfInstance(relation);
         assertEquals(expected, actual);
