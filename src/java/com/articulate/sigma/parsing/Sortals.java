@@ -12,7 +12,7 @@ import java.util.Set;
 // Add type guards to formulas
 public class Sortals {
 
-    private KB kb;
+    private final KB kb;
 
     public boolean debug = false;
     public long disjointTime = 0;
@@ -27,7 +27,7 @@ public class Sortals {
      * Add type guards to a formula by making it the consequent of a rule
      * and making type tests into a new antecedent
      */
-    public String addSortals(FormulaAST f, Map<String,Set<String>> types) {
+    public String addSortals(FormulaAST f, Map<String, Set<String>> types) {
 
         if (types.keySet().isEmpty()) return f.getFormula();
         if (debug) System.out.println("Sortals.addSortals(): types: " + types);
@@ -36,8 +36,10 @@ public class Sortals {
             result.append("(=> ");
         if (types.keySet().size() > 1)
             result.append("(and ");
+
+        Set<String> v;
         for (String k : types.keySet()) {
-            Set<String> v = types.get(k);
+            v = types.get(k);
             for (String t : v) {
                 if (t.endsWith("+"))
                     result.append("(subclass ").append(k).append(" ").append(t.substring(0, t.length() - 1)).append(") ");
@@ -79,7 +81,7 @@ public class Sortals {
      * based on their being arguments to relations, find the most
      * specific type for each
 
-    public Map<String, String> mostSpecificTypes(HashMap<String, Set<String>> vmap) {
+    public Map<String, String> mostSpecificTypes(Map<String, Set<String>> vmap) {
 
         Map<String, String> themap = new HashMap<>();
         for (String var : vmap.keySet()) {
@@ -157,7 +159,7 @@ public class Sortals {
     public String addSortals(FormulaAST f) {
 
         if (debug) System.out.println("Sortals.addSortals():types: " + f.varTypes);
-        Map<String,Set<String>> types = removeExplicitTypes(f.varTypes,f.explicitTypes);
+        Map<String, Set<String>> types = removeExplicitTypes(f.varTypes,f.explicitTypes);
         if (debug) System.out.println("Sortals.addSortals():after removeExplicitTypes: " + f.varTypes);
         String result = addSortals(f,types);
         f.setFormula(result);
