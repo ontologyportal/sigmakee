@@ -19,13 +19,13 @@ public class PredVarInstTest extends IntegrationTestBase {
         pvi = null;
     }
 
-    /***************************************************************
-     * */
+    /** *************************************************************
+     */
     private static int process(String input) {
 
         System.out.println("PredVarInstTest Input: " + input);
         SuokifVisitor.parseString(input);
-        Map<Integer,FormulaAST> hm = SuokifVisitor.result;
+        Map<Integer, FormulaAST> hm = SuokifVisitor.result;
         VarTypes vt = new VarTypes(hm.values(),kb);
         vt.findTypes();
         FormulaAST f = hm.values().iterator().next();
@@ -141,6 +141,7 @@ public class PredVarInstTest extends IntegrationTestBase {
                 "        (?REL1 @ROW2))\n" +
                 "    (not\n" +
                 "        (?REL2 @ROW2)))";
+//        String input = com.articulate.sigma.PredVarInst.DOUBLE_PREDICATE_AXIOM; // TODO: won't process (Error in Vartypes.findTypeOfTerm(): signature Class doesn't allow Predicate)
         int result = process(input);
         assertEquals(308025, result);
     }
