@@ -94,7 +94,8 @@ public class VarTypes {
                             type = "Negative" + type;
                         else
                             type = "Positive" + type;
-                    }   break;
+                    }
+                    break;
                 default:
                     break;
             }
