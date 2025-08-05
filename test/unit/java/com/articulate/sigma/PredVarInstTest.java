@@ -42,7 +42,7 @@ public class PredVarInstTest extends UnitTestBase  {
 
         Formula f = new Formula();
         f.read(PredVarInstTest.AXIOM_1);
-        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
+        Set<String> actual = PredVarInst.gatherPredVars(kb,f);
         Set<String> expected = Sets.newHashSet("?REL");
         System.out.println("\n--------------------");
         System.out.println("testGatherPredVarsStmt1() actual: " + actual);
