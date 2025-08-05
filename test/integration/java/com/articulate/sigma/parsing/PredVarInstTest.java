@@ -4,12 +4,11 @@ import com.articulate.sigma.IntegrationTestBase;
 
 import java.util.Map;
 import java.util.Set;
-import org.junit.After;
 
+import org.junit.After;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 public class PredVarInstTest extends IntegrationTestBase {
 
@@ -22,7 +21,7 @@ public class PredVarInstTest extends IntegrationTestBase {
 
     /***************************************************************
      * */
-    public static int process(String input) {
+    private static int process(String input) {
 
         System.out.println("PredVarInstTest Input: " + input);
         SuokifVisitor.parseString(input);
