@@ -787,7 +787,7 @@ public class FormulaPreprocessor {
      * translating mathematical operators, quoting higher-order formulas,
      * adding a numerical suffix to VariableArityRelations based on their count,
      * expanding row variables and prepending the 'holds__' predicate.
-     * @return an ArrayList of Formula(s)
+     * @return an String as Formula
      */
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
                                      boolean translateIneq, boolean translateMath,
