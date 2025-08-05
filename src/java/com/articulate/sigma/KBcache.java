@@ -151,22 +151,22 @@ public class KBcache implements Serializable {
      */
     public KBcache(KB kbin) {
 
-        relations = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        functions = new HashSet<>(kbin.getCountTerms()/9,LOAD_FACTOR);
-        predicates = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        relations = new HashSet<>(kbin.getCountTerms()/9,LOAD_FACTOR);
+        functions = new HashSet<>(kbin.getCountTerms()/46,LOAD_FACTOR);
+        predicates = new HashSet<>(kbin.getCountTerms()/11,LOAD_FACTOR);
         transRels = new HashSet<>(60,LOAD_FACTOR);
         // instRels = new HashSet<String>();
         instTransRels = new HashSet<>(50,LOAD_FACTOR);
         parents = new HashMap<>(60,LOAD_FACTOR);
-        instanceOf = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        instances = new HashMap<>(kbin.getCountTerms(),LOAD_FACTOR);
-        insts = new HashSet<>(kbin.getCountTerms(),LOAD_FACTOR);
-        children = new HashMap<>(60,LOAD_FACTOR);
-        signatures = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        valences = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        disjoint = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
-        disjointRelations = new HashSet<>(kbin.getCountTerms()/3,LOAD_FACTOR);
+        instanceOf = new HashMap<>(kbin.getCountTerms()/2,LOAD_FACTOR);
+        instances = new HashMap<>(45,LOAD_FACTOR);
+        insts = new HashSet<>(kbin.getCountTerms()/2,LOAD_FACTOR);
+        children = new HashMap<>(200,LOAD_FACTOR);
+        signatures = new HashMap<>(kbin.getCountTerms()/8,LOAD_FACTOR);
+        valences = new HashMap<>(kbin.getCountTerms()/8,LOAD_FACTOR);
+        explicitDisjoint = new HashMap<>(kbin.getCountTerms()/27,LOAD_FACTOR);
+        disjointRelations = new HashSet<>(kbin.getCountTerms()/163,LOAD_FACTOR);
+        disjoint = new HashSet<>(kbin.getCountTerms() * 2103,LOAD_FACTOR);
         this.kb = kbin;
     }
 
@@ -682,18 +682,21 @@ public class KBcache implements Serializable {
             c1 = typeList.get(i);
             for (int j = i+1; j < size; j++) {
                 c2 = typeList.get(j);
-                if (checkDisjoint(kb,c1,c2)) {
-                    System.err.println("KBcache.checkDisjoint(): disjoint classes " + c1 + " and " + c2);
+                if (checkDisjoint(kb,c1,c2))
                     return true;
-                }
             }
         }
         return false;
     }
 
     /** ***************************************************************
-     * check if rel1 and rel2 are disjoint
-     * return true if rel1 and rel2 are disjoint; otherwise return false.
+     * Check if given classes are disjoint
+     *
+     * @param kb the current knowledge base
+     * @param c1 class #1
+     * @param c2 class #2
+     * @return true if c1 and c2 are disjoint; otherwise return false.
+     *
      * TODO: can find spurious type conflict when in scope of disjunctions
      */
     public boolean checkDisjoint(KB kb, String c1, String c2) {
@@ -723,7 +726,7 @@ public class KBcache implements Serializable {
             return true;
         }
         if (disjoint.contains(c1 + "\t" + c2) || disjoint.contains(c2 + "\t" + c1)) {
-            String err = "KBcache.checkDisjoint(): disjoint terms: " + c1 + ", " + c2;
+            String err = "KBcache.checkDisjoint(): disjoint classes: " + c1 + ", " + c2;
             System.err.println(err);
             errors.add(err);
             return true;
@@ -1009,7 +1012,7 @@ public class KBcache implements Serializable {
 
         if (debug) System.out.println("getInstancesForType(): " + cl);
         if (cl.equals("Class"))
-            return (HashSet<String>) getChildClasses("Entity");
+            return getChildClasses("Entity");
         Set<String> instancesForType = new HashSet<>();
         Map<String,Set<String>> ps = children.get("subclass");
         Set<String> classes = new HashSet<>();
@@ -1794,12 +1797,14 @@ public class KBcache implements Serializable {
             buildTransInstOf();
             correctValences(); // correct VariableArityRelation valences
             System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
-            millis = System.currentTimeMillis();
-            buildExplicitDisjointMap(); // find relations under partition definition
-            System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
             if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
                 millis = System.currentTimeMillis();
-//            buildExplicitDisjointMap();
+                buildExplicitDisjointMap(); // find relations under partition definition
+                System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
+                millis = System.currentTimeMillis();
+                buildDisjointRelationsMap();
+                System.out.printf("KBcache.buildCaches(): buildDisjointRelationsMap:   %d m/s%n", (System.currentTimeMillis() - millis));
+                millis = System.currentTimeMillis();
                 buildDisjointMap();
                 System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
             }
@@ -1864,12 +1869,14 @@ public class KBcache implements Serializable {
         buildTransInstOf();
         correctValences(); // correct VariableArityRelation valences
         System.out.printf("KBcache.buildCaches(): buildTransInstOf:            %d m/s%n", (System.currentTimeMillis() - millis));
-        millis = System.currentTimeMillis();
-        buildExplicitDisjointMap(); // find relations under partition definition
-        System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
         if (KBmanager.getMgr().getPref("cacheDisjoint").equals("true")) {
             millis = System.currentTimeMillis();
-//            buildExplicitDisjointMap();
+            buildExplicitDisjointMap(); // find relations under partition definition
+            System.out.printf("KBcache.buildCaches(): buildExplicitDisjointMap:    %d m/s%n", (System.currentTimeMillis() - millis));
+            millis = System.currentTimeMillis();
+            buildDisjointRelationsMap();
+            System.out.printf("KBcache.buildCaches(): buildDisjointRelationsMap:   %d m/s%n", (System.currentTimeMillis() - millis));
+            millis = System.currentTimeMillis();
             buildDisjointMap();
             System.out.printf("KBcache.buildCaches(): buildDisjointMap:            %d m/s%n", (System.currentTimeMillis() - millis));
         }
@@ -1934,10 +1941,12 @@ public class KBcache implements Serializable {
         while (it.hasNext())
             System.out.print(it.next() + " ");
         System.out.println();
+        System.out.println();
         System.out.println("-------------- transitives ----------------");
         it = nkbc.transRels.iterator();
         while (it.hasNext())
             System.out.print(it.next() + " ");
+        System.out.println();
         System.out.println();
         System.out.println("-------------- parents ----------------");
         it = nkbc.parents.keySet().iterator();
@@ -1953,6 +1962,7 @@ public class KBcache implements Serializable {
             System.out.println();
         }
         System.out.println();
+        System.out.println();
         System.out.println("-------------- children ----------------");
         it = nkbc.children.keySet().iterator();
         while (it.hasNext()) {
@@ -1965,8 +1975,14 @@ public class KBcache implements Serializable {
             System.out.println();
         }
         System.out.println();
-        System.out.println("-------------- disjoint ----------------");
+        System.out.println();
+        System.out.println("-------------- explicitDisjoint ----------------");
         System.out.println(nkbc.explicitDisjoint);
+        System.out.println();
+        System.out.println();
+        System.out.println("-------------- disjoint ----------------");
+        System.out.println(nkbc.disjoint);
+        System.out.println();
         System.out.println();
         System.out.println("-------------- domains ----------------");
         Iterator<String> it3 = nkbc.relations.iterator();
@@ -1977,6 +1993,7 @@ public class KBcache implements Serializable {
             System.out.println(rel + ": " + domains);
         }
         System.out.println();
+        System.out.println();
         System.out.println("-------------- valences ----------------");
         Integer arity;
         for (String r : nkbc.valences.keySet()) {
@@ -1984,12 +2001,14 @@ public class KBcache implements Serializable {
             System.out.println(r + ": " + arity);
         }
         System.out.println();
+        System.out.println();
         System.out.println("-------------- signatures ----------------");
         List<String> sig;
         for (String r : nkbc.signatures.keySet()) {
             sig = nkbc.signatures.get(r);
             System.out.println(r + ": " + sig);
         }
+        System.out.println();
         System.out.println();
         System.out.println("-------------- insts ----------------");
         for (String inst : nkbc.insts)
@@ -2089,16 +2108,22 @@ public class KBcache implements Serializable {
         total = 0;
         for (Set<String> seconds : nkbc.instances.values())
             total = total + seconds.size();
-        System.out.println("KBcache.showSizes(): instances average values size (# instances ): " +
+        System.out.println("KBcache.showSizes(): instances average values size (# instances): " +
                 total / nkbc.instances.keySet().size());
+        System.out.println("KBcache.showSizes(): insts size: " + nkbc.insts.size());
         total = 0;
         for (Map<String, Set<String>> seconds : nkbc.children.values())
             total = total + seconds.keySet().size();
         System.out.println("KBcache.showSizes(): children average values size (# children for relations): " +
                 total / nkbc.children.keySet().size());
         System.out.println("KBcache.showSizes(): signature size: " + nkbc.signatures.size());
+        System.out.println("KBcache.showSizes(): valences size: " + nkbc.valences.size());
         System.out.println("KBcache.showSizes(): explicitDisjoint size: " + nkbc.explicitDisjoint.size());
+        nkbc.buildDisjointRelationsMap();
         System.out.println("KBcache.showSizes(): disjointRelations size: " + nkbc.disjointRelations.size());
+        System.out.println("KBcache.showSizes(): disjoint size: " + nkbc.disjoint.size());
+        System.out.println();
+        System.out.printf("Number of terms in KB %s: %d%n", nkbc.kb.name, nkbc.kb.getCountTerms());
     }
 
     /** ***************************************************************

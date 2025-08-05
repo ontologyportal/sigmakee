@@ -3,13 +3,14 @@ package com.articulate.sigma.parsing;
 import com.articulate.sigma.IntegrationTestBase;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.FileUtil;
-import org.junit.Test;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collection;
+
 import org.junit.After;
+import org.junit.Test;
 
 public class TPTPWriterTest  extends IntegrationTestBase {
 
@@ -38,7 +39,6 @@ public class TPTPWriterTest  extends IntegrationTestBase {
         System.out.println("TPTPWriterTest.test1(): sourceFile after parsing: " + sv.rules.iterator().next().sourceFile);
         Collection<FormulaAST> rules = pre.preprocess(sv.hasPredVar,sv.hasRowVar,sv.rules);
         System.out.println("TPTPWriterTest.test1(): sourceFile after preprocessing:" + rules.iterator().next().sourceFile);
-        // HashSet<FormulaAST> result = pre.reparse(rules); done already in preprocess
         if (rules.size() < 100)
             System.out.println("TPTPWriterTest.test1(): " + rules);
         else

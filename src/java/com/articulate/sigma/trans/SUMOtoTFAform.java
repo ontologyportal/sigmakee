@@ -2170,6 +2170,7 @@ public class SUMOtoTFAform {
                                     c1 + ", " + c2 + " for var " + s;
                             if (debug) System.out.println(msg);
                             errors.add(msg);
+                            KBcache.errors.clear();
                             return true;
                         }
                     }

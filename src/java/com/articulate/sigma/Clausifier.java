@@ -73,7 +73,7 @@ public class Clausifier  {
     public List<Formula> separateConjunctions() {
 
         if (!thisFormula.car().equals("and")) {
-            System.out.println("Error Formula.separateConjunctions(): not a conjunction " + thisFormula);
+            System.err.println("Error Formula.separateConjunctions(): not a conjunction " + thisFormula);
             return null;
         }
         List<Formula> result = new ArrayList<>();
@@ -302,15 +302,14 @@ public class Clausifier  {
             List clauses = (List) clauseData.get(0);
             if (!clauses.isEmpty()) {
                 List sortedClauses = new ArrayList();
-                StringBuilder sb;
+                StringBuilder sb = new StringBuilder();
                 Iterator itc, itl;
-                List neglits, poslits;
+                List neglits, poslits, clause;
                 int i;
                 for (itc = clauses.iterator(); itc.hasNext();) {
-                    List clause = (List) itc.next();
+                    clause = (List) itc.next();
                     if (!clause.isEmpty() && (clause.size() == 2)) {
-                        sb = new StringBuilder();
-                        itl = null;
+                        sb.setLength(0); // reset
                         neglits = (List) clause.get(0);
                         if (neglits.size() > 1) Collections.sort(neglits);
                         i = 0;
@@ -340,7 +339,7 @@ public class Clausifier  {
                     }
                 }
                 Collections.sort(sortedClauses);
-                sb = new StringBuilder();
+                sb.setLength(0); // reset
                 int j = 0;
                 for (itc = sortedClauses.iterator(); itc.hasNext(); j++) {
                     if (j > 0) sb.append(Formula.SPACE);
@@ -1736,10 +1735,11 @@ public class Clausifier  {
                 clauses.add(thisFormula);
             // 'Standardize apart' by renaming the variables in each clause.
             int n = clauses.size();
+            Formula oldClause;
             Map<String, String> renames;
             for (int i = 0 ; i < n ; i++) {
                 renames = new HashMap<>();
-                Formula oldClause = clauses.remove(0);
+                oldClause = clauses.remove(0);
                 clauses.add(standardizeApart_1(oldClause,renames,reverseRenames));
             }
 

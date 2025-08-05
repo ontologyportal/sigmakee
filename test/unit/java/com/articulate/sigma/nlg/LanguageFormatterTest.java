@@ -3,14 +3,16 @@ package com.articulate.sigma.nlg;
 import com.articulate.sigma.SigmaTestBase;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.UnitTestBase;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.junit.Ignore;
-import org.junit.Test;
 
 import java.util.*;
+
+import org.junit.Before;
+import org.junit.Test;
 
 import static org.junit.Assert.*;
 
@@ -20,14 +22,19 @@ import static org.junit.Assert.*;
  */
 public class LanguageFormatterTest extends UnitTestBase {
 
-    @Ignore
+    @Before
+    public void startUp() {
+        LanguageFormatter.outputMap.clear();
+    }
+
     @Test
     public void testStatementParse() {
         String input = "(exists (?D ?H) (and (instance ?D Driving) (instance ?H Human) (agent ?D ?H)))";
         LanguageFormatter lf = new LanguageFormatter(input, SigmaTestBase.kb.getFormatMap("EnglishLanguage"), SigmaTestBase.kb.getTermFormatMap("EnglishLanguage"),
                 SigmaTestBase.kb, "EnglishLanguage");
         String actual = lf.paraphraseStatement(input, false, false, 0);
-        assertEquals("", actual);
+        String expected = "there exist ?D and ?H such that ?D is an &%instance$\"instance\" of &%Driving$\"driving\" and ?H is an &%instance$\"instance\" of &%Human$\"human\" and ?H is an &%agent$\"agent\" of ?D";
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -127,7 +134,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         // Verify variableReplace( ).
         Map<String, Set<String>> instanceMap = Maps.newHashMap(ImmutableMap.of("?S", Sets.newHashSet("Seeing"),
                 "?H", Sets.newHashSet("Human"), "?D", Sets.newHashSet("Driving")));
-        HashMap<String, Set<String>> classMap = Maps.newHashMap();
+        Map<String, Set<String>> classMap = Maps.newHashMap();
 
         String expected = "<ul><li>if &%Human$\"a  human\" drives,</li><li>then &%Human$\"the human\" sees</li></ul>";
         String variableReplaceOutput = LanguageFormatter.variableReplace(form, instanceMap, classMap, SigmaTestBase.kb, "EnglishLanguage");
@@ -149,7 +156,7 @@ public class LanguageFormatterTest extends UnitTestBase {
         // Verify variableReplace( ).
         Map<String, Set<String>> instanceMap = Maps.newHashMap(ImmutableMap.of("?S", Sets.newHashSet("Seeing"),
                 "?H", Sets.newHashSet("Human"), "?D", Sets.newHashSet("Driving")));
-        HashMap<String, Set<String>> classMap = Maps.newHashMap();
+        Map<String, Set<String>> classMap = Maps.newHashMap();
 
         String expected = "if &%Human$\"a  human\" drives, then &%Human$\"the human\" sees";
         String variableReplaceOutput = LanguageFormatter.variableReplace(form, instanceMap, classMap, SigmaTestBase.kb, "EnglishLanguage");

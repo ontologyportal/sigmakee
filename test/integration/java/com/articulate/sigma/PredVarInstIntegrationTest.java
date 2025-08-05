@@ -3,18 +3,21 @@ package com.articulate.sigma;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class PredVarInstIntegrationTest extends IntegrationTestBase {
 
     /** ***************************************************************
      */
     @Test
-//    @Ignore
     public void testInstantiatePredVars1() {
 
         String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
@@ -24,7 +27,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
         Formula f = new Formula();
         f.read(stmt1);
 
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
 
         // Prep the expected set of formula objects.
         Set<Formula> expected = Sets.newHashSet();
@@ -1420,10 +1423,52 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
         Formula f = new Formula();
         f.read(stmt3);
 
-        Map<String, Set<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = PredVarInst.findPredVarTypes(f, kb);
         System.out.println("testFindPredVarTypesStmt3(): actual: " + actual);
         Map<String, Set<String>> expected = Maps.newHashMap();
         expected.put("?ROLE", Sets.newHashSet("CaseRole"));
         assertEquals(expected, actual);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testReportDisjointErrors() {
+
+        KBmanager.getMgr().setPref("cacheDisjoint","true"); // ensure disjoint maps are built
+
+        System.out.printf("%n%s%n", "===================== PredVarInstTest.testReportDisjointErrors =====================");
+        List<Formula> errors = new ArrayList<>();
+        String[] classes;
+        List<String> args1 = null, args2 = null;
+        String rel1, rel2;
+        for (String s : kb.kbCache.disjointRelations) {
+            classes = s.split("\t");
+            rel1 = classes[0];
+            rel2 = classes[1];
+            for (Formula form : kb.formulaMap.values()) {
+                if (form.isRule() && form.getFormula().contains(rel1) && form.getFormula().contains(rel2)) {
+                    System.out.printf("%nrel1: %s : rel2: %s%n", rel1, rel2);
+                    for (Formula form1 : form.args) {
+                        if (form1.car() != null && form1.car().equals(rel1)) {
+                            args1 = new ArrayList<>(form1.stringArgs);
+                            args1.remove(form1.car());
+                        }
+                        if (form1.car() != null && form1.car().equals(rel2)) {
+                            args1 = new ArrayList<>(form1.stringArgs);
+                            args1.remove(form1.car());
+                        }
+                        if (args1 != null && args2 != null && args1.containsAll(args2))
+                            errors.add(form);
+                    }
+//                    errors.add(form);
+                }
+            }
+        }
+        System.out.printf("%nDisjoint Error set size: %d%n", errors.size());
+        System.out.printf("%n%s%n", "Disjoint Error set contents:");
+        for (Formula f1 : errors)
+            System.out.printf("%n%s%n", f1);
+        assertTrue(errors.isEmpty());
     }
 }

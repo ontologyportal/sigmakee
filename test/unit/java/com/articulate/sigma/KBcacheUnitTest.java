@@ -273,32 +273,36 @@ public class KBcacheUnitTest {
     @Test
     public void testDisjoint() {
 
+        boolean resultPass;
         System.out.println("Test testDisjoint");
-        HashSet<String> classes = new HashSet<>(Arrays.asList("Dog", "Jellyfish"));
+        Set<String> classes = new HashSet<>(Arrays.asList("Dog", "Jellyfish"));
         System.out.println("KBcacheUnitTest.testDisjoint(): Dog&Jellyfish");
-        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,"Dog", "Jellyfish"));
-        if (kb.kbCache.checkDisjoint(kb,"Dog","Jellyfish"))
+        resultPass = kb.kbCache.checkDisjoint(kb,"Dog", "Jellyfish");
+        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + resultPass);
+        if (resultPass)
             System.out.println("KBcacheUnitTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheUnitTest.testDisjoint(): fail");
-        assertTrue(kb.kbCache.checkDisjoint(kb,"Dog","Jellyfish"));
+            System.err.println("KBcacheUnitTest.testDisjoint(): fail");
+        assertTrue(resultPass);
 
         System.out.println("KBcacheUnitTest.testDisjoint(): classes: " + classes);
-        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
-        if (kb.kbCache.checkDisjoint(kb,classes))
+        resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + resultPass);
+        if (resultPass)
             System.out.println("KBcacheUnitTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheUnitTest.testDisjoint(): fail");
-        assertTrue(kb.kbCache.checkDisjoint(kb,classes));
+            System.err.println("KBcacheUnitTest.testDisjoint(): fail");
+        assertTrue(resultPass);
 
-        classes = new HashSet<>(Arrays.asList("Table", "Chair"));
+        classes = new HashSet<>(Arrays.asList("Physical", "LengthMeasure"));
         System.out.println("KBcacheUnitTest.testDisjoint(): classes: " + classes);
-        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + kb.kbCache.checkDisjoint(kb,classes));
-        if (!kb.kbCache.checkDisjoint(kb,classes))
+        resultPass = kb.kbCache.checkDisjoint(kb,classes);
+        System.out.println("KBcacheUnitTest.testDisjoint(): disjoint? " + resultPass);
+        if (!resultPass)
             System.out.println("KBcacheUnitTest.testDisjoint(): pass");
         else
-            System.out.println("KBcacheUnitTest.testDisjoint(): fail");
-        assertTrue(!kb.kbCache.checkDisjoint(kb,classes));
+            System.err.println("KBcacheUnitTest.testDisjoint(): fail");
+        assertTrue(!resultPass);
     }
 
     /** ***************************************************************

@@ -22,20 +22,31 @@ import java.util.*;
 
 public class PredVarInst {
 
+    public static final String DOUBLE_PREDICATE_AXIOM = "(=> "
+                                                        + "(and "
+                                                            + "(instance ?REL1 Predicate) "
+                                                            + "(instance ?REL2 Predicate) "
+                                                            + "(disjointRelation ?REL1 ?REL2) "
+                                                            + "(not "
+                                                                + "(equal ?REL1 ?REL2)) "
+                                                            + "(?REL1 @ROW2)) "
+                                                        + "(not "
+                                                            + "(?REL2 @ROW2)))";
+
     // The implied arity of a predicate variable from its use in a Formula
     public static Map<String,Integer> predVarArity = new HashMap<>();
 
     // All predicates that meet that class membership and arity constraints for the given variable
 //    private static Map<String,Set<String>> candidatePredicates = new HashMap<>();
 
-    //The list of logical terms that not related to arity check, will skip these predicates
-    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
-
     public static boolean debug = false;
 
     // a debugging option to reject formulas with more than one predicate variable, to save time
     public static boolean rejectDoubles = false;
     public static boolean doublesHandled = false;
+
+    //The list of logical terms that not related to arity check, will skip these predicates
+    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
 
     /** ***************************************************************
      */
@@ -52,6 +63,7 @@ public class PredVarInst {
      * second type condition is specifically defined in the antecedent
      * of a rule with an instance or subclass expression
      *
+     * @param kb the current knowledge base
      * @param input formula
      * @param types type condition extracted from domain expression.
      *              This is a HashMap in which the keys are predicate variables,
@@ -101,7 +113,7 @@ public class PredVarInst {
      */
     private static Set<Formula> handleDouble1(KB kb) {
 
-        String origForm = "(=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate) (disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (?REL1 @ROW2)) (not (?REL2 @ROW2)))";
+        String origForm = DOUBLE_PREDICATE_AXIOM;
         if (debug) System.out.println("PredVarInst.handleDouble1(): " + origForm);
         Set<Formula> result = new HashSet<>();
         String arg1, arg2;
