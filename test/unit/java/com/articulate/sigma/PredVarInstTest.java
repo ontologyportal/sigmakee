@@ -20,12 +20,12 @@ import static org.junit.Assert.*;
  */
 public class PredVarInstTest extends UnitTestBase  {
 
-    private static final String stmt1 = "(<=> (instance ?REL TransitiveRelation) " +
+    private static final String AXIOM_1 = "(<=> (instance ?REL TransitiveRelation) " +
             "(forall (?INST1 ?INST2 ?INST3) " +
             "(=> (and (?REL ?INST1 ?INST2) " +
             "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
 
-    private static final String stmt2 = "(=> " +
+    private static final String AXIOM_2 = "(=> " +
             "(instance ?JURY Jury) " +
             "(holdsRight " +
             "(exists (?DECISION) " +
@@ -33,7 +33,7 @@ public class PredVarInstTest extends UnitTestBase  {
             "(instance ?DECISION LegalDecision) " +
             "(agent ?DECISION ?JURY))) ?JURY))";
 
-    private static final String stmt3 = "(=> (instance ?R TransitiveRelation) (=> (and (?R ?A ?B) (?R ?B ?C)) (?R ?A ?C)))";
+    private static final String AXIOM_3 = "(=> (instance ?R TransitiveRelation) (=> (and (?R ?A ?B) (?R ?B ?C)) (?R ?A ?C)))";
 
     /** ***************************************************************
      */
@@ -41,7 +41,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testGatherPredVarsStmt1() {
 
         Formula f = new Formula();
-        f.read(PredVarInstTest.stmt1);
+        f.read(PredVarInstTest.AXIOM_1);
         Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
         Set<String> expected = Sets.newHashSet("?REL");
         System.out.println("\n--------------------");
@@ -50,7 +50,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (expected.equals(actual))
             System.out.println("testGatherPredVarsStmt1(): success!");
         else
-            System.out.println("testGatherPredVarsStmt1(): failure");
+            System.err.println("testGatherPredVarsStmt1(): failure");
         assertEquals(expected, actual);
     }
 
@@ -60,7 +60,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testGatherPredVarsStmt2() {
 
         Formula f = new Formula();
-        f.read(PredVarInstTest.stmt2);
+        f.read(PredVarInstTest.AXIOM_2);
         Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
         Set<String> expected = Sets.newHashSet();
         System.out.println("\n--------------------");
@@ -69,7 +69,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (expected.equals(actual))
             System.out.println("testGatherPredVarsStmt2(): success!");
         else
-            System.out.println("testGatherPredVarsStmt2(): failure");
+            System.err.println("testGatherPredVarsStmt2(): failure");
         assertEquals(expected, actual);
     }
 
@@ -79,7 +79,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testGatherPredVarsStmt3() {
 
         Formula f = new Formula();
-        f.read(PredVarInstTest.stmt3);
+        f.read(PredVarInstTest.AXIOM_3);
         Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
         Set<String> expected = Sets.newHashSet("?R");
         System.out.println("\n--------------------");
@@ -88,7 +88,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (expected.equals(actual))
             System.out.println("testGatherPredVarsStmt3(): success!");
         else
-            System.out.println("testGatherPredVarsStmt3(): failure");
+            System.err.println("testGatherPredVarsStmt3(): failure");
         assertEquals(expected, actual);
     }
 
@@ -98,7 +98,7 @@ public class PredVarInstTest extends UnitTestBase  {
     public void testInstantiatePredStmt2() {
 
         Formula f = new Formula();
-        f.read(PredVarInstTest.stmt2);
+        f.read(PredVarInstTest.AXIOM_2);
         Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
         Set<Formula> expected = Sets.newHashSet();
         System.out.println("\n--------------------");
@@ -107,7 +107,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (expected.equals(actual))
             System.out.println("testInstantiatePredStmt2(): success!");
         else
-            System.out.println("testInstantiatePredStmt2(): failure");
+            System.err.println("testInstantiatePredStmt2(): failure");
         assertEquals(expected, actual);
     }
 
@@ -133,7 +133,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (actual.size() > 100)
             System.out.println("testInstantiatePredStmt3(): success!");
         else
-            System.out.println("testInstantiatePredStmt3(): failure");
+            System.err.println("testInstantiatePredStmt3(): failure");
         assertTrue(actual.size() > 100);
     }
 
@@ -164,7 +164,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (PredVarInst.predVarArity.get("?REL") == 2)
             System.out.println("testPredVarArity(): success!");
         else
-            System.out.println("testPredVarArity(): failure");
+            System.err.println("testPredVarArity(): failure");
         assertEquals(2,PredVarInst.predVarArity.get("?REL").intValue());
     }
 
@@ -314,7 +314,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (types.contains("TotalValuedRelation") && types.contains("Predicate"))
             System.out.println("PredVarInstTest.testTVRTypes(): pass");
         else
-            System.out.println("PredVarInstTest.testTVRTypes(): fail");
+            System.err.println("PredVarInstTest.testTVRTypes(): fail");
         assertTrue(types.contains("TotalValuedRelation"));
         assertTrue(types.contains("Predicate"));
     }
@@ -325,8 +325,7 @@ public class PredVarInstTest extends UnitTestBase  {
     @Test
     public void testPredVarCount() {
 
-        String stmt = "(=> (and (instance ?REL1 Predicate) (instance ?REL2 Predicate) " +
-                "(disjointRelation ?REL1 ?REL2) (not (equal ?REL1 ?REL2)) (?REL1 @ROW2)) (not (?REL2 @ROW2)))";
+        String stmt = PredVarInst.DOUBLE_PREDICATE_AXIOM;
         Formula f = new Formula();
         f.read(stmt);
         System.out.println("\n--------------------");
@@ -337,8 +336,55 @@ public class PredVarInstTest extends UnitTestBase  {
         if (predVars.contains("?REL1") && predVars.contains("?REL2") && predVars.size() == 2)
             System.out.println("PredVarInstTest.testPredVarCount(): pass");
         else
-            System.out.println("PredVarInstTest.testPredVarCount(): fail");
+            System.err.println("PredVarInstTest.testPredVarCount(): fail");
         assertTrue(predVars.contains("?REL1") && predVars.contains("?REL2") && predVars.size() == 2);
+    }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testReportDisjointErrors() {
+
+        KBmanager.getMgr().setPref("cacheDisjoint","true"); // ensure disjoint maps are built
+
+//        String stmt = PredVarInst.DOUBLE_PREDICATE_AXIOM;
+//        Formula f = new Formula();
+//        f.read(stmt);
+        System.out.printf("%n%s%n", "===================== PredVarInstTest.testReportDisjointErrors =====================");
+//        System.out.printf("formula: %s%n", f);
+        List<Formula> errors = new ArrayList<>();
+//        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        String[] classes;
+        List<String> args1 = null, args2 = null;
+        String rel1, rel2;
+        for (String s : SigmaTestBase.kb.kbCache.disjointRelations) {
+            classes = s.split("\t");
+            rel1 = classes[0];
+            rel2 = classes[1];
+            for (Formula form : SigmaTestBase.kb.formulaMap.values()) {
+                if (form.isRule() && form.getFormula().contains(rel1) && form.getFormula().contains(rel2)) {
+                    System.out.printf("%nrel1: %s : rel2: %s%n", rel1, rel2);
+                    for (Formula form1 : form.args) {
+                        if (form1.car() != null && form1.car().equals(rel1)) {
+                            args1 = new ArrayList<>(form1.stringArgs);
+                            args1.remove(form1.car());
+                        }
+                        if (form1.car() != null && form1.car().equals(rel2)) {
+                            args1 = new ArrayList<>(form1.stringArgs);
+                            args1.remove(form1.car());
+                        }
+                        if (args1 != null && args2 != null && args1.containsAll(args2))
+                            errors.add(form);
+                    }
+//                    errors.add(form);
+                }
+            }
+        }
+        System.out.printf("%nDisjoint Error set size: %d%n", errors.size());
+        System.out.printf("%n%s", "Disjoint Error set contents:");
+        for (Formula f1 : errors)
+            System.out.printf("%n%s%n", f1);
+        assertTrue(errors.isEmpty());
     }
 
     /** ***************************************************************
@@ -355,7 +401,7 @@ public class PredVarInstTest extends UnitTestBase  {
         if (hasCorrectArity == null)
             System.out.println("PredVarInstTest.testPredVarCount(): pass");
         else
-            System.out.println("PredVarInstTest.testPredVarCount(): fail");
+            System.err.println("PredVarInstTest.testPredVarCount(): fail");
         assertTrue(hasCorrectArity == null);
     }
 }
