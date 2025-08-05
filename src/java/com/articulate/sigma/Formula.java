@@ -463,8 +463,8 @@ public class Formula implements Comparable, Serializable {
     public int compareTo(Object f) throws ClassCastException {
 
     	if (f == null) {
-    		System.err.println("Error in Formula.compareTo(): null formula");
-    		throw new ClassCastException("Error in Formula.compareTo(): null formula");
+            System.err.println("Error in Formula.compareTo(): null formula");
+            throw new ClassCastException("Error in Formula.compareTo(): null formula");
     	}
         if (!(f instanceof Formula))
             throw new ClassCastException("Error in Formula.compareTo(): "
@@ -838,7 +838,7 @@ public class Formula implements Comparable, Serializable {
         Formula newFormula = new Formula();
         newFormula.read(theFormula);
         if (newFormula.equals("") || newFormula.atom()) {
-            System.out.println("Error in KB.append(): attempt to append to non-list: " + theFormula);
+            System.err.println("Error in Formula.append(): attempt to append to non-list: " + theFormula);
             return this;
         }
         if (f == null || f.theFormula == null || "".equals(f.theFormula) || f.theFormula.equals("()"))
@@ -926,7 +926,7 @@ public class Formula implements Comparable, Serializable {
         Formula restF = new Formula();
         restF.read(rest);
         int argCount = 0;
-        String arg, result;
+        String arg, result, errString;
         Formula argF;
         while (!restF.empty()) {
             argCount++;
@@ -943,14 +943,14 @@ public class Formula implements Comparable, Serializable {
             location = "near line " + lineNo + " in " + filename;
         if (pred.equals(AND) || pred.equals(OR)) {
             if (argCount < 2) {
-                String errString = "Too few arguments for 'and' or 'or' " + location + ": " + f.toString();
+                errString = "Too few arguments for 'and' or 'or' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(UQUANT) || pred.equals(EQUANT)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for quantifer " + location + ": " + f.toString();
+                errString = "Wrong number of arguments for quantifer " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -958,7 +958,7 @@ public class Formula implements Comparable, Serializable {
                 Formula quantF = new Formula();
                 quantF.read(rest);
                 if (!listP(quantF.car())) {
-                    String errString = "No var list for quantifier " + location + ": " + f.toString();
+                    errString = "No var list for quantifier " + location + ": " + f.toString();
                     errors.add(errString);
                     return errString;
                 }
@@ -966,14 +966,14 @@ public class Formula implements Comparable, Serializable {
         }
         else if (pred.equals(IFF) || pred.equals(IF)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for '<=>' or '=>' " + location + ": " + f.toString();
+                errString = "Wrong number of arguments for '<=>' or '=>' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
         }
         else if (pred.equals(EQUAL)) {
             if (argCount != 2) {
-                String errString = "Wrong number of arguments for 'equals' " + location + ": " + f.toString();
+                errString = "Wrong number of arguments for 'equals' " + location + ": " + f.toString();
                 errors.add(errString);
                 return errString;
             }
@@ -981,7 +981,7 @@ public class Formula implements Comparable, Serializable {
         else if (!(isVariable(pred)) && (argCount > (MAX_PREDICATE_ARITY + 1))) {
             //System.out.println("info in KIF.parse(): pred: " + pred);
             //System.out.println("info in KIF.parse(): " + this);
-			String errString = "Maybe too many arguments " + location + ": " + f.toString();
+            errString = "Maybe too many arguments " + location + ": " + f.toString();
             errors.add(errString);
             return errString;
         }
@@ -1027,6 +1027,7 @@ public class Formula implements Comparable, Serializable {
      * if there are.
      */
     public String validArgs() {
+
         return this.validArgs(null, null);
     }
 
@@ -1512,7 +1513,7 @@ public class Formula implements Comparable, Serializable {
 
     /** ***************************************************************
      * Loads all of the arguments into both args and stringArgs
-     * datastructures.
+     * data structures.
      */
     private void loadArguments() {
 
@@ -2363,6 +2364,7 @@ public class Formula implements Comparable, Serializable {
         }
         return ans;
     }
+
     /** ***************************************************************
      * Returns true only if this Formula, is a horn clause or is simply
      * modified to be horn by breaking out a conjunctive conclusion.
@@ -2397,6 +2399,10 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Test whether a Formula is a simple list of terms (including
      * functional terms).
+     *
+     * @param kb the current knowledge base
+     * @return true if a Formula is a simple list of terms (including
+     * functional terms)
      */
     public boolean isSimpleClause(KB kb) {
 
@@ -2406,11 +2412,12 @@ public class Formula implements Comparable, Serializable {
         	return false;
         String arg;
         int argnum = 1;
+        Formula f;
         do {
             arg = this.getStringArgument(argnum);
             argnum++;
             if (listP(arg)) {
-            	Formula f = new Formula(arg);
+            	f = new Formula(arg);
                 if (kb != null && !kb.isFunction(f.car()))
                     return false;
                 if (kb == null && !f.car().endsWith("Fn")) // in case just testing without a kb
@@ -2504,6 +2511,7 @@ public class Formula implements Comparable, Serializable {
         if (this.isHigherOrder(kb)) sb.append ("hol, ");
         return sb.toString();
     }
+
     /** ***************************************************************
      * Returns the dual logical operator of op, or null if op is not
      * an operator or has no dual.
@@ -2640,14 +2648,16 @@ public class Formula implements Comparable, Serializable {
         String newFormula = "";
         String nextCar = f.car();
 
+        String nextCdr, subFormula, formulaArg;
+        Formula subF;
         while (nextCar != null && !nextCar.equals("")) {
-            String nextCdr = f.cdr();
+            nextCdr = f.cdr();
             if (kb.isChildOf(nextCar, "TemporalRelation")) {
                 return "";
             }
             else if(nextCar.matches("^\\s*\\(\\s*and.*")) {
-                String subFormula = removeTemporalRelations(nextCar, kb);
-                Formula subF = new Formula("("+subFormula+")");
+                subFormula = removeTemporalRelations(nextCar, kb);
+                subF = new Formula("("+subFormula+")");
                 if (subF.cddr() == null || subF.cddr().isEmpty() || subF.cddr().equals("()")) {
                     subFormula = subFormula.replaceFirst("^\\s*and\\s+", "");
                 }
@@ -2657,7 +2667,7 @@ public class Formula implements Comparable, Serializable {
                 return newFormula + " " + subFormula;
             }
             else if (nextCar.startsWith("(")) {
-                String subFormula = removeTemporalRelations(f.car(), kb);
+                subFormula = removeTemporalRelations(f.car(), kb);
                 if (!subFormula.equals("")) {
                     newFormula += "(" + subFormula + ")";
                     if (newFormula.endsWith(" )")) {
@@ -2666,7 +2676,7 @@ public class Formula implements Comparable, Serializable {
                 }
             }
             else if(nextCar.equals("holdsDuring")) {
-                String formulaArg = f.cddr();
+                formulaArg = f.cddr();
                 if (formulaArg != null && formulaArg.length() >= 2 && formulaArg.startsWith("(") && formulaArg.endsWith(")")) {
                     return removeTemporalRelations(formulaArg.substring(1, formulaArg.length()-1), kb);
                 }
