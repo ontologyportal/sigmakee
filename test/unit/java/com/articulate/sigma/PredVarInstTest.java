@@ -61,7 +61,7 @@ public class PredVarInstTest extends UnitTestBase  {
 
         Formula f = new Formula();
         f.read(PredVarInstTest.AXIOM_2);
-        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
+        Set<String> actual = PredVarInst.gatherPredVars(kb,f);
         Set<String> expected = Sets.newHashSet();
         System.out.println("\n--------------------");
         System.out.println("testGatherPredVarsStmt2() actual: " + actual);
@@ -80,7 +80,7 @@ public class PredVarInstTest extends UnitTestBase  {
 
         Formula f = new Formula();
         f.read(PredVarInstTest.AXIOM_3);
-        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb,f);
+        Set<String> actual = PredVarInst.gatherPredVars(kb,f);
         Set<String> expected = Sets.newHashSet("?R");
         System.out.println("\n--------------------");
         System.out.println("testGatherPredVarsStmt3() actual: " + actual);
@@ -99,7 +99,7 @@ public class PredVarInstTest extends UnitTestBase  {
 
         Formula f = new Formula();
         f.read(PredVarInstTest.AXIOM_2);
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
         Set<Formula> expected = Sets.newHashSet();
         System.out.println("\n--------------------");
         System.out.println("testInstantiatePredStmt2() actual: " + actual);
@@ -126,7 +126,7 @@ public class PredVarInstTest extends UnitTestBase  {
         f.read(stmt);
 
         System.out.println("\n--------------------");
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
         Set<Formula> expected = Sets.newHashSet();
         System.out.println("testInstantiatePredStmt3() actual: " + actual);
         System.out.println("testInstantiatePredStmt3() expected: " + expected);
@@ -147,7 +147,7 @@ public class PredVarInstTest extends UnitTestBase  {
         Formula f = new Formula();
         f.read(stmt);
         System.out.println("\n--------------------");
-        Set<String>  actual = PredVarInst.gatherPredVarRecurse(SigmaTestBase.kb,f);
+        Set<String>  actual = PredVarInst.gatherPredVarRecurse(kb,f);
 
         Set<String> expected = new HashSet<>();
         expected.add("?REL");
@@ -186,7 +186,7 @@ public class PredVarInstTest extends UnitTestBase  {
         System.out.println("\n--------------------");
         String var = "?REL";
         System.out.println("PredVarInstTest.testPredVarArity2(): formula: " + f);
-        Set<String> actual = PredVarInst.gatherPredVarRecurse(SigmaTestBase.kb,f);
+        Set<String> actual = PredVarInst.gatherPredVarRecurse(kb,f);
         System.out.println("PredVarInstTest.testPredVarArity2(): actual pred vars: " + actual);
         int arity = PredVarInst.predVarArity.get(var);
         int expectedArity = 2;
@@ -228,7 +228,7 @@ public class PredVarInstTest extends UnitTestBase  {
         f.read(stmt);
         System.out.println("\n--------------------");
         System.out.println("PredVarInstTest.testTVRPredVars(): formula: " + f);
-        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb, f);
+        Set<String> actual = PredVarInst.gatherPredVars(kb, f);
         System.out.println("PredVarInstTest.testTVRPredVars(): actual: " + actual);
         Set<String> expected = new HashSet<>();
         expected.add("?REL");
@@ -267,7 +267,7 @@ public class PredVarInstTest extends UnitTestBase  {
         String var = "?REL";
         System.out.println("PredVarInstTest.testTVRArity(): formula: " + f);
         System.out.println("PredVarInstTest.testTVRArity(): variable: " + var);
-        Set<String> actual = PredVarInst.gatherPredVars(SigmaTestBase.kb, f);
+        Set<String> actual = PredVarInst.gatherPredVars(kb, f);
         int arity = PredVarInst.predVarArity.get(var);
         int expected = 0; // variable arity is given as "0"
         System.out.println("PredVarInstTest.testTVRArity(): actual arity: " + arity);
@@ -347,21 +347,16 @@ public class PredVarInstTest extends UnitTestBase  {
 
         KBmanager.getMgr().setPref("cacheDisjoint","true"); // ensure disjoint maps are built
 
-//        String stmt = PredVarInst.DOUBLE_PREDICATE_AXIOM;
-//        Formula f = new Formula();
-//        f.read(stmt);
         System.out.printf("%n%s%n", "===================== PredVarInstTest.testReportDisjointErrors =====================");
-//        System.out.printf("formula: %s%n", f);
         List<Formula> errors = new ArrayList<>();
-//        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
         String[] classes;
         List<String> args1 = null, args2 = null;
         String rel1, rel2;
-        for (String s : SigmaTestBase.kb.kbCache.disjointRelations) {
+        for (String s : kb.kbCache.disjointRelations) {
             classes = s.split("\t");
             rel1 = classes[0];
             rel2 = classes[1];
-            for (Formula form : SigmaTestBase.kb.formulaMap.values()) {
+            for (Formula form : kb.formulaMap.values()) {
                 if (form.isRule() && form.getFormula().contains(rel1) && form.getFormula().contains(rel2)) {
                     System.out.printf("%nrel1: %s : rel2: %s%n", rel1, rel2);
                     for (Formula form1 : form.args) {
@@ -381,7 +376,7 @@ public class PredVarInstTest extends UnitTestBase  {
             }
         }
         System.out.printf("%nDisjoint Error set size: %d%n", errors.size());
-        System.out.printf("%n%s", "Disjoint Error set contents:");
+        System.out.printf("%n%s%n", "Disjoint Error set contents:");
         for (Formula f1 : errors)
             System.out.printf("%n%s%n", f1);
         assertTrue(errors.isEmpty());

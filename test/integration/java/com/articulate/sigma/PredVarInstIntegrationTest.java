@@ -27,7 +27,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
         Formula f = new Formula();
         f.read(stmt1);
 
-        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
+        Set<Formula> actual = PredVarInst.instantiatePredVars(f, kb);
 
         // Prep the expected set of formula objects.
         Set<Formula> expected = Sets.newHashSet();
@@ -1423,7 +1423,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
         Formula f = new Formula();
         f.read(stmt3);
 
-        Map<String, Set<String>> actual = PredVarInst.findPredVarTypes(f, SigmaTestBase.kb);
+        Map<String, Set<String>> actual = PredVarInst.findPredVarTypes(f, kb);
         System.out.println("testFindPredVarTypesStmt3(): actual: " + actual);
         Map<String, Set<String>> expected = Maps.newHashMap();
         expected.put("?ROLE", Sets.newHashSet("CaseRole"));
@@ -1437,21 +1437,16 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
 
         KBmanager.getMgr().setPref("cacheDisjoint","true"); // ensure disjoint maps are built
 
-//        String stmt = PredVarInst.DOUBLE_PREDICATE_AXIOM;
-//        Formula f = new Formula();
-//        f.read(stmt);
         System.out.printf("%n%s%n", "===================== PredVarInstTest.testReportDisjointErrors =====================");
-//        System.out.printf("formula: %s%n", f);
         List<Formula> errors = new ArrayList<>();
-//        Set<Formula> actual = PredVarInst.instantiatePredVars(f, SigmaTestBase.kb);
         String[] classes;
         List<String> args1 = null, args2 = null;
         String rel1, rel2;
-        for (String s : SigmaTestBase.kb.kbCache.disjointRelations) {
+        for (String s : kb.kbCache.disjointRelations) {
             classes = s.split("\t");
             rel1 = classes[0];
             rel2 = classes[1];
-            for (Formula form : SigmaTestBase.kb.formulaMap.values()) {
+            for (Formula form : kb.formulaMap.values()) {
                 if (form.isRule() && form.getFormula().contains(rel1) && form.getFormula().contains(rel2)) {
                     System.out.printf("%nrel1: %s : rel2: %s%n", rel1, rel2);
                     for (Formula form1 : form.args) {
@@ -1471,7 +1466,7 @@ public class PredVarInstIntegrationTest extends IntegrationTestBase {
             }
         }
         System.out.printf("%nDisjoint Error set size: %d%n", errors.size());
-        System.out.printf("%n%s", "Disjoint Error set contents:");
+        System.out.printf("%n%s%n", "Disjoint Error set contents:");
         for (Formula f1 : errors)
             System.out.printf("%n%s%n", f1);
         assertTrue(errors.isEmpty());
