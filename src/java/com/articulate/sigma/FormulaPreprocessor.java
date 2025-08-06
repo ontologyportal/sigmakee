@@ -587,7 +587,7 @@ public class FormulaPreprocessor {
             }
         }
         else if (form.isSimpleClause(kb)) {
-            if (isNegativeLiteral == true)  // If form is negative literal, do not add explicit type for the variable
+            if (isNegativeLiteral)  // If form is negative literal, do not add explicit type for the variable
                 return;
             Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
             Matcher m = p.matcher(form.getFormula());
