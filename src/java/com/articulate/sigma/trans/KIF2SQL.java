@@ -227,7 +227,6 @@ Articulate Software
      */
     private void writeAxioms() {
 
-        Iterator it = kb.formulaMap.values().iterator();
         for (Formula f : kb.formulaMap.values()) {
             System.out.println("writeAxioms(): f: " + f);
             writeAxiom(f);
