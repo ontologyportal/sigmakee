@@ -2366,7 +2366,7 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Returns true only if this Formula, is a horn clause or is simply
+     * Returns true only if this Formula is a horn clause or is simply
      * modified to be horn by breaking out a conjunctive conclusion.
      */
     public boolean isHorn(KB kb) {
