@@ -267,13 +267,13 @@ public class NLGUtils implements Serializable {
         for (int i = 0; i < arr.length; i++) {
             val = arr[i];
             if (i > 0) {
-                if (val.equals(NLGUtils.getKeyword("and", language))) {
+                if (val.equals(NLGUtils.getKeyword(Formula.AND, language))) {
                     // Make behavior for lists that include "and" the same as for those that don't.
                     continue;
                 }
                 if (i == lastIdx) {
                     result.append(space);
-                    result.append(NLGUtils.getKeyword("and", language));
+                    result.append(NLGUtils.getKeyword(Formula.AND, language));
                 }
                 else {
                     result.append(comma);
@@ -289,7 +289,7 @@ public class NLGUtils implements Serializable {
      */
     static boolean logicalOperator(String word) {
 
-        String logops = "if,then,=>,and,or,<=>,not,forall,exists,holds";
+        String logops = "if,then,=>,and,or,xor,<=>,not,forall,exists,holds";
         return logops.contains(word);
     }
 
@@ -510,7 +510,7 @@ public class NLGUtils implements Serializable {
 
         String ans = "";
         if (getKeywordMap() == null) {
-            if (debug) System.out.println("Error in NLGUtils.getKeyword(): keyword map is null");
+            if (debug) System.err.println("Error in NLGUtils.getKeyword(): keyword map is null");
             return ans;
         }
         Map<String,String> hm = getKeywordMap().get(englishWord);
@@ -652,7 +652,7 @@ public class NLGUtils implements Serializable {
                             lbi = p1;
                             if (lbi < slen) { lb = strFormat.substring(lbi, (lbi + 1)); }
                         }
-                        AND = NLGUtils.getKeyword("and", lang);
+                        AND = NLGUtils.getKeyword(Formula.AND, lang);
                         if (StringUtil.emptyString(AND))
                             AND = "+";
                         nAdded = 0;
