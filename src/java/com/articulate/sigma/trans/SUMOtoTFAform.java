@@ -499,8 +499,10 @@ public class SUMOtoTFAform {
             return "";
         }
         String tptpOp = "&";
-        if (op.equals("or"))
+        if (op.equals(Formula.OR))
             tptpOp = "|";
+        if (op.equals(Formula.XOR))
+            tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(processRecurse(new Formula(args.get(1)),parentType));
         for (int i = 2; i < args.size(); i++) {
@@ -517,9 +519,9 @@ public class SUMOtoTFAform {
         String op = car.getFormula();
         if (debug) System.out.println("processLogOp(): f: " + f);
         if (debug) System.out.println("processLogOp(): args: " + args);
-        if (op.equals("and"))
+        if (op.equals(Formula.AND))
             return processConjDisj(f,car,parentType,args);
-        if (op.equals("=>")) {
+        if (op.equals(Formula.IF)) {
             if (args.size() != 3) {  // op + 2 args
                 System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
@@ -528,7 +530,7 @@ public class SUMOtoTFAform {
                 return "(" + processRecurse(new Formula(args.get(1)),parentType) + " => " +
                         processRecurse(new Formula(args.get(2)),parentType) + ")";
         }
-        if (op.equals("<=>")) {
+        if (op.equals(Formula.IFF)) {
             if (args.size() != 3) { // op + 2 args
                 System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
@@ -539,9 +541,11 @@ public class SUMOtoTFAform {
                         processRecurse(new Formula(args.get(2)),parentType) + " => " +
                         processRecurse(new Formula(args.get(1)),parentType) + "))";
         }
-        if (op.equals("or"))
+        if (op.equals(Formula.OR))
             return processConjDisj(f,car,parentType,args);
-        if (op.equals("not")) {
+        if (op.equals(Formula.XOR))
+            return processConjDisj(f,car,parentType,args);
+        if (op.equals(Formula.NOT)) {
             if (args.size() != 2) { // op + 1 arg
                 System.err.println("Error in SUMOtoTFAform.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
@@ -549,7 +553,7 @@ public class SUMOtoTFAform {
             else
                 return "~(" + processRecurse(new Formula(args.get(1)),parentType) + ")";
         }
-        if (op.equals("forall") || op.equals("exists"))
+        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,car,parentType,op,args);
         System.err.println("Error in SUMOtoTFAform.processLogOp(): bad logical operator " + op + " in " + f);
         return "";
@@ -1653,7 +1657,7 @@ public class SUMOtoTFAform {
         if (isNumericType(t2) && !isBuiltInNumericType(t2))
             t2 = promoteToBuiltIn(t2);
         if (kb.compareTermDepth(t1, t2) > 0) {
-            if (debug) System.out.println("Error SUMOtoTFAform.constrainTerm(): second type more general than first: " +
+            if (debug) System.err.println("Error SUMOtoTFAform.constrainTerm(): second type more general than first: " +
                     t1 + ", " + t2);
             return t1;
         }
@@ -2031,7 +2035,7 @@ public class SUMOtoTFAform {
 
     /** *************************************************************
      * Recursive routine to eliminate occurrences of 'forall', 'exists',
-     * '<=>', '=>', '=>', 'and' and 'or' that
+     * '<=>', '=>', 'and', 'xor' and 'or' that
      * have only one or zero arguments
      * @return the corrected formula as a string
      */
@@ -2041,8 +2045,8 @@ public class SUMOtoTFAform {
             return f.getFormula();
         List<String> args = f.complexArgumentsToArrayListString(0);
         if (args == null) return "";
-        if (f.car().equals("and") || f.car().equals("or") || f.car().equals("=>") ||
-                f.car().equals("<=>") || f.car().equals("exists") || f.car().equals("forall")) {
+        if (f.car().equals(Formula.AND) || f.car().equals(Formula.OR) || f.car().equals(Formula.XOR) || f.car().equals(Formula.IF) ||
+                f.car().equals(Formula.IFF) || f.car().equals(Formula.EQUANT) || f.car().equals(Formula.UQUANT)) {
             if (args.size() == 1) {  // meaning that the one "argument" is the predicate
                 return "";
             }
@@ -2112,7 +2116,7 @@ public class SUMOtoTFAform {
                 if (f.car().equals("instance")) {
                     List<String> al = f.complexArgumentsToArrayListString(0);
                     if (al.size() < 3) {
-                        System.out.println("Error SUMOtoTFAform.removeNumericInstance(): wrong # or args to: " + f);
+                        System.err.println("Error SUMOtoTFAform.removeNumericInstance(): wrong # or args to: " + f);
                         return s;
                     }
                     String arg = al.get(2);
@@ -2512,11 +2516,11 @@ public class SUMOtoTFAform {
     private static String matchingInstance(Formula f) {
 
         if (f.getFormula() == null) {
-            System.out.println("Error in SUMOtoTFAform.matchingInstance(): null formula");
+            System.err.println("Error in SUMOtoTFAform.matchingInstance(): null formula");
             return null;
         }
         if (kb == null || kb.kbCache == null) {
-            System.out.println("Error in SUMOtoTFAform.matchingInstance(): null KB cache");
+            System.err.println("Error in SUMOtoTFAform.matchingInstance(): null KB cache");
             System.out.println("formula: " + f);
             return null;
         }
