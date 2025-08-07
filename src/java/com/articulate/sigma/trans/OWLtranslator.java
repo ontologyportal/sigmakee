@@ -618,20 +618,19 @@ public class OWLtranslator {
      */
     private void writeAxioms(PrintWriter pw) {
 
-        TreeSet ts = new TreeSet();
+        Set<Formula> ts = new TreeSet();
         ts.addAll(kb.formulaMap.values());
-        Iterator tsit = ts.iterator();
-        while (tsit.hasNext()) {
-            Formula f = (Formula) tsit.next();
+        String form;
+        for (Formula f : ts) {
             if (f.isRule()) {
-                String form = f.toString();
-                form = form.replaceAll("<=>","iff");
-                form = form.replaceAll("=>","implies");
+                form = f.toString();
+                form = form.replaceAll(Formula.IFF,"iff");
+                form = form.replaceAll(Formula.IF,"implies");
                 form = processDoc(form);
                 pw.println("<owl:Thing rdf:about=\"#axiom-" + f.createID() + "\">");
                 pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +
-                           "See www.ontologyportal.org for the original SUO-KIF source.\n " +
-                           form + "</rdfs:comment>");
+                        "See www.ontologyportal.org for the original SUO-KIF source.\n " +
+                        form + "</rdfs:comment>");
                 pw.println("</owl:Thing>");
             }
         }
