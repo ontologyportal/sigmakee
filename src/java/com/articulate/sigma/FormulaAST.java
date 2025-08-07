@@ -217,7 +217,7 @@ public class FormulaAST {
         String location = "";
         if ((filename != null) && (lineNo != null))
             location = "near line " + lineNo + " in " + filename;
-        if (pred.equals(Formula.AND) || pred.equals(Formula.OR)) {
+        if (pred.equals(Formula.AND) || pred.equals(Formula.OR) || pred.equals(Formula.XOR)) {
             if (argCount < 2) {
                 String errString = "Too few arguments for 'and' or 'or' at " + location + ": " + f.toString();
                 errors.add(errString);
@@ -267,7 +267,7 @@ public class FormulaAST {
     /** ***************************************************************
      * Test whether the Formula uses logical operators and predicates
      * with the correct number of arguments.  "equals", "<=>", and
-     * "=>" are strictly binary.  "or", and "and" are binary or
+     * "=>" are strictly binary.  "or", "xor" and "and" are binary or
      * greater. "not" is unary.  "forall" and "exists" are unary with
      * an argument list.  Warn if we encounter a formula that has more
      * arguments than MAX_PREDICATE_ARITY.
@@ -285,7 +285,6 @@ public class FormulaAST {
 
         if (formula == null)
             return "";
-        Formula f = new Formula();
         String result = validArgsRecurse(this, filename, lineNo);
         return result;
     }
@@ -293,7 +292,7 @@ public class FormulaAST {
     /** ***************************************************************
      * Test whether the Formula uses logical operators and predicates
      * with the correct number of arguments.  "equals", "<=>", and
-     * "=>" are strictly binary.  "or", and "and" are binary or
+     * "=>" are strictly binary.  "or", "xor" and "and" are binary or
      * greater. "not" is unary.  "forall" and "exists" are unary with
      * an argument list.  Warn if we encounter a formula that has more
      * arguments than MAX_PREDICATE_ARITY.
