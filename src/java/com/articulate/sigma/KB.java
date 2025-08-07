@@ -796,7 +796,7 @@ public class KB implements Serializable {
     public boolean isSubclass(String c1, String parent) {
 
         if (StringUtil.emptyString(c1)) {
-            //System.out.println("Error in KB.isSubclass(): empty c1");
+            //System.err.println("Error in KB.isSubclass(): empty c1");
             //Thread.dumpStack();
             return false;
         }
@@ -3456,7 +3456,7 @@ public class KB implements Serializable {
      */
     public static boolean isCommutative(String obj) {
 
-        return (StringUtil.isNonEmptyString(obj) && (obj.equals("and") || obj.equals("or")));
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals(Formula.AND) || obj.equals(Formula.OR) || obj.equals(Formula.XOR)));
     }
 
     /***************************************************************
