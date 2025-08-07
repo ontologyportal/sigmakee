@@ -125,40 +125,39 @@ public class ProofProcessor {
     	if (relation.equals("answer"))
     		return null;
     	if (relation.equals("not")) {
-    		Formula fcdar = f.cdrAsFormula().carAsFormula();
-    		if (fcdar == null) {
-    			System.err.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
-    			return null;
-    		}
-    		Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
-    		if (fnew == null)
-    			return null;
-    		else {
-    			Formula result = new Formula();
-    			result.read("(not " + fnew.getFormula() + ")");
-    			return result;
-    		}
+            Formula fcdar = f.cdrAsFormula().carAsFormula();
+            if (fcdar == null) {
+                System.err.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");
+                return null;
+            }
+            Formula fnew = removeNestedAnswerClauseRecurse(fcdar);
+            if (fnew == null)
+                return null;
+            else {
+                Formula result = new Formula();
+                result.read("(not " + fnew.getFormula() + ")");
+                return result;
+            }
     	}
     	boolean connective = false;
-    	if (relation.equals("or") || relation.equals("and"))
-    		connective = true;
-//    	ArrayList<Formula> arglist = new ArrayList<>();
+    	if (relation.equals(Formula.OR) || relation.equals(Formula.XOR) || relation.equals(Formula.AND))
+            connective = true;
     	int arg = 1;
     	boolean foundAnswer = false;
     	String strArgs = "";
         Formula argForm, argRes;
     	while (!StringUtil.emptyString(f.getArgument(arg))) {
-    		argForm = new Formula();
-    		argForm.read(f.getStringArgument(arg));
-    		argRes = removeNestedAnswerClauseRecurse(argForm);
-    		if (argRes == null)
-    			foundAnswer = true;
-    		else {
-    			if (arg > 1)
-    				strArgs = strArgs + " ";
-    			strArgs = strArgs + argRes.getFormula();
-    		}
-    		arg = arg + 1;
+            argForm = new Formula();
+            argForm.read(f.getStringArgument(arg));
+            argRes = removeNestedAnswerClauseRecurse(argForm);
+            if (argRes == null)
+                    foundAnswer = true;
+            else {
+                if (arg > 1)
+                        strArgs = strArgs + " ";
+                strArgs = strArgs + argRes.getFormula();
+            }
+            arg = arg + 1;
     	}
     	Formula result = new Formula();
     	if (connective && foundAnswer && arg < 4)
