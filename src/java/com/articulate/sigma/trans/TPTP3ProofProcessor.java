@@ -592,7 +592,7 @@ public class TPTP3ProofProcessor {
 
     /**
      * ***************************************************************
-     * Return the most specific type for skolem variable.
+     * Returns the most specific type for skolem variable.
      *
      * @param kb The knowledge base used to find skolem term's types
      *
@@ -601,6 +601,8 @@ public class TPTP3ProofProcessor {
      *
      * original binding = esk3_1 set binding = "An instance of Human, Agent" (If
      * multiple types are found for esk3_1)
+     *
+     * @return the most specific type for skolem variable
      */
     public String findTypesForSkolemTerms(KB kb) {
 
@@ -1105,8 +1107,8 @@ public class TPTP3ProofProcessor {
                 }
                 formatted = sb.toString();
                 formatted = formatted.replaceAll("&", "&amp;"); // the 'and' character in TPTP
-                formatted = formatted.replaceAll("<=>", "&lt;=&gt;");
-                formatted = formatted.replaceAll("=>", "=&gt;");
+                formatted = formatted.replaceAll(Formula.IFF, "&lt;=&gt;");
+                formatted = formatted.replaceAll(Formula.IF, "=&gt;");
                 String newline = "n" + ps.name + " [shape=\"box\" label = < " + formatted + " <br align=\"left\"/> > ]";
                 lines.add(newline);
             } else {
