@@ -87,9 +87,9 @@ public class SUMOformulaToTPTPformula {
         int translateIndex;
 
         List<String> kifOps = Arrays.asList(Formula.UQUANT, Formula.EQUANT,
-                Formula.NOT, Formula.AND, Formula.OR, Formula.IF, Formula.IFF,
-                Formula.EQUAL);
-        List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " => ", " <=> ", " = ");
+                Formula.NOT, Formula.AND, Formula.OR, Formula.XOR,
+                Formula.IF, Formula.IFF,Formula.EQUAL);
+        List<String> tptpOps = Arrays.asList("! ", "? ", "~ ", " & ", " | ", " <~> " , " => ", " <=> ", " = ");
 
         List<String> kifPredicates =
                 Arrays.asList("<=","<",">",">=",
@@ -202,7 +202,7 @@ public class SUMOformulaToTPTPformula {
 
         int translateIndex;
         String kifOps[] = {Formula.UQUANT, Formula.EQUANT, Formula.NOT,
-                Formula.AND, Formula.OR, Formula.IF, Formula.IFF};
+                Formula.AND, Formula.OR, Formula.XOR, Formula.IF, Formula.IFF};
 
         translateIndex = 0;
         while (translateIndex < kifOps.length &&
@@ -287,8 +287,10 @@ public class SUMOformulaToTPTPformula {
             return "";
         }
         String tptpOp = "&";
-        if (op.equals("or"))
+        if (op.equals(Formula.OR))
             tptpOp = "|";
+        if (op.equals(Formula.XOR))
+            tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(processRecurse(new Formula(args.get(0))));
         for (int i = 1; i < args.size(); i++) {
@@ -305,9 +307,9 @@ public class SUMOformulaToTPTPformula {
         String op = car.getFormula();
         if (debug) System.out.println("processLogOp(): op: " + op);
         if (debug) System.out.println("processLogOp(): args: " + args);
-        if (op.equals("and"))
+        if (op.equals(Formula.AND))
             return processConjDisj(f,car,args);
-        if (op.equals("=>")) {
+        if (op.equals(Formula.IF)) {
             if (args.size() < 2) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
@@ -321,7 +323,7 @@ public class SUMOformulaToTPTPformula {
                             processRecurse(new Formula(args.get(1))) + ")";
             }
         }
-        if (op.equals("<=>")) {
+        if (op.equals(Formula.IFF)) {
             if (args.size() < 2) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
@@ -332,9 +334,11 @@ public class SUMOformulaToTPTPformula {
                         processRecurse(new Formula(args.get(1))) + " => " +
                         processRecurse(new Formula(args.get(0))) + "))";
         }
-        if (op.equals("or"))
+        if (op.equals(Formula.OR))
             return processConjDisj(f,car,args);
-        if (op.equals("not")) {
+        if (op.equals(Formula.XOR))
+            return processConjDisj(f,car,args);
+        if (op.equals(Formula.NOT)) {
             if (args.size() != 1) {
                 System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
@@ -342,7 +346,7 @@ public class SUMOformulaToTPTPformula {
             else
                 return "~(" + processRecurse(new Formula(args.get(0))) + ")";
         }
-        if (op.equals("forall") || op.equals("exists"))
+        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,car,op,args);
         System.err.println("Error in SUMOformulaToTPTPformula.processLogOp(): bad logical operator " + op + " in " + f);
         return "";
