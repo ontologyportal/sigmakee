@@ -20,6 +20,7 @@ import java.io.FileWriter;
 import java.util.*;
 
 import com.articulate.sigma.utils.StringUtil;
+import java.io.IOException;
 
 /** **************************************************************
  *  The code in the section below implements an algorithm for
@@ -60,8 +61,7 @@ public class Clausifier  {
         }
     }
 
-    /** ***************************************************************
-     */
+    @Override
     public String toString() {
 
         return thisFormula.getFormula();
@@ -72,7 +72,7 @@ public class Clausifier  {
      */
     public List<Formula> separateConjunctions() {
 
-        if (!thisFormula.car().equals("and")) {
+        if (!thisFormula.car().equals(Formula.AND)) {
             System.err.println("Error Formula.separateConjunctions(): not a conjunction " + thisFormula);
             return null;
         }
@@ -112,7 +112,7 @@ public class Clausifier  {
      *
      * @return an ArrayList that contains three items: The new
      * clausal-form Formula, the original (input) SUO-KIF Formula, and
-     * a Map containing a graph of all the variable substitions done
+     * a Map containing a graph of all the variable substitutions done
      * during the conversion to clausal form.  This Map makes it
      * possible to retrieve the correspondence between the variables
      * in the clausal form and the variables in the original
@@ -1650,7 +1650,7 @@ public class Clausifier  {
                 clauseF.read("()");
                 f = (Formula) clauses.get(i);
                 if (f.listP()) {
-                    if (f.car().equals(Formula.OR)) {
+                    if (f.car().equals(Formula.OR)) { // TODO: need to also handle XOR
                         f = f.cdrAsFormula();
                         while (!(f.empty())) {
                             lit = f.car();
@@ -1938,7 +1938,7 @@ public class Clausifier  {
                             bw.close();
                             bw = null;
                         }
-                        catch (Exception bwe) {
+                        catch (IOException bwe) {
                             bwe.printStackTrace();
                         }
                     }
@@ -1955,7 +1955,7 @@ public class Clausifier  {
                 try {
                     bw.close();
                 }
-                catch (Exception e2) {
+                catch (IOException e2) {
                     e2.printStackTrace();
                 }
             }
