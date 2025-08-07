@@ -22,8 +22,8 @@ public class Prenexifier {
 
         if (f.empty()) return f;
         if (f.atom()) return f;
-        if (f.car().equals("or") || f.car().equals("and")) {
-
+        if (f.car().equals(Formula.OR) || f.car().equals(Formula.XOR) || f.car().equals(Formula.AND)) {
+            // TODO: do nothing?
         }
         return f;
     }
