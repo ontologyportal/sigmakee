@@ -250,16 +250,17 @@ public class LanguageFormatter {
 
     /******************************************************************
      * Create a natural language paraphrase of a logical statement.
-     *  @param stmt The statement to be paraphrased.
-     *  @param isNegMode Whether the statement is negated.
-     *  @param depth An int indicating the level of nesting, for control of indentation.
-     *  @return A String, which is the paraphrased statement.
+     *
+     * @param stmt The statement to be paraphrased.
+     * @param isNegMode Whether the statement is negated.
+     * @param depth An int indicating the level of nesting, for control of indentation.
+     * @return A String, which is the paraphrased statement.
      */
     public String paraphraseStatement(String stmt, boolean isNegMode, boolean isQuestionMode, int depth) {
 
         if (debug) System.out.println("INFO in LanguageFormatter.paraphraseStatement(): stmt: " + stmt);
         if (Formula.empty(stmt)) {
-            System.out.println("Error in LanguageFormatter.paraphraseStatement(): stmt is empty");
+            System.err.println("Error in LanguageFormatter.paraphraseStatement(): stmt is empty");
             return "";
         }
         boolean alreadyTried = kb.getLoadFormatMapsAttempted().contains(language);
@@ -284,7 +285,7 @@ public class LanguageFormatter {
         else {
             if (!f.listP()) {
                 if (!StringUtil.emptyString(stmt))
-                    System.out.println("Error in LanguageFormatter.paraphraseStatement(): "
+                    System.err.println("Error in LanguageFormatter.paraphraseStatement(): "
                         + " Statement is not an atom or a list: "
                         + stmt);
                 return "";
@@ -309,7 +310,7 @@ public class LanguageFormatter {
         }
 
         if (!Formula.atom(pred)) {
-            System.out.println("Error in LanguageFormatter.paraphraseStatement(): statement "
+            System.err.println("Error in LanguageFormatter.paraphraseStatement(): statement "
                     + stmt
                     + " has a formula in the predicate position.");
             return stmt;
@@ -501,7 +502,7 @@ public class LanguageFormatter {
 
         try {
             if (NLGUtils.getKeywordMap() == null) {
-                if (debug) System.out.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
+                if (debug) System.err.println("Error in LanguageFormatter.paraphraseLogicalOperator(): " + "keywordMap is null");
                 return null;
             }
             List<String> args = new ArrayList<>();
@@ -600,10 +601,11 @@ public class LanguageFormatter {
         //String QUESTION = getKeyword("?",language);
         String IF = NLGUtils.getKeyword("if", language);
         String THEN = NLGUtils.getKeyword("then", language);
-        String AND = NLGUtils.getKeyword("and", language);
-        String OR = NLGUtils.getKeyword("or", language);
+        String AND = NLGUtils.getKeyword(Formula.AND, language);
+        String OR = NLGUtils.getKeyword(Formula.OR, language);
+        String XOR = NLGUtils.getKeyword(Formula.XOR, language);
         String IFANDONLYIF = NLGUtils.getKeyword("if and only if", language);
-        String NOT = NLGUtils.getKeyword("not", language);
+        String NOT = NLGUtils.getKeyword(Formula.NOT, language);
         String FORALL = NLGUtils.getKeyword("for all", language);
         String EXISTS = NLGUtils.getKeyword("there exists", language);
         String EXIST = NLGUtils.getKeyword("there exist", language);
@@ -616,7 +618,7 @@ public class LanguageFormatter {
 
         StringBuilder sb = new StringBuilder();
 
-        if (pred.equals("=>")) {
+        if (pred.equals(Formula.IF)) {
             if (isNegMode) {
                 sb.append(args.get(1));
                 sb.append(" ");
@@ -648,7 +650,7 @@ public class LanguageFormatter {
 
             return sb.toString();
         }
-        if (pred.equalsIgnoreCase("and")) {
+        if (pred.equalsIgnoreCase(Formula.AND)) {
             if (isNegMode) {
                 for (int i = 0; i < args.size(); i++) {
                     if (i > 0) {
@@ -690,7 +692,7 @@ public class LanguageFormatter {
 
             return sb.toString();
         }
-        if (pred.equalsIgnoreCase("or")) {
+        if (pred.equalsIgnoreCase(Formula.OR)) {
             for (int i = 0; i < args.size(); i++) {
                 if (i > 0) {
                     sb.append(" ");
@@ -702,7 +704,19 @@ public class LanguageFormatter {
 
             return sb.toString();
         }
-        if (pred.equals("<=>")) {
+        if (pred.equalsIgnoreCase(Formula.XOR)) {
+            for (int i = 0; i < args.size(); i++) {
+                if (i > 0) {
+                    sb.append(" ");
+                    sb.append(OR); // TODO: determine if this is correct for XOR
+                    sb.append(" ");
+                }
+                sb.append(translateWord(termMap, args.get(i)));
+            }
+
+            return sb.toString();
+        }
+        if (pred.equals(Formula.IFF)) {
             if (isNegMode) {
                 sb.append(translateWord(termMap, args.get(1)));
                 sb.append(" ");
@@ -732,7 +746,7 @@ public class LanguageFormatter {
 
             return sb.toString();
         }
-        if (pred.equalsIgnoreCase("forall")) {
+        if (pred.equalsIgnoreCase(Formula.UQUANT)) {
             if (isNegMode) {
                 sb.append(" ");
                 sb.append(NOT);
@@ -753,7 +767,7 @@ public class LanguageFormatter {
 
             return sb.toString();
         }
-        if (pred.equalsIgnoreCase("exists")) {
+        if (pred.equalsIgnoreCase(Formula.EQUANT)) {
             if (args.get(0).contains(" ")) {
                 // If more than one variable ...
                 sb.append(isNegMode ? NOTEXIST : EXIST);
@@ -1018,7 +1032,7 @@ public class LanguageFormatter {
             //System.out.println(index);
             switch (form.charAt(index)) {
                 case '"':
-                    System.out.println("Error in LanguageFormatter.createObjectMap(): premature quote at index " +
+                    System.err.println("Error in LanguageFormatter.createObjectMap(): premature quote at index " +
                             index + " in " + form);
                     return;
                 case ' ':
@@ -1036,21 +1050,21 @@ public class LanguageFormatter {
                 case '&':
                     index++;
                     if (form.charAt(index) != '%') {
-                        System.out.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
+                        System.err.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
                                 form.charAt(index) + " in " + form);
                         return;
                     }
                     index++;
                     int termEnd = form.indexOf("$",index);
                     if (termEnd == -1) {
-                        System.out.println("Error in LanguageFormatter.createObjectMap(): missing $ in " +
+                        System.err.println("Error in LanguageFormatter.createObjectMap(): missing $ in " +
                                 form + " after " + index);
                         return;
                     }
                     String term = form.substring(index,termEnd);
                     int quote1 = termEnd + 1;
                     if (form.charAt(quote1) != '"') {
-                        System.out.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
+                        System.err.println("Error in LanguageFormatter.createObjectMap(): bad symbol " +
                                 form.charAt(quote1) +" at index " + quote1 + " in " + form);
                         return;
                     }
@@ -1405,7 +1419,7 @@ public class LanguageFormatter {
      */
     public static void main(String[] args) {
 
-        System.out.println("INFO in Graph.main()");
+        System.out.println("INFO in " + LanguageFormatter.class.getName() + " .main()");
         if (args != null && args.length > 1 && args[0].equals("-h")) {
             showHelp();
         }
