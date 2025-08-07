@@ -27,13 +27,13 @@ public class TPTP2SUMO {
     public static boolean debug = false;
 
   /** ***************************************************************
-   * Remove binary cascading or's and and's and consolidate as single
+   * Remove binary cascading or's, xor's and and's and consolidate as single
    * connectives with more arguments.  For example
    * (and (and A B) C) becomes (and A B C)
    */
   public static Formula collapseConnectives(Formula form) {
 
-      if (!form.getFormula().contains("(and ") && !form.getFormula().contains("(or "))
+      if (!form.getFormula().contains("(" + Formula.AND + " ") && !form.getFormula().contains("(" + Formula.OR + " ") && !form.getFormula().contains("(" + Formula.XOR + " "))
           return form;
       if (!form.isBalancedList())
           return form;
@@ -49,7 +49,7 @@ public class TPTP2SUMO {
       for (Formula f : args)
           newargs.add(collapseConnectives(f));
       if (debug) System.out.println("collapseConnectives(): newargs: " + newargs);
-      if (pred.equals("or") || pred.equals("and")) {
+      if (pred.equals(Formula.OR) || pred.equals(Formula.XOR) || pred.equals(Formula.AND)) {
           List<Formula> subargs;
           for (Formula f : newargs) {
               if (f.car() != null && f.car().equals(pred)) {
