@@ -379,7 +379,7 @@ public class KIF {
                         argumentNum = argumentNum + 1;
                 }
                 else if (st.ttype == StreamTokenizer.TT_WORD) { // a token
-                    if ((st.sval.equals("=>") || st.sval.equals("<=>")) && parenLevel == 1)
+                    if ((st.sval.equals(Formula.IF) || st.sval.equals(Formula.IFF)) && parenLevel == 1)
                         inRule = true; // implications in statements aren't rules
                     if (parenLevel < 2) // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
