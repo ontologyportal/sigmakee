@@ -195,15 +195,14 @@ public class SUOKIFparseTest extends UnitTestBase {
         String input = "(=>\n" +
                         "  (connected ?OBJ1 ?OBJ2)\n" +
                         "  (xor\n" +
-                        "    (meetsSpatially ?OBJ1 ?OBJ2)\n" +
-                        "    (overlapsSpatially ?OBJ1 ?OBJ2)))";
+                        "    (overlapsSpatially ?OBJ1 ?OBJ2)))"; // incorrect # of args (only one here)
         Map<Integer,FormulaAST> hm = process(input);
-        FormulaAST f = hm.values().iterator().next();
-        if (!f.isHigherOrder(kb))
+//        FormulaAST f = hm.values().iterator().next();
+        if (hm.isEmpty())
             System.out.println("success!");
         else
             System.err.println("fail!");
-        assertTrue(!f.isHigherOrder(kb));
+        assertTrue(hm.isEmpty());
         System.out.println();
     }
 }
