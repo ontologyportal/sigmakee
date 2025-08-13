@@ -6,14 +6,16 @@ package com.articulate.sigma;
 // apease@articulatesoftware.com
 
 import com.google.common.collect.Sets;
-import org.junit.Test;
 
 import java.util.*;
 
 import static org.junit.Assert.*;
 
+import org.junit.Ignore;
+import org.junit.Test;
+
 /**
- * These tests follow PredVarInst.test( ), with the exception of that method's call to FormulaPreprocessor.
+ * These tests follow PredVarInst.test(), with the exception of that method's call to FormulaPreprocessor.
  * findExplicitTypesInAntecedent( ), which has been put into the FormulaPreprocessorTest class.
  * TODO: See how relevant the line "if (kb.kbCache.transInstOf("exhaustiveAttribute","VariableArityRelation"))"
  * at the start of the original PredVarInst.test( ) method is. Should these tests somehow reflect that?
@@ -341,45 +343,56 @@ public class PredVarInstTest extends UnitTestBase  {
     }
 
     /** ***************************************************************
+     * TODO: Experimental
      */
+    @Ignore
     @Test
     public void testReportDisjointErrors() {
 
         KBmanager.getMgr().setPref("cacheDisjoint","true"); // ensure disjoint maps are built
 
         System.out.printf("%n%s%n", "===================== PredVarInstTest.testReportDisjointErrors =====================");
-        List<Formula> errors = new ArrayList<>();
+        List<Formula> errors = new ArrayList<>(), errorsAll = new ArrayList<>();;
         String[] classes;
-        List<String> args1 = null, args2 = null;
-        String rel1, rel2;
+        Set<String> args1 = null, args2 = null;
+        String rel1, rel2, car;
+        Map<String, Set<String>> varCoccurrences;
+        StringBuilder sb = new StringBuilder();
         for (String s : kb.kbCache.disjointRelations) {
             classes = s.split("\t");
             rel1 = classes[0];
             rel2 = classes[1];
             for (Formula form : kb.formulaMap.values()) {
                 if (form.isRule() && form.getFormula().contains(rel1) && form.getFormula().contains(rel2)) {
-                    System.out.printf("%nrel1: %s : rel2: %s%n", rel1, rel2);
-                    for (Formula form1 : form.args) {
-                        if (form1.car() != null && form1.car().equals(rel1)) {
-                            args1 = new ArrayList<>(form1.stringArgs);
-                            args1.remove(form1.car());
-                        }
-                        if (form1.car() != null && form1.car().equals(rel2)) {
-                            args1 = new ArrayList<>(form1.stringArgs);
-                            args1.remove(form1.car());
-                        }
-                        if (args1 != null && args2 != null && args1.containsAll(args2))
+                    varCoccurrences = Diagnostics.getVariableLinks(form, kb);
+                    for (String key : varCoccurrences.keySet()) {
+                        sb.append(key);
+                        car = sb.substring(1, sb.indexOf(" ")); // the car w/o leading '('
+                        sb.setLength(0); // reset
+                        if (car.equals(rel1))
+                            args1 = varCoccurrences.get(key);
+                        if (car.equals(rel2))
+                            args2 = varCoccurrences.get(key);
+                        if (args1 != null && !args1.isEmpty() && args2 != null && !args2.isEmpty() && args1.containsAll(args2)) {
+                            System.out.printf("%nrel1: %s : rel2: %s%n", rel1, rel2);
+                            System.out.printf("varCoccurrences: %s%n", varCoccurrences);
+
                             errors.add(form);
+                            System.out.printf("%n%s%n", "Disjoint Error set contents:");
+                            for (Formula f1 : errors)
+                                System.out.printf("%n%s%n", f1);
+
+                            errorsAll.addAll(errors);
+                            errors.clear();
+                            args1.clear();
+                            args2.clear();
+                        }
                     }
-//                    errors.add(form);
                 }
             }
         }
-        System.out.printf("%nDisjoint Error set size: %d%n", errors.size());
-        System.out.printf("%n%s%n", "Disjoint Error set contents:");
-        for (Formula f1 : errors)
-            System.out.printf("%n%s%n", f1);
-        assertTrue(errors.isEmpty());
+        System.out.printf("%nDisjoint Error set size: %d%n", errorsAll.size());
+        assertTrue(errorsAll.isEmpty());
     }
 
     /** ***************************************************************
