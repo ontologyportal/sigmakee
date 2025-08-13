@@ -1,16 +1,16 @@
 package com.articulate.sigma;
 
 /** This code is copyright Articulate Software (c) 2003.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+ This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+ Users of this code also consent, by use of this code, to credit Articulate Software
+ and Teknowledge in any writings, briefings, publications, presentations, or
+ other representations of any software which incorporates, builds on, or uses this
+ code.  Please cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
-*/
+ Pease, A., (2003). The Sigma Ontology Development Environment,
+ in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+ August 9, Acapulco, Mexico.
+ */
 
 import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
@@ -28,10 +28,12 @@ public class Diagnostics {
     public static boolean debug = false;
 
     public static List<String> LOG_OPS = Arrays.asList("and","or","not","exists",
-                                                "forall","=>","<=>","holds");
+            "forall","=>","<=>","holds");
 
     private static final int RESULT_LIMIT = 100;
 
+    public static HashMap<String, Set<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f)
+    
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not
      * have a specified relation.
@@ -41,7 +43,7 @@ public class Diagnostics {
      * @param letter the first letter of the term name
      */
     public static List<String> termsWithoutRelation(KB kb, String rel, int argnum,
-                                                         char letter) {
+                                                    char letter) {
 
         List<String> result = new ArrayList<>();
         List<Formula> forms;
@@ -135,21 +137,21 @@ public class Diagnostics {
      * parent can be inferred from the transitive relation caches,
      * else returns false.
 
-    private static boolean hasParent(KB kb, String term) {
+     private static boolean hasParent(KB kb, String term) {
 
-        Iterator<String> it = preds.iterator();
-        while (it.hasNext()) {
-        	String pred = it.next();
-        	Map<String,Set<String>> predvals = kb.kbCache.parents.get(term);
-            if (predvals != null) {
-                Set<String> cached = predvals.get(term);
-                if ((cached != null) && !cached.isEmpty())
-                    return true;
-            }
-        }
-        return false;
-    }
-*/
+     Iterator<String> it = preds.iterator();
+     while (it.hasNext()) {
+     String pred = it.next();
+     Map<String,Set<String>> predvals = kb.kbCache.parents.get(term);
+     if (predvals != null) {
+     Set<String> cached = predvals.get(term);
+     if ((cached != null) && !cached.isEmpty())
+     return true;
+     }
+     }
+     return false;
+     }
+     */
     /** *****************************************************************
      * Return a list of terms that do not have Entity as a parent term.
      */
@@ -432,7 +434,7 @@ public class Diagnostics {
     public static boolean quantifierNotInStatement(Formula f) {
 
         if (f.getFormula() == null || f.getFormula().length() < 1 ||
-            !f.listP() || f.empty())
+                !f.listP() || f.empty())
             return false;
         if (!Arrays.asList("forall", "exists").contains(f.car())) {
             Formula f1 = new Formula();
@@ -510,9 +512,9 @@ public class Diagnostics {
         while (it.hasNext()) {
             form = (Formula) it.next();
             if ((form.getFormula().contains("forall"))
-                || (form.getFormula().contains("exists"))) {
+                    || (form.getFormula().contains("exists"))) {
                 if (quantifierNotInStatement(form))
-                        result.add(form);
+                    result.add(form);
             }
             if (RESULT_LIMIT > 0 && result.size() > RESULT_LIMIT)
                 return result;
@@ -705,7 +707,7 @@ public class Diagnostics {
             if (al != null)
                 return al.size();
         }
-	return 0;
+        return 0;
     }
 
     /** *****************************************************************
@@ -1112,6 +1114,57 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Recursively extract variable co-occurrences from a KIF formula
+     *
+     * @param f the original Formula to process
+     * @param kb the current knowledge base
+     * @return a map where each variable is linked to others it appears with
+     */
+    public static Map<String, Set<String>> getVariableLinks(Formula f, KB kb) {
+
+        Map<String, Set<String>> links = new HashMap<>();
+
+        if (f.getFormula() == null || f.getFormula().isBlank())
+            return links;
+
+        KIF kifInstance = new KIF();
+        String parsedf = kifInstance.parseStatement(f.getFormula()); //getFormula() translates formula into a string
+
+        if (parsedf != null && !parsedf.isBlank()) {
+            System.err.println("Error in: " + Diagnostics.class.getName() + "getVariableLinks: " + parsedf + "\nReturning null");
+            return links;
+        }
+
+        Set<String> variables;
+        List<String> simpleArgs;
+        List<Formula> complexArgs;
+        Map<String, Set<String>> tempMap;
+
+        // check if formula is a simple argument
+        if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
+            simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
+            variables = new HashSet<>();
+            for (String arg : simpleArgs) {
+                if (new Formula(arg).isVariable())
+                    variables.add(arg); // extracts ?H from (instance ?H Human)
+            }
+            if (!variables.isEmpty())
+                links.put(f.getFormula(), variables);
+        }
+        else { // recursive case
+            if (Formula.isQuantifier(f.car()))
+                complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
+            else 
+                complexArgs = f.complexArgumentsToArrayList(1);
+            for (Formula complexForm : complexArgs) {
+                tempMap = getVariableLinks(complexForm, kb);
+                links.putAll(tempMap);
+            }
+        }
+        return links;
+    }
+
+    /** ***************************************************************
      */
     public static void showHelp() {
 
@@ -1132,6 +1185,11 @@ public class Diagnostics {
      * Test method for this class.
      */
     public static void main(String args[]) {
+        if (args.length > 0) {
+            for (int i = 0; i < args.length; i++) {
+                System.out.println("Arg[" + i + "]: '" + args[i] + "'");
+            }
+        }
 
         KBmanager.getMgr().initializeOnce();
         //resultLimit = 0; // don't limit number of results on command line
@@ -1168,8 +1226,34 @@ public class Diagnostics {
         }
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
-        }
-        else
+        } 
+        else if (args != null && args.length > 0 && args[0].equals("-v")) {
+             Formula simpleFormula = new Formula("(instance ?H Human)");
+             Formula complexFormula = new Formula("(=>\n" +
+                                                  "  (and\n" +
+                                                  "    (P ?A ?B)\n" +
+                                                  "    (P ?B ?C))\n" +
+                                                  "  (exists (?X ?Z)\n" +
+                                                  "    (and\n" +
+                                                  "      (Q ?X)\n" +
+                                                  "      (M ?Z ?C))))"
+                                                 );
+            Formula wargamingFormula = new Formula("(=>\n" + 
+                                "  (instance ?WARGAMING Wargaming)\n" + 
+                                "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" + 
+                                "    (and\n" + 
+                                "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" + 
+                                "      (instance ?SIMULATION Imagining)\n" + 
+                                "      (instance ?TOOL Device)\n" + 
+                                "      (agent ?WARGAMING ?MILITARYOFFICER)\n" + 
+                                "      (patient ?WARGAMING ?SIMULATION)\n" + 
+                                "      (instrument ?WARGAMING ?TOOL))))");
+            varLinksParentMap.putAll(getVariableLinks(wargamingFormula, kb));
+            System.out.println("varLinksParentMap:");
+            for (String key : varLinksParentMap.keySet()) {
+                System.out.println("  " + key + " -> " + varLinksParentMap.get(key));
+            }
+        } else
             showHelp();
     }
 }
