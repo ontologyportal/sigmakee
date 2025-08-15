@@ -5,9 +5,7 @@ import java.net.*;
 import javax.mail.*;
 import javax.mail.internet.*;
 
-/* This code 
-ygygygy
-is copyrighted by Articulate Software (c) 2011.
+/* This code is copyrighted by Articulate Software (c) 2011.
 It is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
 Users of this code also consent, by use of this code, to credit Articulate Software in any
 writings, briefings, publications, presentations, or other representations of any
