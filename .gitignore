@@ -22,3 +22,4 @@ lib
 /docker/sumo-ci/sigmakee/
 /docker/sumo-ci/sigmakee-runtime/
 /prover_out.txt
+/plugins/eclipse/SigmaEditor/.project
