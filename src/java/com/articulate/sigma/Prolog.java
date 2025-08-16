@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Set;
@@ -23,8 +24,8 @@ public class Prolog {
         Set<Formula> ts = new TreeSet<>();
         ts.addAll(forms);
         if (forms != null) {
-            Formula formula = null;
-            String result = null;
+            Formula formula;
+            String result;
             Iterator<Formula> it = ts.iterator();
             while (it.hasNext()) {
                 formula = it.next();
@@ -50,12 +51,14 @@ public class Prolog {
                 return;
             sb.append(clause);
         }
-        if (antecedent.car().equals("and")) {
+        if (antecedent.car().equals(Formula.AND)) {
             Formula consList = antecedent.cdrAsFormula();
             System.out.println("INFO in Prolog.writeOneHornClause(): consList: " + consList);
+            Formula car;
+            String clause;
             while (!consList.empty()) {
-                Formula car = consList.carAsFormula();
-                String clause = car.toProlog();
+                car = consList.carAsFormula();
+                clause = car.toProlog();
                 if (clause == null)
                     return;
                 sb.append(clause);
@@ -74,13 +77,14 @@ public class Prolog {
                 return;
             pw.println(clause + sb.toString() + ".");
         }
-        if (consequent.car().equals("and")) {
+        if (consequent.car().equals(Formula.AND)) {
               Formula consList = consequent.cdrAsFormula();
-              boolean first = true;
+              Formula car;
+              String carst;
               while (!consList.empty()) {
-                  Formula car = consList.carAsFormula();
+                  car = consList.carAsFormula();
                   consList = consList.cdrAsFormula();
-                  String carst = car.toProlog();
+                  carst = car.toProlog();
                   if (carst == null)
                       return;
                   pw.println(carst + sb.toString() + ".");
@@ -92,11 +96,9 @@ public class Prolog {
      */
     private static void writeClauses(PrintWriter pw) {
 
-        Iterator<Formula> it = kb.formulaMap.values().iterator();
-        while (it.hasNext()) {
-            Formula f = it.next();
-            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains("exists") &&
-                !f.getFormula().contains("forall"))
+        for (Formula f : kb.formulaMap.values()) {
+            if (f.isRule() && f.isHorn(kb) && !f.getFormula().contains(Formula.EQUANT) &&
+                    !f.getFormula().contains(Formula.UQUANT))
                 writeOneHornClause(f,pw);
             else if (f.isSimpleClause(kb))
                 pw.println(f.toProlog() + ".");
@@ -108,15 +110,11 @@ public class Prolog {
      */
     public static String writePrologFile(String fname) {
 
-        File file = null;
-        PrintWriter pw = null;
         String result = null;
-
-        try {
-            file = new File(fname);
-            if ((WordNet.wn != null) && WordNet.wn.wordCoFrequencies.isEmpty())
-                WordNet.wn.readWordCoFrequencies();
-            pw = new PrintWriter(new FileWriter(file));
+        File file = new File(fname);
+        if ((WordNet.wn != null) && WordNet.wn.wordCoFrequencies.isEmpty())
+            WordNet.wn.readWordCoFrequencies();
+        try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
             pw.println("% Copyright (c) 2006-2009 Articulate Software Incorporated");
             pw.println("% This software released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.");
             pw.println("% This is a very lossy translation to prolog of the KIF ontologies available at www.ontologyportal.org\n");
@@ -127,13 +125,6 @@ public class Prolog {
         catch (IOException e) {
             System.err.println("Error in KB.writePrologFile(): " + e.getMessage());
             e.printStackTrace();
-        }
-        finally {
-            try {
-                if (pw != null) pw.close();
-            }
-            catch (Exception e1) {
-            }
         }
         return result;
     }

@@ -27,13 +27,13 @@ public class Diagnostics {
 
     public static boolean debug = false;
 
-    public static List<String> LOG_OPS = Arrays.asList("and","or","not","exists",
-            "forall","=>","<=>","holds");
+    public static List<String> LOG_OPS = Arrays.asList(Formula.AND,Formula.OR,Formula.XOR,Formula.NOT,Formula.EQUANT,
+            Formula.UQUANT,Formula.IF,Formula.IFF, "holds");
+
+    public static Map<String, Set<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
 
     private static final int RESULT_LIMIT = 100;
 
-    public static HashMap<String, Set<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f)
-    
     /** *****************************************************************
      * Return a list of terms (for a given argument position) that do not
      * have a specified relation.
@@ -157,7 +157,7 @@ public class Diagnostics {
      */
     public static boolean termNotBelowEntity(String term, KB kb) {
 
-        if (LOG_OPS.contains(term) || term.equals("equal") || term.equals("Entity") || StringUtil.isNumeric(term))
+        if (LOG_OPS.contains(term) || term.equals(Formula.EQUAL) || term.equals("Entity") || StringUtil.isNumeric(term))
             return false;
         else if (!kb.kbCache.subclassOf(term,"Entity") && !kb.kbCache.transInstOf(term,"Entity"))
             return true;
@@ -416,8 +416,8 @@ public class Diagnostics {
 
         List<Formula> result = new ArrayList<>();
         for (Formula form : kb.formulaMap.values()) {
-            if ((form.getFormula().contains("forall"))
-                    || (form.getFormula().contains("exists"))) {
+            if ((form.getFormula().contains(Formula.UQUANT))
+                    || (form.getFormula().contains(Formula.EQUANT))) {
                 if (!unquantInConsequent(form).isEmpty())
                     result.add(form);
             }
@@ -436,7 +436,7 @@ public class Diagnostics {
         if (f.getFormula() == null || f.getFormula().length() < 1 ||
                 !f.listP() || f.empty())
             return false;
-        if (!Arrays.asList("forall", "exists").contains(f.car())) {
+        if (!Arrays.asList(Formula.UQUANT, Formula.EQUANT).contains(f.car())) {
             Formula f1 = new Formula();
             f1.read(f.car());
             Formula f2 = new Formula();
@@ -453,7 +453,7 @@ public class Diagnostics {
             String body = quant.cdr();
             quant.read(q);
             List<String> qList = quant.argumentsToArrayListString(0);  // Put all the quantified variables into a list.
-            if (rest.contains("exists") || rest.contains("forall")) { //nested quantifiers
+            if (rest.contains(Formula.EQUANT) || rest.contains(Formula.UQUANT)) { //nested quantifiers
                 Formula restForm = new Formula();
                 restForm.read(rest);
                 restForm.read(restForm.cdr());
@@ -487,8 +487,8 @@ public class Diagnostics {
             form = (Formula) it.next();
             if (!FileUtil.noPath(form.sourceFile).equals(fname))
                 continue;
-            if ((form.getFormula().contains("forall"))
-                    || (form.getFormula().contains("exists"))) {
+            if ((form.getFormula().contains(Formula.UQUANT))
+                    || (form.getFormula().contains(Formula.EQUANT))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -511,8 +511,8 @@ public class Diagnostics {
         Formula form;
         while (it.hasNext()) {
             form = (Formula) it.next();
-            if ((form.getFormula().contains("forall"))
-                    || (form.getFormula().contains("exists"))) {
+            if ((form.getFormula().contains(Formula.UQUANT))
+                    || (form.getFormula().contains(Formula.EQUANT))) {
                 if (quantifierNotInStatement(form))
                     result.add(form);
             }
@@ -1128,10 +1128,9 @@ public class Diagnostics {
             return links;
 
         KIF kifInstance = new KIF();
-        String parsedf = kifInstance.parseStatement(f.getFormula()); //getFormula() translates formula into a string
-
+        String parsedf = kifInstance.parseStatement(f.getFormula()); // getFormula() translates formula into a string
         if (parsedf != null && !parsedf.isBlank()) {
-            System.err.println("Error in: " + Diagnostics.class.getName() + "getVariableLinks: " + parsedf + "\nReturning null");
+            System.err.println("Error in: " + Diagnostics.class.getName() + "getVariableLinks: " + parsedf);
             return links;
         }
 
@@ -1154,7 +1153,7 @@ public class Diagnostics {
         else { // recursive case
             if (Formula.isQuantifier(f.car()))
                 complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
-            else 
+            else
                 complexArgs = f.complexArgumentsToArrayList(1);
             for (Formula complexForm : complexArgs) {
                 tempMap = getVariableLinks(complexForm, kb);
@@ -1179,12 +1178,14 @@ public class Diagnostics {
         System.out.println("  -o - terms not below Entity (Orphans)");
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
+        System.out.println("  -v - extract variable co-occurrences");
     }
 
     /** ***************************************************************
      * Test method for this class.
      */
     public static void main(String args[]) {
+
         if (args.length > 0) {
             for (int i = 0; i < args.length; i++) {
                 System.out.println("Arg[" + i + "]: '" + args[i] + "'");
@@ -1198,13 +1199,13 @@ public class Diagnostics {
             termDefsByFile(kb);
         }
         if (args != null && args.length > 1 && args[0].equals("-f")) {
-            HashSet<String> files = new HashSet<>();
+            Set<String> files = new HashSet<>();
             List<String> lines = FileUtil.readLines(args[1],false);
             files.addAll(lines);
             termDefsByGivenFile(kb,files);
         }
         if (args != null && args.length > 1 && args[0].equals("-l")) {
-            HashSet<String> files = new HashSet<>();
+            Set<String> files = new HashSet<>();
             List<String> lines = FileUtil.readLines(args[1],false);
             files.addAll(lines);
             addLabels(kb,files);
@@ -1226,34 +1227,35 @@ public class Diagnostics {
         }
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
-        } 
+        }
         else if (args != null && args.length > 0 && args[0].equals("-v")) {
              Formula simpleFormula = new Formula("(instance ?H Human)");
+//             Formula complexFormula = new Formula("(=>\n" +
+//                                                  "  (and\n" +
+//                                                  "    (P ?A ?B)\n" +
+//                                                  "    (P ?B ?C))\n" +
+//                                                  "  (exists (?X ?Z)\n" +
+//                                                  "    (and\n" +
+//                                                  "      (Q ?X)\n" +
+//                                                  "      (M ?Z ?C))))"
+//                                                 );
+
              Formula complexFormula = new Formula("(=>\n" +
-                                                  "  (and\n" +
-                                                  "    (P ?A ?B)\n" +
-                                                  "    (P ?B ?C))\n" +
-                                                  "  (exists (?X ?Z)\n" +
-                                                  "    (and\n" +
-                                                  "      (Q ?X)\n" +
-                                                  "      (M ?Z ?C))))"
+                                                    "  (instance ?WARGAMING Wargaming)\n" +
+                                                    "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
+                                                    "    (and\n" +
+                                                    "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
+                                                    "      (instance ?SIMULATION Imagining)\n" +
+                                                    "      (instance ?TOOL Device)\n" +
+                                                    "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
+                                                    "      (patient ?WARGAMING ?SIMULATION)\n" +
+                                                    "      (instrument ?WARGAMING ?TOOL))))"
                                                  );
-            Formula wargamingFormula = new Formula("(=>\n" + 
-                                "  (instance ?WARGAMING Wargaming)\n" + 
-                                "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" + 
-                                "    (and\n" + 
-                                "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" + 
-                                "      (instance ?SIMULATION Imagining)\n" + 
-                                "      (instance ?TOOL Device)\n" + 
-                                "      (agent ?WARGAMING ?MILITARYOFFICER)\n" + 
-                                "      (patient ?WARGAMING ?SIMULATION)\n" + 
-                                "      (instrument ?WARGAMING ?TOOL))))");
-            varLinksParentMap.putAll(getVariableLinks(wargamingFormula, kb));
-            System.out.println("varLinksParentMap:");
-            for (String key : varLinksParentMap.keySet()) {
-                System.out.println("  " + key + " -> " + varLinksParentMap.get(key));
-            }
-        } else
+
+             varLinksParentMap.putAll(getVariableLinks(complexFormula, kb));
+             System.out.println("varLinksParentMap: " + varLinksParentMap);
+        }
+        else
             showHelp();
     }
 }

@@ -38,6 +38,7 @@ public class Formula implements Comparable, Serializable {
 
     public static final String AND    = "and";
     public static final String OR     = "or";
+    public static final String XOR    = "xor";
     public static final String NOT    = "not";
     public static final String IF     = "=>";
     public static final String IFF    = "<=>";
@@ -79,6 +80,7 @@ public class Formula implements Comparable, Serializable {
                                                                        EQUANT,
                                                                        AND,
                                                                        OR,
+                                                                       XOR,
                                                                        NOT,
                                                                        IF,
                                                                        IFF
@@ -941,7 +943,7 @@ public class Formula implements Comparable, Serializable {
         String location = "";
         if ((filename != null) && (lineNo != null))
             location = "near line " + lineNo + " in " + filename;
-        if (pred.equals(AND) || pred.equals(OR)) {
+        if (pred.equals(AND) || pred.equals(OR) || pred.equals(XOR)) {
             if (argCount < 2) {
                 errString = "Too few arguments for 'and' or 'or' " + location + ": " + f.toString();
                 errors.add(errString);
@@ -991,7 +993,7 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Test whether the Formula uses logical operators and predicates
      * with the correct number of arguments.  "equals", "<=>", and
-     * "=>" are strictly binary.  "or", and "and" are binary or
+     * "=>" are strictly binary.  "or", "xor" and "and" are binary or
      * greater. "not" is unary.  "forall" and "exists" are unary with
      * an argument list.  Warn if we encounter a formula that has more
      * arguments than MAX_PREDICATE_ARITY.
@@ -1018,7 +1020,7 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Test whether the Formula uses logical operators and predicates
      * with the correct number of arguments.  "equals", "<=>", and
-     * "=>" are strictly binary.  "or", and "and" are binary or
+     * "=>" are strictly binary.  "or", "xor" and "and" are binary or
      * greater. "not" is unary.  "forall" and "exists" are unary with
      * an argument list.  Warn if we encounter a formula that has more
      * arguments than MAX_PREDICATE_ARITY.
@@ -1115,7 +1117,7 @@ public class Formula implements Comparable, Serializable {
         Formula sform = new Formula();
         sform.read(s);
 
-        if ("and".equals(form.car().intern()) || "or".equals(form.car().intern())) {
+        if (Formula.AND.equals(form.car().intern()) || Formula.OR.equals(form.car().intern()) || Formula.XOR.equals(form.car().intern())) {
             if (sform.car().intern() == null ? sform.car().intern() != null : !sform.car().intern().equals(sform.car().intern()))
                 return false;
             form.read(form.cdr());
@@ -1696,10 +1698,10 @@ public class Formula implements Comparable, Serializable {
      */
     private static String translateInequalities(String s) {
 
-        if (s.equalsIgnoreCase("greaterThan")) return ">";
-        if (s.equalsIgnoreCase("greaterThanOrEqualTo")) return ">=";
-        if (s.equalsIgnoreCase("lessThan")) return "<";
-        if (s.equalsIgnoreCase("lessThanOrEqualTo")) return "<=";
+        if (s.equalsIgnoreCase(GT)) return ">";
+        if (s.equalsIgnoreCase(GTET)) return ">=";
+        if (s.equalsIgnoreCase(LT)) return "<";
+        if (s.equalsIgnoreCase(LTET)) return "<=";
         return "";
     }
 
@@ -2366,7 +2368,7 @@ public class Formula implements Comparable, Serializable {
     }
 
     /** ***************************************************************
-     * Returns true only if this Formula, is a horn clause or is simply
+     * Returns true only if this Formula is a horn clause or is simply
      * modified to be horn by breaking out a conjunctive conclusion.
      */
     public boolean isHorn(KB kb) {
@@ -2377,14 +2379,14 @@ public class Formula implements Comparable, Serializable {
         }
         if (isHigherOrder(kb))
             return false;
-        if (theFormula.contains("exists") || theFormula.contains("forall"))
+        if (theFormula.contains(Formula.EQUANT) || theFormula.contains(Formula.UQUANT))
             return false;
 
         Formula antecedent = cdrAsFormula().carAsFormula();
-        if (!antecedent.isSimpleClause(kb) && !antecedent.car().equals("and"))
+        if (!antecedent.isSimpleClause(kb) && !antecedent.car().equals(Formula.AND))
             return false;
         Formula consequent = cdrAsFormula().cdrAsFormula().carAsFormula();
-        return !(!consequent.isSimpleClause(kb) && !consequent.car().equals("and"));
+        return !(!consequent.isSimpleClause(kb) && !consequent.car().equals(Formula.AND));
     }
 
     /** ***************************************************************
@@ -2437,7 +2439,7 @@ public class Formula implements Comparable, Serializable {
         	return false;
         Formula f = new Formula();
         f.read(theFormula);
-        if (f.car().equals("not")) {
+        if (f.car().equals(NOT)) {
             f.read(f.cdr());
             if (empty(f.cdr())) {
                 f.read(f.car());
@@ -2970,7 +2972,7 @@ public class Formula implements Comparable, Serializable {
                     else
                         inVarlist = false;
                 }
-                if ((token.indexOf("forall") > -1) || (token.indexOf("exists") > -1))
+                if ((token.indexOf(UQUANT) > -1) || (token.indexOf(EQUANT) > -1))
                     inQuantifier = true;
                 if (inVariable
                     && !Character.isJavaIdentifierPart(ch)

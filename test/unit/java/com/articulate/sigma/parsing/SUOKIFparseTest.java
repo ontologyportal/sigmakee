@@ -185,4 +185,24 @@ public class SUOKIFparseTest extends UnitTestBase {
         assertTrue(f.containsNumber);
         System.out.println();
     }
+
+    /** ***************************************************************
+     */
+    @Test
+    public void testXor() {
+
+        System.out.println("===================== SUOKIFparseTest.testXor() =====================");
+        String input = "(=>\n" +
+                        "  (connected ?OBJ1 ?OBJ2)\n" +
+                        "  (xor\n" +
+                        "    (overlapsSpatially ?OBJ1 ?OBJ2)))"; // incorrect # of args (only one here)
+        Map<Integer,FormulaAST> hm = process(input);
+//        FormulaAST f = hm.values().iterator().next();
+        if (hm.isEmpty())
+            System.out.println("success!");
+        else
+            System.err.println("fail!");
+        assertTrue(hm.isEmpty());
+        System.out.println();
+    }
 }

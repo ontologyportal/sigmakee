@@ -33,7 +33,7 @@ public class KIFplus {
     String filename;
     String[] spcl = {"!" , "$" , "%" , "&" , "*" , "+" , "-" , "." , "/" , "<" , "=" , ">" , "?" , "@" , "_" , "~"};
     String[] wht = {" ", "\t", "\n"};
-    List special = new ArrayList(Arrays.asList(spcl));
+    List<String> special = new ArrayList<>(Arrays.asList(spcl));
 /*
 upper ::= A | B | C | D | E | F | G | H | I | J | K | L | M |
           N | O | P | Q | R | S | T | U | V | W | X | Y | Z
@@ -102,7 +102,7 @@ quantsent ::= (forall (variable+) sentence) |
                 ch = fr.read();
                 predicate = predicate.append(ch);
             }
-            if (predicate.toString().equalsIgnoreCase("forall")) {
+            if (predicate.toString().equalsIgnoreCase(Formula.UQUANT)) {
                 readLogsent(fr);
             }
         }

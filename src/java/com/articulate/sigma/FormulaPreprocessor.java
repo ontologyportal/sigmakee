@@ -92,7 +92,7 @@ public class FormulaPreprocessor {
             sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
             if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred) &&
-                !pred.equals("equal")) {
+                !pred.equals(Formula.EQUAL)) {
                 if (debug) System.out.println("Error in FormulaPreprocessor.findType(): " +
                         "no type information for predicate " + pred);
                 if (debug) System.out.println("start of FormulaPreprocessor.findType: " + StringUtil.shorten(kb.kbCache.signatures.toString(),100) + "...");
@@ -587,7 +587,7 @@ public class FormulaPreprocessor {
             }
         }
         else if (form.isSimpleClause(kb)) {
-            if (isNegativeLiteral == true)  // If form is negative literal, do not add explicit type for the variable
+            if (isNegativeLiteral)  // If form is negative literal, do not add explicit type for the variable
                 return;
             Pattern p = Pattern.compile("\\(instance (\\?[a-zA-Z0-9\\-_]+) ([\\?a-zA-Z0-9\\-_]+)");
             Matcher m = p.matcher(form.getFormula());
@@ -745,7 +745,7 @@ public class FormulaPreprocessor {
                             if (debug) System.out.println("cl: " + cl);
                             if (StringUtil.emptyString(cl)) {
                                 if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
-                                        !pred.equals("equal")) {
+                                        !pred.equals(Formula.EQUAL)) {
                                     errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                             "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f;
                                     System.err.println(errStr);
@@ -787,7 +787,7 @@ public class FormulaPreprocessor {
      * translating mathematical operators, quoting higher-order formulas,
      * adding a numerical suffix to VariableArityRelations based on their count,
      * expanding row variables and prepending the 'holds__' predicate.
-     * @return an ArrayList of Formula(s)
+     * @return an String as Formula
      */
     private String preProcessRecurse(Formula f, String previousPred, boolean ignoreStrings,
                                      boolean translateIneq, boolean translateMath,

@@ -91,7 +91,7 @@ public class FormulaUtil {
     }
 
     /** ***************************************************************
-     * Test whether a forumula is suitable for theorem proving or if
+     * Test whether a formula is suitable for theorem proving or if
      * it's just a documentation statement
      */
     public static boolean isDoc(Formula f) {

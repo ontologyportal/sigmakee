@@ -356,26 +356,6 @@
             <arg line="${run.args}"/>
         </java>
     </target>
-    <target name="debug.password.service" depends="clean,compile">
-        <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
-            <classpath refid="dcp"/>
-        </nbjpdastart>
-        <java classname="com.articulate.sigma.PasswordService"
-              classpathref="dcp"
-              fork="true">
-            <jvmarg value="-agentlib:jdwp=transport=${debug.transport},address=${jpda.address}"/>
-            <jvmarg line="${run.jvmargs}"/>
-            <env key="SIGMA_HOME" value="${sigma_home}"/>
-            <env key="ONTOLOGYPORTAL_GIT" value="${ontologyportal.git}"/>
-            <env key="SIGMA_SRC" value="${basedir}"/>
-            <env key="CATALINA_HOME" value="${catalina.base}"/>
-            <env key="SIGMA_EMAIL_ADDRESS" value="${my.email}"/>
-            <env key="SIGMA_EMAIL_USER" value="${my.email}"/>
-            <env key="SIGMA_EMAIL_PASS" value="${my.pw}"/>
-            <env key="SIGMA_EMAIL_SERVER" value="${my.server}"/>
-            <arg line="${pword.props}"/>
-        </java>
-    </target>
 
     <!--
     =====================

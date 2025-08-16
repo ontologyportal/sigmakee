@@ -97,7 +97,7 @@ public final class PasswordService implements ServletContextListener {
             md.update(plaintext.getBytes());
             //Get the hash's bytes
             byte[] bytes = md.digest();
-            //This bytes[] has bytes in decimal format. Convert it to hexadecimal format
+            //This byte[] has bytes in decimal format. Convert it to hexadecimal format
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < bytes.length; i++)
                 sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
@@ -250,7 +250,7 @@ public final class PasswordService implements ServletContextListener {
         }
 
         String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
-        System.out.println("mailModerator(): host: " + smtphost);
+        System.out.println("PasswordService.mailModerator(): host: " + smtphost);
         Properties propvls = new Properties();
         propvls.put("mail.smtp.auth", "true");
         propvls.put("mail.smtp.starttls.enable", "true");
@@ -258,12 +258,12 @@ public final class PasswordService implements ServletContextListener {
         propvls.put("mail.smtp.port", "587");
         //Create a Session object & authenticate uid and pwd
         Session sessionobj = Session.getInstance(propvls,
-                new javax.mail.Authenticator() {
-                    @Override
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(uname, pwd);
-                    }
-                });
+            new javax.mail.Authenticator() {
+                @Override
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(uname, pwd);
+                }
+            });
         try {
             //Create MimeMessage object & set values
             Message messageobj = new MimeMessage(sessionobj);
@@ -303,7 +303,7 @@ public final class PasswordService implements ServletContextListener {
         if (u != null)
             mailModerator(u);
         else
-            System.err.println("Error in PasswordService.onlineRegister(): unable to create user");
+            System.err.println("Error in PasswordService.onlineRegister(): unable to register user");
     }
 
     /** *****************************************************************

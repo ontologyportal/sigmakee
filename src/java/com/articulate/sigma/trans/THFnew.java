@@ -22,7 +22,7 @@ public class THFnew {
         if (debug) System.out.println("THFnew.processQuant(): quantifier");
         if (debug) System.out.println("THFnew.processQuant(): typeMap: " + typeMap);
         if (args.size() < 2) {
-            System.out.println("Error in THFnew.processQuant(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in THFnew.processQuant(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         else {
@@ -43,7 +43,7 @@ public class THFnew {
                         processRecurse(new Formula(args.get(1)),typeMap) + "))";
             }
             else {
-                System.out.println("Error in THFnew.processQuant(): null arguments to " + op + " in " + f);
+                System.err.println("Error in THFnew.processQuant(): null arguments to " + op + " in " + f);
                 return "";
             }
         }
@@ -57,12 +57,14 @@ public class THFnew {
 
         String op = car.getFormula();
         if (args.size() < 2) {
-            System.out.println("Error in THFnew.processConjDisj(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in THFnew.processConjDisj(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
         String tptpOp = "&";
-        if (op.equals("or"))
+        if (op.equals(Formula.OR))
             tptpOp = "|";
+        if (op.equals(Formula.XOR))
+            tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
         sb.append("(").append(processRecurse(new Formula(args.get(0)),typeMap));
         for (int i = 1; i < args.size(); i++) {
@@ -81,11 +83,11 @@ public class THFnew {
         if (debug) System.out.println("processLogOp(): op: " + op);
         if (debug) System.out.println("processLogOp(): args: " + args);
         if (debug) System.out.println("THFnew.processLogOp(): typeMap: " + typeMap);
-        if (op.equals("and"))
+        if (op.equals(Formula.AND))
             return processConjDisj(f,car,args,typeMap);
-        if (op.equals("=>")) {
+        if (op.equals(Formula.IF)) {
             if (args.size() < 2) {
-                System.out.println("Error in THFnew.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in THFnew.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else {
@@ -97,9 +99,9 @@ public class THFnew {
                             processRecurse(new Formula(args.get(1)),typeMap) + ")";
             }
         }
-        if (op.equals("<=>")) {
+        if (op.equals(Formula.IFF)) {
             if (args.size() < 2) {
-                System.out.println("Error in THFnew.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in THFnew.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
@@ -108,19 +110,21 @@ public class THFnew {
                         processRecurse(new Formula(args.get(1)),typeMap) + " => " +
                         processRecurse(new Formula(args.get(0)),typeMap) + "))";
         }
-        if (op.equals("or"))
+        if (op.equals(Formula.OR))
             return processConjDisj(f,car,args,typeMap);
-        if (op.equals("not")) {
+        if (op.equals(Formula.XOR))
+            return processConjDisj(f,car,args,typeMap);
+        if (op.equals(Formula.NOT)) {
             if (args.size() != 1) {
-                System.out.println("Error in THFnew.processLogOp(): wrong number of arguments to " + op + " in " + f);
+                System.err.println("Error in THFnew.processLogOp(): wrong number of arguments to " + op + " in " + f);
                 return "";
             }
             else
                 return "~(" + processRecurse(new Formula(args.get(0)),typeMap) + ")";
         }
-        if (op.equals("forall") || op.equals("exists"))
+        if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,op,args,typeMap);
-        System.out.println("Error in THFnew.processLogOp(): bad logical operator " + op + " in " + f);
+        System.err.println("Error in THFnew.processLogOp(): bad logical operator " + op + " in " + f);
         return "";
     }
 
@@ -131,14 +135,14 @@ public class THFnew {
 
         String op = car.getFormula();
         if (args.size() != 2) {
-            System.out.println("Error in THFnew.processCompOp(): wrong number of arguments to " + op + " in " + f);
+            System.err.println("Error in THFnew.processCompOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
-        if (op.startsWith("equal")) {
+        if (op.startsWith(Formula.EQUAL)) {
             return "(" + processRecurse(new Formula(args.get(0)),typeMap) + " = " +
                     processRecurse(new Formula(args.get(1)),typeMap) + ")";
         }
-        System.out.println("Error in THFnew.processCompOp(): bad comparison operator " + op + " in " + f);
+        System.err.println("Error in THFnew.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
     }
 
@@ -164,12 +168,12 @@ public class THFnew {
         //System.out.println("THFnew.processRecurse(): car: " + car.theFormula);
         List<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
-            System.out.println("Error in THFnew.processRecurse(): formula " + f);
+            System.err.println("Error in THFnew.processRecurse(): formula " + f);
             return "";
         }
         if (Formula.isLogicalOperator(car.getFormula()))
             return processLogOp(f,car,args,typeMap);
-        else if (car.getFormula().equals("equal"))
+        else if (car.getFormula().equals(Formula.EQUAL))
             return processEquals(f,car,args,typeMap);
         else {
             if (debug) System.out.println("THFnew.processRecurse(): not math or comparison op: " + car);
@@ -239,7 +243,7 @@ public class THFnew {
 
         if (debug) System.out.println("THFnew.process(): typeMap: " + typeMap);
         if (f == null) {
-            if (debug) System.out.println("Error in THFnew.process(): null formula: ");
+            if (debug) System.err.println("Error in THFnew.process(): null formula: ");
             return "";
         }
         if (f.atom())
@@ -346,7 +350,7 @@ public class THFnew {
                     fnew.read("(forall (" + worldVar + ") " +
                             fnew.getFormula().substring(0, fnew.getFormula().length() - 1) +
                             " " + worldVar + "))");
-                    types = new HashSet<String>();
+                    types = new HashSet<>();
                     types.add("World");
                     fnew.varTypeCache.put(worldVar,types);  // add the "World" type for the ?W since this is post-processModals()
                 }
@@ -448,7 +452,7 @@ public class THFnew {
             pred.equals("believes") ||  //handled in header
             pred.equals("desires") ||  //handled in header
             //StringUtil.isNumeric(pred) ||
-            pred.equals("equal") ||
+            pred.equals(Formula.EQUAL) ||
             pred.equals("=") ||
             pred.equals(Formula.LOG_FALSE) ||
             pred.equals(Formula.LOG_TRUE) ||
@@ -487,7 +491,7 @@ public class THFnew {
         //if (sb.length() > 2)
         //    sb.delete(sb.length()-2,sb.length());  // remove final arg separator
         //else
-        //    System.out.println("Error in sigString(): for sig: " + sig);
+        //    System.err.println("Error in sigString(): for sig: " + sig);
         //sb.append("w > ");
         if (function) {
             if (kb.isInstanceOf(range,"Formula") || range.equals("Formula"))
@@ -524,7 +528,7 @@ public class THFnew {
                     sig.add("World");
                 }
                 if (t == null) {
-                    System.out.println("Error in THFnew.writeTypes(): bad sig for " + t);
+                    System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
                     continue;
                 }
                 boolean isFunction = false;
@@ -633,7 +637,7 @@ public class THFnew {
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("THFnew.main(): KB loaded");
             if (!kb.errors.isEmpty()) {
-                System.out.println("Errors: " + kb.errors);
+                System.err.println("Errors: " + kb.errors);
             }
             else if (args != null && args.length > 0 && args[0].equals("-t")) {
                 System.out.println("THFnew.main(): translate to THF");

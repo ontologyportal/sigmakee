@@ -33,7 +33,6 @@ import java.util.*;
  * @since 14/08/2003, Acapulco
  * @author apease
  */
-
 public class Vampire {
 
     public StringBuilder qlist = null; // quantifier list in order for answer extraction
@@ -60,7 +59,7 @@ public class Vampire {
         String space = " ";
         StringBuilder opts = new StringBuilder("--output_axiom_names").append(space).append("on").append(space);
         if (mode == ModeType.AVATAR)
-            opts.append("-abs").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space).append("-t").append(space);
+            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space).append("-t").append(space);
         if (mode == ModeType.CASC)
             opts.append("--mode").append(space).append("casc").append(space).append("-t").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
         if (mode == ModeType.CUSTOM)

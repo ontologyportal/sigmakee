@@ -131,40 +131,48 @@ public class TPTPutil {
                     }
                     else if (ch == ':') {
                     	if (!traditionalLogic)
-                    		result.append(ch);
+                            result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '!') {
                     	if (!traditionalLogic)
-                    		result.append(ch);
+                            result.append(ch);
                     	else
-                    		result.append("&forall;");
+                            result.append("&forall;");
                     }
                     else if (ch == '?') {
                     	if (!traditionalLogic)
-                    		result.append(ch);
+                            result.append(ch);
                        	else
-                    		result.append("&exist;");
+                            result.append("&exist;");
                     }
                     else if (ch == '&') {
                     	if (traditionalLogic)
-                    		result.append("&and;");
+                            result.append("&and;");
                     	else
-                    		result.append(ch);
+                            result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '|') {
                     	if (traditionalLogic)
-                    		result.append("&or;");
+                            result.append("&or;");
                     	else
-                    		result.append(ch);
+                            result.append(ch);
+                        result.append(returnAndIndent(level));
+                    }
+                    else if (formString.substring(i).startsWith("<~>")) {
+                        i = i + 2;
+                    	if (traditionalLogic)
+                            result.append("&xor;");
+                    	else
+                            result.append(ch);
                         result.append(returnAndIndent(level));
                     }
                     else if (ch == '~') {
                     	if (traditionalLogic)
-                    		result.append("&not;");
+                            result.append("&not;");
                     	else
-                    		result.append(ch);
+                            result.append(ch);
                     }
                     else if (ch == ')') {
                         level--;
@@ -173,12 +181,12 @@ public class TPTPutil {
                         if ((i+1 < formString.length()) && formString.charAt(i+1) != ')')
                         	result.append(returnAndIndent(level));
                     }
-                    else if (formString.substring(i).startsWith("=>")) {
+                    else if (formString.substring(i).startsWith(Formula.IF)) {
                         i++;
                         if (traditionalLogic)
-                        	result.append("&rArr;");
+                            result.append("&rArr;");
                         else
-                        	result.append("=&gt;");
+                            result.append("=&gt;");
                         result.append(returnAndIndent(level));
                     }
                     else {

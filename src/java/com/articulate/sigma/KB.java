@@ -796,7 +796,7 @@ public class KB implements Serializable {
     public boolean isSubclass(String c1, String parent) {
 
         if (StringUtil.emptyString(c1)) {
-            //System.out.println("Error in KB.isSubclass(): empty c1");
+            //System.err.println("Error in KB.isSubclass(): empty c1");
             //Thread.dumpStack();
             return false;
         }
@@ -1330,8 +1330,8 @@ public class KB implements Serializable {
             List<String> inverses = null;
             if (useInverses) {
                 inverseSyns = getTermsViaAskWithRestriction(0, "subrelation", 2, "inverse", 1);
-                inverseSyns.addAll(getTermsViaAskWithRestriction(0, "equal", 2, "inverse", 1));
-                inverseSyns.addAll(getTermsViaAskWithRestriction(0, "equal", 1, "inverse", 2));
+                inverseSyns.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 2, "inverse", 1));
+                inverseSyns.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 1, "inverse", 2));
                 inverseSyns.add("inverse");
                 SetUtil.removeDuplicates(inverseSyns);
                 inverses = new ArrayList<>();
@@ -1344,8 +1344,8 @@ public class KB implements Serializable {
                     reduced.addAll(
                             getTermsViaAskWithRestriction(0, pred, idxArgnum, idxTerm, targetArgnum, predicatesUsed));
                     accumulator.addAll(getTermsViaAskWithRestriction(0, "subrelation", 2, pred, 1));
-                    accumulator.addAll(getTermsViaAskWithRestriction(0, "equal", 2, "subrelation", 1));
-                    accumulator.addAll(getTermsViaAskWithRestriction(0, "equal", 1, "subrelation", 2));
+                    accumulator.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 2, "subrelation", 1));
+                    accumulator.addAll(getTermsViaAskWithRestriction(0, Formula.EQUAL, 1, "subrelation", 2));
                     accumulator.remove(pred);
                     if (useInverses) {
                         for (String syn : inverseSyns) {
@@ -3443,7 +3443,7 @@ public class KB implements Serializable {
      */
     public static boolean isQuantifier(String obj) {
 
-        return (StringUtil.isNonEmptyString(obj) && (obj.equals("forall") || obj.equals("exists")));
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals(Formula.UQUANT) || obj.equals(Formula.EQUANT)));
     }
 
     /*****************************************************************
@@ -3456,7 +3456,7 @@ public class KB implements Serializable {
      */
     public static boolean isCommutative(String obj) {
 
-        return (StringUtil.isNonEmptyString(obj) && (obj.equals("and") || obj.equals("or")));
+        return (StringUtil.isNonEmptyString(obj) && (obj.equals(Formula.AND) || obj.equals(Formula.OR) || obj.equals(Formula.XOR)));
     }
 
     /***************************************************************

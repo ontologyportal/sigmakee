@@ -505,7 +505,7 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
     }
 
     /** ***************************************************************
-     * logsent :  (notsent | andsent | orsent | implies | iff | eqsent) ;
+     * logsent :  (notsent | andsent | orsent | xorsent | implies | iff | eqsent) ;
      */
     public FormulaAST visitLogsent(SuokifParser.LogsentContext context) {
 
@@ -523,6 +523,8 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
                  f = visitAndsent((SuokifParser.AndsentContext) c);
              if (c instanceof SuokifParser.OrsentContext)
                  f = visitOrsent((SuokifParser.OrsentContext) c);
+             if (c instanceof SuokifParser.XorsentContext)
+                 f = visitXorsent((SuokifParser.XorsentContext) c);
              if (c instanceof SuokifParser.ImpliesContext)
                  f = visitImplies((SuokifParser.ImpliesContext) c);
              if (c instanceof SuokifParser.IffContext)
@@ -595,6 +597,34 @@ public class SuokifVisitor extends AbstractParseTreeVisitor<String> {
         sb.append("(or ");
         for (ParseTree c : context.children) {
             if (debug) System.out.println("visitOrsent() child: " + c.getClass().getName());
+            if (c instanceof SuokifParser.SentenceContext) {
+                f = visitSentence((SuokifParser.SentenceContext) c);
+                ar.add(f);
+                sb.append(f.getFormula()).append(" ");
+            }
+        }
+        sb.delete(sb.length()-1,sb.length());
+        sb.append(")");
+        f = new FormulaAST();
+        f.setFormula(sb.toString());
+        f.mergeFormulaAST(ar);
+        return f;
+    }
+
+    /** ***************************************************************
+     * xorsent : '(' 'xor' sentence sentence+ ')' ;
+     */
+    public FormulaAST visitXorsent(SuokifParser.XorsentContext context) {
+
+        if (debug) System.out.println("Visiting Xorsent: " + context.getText());
+        if (debug) System.out.println("# children: " + context.children.size());
+        if (debug) System.out.println("text: " + context.getText());
+        List<FormulaAST> ar = new ArrayList<>();
+        StringBuilder sb = new StringBuilder();
+        FormulaAST f;
+        sb.append("(xor ");
+        for (ParseTree c : context.children) {
+            if (debug) System.out.println("visitXorsent() child: " + c.getClass().getName());
             if (c instanceof SuokifParser.SentenceContext) {
                 f = visitSentence((SuokifParser.SentenceContext) c);
                 ar.add(f);

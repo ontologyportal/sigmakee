@@ -46,7 +46,7 @@ public class PredVarInst {
     public static boolean doublesHandled = false;
 
     //The list of logical terms that not related to arity check, will skip these predicates
-    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{"forall","exists","=>","and","or","<=>","not", "equal"});
+    private static final List<String> LOGICAL_TERMS = Arrays.asList(new String[]{Formula.UQUANT,Formula.EQUANT,Formula.IF,Formula.AND,Formula.OR,Formula.XOR,Formula.IFF,Formula.NOT,Formula.EQUAL});
 
     /** ***************************************************************
      */
@@ -279,7 +279,7 @@ public class PredVarInst {
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
-                if (rel.equals("equal") || Formula.isLogicalOperator(rel) ||
+                if (rel.equals(Formula.EQUAL) || Formula.isLogicalOperator(rel) ||
                         Formula.isComparisonOperator(rel) || Formula.isMathFunction(rel))
                     continue;
                 if (isTypeExpansion(rel)) {
@@ -611,7 +611,7 @@ public class PredVarInst {
          // formStr = " (=> (reflexiveOn ?REL ?CLASS) (forall (?INST) (=> (instance ?INST ?CLASS) (?REL ?INST ?INST))))";
          Formula f = kb.formulaMap.get(formStr);
          if (f == null) {
-        	System.out.println("Error " + formStr + " not found.");
+        	System.err.println("Error " + formStr + " not found.");
         	formStr = kb.formulas.get("ant-reflexiveOn").get(0);
         	f = kb.formulaMap.get(formStr);
          }

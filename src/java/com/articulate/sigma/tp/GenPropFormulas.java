@@ -1,5 +1,6 @@
 package com.articulate.sigma.tp;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.KButilities;
 import com.articulate.sigma.SimpleElement;
@@ -19,8 +20,8 @@ public class GenPropFormulas {
     public static final String NOT = "~";
     public static final String OR = "|";
     public static final String AND = "&";
-    public static final String IMPLIES = "=>";
-    public static final String IFF = "<=>";
+    public static final String IMPLIES = Formula.IF;
+    public static final String IFF = Formula.IFF;
     public static final String PARENS = "()"; // they go around a formula
 
     public static boolean debug = false;
@@ -211,7 +212,7 @@ public class GenPropFormulas {
             System.err.println("GenPropFormulas.run(): Error writing file " + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
-        
+
         // Find path to vampire
         KBmanager mgr = KBmanager.getMgr();
         SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
@@ -302,8 +303,8 @@ public class GenPropFormulas {
      */
     public static String encodeTT(String s) {
 
-        String result = s.replace("<=>","<->");
-        result = result.replace("=>","->");
+        String result = s.replace(Formula.IFF,"<->");
+        result = result.replace(Formula.IF,"->");
         result = URLEncoder.encode(result, Charset.defaultCharset());
         return "https://www.emathhelp.net/calculators/discrete-mathematics/truth-table-calculator/?f=" + result;
     }
@@ -317,8 +318,8 @@ public class GenPropFormulas {
         String result = s.replace("~","¬");
         result = result.replace("|","∨");
         result = result.replace("&","∧");
-        result = result.replace("<=>","↔");
-        result = result.replace("=>","→");
+        result = result.replace(Formula.IFF,"↔");
+        result = result.replace(Formula.IF,"→");
         result = URLEncoder.encode(result,Charset.defaultCharset());
         return "https://mathlogic.lv/tableau.html?f=" + result;
      }

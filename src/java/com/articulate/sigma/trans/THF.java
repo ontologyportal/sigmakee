@@ -409,7 +409,7 @@ public class THF {
         Collections.sort(constantsL);
         String ty;
         for (String con : constantsL) {
-            if (con.startsWith("=>")) continue;
+            if (con.startsWith(Formula.IF)) continue;
             ty = (String) overallsig.get(con);
             signatures.add("\n thf(" + con + ",type,(" + con + ": "
                     + ty + ")).");
@@ -1286,11 +1286,14 @@ public class THF {
             else if (h.equals(Formula.OR)) {
                 result.append(toTHFHelp1(f,"|",boolTp,boolTp,false,relTpInfo));
             }
+            else if (h.equals(Formula.XOR)) {
+                result.append(toTHFHelp1(f,"<~>",boolTp,boolTp,false,relTpInfo));
+            }
             else if (h.equals(Formula.IF)) {
-                result.append(toTHFHelp1(f,"=>",boolTp,boolTp,false,relTpInfo));
+                result.append(toTHFHelp1(f,Formula.IF,boolTp,boolTp,false,relTpInfo));
             }
             else if (h.equals(Formula.IFF)) {
-                result.append(toTHFHelp1(f,"<=>",boolTp,boolTp,false,relTpInfo));
+                result.append(toTHFHelp1(f,Formula.IFF,boolTp,boolTp,false,relTpInfo));
             }
             else if (h.equals(Formula.EQUAL)) {
                 String arg1 = f.getStringArgument(1);
@@ -1647,11 +1650,14 @@ public class THF {
             else if (h.equals(Formula.OR)) {
                 result.append(toTHFHelp2(f,Formula.OR,"|",boolTp,boolTp,false));
             }
+            else if (h.equals(Formula.XOR)) {
+                result.append(toTHFHelp2(f,Formula.XOR,"<~>",boolTp,boolTp,false));
+            }
             else if (h.equals(Formula.IF)) {
-                result.append(toTHFHelp2(f,Formula.IF,"=>",boolTp,boolTp,false));
+                result.append(toTHFHelp2(f,Formula.IF,Formula.IF,boolTp,boolTp,false));
             }
             else if (h.equals(Formula.IFF)) {
-                result.append(toTHFHelp2(f,Formula.IFF,"<=>",boolTp,boolTp,false));
+                result.append(toTHFHelp2(f,Formula.IFF,Formula.IFF,boolTp,boolTp,false));
             }
             else if (h.equals(Formula.EQUAL)) {
                 result.append(toTHFHelp2(f,Formula.EQUAL,"=",boolTp,unknownTp,false));
