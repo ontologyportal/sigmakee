@@ -279,7 +279,7 @@ public class PredVarInst {
                 if (debug) System.out.println("instantiatePredVars(): check relation: " + rel);
                 if (debug) System.out.println("instantiatePredVars(): pred var arity: " + predVarArity.get(var));
                 if (debug) System.out.println("instantiatePredVars(): relation arity: " + kb.kbCache.valences.get(rel));
-                if (rel.equals("equal") || Formula.isLogicalOperator(rel) ||
+                if (rel.equals(Formula.EQUAL) || Formula.isLogicalOperator(rel) ||
                         Formula.isComparisonOperator(rel) || Formula.isMathFunction(rel))
                     continue;
                 if (isTypeExpansion(rel)) {

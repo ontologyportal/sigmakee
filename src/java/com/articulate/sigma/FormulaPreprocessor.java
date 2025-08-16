@@ -92,7 +92,7 @@ public class FormulaPreprocessor {
             sig = kb.kbCache.signatures.get(pred);
         if (sig == null) {
             if (!kb.isInstanceOf(pred, "VariableArityRelation") && !Formula.isLogicalOperator(pred) &&
-                !pred.equals("equal")) {
+                !pred.equals(Formula.EQUAL)) {
                 if (debug) System.out.println("Error in FormulaPreprocessor.findType(): " +
                         "no type information for predicate " + pred);
                 if (debug) System.out.println("start of FormulaPreprocessor.findType: " + StringUtil.shorten(kb.kbCache.signatures.toString(),100) + "...");
@@ -745,7 +745,7 @@ public class FormulaPreprocessor {
                             if (debug) System.out.println("cl: " + cl);
                             if (StringUtil.emptyString(cl)) {
                                 if (kb.kbCache == null || !kb.kbCache.transInstOf(pred, "VariableArityRelation") &&
-                                        !pred.equals("equal")) {
+                                        !pred.equals(Formula.EQUAL)) {
                                     errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                             "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f;
                                     System.err.println(errStr);

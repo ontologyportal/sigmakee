@@ -1127,8 +1127,8 @@ public class TPTP3ProofProcessor {
                 if (debug) {
                     System.out.println("createProofDotGraphBody(): formatted: " + formatted);
                 }
-                formatted = formatted.replaceAll("<=>", "&lt;=&gt;");
-                formatted = formatted.replaceAll("=>", "=&gt;");
+                formatted = formatted.replaceAll(Formula.IFF, "&lt;=&gt;");
+                formatted = formatted.replaceAll(Formula.IF, "=&gt;");
                 formatted = formatted.replace("[", " &#91;");
                 formatted = formatted.replace("]", " &#93;");
                 if (debug) {

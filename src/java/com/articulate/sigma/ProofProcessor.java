@@ -124,7 +124,7 @@ public class ProofProcessor {
     	String relation = f.car();
     	if (relation.equals("answer"))
     		return null;
-    	if (relation.equals("not")) {
+    	if (relation.equals(Formula.NOT)) {
             Formula fcdar = f.cdrAsFormula().carAsFormula();
             if (fcdar == null) {
                 System.err.println("Error in ProofProcessor.removeNestedAnswerClauseRecurse(): bad arg to not: '" + f.getFormula() + "'");

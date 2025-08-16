@@ -93,7 +93,7 @@ public class SUMOformulaToTPTPformula {
 
         List<String> kifPredicates =
                 Arrays.asList("<=","<",">",">=",
-                        "lessThanOrEqualTo","lessThan","greaterThan","greaterThanOrEqualTo");
+                        Formula.LTET,Formula.LT,Formula.GT,Formula.GTET);
         List<String> tptpPredicates = Arrays.asList("lesseq","less","greater","greatereq",
                 "lesseq","less","greater","greatereq");
 
@@ -361,7 +361,7 @@ public class SUMOformulaToTPTPformula {
             System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
-        if (op.startsWith("equal")) {
+        if (op.startsWith(Formula.EQUAL)) {
             return "(" + processRecurse(new Formula(args.get(0))) + " = " +
                     processRecurse(new Formula(args.get(1))) + ")";
         }
@@ -392,7 +392,7 @@ public class SUMOformulaToTPTPformula {
         }
         if (Formula.isLogicalOperator(car.getFormula()))
             return processLogOp(f,car,args);
-        else if (car.getFormula().equals("equal"))
+        else if (car.getFormula().equals(Formula.EQUAL))
             return processEquals(f,car,args);
         else {
             if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): not math or comparison op: " + car);

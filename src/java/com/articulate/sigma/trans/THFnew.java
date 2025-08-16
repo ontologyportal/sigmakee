@@ -173,7 +173,7 @@ public class THFnew {
         }
         if (Formula.isLogicalOperator(car.getFormula()))
             return processLogOp(f,car,args,typeMap);
-        else if (car.getFormula().equals("equal"))
+        else if (car.getFormula().equals(Formula.EQUAL))
             return processEquals(f,car,args,typeMap);
         else {
             if (debug) System.out.println("THFnew.processRecurse(): not math or comparison op: " + car);
@@ -452,7 +452,7 @@ public class THFnew {
             pred.equals("believes") ||  //handled in header
             pred.equals("desires") ||  //handled in header
             //StringUtil.isNumeric(pred) ||
-            pred.equals("equal") ||
+            pred.equals(Formula.EQUAL) ||
             pred.equals("=") ||
             pred.equals(Formula.LOG_FALSE) ||
             pred.equals(Formula.LOG_TRUE) ||

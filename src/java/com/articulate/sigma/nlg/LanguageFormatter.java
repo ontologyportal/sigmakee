@@ -521,7 +521,7 @@ public class LanguageFormatter {
             theStack.pushNew();
             StackElement inElement = theStack.getCurrStackElement();
 
-            if (pred.equals("not")) {
+            if (pred.equals(Formula.NOT)) {
                 theStack.setPolarity(VerbProperties.Polarity.NEGATIVE);
                 ans = paraphraseStatement(f.car(), true, false,depth + 1);
                 inElement.setProcessPolarity(VerbProperties.Polarity.NEGATIVE);
@@ -825,10 +825,10 @@ public class LanguageFormatter {
                 }
             } else {
                 if (!strFormat.contains("%n")) {
-                    strFormat = NLGUtils.getKeyword("not", language) + " " + strFormat;
+                    strFormat = NLGUtils.getKeyword(Formula.NOT, language) + " " + strFormat;
                 } else {
                     if (!strFormat.contains("%n{")) {
-                        strFormat = strFormat.replace("%n", NLGUtils.getKeyword("not", language));
+                        strFormat = strFormat.replace("%n", NLGUtils.getKeyword(Formula.NOT, language));
                     } else {
                         int start = strFormat.indexOf("%n{") + 3;
                         int end = strFormat.indexOf("}", start);

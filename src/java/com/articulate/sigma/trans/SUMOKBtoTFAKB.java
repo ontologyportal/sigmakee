@@ -247,7 +247,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
         output = "tff(" + label + ",type," + t;
         //if (Formula.isLogicalOperator(bareTerm) ||
         if (kb.isRelation(bareTerm) ||
-                bareTerm.equals("equal")) {
+                bareTerm.equals(Formula.EQUAL)) {
           //  ||
         //        (kb.isRelation(bareTerm) && !Formula.isMathFunction(bareTerm))) {
 //                       && !Formula.isInequality(bareTerm))) {
@@ -636,7 +636,7 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             if (!Character.isLetter(t.charAt(0)) || Formula.isTrueFalse(t))
                 continue;
             if (kb.isFunction(bareTerm)) {
-                if (Formula.isLogicalOperator(bareTerm) || t.equals("equal") ) {
+                if (Formula.isLogicalOperator(bareTerm) || t.equals(Formula.EQUAL) ) {
                     continue;
                 }
                 else {

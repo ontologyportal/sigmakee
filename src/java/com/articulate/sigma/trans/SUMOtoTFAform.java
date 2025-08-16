@@ -357,7 +357,7 @@ public class SUMOtoTFAform {
         Formula car = f.carAsFormula();
         ArrayList<String> args = f.complexArgumentsToArrayListString(1);
         if (isMathFunction(car.getFormula()) ||
-                (isComparisonOperator(car.getFormula()) && !car.getFormula().equals("equal"))) {
+                (isComparisonOperator(car.getFormula()) && !car.getFormula().equals(Formula.EQUAL))) {
             StringBuilder argsStr = new StringBuilder();
             boolean isInt = false;
             boolean isReal = false;
@@ -808,7 +808,7 @@ public class SUMOtoTFAform {
         }
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): final best: " + best);
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): args: " + args);
-        if (!op.startsWith("lessThan") && !op.startsWith("greaterThan") && !op.startsWith("equal")) {
+        if (!op.startsWith(Formula.LT) && !op.startsWith(Formula.GT) && !op.startsWith(Formula.EQUAL)) {
             System.err.println("Error in SUMOtoTFAform.processCompOp(): bad comparison operator " + op + " in " + f);
             return "";
         }
@@ -818,18 +818,18 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): rhsResult: " + rhsResult);
         String comparator = "";
         String result;
-        if (op.startsWith("equal")) {
+        if (op.startsWith(Formula.EQUAL)) {
             result = lhsResult + " = " + rhsResult;
             if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
             return result;
         }
-        if (op.startsWith("greaterThanOrEqualTo"))
+        if (op.startsWith(Formula.GTET))
             comparator = "$greatereq(" ;
-        else if (op.startsWith("greaterThan"))
+        else if (op.startsWith(Formula.GT))
             comparator = "$greater(" ;
-        else if (op.startsWith("lessThanOrEqualTo"))
+        else if (op.startsWith(Formula.LTET))
             comparator = "$lesseq(";
-        else if (op.startsWith("lessThan"))
+        else if (op.startsWith(Formula.LT))
             comparator = "$less(";
         result = "(" + comparator + lhsResult + "," + rhsResult + "))";
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
@@ -1127,7 +1127,7 @@ public class SUMOtoTFAform {
 
         if (argTypes1 == null || argTypes2 == null ||
             argTypes1.size() != argTypes2.size()) {
-            if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith("equal"))
+            if ((argTypes1 == null || argTypes2 == null) && pred != null && !pred.startsWith(Formula.EQUAL))
                 System.err.println("Error in SUMOtoTFAform.equalTFFsig(): bad signatures " +
                     argTypes1 + ", " + argTypes2 + " for " + pred);
             return false;

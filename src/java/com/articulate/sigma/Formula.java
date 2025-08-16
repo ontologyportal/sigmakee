@@ -1698,10 +1698,10 @@ public class Formula implements Comparable, Serializable {
      */
     private static String translateInequalities(String s) {
 
-        if (s.equalsIgnoreCase("greaterThan")) return ">";
-        if (s.equalsIgnoreCase("greaterThanOrEqualTo")) return ">=";
-        if (s.equalsIgnoreCase("lessThan")) return "<";
-        if (s.equalsIgnoreCase("lessThanOrEqualTo")) return "<=";
+        if (s.equalsIgnoreCase(GT)) return ">";
+        if (s.equalsIgnoreCase(GTET)) return ">=";
+        if (s.equalsIgnoreCase(LT)) return "<";
+        if (s.equalsIgnoreCase(LTET)) return "<=";
         return "";
     }
 
@@ -2439,7 +2439,7 @@ public class Formula implements Comparable, Serializable {
         	return false;
         Formula f = new Formula();
         f.read(theFormula);
-        if (f.car().equals("not")) {
+        if (f.car().equals(NOT)) {
             f.read(f.cdr());
             if (empty(f.cdr())) {
                 f.read(f.car());
@@ -2972,7 +2972,7 @@ public class Formula implements Comparable, Serializable {
                     else
                         inVarlist = false;
                 }
-                if ((token.indexOf("forall") > -1) || (token.indexOf("exists") > -1))
+                if ((token.indexOf(UQUANT) > -1) || (token.indexOf(EQUANT) > -1))
                     inQuantifier = true;
                 if (inVariable
                     && !Character.isJavaIdentifierPart(ch)

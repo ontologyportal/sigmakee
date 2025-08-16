@@ -644,8 +644,8 @@ public class OWLtranslator {
         Formula f = (Formula) axiomMap.get(id);
         if (f != null && f.isRule()) {
             String form = f.toString();
-            form = form.replaceAll("<=>","iff");
-            form = form.replaceAll("=>","implies");
+            form = form.replaceAll(Formula.IFF,"iff");
+            form = form.replaceAll(Formula.IF,"implies");
             form = processDoc(form);
             pw.println("<owl:Thing rdf:about=\"#" + id + "\">");
             pw.println("  <rdfs:comment xml:lang=\"en\">A SUO-KIF axiom that may not be directly expressible in OWL. " +

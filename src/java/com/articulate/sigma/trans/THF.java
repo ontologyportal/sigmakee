@@ -1654,10 +1654,10 @@ public class THF {
                 result.append(toTHFHelp2(f,Formula.XOR,"<~>",boolTp,boolTp,false));
             }
             else if (h.equals(Formula.IF)) {
-                result.append(toTHFHelp2(f,Formula.IF,"=>",boolTp,boolTp,false));
+                result.append(toTHFHelp2(f,Formula.IF,Formula.IF,boolTp,boolTp,false));
             }
             else if (h.equals(Formula.IFF)) {
-                result.append(toTHFHelp2(f,Formula.IFF,"<=>",boolTp,boolTp,false));
+                result.append(toTHFHelp2(f,Formula.IFF,Formula.IFF,boolTp,boolTp,false));
             }
             else if (h.equals(Formula.EQUAL)) {
                 result.append(toTHFHelp2(f,Formula.EQUAL,"=",boolTp,unknownTp,false));

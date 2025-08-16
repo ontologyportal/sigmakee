@@ -510,7 +510,7 @@ public class KBcache implements Serializable {
          **/
         List<String> sig = signatures.get(term);
 
-        if (sig == null && term != null && term.equals("equal")) {
+        if (sig == null && term != null && term.equals(Formula.EQUAL)) {
             sig = new ArrayList<>();
             sig.add("Entity");
             sig.add("Entity");
