@@ -14,13 +14,12 @@ August 9, Acapulco, Mexico.  See also http://sigmakee.sourceforge.net
 
 package com.articulate.sigma;
 
+import com.articulate.sigma.utils.StringUtil;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.util.*;
-
-import com.articulate.sigma.utils.StringUtil;
-import java.io.IOException;
 
 /** **************************************************************
  *  The code in the section below implements an algorithm for
@@ -1897,69 +1896,53 @@ public class Clausifier  {
     }
 
     /** ***************************************************************
-     * A test method.
+     * A test method. It expects two command line arguments for the
+     * input file and output file.
      */
     public static void testClausifier(String[] args) {
 
-        BufferedWriter bw = null;
-        try {
-            long t1 = System.currentTimeMillis();
-            int count = 0;
-            String inpath = args[0];
-            String outpath = args[1];
-            if (!StringUtil.emptyString(inpath) && !StringUtil.emptyString(outpath)) {
-                File infile = new File(inpath);
-                if (infile.exists()) {
-                    KIF kif = new KIF();
-                    kif.setParseMode(KIF.RELAXED_PARSE_MODE);
+        long t1 = System.currentTimeMillis();
+        int count = 0;
+        String inpath = args[0];
+        String outpath = args[1];
+        if (!StringUtil.emptyString(inpath) && !StringUtil.emptyString(outpath)) {
+            File infile = new File(inpath);
+            if (infile.exists()) {
+                KIF kif = new KIF();
+                kif.setParseMode(KIF.RELAXED_PARSE_MODE);
+                try {
                     kif.readFile(infile.getCanonicalPath());
-                    if (! kif.formulas.isEmpty()) {
+                    if (!kif.formulas.isEmpty()) {
                         File outfile = new File(outpath);
-                        if (outfile.exists()) { outfile.delete(); }
-                        bw = new BufferedWriter(new FileWriter(outfile, true));
-                        Iterator it = kif.formulas.values().iterator();
-                        Iterator it2 = null;
-                        Formula f = null;
-                        Formula clausalForm = null;
-                        while (it.hasNext()) {
-                            it2 = ((List) it.next()).iterator();
-                            while (it2.hasNext()) {
-                                f = (Formula) it2.next();
-                                clausalForm = Clausifier.clausify(f);
-                                if (clausalForm != null) {
-                                    bw.write(clausalForm.getFormula());
-                                    bw.newLine();
-                                    count++;
+                        if (outfile.exists()) {
+                            outfile.delete();
+                        }
+                        try (BufferedWriter bw = new BufferedWriter(new FileWriter(outfile, true))) {
+                            Iterator<List<String>> it = kif.formulas.values().iterator();
+                            Iterator<String> it2;
+                            Formula f, clausalForm;
+                            while (it.hasNext()) {
+                                it2 = it.next().iterator();
+                                while (it2.hasNext()) {
+                                    f = new Formula(it2.next());
+                                    clausalForm = Clausifier.clausify(f);
+                                    if (clausalForm != null) {
+                                        bw.write(clausalForm.getFormula());
+                                        bw.newLine();
+                                        bw.flush();
+                                        count++;
+                                    }
                                 }
                             }
                         }
-                        try {
-                            bw.flush();
-                            bw.close();
-                            bw = null;
-                        }
-                        catch (IOException bwe) {
-                            bwe.printStackTrace();
-                        }
                     }
-                }
-            }
-            long dur = (System.currentTimeMillis() - t1);
-            System.out.println(count + " clausal forms written in " + (dur / 1000.0) + " seconds");
-        }
-        catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        finally {
-            if (bw != null) {
-                try {
-                    bw.close();
-                }
-                catch (IOException e2) {
-                    e2.printStackTrace();
+                } catch (Exception ex) {
+                    ex.printStackTrace();
                 }
             }
         }
+        long dur = (System.currentTimeMillis() - t1);
+        System.out.println(count + " clausal forms written in " + (dur / 1000.0) + " seconds");
     }
 
 
@@ -2275,15 +2258,15 @@ public class Clausifier  {
      */
     public static void main(String[] args) {
 
-        //testRemoveImpEq();
-        //testMoveNegationIn();
-        //testMoveQuantifiersLeft();
-        //testStandardizeVariables();
-        //testSkolemization();
-        //testDistribute();
-        //testClausification();
-        testClausificationSimple();
-    	//testClausifier(args);
+//        testRemoveImpEq();
+//        testMoveNegationIn();
+//        testMoveQuantifiersLeft();
+//        testStandardizeVariables();
+//        testSkolemization();
+//        testDistribute();
+//        testClausification();
+//        testClausificationSimple();
+    	testClausifier(args);
     }
 }
 
