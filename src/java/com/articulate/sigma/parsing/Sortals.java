@@ -1,5 +1,6 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBcache;
 import com.articulate.sigma.utils.StringUtil;
@@ -42,9 +43,9 @@ public class Sortals {
             v = types.get(k);
             for (String t : v) {
                 if (t.endsWith("+"))
-                    result.append("(subclass ").append(k).append(" ").append(t.substring(0, t.length() - 1)).append(") ");
+                    result.append("(subclass ").append(k).append(Formula.SPACE).append(t.substring(0, t.length() - 1)).append(") ");
                 else
-                    result.append("(instance ").append(k).append(" ").append(t).append(") ");
+                    result.append("(instance ").append(k).append(Formula.SPACE).append(t).append(") ");
             }
         }
         if (!types.keySet().isEmpty())
@@ -52,7 +53,7 @@ public class Sortals {
         if (types.keySet().size() > 1)
             result.append(") ");
         result.append(f.getFormula());
-        result.append(")");
+        result.append(Formula.RP);
         if (debug) System.out.println("Sortals.addSortals(): result: " + result);
         return result.toString();
     }

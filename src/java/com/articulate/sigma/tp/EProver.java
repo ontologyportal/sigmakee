@@ -386,7 +386,7 @@ public class EProver {
                                                     int timeout, File kbFile,
                                                     Collection<String> commands) {
 
-        String space = " ";
+        String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
         for (String s : commands)
             opts.append(s).append(space);
@@ -395,7 +395,7 @@ public class EProver {
             opts.append(timeout).append(space);
         }
         opts.append(kbFile.toString());
-        String[] optar = opts.toString().split(" ");
+        String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 1];
         cmds[0] = executable.toString();
         System.arraycopy(optar, 0, cmds, 1, optar.length);

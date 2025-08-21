@@ -370,7 +370,7 @@ public class LanguageFormatter {
                 if (debug) System.out.println("result: " + result);
                 arg = f.car();
                 f.read(f.cdr());
-                result.append(" ");
+                result.append(Formula.SPACE);
                 if (Formula.atom(arg))
                     result.append(processAtom(arg, termMap));
                 else
@@ -423,8 +423,8 @@ public class LanguageFormatter {
         if (kb.kbCache.isInstanceOf(caseRole, "CaseRole")) {
             try {
                 if (!theStack.isEmpty()) {
-                    String caseArgument = formula.cadr() + " " + formula.caddr();
-                    String[] caseArgs = caseArgument.trim().split(" ");
+                    String caseArgument = formula.cadr() + Formula.SPACE + formula.caddr();
+                    String[] caseArgs = caseArgument.trim().split(Formula.SPACE);
                     String processInstanceName = caseArgs[0];
                     String processParticipant = caseArgs[1];
 
@@ -461,7 +461,7 @@ public class LanguageFormatter {
             catch (IllegalArgumentException e) {
                 // Recover from exception by turning off full NLG.
                 this.doInformalNLG = false;
-                String temp = statement.replaceAll("\\s+", " ");    // clean up, reducing consecutive whitespace to single space
+                String temp = statement.replaceAll("\\s+", Formula.SPACE);    // clean up, reducing consecutive whitespace to single space
                 String msg = "Handled IllegalArgumentException after finding case role.\n   Exception message:\n      " + e.getMessage() + "\n" +
                         "   Formula:\n       " + temp + "\n";
                 System.out.println("LanguageFormatter " + msg);
@@ -598,7 +598,7 @@ public class LanguageFormatter {
         if (args.isEmpty())
             return "";
         String COMMA = NLGUtils.getKeyword(",", language);
-        //String QUESTION = getKeyword("?",language);
+        //String QUESTION = getKeyword(Formula.V_PREF,language);
         String IF = NLGUtils.getKeyword("if", language);
         String THEN = NLGUtils.getKeyword("then", language);
         String AND = NLGUtils.getKeyword(Formula.AND, language);
@@ -621,9 +621,9 @@ public class LanguageFormatter {
         if (pred.equals(Formula.IF)) {
             if (isNegMode) {
                 sb.append(args.get(1));
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(AND);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append("~{");
                 sb.append(args.get(0));
                 sb.append("}");
@@ -635,14 +635,14 @@ public class LanguageFormatter {
                 sb.append("<ul><li>");
                 sb.append(isArabic ? "<span dir=\"rtl\">" : "");
                 sb.append(IF);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(args.get(0));
                 sb.append(COMMA);
                 sb.append(isArabic ? "</span>" : "");
                 sb.append("</li><li>");
                 sb.append(isArabic ? "<span dir=\"rtl\">" : "");
                 sb.append(THEN);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(args.get(1));
                 sb.append(isArabic ? "</span>" : "");
                 sb.append("</li></ul>");
@@ -654,9 +654,9 @@ public class LanguageFormatter {
             if (isNegMode) {
                 for (int i = 0; i < args.size(); i++) {
                     if (i > 0) {
-                        sb.append(" ");
+                        sb.append(Formula.SPACE);
                         sb.append(OR);
-                        sb.append(" ");
+                        sb.append(Formula.SPACE);
                     }
                     sb.append("~{ ");
                     sb.append(translateWord(termMap, args.get(i)));
@@ -666,9 +666,9 @@ public class LanguageFormatter {
             else {
                 for (int i = 0; i < args.size(); i++) {
                     if (i > 0) {
-                        sb.append(" ");
+                        sb.append(Formula.SPACE);
                         sb.append(AND);
-                        sb.append(" ");
+                        sb.append(Formula.SPACE);
                     }
                     sb.append(translateWord(termMap, args.get(i)));
                 }
@@ -680,12 +680,12 @@ public class LanguageFormatter {
             for (int i = 0; i < args.size(); i++) {
                 if (i > 0) {
                     if (isNegMode) {
-                        sb.append(" ");
+                        sb.append(Formula.SPACE);
                         sb.append(NOT);
                     }
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
                     sb.append(HOLDS);
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
                 }
                 sb.append(translateWord(termMap, args.get(i)));
             }
@@ -695,9 +695,9 @@ public class LanguageFormatter {
         if (pred.equalsIgnoreCase(Formula.OR)) {
             for (int i = 0; i < args.size(); i++) {
                 if (i > 0) {
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
                     sb.append(isNegMode ? AND : OR);
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
                 }
                 sb.append(translateWord(termMap, args.get(i)));
             }
@@ -707,9 +707,9 @@ public class LanguageFormatter {
         if (pred.equalsIgnoreCase(Formula.XOR)) {
             for (int i = 0; i < args.size(); i++) {
                 if (i > 0) {
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
                     sb.append(OR); // TODO: determine if this is correct for XOR
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
                 }
                 sb.append(translateWord(termMap, args.get(i)));
             }
@@ -719,28 +719,28 @@ public class LanguageFormatter {
         if (pred.equals(Formula.IFF)) {
             if (isNegMode) {
                 sb.append(translateWord(termMap, args.get(1)));
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(OR);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append("~{ ");
                 sb.append(translateWord(termMap, args.get(0)));
                 sb.append(" }");
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(OR);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(translateWord(termMap, args.get(0)));
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(OR);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append("~{ ");
                 sb.append(translateWord(termMap, args.get(1)));
                 sb.append(" }");
             }
             else {
                 sb.append(translateWord(termMap, args.get(0)));
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(IFANDONLYIF);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(translateWord(termMap, args.get(1)));
             }
 
@@ -748,13 +748,13 @@ public class LanguageFormatter {
         }
         if (pred.equalsIgnoreCase(Formula.UQUANT)) {
             if (isNegMode) {
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(NOT);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
             }
             sb.append(FORALL);
-            sb.append(" ");
-            if (args.get(0).contains(" ")) {
+            sb.append(Formula.SPACE);
+            if (args.get(0).contains(Formula.SPACE)) {
                 // If more than one variable ...
                 sb.append(translateWord(termMap, NLGUtils.formatList(args.get(0), language)));
             }
@@ -762,27 +762,27 @@ public class LanguageFormatter {
                 // If just one variable ...
                 sb.append(translateWord(termMap, args.get(0)));
             }
-            sb.append(" ");
+            sb.append(Formula.SPACE);
             sb.append(translateWord(termMap, args.get(1)));
 
             return sb.toString();
         }
         if (pred.equalsIgnoreCase(Formula.EQUANT)) {
-            if (args.get(0).contains(" ")) {
+            if (args.get(0).contains(Formula.SPACE)) {
                 // If more than one variable ...
                 sb.append(isNegMode ? NOTEXIST : EXIST);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(translateWord(termMap, NLGUtils.formatList(args.get(0), language)));
             }
             else {
                 // If just one variable ...
                 sb.append(isNegMode ? NOTEXISTS : EXISTS);
-                sb.append(" ");
+                sb.append(Formula.SPACE);
                 sb.append(translateWord(termMap, args.get(0)));
             }
-            sb.append(" ");
+            sb.append(Formula.SPACE);
             sb.append(SUCHTHAT);
-            sb.append(" ");
+            sb.append(Formula.SPACE);
             sb.append(translateWord(termMap, args.get(1)));
 
             return sb.toString();
@@ -825,7 +825,7 @@ public class LanguageFormatter {
                 }
             } else {
                 if (!strFormat.contains("%n")) {
-                    strFormat = NLGUtils.getKeyword(Formula.NOT, language) + " " + strFormat;
+                    strFormat = NLGUtils.getKeyword(Formula.NOT, language) + Formula.SPACE + strFormat;
                 } else {
                     if (!strFormat.contains("%n{")) {
                         strFormat = strFormat.replace("%n", NLGUtils.getKeyword(Formula.NOT, language));
@@ -861,23 +861,23 @@ public class LanguageFormatter {
             }
         }
         // delete all the unused negative commands
-        strFormat = strFormat.replaceAll(" %n\\{.+?\\} "," ");
-        strFormat = strFormat.replaceAll("%n\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll(" %n\\{.+?\\} ",Formula.SPACE);
+        strFormat = strFormat.replaceAll("%n\\{.+?\\} ",Formula.SPACE);
         strFormat = strFormat.replaceAll("%n\\{.+?\\}","");
-        strFormat = strFormat.replace(" %n "," ");
-        strFormat = strFormat.replace("%n "," ");
+        strFormat = strFormat.replace(" %n ",Formula.SPACE);
+        strFormat = strFormat.replace("%n ",Formula.SPACE);
         strFormat = strFormat.replace("%n","");
         // delete all unused positive commands
-        strFormat = strFormat.replaceAll(" %p\\{.+?\\} "," ");
-        strFormat = strFormat.replaceAll("%p\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll(" %p\\{.+?\\} ",Formula.SPACE);
+        strFormat = strFormat.replaceAll("%p\\{.+?\\} ",Formula.SPACE);
         strFormat = strFormat.replaceAll("%p\\{.+?\\}","");
         // delete all unused positive question commands
-        strFormat = strFormat.replaceAll(" %qp\\{.+?\\} "," ");
-        strFormat = strFormat.replaceAll("%qp\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll(" %qp\\{.+?\\} ",Formula.SPACE);
+        strFormat = strFormat.replaceAll("%qp\\{.+?\\} ",Formula.SPACE);
         strFormat = strFormat.replaceAll("%qp\\{.+?\\}","");
         // delete all unused negative question commands
-        strFormat = strFormat.replaceAll(" %qn\\{.+?\\} "," ");
-        strFormat = strFormat.replaceAll("%qn\\{.+?\\} "," ");
+        strFormat = strFormat.replaceAll(" %qn\\{.+?\\} ",Formula.SPACE);
+        strFormat = strFormat.replaceAll("%qn\\{.+?\\} ",Formula.SPACE);
         strFormat = strFormat.replaceAll("%qn\\{.+?\\}","");
 
         //System.out.println("INFO in LanguageFormatter.paraphraseWithFormat(): 3 format: " + strFormat);
@@ -914,7 +914,7 @@ public class LanguageFormatter {
                      int spLen = splitPara.size();
                      for (int i = 0; i < spLen; i++) {
                      if (i > 0) {
-                     pb.append(" ");
+                     pb.append(Formula.SPACE);
                      }
                      pb.append("&%");
                      pb.append(arg);
@@ -1017,7 +1017,7 @@ public class LanguageFormatter {
     private static void createObjectMap(String form) {
 
         form = removePreamble(form);
-        form = form + " ";
+        form = form + Formula.SPACE;
         if (debug) System.out.println("LanguageFormatter.createObjectMap(): input " + form);
         int tokenNum = 1;
 //        boolean inQuote;
@@ -1075,7 +1075,7 @@ public class LanguageFormatter {
                     argnum = -1;
                     if (Character.isDigit(form.charAt(phraseEnd+1)))
                         argnum = Integer.parseInt(Character.toString(form.charAt(phraseEnd+1)));
-                    phraseWords = phrase.split(" ");
+                    phraseWords = phrase.split(Formula.SPACE);
                     for (String s : phraseWords) {
                         cl = new CoreLabel();
                         cl.setOriginalText(s);
@@ -1138,7 +1138,7 @@ public class LanguageFormatter {
             argNumStr = Integer.toString(cl.get(RelationArgumentAnnotation.class));
             outputMap.put(varString, cl); // create a "dummy" CoreLabel to hold the variable value
         }
-        if (!form.contains("?")) // if there are variables, the replacements are not done yet
+        if (!form.contains(Formula.V_PREF)) // if there are variables, the replacements are not done yet
             createObjectMap(form);
         String result = form;
         // Make necessary changes if the variable is a quoted string, i.e. a name.
@@ -1171,24 +1171,24 @@ public class LanguageFormatter {
             if (result.contains(varString) && count < 20) {
                 if (isClass) {
                     article = NLGUtils.getArticle("kind", count, occurrenceCounter, language);
-                    replacement = (article + " " + NLGUtils.getKeyword("kind of", language)
-                            + " " + varPretty);
+                    replacement = (article + Formula.SPACE + NLGUtils.getKeyword("kind of", language)
+                            + Formula.SPACE + varPretty);
                     if (isArabic)
-                        replacement = (NLGUtils.getKeyword("kind of", language) + " " + varPretty);
+                        replacement = (NLGUtils.getKeyword("kind of", language) + Formula.SPACE + varPretty);
                     result =
                         result.replaceFirst(("\\?" + varString.substring(1)),
                                 ("\\&\\%" + varType + "\\$\"" + replacement + "\"" + argNumStr));
                 }
                 else {
                     article = NLGUtils.getArticle(varPretty, count, occurrenceCounter, language);
-                    replacement = (article + " " + varPretty);
+                    replacement = (article + Formula.SPACE + varPretty);
                     if (isArabic) {
                         defArt = NLGUtils.getKeyword("the", language);
                         if (article.startsWith(defArt) && !varPretty.startsWith(defArt)) {
                             // This has to be refined to insert shadda for sun letters.
                             varPretty = (defArt + varPretty);
                         }
-                        replacement = (varPretty + " " + article);
+                        replacement = (varPretty + Formula.SPACE + article);
                     }
                 }
                 result = result.replaceFirst(("\\?" + varString.substring(1)),

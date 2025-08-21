@@ -47,7 +47,7 @@ public class SUMOformulaToTPTPformula {
         try {
             result = translateWord_1(st,type,hasArguments);
             if (debug) System.out.println("SUMOformulaToTPTPformula.translateWord(): result: " + result);
-            if (result.equals("$true" + Formula.termMentionSuffix) || result.equals("$false" + Formula.termMentionSuffix))
+            if (result.equals("$true" + Formula.TERM_MENTION_SUFFIX) || result.equals("$false" + Formula.TERM_MENTION_SUFFIX))
                 result = "'" + result + "'";
             if (StringUtil.isNumeric(result) && hideNumbers && !lang.equals("tff")) {
                 if (result.contains("."))
@@ -114,7 +114,7 @@ public class SUMOformulaToTPTPformula {
         // turned on, or not.  If it is on, then we do not want to add
         // the "mentions" suffix to relation names used as arguments
         // to other relations.
-        String mentionSuffix = Formula.termMentionSuffix;
+        String mentionSuffix = Formula.TERM_MENTION_SUFFIX;
         KBmanager mgr = KBmanager.getMgr();
         boolean holdsPrefixInUse = ((mgr != null) && mgr.getPref("holdsPrefix").equalsIgnoreCase("yes"));
         if (holdsPrefixInUse && !kifRelations.contains(st))
@@ -122,10 +122,10 @@ public class SUMOformulaToTPTPformula {
 
         //----Places single quotes around strings, and replace \n by space
         //if (type == 34)
-        //    return("'" + st.replaceAll("[\n\t\r\f]"," ").replaceAll("'","") + "'");
+        //    return("'" + st.replaceAll("[\n\t\r\f]",Formula.SPACE).replaceAll("'","") + "'");
         //---- replace \n by space
         if (type == 34)
-            return(st.replaceAll("[\n\t\r\f]"," ").replaceAll("'",""));
+            return(st.replaceAll("[\n\t\r\f]",Formula.SPACE).replaceAll("'",""));
         //----Fix variables to have leading V_
         char ch0 = ((st.length() > 0)
                     ? st.charAt(0)
@@ -135,12 +135,12 @@ public class SUMOformulaToTPTPformula {
                     : 'x');
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here1: ");
         if (ch0 == '?' || ch0 == '@')
-            return(Formula.termVariablePrefix + st.substring(1).replace('-','_'));
+            return(Formula.TERM_VARIABLE_PREFIX + st.substring(1).replace('-','_'));
         if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): here2: ");
         //----Translate special predicates
         if (lang.equals("tff")) {
             if (Formula.isInequality(st) && !hasArguments)
-                return Formula.termSymbolPrefix + st + Formula.termMentionSuffix;
+                return Formula.TERM_SYMBOL_PREFIX + st + Formula.TERM_MENTION_SUFFIX;
             translateIndex = kifPredicates.indexOf(st);
             if (translateIndex != -1)
                 return (tptpPredicates.get(translateIndex) + (hasArguments ? "" : mentionSuffix));
@@ -176,20 +176,20 @@ public class SUMOformulaToTPTPformula {
             if (debug) System.out.println("INFO in SUMOformulaToTPTPformula.translateWord_1(): no arguments: " + term);
             if (!Formula.isInequality(term)) {
                 if ((!term.endsWith(mentionSuffix) && Character.isLowerCase(ch0))
-                        || term.endsWith("Fn")
+                        || term.endsWith(Formula.FN_SUFF)
                         || KB.isRelationInAnyKB(term)) {
                     term += mentionSuffix;
                 }
             }
             else {
-                return (Formula.termSymbolPrefix + st.substring(1).replace('-','_'));
+                return (Formula.TERM_SYMBOL_PREFIX + st.substring(1).replace('-','_'));
             }
 
         }
         if (kifOps.contains(term) && hasArguments)
             return(term);
         else
-            return(Formula.termSymbolPrefix + term);
+            return(Formula.TERM_SYMBOL_PREFIX + term);
     }
 
     /** ***************************************************************
@@ -266,7 +266,7 @@ public class SUMOformulaToTPTPformula {
                 if (op.equals("exists"))
                     opStr = " ? ";
                 //if (debug) System.out.println("SUMOformulaToTPTPformula.processQuant(): quantified formula: " + args.get(1));
-                return "(" + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
+                return Formula.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
                         processRecurse(new Formula(args.get(1))) + "))";
             }
             else {
@@ -292,11 +292,11 @@ public class SUMOformulaToTPTPformula {
         if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append("(").append(processRecurse(new Formula(args.get(0))));
+        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0))));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(" ").append(tptpOp).append(" ").append(processRecurse(new Formula(args.get(i))));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i))));
         }
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -316,11 +316,11 @@ public class SUMOformulaToTPTPformula {
             }
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                    return "(" + processRecurse(new Formula(args.get(0))) + " => " +
-                        "(" + processRecurse(new Formula(args.get(1))) + "))";
+                    return Formula.LP + processRecurse(new Formula(args.get(0))) + " => " +
+                        Formula.LP + processRecurse(new Formula(args.get(1))) + "))";
                 else
-                    return "(" + processRecurse(new Formula(args.get(0))) + " => " +
-                            processRecurse(new Formula(args.get(1))) + ")";
+                    return Formula.LP + processRecurse(new Formula(args.get(0))) + " => " +
+                            processRecurse(new Formula(args.get(1))) + Formula.RP;
             }
         }
         if (op.equals(Formula.IFF)) {
@@ -344,7 +344,7 @@ public class SUMOformulaToTPTPformula {
                 return "";
             }
             else
-                return "~(" + processRecurse(new Formula(args.get(0))) + ")";
+                return "~(" + processRecurse(new Formula(args.get(0))) + Formula.RP;
         }
         if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,car,op,args);
@@ -362,8 +362,8 @@ public class SUMOformulaToTPTPformula {
             return "";
         }
         if (op.startsWith(Formula.EQUAL)) {
-            return "(" + processRecurse(new Formula(args.get(0))) + " = " +
-                    processRecurse(new Formula(args.get(1))) + ")";
+            return Formula.LP + processRecurse(new Formula(args.get(0))) + " = " +
+                    processRecurse(new Formula(args.get(1))) + Formula.RP;
         }
         System.err.println("Error in SUMOformulaToTPTPformula.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
@@ -411,7 +411,7 @@ public class SUMOformulaToTPTPformula {
                 else
                     argStr.append(processRecurse(new Formula(s))).append(",");
             }
-            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true) + "(" + argStr.substring(0,argStr.length()-1) + ")";
+            String result = translateWord(car.getFormula(), StreamTokenizer.TT_WORD,true) + Formula.LP + argStr.substring(0,argStr.length()-1) + Formula.RP;
             //if (debug) System.out.println("SUMOformulaToTPTPformula.processRecurse(): result: " + result);
             return result;
         }
@@ -546,7 +546,7 @@ public class SUMOformulaToTPTPformula {
                 //----Performs function on each current processed axiom
                 String tptpStr;
                 for (Formula f : processed) {
-                    if (!f.getFormula().contains("@") && !f.higherOrder) {
+                    if (!f.getFormula().contains(Formula.R_PREF) && !f.higherOrder) {
                         tptpStr = tptpParseSUOKIFString(f.getFormula(),query);
                         if (StringUtil.isNonEmptyString(tptpStr))
                             _f.theTptpFormulas.add(tptpStr);

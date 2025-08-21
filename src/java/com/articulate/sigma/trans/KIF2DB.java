@@ -108,7 +108,7 @@ public class KIF2DB {
                     }
                     else {
                         table = tables.get("Class");
-                        //String s = "create table " + term + "(" + rel + ")";
+                        //String s = "create table " + term + Formula.LP + rel + ")";
                     }
 
                     if (!table.keySet().contains(term)) {
@@ -117,7 +117,7 @@ public class KIF2DB {
                     }
                     else {
                         rels = table.get(term);
-                        //String s = "create table " + term + "(" + rel + ")";
+                        //String s = "create table " + term + Formula.LP + rel + ")";
                     }
 
                     if (!rels.keySet().contains(rel)) {
@@ -126,7 +126,7 @@ public class KIF2DB {
                     }
                     else {
                         vals = rels.get(rel);
-                        //String s = "create table " + term + "(" + rel + ")";
+                        //String s = "create table " + term + Formula.LP + rel + ")";
                     }
                     vals.add(arg);
                 }
@@ -140,7 +140,7 @@ public class KIF2DB {
                         }
                         else {
                             table = tables.get(p);
-                            //String s = "create table " + term + "(" + rel + ")";
+                            //String s = "create table " + term + Formula.LP + rel + ")";
                         }
                         if (!table.keySet().contains(term)) {
                             rels = new HashMap<>();
@@ -148,7 +148,7 @@ public class KIF2DB {
                         }
                         else {
                             rels = table.get(term);
-                            //String s = "create table " + term + "(" + rel + ")";
+                            //String s = "create table " + term + Formula.LP + rel + ")";
                         }
 
                         if (!rels.keySet().contains(rel)) {
@@ -157,7 +157,7 @@ public class KIF2DB {
                         }
                         else {
                             vals = rels.get(rel);
-                            //String s = "create table " + term + "(" + rel + ")";
+                            //String s = "create table " + term + Formula.LP + rel + ")";
                         }
                         vals.add(arg);
                     }

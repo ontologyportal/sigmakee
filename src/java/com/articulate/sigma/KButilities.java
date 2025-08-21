@@ -535,7 +535,7 @@ public class KButilities implements ServletContextListener {
         Set<String> s = generateSemanticNetwork(kb, cached, strings);
         List<GraphArc> al = new ArrayList();
         for (String st : s) {
-            String[] sp = st.split(" ");
+            String[] sp = st.split(Formula.SPACE);
             GraphArc ga = this.new GraphArc(sp[0],sp[1],sp[2]);
             al.add(ga);
         }
@@ -655,12 +655,12 @@ public class KButilities implements ServletContextListener {
                     for (String term2 : terms) {
                         if (Formula.isLogicalOperator(term2) || Formula.isVariable(term2) || (!strings && StringUtil.isQuotedString(term2)))
                             continue;
-                        //resultSet.add("(link " + term1 + " " + term2 + ")");
+                        //resultSet.add("(link " + term1 + Formula.SPACE + term2 + Formula.RP);
                         if (!term1.equals(term2) && !StringUtil.isNumeric(term1) && !StringUtil.isNumeric(term2))
                             resultSet.add(term1 + " link " +  term2);
                     }
-                    if (!f.getFormula().contains("\"") && (!f.getFormula().contains("(")) &&
-                            (!f.getFormula().contains(")")))
+                    if (!f.getFormula().contains("\"") && (!f.getFormula().contains(Formula.LP)) &&
+                            (!f.getFormula().contains(Formula.RP)))
                     resultSet.add(term1 + " inAxiom \"" + f.getFormula() + "\"");
                 }
             }
@@ -670,12 +670,12 @@ public class KButilities implements ServletContextListener {
                 if (args != null && args.size() == 2) { // could have a function which would return null
                     arg1 = f.getStringArgument(1);
                     arg2 = f.getStringArgument(2);
-                    if (arg1.contains("(") || arg1.contains(")") || arg2.contains("(") || arg2.contains(")"))
+                    if (arg1.contains(Formula.LP) || arg1.contains(Formula.RP) || arg2.contains(Formula.LP) || arg2.contains(Formula.RP))
                         System.out.println("error in generateSemanticNetwork(): for formula: " + f);
                     else if (!Formula.isLogicalOperator(arg1) && !Formula.isLogicalOperator(arg2) &&
                             !Formula.isVariable(arg1) && !Formula.isVariable(arg1) &&
                             (strings || !StringUtil.isQuotedString(arg1)) && (strings || !StringUtil.isQuotedString(arg2)))
-                        resultSet.add(arg1 + " " + predicate + " " +  arg2);
+                        resultSet.add(arg1 + Formula.SPACE + predicate + Formula.SPACE +  arg2);
                 }
             }
         }
@@ -690,7 +690,7 @@ public class KButilities implements ServletContextListener {
         sb.append("graph G {");
         String[] tuple;
         for (String s : triples) {
-            tuple = s.split(" ");
+            tuple = s.split(Formula.SPACE);
             sb.append("  \"").append(tuple[0]).append("\" -- \"").append(tuple[2]).append("\" [ label=\"").append(tuple[1]).append("\" ];\n");
         }
         sb.append("}");
@@ -738,7 +738,7 @@ public class KButilities implements ServletContextListener {
         sb.append("            \"edges\": [\n");
         String[] tuple;
         for (String s : triples) {
-            tuple = s.split(" ");
+            tuple = s.split(Formula.SPACE);
             sb.append("                {\n");
             sb.append("                    \"source\": \"").append(tuple[0]).append("\",\n");
             sb.append("                    \"relation\": \"").append(tuple[1]).append("\",\n");
@@ -795,7 +795,7 @@ public class KButilities implements ServletContextListener {
             sb.append("[\n");
             String[] tuple;
             for (String s : triples) {
-                tuple = s.split(" ");
+                tuple = s.split(Formula.SPACE);
                 sb.append("    {\n");
                 sb.append("        \"source\" : \"").append(tuple[0]).append("\",\n");
                 sb.append("        \"relation\" : \"").append(tuple[1]).append("\",\n");
@@ -846,7 +846,7 @@ public class KButilities implements ServletContextListener {
                     pw.println(s + "|documentation|" + doc);
             }
             for (String s : triples) {
-                tuple = s.split(" ");
+                tuple = s.split(Formula.SPACE);
                 pw.println(tuple[0] + "|" + tuple[1] + "|" + tuple[2]);
             }
         }
@@ -893,7 +893,7 @@ public class KButilities implements ServletContextListener {
 
             sb = new StringBuilder();
             for (String s : triples) {
-                tuple = s.split(" ");
+                tuple = s.split(Formula.SPACE);
                 sb.append(" INSERT INTO edges (source, rel, target) values ('").append(tuple[0]).append("'");
                 sb.append(", '").append(tuple[1]).append("', '").append(tuple[2]).append("');\n");
             }
@@ -1047,7 +1047,7 @@ public class KButilities implements ServletContextListener {
                         if (argnum.equals("1"))
                             System.out.print("(instance Foo " + type + "),");
                         if (argnum.equals("2"))
-                            System.out.print("(instance Bar " + type + ")");
+                            System.out.print("(instance Bar " + type + Formula.RP);
                     }
                     */
                     argType1 = kb.getArgType(term,1);
@@ -1121,7 +1121,7 @@ public class KButilities implements ServletContextListener {
             b = m.find();
             if (b) {
                 quoted = m.group(1);
-                ar = quoted.split(" ");
+                ar = quoted.split(Formula.SPACE);
                 for (int i = 0; i < ar.length-1; i++) {
                     if (ar[i].matches("\\w+"))
                         total++;

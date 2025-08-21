@@ -1,5 +1,6 @@
 package com.articulate.sigma.wordNet;
 
+import com.articulate.sigma.Formula;
 import java.io.*;
 import java.util.*;
 
@@ -74,25 +75,25 @@ August 9, Acapulco, Mexico.
             for (String key : WordNet.wn.nounSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.nounSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(" "))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
             for (String key : WordNet.wn.verbSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.verbSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(" "))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
             for (String key : WordNet.wn.adjectiveSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.adjectiveSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(" "))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
             for (String key : WordNet.wn.adverbSUMOHash.keySet()) {
                 SUMOterm = WordNet.wn.adverbSUMOHash.get(key);
                 mappingSuffix = Character.toString(getOMWMappingSuffix(SUMOterm));
-                if (!SUMOterm.contains(" "))
+                if (!SUMOterm.contains(Formula.SPACE))
                     pw.println(key + "-n\tsumo:xref\t" + WordNetUtilities.getBareSUMOTerm(SUMOterm) + "\t" + mappingSuffix);
             }
         }
@@ -129,7 +130,7 @@ August 9, Acapulco, Mexico.
                     id = line.substring(0,tabIndex);
                     int tab2index = line.indexOf("\t",tabIndex+1);
                     if (tab2index > -1) {
-                        //System.out.println(tabIndex + " " + tab2index);
+                        //System.out.println(tabIndex + Formula.SPACE + tab2index);
                         type = line.substring(tabIndex+1,tab2index);
                         if (type.endsWith("lemma")) {
                             int end = line.length();
@@ -412,7 +413,7 @@ August 9, Acapulco, Mexico.
      */
     public static String formatWords(String term, String kbName, String lang, String href) {
 
-        //System.out.println("INFO in OMWordnet.formatWords(): " + term + " " + lang);
+        //System.out.println("INFO in OMWordnet.formatWords(): " + term + Formula.SPACE + lang);
         Map<String,List<String>> wordnet = omw.wordnets.get(languageToCode(lang));
         if (wordnet == null || wordnet.isEmpty())
             return "";

@@ -33,7 +33,7 @@ public class TPTP2SUMO {
    */
   public static Formula collapseConnectives(Formula form) {
 
-      if (!form.getFormula().contains("(" + Formula.AND + " ") && !form.getFormula().contains("(" + Formula.OR + " ") && !form.getFormula().contains("(" + Formula.XOR + " "))
+      if (!form.getFormula().contains(Formula.LP + Formula.AND + Formula.SPACE) && !form.getFormula().contains(Formula.LP + Formula.OR + Formula.SPACE) && !form.getFormula().contains(Formula.LP + Formula.XOR + Formula.SPACE))
           return form;
       if (!form.isBalancedList())
           return form;
@@ -43,7 +43,7 @@ public class TPTP2SUMO {
           return form;
       StringBuilder sb = new StringBuilder();
       String pred = form.car();
-      sb.append("(").append(pred).append(" ");
+      sb.append(Formula.LP).append(pred).append(Formula.SPACE);
       List<Formula> newargs = new ArrayList<>();
       if (debug) System.out.println("collapseConnectives(): args: " + args);
       for (Formula f : args)
@@ -57,22 +57,22 @@ public class TPTP2SUMO {
                   subargs = f.complexArgumentsToArrayList(1);
                   if (debug) System.out.println("collapseConnectives(): subargs " + subargs);
                   for (Formula f2 : subargs)
-                      sb.append(f2.toString()).append(" ");
+                      sb.append(f2.toString()).append(Formula.SPACE);
                   if (debug) System.out.println("collapseConnectives(): after adding to " + f + " result is " + sb);
               }
               else {
                   if (debug) System.out.println("collapseConnectives(): not matching connective in " + f);
                   if (debug) System.out.println("collapseConnectives(): adding to " + sb);
-                  sb.append(f.toString()).append(" ");
+                  sb.append(f.toString()).append(Formula.SPACE);
               }
           }
       }
       else {
           for (Formula f : newargs)
-            sb.append(f.toString()).append(" ");
+            sb.append(f.toString()).append(Formula.SPACE);
       }
       sb.deleteCharAt(sb.length()-1);
-      sb.append(")");
+      sb.append(Formula.RP);
       Formula newForm = new Formula(sb.toString());
       if (debug) System.out.println("collapseConnectives(): result: " + newForm);
       return newForm;
@@ -84,7 +84,7 @@ public class TPTP2SUMO {
 
       String res = "";
       for (int i = indented+1; i <= indent; i++)
-          res += " ";
+          res += Formula.SPACE;
       return res;
   }
 
@@ -103,20 +103,20 @@ public class TPTP2SUMO {
   }
 
   /** ***************************************************************
-   * remove termVariablePrefix
+   * remove TERM_VARIABLE_PREFIX
    */
   private static String transformVariable (String variable) {
 
-      return variable.replace(Formula.termVariablePrefix, "");
+      return variable.replace(Formula.TERM_VARIABLE_PREFIX, "");
   }
 
   /** ***************************************************************
-   * remove termSymbolPrefix and termMentionSuffix
+   * remove TERM_SYMBOL_PREFIX and TERM_MENTION_SUFFIX
    */
   public static String transformTerm (String term) {
 
-      term = term.replaceFirst(Formula.termSymbolPrefix, "");
-      term = term.replace(Formula.termMentionSuffix, "");
+      term = term.replaceFirst(Formula.TERM_SYMBOL_PREFIX, "");
+      term = term.replace(Formula.TERM_MENTION_SUFFIX, "");
       if (term.matches(".*__\\d"))
           term = term.substring(0,term.length()-3);
       return term;

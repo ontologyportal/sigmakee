@@ -114,13 +114,13 @@ public class KIFAST {
                         // Open paren
                         parenLevel++;
                         if ((parenLevel != 0) && (lastVal != 40) && (sb.length() > 0))
-                            sb.append(" "); // add back whitespace that ST removes
-                        sb.append("(");
+                            sb.append(Formula.SPACE); // add back whitespace that ST removes
+                        sb.append(Formula.LP);
                         break;
                     case 41:
                         // ) - close paren
                         parenLevel--;
-                        sb.append(")");
+                        sb.append(Formula.RP);
                         if (parenLevel == 0) { // The end of the statement...
                             if (formulaMap.keySet().contains(sb.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
                                 String warning = ("Duplicate axiom at line: " + startLine + " of " + filename + ": " + sb);
@@ -140,7 +140,7 @@ public class KIFAST {
                         // " - it's a string
                         st.sval = StringUtil.escapeQuoteChars(st.sval);
                         if (lastVal != 40) // add back whitespace that ST removes
-                            sb.append(" ");
+                            sb.append(Formula.SPACE);
                         sb.append("\"");
                         String com = st.sval;
                         sb.append(com);
@@ -148,7 +148,7 @@ public class KIFAST {
                         break;
                     default:
                         if (lastVal != 40) // add back whitespace that ST removes
-                            sb.append(" ");
+                            sb.append(Formula.SPACE);
                         sb.append(st.sval);
                         break;
                 }
@@ -212,13 +212,13 @@ public class KIFAST {
                             startLine = st.lineno();
                         parenLevel++;
                         if ((parenLevel != 0) && (lastVal != 40) && (sb.length() > 0))
-                            sb.append(" "); // add back whitespace that ST removes
-                        sb.append("(");
+                            sb.append(Formula.SPACE); // add back whitespace that ST removes
+                        sb.append(Formula.LP);
                         break;
                     case 41:
                         // ) - close paren
                         parenLevel--;
-                        sb.append(")");
+                        sb.append(Formula.RP);
                         if (parenLevel == 0) { // The end of the statement...
                             if (formulaMap.keySet().contains(sb.toString()) && !KBmanager.getMgr().getPref("reportDup").equals("no")) {
                                 String warning = ("Duplicate axiom at line: " + startLine + " of " + filename + ": " + sb);
@@ -240,7 +240,7 @@ public class KIFAST {
                         // " - it's a string
                         st.sval = StringUtil.escapeQuoteChars(st.sval);
                         if (lastVal != 40) // add back whitespace that ST removes
-                            sb.append(" ");
+                            sb.append(Formula.SPACE);
                         sb.append("\"");
                         String com = st.sval;
                         totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
@@ -249,7 +249,7 @@ public class KIFAST {
                         break;
                     default:
                         if (lastVal != 40) // add back whitespace that ST removes
-                            sb.append(" ");
+                            sb.append(Formula.SPACE);
                         sb.append(st.sval);
                         break;
                 }
@@ -262,7 +262,7 @@ public class KIFAST {
         }
         if (duplicateCount > 0) {
             String warning = "WARNING in KIFAST.parse(StreamTokenizer_s), " + duplicateCount + " duplicate statement"
-                    + ((duplicateCount > 1) ? "s " : " ") + "detected in "
+                    + ((duplicateCount > 1) ? "s " : Formula.SPACE) + "detected in "
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);
         }
@@ -352,12 +352,12 @@ public class KIFAST {
                         }
                     }
                     if ((parenLevel != 0) && (lastVal != 40) && (expression.length() > 0))
-                        expression.append(" "); // add back whitespace that ST removes
-                    expression.append("(");
+                        expression.append(Formula.SPACE); // add back whitespace that ST removes
+                    expression.append(Formula.LP);
                 }
                 else if (st.ttype == 41) { // ) - close paren
                     parenLevel--;
-                    expression.append(")");
+                    expression.append(Formula.RP);
                     if (parenLevel == 0) { // The end of the statement...
                         fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.read(fstr.intern());
@@ -422,7 +422,7 @@ public class KIFAST {
                 else if (st.ttype == 34) { // " - it's a string
                     st.sval = StringUtil.escapeQuoteChars(st.sval);
                     if (lastVal != 40) // add back whitespace that ST removes
-                        expression.append(" ");
+                        expression.append(Formula.SPACE);
                     expression.append("\"");
                     String com = st.sval;
                     totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
@@ -434,7 +434,7 @@ public class KIFAST {
                 else if ((st.ttype == StreamTokenizer.TT_NUMBER) || // number
                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {
                     if (lastVal != 40) // add back whitespace that ST removes
-                        expression.append(" ");
+                        expression.append(Formula.SPACE);
                     if (st.nval == 0)
                         expression.append(st.sval);
                     else
@@ -448,7 +448,7 @@ public class KIFAST {
                     if (parenLevel < 2) // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
                     if (lastVal != 40) // add back whitespace that ST removes
-                        expression.append(" ");
+                        expression.append(Formula.SPACE);
                     expression.append(String.valueOf(st.sval));
                     if (expression.length() > 64000) {
                         errStr = (errStart + ": Sentence over 64000 characters new line: " + f.startLine);
@@ -491,7 +491,7 @@ public class KIFAST {
         }
         if (duplicateCount > 0) {
             String warning = "WARNING in KIFAST.parse(Reader), " + duplicateCount + " duplicate statement"
-                    + ((duplicateCount > 1) ? "s " : " ") + "detected in "
+                    + ((duplicateCount > 1) ? "s " : Formula.SPACE) + "detected in "
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);
         }

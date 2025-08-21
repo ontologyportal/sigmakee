@@ -1,6 +1,7 @@
 package com.articulate.sigma.trans;
 
 import com.articulate.sigma.DB;
+import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.utils.StringUtil;
@@ -368,11 +369,11 @@ public class DB2KIF {
                 if (units.containsKey(header)) {
                     unit = units.get(header);
                     //System.out.println("toKIF(): unit: " + unit);
-                    if (unit.endsWith("Fn")) {
-                        cell = "(" + unit + " " + cell + ")";
+                    if (unit.endsWith(Formula.FN_SUFF)) {
+                        cell = Formula.LP + unit + Formula.SPACE + cell + Formula.RP;
                     }
                     else {
-                        cell = "(MeasureFn " + cell  + " " + unit + ")";
+                        cell = "(MeasureFn " + cell  + Formula.SPACE + unit + Formula.RP;
                     }
                 }
                 else {
@@ -382,7 +383,7 @@ public class DB2KIF {
                             cell = map.get(cell);
                     }
                 }
-                kifstring = "(" + rel + " " + defaultRowType + id + " " + cell + ")";
+                kifstring = Formula.LP + rel + Formula.SPACE + defaultRowType + id + Formula.SPACE + cell + Formula.RP;
                 if (print)
                     System.out.println(kifstring);
                 else

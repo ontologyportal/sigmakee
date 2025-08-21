@@ -163,7 +163,7 @@ public class VarTypes {
      */
     public FormulaAST constrainVars(String rel, String var, FormulaAST f) {
 
-        if (var.startsWith("@"))
+        if (var.startsWith(Formula.R_PREF))
             return f;
         Map<Integer, Set<SuokifParser.ArgumentContext>> argsForIndex = f.argMap.get(var);
         List<String> sig = kb.kbCache.getSignature(rel);
@@ -175,7 +175,7 @@ public class VarTypes {
                     sb.append(arg.getText()).append(", ");
             }
             if (debug) System.out.println("VarTypes.constrainVars(): " + sb.toString());
-            if (sb.toString().contains("@")) {
+            if (sb.toString().contains(Formula.R_PREF)) {
                 if (debug) System.out.println("Arg mismatch caused by row variable " + argsForIndex.keySet());
             }
             else {
@@ -325,8 +325,8 @@ public class VarTypes {
         for (String c : f.constants.keySet()) {
             as = f.constants.get(c);
             if (kb.kbCache.relations.contains(c)) {
-                newc = c + "__m";
-                as.literal = as.literal.replace(" " +  c, " " + newc);
+                newc = c + Formula.TERM_MENTION_SUFFIX;
+                as.literal = as.literal.replace(Formula.SPACE +  c, " " + newc);
             }
         }
     }
@@ -390,7 +390,7 @@ public class VarTypes {
                         sb.append(arg.getText()).append(", ");
                 }
                 if (debug) System.out.println("VarTypes.findType(): " + sb.toString());
-                if (sb.toString().contains("@")) {
+                if (sb.toString().contains(Formula.R_PREF)) {
                     if (debug) System.out.println("Arg mismatch caused by row variable " + argsForIndex.keySet());
                 }
                 else {

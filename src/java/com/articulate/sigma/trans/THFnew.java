@@ -39,7 +39,7 @@ public class THFnew {
                 if (op.equals("exists"))
                     opStr = " ? ";
                 if (debug) System.out.println("THFnew.processQuant(): quantified formula: " + args.get(1));
-                return "(" + opStr + "[" + varStr + "] : (" +
+                return Formula.LP + opStr + "[" + varStr + "] : (" +
                         processRecurse(new Formula(args.get(1)),typeMap) + "))";
             }
             else {
@@ -66,11 +66,11 @@ public class THFnew {
         if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append("(").append(processRecurse(new Formula(args.get(0)),typeMap));
+        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(0)),typeMap));
         for (int i = 1; i < args.size(); i++) {
-            sb.append(" ").append(tptpOp).append(" ").append(processRecurse(new Formula(args.get(i)),typeMap));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i)),typeMap));
         }
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -92,11 +92,11 @@ public class THFnew {
             }
             else {
                 if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER)
-                    return "(" + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                            "(" + processRecurse(new Formula(args.get(1)),typeMap) + "))";
+                    return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
+                            Formula.LP + processRecurse(new Formula(args.get(1)),typeMap) + "))";
                 else
-                    return "(" + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
-                            processRecurse(new Formula(args.get(1)),typeMap) + ")";
+                    return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " => " +
+                            processRecurse(new Formula(args.get(1)),typeMap) + Formula.RP;
             }
         }
         if (op.equals(Formula.IFF)) {
@@ -120,7 +120,7 @@ public class THFnew {
                 return "";
             }
             else
-                return "~(" + processRecurse(new Formula(args.get(0)),typeMap) + ")";
+                return "~(" + processRecurse(new Formula(args.get(0)),typeMap) + Formula.RP;
         }
         if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,op,args,typeMap);
@@ -139,8 +139,8 @@ public class THFnew {
             return "";
         }
         if (op.startsWith(Formula.EQUAL)) {
-            return "(" + processRecurse(new Formula(args.get(0)),typeMap) + " = " +
-                    processRecurse(new Formula(args.get(1)),typeMap) + ")";
+            return Formula.LP + processRecurse(new Formula(args.get(0)),typeMap) + " = " +
+                    processRecurse(new Formula(args.get(1)),typeMap) + Formula.RP;
         }
         System.err.println("Error in THFnew.processCompOp(): bad comparison operator " + op + " in " + f);
         return "";
@@ -193,8 +193,8 @@ public class THFnew {
                 argStr.append(" @ ");
             }
             argStr.delete(argStr.length()-2,argStr.length());  // remove final arg separator
-            String result = "(" + SUMOformulaToTPTPformula.translateWord(car.getFormula(),
-                    StreamTokenizer.TT_WORD,true) + " @ " + argStr.substring(0,argStr.length()-1) + ")";
+            String result = Formula.LP + SUMOformulaToTPTPformula.translateWord(car.getFormula(),
+                    StreamTokenizer.TT_WORD,true) + " @ " + argStr.substring(0,argStr.length()-1) + Formula.RP;
             //if (debug) System.out.println("THFnew.processRecurse(): result: " + result);
             return result;
         }
@@ -300,7 +300,7 @@ public class THFnew {
         if (m.find()) {
             int num = Integer.parseInt(m.group(2));
             num--;
-            Formula result = new Formula("(" + m.group(1) + num + " " + fstr);
+            Formula result = new Formula(Formula.LP + m.group(1) + num + Formula.SPACE + fstr);
             if (debug) System.out.println("adjustArity(): result: " + result);
             return result;
         }
@@ -389,7 +389,7 @@ public class THFnew {
             List<String> ar = f.complexArgumentsToArrayListString(0);
             if (protectedRelation(ar.get(0)) && Modals.modalAttributes.contains(ar.get(1))) {
                 out.write("% exclude(): modal attribute in protected relation: " + ar.get(0) +
-                        " " + ar.get(1) + "\n");
+                        Formula.SPACE + ar.get(1) + "\n");
                 return true;  // defined as type "$m" directly in THF
             }
             for (String s : ar) {

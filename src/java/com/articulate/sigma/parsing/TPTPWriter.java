@@ -1,5 +1,6 @@
 package com.articulate.sigma.parsing;
 
+import com.articulate.sigma.Formula;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import com.articulate.sigma.KBmanager;
@@ -106,7 +107,7 @@ public class TPTPWriter {
 //        Map<Integer,Set<SuokifParser.ArgumentContext>> args = new HashMap<>();
         if (context.IDENTIFIER() != null) {
             pred = context.IDENTIFIER().toString();
-            sb.append("s__").append(pred).append("(");
+            sb.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
         }
 //        FormulaAST f = null;
         SuokifParser.ArgumentContext ac;
@@ -125,7 +126,7 @@ public class TPTPWriter {
             }
         }
         sb.delete(sb.length()-1,sb.length());
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -196,7 +197,7 @@ public class TPTPWriter {
             if (c instanceof SuokifParser.SentenceContext)
                 f = visitSentence((SuokifParser.SentenceContext) c);
         }
-        return "~(" + f + ")";
+        return "~" + Formula.LP + f + Formula.RP;
     }
 
     /** ***************************************************************
@@ -217,7 +218,7 @@ public class TPTPWriter {
             }
         }
         sb.delete(sb.length()-2,sb.length());
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -230,7 +231,7 @@ public class TPTPWriter {
         if (debug) System.out.println("Visiting Orsent: " + context.getText());
         if (debug) System.out.println("# children: " + context.children.size());
         if (debug) System.out.println("text: " + context.getText());
-        sb.append("(");
+        sb.append(Formula.LP);
         for (ParseTree c : context.children) {
             if (debug) System.out.println("visitOrsent() child: " + c.getClass().getName());
             if (c instanceof SuokifParser.SentenceContext) {
@@ -238,7 +239,7 @@ public class TPTPWriter {
             }
         }
         sb.delete(sb.length()-2,sb.length());
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -264,7 +265,7 @@ public class TPTPWriter {
                 }
             }
         }
-        return "( " + f1 + " => " + f2 + ")";
+        return "( " + f1 + " => " + f2 + Formula.RP;
     }
 
     /** ***************************************************************
@@ -288,7 +289,7 @@ public class TPTPWriter {
                 }
             }
         }
-        return "( " + f1 + " <=> " + f2 + ")";
+        return "( " + f1 + " <=> " + f2 + Formula.RP;
     }
 
     /** ***************************************************************
@@ -314,7 +315,7 @@ public class TPTPWriter {
                 }
             }
         }
-        return "(" + f1 + " = " + f2 + ")";
+        return Formula.LP + f1 + " = " + f2 + Formula.RP;
     }
 
     /** ***************************************************************
@@ -358,7 +359,7 @@ public class TPTPWriter {
             }
         }
         varlist.delete(varlist.length()-2,varlist.length());
-        return "! [" + varlist + "] : (" + body + ")";
+        return "! [" + varlist + "] : (" + body + Formula.RP;
     }
 
     /** ***************************************************************
@@ -384,7 +385,7 @@ public class TPTPWriter {
             }
         }
         varlist.delete(varlist.length()-2,varlist.length());
-        return "? [" + varlist + "] : (" + body + ")";
+        return "? [" + varlist + "] : (" + body + Formula.RP;
     }
 
     /** ***************************************************************
@@ -397,7 +398,7 @@ public class TPTPWriter {
         if (debug) System.out.println("text: " + context.getText());
         if (context.REGVAR() != null) {
             if (debug) System.out.println("regvar: " + context.REGVAR().toString());
-            return "V__" + context.REGVAR().toString().substring(1);
+            return Formula.TERM_VARIABLE_PREFIX + context.REGVAR().toString().substring(1);
         }
         if (context.ROWVAR() != null) {
             if (debug) System.out.println("Error - no row vars should exist at this point - rowv: " + context.ROWVAR().toString());
@@ -419,12 +420,12 @@ public class TPTPWriter {
         if (context.IDENTIFIER() != null) {
             String ident = context.IDENTIFIER().toString();
             if (debug) System.out.println("visitTerm() identifier: " + ident);
-            return "s__" + ident;
+            return Formula.TERM_SYMBOL_PREFIX + ident;
         }
         if (context.FUNWORD() != null) {
             String funword = context.FUNWORD().toString();
             if (debug) System.out.println("visitTerm() funword: " + funword);
-            return "s__" + funword;
+            return Formula.TERM_SYMBOL_PREFIX + funword;
         }
         for (ParseTree c : context.children) { // there should be only one child
             if (debug) System.out.println("visitTerm() child: " + c.getClass().getName());
@@ -459,7 +460,7 @@ public class TPTPWriter {
         if (context.FUNWORD() != null) {
             funword = context.FUNWORD().toString();
             if (debug) System.out.println("funword: " + funword);
-            sb.append("s__").append(funword).append("(");
+            sb.append(Formula.TERM_SYMBOL_PREFIX).append(funword).append(Formula.LP);
         }
 //        int argnum = 1;
 //        Map<Integer,Set<SuokifParser.ArgumentContext>> args = new HashMap<>();
@@ -477,7 +478,7 @@ public class TPTPWriter {
             }
         }
         sb.delete(sb.length()-1,sb.length());
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 

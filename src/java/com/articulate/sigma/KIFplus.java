@@ -31,8 +31,8 @@ import java.util.List;
 public class KIFplus {
 
     String filename;
-    String[] spcl = {"!" , "$" , "%" , "&" , "*" , "+" , "-" , "." , "/" , "<" , "=" , ">" , "?" , "@" , "_" , "~"};
-    String[] wht = {" ", "\t", "\n"};
+    String[] spcl = {"!" , "$" , "%" , "&" , "*" , "+" , "-" , "." , "/" , "<" , "=" , ">" , Formula.V_PREF , Formula.R_PREF , "_" , "~"};
+    String[] wht = {Formula.SPACE, "\t", "\n"};
     List<String> special = new ArrayList<>(Arrays.asList(spcl));
 /*
 upper ::= A | B | C | D | E | F | G | H | I | J | K | L | M |

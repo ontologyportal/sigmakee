@@ -199,10 +199,10 @@ public class THF {
      */
     private String applySubstTo(String key, String keysubst, String str) {
 
-        String key1 = key + " ";
-        String keysubst1 = keysubst + " ";
+        String key1 = key + Formula.SPACE;
+        String keysubst1 = keysubst + Formula.SPACE;
         String key2 = key + "\\)";
-        String keysubst2 = keysubst + ")";
+        String keysubst2 = keysubst + Formula.RP;
         str = str.replaceAll(key1,keysubst1);
         str = str.replaceAll(key2,keysubst2);
         return str;
@@ -213,7 +213,7 @@ public class THF {
     private boolean hasMathOp(Formula f, KB kb) {
 
         for (String s : numericOps) {
-            if (f.getFormula().contains(s + " ")) {
+            if (f.getFormula().contains(s + Formula.SPACE)) {
                 if (debug) System.out.println("THF.hasMathOp(): " + f);
                 return true;
             }
@@ -395,7 +395,7 @@ public class THF {
         // the main loop; we proceed formula by formula and work with side effects
         // to variables introduced above (I know that this is terrible programming style! - CB)
         for (Formula form : sortFormulas(taggedFormulas.keySet())) {
-            axiomsResult.add("\n\n%%% " + form.getFormula() + " " + form.sourceFile + " line: " + form.startLine);
+            axiomsResult.add("\n\n%%% " + form.getFormula() + Formula.SPACE + form.sourceFile + " line: " + form.startLine);
             // formula f contains the explicitly quantified formula under
             // consideration, the quantifier (universal/existential) is
             // determined correctly for axioms and conjectures
@@ -440,9 +440,9 @@ public class THF {
         Set<String> keyset = map.keySet();
         String key1, key2, key3;
         for (String key : keyset) {
-            key1 = "(" + key + " ";
-            key2 = " " + key + " ";
-            key3 = " " + key + ")";
+            key1 = Formula.LP + key + Formula.SPACE;
+            key2 = Formula.SPACE + key + Formula.SPACE;
+            key3 = Formula.SPACE + key + Formula.RP;
             // Pattern p = Pattern.compile(".*([\\(\\s]" + key + "[\\)\\s]).*");
             // Matcher m = p.matcher(f);
             // boolean b = m.matches();
@@ -507,7 +507,7 @@ public class THF {
         convertTypeInfo.put("Quantity",indTp);
         convertTypeInfo.put("PhysicalQuantity",indTp);
         /* sets (if we enable this, then we run into problems) */
-        //String setTpPattern = "(" + unknownTp + typeDelimiter + boolTp + ")";
+        //String setTpPattern = Formula.LP + unknownTp + typeDelimiter + boolTp + Formula.RP;
         //convertTypeInfo.put("Class", setTpPattern);
         //convertTypeInfo.put("Collection", setTpPattern);
         //convertTypeInfo.put("FamilyGroup", setTpPattern);
@@ -515,27 +515,27 @@ public class THF {
         /* arbitrary relations */
         convertTypeInfo.put("Relation", unknownTp);
         /* binary relations */
-        String binrelTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + typeDelimiter + boolTp + ")";
+        String binrelTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + typeDelimiter + boolTp + Formula.RP;
         convertTypeInfo.put("BinaryRelation", binrelTpPattern);
         convertTypeInfo.put("BinaryPredicate", binrelTpPattern);
         convertTypeInfo.put("CaseRole", binrelTpPattern);
         /* ternary relations */
-        String ternrelTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + boolTp + ")";
+        String ternrelTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + boolTp + Formula.RP;
         convertTypeInfo.put("TernaryRelation", ternrelTpPattern);
         /* quaternary relations */
-        String quaternrelTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + boolTp + ")";
+        String quaternrelTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + boolTp + Formula.RP;
         convertTypeInfo.put("QuaternaryRelation", quaternrelTpPattern);
         /* unary functions */
-        String ufunTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + ")";
+        String ufunTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + Formula.RP;
         convertTypeInfo.put("UnaryFunction", ufunTpPattern);
         /* binary functions */
-        String binfunTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + ")";
+        String binfunTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + Formula.RP;
         convertTypeInfo.put("BinaryFunction", binfunTpPattern);
         /* ternary functions */
-        String ternfunTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + ")";
+        String ternfunTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + Formula.RP;
         convertTypeInfo.put("TernaryFunction", ternfunTpPattern);
         /* quaternary functions */
-        String quatfunTpPattern = "(" + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + ")";
+        String quatfunTpPattern = Formula.LP + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + typeDelimiter + unknownTp + Formula.RP;
         convertTypeInfo.put("QuaternaryFunction", quatfunTpPattern);
         String res;
         if (convertTypeInfo.containsKey(intype)) {
@@ -613,7 +613,7 @@ public class THF {
      */
     private boolean isKifVar (String sym) {
 
-        return (sym.startsWith("?")) || (sym.startsWith("@"));
+        return (sym.startsWith(Formula.V_PREF)) || (sym.startsWith(Formula.R_PREF));
     }
 
     /** ***************************************************************
@@ -625,7 +625,7 @@ public class THF {
      */
     private boolean isKifConst (String sym) {
 
-        return !sym.startsWith("?") && !sym.startsWith("@") && !sym.startsWith("(");
+        return !sym.startsWith(Formula.V_PREF) && !sym.startsWith(Formula.R_PREF) && !sym.startsWith(Formula.LP);
     }
 
     /** ***************************************************************
@@ -706,16 +706,16 @@ public class THF {
             }
         }
         else {
-            resTerm.append("(").append(arg1);
+            resTerm.append(Formula.LP).append(arg1);
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 fi = new Formula();
                 fi.read(f.getStringArgument(i));
                 argi = toTHF1(fi,argsTp,relTpInfo);
-                resTerm.append(" ").append(op_thf).append(" ").append(argi);
+                resTerm.append(Formula.SPACE).append(op_thf).append(Formula.SPACE).append(argi);
             }
         }
-        resTerm.append(")");
+        resTerm.append(Formula.RP);
         terms.put(resTerm.toString(),goalTp);
         return  resTerm.toString();
     }
@@ -741,19 +741,19 @@ public class THF {
         THFdebugOut("\n  Enter toTHFHelp2: " + f.getFormula());
         // in toTHF2 and in this help function we always reconstruct the worked off
         // formula (possible slightly modify it thereby) for later reuse
-        kifFormula.append("(").append(op_sumo);
+        kifFormula.append(Formula.LP).append(op_sumo);
         // a string builder for the result
         StringBuilder resTerm = new StringBuilder();
         Formula f1 = new Formula();
         f1.read(f.getStringArgument(1));
-        kifFormula.append(" ");
+        kifFormula.append(Formula.SPACE);
         // a (recursive) call to toTHF2 for the first argument
         String arg1 = toTHF2(f1);
         // we work off the remaining arguments and distinguish thereby between the prefix and infix case
         Formula fi;
         String argi;
         if (preferPrefix) {
-            resTerm.append("(").append(op_thf);
+            resTerm.append(Formula.LP).append(op_thf);
             if (!op_thf.equals("~"))
                 resTerm.append(" @ ");
             resTerm.append(arg1);
@@ -761,24 +761,24 @@ public class THF {
             for (int i = 2; i < len; i++) {
                 fi = new Formula();
                 fi.read(f.getStringArgument(i));
-                kifFormula.append(" ");
+                kifFormula.append(Formula.SPACE);
                 argi = toTHF2(fi);
                 resTerm.append(" @ ").append(argi);
             }
         }
         else {
-            resTerm.append("(").append(arg1);
+            resTerm.append(Formula.LP).append(arg1);
             int len = f.listLength();
             for (int i = 2; i < len; i++) {
                 fi = new Formula();
                 fi.read(f.getStringArgument(i));
-                kifFormula.append(" ");
+                kifFormula.append(Formula.SPACE);
                 argi = toTHF2(fi);
-                resTerm.append(" ").append(op_thf).append(" ").append(argi);
+                resTerm.append(Formula.SPACE).append(op_thf).append(Formula.SPACE).append(argi);
             }
         }
-        resTerm.append(")");
-        kifFormula.append(")");
+        resTerm.append(Formula.RP);
+        kifFormula.append(Formula.RP);
         // we also remember the new type information we gained for the resulting term; this is
         // very important
         terms.put(resTerm.toString(),goalTp);
@@ -804,7 +804,7 @@ public class THF {
         Formula varlistF = new Formula();
         varlistF.read(varlist);
         StringBuilder resTerm = new StringBuilder();
-        resTerm.append("(").append(quant_thf).append(" [");
+        resTerm.append(Formula.LP).append(quant_thf).append(" [");
         int len = varlistF.listLength();
         String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
@@ -826,7 +826,7 @@ public class THF {
                 resTerm.append(",").append(varTHF).append(": ").append(terms.get(varTHF));
             }
         }
-        resTerm.append("]: ").append(arg2FTHF).append(")");
+        resTerm.append("]: ").append(arg2FTHF).append(Formula.RP);
         terms.put(resTerm.toString(),boolTp);
         return resTerm.toString();
     }
@@ -854,8 +854,8 @@ public class THF {
         arg2F.read(arg2);
         String arg2FTHF = toTHF1(arg2F,boolTp,relTpInfo);
         String varTHFtype = (String) terms.get(varTHF);
-        resTerm.append("(").append(kappa_thf).append(" [").append(varTHF).append(": ").append(varTHFtype).append("]: ").append(arg2FTHF).append(")");
-        terms.put(resTerm.toString(),"(" + varTHFtype + typeDelimiter + boolTp + ")");
+        resTerm.append(Formula.LP).append(kappa_thf).append(" [").append(varTHF).append(": ").append(varTHFtype).append("]: ").append(arg2FTHF).append(Formula.RP);
+        terms.put(resTerm.toString(),Formula.LP + varTHFtype + typeDelimiter + boolTp + Formula.RP);
         return resTerm.toString();
     }
 
@@ -872,11 +872,11 @@ public class THF {
 
         THFdebugOut("\n  Debug: universal quantifier at head position in " + f.getFormula());
         String varlist = f.getStringArgument(1);
-        kifFormula.append("(").append(quant_sumo).append(" ").append(varlist).append(" ");
+        kifFormula.append(Formula.LP).append(quant_sumo).append(Formula.SPACE).append(varlist).append(Formula.SPACE);
         Formula varlistF = new Formula();
         varlistF.read(varlist);
         StringBuilder resTerm = new StringBuilder();
-        resTerm.append("(").append(quant_thf).append(" [");
+        resTerm.append(Formula.LP).append(quant_thf).append(" [");
         int len = varlistF.listLength();
         String arg2 = f.getStringArgument(2);
         Formula arg2F = new Formula();
@@ -893,8 +893,8 @@ public class THF {
                 resTerm.append(",").append(varTHF).append(": ").append(terms.get(varTHF));
             }
         }
-        resTerm.append("]: ").append(arg2FTHF).append(")");
-        kifFormula.append(")");
+        resTerm.append("]: ").append(arg2FTHF).append(Formula.RP);
+        kifFormula.append(Formula.RP);
         terms.put(resTerm.toString(),boolTp);
         return resTerm.toString();
     }
@@ -915,7 +915,7 @@ public class THF {
         THFdebugOut("\n  Debug: KappaFn at head position in " + f.getFormula());
         StringBuilder resTerm = new StringBuilder();
         String var = f.getStringArgument(1);
-        kifFormula.append("(").append(kappa_sumo).append(" ").append(var).append(" ");
+        kifFormula.append(Formula.LP).append(kappa_sumo).append(Formula.SPACE).append(var).append(Formula.SPACE);
         String varTHF = toTHFKifVar(var);
         terms.put(varTHF,unknownTp);
         String arg2 = f.getStringArgument(2);
@@ -923,9 +923,9 @@ public class THF {
         arg2F.read(arg2);
         String arg2FTHF = toTHF2(arg2F);
         String varTHFtype = groundType("NOT_APPLICABLE",(String) terms.get(varTHF));
-        resTerm.append("(").append(kappa_thf).append(" [").append(varTHF).append(": ").append(varTHFtype).append("]: ").append(arg2FTHF).append(")");
-        kifFormula.append(")");
-        terms.put(resTerm.toString(),"(" + varTHFtype + typeDelimiter + boolTp + ")");
+        resTerm.append(Formula.LP).append(kappa_thf).append(" [").append(varTHF).append(": ").append(varTHFtype).append("]: ").append(arg2FTHF).append(Formula.RP);
+        kifFormula.append(Formula.RP);
+        terms.put(resTerm.toString(),Formula.LP + varTHFtype + typeDelimiter + boolTp + Formula.RP);
         return resTerm.toString();
     }
 
@@ -960,7 +960,7 @@ public class THF {
      */
     private List addStr(String str, List accu) {
 
-        // THFdebugOut("\n   Enter addStr with: " + str + " " + accu);
+        // THFdebugOut("\n   Enter addStr with: " + str + Formula.SPACE + accu);
         List reslist;
         if (accu.isEmpty()) {
             reslist = Arrays.asList(str);
@@ -988,7 +988,7 @@ public class THF {
         THFdebugOut("\n   Enter toTHFList with: " + thfTp);
         List res;
         List help = toTHFListH(thfTp,0,Arrays.asList());
-        if (!thfTp.startsWith("(")) {
+        if (!thfTp.startsWith(Formula.LP)) {
             res = help;
         }
         else if (help.size() == 1) {
@@ -1018,7 +1018,7 @@ public class THF {
      */
     private List toTHFListH(String thfTp, int i, List accu) {
 
-        THFdebugOut("\n   Enter toTHFListH with: " + thfTp + " " + i + " " + accu.toString());
+        THFdebugOut("\n   Enter toTHFListH with: " + thfTp + Formula.SPACE + i + Formula.SPACE + accu.toString());
         List reslist = new ArrayList();
         // thfTp is base type
         if (i == 0) {
@@ -1038,7 +1038,7 @@ public class THF {
                 reslist.add(problemTp);
             }
             // in all other case thfTp must be of form (tp1 > ... > tpn)
-            else if (thfTp.startsWith("(")) {
+            else if (thfTp.startsWith(Formula.LP)) {
                 reslist = toTHFListH(thfTp.substring(1),1,accu);
             }
             // there is no other case
@@ -1047,10 +1047,10 @@ public class THF {
             }
         }
         else if (i == 1) {
-            if (thfTp.startsWith("(")) {
-                reslist = toTHFListH(thfTp.substring(1),2,addStr("(",accu));
+            if (thfTp.startsWith(Formula.LP)) {
+                reslist = toTHFListH(thfTp.substring(1),2,addStr(Formula.LP,accu));
             }
-            else if (thfTp.startsWith(")")) {
+            else if (thfTp.startsWith(Formula.RP)) {
                 reslist = toTHFListH(thfTp.substring(1),0,accu);
             }
             else if (thfTp.startsWith(">")) {
@@ -1073,11 +1073,11 @@ public class THF {
             }
         }
         else if (i > 1) {
-            if (thfTp.startsWith("(")) {
-                reslist = toTHFListH(thfTp.substring(1),i + 1,addStr("(",accu));
+            if (thfTp.startsWith(Formula.LP)) {
+                reslist = toTHFListH(thfTp.substring(1),i + 1,addStr(Formula.LP,accu));
             }
-            else if (thfTp.startsWith(")")) {
-                reslist = toTHFListH(thfTp.substring(1),i - 1,addStr(")",accu));
+            else if (thfTp.startsWith(Formula.RP)) {
+                reslist = toTHFListH(thfTp.substring(1),i - 1,addStr(Formula.RP,accu));
             }
             else {
                 Pattern p = Pattern.compile("([a-zA-Z$>]?).*");
@@ -1110,11 +1110,11 @@ public class THF {
             result.append(unknownTp);
         }
         else {
-            result.append("(" + unknownTp);
+            result.append(Formula.LP + unknownTp);
             for (int i = 2; i <= num; i++) {
                 result.append(typeDelimiter + unknownTp);
             }
-            result.append(")");
+            result.append(Formula.RP);
         }
         return result.toString();
     }
@@ -1341,7 +1341,7 @@ public class THF {
                 result.append(toTHFQuant1(f,"!",relTpInfo));
             }
             else if (h.equals(Formula.EQUANT)) {
-                result.append(toTHFQuant1(f,"?",relTpInfo));
+                result.append(toTHFQuant1(f,Formula.V_PREF,relTpInfo));
             }
             /* we treat the case where h is the KappaFN */
             else if (h.equals(Formula.KAPPAFN)) {
@@ -1365,8 +1365,8 @@ public class THF {
                 else {
                     hconv = toTHFKifConst(h);
                 }
-                resTerm.append("(").append(hconv);
-                resType.append("(");
+                resTerm.append(Formula.LP).append(hconv);
+                resType.append(Formula.LP);
                 int len = f.listLength();
                 List<String> typeInfo = new ArrayList<>();
                 String goalTp = null;
@@ -1443,8 +1443,8 @@ public class THF {
                     }
                 }
                 // use the freshly computed type information to (re-)declare the type information for the head symbol hconv
-                resTerm.append(")");
-                resType.append(goalTp).append(")");
+                resTerm.append(Formula.RP);
+                resType.append(goalTp).append(Formula.RP);
                 THFdebugOut("\n   Debug: declaring: " + hconv + " of type " + resType.toString());
                 terms.put(hconv,resType.toString());
                 if (!isKifVar(h)) {
@@ -1497,7 +1497,7 @@ public class THF {
                 result.append((String) entry).append(typeDelimiter);
             }
             else if (entry instanceof java.util.List) {
-                result.append("(").append(toTHFTpList((List) entry)).append(")");
+                result.append(Formula.LP).append(toTHFTpList((List) entry)).append(Formula.RP);
             }
         }
         Object entry0 = l.get(0);
@@ -1505,7 +1505,7 @@ public class THF {
             result.append((String) entry0);
         }
         else if (entry0 instanceof java.util.List) {
-            result.append("(").append(toTHFTpList((List) entry0)).append(")");
+            result.append(Formula.LP).append(toTHFTpList((List) entry0)).append(Formula.RP);
         }
         THFdebugOut("\n   Exit toTHFTpList with " + result.toString());
         return result.toString();
@@ -1624,8 +1624,8 @@ public class THF {
         /* the formula has form (h arg1 ... argN) */
         else {
             String h = f.getStringArgument(0);
-            String arith_pred_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + boolTp + ")";
-            String arith_op_tp = "(" + indTp + typeDelimiter + indTp + typeDelimiter + indTp + ")";
+            String arith_pred_tp = Formula.LP + indTp + typeDelimiter + indTp + typeDelimiter + boolTp + Formula.RP;
+            String arith_op_tp = Formula.LP + indTp + typeDelimiter + indTp + typeDelimiter + indTp + Formula.RP;
             /* documentation formulas are not translated */
             if (h.equals("documentation")  || h.equals("document")  || h.equals("synonymousExternalConcept") ||
                     h.equals("termFormat") || h.equals("names") || h.equals("abbreviation")  ||
@@ -1706,7 +1706,7 @@ public class THF {
                 result.append(toTHFQuant2(f,Formula.UQUANT,"!"));
             }
             else if (h.equals(Formula.EQUANT)) {
-                result.append(toTHFQuant2(f,Formula.EQUANT,"?"));
+                result.append(toTHFQuant2(f,Formula.EQUANT,Formula.V_PREF));
             }
             /* we treat the case where h is the KappaFN */
             else if (h.equals(Formula.KAPPAFN)) {
@@ -1728,10 +1728,10 @@ public class THF {
                 else {
                     hconv = toTHFKifConst(h);
                 }
-                resTerm.append("(");
-                kifFormula.append("(");
+                resTerm.append(Formula.LP);
+                kifFormula.append(Formula.LP);
                 int marker1 = kifFormula.length();
-                resType.append("(");
+                resType.append(Formula.LP);
                 int len = f.listLength();
                 String headTpOld = (String) terms.get(hconv);
                 List typeInfo;
@@ -1751,7 +1751,7 @@ public class THF {
                     argi = (f.getStringArgument(i));
                     argiF = new Formula();
                     argiF.read(argi);
-                    kifFormula.append(" ");
+                    kifFormula.append(Formula.SPACE);
                     // String argiFTHF = "";
                     // if (isKifVar(argi) || isKifConst(argi) {
                     //    argiFTHF = toTHFKifVar(argi);
@@ -1773,7 +1773,7 @@ public class THF {
                 if (goalTp.equals(unknownTp)) {
                     goalTp = indTp;
                 }
-                resType.append(goalTp).append(")");
+                resType.append(goalTp).append(Formula.RP);
                 String headNew;
                 String headNewKif;
                 if (isKifVar(h)) {
@@ -1792,9 +1792,9 @@ public class THF {
                     //}
                 }
                 resTerm.insert(1,headNew);
-                resTerm.append(")");
+                resTerm.append(Formula.RP);
                 kifFormula.insert(marker1,headNewKif);
-                kifFormula.append(")");
+                kifFormula.append(Formula.RP);
                 THFdebugOut("\n   Debug: declaring: " + headNew + " of type " + resType.toString());
                 terms.put(headNew,resType.toString());
                 if (!isKifVar(h)) {

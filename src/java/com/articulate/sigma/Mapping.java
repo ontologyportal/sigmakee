@@ -97,10 +97,10 @@ public class Mapping {
                 term2 = st.substring(i+1);
                 if (!subcheckbox)
                     pw.println("(synonymousExternalConcept \"" + term2 +
-                               "\" " + term1 + " " + kbname2 + ")");
+                               "\" " + term1 + Formula.SPACE + kbname2 + Formula.RP);
                 else
                     pw.println("(subsumedExternalConcept \"" + term2 +
-                               "\" " + term1 + " " + kbname2 + ")");
+                               "\" " + term1 + Formula.SPACE + kbname2 + Formula.RP);
 
             }
         }
@@ -146,11 +146,11 @@ public class Mapping {
                     kb2.rename(term2,term1);
                 if (cbset.contains(subName)) {
                     if (kb2.isInstance(term2)) {
-                        kb2.tell("(instance " + term2 + " " + term1 + ")");
-                        System.out.println("(instance " + term2 + " " + term1 + ")");
+                        kb2.tell("(instance " + term2 + Formula.SPACE + term1 + Formula.RP);
+                        System.out.println("(instance " + term2 + Formula.SPACE + term1 + ")");
                     }
                     else {
-                        kb2.tell("(subclass " + term2 + " " + term1 + ")");
+                        kb2.tell("(subclass " + term2 + Formula.SPACE + term1 + Formula.RP);
                         System.out.println("(subclass " + term2 + " " + term1 + ")");
                     }
                 }
@@ -368,12 +368,12 @@ public class Mapping {
             else {
                 if (Character.isLetter(s.charAt(i)) && Character.isUpperCase(s.charAt(i))) {
                     if (result.length() > 0 && result.charAt(result.length()-1) != ' ')
-                        result.append(" ");
+                        result.append(Formula.SPACE);
                     result.append(Character.toLowerCase(s.charAt(i)));
                 }
                 else
                     if (result.length() > 0 && result.charAt(result.length()-1) != ' ')
-                        result.append(" ");
+                        result.append(Formula.SPACE);
             }
         }
         return result.toString();

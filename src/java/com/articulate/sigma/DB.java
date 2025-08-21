@@ -777,7 +777,7 @@ public class DB {
                 for (Iterator its = statements.iterator(); its.hasNext();) {
                     f = (Formula) its.next();
                     arg1 = f.getStringArgument(1);
-                    if (Character.isUpperCase(arg1.charAt(0)) && !arg1.endsWith("Fn")) {
+                    if (Character.isUpperCase(arg1.charAt(0)) && !arg1.endsWith(Formula.FN_SUFF)) {
                         if (!usedRelations.contains(term))
                             usedRelations.add(term);
                         arg2 = f.getStringArgument(2);

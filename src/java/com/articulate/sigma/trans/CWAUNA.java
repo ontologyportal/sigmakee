@@ -29,7 +29,7 @@ public class CWAUNA {
         sb.append("fof(").append(name).append(",axiom,");
         sb.append("$distinct(");
         for (String arg : allArgs) {
-            sb.append("s__").append(arg).append(",\n");
+            sb.append(Formula.TERM_SYMBOL_PREFIX).append(arg).append(",\n");
         }
         sb.delete(sb.length()-2,sb.length());
         sb.append(")).");

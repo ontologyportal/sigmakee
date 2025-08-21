@@ -880,13 +880,13 @@ public class KB implements Serializable {
 
         StringBuilder b = new StringBuilder();
         if (literal instanceof List) {
-            b.append("(");
+            b.append(Formula.LP);
             for (int i = 0; i < literal.size(); i++) {
                 if (i > 0)
-                    b.append(" ");
+                    b.append(Formula.SPACE);
                 b.append(literal.get(i));
             }
-            b.append(")");
+            b.append(Formula.RP);
         }
         return b.toString();
     }
@@ -1834,9 +1834,9 @@ public class KB implements Serializable {
                 if (processedQuery.size() > 1) {
                     combined.append("(or ");
                     for (Formula p : processedQuery) {
-                        combined.append(p.getFormula()).append(" ");
+                        combined.append(p.getFormula()).append(Formula.SPACE);
                     }
-                    combined.append(")");
+                    combined.append(Formula.RP);
                     String theTHFstatement =
                             thf.oneKIF2THF(new Formula(combined.toString()), true, this).trim(); // true - it's a query
                     thfquery.add(theTHFstatement);
@@ -1904,9 +1904,9 @@ public class KB implements Serializable {
                     if (processedStmts.size() > 1) {
                         combined.append("(or ");
                         for (Formula p : processedStmts) {
-                            combined.append(p.getFormula()).append(" ");
+                            combined.append(p.getFormula()).append(Formula.SPACE);
                         }
-                        combined.append(")");
+                        combined.append(Formula.RP);
                         String theTPTPstatement = SUMOKBtoTPTPKB.lang + "(query" + "_" + axiomIndex++ +
                                 ",conjecture,(" +
                                 SUMOformulaToTPTPformula.tptpParseSUOKIFString(combined.toString(), true) // true - it's a query
@@ -2170,7 +2170,7 @@ public class KB implements Serializable {
             LeoInputFileW.write(LeoProblem);
             LeoInputFileW.close();
 
-            String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + " "
+            String command = LeoExecutableFile.getCanonicalPath() + " -po 1 -t " + timeout + Formula.SPACE
                     + LeoInputFile.getCanonicalPath();
 
             Process leo = Runtime.getRuntime().exec(command);
@@ -2206,7 +2206,7 @@ public class KB implements Serializable {
         //System.out.println("KB.termDepth(): " + term);
         if (term.endsWith("+"))
             term = term.substring(0,term.length()-1);
-        if (term.startsWith("(")) {
+        if (term.startsWith(Formula.LP)) {
             System.out.println("KB.termDepth(): warning - composite term: " + term);
             Formula f = new Formula(term);
             String arg1 = f.getStringArgument(1);
@@ -3256,7 +3256,7 @@ public class KB implements Serializable {
                 Iterator<String> it = ai.iterator();
                 while (it.hasNext()) {
                     inst = (String) it.next();
-                    fStr = ("(instance " + inst + " " + className + ")");
+                    fStr = ("(instance " + inst + Formula.SPACE + className + Formula.RP);
                     f = new Formula();
                     f.read(fStr);
                     ans.add(f);
@@ -3272,7 +3272,7 @@ public class KB implements Serializable {
                     inst = (String) it.next();
                     valence = kbCache.valences.get(inst);
                     if (valence > 0) {
-                        String fStr = ("(valence " + inst + " " + valence + ")");
+                        String fStr = ("(valence " + inst + Formula.SPACE + valence + Formula.RP);
                         Formula f = new Formula();
                         f.read(fStr);
                         ans.add(f);
@@ -3429,7 +3429,7 @@ public class KB implements Serializable {
     public static boolean isVariable(String obj) {
 
         if (StringUtil.isNonEmptyString(obj)) {
-            return (obj.startsWith("?") || obj.startsWith("@"));
+            return (obj.startsWith(Formula.V_PREF) || obj.startsWith(Formula.R_PREF));
         }
         return false;
     }
@@ -3466,8 +3466,8 @@ public class KB implements Serializable {
 
         if (!documentation.contains("[from Wikipedia]"))
             return documentation;
-        int space1 = documentation.indexOf(" ");
-        int space2 = documentation.indexOf(" ",space1);
+        int space1 = documentation.indexOf(Formula.SPACE);
+        int space2 = documentation.indexOf(Formula.SPACE,space1);
         String term = documentation.substring(space1+1,space2);
         return documentation.replace("[from Wikipedia]","[<a href=\"https://en.wikipedia.org/wiki/" + term +
                 "\">from Wikipedia]</a>");

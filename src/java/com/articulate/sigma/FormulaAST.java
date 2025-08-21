@@ -153,14 +153,14 @@ public class FormulaAST {
             return null;
         else {
             Term t;
-            sb.append("(");
+            sb.append(Formula.LP);
             for (int i = 0; i < elems.size(); i++) {
                 t = elems.get(i);
                 sb.append(t.toString());
                 if (i < elems.size() - 1)
-                    sb.append(" ");
+                    sb.append(Formula.SPACE);
             }
-            sb.append(")");
+            sb.append(Formula.RP);
         }
         asString = sb.toString();
         return sb.toString();

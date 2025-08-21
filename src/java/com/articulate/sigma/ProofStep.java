@@ -213,7 +213,7 @@ public class ProofStep {
     public String toString() {
 
         StringBuilder sb = new StringBuilder();
-        sb.append(number).append(". ").append(new Formula(axiom).format("","  ","\n")).append(" ").append(premises).append(" ");
+        sb.append(number).append(". ").append(new Formula(axiom).format("","  ","\n")).append(Formula.SPACE).append(premises).append(Formula.SPACE);
         if (inferenceType.startsWith("kb_")) {
             Formula originalF = SUMOKBtoTPTPKB.axiomKey.get(inferenceType);
             if (originalF != null) {

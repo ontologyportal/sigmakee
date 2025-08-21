@@ -39,7 +39,7 @@ public class FormulaUtil {
 
         StringBuilder sb = new StringBuilder();
         String car = f.car();
-        sb.append(car).append("(");
+        sb.append(car).append(Formula.LP);
         if (Formula.listP(car)) {
             System.err.println("Error in FormulaUtil.toProlog(): not a simple clause: " + car);
             return "";
@@ -55,7 +55,7 @@ public class FormulaUtil {
             }
             sb.append(arg);
         }
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -78,7 +78,7 @@ public class FormulaUtil {
         //System.out.println("getLiteralWithPredAndRowVar(): pred,f: " + pred + ", " + f);
         if (f == null || !f.listP())
             return null;
-        if (f.car().equals(pred) && f.getFormula().contains("@"))
+        if (f.car().equals(pred) && f.getFormula().contains(Formula.R_PREF))
             return f.getFormula();
         List<Formula> lits = f.complexArgumentsToArrayList(0);
         String result;
@@ -129,11 +129,12 @@ public class FormulaUtil {
             permutations.add(prefix);
         }
         else {
+            int[] newPrefix, leftovers;
             for (int i = 0; i < n; i++) {
                 if (validateFn.test(prefix.length, array[i])) {
-                    int[] newPrefix = Arrays.copyOf(prefix, prefix.length + 1);
+                    newPrefix = Arrays.copyOf(prefix, prefix.length + 1);
                     newPrefix[prefix.length] = array[i];
-                    int[] leftovers = new int[n - 1];
+                    leftovers = new int[n - 1];
                     System.arraycopy(array, 0, leftovers, 0, i);
                     for (int j = i + 1; j < n; j++) {
                         leftovers[j - 1] = array[j];
@@ -194,15 +195,15 @@ public class FormulaUtil {
                     Formula f = new Formula();
                     f.read(tree);
                     List tuple = f.literalToArrayList();
-                    sb.append("(");
+                    sb.append(Formula.LP);
                     int i = 0;
                     for (Iterator it = tuple.iterator(); it.hasNext(); i++) {
-                        if (i > 0) sb.append(" ");
+                        if (i > 0) sb.append(Formula.SPACE);
                         sb.append(treeReplace(oldPattern,
                                 newTerm,
                                 (String) it.next()));
                     }
-                    sb.append(")");
+                    sb.append(Formula.RP);
                 }
             } else {
                 sb.append(tree);
