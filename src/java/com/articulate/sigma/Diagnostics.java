@@ -1142,8 +1142,7 @@ public class Diagnostics {
         List<String> simpleArgs;
         List<Formula> complexArgs;
         Map<String, Set<String>> tempMap;
-
-        // check if formula is a simple argument
+        Set<String> linkedVars;
         if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
             simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
             variables = new HashSet<>();
@@ -1151,17 +1150,29 @@ public class Diagnostics {
                 if (new Formula(arg).isVariable())
                     variables.add(arg); // extracts ?H from (instance ?H Human)
             }
-            if (!variables.isEmpty())
-                links.put(f.getFormula(), variables);
-        }
-        else { // recursive case
+            for (String var : variables) {
+                linkedVars = new HashSet<>(variables);
+                linkedVars.remove(var); // prevents self links (?X -> {?X})
+                if (links.containsKey(var)) { // if the variable already exists in the map
+                    links.get(var).addAll(linkedVars); // merges other variables that exists for var
+                } else {
+                    links.put(var, linkedVars); // create a new entry with the variable and its linked variables
+                }
+            }
+        } else { // recursive case
             if (Formula.isQuantifier(f.car()))
                 complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
             else
                 complexArgs = f.complexArgumentsToArrayList(1);
             for (Formula complexForm : complexArgs) {
                 tempMap = getVariableLinks(complexForm, kb);
-                links.putAll(tempMap);
+                for (String key : tempMap.keySet()) {
+                    if (links.containsKey(key)) { // if the variable already exists in the map
+                        links.get(key).addAll(tempMap.get(key)); // add the linked variables to the existing set
+                    } else {
+                        links.put(key, new HashSet<>(tempMap.get(key)));
+                    }
+                }
             }
         }
         return links;
