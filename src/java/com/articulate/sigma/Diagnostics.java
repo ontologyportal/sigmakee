@@ -17,7 +17,11 @@ import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Stream;
 
 /** *****************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
@@ -905,7 +909,7 @@ public class Diagnostics {
                     answer.append(a);
 
                     negatedQuery = new StringBuilder();
-                    negatedQuery.append("(not ").append(processedQuery).append(")");
+                    negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
                     proof = empty.askEProver(negatedQuery.toString(),timeout,maxAnswers) + " ";
                     a.append(reportAnswer(kb,proof,query,negatedQuery.toString(),"Inconsistency"));
                     if (a.length() != 0) {
@@ -1186,11 +1190,12 @@ public class Diagnostics {
      */
     public static void main(String args[]) {
 
-        if (args.length > 0) {
+        if (args != null && args.length > 0) {
             for (int i = 0; i < args.length; i++) {
                 System.out.println("Arg[" + i + "]: '" + args[i] + "'");
             }
-        }
+        } else
+            showHelp();
 
         KBmanager.getMgr().initializeOnce();
         //resultLimit = 0; // don't limit number of results on command line
@@ -1228,34 +1233,49 @@ public class Diagnostics {
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
         }
-        else if (args != null && args.length > 0 && args[0].equals("-v")) {
-             Formula simpleFormula = new Formula("(instance ?H Human)");
+        else if (args != null && args.length == 2 && args[0].equals("-v")) {
+//             Formula simpleFormula = new Formula("(instance ?H Human)");
+////             Formula complexFormula = new Formula("(=>\n" +
+////                                                  "  (and\n" +
+////                                                  "    (P ?A ?B)\n" +
+////                                                  "    (P ?B ?C))\n" +
+////                                                  "  (exists (?X ?Z)\n" +
+////                                                  "    (and\n" +
+////                                                  "      (Q ?X)\n" +
+////                                                  "      (M ?Z ?C))))"
+////                                                 );
+//
 //             Formula complexFormula = new Formula("(=>\n" +
-//                                                  "  (and\n" +
-//                                                  "    (P ?A ?B)\n" +
-//                                                  "    (P ?B ?C))\n" +
-//                                                  "  (exists (?X ?Z)\n" +
-//                                                  "    (and\n" +
-//                                                  "      (Q ?X)\n" +
-//                                                  "      (M ?Z ?C))))"
+//                                                    "  (instance ?WARGAMING Wargaming)\n" +
+//                                                    "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
+//                                                    "    (and\n" +
+//                                                    "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
+//                                                    "      (instance ?SIMULATION Imagining)\n" +
+//                                                    "      (instance ?TOOL Device)\n" +
+//                                                    "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
+//                                                    "      (patient ?WARGAMING ?SIMULATION)\n" +
+//                                                    "      (instrument ?WARGAMING ?TOOL))))"
 //                                                 );
+//
+//             varLinksParentMap.putAll(getVariableLinks(complexFormula, kb));
+//             System.out.println("varLinksParentMap: " + varLinksParentMap);
 
-             Formula complexFormula = new Formula("(=>\n" +
-                                                    "  (instance ?WARGAMING Wargaming)\n" +
-                                                    "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
-                                                    "    (and\n" +
-                                                    "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
-                                                    "      (instance ?SIMULATION Imagining)\n" +
-                                                    "      (instance ?TOOL Device)\n" +
-                                                    "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
-                                                    "      (patient ?WARGAMING ?SIMULATION)\n" +
-                                                    "      (instrument ?WARGAMING ?TOOL))))"
-                                                 );
+            String path = args[1];
+            Path inPath = Paths.get(path);
+            try (Stream<Path> paths = Files.walk(inPath)) {
+                paths.filter(f -> f.toString().endsWith(".kif")).sorted().forEach(f -> {
+                    String s = String.join("\n", FileUtil.readLines(args[1]));
+                    Formula kifFormula = new Formula(s);
+                    varLinksParentMap.putAll(getVariableLinks(kifFormula, kb));
+                });
 
-             varLinksParentMap.putAll(getVariableLinks(complexFormula, kb));
-             System.out.println("varLinksParentMap: " + varLinksParentMap);
+                for (String key : varLinksParentMap.keySet()) {
+                    System.out.println("  " + key + " -> " + varLinksParentMap.get(key));
+                }
+            } catch (IOException e) {
+                System.err.println("Error processing input: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
-        else
-            showHelp();
     }
 }

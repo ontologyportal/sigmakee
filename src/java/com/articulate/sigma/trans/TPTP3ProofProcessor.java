@@ -68,11 +68,11 @@ public class TPTP3ProofProcessor {
         sb.append("Answers:");
         if (bindingMap != null && !bindingMap.keySet().isEmpty()) {
             for (String s : bindingMap.keySet()) {
-                sb.append(s).append(" = ").append(bindingMap.get(s)).append(" ");
+                sb.append(s).append(" = ").append(bindingMap.get(s)).append(Formula.SPACE);
             }
         } else {
             for (String s : bindings) {
-                sb.append(s).append(" ");
+                sb.append(s).append(Formula.SPACE);
             }
         }
         sb.append("\n");
@@ -223,16 +223,16 @@ public class TPTP3ProofProcessor {
 
         String inferenceType = null;
         if (supportId.startsWith("inference(")) {
-            int firstParen = supportId.indexOf("(");
+            int firstParen = supportId.indexOf(Formula.LP);
             int firstComma = supportId.indexOf(",");
             inferenceType = supportId.substring(firstParen + 1, firstComma);
         } else if (supportId.startsWith("file(")) {
-            int firstParen = supportId.indexOf("(");
+            int firstParen = supportId.indexOf(Formula.LP);
             int firstComma = supportId.indexOf(",");
-            int secondParen = supportId.indexOf(")", firstComma + 1);
+            int secondParen = supportId.indexOf(Formula.RP, firstComma + 1);
             inferenceType = supportId.substring(firstComma + 1, secondParen);
         } else if (supportId.startsWith("introduced(")) {
-            int firstParen = supportId.indexOf("(");
+            int firstParen = supportId.indexOf(Formula.LP);
             int firstComma = supportId.indexOf(",");
             inferenceType = "introduced:" + supportId.substring(firstParen + 1, firstComma);
         }
@@ -276,7 +276,7 @@ public class TPTP3ProofProcessor {
                 if (debug) {
                     System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet1);
                 }
-                if (!supportSet1.contains("(")) {
+                if (!supportSet1.contains(Formula.LP)) {
                     if (!supportSet1.trim().startsWith("[symmetry]")) {
                         stepnum = getNumFromIDtable(supportSet1.trim());
                         if (stepnum == null) {
@@ -358,9 +358,9 @@ public class TPTP3ProofProcessor {
                     ps.input = line;
                     ps.premises.addAll(supportIdToInts(tptpF.supports));
                     if (tptpF.supports != null && tptpF.supports.size() == 1 && tptpF.supports.get(0).startsWith("file(")) {
-                        firstParen = tptpF.supports.get(0).indexOf("(");
+                        firstParen = tptpF.supports.get(0).indexOf(Formula.LP);
                         firstComma = tptpF.supports.get(0).indexOf(",");
-                        secondParen = tptpF.supports.get(0).indexOf(")", firstComma + 1);
+                        secondParen = tptpF.supports.get(0).indexOf(Formula.RP, firstComma + 1);
                         ps.sourceID = tptpF.supports.get(0).substring(firstComma + 1, secondParen);
                     }
                 }
@@ -542,7 +542,7 @@ public class TPTP3ProofProcessor {
         if (qlist != null && qlist.length() > 0) {
             List<String> qvarslist = Arrays.asList(qlist.toString().split(","));
             for (String s : qvarslist) {
-                news = s.replace("V__", "?");
+                news = s.replace(Formula.TERM_VARIABLE_PREFIX, Formula.V_PREF);
                 qvars.add(news);
             }
         }
@@ -559,7 +559,7 @@ public class TPTP3ProofProcessor {
                 System.out.println("processAnswersFromProof(): ps: " + ps);
             }
             if (ps != null && !StringUtil.emptyString(ps.sumo)
-                    && ps.sumo.contains("ans0") && !ps.sumo.contains("?")) {
+                    && ps.sumo.contains("ans0") && !ps.sumo.contains(Formula.V_PREF)) {
                 if (debug) {
                     System.out.println("processAnswersFromProof(): has ans clause: " + ps);
                 }
@@ -694,8 +694,8 @@ public class TPTP3ProofProcessor {
     private String removeEsk(String line) {
 
         if (isSkolemRelation(line)) {
-            int leftParen = line.indexOf("(");
-            int rightParen = line.indexOf(")");
+            int leftParen = line.indexOf(Formula.LP);
+            int rightParen = line.indexOf(Formula.RP);
             if (leftParen != -1 && rightParen != -1) {
                 return line.substring(leftParen + 1, rightParen);
             }
@@ -710,7 +710,7 @@ public class TPTP3ProofProcessor {
     private String removePrefix(String st) {
 
         //System.out.println("TPTP3ProofProcessor.removePrefix(): " + st);
-        String tsp = Formula.termSymbolPrefix;
+        String tsp = Formula.TERM_SYMBOL_PREFIX;
         if (st.startsWith(tsp)) {
             return st.substring(tsp.length(), st.length());
         } else {
@@ -807,8 +807,8 @@ public class TPTP3ProofProcessor {
                 if (line.contains(szs_status)) {
                     idx = line.indexOf(szs_status);
                     scratch = line.substring(idx + szs_status.length()).trim();
-                    if (scratch.contains(" ")) {
-                        idx = scratch.indexOf(" ");
+                    if (scratch.contains(Formula.SPACE)) {
+                        idx = scratch.indexOf(Formula.SPACE);
                         status = scratch.substring(0, idx);
                     }
                     else

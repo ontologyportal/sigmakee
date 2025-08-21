@@ -45,7 +45,7 @@ public class TestSQUAD {
                     SUMOtoTFAform.errors.clear();
                     typeError = !KButilities.hasCorrectTypes(kb,f);
                     for (String t : terms) {
-                        if (!kb.containsTerm(t) && !t.startsWith("?") && !t.equals("You") &&
+                        if (!kb.containsTerm(t) && !t.startsWith(Formula.V_PREF) && !t.equals("You") &&
                                 !t.equals("Now") && !StringUtil.isNumeric(t) && !StringUtil.quoted(t)) {
                             System.out.println("term not in KB: " + t);
                             termMissing = true;

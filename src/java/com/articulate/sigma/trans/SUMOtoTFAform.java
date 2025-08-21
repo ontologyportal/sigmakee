@@ -394,10 +394,10 @@ public class SUMOtoTFAform {
                         isRat = true;
                     if (type != null && (type.equals("RealNumber") || kb.isSubclass(type,"RealNumber")))
                         isReal = true;
-                    argsStr.append(argResult + " ");
+                    argsStr.append(argResult + Formula.SPACE);
                 }
                 else
-                    argsStr.append(s + " ");
+                    argsStr.append(s + Formula.SPACE);
             }
             argsStr.deleteCharAt(argsStr.length()-1);
             String suffix = "";
@@ -418,15 +418,15 @@ public class SUMOtoTFAform {
                     suffix = "__1Re2Re";
             }
             if (suffix != "" && isMathFunction(car.getFormula()))
-                suffix = suffix + "Fn";
+                suffix = suffix + Formula.FN_SUFF;
             String withSuffix = composeSuffix(car.getFormula(),suffix);
-            f = new Formula("(" + withSuffix + " " + argsStr.toString() + ")");
+            f = new Formula(Formula.LP + withSuffix + Formula.SPACE + argsStr.toString() + Formula.RP);
             //if (isInt || isReal || isRat)
             //    constrainVarsFromFunct(args,suffix.substring(0,4));
         }
         else {
             StringBuilder argsStr = new StringBuilder();
-            ArrayList<String> sig = kb.kbCache.signatures.get(car.toString());
+            List<String> sig = kb.kbCache.signatures.get(car.toString());
             if (args != null) {
                 for (int i = 0; i < args.size(); i++) {
                     String s = args.get(i);
@@ -434,10 +434,10 @@ public class SUMOtoTFAform {
                     if (sig != null && (i+1) < sig.size())
                         type = sig.get(i+1);
                     Formula sf = new Formula(s);
-                    argsStr.append(convertNumericFunctions(sf,type) + " ");
+                    argsStr.append(convertNumericFunctions(sf,type) + Formula.SPACE);
                 }
                 argsStr.deleteCharAt(argsStr.length() - 1);
-                f = new Formula("(" + car.getFormula() + " " + argsStr.toString() + ")");
+                f = new Formula(Formula.LP + car.getFormula() + Formula.SPACE + argsStr.toString() + Formula.RP);
             }
         }
         return f;
@@ -478,7 +478,7 @@ public class SUMOtoTFAform {
                 if (op.equals("exists"))
                     opStr = " ? ";
                 //if (debug) System.out.println("SUMOtoTFAform.processQuant(): quantified formula: " + args.get(1));
-                return "(" + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
+                return Formula.LP + opStr + "[" + varStr.toString().substring(0,varStr.length()-2) + "] : (" +
                         processRecurse(new Formula(args.get(2)),parentType) + "))";
             }
             else {
@@ -504,11 +504,11 @@ public class SUMOtoTFAform {
         if (op.equals(Formula.XOR))
             tptpOp = "<~>";
         StringBuilder sb = new StringBuilder();
-        sb.append("(").append(processRecurse(new Formula(args.get(1)),parentType));
+        sb.append(Formula.LP).append(processRecurse(new Formula(args.get(1)),parentType));
         for (int i = 2; i < args.size(); i++) {
-            sb.append(" ").append(tptpOp).append(" ").append(processRecurse(new Formula(args.get(i)),parentType));
+            sb.append(Formula.SPACE).append(tptpOp).append(Formula.SPACE).append(processRecurse(new Formula(args.get(i)),parentType));
         }
-        sb.append(")");
+        sb.append(Formula.RP);
         return sb.toString();
     }
 
@@ -527,8 +527,8 @@ public class SUMOtoTFAform {
                 return "";
             }
             else
-                return "(" + processRecurse(new Formula(args.get(1)),parentType) + " => " +
-                        processRecurse(new Formula(args.get(2)),parentType) + ")";
+                return Formula.LP + processRecurse(new Formula(args.get(1)),parentType) + " => " +
+                        processRecurse(new Formula(args.get(2)),parentType) + Formula.RP;
         }
         if (op.equals(Formula.IFF)) {
             if (args.size() != 3) { // op + 2 args
@@ -551,7 +551,7 @@ public class SUMOtoTFAform {
                 return "";
             }
             else
-                return "~(" + processRecurse(new Formula(args.get(1)),parentType) + ")";
+                return "~(" + processRecurse(new Formula(args.get(1)),parentType) + Formula.RP;
         }
         if (op.equals(Formula.UQUANT) || op.equals(Formula.EQUANT))
             return processQuant(f,car,parentType,op,args);
@@ -634,7 +634,7 @@ public class SUMOtoTFAform {
         if (kb.isFunction(car.getFormula())) {
             if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): " + car + " is a Function: ");
             //newArgTypeMap.set(0, kb.kbCache.getRange(car.getFormula()));
-            suffix = "Fn";
+            suffix = Formula.FN_SUFF;
         }
         else {
             if (debug) System.out.println("SUMOtoTFAform.makePredFromArgTypes(): " + car + "is not a Function: ");
@@ -655,7 +655,7 @@ public class SUMOtoTFAform {
         if (KButilities.isVariableArity(kb,pred)) {
             arityCountStr = Integer.toString(types.size()-1);
             if (kb.isFunction(pred))
-                arityCountStr = arityCountStr + "Fn";
+                arityCountStr = arityCountStr + Formula.FN_SUFF;
         }
         if (SUMOKBtoTFAKB.alreadyExtended(pred))
             return pred;
@@ -717,11 +717,11 @@ public class SUMOtoTFAform {
             processedArgs.add(processRecurse(new Formula(args.get(i)), argType));
         }
         StringBuilder result = new StringBuilder();
-        result.append("s__").append(pred).append("(");
+        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
         for (String arg : processedArgs)
             result.append(arg).append(",");
         result.deleteCharAt(result.length()-1);
-        result.append(")");
+        result.append(Formula.RP);
         if (debug) System.out.println("SUMOtoTFAform.processNumericSuperArgs(): result: " + result);
         return result.toString();
     }
@@ -749,12 +749,12 @@ public class SUMOtoTFAform {
         for (int i = 1; i < args.size(); i++) // arg 0 is ListFn
             processedArgs.add(processRecurse(new Formula(args.get(i)),parentType));
         StringBuilder result = new StringBuilder();
-        result.append("s__").append(pred).append("(");
+        result.append(Formula.TERM_SYMBOL_PREFIX).append(pred).append(Formula.LP);
         for (String arg : processedArgs) {
             result.append(arg).append(",");
         }
         result.deleteCharAt(result.length()-1);
-        result.append(")");
+        result.append(Formula.RP);
         return result.toString();
     }
 
@@ -831,7 +831,7 @@ public class SUMOtoTFAform {
             comparator = "$lesseq(";
         else if (op.startsWith(Formula.LT))
             comparator = "$less(";
-        result = "(" + comparator + lhsResult + "," + rhsResult + "))";
+        result = Formula.LP + comparator + lhsResult + "," + rhsResult + "))";
         if (debug) System.out.println("SUMOtoTFAform.processCompOp(): result: " + result);
         return result;
     }
@@ -842,7 +842,7 @@ public class SUMOtoTFAform {
     public static String getBareTerm(String s) {
 
         String result = s;
-        if (result.startsWith(Formula.termSymbolPrefix))
+        if (result.startsWith(Formula.TERM_SYMBOL_PREFIX))
             result = result.substring(3);
         Pattern p = Pattern.compile("^(.+)__.*");
         Matcher m = p.matcher(result);
@@ -885,12 +885,12 @@ public class SUMOtoTFAform {
         if ("".equals(promote)) {
             System.err.println("Error in SUMOtoTFAform.mixedQuotient() with args: " + args +
                     " and types " + argTypes);
-            return "$quotient" + eSuffix + "(" + processRecurse(lhs,parentType) + " ," +
-                    processRecurse(rhs,parentType) + ")";
+            return "$quotient" + eSuffix + Formula.LP + processRecurse(lhs,parentType) + " ," +
+                    processRecurse(rhs,parentType) + Formula.RP;
         }
         else
-            return "$quotient" + eSuffix + "(" + promote + "(" + processRecurse(lhs,parentType) + ") ," +
-                    promote + "(" + processRecurse(rhs,parentType) + "))";
+            return "$quotient" + eSuffix + Formula.LP + promote + Formula.LP + processRecurse(lhs,parentType) + ") ," +
+                    promote + Formula.LP + processRecurse(rhs,parentType) + "))";
     }
 
     /** *************************************************************
@@ -908,11 +908,11 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): f: " + f);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): sig: " + sig);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): best: " + best);
-        if (!op.startsWith("FloorFn") && !op.startsWith("CeilingFn") && args.size() != 3) {
+        if (!op.startsWith(Formula.FLOORFN) && !op.startsWith(Formula.CEILINGFN) && args.size() != 3) {
             System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
-        if (op.startsWith("FloorFn") && op.startsWith("CeilingFn") && args.size() != 2) {
+        if (op.startsWith(Formula.FLOORFN) && op.startsWith(Formula.CEILINGFN) && args.size() != 2) {
             System.err.println("Error in SUMOtoTFAform.processMathOp(): wrong number of arguments to " + op + " in " + f);
             return "";
         }
@@ -921,43 +921,43 @@ public class SUMOtoTFAform {
         String promotion = numTypePromotion(f,parentType);
         String closeP = "";
         if (promotion != null)
-            closeP = ")";
+            closeP = Formula.RP;
         else
             promotion = "";
-        if (op.startsWith("FloorFn"))
-            return promotion + "$floor(" + processRecurse(arg1, arg1Type) + ")" + closeP;
-        if (op.startsWith("CeilingFn"))
-            return promotion + "$ceiling(" + processRecurse(arg1, arg1Type) + ")" + closeP;
-        if (op.startsWith("RoundFn"))
-            return promotion + "$round(" + processRecurse(arg1, arg1Type) + ")" + closeP;
+        if (op.startsWith(Formula.FLOORFN))
+            return promotion + "$floor(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.CEILINGFN))
+            return promotion + "$ceiling(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.ROUNDFN))
+            return promotion + "$round(" + processRecurse(arg1, arg1Type) + Formula.RP + closeP;
         Formula arg2 = new Formula(args.get(2));
         String arg2Type = best;
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): arg1Type: " + arg1Type);
         if (debug) System.out.println("SUMOtoTFAform.processMathOp(): arg2Type: " + arg2Type);
-        if (op.startsWith("AdditionFn"))
+        if (op.startsWith(Formula.PLUSFN))
             return promotion + "$sum(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + ")" + closeP;
-        if (op.startsWith("SubtractionFn"))
+                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.MINUSFN))
             return promotion + "$difference(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + ")" + closeP;
-        if (op.startsWith("MultiplicationFn"))
+                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.TIMESFN))
             return promotion + "$product(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + ")" + closeP;
-        if (op.startsWith("DivisionFn")) {
+                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
+        if (op.startsWith(Formula.DIVIDEFN)) {
             if (allOfType(args,"Integer"))
                 return promotion + "$quotient_e(" + processRecurse(arg1,"Integer") + " ," +
-                        processRecurse(arg2,"Integer") + ")" + closeP;
+                        processRecurse(arg2,"Integer") + Formula.RP + closeP;
             else {
                 return mixedQuotient(f,op,parentType,args,argTypes);
             }
         }
-        if (op.startsWith("RemainderFn"))
+        if (op.startsWith(Formula.REMAINDERFN))
             if (allOfType(args,"Integer"))
                 return promotion + "$remainder_e(" + processRecurse(arg1,arg1Type) + " ," +
-                    processRecurse(arg2,arg2Type) + ")" + closeP;
+                    processRecurse(arg2,arg2Type) + Formula.RP + closeP;
             else
                 return promotion + "$remainder_t(" + processRecurse(arg1,arg1Type) + " ," +
-                        processRecurse(arg2,arg2Type) + ")" + closeP;
+                        processRecurse(arg2,arg2Type) + Formula.RP + closeP;
         System.err.println("Error in SUMOtoTFAform.processMathOp(): bad math operator " + op + " in " + f);
         return "";
     }
@@ -1021,10 +1021,10 @@ public class SUMOtoTFAform {
         String promotion = numTypePromotion(f,parentType);
         String closeP = "";
         if (promotion != null)
-            closeP = ")";
+            closeP = Formula.RP;
         else
             promotion = "";
-        String result = promotion + "s__" + op + "(" + argStr.substring(0,argStr.length()-2) + ")" + closeP;
+        String result = promotion + Formula.TERM_SYMBOL_PREFIX + op + Formula.LP + argStr.substring(0,argStr.length()-2) + Formula.RP + closeP;
         if (debug) System.out.println("SUMOtoTFAform.processOtherRelation(): result: " + result);
         return result;
     }
@@ -1188,7 +1188,7 @@ public class SUMOtoTFAform {
             String result;
             if (debug) System.out.println("SUMOtoTFAform.processRecurse(): promotion: " + promotion);
             if (promotion != null)
-                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + ")";
+                result = promotion + SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false) + Formula.RP;
             else
                 result = SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,false);
             if (debug) System.out.println("SUMOtoTFAform.processRecurse(): result: " + result);
@@ -1371,7 +1371,7 @@ public class SUMOtoTFAform {
         int i = op.indexOf("__");
         if (i != -1) {
             type = op.substring(i+2,op.length());
-            if (type.endsWith("Fn"))
+            if (type.endsWith(Formula.FN_SUFF))
                 type = type.substring(0,type.length()-2);
             return type;
         }
@@ -1932,8 +1932,8 @@ public class SUMOtoTFAform {
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): suffix: " + suffix);
         //if (isComparisonOperator(op) || op.startsWith("ListFn")  || isMathFunction(op))
         //    composed = composeSuffix(op, suffix);
-        //String result = "(" + composed + " " + StringUtil.arrayListToSpacedString(newargs) + ")";
-        String result = "(" + makePred + " " + StringUtil.arrayListToSpacedString(newargs) + ")";
+        //String result = Formula.LP + composed + Formula.SPACE + StringUtil.arrayListToSpacedString(newargs) + Formula.RP;
+        String result = Formula.LP + makePred + Formula.SPACE + StringUtil.arrayListToSpacedString(newargs) + Formula.RP;
         if (debug) System.out.println("SUMOtoTFAform.constrainOp(): result: " + result);
         return result;
     }
@@ -1962,7 +1962,7 @@ public class SUMOtoTFAform {
         else {
             List<String> sig = kb.kbCache.getSignature(op);
             StringBuilder resultString = new StringBuilder();
-            resultString.append("(").append(op);
+            resultString.append(Formula.LP).append(op);
             List<String> newargs = new ArrayList<>();
             newargs.addAll(args);
             String s, t;
@@ -1971,9 +1971,9 @@ public class SUMOtoTFAform {
                 t = "Entity";
                 if (sig != null && i < sig.size())
                     t = sig.get(i);
-                resultString.append(" ").append(constrainFunctVarsRecurse(new Formula(s),t));
+                resultString.append(Formula.SPACE).append(constrainFunctVarsRecurse(new Formula(s),t));
             }
-            resultString.append(")");
+            resultString.append(Formula.RP);
             //if (debug) System.out.println("SUMOtoTFAform.constrainFunctVarsRecurse(): returning: " + resultString);
             return resultString.toString();
         }
@@ -1995,7 +1995,7 @@ public class SUMOtoTFAform {
             oldt = bestSpecificTerm(oldvartypes);
             if (StringUtil.emptyString(newt) && StringUtil.emptyString(oldt)) {
                 System.err.println("Error in SUMOtoTFAform.constrainTypeRestriction(): empty variables: " +
-                        newt + " " + oldt);
+                        newt + Formula.SPACE + oldt);
                 System.err.println("Error in SUMOtoTFAform.constrainTypeRestriction(): newvarmap: " +
                         newvarmap);
                 Thread.dumpStack();
@@ -2056,11 +2056,11 @@ public class SUMOtoTFAform {
             }
         }
         StringBuilder result = new StringBuilder();
-        result = result.append("(").append(args.get(0));
+        result = result.append(Formula.LP).append(args.get(0));
         for (int i = 1; i < args.size(); i++) {
-            result.append(" ").append(elimUnitaryLogops(new Formula(args.get(i))));
+            result.append(Formula.SPACE).append(elimUnitaryLogops(new Formula(args.get(i))));
         }
-        result.append(")");
+        result.append(Formula.RP);
         if (!result.toString().equals(f.getFormula()))
             return elimUnitaryLogops(new Formula(result.toString())); // loop again if it's changed
         return result.toString();
@@ -2138,7 +2138,7 @@ public class SUMOtoTFAform {
                                     cons + " in formula:\n" + f);
                         else {
                             String origVar = numericVars.get(arg);
-                            String newCons = cons.replace("?" + origVar, "?" + var);
+                            String newCons = cons.replace(Formula.V_PREF + origVar, Formula.V_PREF + var);
                             return newCons;
                         }
                     }
@@ -2147,10 +2147,10 @@ public class SUMOtoTFAform {
             else {
                 List<String> args = f.complexArgumentsToArrayListString(1);
                 StringBuilder sb = new StringBuilder();
-                sb.append("(").append(f.car());
+                sb.append(Formula.LP).append(f.car());
                 for (String a : args)
-                    sb.append(" ").append(removeNumericInstance(a));
-                sb.append(")");
+                    sb.append(Formula.SPACE).append(removeNumericInstance(a));
+                sb.append(Formula.RP);
                 return sb.toString();
             }
         }
@@ -2299,18 +2299,18 @@ public class SUMOtoTFAform {
         StringBuilder sigBuf = new StringBuilder();
         for (String s : sig.subList(1,sig.size())) {
             if (StringUtil.emptyString((s)))
-                sigBuf.append(" " + "$i" + " *");
+                sigBuf.append(Formula.SPACE + "$i" + " *");
             else
-                sigBuf.append(" ").append(SUMOKBtoTFAKB.translateSort(kb, s)).append(" *");
+                sigBuf.append(Formula.SPACE).append(SUMOKBtoTFAKB.translateSort(kb, s)).append(" *");
         }
         String sigStr = sigBuf.toString().substring(0,sigBuf.length()-1);
         String relname = SUMOKBtoTFAKB.translateName(rel);
-        if (relname.endsWith(Formula.termMentionSuffix))
+        if (relname.endsWith(Formula.TERM_MENTION_SUFFIX))
             relname = relname.substring(0,relname.length()-3);
         String axname = rel;
-        if (axname.startsWith("s__"))
+        if (axname.startsWith(Formula.TERM_SYMBOL_PREFIX))
             axname = axname.substring(3,axname.length());
-        if (kb.isFunction(rel) || rel.endsWith("Fn")) {
+        if (kb.isFunction(rel) || rel.endsWith(Formula.FN_SUFF)) {
             String range = sig.get(0);
             if (StringUtil.emptyString(range))
                 range = "Entity";
@@ -2406,8 +2406,8 @@ public class SUMOtoTFAform {
                 qlist.deleteCharAt(qlist.length() - 1);  // delete final comma
                 String quant = "!";
                 if (query)
-                    quant = "?";
-                result = quant + " [" + qlist + "] : (" + result + ")";
+                    quant = Formula.V_PREF;
+                result = quant + " [" + qlist + "] : (" + result + Formula.RP;
             }
             if (debug) System.out.println("SUMOtoTFAform.process(): result 2: " + result);
             return result;
@@ -2593,7 +2593,7 @@ public class SUMOtoTFAform {
             if (m.find()) {
                 found = true;
                 var = m.group(1);
-                toReplace = "(instance ?" + var + " " + type + ")";
+                toReplace = "(instance ?" + var + Formula.SPACE + type + Formula.RP;
                 cons = numericConstraints.get(type);
                 //if (debug) System.out.println("modifyTypesToConstraints(): found matching constraint " + cons +
                 //        " for type: " + type);
@@ -2605,7 +2605,7 @@ public class SUMOtoTFAform {
                 }
                 else {
                     origVar = numericVars.get(type);
-                    newCons = cons.replace("?" + origVar, "?" + var);
+                    newCons = cons.replace(Formula.V_PREF + origVar, Formula.V_PREF + var);
                     f = new Formula(f.getFormula().replace(toReplace, newCons));
                 }
             }

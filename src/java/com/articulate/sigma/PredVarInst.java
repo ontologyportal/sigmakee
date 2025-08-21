@@ -272,7 +272,7 @@ public class PredVarInst {
             if (varTypes.get(var).contains("Function"))
                 rels = kb.kbCache.functions;
             for (String rel : rels) {
-                //if (kb.isFunction(rel) || rel.endsWith("Fn")) { // can't substitute a function for where a relation is expected
+                //if (kb.isFunction(rel) || rel.endsWith(Formula.FN_SUFF)) { // can't substitute a function for where a relation is expected
                 //    if (debug) System.out.println("instantiatePredVars(): excluding function: " + rel);
                 //    continue;
                 //}
@@ -362,7 +362,7 @@ public class PredVarInst {
             if (intval != null)
                 val = intval;
             else {
-                if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith("?")) {
+                if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith(Formula.V_PREF)) {
                     System.out.printf("%nINFO in PredVarInst.hasCorrectArityRecurse(): " +
                             "Predicate %s does not have an arity defined in KB, " +
                             "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);

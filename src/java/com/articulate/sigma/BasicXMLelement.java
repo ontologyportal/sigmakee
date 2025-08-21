@@ -45,7 +45,7 @@ public class BasicXMLelement {
         String value;
         for (String key : attributes.keySet()) {
             value = attributes.get(key);
-            result = result.append(" ").append(key).append("='").append(value).append("'");
+            result = result.append(Formula.SPACE).append(key).append("='").append(value).append("'");
         }
         result = result.append(">");
         if (contents != null)

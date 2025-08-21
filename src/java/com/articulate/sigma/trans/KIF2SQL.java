@@ -72,10 +72,10 @@ Articulate Software
         List<String> l = f.complexArgumentsToArrayListString(1);
         if (l == null || l.isEmpty())
             System.err.println("Error in KIF2SQL.createNewFunction(): null argument list for: " + f);
-        sb.append("(").append(pred).append(" ").append(funcID);
+        sb.append(Formula.LP).append(pred).append(Formula.SPACE).append(funcID);
         for (String s : l)
-            sb.append(" ").append(s);
-        sb.append(")");
+            sb.append(Formula.SPACE).append(s);
+        sb.append(Formula.RP);
         return new Formula(sb.toString());
     }
 

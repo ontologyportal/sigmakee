@@ -8,11 +8,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class Modals {
 
-    public static final ArrayList<String> formulaPreds = new ArrayList<String>(
-            Arrays.asList("KappaFn", "ProbabilityFn", "believes",
+    public static final List<String> formulaPreds = new ArrayList<>(
+            Arrays.asList(Formula.KAPPAFN, "ProbabilityFn", "believes",
                     "causesProposition", "conditionalProbability",
                     "confersNorm", "confersObligation", "confersRight",
                     "considers", "containsFormula", "decreasesLikelihood",
@@ -24,16 +25,16 @@ public class Modals {
                     "permits", "prefers", "prohibits", "rateDetail", "says",
                     "treatedPageDefinition", "visitorParameter"));
 
-    public static final ArrayList<String> dualFormulaPreds = new ArrayList<String>(
+    public static final List<String> dualFormulaPreds = new ArrayList<>(
             Arrays.asList("causesProposition", "conditionalProbability",
                     "decreasesLikelihood",
                     "entails",  "increasesLikelihood",
                     "independentProbability","prefers"));
 
-    public static final ArrayList<String> regHOLpred = new ArrayList<String>(
+    public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
 
-    public static final HashSet<String> modalAttributes = new HashSet<String>(Arrays.asList("Possibility",
+    public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList("Possibility",
             "Necessity", "Permission", "Obligation", "Prohibition"));
 
     /***************************************************************
@@ -45,9 +46,9 @@ public class Modals {
         StringBuilder fstring = new StringBuilder();
         List<Formula> flist = f.complexArgumentsToArrayList(1);
         worldNum = worldNum + 1;
-        fstring.append("(=> (accreln ").append(f.car()).append(" ").append(flist.get(0)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
-        fstring.append(" ").append(processRecurse(flist.get(1),kb,worldNum));
-        fstring.append(")");
+        fstring.append("(=> (accreln ").append(f.car()).append(Formula.SPACE).append(flist.get(0)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
+        fstring.append(Formula.SPACE).append(processRecurse(flist.get(1),kb,worldNum));
+        fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
@@ -63,7 +64,7 @@ public class Modals {
         worldNum = worldNum + 1;
         fstring.append("(=> (accrelnP ").append(flist.get(1)).append(" ?W").append(worldNum - 1).append(" ?W").append(worldNum).append(") ");
         fstring.append(processRecurse(flist.get(0),kb,worldNum));
-        fstring.append(")");
+        fstring.append(Formula.RP);
         Formula result = new Formula();
         result.read(fstring.toString());
         return result;
@@ -88,15 +89,15 @@ public class Modals {
                 argStart = 2;
             List<Formula> flist = f.complexArgumentsToArrayList(argStart);
             StringBuilder fstring = new StringBuilder();
-            fstring.append("(").append(f.car());
+            fstring.append(Formula.LP).append(f.car());
             if (argStart == 2) // append quantifier list without processing
-                fstring.append(" ").append(f.getStringArgument(1));
+                fstring.append(Formula.SPACE).append(f.getStringArgument(1));
             for (Formula arg : flist)
-                fstring.append(" ").append(processRecurse(arg,kb,worldNum));
+                fstring.append(Formula.SPACE).append(processRecurse(arg,kb,worldNum));
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
-                fstring.append(")");
+                fstring.append(Formula.RP);
             else {
-                fstring.append(" ?W").append(worldNum).append(")");
+                fstring.append(" ?W").append(worldNum).append(Formula.RP);
                 List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
                 if (sig == null) {
                     if (!Formula.isVariable(f.car()))
@@ -121,7 +122,7 @@ public class Modals {
      */
     public static void addAccrelnDef(KB kb) {
 
-        ArrayList<String> sig = new ArrayList<>();
+        List<String> sig = new ArrayList<>();
         sig.add(""); // empty 0th argument for relations
         sig.add("Entity");
         sig.add("Entity");
@@ -134,7 +135,7 @@ public class Modals {
      */
     public static void addAccrelnDefP(KB kb) {
 
-        ArrayList<String> sig = new ArrayList<>();
+        List<String> sig = new ArrayList<>();
         sig.add(""); // empty 0th argument for relations
         sig.add("Modal");
         sig.add("World");
@@ -149,13 +150,12 @@ public class Modals {
         addAccrelnDef(kb);
         addAccrelnDefP(kb);
         int worldNum = 1;
-        Formula result = new Formula();
         //if (!f.isHigherOrder(kb))
         //    return f;
-        result = processRecurse(f,kb,worldNum);
+        Formula result = processRecurse(f,kb,worldNum);
         String fstring = result.getFormula();
         result.read(fstring);
-        HashSet<String> types = new HashSet<String>();
+        HashSet<String> types = new HashSet<>();
         types.add("World");
         for (int i = 1; i <= worldNum; i++)
             result.varTypeCache.put("?W" + i,types);

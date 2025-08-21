@@ -41,8 +41,8 @@ public class TPTPutil {
      */
     private static String removeTPTPSuffix(String t) {
 
-        if (t.endsWith(Formula.termMentionSuffix) || t.endsWith(Formula.termMentionSuffix))
-            return t.substring(0,t.length()-Formula.termMentionSuffix.length());
+        if (t.endsWith(Formula.TERM_MENTION_SUFFIX) || t.endsWith(Formula.TERM_MENTION_SUFFIX))
+            return t.substring(0,t.length()-Formula.TERM_MENTION_SUFFIX.length());
         else
             return t;
     }
@@ -190,7 +190,7 @@ public class TPTPutil {
                         result.append(returnAndIndent(level));
                     }
                     else {
-                        if (formString.substring(i).startsWith("s__")) {
+                        if (formString.substring(i).startsWith(Formula.TERM_SYMBOL_PREFIX)) {
                             inToken = true;
                             i = i + 2;
                         }
@@ -310,7 +310,7 @@ public class TPTPutil {
             if (args != null && args.length > 1 && args[0].contains("f")) {
                 try {
                     List<String> lines = FileUtil.readLines(args[1],false);
-                    String query = "(";
+                    String query = Formula.LP;
                     StringBuilder answerVars = new StringBuilder("");
                     System.out.println("input: " + lines + "\n");
                     tpp.parseProofOutput(lines, query, kb,answerVars);
@@ -350,9 +350,9 @@ public class TPTPutil {
                             name = step.infRule;
                             //System.out.println("TPTPutil.main(): name: " + name);
                             if (name.startsWith("file(")) {
-                                firstParen = name.indexOf("(");
+                                firstParen = name.indexOf(Formula.LP);
                                 firstComma = name.indexOf(",");
-                                secondParen = name.indexOf(")", firstComma + 1);
+                                secondParen = name.indexOf(Formula.RP, firstComma + 1);
                                 id = name.substring(firstComma + 1, secondParen);
                                 //System.out.println("TPTPutil.main(): id: " + id);
                                 if (KB.axiomKey.keySet().contains(id)) {

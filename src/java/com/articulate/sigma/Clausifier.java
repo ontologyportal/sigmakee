@@ -397,7 +397,7 @@ public class Clausifier  {
 
         // 2. Negate the formula.
         Formula negQF = new Formula();
-        negQF.read("(not " + qF.getFormula() + ")");
+        negQF.read(Formula.LP + Formula.NOT + Formula.SPACE + qF.getFormula() + Formula.RP);
 
         // 3. Generate the canonical clausal form of the negation
         // of the formula we want to check.
@@ -628,8 +628,8 @@ public class Clausifier  {
                 String third = thisFormula.caddr();
                 Clausifier thirdF = new Clausifier(third);
                 String newThird = thirdF.equivalencesOut().getFormula();
-                theNewFormula = ("(and (=> " + newSecond + " " + newThird
-                                 + ") (=> " + newThird + " " + newSecond + "))");
+                theNewFormula = ("(and (=> " + newSecond + Formula.SPACE + newThird
+                                 + ") (=> " + newThird + Formula.SPACE + newSecond + "))");
             }
             else {
                 Clausifier fourth = new Clausifier(thisFormula.cdrAsFormula().getFormula());
@@ -669,7 +669,7 @@ public class Clausifier  {
                 String third = thisFormula.caddr();
                 Clausifier thirdF = new Clausifier(third);
                 String newThird = thirdF.implicationsOut().getFormula();
-                theNewFormula = ("(or (not " + newSecond + ") " + newThird + ")");
+                theNewFormula = ("(or (not " + newSecond + ") " + newThird + Formula.RP);
             }
             else {
                 Clausifier fourth = new Clausifier(thisFormula.cdrAsFormula().getFormula());
@@ -738,7 +738,7 @@ public class Clausifier  {
                     	newOp = Formula.OR;
                     else
                     	newOp = Formula.AND;
-                    return listAll(arg1F.cdrAsFormula(),"(not ", ")").cons(newOp);
+                    return listAll(arg1F.cdrAsFormula(),"(not ", Formula.RP).cons(newOp);
                 }
                 if (Formula.isQuantifier(arg0_of_arg1)) {
                     String vars = arg1F.cadr();
@@ -748,16 +748,16 @@ public class Clausifier  {
                     	quant = Formula.EQUANT;
                     else
                     	quant = Formula.UQUANT;
-                    arg2_of_arg1 = ("(not " + arg2_of_arg1 + ")");
+                    arg2_of_arg1 = ("(not " + arg2_of_arg1 + Formula.RP);
                     Formula arg2_of_arg1F = new Formula();
                     arg2_of_arg1F.read(arg2_of_arg1);
-                    String theNewFormula = ("(" + quant + " " + vars + " "
-                                            + negationsIn_1(arg2_of_arg1F).getFormula() + ")");
+                    String theNewFormula = ("(" + quant + Formula.SPACE + vars + Formula.SPACE
+                                            + negationsIn_1(arg2_of_arg1F).getFormula() + Formula.RP);
                     Formula newF = new Formula();
                     newF.read(theNewFormula);
                     return newF;
                 }
-                String theNewFormula = ("(not " + negationsIn_1(arg1F).getFormula() + ")");
+                String theNewFormula = ("(not " + negationsIn_1(arg1F).getFormula() + Formula.RP);
                 Formula newF = new Formula();
                 newF.read(theNewFormula);
                 return newF;
@@ -767,7 +767,7 @@ public class Clausifier  {
                 Formula arg2F = new Formula();
                 arg2F.read(arg2);
                 String newArg2 = negationsIn_1(arg2F).getFormula();
-                String theNewFormula = ("(" + arg0 + " " + arg1 + " " + newArg2 + ")");
+                String theNewFormula = ("(" + arg0 + Formula.SPACE + arg1 + Formula.SPACE + newArg2 + Formula.RP);
                 Formula newF = new Formula();
                 newF.read(theNewFormula);
                 return newF;
@@ -963,7 +963,7 @@ public class Clausifier  {
             if (m.keySet().contains(thisFormula.getFormula())) {
                 thisFormula.read(m.get(thisFormula.getFormula()));
                 if (thisFormula.listP())
-                    thisFormula.read("(" + thisFormula.getFormula() + ")");
+                    thisFormula.read("(" + thisFormula.getFormula() + Formula.RP);
             }
             return thisFormula;
         }
@@ -1253,9 +1253,9 @@ public class Clausifier  {
                 String arg2 = thisFormula.caddr();
                 Formula arg2F = new Formula();
                 arg2F.read(arg2);
-                String theNewFormula = ("(forall " + varList + " "
+                String theNewFormula = ("(forall " + varList + Formula.SPACE
                                         + existentialsOut(arg2F, evSubs, iUQVs,
-                                                          newScopedUQVs).getFormula() + ")");
+                                                          newScopedUQVs).getFormula() + Formula.RP);
                 thisFormula.read(theNewFormula);
                 return thisFormula;
             }

@@ -151,7 +151,7 @@ public class NLGUtils implements Serializable {
      */
     static String prettyPrint(String term) {
 
-        if (term.endsWith("Fn"))
+        if (term.endsWith(Formula.FN_SUFF))
             term = term.substring(0,term.length()-2);
         StringBuilder result = new StringBuilder();
         for (int i = 0; i < term.length(); i++) {
@@ -162,7 +162,7 @@ public class NLGUtils implements Serializable {
                     result.append(term.charAt(i));
                 else {
                     if (i != 0)
-                        result.append(" ");
+                        result.append(Formula.SPACE);
                     result.append(Character.toLowerCase(term.charAt(i)));
                 }
             }
@@ -260,7 +260,7 @@ public class NLGUtils implements Serializable {
 
         StringBuilder result = new StringBuilder();
         String comma = NLGUtils.getKeyword(",", language);
-        String space = " ";
+        String space = Formula.SPACE;
         String[] arr = strseq.split(space);
         int lastIdx = (arr.length - 1);
         String val;
@@ -420,13 +420,13 @@ public class NLGUtils implements Serializable {
                 if (isArabic)
                     return ordinal;
                 else
-                    return (NLGUtils.getKeyword("the", language) + " " + ordinal);
+                    return (NLGUtils.getKeyword("the", language) + Formula.SPACE + ordinal);
             }
             else {
                 if (isArabic)
-                    return (NLGUtils.getKeyword("the", language) + " " + NLGUtils.getKeyword("other", language));
+                    return (NLGUtils.getKeyword("the", language) + Formula.SPACE + NLGUtils.getKeyword("other", language));
                 else
-                    return (NLGUtils.getKeyword("the", language) + " " + NLGUtils.getKeyword("other", language));
+                    return (NLGUtils.getKeyword("the", language) + Formula.SPACE + NLGUtils.getKeyword("other", language));
             }
         }
         // count = 1 (first occurrence of a type)
@@ -597,7 +597,7 @@ public class NLGUtils implements Serializable {
                         for (int k = 0 ; k < argsToPrint.length ; k++) {
                             argsToPrint[k] = false;
                         }
-                        delim = " ";
+                        delim = Formula.SPACE;
                         nArgsSet = 0;
                         lb = null;
                         lbi = p1;
@@ -662,17 +662,17 @@ public class NLGUtils implements Serializable {
                             if (addAll || argsToPrint[i]) {
                                 if (nAdded >= 1) {
                                     if (nToAdd == 2) {
-                                        sb.append(" ");
+                                        sb.append(Formula.SPACE);
                                         sb.append(AND);
-                                        sb.append(" ");
+                                        sb.append(Formula.SPACE);
                                     }
                                     else {
                                         sb.append(delim);
-                                        sb.append(" ");
+                                        sb.append(Formula.SPACE);
                                     }
                                     if ((nToAdd > 2) && ((nAdded + 1) == nToAdd)) {
                                         sb.append(AND);
-                                        sb.append(" ");
+                                        sb.append(Formula.SPACE);
                                     }
                                 }
                                 sb.append("%").append(i);

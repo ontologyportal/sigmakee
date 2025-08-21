@@ -321,7 +321,7 @@ public class CCheck implements Runnable {
                         System.err.println("Error from inference engine: " + e.getMessage());
                     }
                     negatedQuery = new StringBuilder();
-                    negatedQuery.append("(not ").append(processedQuery).append(")");
+                    negatedQuery.append(Formula.LP).append(Formula.NOT).append(Formula.SPACE).append(processedQuery).append(Formula.RP);
                     try {
                         proof = askInferenceEngine(empty, negatedQuery.toString());
                         reportAnswer(proof, query ,"Inconsistency", processedQuery, sourceFile);

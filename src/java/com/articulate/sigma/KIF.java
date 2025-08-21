@@ -284,12 +284,12 @@ public class KIF {
                         }
                     }
                     if ((parenLevel != 0) && (lastTtype != 40) && (expression.length() > 0))
-                        expression.append(" "); // add back whitespace that ST removes
-                    expression.append("(");
+                        expression.append(Formula.SPACE); // add back whitespace that ST removes
+                    expression.append(Formula.LP);
                 }
                 else if (st.ttype == 41) { // ) - close paren
                     parenLevel--;
-                    expression.append(")");
+                    expression.append(Formula.RP);
                     if (parenLevel == 0) { // The end of the statement...
                         fstr = StringUtil.normalizeSpaceChars(expression.toString());
                         f.read(fstr.intern());
@@ -358,7 +358,7 @@ public class KIF {
                 else if (st.ttype == 34) { // " - it's a string
                     st.sval = StringUtil.escapeQuoteChars(st.sval);
                     if (lastTtype != 40) // add back whitespace that ST removes
-                        expression.append(" ");
+                        expression.append(Formula.SPACE);
                     expression.append("\"");
                     com = st.sval;
                     totalLinesForComments += StringUtil.countChar(com, (char) 0X0A);
@@ -370,7 +370,7 @@ public class KIF {
                 else if ((st.ttype == StreamTokenizer.TT_NUMBER) || // number
                         (st.sval != null && (Character.isDigit(st.sval.charAt(0))))) {
                     if (lastTtype != 40) // add back whitespace that ST removes
-                        expression.append(" ");
+                        expression.append(Formula.SPACE);
                     if (st.nval == 0)
                         expression.append(st.sval);
                     else
@@ -384,7 +384,7 @@ public class KIF {
                     if (parenLevel < 2) // Don't care if parenLevel > 1
                         argumentNum = argumentNum + 1;
                     if (lastTtype != 40) // add back whitespace that ST removes
-                        expression.append(" ");
+                        expression.append(Formula.SPACE);
                     expression.append(st.sval);
                     if (expression.length() > 64000) {
                         errStr = (errStart + ": Sentence over 64000 characters new line: " + f.startLine);
@@ -431,7 +431,7 @@ public class KIF {
         }
         if (duplicateCount > 0) {
             String warning = "WARNING in KIF.parse(Reader), " + duplicateCount + " duplicate statement"
-                    + ((duplicateCount > 1) ? "s " : " ") + "detected in "
+                    + ((duplicateCount > 1) ? "s " : Formula.SPACE) + "detected in "
                     + (StringUtil.emptyString(filename) ? " the input file" : filename);
             warningSet.add(warning);
         }

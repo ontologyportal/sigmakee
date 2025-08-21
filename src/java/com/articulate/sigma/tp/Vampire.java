@@ -56,7 +56,7 @@ public class Vampire {
      */
     private static String[] createCommandList(File executable, int timeout, File kbFile) {
 
-        String space = " ";
+        String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder("--output_axiom_names").append(space).append("on").append(space);
         if (mode == ModeType.AVATAR)
             opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space).append("-t").append(space);
@@ -64,7 +64,7 @@ public class Vampire {
             opts.append("--mode").append(space).append("casc").append(space).append("-t").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
         if (mode == ModeType.CUSTOM)
             opts.append(System.getenv("VAMPIRE_OPTS"));
-        String[] optar = opts.toString().split(" ");
+        String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();
         System.arraycopy(optar, 0, cmds, 1, optar.length);
@@ -80,7 +80,7 @@ public class Vampire {
                                                     int timeout, File kbFile,
                                                     Collection<String> commands) {
 
-        String space = " ";
+        String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
         if (mode == ModeType.CUSTOM)
             opts.append(System.getenv("VAMPIRE_OPTS"));
@@ -91,7 +91,7 @@ public class Vampire {
             opts.append(timeout).append(space);
         }
         opts.append(kbFile.toString());
-        String[] optar = opts.toString().split(" ");
+        String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 1];
         cmds[0] = executable.toString();
         System.arraycopy(optar, 0, cmds, 1, optar.length);

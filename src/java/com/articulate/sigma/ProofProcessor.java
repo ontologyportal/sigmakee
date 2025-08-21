@@ -72,9 +72,9 @@ public class ProofProcessor {
                 variableBinding = binding.subelements.get(j);
                 variable = variableBinding.attributes.get("name");
                 value = variableBinding.attributes.get("value");
-                result = result.append("(").append(variable).append(" ").append(value).append(")");
+                result = result.append(Formula.LP).append(variable).append(Formula.SPACE).append(value).append(Formula.RP);
                 if (j < binding.subelements.size()-1)
-                    result = result.append(" ");
+                    result = result.append(Formula.SPACE);
             }
     	}
     	return result.toString().equalsIgnoreCase(expectedAnswer);
@@ -89,9 +89,9 @@ public class ProofProcessor {
      */
     public static List<String> returnSkolemStmt(String skolem, List<TPTPFormula> proofSteps) {
 
-    	if (skolem.startsWith("(") && skolem.endsWith(")"))
+    	if (skolem.startsWith(Formula.LP) && skolem.endsWith(Formula.RP))
     		skolem = skolem.substring(1, skolem.length()-1);
-    	skolem = skolem.split(" ")[0];
+    	skolem = skolem.split(Formula.SPACE)[0];
     	Pattern pattern = Pattern.compile("(\\([^\\(|.]*?\\(" + skolem + " .+?\\).*?\\)|\\([^\\(|.]*?" + skolem + "[^\\)|.]*?\\))");
     	Matcher match;
 
@@ -135,7 +135,7 @@ public class ProofProcessor {
                 return null;
             else {
                 Formula result = new Formula();
-                result.read("(not " + fnew.getFormula() + ")");
+                result.read(Formula.LP + Formula.NOT + Formula.SPACE + fnew.getFormula() + Formula.RP);
                 return result;
             }
     	}
@@ -154,16 +154,16 @@ public class ProofProcessor {
                     foundAnswer = true;
             else {
                 if (arg > 1)
-                        strArgs = strArgs + " ";
+                        strArgs = strArgs + Formula.SPACE;
                 strArgs = strArgs + argRes.getFormula();
             }
             arg = arg + 1;
     	}
     	Formula result = new Formula();
     	if (connective && foundAnswer && arg < 4)
-    		result.read(strArgs);
+            result.read(strArgs);
     	else
-    		result.read("(" + relation + " " + strArgs + ")");
+            result.read(Formula.LP + relation + Formula.SPACE + strArgs + Formula.RP);
     	return result;
     }
 
@@ -321,10 +321,10 @@ public class ProofProcessor {
     		  KBmanager.getMgr().initializeOnce();
     		  KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
     		  String stmt = "(subclass ?X Entity)";
-    		  String result = kb.askEProver(stmt, 30, 3) + " ";
+    		  String result = kb.askEProver(stmt, 30, 3) + Formula.SPACE;
                   TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
                   StringBuilder qlist = new StringBuilder();
-                  qlist.append("?X");
+                  qlist.append(Formula.VX);
                   tpp.parseProofOutput(result,kb);
     		  result = HTMLformatter.formatTPTP3ProofResult(tpp,stmt,"<hr>\n",
 					  KBmanager.getMgr().getPref("sumokbname"),"EnglishLanguage");

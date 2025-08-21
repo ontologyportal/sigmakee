@@ -104,7 +104,7 @@ public class GenPropFormulas {
         if (atom != null)
             return atom;
         if (operator == null ? PARENS == null : operator.equals(PARENS))
-            return "(" + f1.toString() + ")";
+            return Formula.LP + f1.toString() + Formula.RP;
         if (operator == null ? NOT == null : operator.equals(NOT))
             return NOT + f1.toString();
         return f1.toString() + operator + f2.toString();
@@ -132,7 +132,7 @@ public class GenPropFormulas {
             for (String l : literals)
                 newclause.add(l);
             String newClauseStr = newclause.toString().replace(",","|");
-            newclauseset.add("(" + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + ")");
+            newclauseset.add(Formula.LP + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + Formula.RP);
         }
         System.out.println("simplifyCNF(): after: " + newclauseset);
         return StringUtil.removeEnclosingCharPair(newclauseset.toString(),1,'[',']');
@@ -158,7 +158,7 @@ public class GenPropFormulas {
                 int thirdComma = s.indexOf(",",secondComma+1);
                 if (thirdComma > -1)
                     end = thirdComma;
-                String firstParam = s.substring(s.indexOf("(")+1,firstComma).trim();
+                String firstParam = s.substring(s.indexOf(Formula.LP)+1,firstComma).trim();
                 String secondParam = s.substring(firstComma+1,secondComma).trim();
                 //System.out.println("formatCNF(): firstParam: " + firstParam);
                 //System.out.println("formatCNF(): secondParam: " + secondParam);
@@ -292,7 +292,7 @@ public class GenPropFormulas {
 
         StringBuilder sb = new StringBuilder();
         for (String s : input)
-            sb.append(s).append(" ");
+            sb.append(s).append(Formula.SPACE);
         return sb.toString();
     }
 
@@ -392,7 +392,7 @@ public class GenPropFormulas {
             SZSonto result = run(stmts,filename);
             HashSet<String> negstmts = new HashSet<>();
             String negWrappedForm = "fof(conj,axiom,~(" + form + ")).";
-            String negForm = "~(" + form + ")";
+            String negForm = "~(" + form + Formula.RP;
             System.out.println("generateFormulas(): neg form: " + negForm);
             System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
             negstmts.add(negWrappedForm);

@@ -476,7 +476,7 @@ public class KBcache implements Serializable {
         kb.capterms.put(newTerm.toUpperCase(),newTerm);
         Set<String> iset = instanceOf.get(term);
         instanceOf.put(newTerm,iset);
-        //if (newTerm.endsWith("Fn"))
+        //if (newTerm.endsWith(Formula.FN_SUFF))
         //    System.out.println("KBcache.extendInstance(): instance parents of: " + newTerm + " are: " + iset);
         //System.out.println("extendInstance(): new term: " + newTerm + " parents: " + iset);
         relations.add(newTerm);
@@ -521,7 +521,7 @@ public class KBcache implements Serializable {
         signatures.put(newTerm,newsig);
         // The number of arguments to each relation.  Variable arity is -1
         valences.put(newTerm,valences.get(term));
-        if (term.endsWith("Fn"))
+        if (term.endsWith(Formula.FN_SUFF))
             functions.add(newTerm);
     }
 
@@ -1615,7 +1615,7 @@ public class KBcache implements Serializable {
                     for (String child : valSet.keySet()) {
                         prents = valSet.get(child);
                         for (String parent : prents) {
-                            tuple = "(" + rel + " " + child + " " + parent + ")";
+                            tuple = Formula.LP + rel + Formula.SPACE + child + Formula.SPACE + parent + Formula.RP;
                             if (!kb.formulaMap.containsKey(tuple)) {
                                 fw.write(tuple + System.getProperty("line.separator"));
                             }
@@ -1626,7 +1626,7 @@ public class KBcache implements Serializable {
                 for (String inst : instanceOf.keySet()) {
                     vSet = instanceOf.get(inst);
                     for (String parent : vSet) {
-                        tuple = "(instance " + inst + " " + parent + ")";
+                        tuple = "(instance " + inst + Formula.SPACE + parent + Formula.RP;
                         if (!kb.formulaMap.containsKey(tuple)) {
                             fw.write(tuple + System.getProperty("line.separator"));
                         }
@@ -1666,7 +1666,7 @@ public class KBcache implements Serializable {
             for (String child : valSet.keySet()) {
                 prents = valSet.get(child);
                 for (String parent : prents) {
-                    tuple = "(" + rel + " " + child + " " + parent + ")";
+                    tuple = Formula.LP + rel + Formula.SPACE + child + Formula.SPACE + parent + Formula.RP;
                     if (!kb.formulaMap.containsKey(tuple)) {
                         sb.append(tuple);
                         cacheCount++;
@@ -1678,7 +1678,7 @@ public class KBcache implements Serializable {
         for (String inst : instanceOf.keySet()) {
             vSet = instanceOf.get(inst);
             for (String parent : vSet) {
-                tuple = "(instance " + inst + " " + parent + ")";
+                tuple = "(instance " + inst + Formula.SPACE + parent + Formula.RP;
                 if (!kb.formulaMap.containsKey(tuple)) {
                     sb.append(tuple);
                     cacheCount++;

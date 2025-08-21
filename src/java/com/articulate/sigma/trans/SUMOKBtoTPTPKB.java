@@ -354,10 +354,10 @@ public class SUMOKBtoTPTPKB {
             f.theTptpFormulas.clear();
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
             if (!f.getFormula().startsWith("(documentation")) {
-                pw.println("% f: " + f.format("", "", " "));
+                pw.println("% f: " + f.format("", "", Formula.SPACE));
                 if (!f.derivation.parents.isEmpty()) {
                     for (Formula derivF : f.derivation.parents)
-                        pw.println("% original f: " + derivF.format("", "", " "));
+                        pw.println("% original f: " + derivF.format("", "", Formula.SPACE));
                 }
                 pw.println("% " + formCount.getAndIncrement() + " of " + total +
                         " from file " + f.sourceFile + " at line " + f.startLine);
@@ -391,7 +391,7 @@ public class SUMOKBtoTPTPKB {
                     switch (lang) {
                         case "fof":
                             if (debug) {
-                                System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", " "));
+                                System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", Formula.SPACE));
                             }
                             result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
                             if (debug) {
@@ -404,7 +404,7 @@ public class SUMOKBtoTPTPKB {
                         case "tff":
                             stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
-                            pw.println("% tff input: " + f3.format("", "", " "));
+                            pw.println("% tff input: " + f3.format("", "", Formula.SPACE));
                             if (debug) {
                                 System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
                             }
@@ -429,14 +429,14 @@ public class SUMOKBtoTPTPKB {
             }
             else {
                 //System.out.println("SUMOKBtoTPTPKB.writeFile() : % empty result from preprocess on " + f.getFormula().replace("\\n"," "));
-                pw.println("% empty result from preprocess on " + f.getFormula().replace("\\n"," "));
+                pw.println("% empty result from preprocess on " + f.getFormula().replace("\\n",Formula.SPACE));
             }
             for (String sort : f.tffSorts) {
                 if (!StringUtil.emptyString(sort) &&
                         !alreadyWrittenTPTPs.contains(sort)) {
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     axiomKey.put(name,f);
-                    pw.println(lang + "(" + name + ",axiom,(" + sort + ")).");
+                    pw.println(lang + Formula.LP + name + ",axiom,(" + sort + ")).");
                     alreadyWrittenTPTPs.add(sort);
                 }
             }
@@ -447,7 +447,7 @@ public class SUMOKBtoTPTPKB {
                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : writing " + theTPTPFormula);
                     name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                     axiomKey.put(name,f);
-                    pw.println(lang + "(" + name + ",axiom,(" + theTPTPFormula + ")).");
+                    pw.println(lang + Formula.LP + name + ",axiom,(" + theTPTPFormula + ")).");
                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : finished writing " + theTPTPFormula + " with name " + name);
                     alreadyWrittenTPTPs.add(theTPTPFormula);
                 }
@@ -516,10 +516,10 @@ public class SUMOKBtoTPTPKB {
                 if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : source line: " + f.startLine);
                 try {
                     if (!f.getFormula().startsWith("(documentation")) {
-                        fileContents.add("% f: " + f.format("", "", " "));
+                        fileContents.add("% f: " + f.format("", "", Formula.SPACE));
                         if (!f.derivation.parents.isEmpty()) {
                             for (Formula derivF : f.derivation.parents)
-                                fileContents.add("% original f: " + derivF.format("", "", " "));
+                                fileContents.add("% original f: " + derivF.format("", "", Formula.SPACE));
                         }
                         fileContents.add("% " + formCount.getAndIncrement() + " of " + total +
                                 " from file " + f.sourceFile + " at line " + f.startLine);
@@ -565,7 +565,7 @@ public class SUMOKBtoTPTPKB {
                                 case "tff":
                                     stfa = new SUMOtoTFAform();
                                     SUMOtoTFAform.kb = kb; // Already set in init?
-                                    fileContents.add("% tff input: " + f3.format("", "", " "));
+                                    fileContents.add("% tff input: " + f3.format("", "", Formula.SPACE));
                                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
                                     stfa.sorts = stfa.missingSorts(f3);
                                     if (stfa.sorts != null && !stfa.sorts.isEmpty())
@@ -586,14 +586,14 @@ public class SUMOKBtoTPTPKB {
                     }
                     else {
                         //System.out.println("SUMOKBtoTPTPKB.writeFile() : % empty result from preprocess on " + f.getFormula().replace("\\n"," "));
-                        fileContents.add("% empty result from preprocess on " + f.getFormula().replace("\\n"," "));
+                        fileContents.add("% empty result from preprocess on " + f.getFormula().replace("\\n",Formula.SPACE));
                     }
                     for (String sort : f.tffSorts) {
                         if (!StringUtil.emptyString(sort) &&
                                 !alreadyWrittenTPTPs.contains(sort)) {
                             name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                             axiomKey.put(name,f);
-                            fileContents.add(lang + "(" + name + ",axiom,(" + sort + ")).");
+                            fileContents.add(lang + Formula.LP + name + ",axiom,(" + sort + ")).");
                             alreadyWrittenTPTPs.add(sort);
                         }
                     }
@@ -604,7 +604,7 @@ public class SUMOKBtoTPTPKB {
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : writing " + theTPTPFormula);
                             name = "kb_" + getSanitizedKBname() + "_" + axiomIndex.getAndIncrement();
                             axiomKey.put(name,f);
-                            fileContents.add(lang + "(" + name + ",axiom,(" + theTPTPFormula + ")).");
+                            fileContents.add(lang + Formula.LP + name + ",axiom,(" + theTPTPFormula + ")).");
                             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : finished writing " + theTPTPFormula + " with name " + name);
                             alreadyWrittenTPTPs.add(theTPTPFormula);
                         }
@@ -687,7 +687,7 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            pw.println("% f: " + form.format("", "", " "));
+            pw.println("% f: " + form.format("", "", Formula.SPACE));
             pw.println("% quoted thing");
             return true;
         }
@@ -720,7 +720,7 @@ public class SUMOKBtoTPTPKB {
             return removeNum;
         }
         if (removeStrings && (tptp.contains("'") || tptp.indexOf('"') >= 0)) {
-            fileContents.add("% f: " + form.format("", "", " "));
+            fileContents.add("% f: " + form.format("", "", Formula.SPACE));
             fileContents.add("% quoted thing");
             return true;
         }

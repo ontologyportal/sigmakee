@@ -97,8 +97,8 @@ public class RowVars {
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int nonRowVar = 0;
                 boolean done = false;
-                int start = f.getFormula().indexOf("(" + pred);
-                int end = f.getFormula().indexOf(")", start);
+                int start = f.getFormula().indexOf(Formula.LP + pred);
+                int end = f.getFormula().indexOf(Formula.RP, start);
                 String simpleFS = FormulaUtil.getLiteralWithPredAndRowVar(pred,f);
                 if (simpleFS == null)
                     continue;
@@ -154,15 +154,15 @@ public class RowVars {
                 // then #arguments which can be expanded = #arguments in pred - nonRowVar
                 int startIndex = 0;
                 while (startIndex < f.getFormula().length()) {
-                    int start = f.getFormula().indexOf("(" + pred, startIndex);
+                    int start = f.getFormula().indexOf(Formula.LP + pred, startIndex);
                     if (start == -1) {
                         startIndex = f.getFormula().length();
                         continue;
                     }
-                    int end = f.getFormula().indexOf(")", start);
+                    int end = f.getFormula().indexOf(Formula.RP, start);
                     startIndex = end + 1;
                     String simpleFS = f.getFormula().substring(start, end + 1);
-                    if (!simpleFS.contains("@"))
+                    if (!simpleFS.contains(Formula.R_PREF))
                         continue;
                     int nonRowVar = 0;
                     if (DEBUG)
@@ -281,11 +281,11 @@ public class RowVars {
 
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): f: " + f);
         Map<String,Set<String>> result = new HashMap<>();
-        if (!f.getFormula().contains("@") || f.empty() || f.atom())
+        if (!f.getFormula().contains(Formula.R_PREF) || f.empty() || f.atom())
             return result;
         String pred = f.getStringArgument(0);
         if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): pred: " + pred);
-        if (!f.getFormula().substring(1).contains("(")) {  // no higher order or functions
+        if (!f.getFormula().substring(1).contains(Formula.LP)) {  // no higher order or functions
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): simple clause f: " + f);
             Set<String> rowvars = findRowVars(f);
             if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): found rowvars: " + rowvars);
@@ -302,12 +302,12 @@ public class RowVars {
             List<String> args = f.complexArgumentsToArrayListString(1);
             for (int i = 0; i < args.size(); i++) {
                 Formula f2 = new Formula(args.get(i));
-                if (f2.getFormula().startsWith("@")) {
+                if (f2.getFormula().startsWith(Formula.R_PREF)) {
                     if (DEBUG) System.out.println("Info in RowVars.getRowVarRelations(): adding var,pred: " +
                             f2.getFormula() + ", " + pred);
                     addToValueSet(result,f2.getFormula(),pred);
                 }
-                else if (f2.getFormula().contains("@"))
+                else if (f2.getFormula().contains(Formula.R_PREF))
                     result = mergeValueSets(result,getRowVarRelations(f2));
             }
         }
@@ -346,7 +346,7 @@ public class RowVars {
 
         List<String> result = new ArrayList<>();
         List<Formula> formresult = new ArrayList<>();
-        if (!f.getFormula().contains("@")) {
+        if (!f.getFormula().contains(Formula.R_PREF)) {
             // If there are no row variables, return the original formula
             formresult.add(f);
             return formresult;
@@ -378,12 +378,12 @@ public class RowVars {
                 System.out.println("Info in RowVars.expandRowVars(): minArity: " + minArity);
             for (int j = 1; j < minArity; j++) {
                 if (j > 1)
-                    replaceString.append(" ");
+                    replaceString.append(Formula.SPACE);
                 replaceString.append(replaceVar).append(Integer.toString(j+1));
             }
             for (int j = minArity; j <= maxArity; j++) {
                 if (j > 0)
-                    replaceString.append(" ");
+                    replaceString.append(Formula.SPACE);
                 replaceString.append(replaceVar).append(Integer.toString(j+1));
                 //if (DEBUG)
                 //    System.out.println("Info in RowVars.expandRowVars(): replace: " + replaceString);
