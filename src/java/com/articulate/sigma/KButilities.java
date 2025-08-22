@@ -16,16 +16,6 @@ http://sigmakee.sourceforge.net
 /*************************************************************************************************/
 package com.articulate.sigma;
 
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.articulate.sigma.nlg.NLGUtils;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.FileUtil;
@@ -36,6 +26,16 @@ import com.articulate.sigma.wordNet.WordNet;
 import com.esotericsoftware.kryo.Kryo;
 
 import com.google.common.collect.Sets;
+
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;

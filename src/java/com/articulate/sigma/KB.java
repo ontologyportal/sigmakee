@@ -69,8 +69,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-import tptp_parser.TPTPFormula;
-
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -81,6 +79,8 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+
+import tptp_parser.TPTPFormula;
 
 /**
  * ***************************************************************** Contains
