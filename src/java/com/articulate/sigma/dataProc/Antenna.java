@@ -92,7 +92,8 @@ public class Antenna {
                 id = type + Integer.toString(idcount++);
                 if (StringUtil.emptyString(stype))
                     System.out.println("Error in genSUMO(): no mapping for type: " + type);
-                sumoForms.add("(instance " + id + " " + stype + ")");
+                sumoForms.add("(instance " + id + " Antenna)");
+                sumoForms.add("(antennaPattern " + id + " " + stype + ")");
             }
             if (mapping.keySet().contains(be.getTagName())) {
                 if (be.getAttribute("unit") != null) {
@@ -122,7 +123,8 @@ public class Antenna {
                 id = args[1];
                 String type = args[2];
                 String stype = mapping.get(type);
-                sumoForms.add("(instance " + id + " " + stype + ")");
+                sumoForms.add("(instance " + id + " Antenna)");
+                sumoForms.add("(antennaPattern " + id + " " + stype + ")");
                 continue;
             }
             if (line.trim().startsWith("//"))
