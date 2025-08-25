@@ -50,8 +50,14 @@ import org.json.simple.JSONValue;
 @WebListener
 public class KButilities implements ServletContextListener {
 
-    /** Uses the number of available processors to set the thread pool count */
-    public static final ExecutorService EXECUTOR_SERVICE = Executors.newWorkStealingPool();
+    /** Uses a fixed pool, which is more predictable and avoids deadlocks;
+    thread count can be changed by passing a system property:
+    java -Dsigma.exec.parallelism=6 ... 
+    */
+    private static final int PAR = Integer.getInteger("sigma.exec.parallelism", 6);
+    public static final ExecutorService EXECUTOR_SERVICE =
+        Executors.newFixedThreadPool(PAR);
+
 
     /** A thread local pool for the Kryo serializer */
     public static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
