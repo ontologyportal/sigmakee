@@ -1143,6 +1143,8 @@ public class Diagnostics {
         List<Formula> complexArgs;
         Map<String, Set<String>> tempMap;
         Set<String> linkedVars;
+
+        // check if formula is a simple argument
         if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
             simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
             variables = new HashSet<>();
@@ -1159,7 +1161,8 @@ public class Diagnostics {
                     links.put(var, linkedVars); // create a new entry with the variable and its linked variables
                 }
             }
-        } else { // recursive case
+        }
+        else { // recursive case
             if (Formula.isQuantifier(f.car()))
                 complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
             else
@@ -1179,10 +1182,72 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Recursively extract variable co-occurrences from a KIF file
+     *
+     * @param fKif the KIF file to process
+     * @param kb the current knowledge base
+     * @return a map where each variable is linked to others it appears with
+     */
+    public static Map<String, Set<String>> getVariableLinks(File fKif, KB kb) {
+
+        Map<String, Set<String>> links = new HashMap<>();
+
+        if (!fKif.exists())
+            return links;
+
+        KIF kifInstance = new KIF();
+        kifInstance.setParseMode(KIF.RELAXED_PARSE_MODE);
+        try {
+            kifInstance.readFile(fKif.getPath()); // getFormula() translates formula into a string
+        } catch (Exception e) {
+            System.err.println("Error in: " + Diagnostics.class.getName() + "getVariableLinks: " + e);
+            return links;
+        }
+
+        Set<String> variables;
+        List<String> simpleArgs;
+        List<Formula> complexArgs;
+        Set<String> linkedVars;
+        Formula f;
+        Set<String> keys = kifInstance.formulaMap.keySet();
+
+        for (String key : keys) {
+            f = kifInstance.formulaMap.get(key);
+            // check if formula is a simple argument
+            if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
+                simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
+                variables = new HashSet<>();
+                for (String arg : simpleArgs) {
+                    if (new Formula(arg).isVariable())
+                        variables.add(arg); // extracts ?H from (instance ?H Human)
+                }
+                for (String var : variables) {
+                linkedVars = new HashSet<>(variables);
+                linkedVars.remove(var); // prevents self links (?X -> {?X})
+                if (links.containsKey(var)) { // if the variable already exists in the map
+                    links.get(var).addAll(linkedVars); // merges other variables that exists for var
+                } else {
+                    links.put(var, linkedVars); // create a new entry with the variable and its linked variables
+                }
+            }
+            }
+            else {
+                if (Formula.isQuantifier(f.car()))
+                    complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
+                else
+                    complexArgs = f.complexArgumentsToArrayList(1);
+                for (Formula complexForm : complexArgs)
+                    links.putAll(getVariableLinks(complexForm, kb));
+            }
+        }
+        return links;
+    }
+
+    /** ***************************************************************
      */
     public static void showHelp() {
 
-        System.out.println("Diagnostics");
+        System.out.println("Diagnostics class");
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -t - print term def by file");
@@ -1193,7 +1258,7 @@ public class Diagnostics {
         System.out.println("  -o - terms not below Entity (Orphans)");
         System.out.println("  -c - terms without documentation");
         System.out.println("  -q - quantifier not in body");
-        System.out.println("  -v - extract variable co-occurrences");
+        System.out.println("  -v <fname> - extract variable co-occurrences from a kif file");
     }
 
     /** ***************************************************************
@@ -1244,48 +1309,49 @@ public class Diagnostics {
         else if (args != null && args.length > 0 && args[0].equals("-h")) {
             showHelp();
         }
-        else if (args != null && args.length == 2 && args[0].equals("-v")) {
-//             Formula simpleFormula = new Formula("(instance ?H Human)");
-////             Formula complexFormula = new Formula("(=>\n" +
-////                                                  "  (and\n" +
-////                                                  "    (P ?A ?B)\n" +
-////                                                  "    (P ?B ?C))\n" +
-////                                                  "  (exists (?X ?Z)\n" +
-////                                                  "    (and\n" +
-////                                                  "      (Q ?X)\n" +
-////                                                  "      (M ?Z ?C))))"
-////                                                 );
-//
+        else if (args != null && args.length > 0 && args[0].equals("-v")) {
+//            Formula simpleFormula = new Formula("(instance ?H Human)");
+//            varLinksParentMap.putAll(getVariableLinks(simpleFormula, kb));
+
 //             Formula complexFormula = new Formula("(=>\n" +
-//                                                    "  (instance ?WARGAMING Wargaming)\n" +
-//                                                    "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
-//                                                    "    (and\n" +
-//                                                    "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
-//                                                    "      (instance ?SIMULATION Imagining)\n" +
-//                                                    "      (instance ?TOOL Device)\n" +
-//                                                    "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
-//                                                    "      (patient ?WARGAMING ?SIMULATION)\n" +
-//                                                    "      (instrument ?WARGAMING ?TOOL))))"
+//                                                  "  (and\n" +
+//                                                  "    (P ?A ?B)\n" +
+//                                                  "    (P ?B ?C))\n" +
+//                                                  "  (exists (?X ?Z)\n" +
+//                                                  "    (and\n" +
+//                                                  "      (Q ?X)\n" +
+//                                                  "      (M ?Z ?C))))"
 //                                                 );
-//
-//             varLinksParentMap.putAll(getVariableLinks(complexFormula, kb));
-//             System.out.println("varLinksParentMap: " + varLinksParentMap);
+//            Formula complexFormula = new Formula("(=>\n" +
+//                                                   "  (instance ?WARGAMING Wargaming)\n" +
+//                                                   "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
+//                                                   "    (and\n" +
+//                                                   "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
+//                                                   "      (instance ?SIMULATION Imagining)\n" +
+//                                                   "      (instance ?TOOL Device)\n" +
+//                                                   "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
+//                                                   "      (patient ?WARGAMING ?SIMULATION)\n" +
+//                                                   "      (instrument ?WARGAMING ?TOOL))))"
+//                                                );
 
-            String path = args[1];
-            Path inPath = Paths.get(path);
-            try (Stream<Path> paths = Files.walk(inPath)) {
-                paths.filter(f -> f.toString().endsWith(".kif")).sorted().forEach(f -> {
-                    String s = String.join("\n", FileUtil.readLines(args[1]));
-                    Formula kifFormula = new Formula(s);
-                    varLinksParentMap.putAll(getVariableLinks(kifFormula, kb));
-                });
+//            varLinksParentMap.putAll(getVariableLinks(complexFormula, kb));
 
-                for (String key : varLinksParentMap.keySet()) {
-                    System.out.println("  " + key + " -> " + varLinksParentMap.get(key));
+            if (args[1] != null && !args[1].isBlank()) {
+                String path = args[1];
+                Path inPath = Paths.get(path);
+                try (Stream<Path> paths = Files.walk(inPath)) {
+                    paths.filter(f -> f.toString().endsWith(".kif")).sorted().forEach(f -> {
+                        varLinksParentMap.putAll(getVariableLinks(f.toFile(), kb));
+                    });
+                } catch (IOException e) {
+                    System.err.println("Error processing input: " + e);
                 }
-            } catch (IOException e) {
-                System.err.println("Error processing input: " + e.getMessage());
-                e.printStackTrace();
+            }
+
+            // Results output
+            System.out.printf("Resuls of getVariableLinks():%n");
+            for (String key : varLinksParentMap.keySet()) {
+               System.out.println("  " + key + " -> " + varLinksParentMap.get(key));
             }
         }
     }
