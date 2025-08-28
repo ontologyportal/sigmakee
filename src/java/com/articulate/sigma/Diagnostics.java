@@ -1118,6 +1118,53 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
+     * Recursively extract variables from a KIF formula
+     *
+     * @param f the original Formula to process
+     * @param kb the current knowledge base
+     * @return a map where each variable is collected from its containing atom as its key
+     */
+    public static Map<String, Set<String>> extractVariables(Formula f, KB kb) {
+
+        Map<String, Set<String>> links = new HashMap<>();
+
+        if (f.getFormula() == null || f.getFormula().isBlank())
+            return links;
+
+        KIF kifInstance = new KIF();
+        String parsedf = kifInstance.parseStatement(f.getFormula()); // getFormula() translates formula into a string
+        if (parsedf != null && !parsedf.isBlank()) {
+            System.err.println("Error in: " + Diagnostics.class.getName() + "extractVariables: " + parsedf);
+            return links;
+        }
+
+        Set<String> variables;
+        List<String> simpleArgs;
+        List<Formula> complexArgs;
+
+        // check if formula is a simple argument
+        if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
+            simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
+            variables = new HashSet<>();
+            for (String arg : simpleArgs) {
+                if (new Formula(arg).isVariable())
+                    variables.add(arg); // extracts ?H from (instance ?H Human)
+            }
+            if (!variables.isEmpty())
+                links.put(f.getFormula(), variables);
+        }
+        else { // recursive case
+            if (Formula.isQuantifier(f.car()))
+                complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
+            else
+                complexArgs = f.complexArgumentsToArrayList(1);
+            for (Formula complexForm : complexArgs)
+                links.putAll(extractVariables(complexForm, kb));
+        }
+        return links;
+    }
+
+    /** ***************************************************************
      * Recursively extract variable co-occurrences from a KIF formula
      *
      * @param f the original Formula to process
@@ -1222,14 +1269,14 @@ public class Diagnostics {
                         variables.add(arg); // extracts ?H from (instance ?H Human)
                 }
                 for (String var : variables) {
-                linkedVars = new HashSet<>(variables);
-                linkedVars.remove(var); // prevents self links (?X -> {?X})
-                if (links.containsKey(var)) { // if the variable already exists in the map
-                    links.get(var).addAll(linkedVars); // merges other variables that exists for var
-                } else {
-                    links.put(var, linkedVars); // create a new entry with the variable and its linked variables
+                    linkedVars = new HashSet<>(variables);
+                    linkedVars.remove(var); // prevents self links (?X -> {?X})
+                    if (links.containsKey(var)) { // if the variable already exists in the map
+                        links.get(var).addAll(linkedVars); // merges other variables that exists for var
+                    } else {
+                        links.put(var, linkedVars); // create a new entry with the variable and its linked variables
+                    }
                 }
-            }
             }
             else {
                 if (Formula.isQuantifier(f.car()))
@@ -1313,15 +1360,15 @@ public class Diagnostics {
 //            Formula simpleFormula = new Formula("(instance ?H Human)");
 //            varLinksParentMap.putAll(getVariableLinks(simpleFormula, kb));
 
-//             Formula complexFormula = new Formula("(=>\n" +
-//                                                  "  (and\n" +
-//                                                  "    (P ?A ?B)\n" +
-//                                                  "    (P ?B ?C))\n" +
-//                                                  "  (exists (?X ?Z)\n" +
-//                                                  "    (and\n" +
-//                                                  "      (Q ?X)\n" +
-//                                                  "      (M ?Z ?C))))"
-//                                                 );
+//            Formula complexFormula = new Formula("(=>\n" +
+//                                                 "  (and\n" +
+//                                                 "    (P ?A ?B)\n" +
+//                                                 "    (P ?B ?C))\n" +
+//                                                 "  (exists (?X ?Z)\n" +
+//                                                 "    (and\n" +
+//                                                 "      (Q ?X)\n" +
+//                                                 "      (M ?Z ?C))))"
+//                                                );
 //            Formula complexFormula = new Formula("(=>\n" +
 //                                                   "  (instance ?WARGAMING Wargaming)\n" +
 //                                                   "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +

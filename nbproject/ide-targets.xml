@@ -102,11 +102,11 @@
     <target name="check.config" depends="get.length,copy.milo.config"/>
     <target name="get.length">
         <condition property="is.milo">
-            <length mode="all" when="eq" length="2593"> <!-- Check the size every now and then for addtions of preferences -->
+            <length mode="all" when="eq" length="2594"> <!-- Check the size every now and then for addtions of preferences -->
                 <fileset file="${kbs.dir}/config.xml"/>
             </length>
         </condition>
-        <echo message="confix.xml size is 2.543KB: ${is.milo}"/>
+        <echo message="confix.xml size is 2.594KB: ${is.milo}"/>
     </target>
     <target name="copy.milo.config" unless="is.milo">
         <antcall target="prep.top.mid.config"/>
@@ -159,7 +159,7 @@
         <antcall target="junit.report"/>
         <echo message="Now, manually run thorough.clean to purge KBs and restore the main config"/>
     </target>
-    <target name="run-selected-test" depends="clean,compile.test">
+    <target name="run-selected-test" depends="clean,prep.unit.config,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -182,7 +182,7 @@
             </test>
         </junit>
     </target>
-    <target name="run-single-test-method" depends="clean,check.config,compile.test">
+    <target name="run-single-test-method" depends="clean,prep.unit.config,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <junit printsummary="yes"
                showoutput="yes"
@@ -363,7 +363,7 @@
     =====================
     -->
 
-    <target name="debug-selected-test" depends="clean,check.config,compile.test">
+    <target name="debug-selected-test" depends="clean,prep.unit.config,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>
@@ -390,7 +390,7 @@
             </test>
         </junit>
     </target>
-    <target name="debug-single-test-method" depends="clean,check.config,compile.test">
+    <target name="debug-single-test-method" depends="clean,prep.unit.config,check.config,compile.test">
         <fail unless="test.class">Must set property 'test.class'</fail>
         <nbjpdastart addressproperty="jpda.address" name="${impl.title}" transport="${debug.transport}">
             <classpath refid="tcp"/>

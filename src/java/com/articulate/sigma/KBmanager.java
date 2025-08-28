@@ -646,7 +646,7 @@ public class KBmanager implements Serializable {
                 if (!retVal)
                     break;
             } catch (InterruptedException | ExecutionException ex) {
-                System.err.printf("Error in KB.checkArity(): %s", ex);
+                System.err.printf("Error in KBmanager.loadKB(): %s", ex);
                 ex.printStackTrace();
                 retVal = false;
                 break;

@@ -364,7 +364,7 @@ public class PredVarInstTest extends UnitTestBase  {
             rel2 = classes[1];
             for (Formula form : kb.formulaMap.values()) {
                 if (form.isRule() && form.getFormula().contains(rel1) && form.getFormula().contains(rel2)) {
-                    varCoccurrences = Diagnostics.getVariableLinks(form, kb);
+                    varCoccurrences = Diagnostics.extractVariables(form, kb);
                     for (String key : varCoccurrences.keySet()) {
                         sb.append(key);
                         car = sb.substring(1, sb.indexOf(" ")); // the car w/o leading '('
