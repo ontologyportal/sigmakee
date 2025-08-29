@@ -36,6 +36,7 @@
       <TD>
         <font FACE="Arial, Helvetica" SIZE=-1><b>[&nbsp;
         <%
+            out.println("<A href=\"CheckKifFile.jsp\"><b>Check KIF File</b></A>&nbsp;|&nbsp;");
             if (pageName == null || !pageName.equals("KBs"))
                 out.println("<A href=\"KBs.jsp\"><b>Home</b></A>&nbsp;|&nbsp");
             if (kb != null && kb.eprover != null && role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("AskTell")))
