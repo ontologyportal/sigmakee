@@ -221,15 +221,23 @@ public final class PasswordService implements ServletContextListener {
     public void mailModerator(User user) {
 
         String destmailid = user.attributes.get("email");
-        String from = System.getenv("SIGMA_EMAIL_ADDRESS");
+        /* Environment variables temporarily overwritten, hardcoded a burner email for now. */
+        // String from = System.getenv("SIGMA_EMAIL_ADDRESS");
+        // final String pwd = System.getenv("SIGMA_EMAIL_PASS");
+        // final String uname = System.getenv("SIGMA_EMAIL_USER");
+        // String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
+
+        String from = "simgauserverif@gmail.com";
+        final String pwd = "kouojgulatnaeuaq";
+        final String uname = from;
+        String smtphost = "smtp.gmail.com";
+        
         String firstName = user.attributes.get("firstName");
         String lastName = user.attributes.get("lastName");
         String username = user.username;
         String notRobot = user.attributes.get("notRobot");
         String registrId = user.attributes.get("registrId");
-        final String pwd = System.getenv("SIGMA_EMAIL_PASS");
-        final String uname = System.getenv("SIGMA_EMAIL_USER");
-        System.out.println("mailModerator(): uname: " + uname); // the system username for the email server
+        System.out.println("mailModerator(): uname: " + uname);
 
         String host = KBmanager.getMgr().getPref("hostname");
         String port = KBmanager.getMgr().getPref("port");
@@ -249,7 +257,6 @@ public final class PasswordService implements ServletContextListener {
             uee.printStackTrace();
         }
 
-        String smtphost = System.getenv("SIGMA_EMAIL_SERVER");
         System.out.println("PasswordService.mailModerator(): host: " + smtphost);
         Properties propvls = new Properties();
         propvls.put("mail.smtp.auth", "true");
@@ -399,6 +406,21 @@ public final class PasswordService implements ServletContextListener {
         else
             System.err.println("invalid login");
     }
+
+    /** *****************************************************************
+     */
+    public void changeUserPassword(String username, String newPassword) {
+        
+        User u = User.fromDB(conn, username);
+        if (u != null) {
+            u.password = encrypt(newPassword);
+            u.updatePassword(conn);
+            System.out.println("PasswordService.changeUserPassword(): changed password for " + username);
+        } else {
+            System.err.println("PasswordService.changeUserPassword(): user not found " + username);
+        }
+    }
+
 
     /** *****************************************************************
      */

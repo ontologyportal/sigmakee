@@ -21,7 +21,17 @@
 <TABLE width="95%" cellspacing="0" cellpadding="0">
   <TR>
       <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
-      <TD align="left" valign="top"><img src="pixmaps/logoText-gray.gif"><br><B><%=pageString %></B><%=welcomeString%></TD>
+      <TD align="left" valign="top">
+        <img src="pixmaps/logoText-gray.gif"><br>
+        <B><%=pageString %></B>
+        <%=welcomeString%>
+        <%
+            boolean showLogout = (username != null && !username.trim().isEmpty());
+            if (showLogout) {
+        %>
+           &nbsp;<a href="logout.jsp"><b>logout</b></a>
+        <% } %>
+      </TD>
       <TD valign="bottom"></TD>
       <TD>
         <font FACE="Arial, Helvetica" SIZE=-1><b>[&nbsp;
@@ -37,6 +47,9 @@
                 out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
                 out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
+            if (role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("manageUsers"))) {
+                out.println("<A href=\"ManageUsers.jsp\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
+            }
         %>
         ]&nbsp;
         <b>KB:&nbsp;
