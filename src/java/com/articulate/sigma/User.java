@@ -183,6 +183,38 @@ public class User {
     }
 
     /** *****************************************************************
+     * Update the role for this user
+     */
+    public void updateRole(Connection conn) {
+
+        try (Statement stmt = conn.createStatement()) {
+            String str = "update users set role='" + this.role + "' where username='" + this.username + "';";
+            stmt.execute(str);
+            System.out.println("User.updateRole(): role updated for " + this.username);
+        }
+        catch (SQLException e) {
+            System.err.println("Error in User.updateRole(): " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /** *****************************************************************
+     * Update just the password for this user
+     */
+    public void updatePassword(Connection conn) {
+
+        try (Statement stmt = conn.createStatement()) {
+            String str = "update users set password='" + this.password + "' where username='" + this.username + "';";
+            stmt.execute(str);
+            System.out.println("User.updatePassword(): password updated for " + this.username);
+        }
+        catch (SQLException e) {
+            System.err.println("Error in User.updatePassword(): " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /** *****************************************************************
      * @return the role of this user
      */
     public String getRole() {
