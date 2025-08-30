@@ -9,11 +9,12 @@ import java.util.*;
  * Validates a .kif file for common SUO-KIF issues:
  *   • Balanced parentheses across lines
  *   • Logical operator shapes (via Formula.validArgs + a few explicit checks)
- *   • Unquantified variables (free vars allowed in rules =>, <=>)
+ *   • Unquantified variables (checked ONLY at top level)
  *   • Arity checks (KB signatures with small built-ins)
  *   • Light semantics: arguments “below Entity” for instance/subclass
  *     using Diagnostics.termNotBelowEntity(...) + local declarations
  *   • Unknown head symbol (flags misspelled predicates like "ibnstance")
+ *   • Recurses into nested formulas (and/or/not/exists/forall/=>/<=>)
  */
 public class KifFileChecker {
 
@@ -63,12 +64,8 @@ public class KifFileChecker {
                 f.endLine   = lineNo;
                 f.setSourceFile(fileName);
 
-                // Learn local class declarations before running checks
-                recordLocalClassFacts(f, localClasses, kb);
-
-
-                // Validate one complete formula
-                out.addAll(validateFormula(f, fileName, startLine, kb, localClasses));
+                // Validate deeply (this also records local classes as it goes)
+                validateDeep(f, fileName, startLine, kb, localClasses, out, /*topLevel=*/true);
 
                 buf.setLength(0); // reset for the next formula
             }
@@ -82,12 +79,86 @@ public class KifFileChecker {
         return out;
     }
 
-    /** Validate a single complete, balanced formula. */
+    /** Validate f and all nested subformulas. Quantifier check only at top level. */
+    private static void validateDeep(Formula f,
+                                     String fileName,
+                                     int startLine,
+                                     KB kb,
+                                     Set<String> localClasses,
+                                     List<String> out,
+                                     boolean topLevel) {
+
+        // Learn any local class facts introduced by this literal (e.g., subclass/instance Class)
+        recordLocalClassFacts(f, localClasses, kb);
+
+        // Validate this literal itself (quantifier check only at top level)
+        out.addAll(validateFormula(f, fileName, startLine, kb, localClasses, topLevel));
+
+        // Recurse into sentence-valued arguments
+        final String pred = f.car();
+        if (pred == null || pred.isEmpty()) return;
+
+        final List<String> args = f.argumentsToArrayListString(1);
+        if (args == null) return;
+
+        switch (pred) {
+            case "not":
+                if (!args.isEmpty())
+                    descend(args.get(0), f, fileName, startLine, kb, localClasses, out, false);
+                break;
+
+            case "and":
+            case "or":
+            case "=>":
+            case "<=>":
+                for (String a : args)
+                    descend(a, f, fileName, startLine, kb, localClasses, out, false);
+                break;
+
+            case "exists":
+            case "forall":
+                // (exists (?vars) BODY) — args: [varlist, body]
+                if (args.size() >= 2)
+                    descend(args.get(1), f, fileName, startLine, kb, localClasses, out, false);
+                break;
+
+            default:
+                // Non-logical heads have no sentence-valued arguments to descend into
+                break;
+        }
+    }
+
+    /** Helper to descend into a child S-expression, if present. */
+    private static void descend(String s,
+                                Formula parent,
+                                String fileName,
+                                int startLine,
+                                KB kb,
+                                Set<String> localClasses,
+                                List<String> out,
+                                boolean topLevel) {
+        if (s == null) return;
+        s = s.trim();
+        if (!s.startsWith("(")) return; // quick guard against constants/vars/strings
+
+        Formula g = new Formula();
+        g.read(s);
+        if (!g.isBalancedList()) return;
+
+        g.startLine = startLine;  // reuse parent's start; exact mapping optional
+        g.endLine   = parent.endLine;
+        g.setSourceFile(fileName);
+
+        validateDeep(g, fileName, startLine, kb, localClasses, out, topLevel);
+    }
+
+    /** Validate a single complete, balanced formula (non-recursive). */
     private static List<String> validateFormula(Formula f,
                                                 String fileName,
                                                 int startLine,
                                                 KB kb,
-                                                Set<String> localClasses) {
+                                                Set<String> localClasses,
+                                                boolean topLevel) {
 
         final List<String> errors = new ArrayList<>();
         final Set<String> seen = new HashSet<>();
@@ -103,10 +174,12 @@ public class KifFileChecker {
             }
         }
 
-        // 2) Quantification: treat free variables in rules (=>, <=>) as universally quantified
-        Set<String> unquant = f.collectUnquantifiedVariables();
-        if (!f.isRule() && !unquant.isEmpty()) {
-            errors.add(lineMsg(startLine, "Unquantified variables → " + unquant));
+        // 2) Quantification: ONLY check at top level.
+        if (topLevel) {
+            Set<String> unquant = f.collectUnquantifiedVariables();
+            if (!f.isRule() && !unquant.isEmpty()) {
+                errors.add(lineMsg(startLine, "Unquantified variables → " + unquant));
+            }
         }
 
         // 3) Head symbol and arguments
@@ -192,10 +265,11 @@ public class KifFileChecker {
         return errors;
     }
 
-    // Pass kb into this method so you can test arg2 against the real KB.
+    /** Record local declarations so they count as “below Entity” during this run. */
     private static void recordLocalClassFacts(Formula f, Set<String> localClasses, KB kb) {
         final String pred = f.car();
         if (pred == null || pred.isEmpty()) return;
+
         final List<String> args = f.argumentsToArrayListString(1);
         if (args == null) return;
 
@@ -211,7 +285,6 @@ public class KifFileChecker {
             localClasses.add(args.get(0));
         }
     }
-
 
     /** True if term is “below Entity”, using local declarations + Diagnostics. */
     private static boolean isBelowEntity(String term, Set<String> localClasses, KB kb) {
