@@ -1,17 +1,5 @@
 <%@ include file="Prelude.jsp" %>
 <%
-/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
-    Infosys (c) 2017-present.
-
-    This software is released under the GNU Public License
-    <http://www.gnu.org/copyleft/gpl.html>.
-
-    Please cite the following article in any publication with references:
-
-    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
-    for Logical Theories. AI Communications 26, pp79-97.  See also
-    http://github.com/ontologyportal
-*/
     String pageName = "CheckKifFile";
     String pageString = "Check KIF File";
     if (welcomeString == null) welcomeString = "";
@@ -39,12 +27,39 @@
     .row.bad { background: #ffd6d6; }
     .ln { display: inline-block; width: 4ch; text-align: right; color: #555; }
     h3 { margin: 8px 0; }
+
+    /* Syntax highlighting */
+    .comment { color: red; }
+    .operator { color: darkblue; font-weight: bold; }
+    .quantifier { color: darkblue; font-style: italic; }
+    .variable { color: #3399ff; }
+    .instance { color: green; font-weight: bold; }
   </style>
 </head>
 <body>
 <%!
   private static String esc(String s) {
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
+  }
+
+  private static String highlightKif(String s) {
+    if (s == null) return "";
+    String out = esc(s);
+
+    // Comments
+    out = out.replaceAll("(;.*)$", "<span class='comment'>$1</span>");
+
+    // Operators & quantifiers
+    out = out.replaceAll("\\b(and|or|not|=>|<=>)\\b", "<span class='operator'>$1</span>");
+    out = out.replaceAll("\\b(exists|forall)\\b", "<span class='quantifier'>$1</span>");
+
+    // Variables
+    out = out.replaceAll("(\\?[A-Za-z0-9_-]+)", "<span class='variable'>$1</span>");
+
+    // Special keyword
+    out = out.replaceAll("\\b(instance)\\b", "<span class='instance'>$1</span>");
+
+    return out;
   }
 %>
 <h3>Check KIF File For Errors</h3>
@@ -94,7 +109,7 @@
           boolean bad = errorLines.contains(lineNo);
           out.print("<span class='row" + (bad ? " bad" : "") + "'>");
           out.print("<span class='ln'>" + String.format("%4d", lineNo) + "</span> | ");
-          out.print(esc(lineText));
+          out.print(highlightKif(lineText));
           out.println("</span>");
           lineNo++;
       }
