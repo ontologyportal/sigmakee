@@ -1,14 +1,26 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
-<%@ page import="java.util.*,java.util.regex.*" %>
+<%@ include file="Prelude.jsp" %>
+<%
+/** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-2017,
+    Infosys (c) 2017-present.
 
-<%!
-  // Simple HTML escaper for rendering safely
-  private static String esc(String s){
-    if (s == null) return "";
-    return s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
-  }
+    This software is released under the GNU Public License
+    <http://www.gnu.org/copyleft/gpl.html>.
+
+    Please cite the following article in any publication with references:
+
+    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
+    for Logical Theories. AI Communications 26, pp79-97.  See also
+    http://github.com/ontologyportal
+*/
+    String pageName = "CheckKifFile";
+    String pageString = "Check KIF File";
+    if (welcomeString == null) welcomeString = "";
 %>
+<%@ include file="CommonHeader.jsp" %>
 
+<table align="left" width="80%">
+  <tr><td bgcolor="#AAAAAA"><img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr>
+</table><br>
 <!DOCTYPE html>
 <html>
 <head>
@@ -17,98 +29,93 @@
   <style>
     body { font-family: system-ui, sans-serif; margin: 24px; }
     .card { border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px; }
-    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
+    .layout { display: grid; grid-template-columns: 50% 50%; gap: 16px; margin-top: 12px; }
     .scroller { max-height: 60vh; overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-    .msg { padding: 12px; white-space: pre-wrap; }
-    .errors-box { color:#b00020; }
-    .success { color:#077d3f; }
-    pre {
-      margin: 0; background: #f8f8f8; padding: 8px;
-      border: 0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
-      color: #000;
-    }
+    .msg { padding: 12px; white-space: pre-line; }
+    .errors-box { color: #b00020; }
+    .success { color: #077d3f; }
+    pre { margin: 0; background: #f8f8f8; border: 0; font-family: ui-monospace, monospace; color: #000; }
     .row { display: inline-block; padding: 0 4px; }
     .row.bad { background: #ffd6d6; }
-    .ln  { display:inline-block; width: 4ch; text-align: right; color:#555; }
+    .ln { display: inline-block; width: 4ch; text-align: right; color: #555; }
     h3 { margin: 8px 0; }
   </style>
 </head>
 <body>
-<flex>
+<%!
+  private static String esc(String s) {
+    return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
+  }
+%>
+<h3>Check KIF File For Errors</h3>
 <div class="card">
-  <form method="post" action="CheckKifFile" enctype="multipart/form-data">
-    <label>Select a .kif file to check:</label><br/>
-    <input type="file" name="kifFile" accept=".kif" required/>
-    <div style="margin-top:8px">
-      <label>
-        <input type="checkbox" name="includeBelow"
-               value="1"
-               <%= (request.getAttribute("includeBelow") == null
-                    || Boolean.TRUE.equals(request.getAttribute("includeBelow")))
-                    ? "checked" : "" %> />
-        Terms Below Entity Errors
-      </label>
-    </div>
+  <form method="post" action="CheckKifFile" enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+    <label>
+      <input label="Select a .kif file" type="file" name="kifFile" accept=".kif" required/>
+    </label>
+    <label style="display:flex; align-items:center; gap:8px; margin:0;">
+      <input type="checkbox" name="includeBelow" value="1"
+        <%= (request.getAttribute("includeBelow") == null
+            || Boolean.TRUE.equals(request.getAttribute("includeBelow"))) ? "checked" : "" %> />
+      Terms Below Entity Errors
+    </label>
     <button type="submit">Upload & Check</button>
   </form>
 </div>
-</flex>
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
   String fileName = (String) request.getAttribute("fileName");
   List<String> errors = (List<String>) request.getAttribute("errors");
   List<String> fileContent = (List<String>) request.getAttribute("fileContent");
-
   if (errorMessage != null) {
 %>
   <div class="scroller msg errors-box"><%= esc(errorMessage) %></div>
 <%
   } else if (fileName != null) {
-    // Collect error line numbers from messages like "Line N: ..."
-    Set<Integer> errorLines = new HashSet<>();
-    if (errors != null) {
-      Pattern p = Pattern.compile("^Line\\s+(\\d+):");
-      for (String e : errors) {
-        Matcher m = p.matcher(e);
-        if (m.find()) {
-          try { errorLines.add(Integer.parseInt(m.group(1))); } catch (NumberFormatException ignore) {}
-        }
+      java.util.Set<Integer> errorLines = new java.util.HashSet<>();
+      if (errors != null) {
+          java.util.regex.Pattern p = java.util.regex.Pattern.compile("^Line\\s+(\\d+):");
+          for (String e : errors) {
+              java.util.regex.Matcher m = p.matcher(e);
+              if (m.find()) {
+                  try { errorLines.add(Integer.parseInt(m.group(1))); } catch (NumberFormatException ignore) {}
+              }
+          }
       }
-    }
-    String panelClass = (errors == null || errors.isEmpty())
-            ? "scroller msg success"
-            : "scroller msg errors-box";
 %>
-  <div>
+  <div class="layout">
+    <!-- Left column: Code -->
     <div>
       <h3>Uploaded File: <%= fileName %></h3>
-      <div class="scroller">
-        <pre>
+      <div class="scroller"><pre>
 <%
-          int lineNo = 1;
-          for (String line : fileContent) {
-            boolean bad = errorLines.contains(lineNo);
-            out.print("<span class='row" + (bad ? " bad" : "") + "'>");
-            out.print("<span class='ln'>");
-            out.print(String.format("%4d", lineNo));
-            out.print("</span> | ");
-            out.print(esc(line));
-            out.println("</span>");
-            lineNo++;
-          }
+      int lineNo = 1;
+      for (String lineText : fileContent) {
+          boolean bad = errorLines.contains(lineNo);
+          out.print("<span class='row" + (bad ? " bad" : "") + "'>");
+          out.print("<span class='ln'>" + String.format("%4d", lineNo) + "</span> | ");
+          out.print(esc(lineText));
+          out.println("</span>");
+          lineNo++;
+      }
 %>
-        </pre>
-      </div>
+      </pre></div>
     </div>
+    <!-- Right column: Errors -->
     <div>
       <h3>Errors in <%= fileName %>:</h3>
-      <div class="<%= panelClass %>">
+      <div class="scroller msg <%= (errors == null || errors.isEmpty()) ? "success" : "errors-box" %>">
 <%
-        if (errors == null || errors.isEmpty()) {
-          out.print("✅ No errors.");
-        } else {
-          for (String e : errors) out.println(esc(e) + "\n");
-        }
+          if (errors == null || errors.isEmpty()) {
+              out.print("&#9989; No errors.");
+          } else {
+              boolean first = true;
+              for (String e : errors) {
+                  if (!first) out.print("<br/><br/>");
+                  out.print(esc(e));
+                  first = false;
+              }
+          }
 %>
       </div>
     </div>
@@ -116,6 +123,6 @@
 <%
   }
 %>
-
+<%@ include file="Postlude.jsp" %>
 </body>
 </html>

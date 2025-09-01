@@ -50,7 +50,7 @@ public class KifFileChecker {
     public static List<String> check(Reader reader, String sourceName, boolean includeBelow) throws IOException {
 
         final List<String> out = new ArrayList<>();
-        final StringBuilder buf = new StringBuilder();     // preserves newlines
+        final StringBuilder buf = new StringBuilder();
         final Set<String> localClasses = new HashSet<>();
         int lineNo = 0, startLine = 0;
         final KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
@@ -64,9 +64,9 @@ public class KifFileChecker {
                 if (buf.length() == 0) {
                     startLine = lineNo;
                 } else {
-                    buf.append('\n');               // <— key change
+                    buf.append('\n');
                 }
-                buf.append(raw);                    // keep original spacing/newlines
+                buf.append(raw);
                 final String chunkRaw = buf.toString();
                 final String chunk    = chunkRaw.trim();
                 Formula probe = new Formula(); probe.read(chunk);
@@ -106,27 +106,19 @@ public class KifFileChecker {
                                     boolean topLevel,
                                     boolean includeBelow,
                                     String sourceText) {
-
-        // Learn any local class facts introduced by this literal (e.g., subclass/instance Class)
+    
         recordLocalClassFacts(f, localClasses, kb, includeBelow);
-
-        // Validate this literal itself (quantifier check only at top level)
         out.addAll(validateFormula(f, fileName, startLine, kb, localClasses, topLevel, includeBelow));
-
-        // Recurse into sentence-valued arguments
         final String pred = f.car();
         if (pred == null || pred.isEmpty()) return;
-
         final List<String> args = f.argumentsToArrayListString(1);
         if (args == null) return;
-
         switch (pred) {
             case "not":
                 if (!args.isEmpty())
                     descend(args.get(0), f, fileName, startLine, kb, localClasses, out,
                             /*topLevel=*/false, includeBelow, sourceText);
                 break;
-
             case "and":
             case "or":
             case "=>":
@@ -135,21 +127,16 @@ public class KifFileChecker {
                     descend(a, f, fileName, startLine, kb, localClasses, out,
                             /*topLevel=*/false, includeBelow, sourceText);
                 break;
-
             case "exists":
             case "forall":
-                // (exists (?vars) BODY) — args: [varlist, body]
                 if (args.size() >= 2)
                     descend(args.get(1), f, fileName, startLine, kb, localClasses, out,
                             /*topLevel=*/false, includeBelow, sourceText);
                 break;
-
             default:
-                // Non-logical heads have no sentence-valued arguments to descend into
                 break;
         }
     }
-
 
     /** *************************************************************
      * Parse and validate a child S-expression if present.
@@ -174,151 +161,175 @@ public class KifFileChecker {
                                 boolean topLevel,
                                 boolean includeBelow,
                                 String parentText) {
+    
         if (s == null) return;
         s = s.trim();
-        if (!s.startsWith("(")) return; // quick guard against constants/vars/strings
-
+        if (!s.startsWith("(")) return;
         Formula g = new Formula();
         g.read(s);
         if (!g.isBalancedList()) return;
-
-        // Compute child's own start line by locating it inside the parent's raw text
         int childStartLine = estimateStartLine(parentText, s, parentStartLine);
-
         g.startLine = childStartLine;
         g.endLine   = parent.endLine;
         g.setSourceFile(fileName);
-
-        // For the next level, the child's own raw text becomes the new sourceText
         validateDeep(g, fileName, childStartLine, kb, localClasses, out,
                     /*topLevel=*/false, includeBelow, s);
     }
 
-
-
-
-
-    // Make any message single-line (remove all newlines)
-    private static String flatten(String s) {
-        return (s == null) ? "" : s.replaceAll("[\\r\\n]+", " ").trim();
-    }
-
-    // Compact a formula to a single inline snippet (no excessive whitespace)
-    private static String inlineFormula(Formula f) {
-        String s = (f == null) ? "" : f.getFormula();
-        return (s == null) ? "" : s.replaceAll("\\s+", " ").trim();
-    }
-
-    // Dedup + add a line-prefixed, single-line message
-    private static void addMsg(List<String> errors, Set<String> seen, int line, String msg) {
-        String one = flatten(msg);
-        if (seen.add(one)) errors.add(lineMsg(line, one));
-    }
-
-    private static String oneLine(String s) {
-        if (s == null) return "";
-        int i = s.indexOf('\n');
-        return (i >= 0) ? s.substring(0, i) : s;
-    }
-
     /** *************************************************************
      * Validate one balanced formula (non-recursive).
-
-    * @param f the formula to validate
-    * @param fileName source label for messages
-    * @param startLine first line number of the current balanced chunk
-    * @param kb knowledge base for signatures/taxonomy
-    * @param localClasses locally declared classes available for this chunk
-    * @param topLevel true to enable the unquantified-variable check
-    * @param includeBelow toggle for taxonomy-based checks
-    * @return a list of messages for this formula; possibly empty
-    */
-    private static List<String> validateFormula(Formula f, String fileName, int startLine,
-                                            KB kb, Set<String> localClasses,
-                                            boolean topLevel, boolean includeBelow) {
+     * 
+     * @param f the formula to validate
+     * @param fileName source label for messages
+     * @param startLine first line number of the current balanced chunk
+     * @param kb knowledge base for signatures/taxonomy
+     * @param localClasses locally declared classes available for this chunk
+     * @param topLevel true to enable the unquantified-variable check
+     * @param includeBelow toggle for taxonomy-based checks
+     * @return a list of messages for this formula; possibly empty
+     */
+    private static List<String> validateFormula(Formula f, String fileName, int startLine, KB kb, Set<String> localClasses, boolean topLevel, boolean includeBelow) {
+        
         final List<String> errors = new ArrayList<>();
         final Set<String> seen = new HashSet<>();
-
-        // Built-in validator messages
-        String argError = f.validArgs(fileName, startLine);
-        if (!argError.isEmpty()) addMsg(errors, seen, startLine, argError);
-        for (String err : f.getErrors()) addMsg(errors, seen, startLine, err);
-
-        // Unquantified variables (top-level only)
-        if (topLevel) {
-            Set<String> unq = f.collectUnquantifiedVariables();
-            if (!f.isRule() && !unq.isEmpty())
-                addMsg(errors, seen, startLine, "Unquantified variables → " + unq);
-        }
-
+        checkArgsAndErrors(f, fileName, startLine, errors, seen);
+        if (topLevel) checkUnquantifiedVariables(f, startLine, errors, seen);
         final String pred = f.car();
         final List<String> args = (pred == null || pred.isEmpty()) ? null : f.argumentsToArrayListString(1);
-
-        // Unknown head
-        if (includeBelow && pred != null && !pred.isEmpty()
-                && !Formula.isLogicalOperator(pred) && !Formula.isVariable(pred)) {
-            boolean known = (kb != null) && !Diagnostics.termNotBelowEntity(pred, kb);
-            if (!known)
-                addMsg(errors, seen, startLine, "Unknown predicate/operator '" + pred +
-                        "' (not a SUMO term below Entity).");
-        }
-
-        if (pred != null && !pred.isEmpty()) {
-            // Operator shapes
-            if ("not".equals(pred) && size(args) != 1)
-                addMsg(errors, seen, startLine, "'not' must have exactly one argument → " + inlineFormula(f));
-
-            if (("=>".equals(pred) || "<=>".equals(pred)) && size(args) != 2)
-                addMsg(errors, seen, startLine, "'" + pred + "' must have exactly two arguments → " + inlineFormula(f));
-
-            // Arity
-            int expected = expectedArity(pred, kb);
-            if (expected != -1 && args != null && args.size() != expected)
-                addMsg(errors, seen, startLine, "Arity error for '" + pred + "'. Expected " + expected +
-                        " args, found " + args.size() + " → " + inlineFormula(f));
-
-            // Light semantic checks
-            if (kb != null && args != null && includeBelow) {
-                if ("instance".equals(pred) && args.size() == 2) {
-                    String cls = args.get(1);
-                    if (!isBelowEntity(cls, localClasses, kb, true))
-                        addMsg(errors, seen, startLine, "'instance' expects a Class below Entity as arg2, found: " + cls);
-                } else if ("subclass".equals(pred) && args.size() == 2) {
-                    boolean ok1 = isBelowEntity(args.get(0), localClasses, kb, true);
-                    boolean ok2 = isBelowEntity(args.get(1), localClasses, kb, true);
-                    if (!ok1 || !ok2)
-                        addMsg(errors, seen, startLine, "'subclass' expects Classes below Entity → " + inlineFormula(f));
-                } else if ("attribute".equals(pred) && args.size() == 2) {
-                    String attr = args.get(1);
-                    boolean attrOK = kb.kbCache.subclassOf(attr, "Attribute") || kb.kbCache.transInstOf(attr, "Attribute");
-                    if (!attrOK)
-                        addMsg(errors, seen, startLine, "'attribute' expects arg2 below Attribute, found: " + attr);
-                }
-            }
-
-            // names("... ", x)
-            if ("names".equals(pred) && args != null && args.size() == 2) {
-                String s = args.get(0);
-                if (!isQuoted(s))
-                    addMsg(errors, seen, startLine, "'names' arg1 must be a quoted string → " + inlineFormula(f));
-            }
-        }
-
+        if (includeBelow) checkUnknownPredicate(pred, kb, fileName, startLine, errors, seen);
+        checkOperatorShapes(pred, args, f, startLine, errors, seen);
+        checkArity(pred, args, f, kb, startLine, errors, seen);
+        if (kb != null && args != null && includeBelow) checkSemanticConstraints(pred, args, f, kb, localClasses, startLine, errors, seen);
+        checkNamesOperator(pred, args, f, startLine, errors, seen);
         return errors;
     }
 
+    /**
+     * Run built-in argument checks and collect formula-level errors.
+     *
+     * @param f the formula being validated
+     * @param fileName label for the source
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkArgsAndErrors(Formula f, String fileName, int line, List<String> errors, Set<String> seen) {
+    
+        String argError = f.validArgs(fileName, line);
+        if (!argError.isEmpty()) addMsg(errors, seen, line, argError);
+        for (String err : f.getErrors()) addMsg(errors, seen, line, err);
+    }
 
-    /** Best-effort line number for a child S-expression within its parent's raw text. */
-    private static int estimateStartLine(String parentText, String childText, int parentStartLine) {
-        if (parentText == null || childText == null) return parentStartLine;
-        int idx = parentText.indexOf(childText);
-        if (idx < 0) return parentStartLine;  // fallback if not found
+    /**
+     * Check for unquantified variables at the top level.
+     *
+     * @param f the formula being validated
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkUnquantifiedVariables(Formula f, int line, List<String> errors, Set<String> seen) {
+    
+        Set<String> unq = f.collectUnquantifiedVariables();
+        if (!f.isRule() && !unq.isEmpty()) addMsg(errors, seen, line, "Unquantified variables → " + unq);
+    }
 
-        int newlines = 0;
-        for (int i = 0; i < idx; i++) {
-            if (parentText.charAt(i) == '\n') newlines++;
+    /**
+     * Check if a predicate is unknown (not in SUMO and not logical).
+     *
+     * @param pred predicate string
+     * @param kb knowledge base to check against
+     * @param fileName label for the source
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkUnknownPredicate(String pred, KB kb, String fileName, int line, List<String> errors, Set<String> seen) {
+    
+        if (pred == null || pred.isEmpty()) return;
+        if (!Formula.isLogicalOperator(pred) && !Formula.isVariable(pred)) {
+            boolean known = (kb != null) && !Diagnostics.termNotBelowEntity(pred, kb);
+            if (!known) addMsg(errors, seen, line, "Unknown predicate/operator '" + pred + "' (not a SUMO term below Entity).");
         }
-        return parentStartLine + newlines;
+    }
+
+    /**
+     * Check operator-specific constraints like "not", "=>" and "<=>".
+     *
+     * @param pred predicate string
+     * @param args list of arguments
+     * @param f formula being validated
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkOperatorShapes(String pred, List<String> args, Formula f, int line, List<String> errors, Set<String> seen) {
+    
+        if ("not".equals(pred) && size(args) != 1) addMsg(errors, seen, line, "'not' must have exactly one argument → " + inlineFormula(f));
+        if (("=>".equals(pred) || "<=>".equals(pred)) && size(args) != 2) addMsg(errors, seen, line, "'" + pred + "' must have exactly two arguments → " + inlineFormula(f));
+    }
+
+    /**
+     * Validate predicate arity against KB signatures or built-in rules.
+     *
+     * @param pred predicate string
+     * @param args list of arguments
+     * @param f formula being validated
+     * @param kb knowledge base to check against
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkArity(String pred, List<String> args, Formula f, KB kb, int line, List<String> errors, Set<String> seen) {
+    
+        int expected = expectedArity(pred, kb);
+        if (expected != -1 && args != null && args.size() != expected) addMsg(errors, seen, line, "Arity error for '" + pred + "'. Expected " + expected + " args, found " + args.size() + " → " + inlineFormula(f));
+    }
+
+    /**
+     * Validate semantic constraints on predicates like instance, subclass, attribute.
+     *
+     * @param pred predicate string
+     * @param args list of arguments
+     * @param f formula being validated
+     * @param kb knowledge base to check against
+     * @param localClasses locally declared classes
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkSemanticConstraints(String pred, List<String> args, Formula f, KB kb, Set<String> localClasses, int line, List<String> errors, Set<String> seen) {
+    
+        if ("instance".equals(pred) && args.size() == 2) {
+            String cls = args.get(1);
+            if (!isBelowEntity(cls, localClasses, kb, true)) addMsg(errors, seen, line, "'instance' expects a Class below Entity as arg2, found: " + cls);
+        } else if ("subclass".equals(pred) && args.size() == 2) {
+            boolean ok1 = isBelowEntity(args.get(0), localClasses, kb, true);
+            boolean ok2 = isBelowEntity(args.get(1), localClasses, kb, true);
+            if (!ok1 || !ok2) addMsg(errors, seen, line, "'subclass' expects Classes below Entity → " + inlineFormula(f));
+        } else if ("attribute".equals(pred) && args.size() == 2) {
+            String attr = args.get(1);
+            boolean attrOK = kb.kbCache.subclassOf(attr, "Attribute") || kb.kbCache.transInstOf(attr, "Attribute");
+            if (!attrOK) addMsg(errors, seen, line, "'attribute' expects arg2 below Attribute, found: " + attr);
+        }
+    }
+
+    /**
+     * Validate the "names" operator requires a quoted string as first argument.
+     *
+     * @param pred predicate string
+     * @param args list of arguments
+     * @param f formula being validated
+     * @param line current line number
+     * @param errors list to collect error messages
+     * @param seen deduplication set
+     */
+    private static void checkNamesOperator(String pred, List<String> args, Formula f, int line, List<String> errors, Set<String> seen) {
+    
+        if ("names".equals(pred) && args != null && args.size() == 2) {
+            String s = args.get(0);
+            if (!isQuoted(s)) addMsg(errors, seen, line, "'names' arg1 must be a quoted string → " + inlineFormula(f));
+        }
     }
 
     /** *************************************************************
@@ -367,16 +378,89 @@ public class KifFileChecker {
 
     /** *************************************************************
      * Determine expected arity for a predicate.
-
-    * @param pred predicate symbol
-    * @param kb knowledge base to query for the signature
-    * @return expected number of arguments, or -1 if not known
-    */
+     * 
+     * @param pred predicate symbol
+     * @param kb knowledge base to query for the signature
+     * @return expected number of arguments, or -1 if not known
+     */
     private static int expectedArity(String pred, KB kb) {
 
         if (kb == null || kb.kbCache == null) return -1;
         final List<String> sig = kb.kbCache.getSignature(pred);
         return (sig == null) ? -1 : sig.size() - 1; // subtract predicate position
+    }
+
+    /** *************************************************************
+     * Replace all newlines in the given string with spaces,
+     * and trim leading/trailing whitespace.
+     *
+     * @param s the input string (may be null)
+     * @return a single-line, trimmed version of the string,
+     *         or "" if input is null
+     */
+    private static String flatten(String s) {
+        return (s == null) ? "" : s.replaceAll("[\\r\\n]+", " ").trim();
+    }
+
+    /** *************************************************************
+     * Convert a Formula to a compact, single-line string.
+     *
+     * @param f the Formula object (may be null)
+     * @return a normalized one-line string representation of the formula,
+     *         or "" if the formula is null or has no content
+     */
+    private static String inlineFormula(Formula f) {
+
+        String s = (f == null) ? "" : f.getFormula();
+        return (s == null) ? "" : s.replaceAll("\\s+", " ").trim();
+    }
+
+    /** *************************************************************
+     * Add a line-numbered error message if it has not already been seen.
+     *
+     * @param errors list to collect error messages
+     * @param seen set of already-added messages (deduplication)
+     * @param line the line number to prefix in the error message
+     * @param msg the raw error message (may span multiple lines)
+     */
+    private static void addMsg(List<String> errors, Set<String> seen, int line, String msg) {
+        String one = flatten(msg);
+        if (seen.add(one)) errors.add(lineMsg(line, one));
+    }
+
+    /** *************************************************************
+     * Return only the first line of a string.
+     *
+     * @param s the input string (may be null)
+     * @return the substring up to the first newline,
+     *         or the whole string if no newline is found,
+     *         or "" if input is null
+     */
+    private static String oneLine(String s) {
+        if (s == null) return "";
+        int i = s.indexOf('\n');
+        return (i >= 0) ? s.substring(0, i) : s;
+    }
+
+    /** *************************************************************
+     * Estimate the starting line number of a child S-expression
+     * by locating it within the parent's raw text and counting newlines.
+     *
+     * @param parentText the full text of the parent formula
+     * @param childText the raw text of the child formula
+     * @param parentStartLine the line number where the parent starts
+     * @return approximate line number where the child begins
+     */
+    private static int estimateStartLine(String parentText, String childText, int parentStartLine) {
+
+        if (parentText == null || childText == null) return parentStartLine;
+        int idx = parentText.indexOf(childText);
+        if (idx < 0) return parentStartLine;
+        int newlines = 0;
+        for (int i = 0; i < idx; i++) {
+            if (parentText.charAt(i) == '\n') newlines++;
+        }
+        return parentStartLine + newlines;
     }
 
     /** *************************************************************
@@ -412,5 +496,4 @@ public class KifFileChecker {
 
         return "Line " + line + ": " + msg;
     }
-
 }
