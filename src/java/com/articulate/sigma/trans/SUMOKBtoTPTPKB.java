@@ -9,6 +9,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SUMOKBtoTPTPKB {
@@ -623,13 +625,38 @@ public class SUMOKBtoTPTPKB {
             futures.add(future);
         } // end outer (main) loop
 
-        for (Future<?> f : futures)
+        // Wait for all tasks to complete with individual timeout handling
+        System.out.println("SUMOKBtoTPTPKB._tWriteFile(): Waiting for " + futures.size() + " tasks to complete...");
+        int completed = 0;
+        List<Future<?>> failed = new ArrayList<>();
+
+        for (int i = 0; i < futures.size(); i++) {
+            Future<?> f = futures.get(i);
             try {
-                f.get(); // waits for task completion
-            } catch (InterruptedException | ExecutionException ex) {
-                System.err.printf("Error in SUMOKBtoTPTPKB.writeFile(): %s", ex.getMessage());
-                ex.printStackTrace();
+                f.get(30, TimeUnit.MINUTES); // 30-minute timeout per task
+                completed++;
+                if (completed % 1000 == 0) {
+                    System.out.println("SUMOKBtoTPTPKB._tWriteFile(): Completed " + completed + "/" + futures.size() + " tasks");
+                }
+            } catch (TimeoutException e) {
+                System.err.println("SUMOKBtoTPTPKB._tWriteFile(): Task " + i + " timed out, cancelling...");
+                f.cancel(true);
+                failed.add(f);
+            } catch (InterruptedException e) {
+                System.err.println("SUMOKBtoTPTPKB._tWriteFile(): Task " + i + " was interrupted");
+                f.cancel(true);
+                Thread.currentThread().interrupt();
+                break;
+            } catch (ExecutionException e) {
+                System.err.println("SUMOKBtoTPTPKB._tWriteFile(): Task " + i + " failed: " + e.getMessage());
+                failed.add(f);
             }
+        }
+
+        if (!failed.isEmpty()) {
+            System.err.println("SUMOKBtoTPTPKB._tWriteFile(): " + failed.size() + " tasks failed or timed out");
+            System.err.println("Translation may be incomplete but will continue with available results");
+        }
 
         // Write fileContents to the print writer
         for (List<String> contents : writeMap.values())

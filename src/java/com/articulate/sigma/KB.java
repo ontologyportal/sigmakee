@@ -79,6 +79,9 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import tptp_parser.TPTPFormula;
 
@@ -4120,112 +4123,124 @@ public class KB implements Serializable {
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
+            try{
+                // Check for "N" before initializing the KBmanager
+                if (args != null && args.length > 1 && (args[0].contains("N") || args[1].contains("N")))
+                    SUMOKBtoTPTPKB.rapidParsing = false;
 
-            // Check for "N" before initializing the KBmanager
-            if (args != null && args.length > 1 && (args[0].contains("N") || args[1].contains("N")))
-                SUMOKBtoTPTPKB.rapidParsing = false;
+                System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
+                
+                // Clear single-threaded mode for translation (if it was set)
+                System.clearProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
 
-            System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
+                // Refresh ExecutorService to use translation-optimized threading
+                KButilities.refreshExecutorService();
 
-            //KBmanager.prefOverride.put("loadLexicons","false");
-            //System.out.println("KB.main(): Note! Not loading lexicons.");
-            KBmanager.getMgr().initializeOnce();
-            String kbName = KBmanager.getMgr().getPref("sumokbname");
-            KB kb = KBmanager.getMgr().getKB(kbName);
-            if (args != null)
-                System.out.println("KB.main(): args[0]: " + args[0]);
-            if (args != null && args.length > 2 && args[0].contains("c")) {
-                if (!kb.containsTerm(args[1]))
-                    System.err.println("Error in KB.main() no such term: " + args[1]);
-                if (!kb.containsTerm(args[2]))
-                    System.err.println("Error in KB.main() no such term: " + args[2]);
-                int eqrel = kb.compareTermDepth(args[1], args[2]);
-                String eqText = KButilities.eqNum2Text(eqrel);
-                System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));
-                System.out.println("KB.main() term depth of " + args[2] + " : " + kb.termDepth(args[2]));
-                System.out.println("KB.main() eqrel " + eqrel);
-                System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
-            }
-            if (args != null && args.length > 0 && args[0].contains("t")) {
-                test();
-            }
-            if (args != null && args.length > 1 && args[0].contains("v")) {
-                KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
-            }
-            if (args != null && args.length > 1 && args[0].contains("e")) {
-                KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
-            }
-            if (args != null && args.length > 1 && args[0].contains("L")) {
-                KBmanager.getMgr().prover = KBmanager.Prover.LEO;
-            }
-            if (args != null && args.length > 0 && args[0].contains("l")) {
-                System.out.println("KB.main(): Normal completion");
-            }
-            if (args != null && args.length > 0 && args[0].contains("f")) {
-                System.out.println("KB.main(): set to TFF language");
-                SUMOformulaToTPTPformula.lang = "tff";
-                SUMOKBtoTPTPKB.lang = "tff";
-            }
-            if (args != null && args.length > 0 && args[0].contains("r")) {
-                System.out.println("KB.main(): set to FOF language");
-                SUMOformulaToTPTPformula.lang = "fof";
-                SUMOKBtoTPTPKB.lang = "fof";
-            }
-            if (args != null && args.length > 0 && args[0].contains("s")) {
-                System.out.println("KB.main(): show statistics");
-                System.out.println(HTMLformatter.showStatistics(kb));
-            }
-            int timeout = 30;
-            if (args != null && args.length > 2 && args[0].contains("o")) {
-                try {
-                    timeout = Integer.parseInt(args[1]);
+                //KBmanager.prefOverride.put("loadLexicons","false");
+                //System.out.println("KB.main(): Note! Not loading lexicons.");
+                KBmanager.getMgr().initializeOnce();
+                String kbName = KBmanager.getMgr().getPref("sumokbname");
+                KB kb = KBmanager.getMgr().getKB(kbName);
+                if (args != null)
+                    System.out.println("KB.main(): args[0]: " + args[0]);
+                if (args != null && args.length > 2 && args[0].contains("c")) {
+                    if (!kb.containsTerm(args[1]))
+                        System.err.println("Error in KB.main() no such term: " + args[1]);
+                    if (!kb.containsTerm(args[2]))
+                        System.err.println("Error in KB.main() no such term: " + args[2]);
+                    int eqrel = kb.compareTermDepth(args[1], args[2]);
+                    String eqText = KButilities.eqNum2Text(eqrel);
+                    System.out.println("KB.main() term depth of " + args[1] + " : " + kb.termDepth(args[1]));
+                    System.out.println("KB.main() term depth of " + args[2] + " : " + kb.termDepth(args[2]));
+                    System.out.println("KB.main() eqrel " + eqrel);
+                    System.out.println("KB.main() " + args[1] + " " + eqText + " " + args[2]);
                 }
-                catch(NumberFormatException nfe) {
-                    timeout = Integer.parseInt(args[2]);
+                if (args != null && args.length > 0 && args[0].contains("t")) {
+                    test();
                 }
-                System.out.println("KB.main(): set timeout to: " + timeout);
-            }
-            if (args != null && args.length > 1 && args[0].contains("a")) {
-                TPTP3ProofProcessor tpp = null;
-                if (args[0].contains("p"))
-                    TPTP3ProofProcessor.tptpProof = true;
-                if (args[0].contains("x")) {
-                    contradictionHelp(kb,args,timeout);
+                if (args != null && args.length > 1 && args[0].contains("v")) {
+                    KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
                 }
-                else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
-                    EProver eprover = kb.askEProver(args[1], timeout, 1);
-                    System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
-                    tpp = new TPTP3ProofProcessor();
-                    tpp.parseProofOutput(eprover.output, args[1], kb, eprover.qlist);
+                if (args != null && args.length > 1 && args[0].contains("e")) {
+                    KBmanager.getMgr().prover = KBmanager.Prover.EPROVER;
                 }
-                else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-                    Vampire vamp = kb.askVampire(args[1], timeout, 1);
-                    System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
-                    tpp = new TPTP3ProofProcessor();
-                    tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
+                if (args != null && args.length > 1 && args[0].contains("L")) {
+                    KBmanager.getMgr().prover = KBmanager.Prover.LEO;
                 }
-                else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
-                    LEO leo = kb.askLeo(args[1], timeout, 1);
-                    System.out.println("KB.main(): completed LEO query with result: " + StringUtil.arrayListToCRLFString(leo.output));
-                    tpp = new TPTP3ProofProcessor();
-                    tpp.parseProofOutput(leo.output, args[1], kb, leo.qlist);
+                if (args != null && args.length > 0 && args[0].contains("l")) {
+                    System.out.println("KB.main(): Normal completion");
                 }
-                if (tpp != null)
-                    tpp.createProofDotGraph();
-                if (!args[0].contains("x")) {
-                    System.out.println("KB.main(): binding map: " + tpp.bindingMap);
-                    int level = 1;
-                    if (args[0].contains("2") || args[0].contains("3") ) {
-                        if (args[0].contains("2"))
-                            level = 2;
-                        if (args[0].contains("3"))
-                            level = 3;
+                if (args != null && args.length > 0 && args[0].contains("f")) {
+                    System.out.println("KB.main(): set to TFF language");
+                    SUMOformulaToTPTPformula.lang = "tff";
+                    SUMOKBtoTPTPKB.lang = "tff";
+                }
+                if (args != null && args.length > 0 && args[0].contains("r")) {
+                    System.out.println("KB.main(): set to FOF language");
+                    SUMOformulaToTPTPformula.lang = "fof";
+                    SUMOKBtoTPTPKB.lang = "fof";
+                }
+                if (args != null && args.length > 0 && args[0].contains("s")) {
+                    System.out.println("KB.main(): show statistics");
+                    System.out.println(HTMLformatter.showStatistics(kb));
+                }
+                int timeout = 30;
+                if (args != null && args.length > 2 && args[0].contains("o")) {
+                    try {
+                        timeout = Integer.parseInt(args[1]);
                     }
-                    System.out.println("KB.main(): proof with level " + level);
-                    System.out.println("KB.main(): axiom key size " + SUMOKBtoTPTPKB.axiomKey.size());
-                    tpp.printProof(level);
+                    catch(NumberFormatException nfe) {
+                        timeout = Integer.parseInt(args[2]);
+                    }
+                    System.out.println("KB.main(): set timeout to: " + timeout);
                 }
+                if (args != null && args.length > 1 && args[0].contains("a")) {
+                    TPTP3ProofProcessor tpp = null;
+                    if (args[0].contains("p"))
+                        TPTP3ProofProcessor.tptpProof = true;
+                    if (args[0].contains("x")) {
+                        contradictionHelp(kb,args,timeout);
+                    }
+                    else if (KBmanager.getMgr().prover == KBmanager.Prover.EPROVER) {
+                        EProver eprover = kb.askEProver(args[1], timeout, 1);
+                        System.out.println("KB.main(): completed Eprover query with result: " + StringUtil.arrayListToCRLFString(eprover.output));
+                        tpp = new TPTP3ProofProcessor();
+                        tpp.parseProofOutput(eprover.output, args[1], kb, eprover.qlist);
+                    }
+                    else if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
+                        Vampire vamp = kb.askVampire(args[1], timeout, 1);
+                        System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+                        tpp = new TPTP3ProofProcessor();
+                        tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
+                    }
+                    else if (KBmanager.getMgr().prover == KBmanager.Prover.LEO) {
+                        LEO leo = kb.askLeo(args[1], timeout, 1);
+                        System.out.println("KB.main(): completed LEO query with result: " + StringUtil.arrayListToCRLFString(leo.output));
+                        tpp = new TPTP3ProofProcessor();
+                        tpp.parseProofOutput(leo.output, args[1], kb, leo.qlist);
+                    }
+                    if (tpp != null)
+                        tpp.createProofDotGraph();
+                    if (!args[0].contains("x")) {
+                        System.out.println("KB.main(): binding map: " + tpp.bindingMap);
+                        int level = 1;
+                        if (args[0].contains("2") || args[0].contains("3") ) {
+                            if (args[0].contains("2"))
+                                level = 2;
+                            if (args[0].contains("3"))
+                                level = 3;
+                        }
+                        System.out.println("KB.main(): proof with level " + level);
+                        System.out.println("KB.main(): axiom key size " + SUMOKBtoTPTPKB.axiomKey.size());
+                        tpp.printProof(level);
+                    }
+                }
+            } finally {
+                // Ensure ExecutorService is properly shut down
+                System.out.println("KB.main(): Shutting down ExecutorService");
+                KButilities.shutDownExecutorService();
+                System.out.println("KB.main(): Process complete");  
             }
         }
     }
-}
+}   
