@@ -55,7 +55,7 @@ import org.json.simple.JSONValue;
 @WebListener
 public class KButilities implements ServletContextListener {
 
-    private static final int PAR = Integer.getInteger("sigma.exec.parallelism", 1);
+    private static final int PAR = Integer.getInteger("sigma.exec.parallelism", Runtime.getRuntime().availableProcessors());
     private static volatile ExecutorService currentExecutorService;
     private static final Object executorLock = new Object();
     private static volatile boolean isJEditMode = false;
