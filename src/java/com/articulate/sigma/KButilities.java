@@ -31,7 +31,6 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
-import java.util.concurrent.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -65,21 +64,21 @@ public class KButilities implements ServletContextListener {
         // Check if we're in single-threaded mode (jEdit context)
         String parallelism = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
         isJEditMode = "1".equals(parallelism);
-        
+
         if (isJEditMode) {
             // For jEdit: use single-threaded executor to prevent deadlocks
-            System.out.println("KBUtilities: Creating single-threaded executor for jEdit mode");
+            System.out.println("KButilities: Creating single-threaded executor for jEdit mode");
             return Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "SIGMA-jEdit-Thread");
-                t.setDaemon(false); // Don't make it daemon to ensure completion
+                t.setDaemon(true); // Make it daemon to ensure JVM exit
                 return t;
             });
         } else {
             // For translation: use fixed thread pool for predictable performance
-            System.out.println("KBUtilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
+            System.out.println("KButilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
             return Executors.newFixedThreadPool(PAR, r -> {
                 Thread t = new Thread(r, "SIGMA-Translation-Thread");
-                t.setDaemon(false);
+                t.setDaemon(true);
                 return t;
             });
         }
@@ -103,68 +102,68 @@ public class KButilities implements ServletContextListener {
         public void shutdown() {
             getExecutorService().shutdown();
         }
-        
+
         @Override
         public List<Runnable> shutdownNow() {
             return getExecutorService().shutdownNow();
         }
-        
+
         @Override
         public boolean isShutdown() {
             return getExecutorService().isShutdown();
         }
-        
+
         @Override
         public boolean isTerminated() {
             return getExecutorService().isTerminated();
         }
-        
+
         @Override
         public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
             return getExecutorService().awaitTermination(timeout, unit);
         }
-        
+
         @Override
         public <T> Future<T> submit(Callable<T> task) {
             return getExecutorService().submit(task);
         }
-        
+
         @Override
         public <T> Future<T> submit(Runnable task, T result) {
             return getExecutorService().submit(task, result);
         }
-        
+
         @Override
         public Future<?> submit(Runnable task) {
             return getExecutorService().submit(task);
         }
-        
+
         @Override
         public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
             return getExecutorService().invokeAll(tasks);
         }
-        
+
         @Override
         public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
             return getExecutorService().invokeAll(tasks, timeout, unit);
         }
-        
+
         @Override
         public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
             return getExecutorService().invokeAny(tasks);
         }
-        
+
         @Override
         public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
             return getExecutorService().invokeAny(tasks, timeout, unit);
         }
-        
+
         @Override
         public void execute(Runnable command) {
             getExecutorService().execute(command);
         }
     };
-    
+
     /** A thread local pool for the Kryo serializer */
     public static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
@@ -1611,24 +1610,24 @@ public class KButilities implements ServletContextListener {
     public static void shutDownExecutorService() {
         synchronized (executorLock) {
             if (currentExecutorService != null) {
-                System.out.println("KBUtilities.shutDownExecutorService(): Initiating executor shutdown");
+                System.out.println("KButilities.shutDownExecutorService(): Initiating executor shutdown");
                 currentExecutorService.shutdown();
                 try {
                     // Give translation processes more time to complete
                     int timeoutSeconds = isJEditMode ? 10 : 60;
                     if (!currentExecutorService.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)) {
-                        System.out.println("KBUtilities.shutDownExecutorService(): Forcing immediate shutdown");
+                        System.out.println("KButilities.shutDownExecutorService(): Forcing immediate shutdown");
                         List<Runnable> unfinishedTasks = currentExecutorService.shutdownNow();
-                        System.out.println("KBUtilities.shutDownExecutorService(): " + unfinishedTasks.size() + " tasks were cancelled");
-                        
+                        System.out.println("KButilities.shutDownExecutorService(): " + unfinishedTasks.size() + " tasks were cancelled");
+
                         // Give forceful shutdown a moment to complete
                         if (!currentExecutorService.awaitTermination(10, TimeUnit.SECONDS)) {
-                            System.err.println("KBUtilities.shutDownExecutorService(): ExecutorService did not terminate cleanly");
+                            System.err.println("KButilities.shutDownExecutorService(): ExecutorService did not terminate cleanly");
                         }
                     }
-                    System.out.println("KBUtilities.shutDownExecutorService(): ExecutorService shutdown complete");
+                    System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown complete");
                 } catch (InterruptedException e) {
-                    System.out.println("KBUtilities.shutDownExecutorService(): Shutdown interrupted, forcing immediate termination");
+                    System.err.println("KButilities.shutDownExecutorService(): Shutdown interrupted, forcing immediate termination");
                     currentExecutorService.shutdownNow();
                     Thread.currentThread().interrupt();
                 }
@@ -1672,13 +1671,7 @@ public class KButilities implements ServletContextListener {
             KBmanager.getMgr().initializeOnce();
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("KButilities.main(): completed init");
-            //countRelations(kb);
-            //checkURLs(kb);
-            //validatePictureList();
-            //for (String s : generateSemanticNetwork(kb))
-            //    System.out.println(s);
             KButilities kbu = new KButilities();
-//            Infrastructure infra = new Infrastructure();
             if (args != null && args.length > 1 && args[0].equals("-c")) {
                 genSynLinks(args[1]);
             }
