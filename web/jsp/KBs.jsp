@@ -13,7 +13,6 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
     out.println("<html>");
     out.println("  <head>");
     out.println("    <title>Sigma Knowledge Engineering Environment - Main</title>");
@@ -21,20 +20,22 @@
     out.println("  <body bgcolor=\"#FFFFFF\">");
     String baseDir = mgr.getPref("baseDir");
     String kbDir = mgr.getPref("kbDir");
-    System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
-    System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
-    System.out.println("KBs.jsp: username: " + username);
+    if (debug) System.out.println("INFO in KBs.jsp: baseDir == " + baseDir);
+    if (debug) System.out.println("INFO in KBs.jsp:   kbDir == " + kbDir);
+    if (debug) System.out.println("KBs.jsp: username: " + username);
     boolean isAdministrator = role.equalsIgnoreCase("admin");
-    System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
+    if (debug) System.out.println("INFO in KBs.jsp: ************ Initializing Sigma ***************");
     KBmanager.getMgr().initializeOnce();
     String pageName = "KBs";
     String pageString = "Knowledge Bases";
-    %>
-    <%@include file="CommonHeader.jsp" %>
+%>
+
+<%@include file="CommonHeader.jsp" %>
 
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
+<!-- Global Knowledge Bases -->
 <%
   Iterator<String> kbNames = null;
   String removeResult = "";
@@ -43,11 +44,10 @@
       removeResult = KBmanager.getMgr().removeKB(kbName);
 
   if (KBmanager.getMgr().getKBnames() != null && !KBmanager.getMgr().getKBnames().isEmpty()) {
-      System.out.println(KBmanager.getMgr().getKBnames().size());
+      if (debug) System.out.println(KBmanager.getMgr().getKBnames().size());
       kbNames = KBmanager.getMgr().getKBnames().iterator();
-      System.out.println("INFO in KBs.jsp: Got KB names.");
+      if (debug) System.out.println("INFO in KBs.jsp: Got KB names.");
   }
-
   String defaultKB = null;
   if (KBmanager.getMgr().getKBnames() == null || KBmanager.getMgr().getKBnames().isEmpty())
       out.println("<H2>No Knowledge Bases loaded.</H2>");
@@ -58,7 +58,7 @@
              <TH>Knowledge Bases</TH>
            </TR>
 <%
-      System.out.println("Showing knowledge bases.");
+      if (debug) System.out.println("Showing knowledge bases.");
       boolean first = true;
       boolean odd = true;
       String kbName2 = null;
@@ -104,34 +104,99 @@
 <%
   }
 %>
-<P>
-<P>
+
+<!-- User Knowledge Bases -->
 <%
-    if (isAdministrator) { %>
-    <b>Add a new knowledge base</b>
-    <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
+boolean showUserKBs = (username != null && username.length() > 0 && !"guest".equalsIgnoreCase(username));
+if (showUserKBs) {
+    out.println("<hr>");
+    UserKBmanager userMgr = (UserKBmanager) session.getAttribute("kbManager");
+    if (userMgr == null) {
+        out.println("<P>No user KB manager found in session.</P>");
+    } else {
+        java.util.Set<String> userKBnames = userMgr.getKBnames();
+        if (userKBnames.isEmpty()) {
+            out.println("<P><TABLE border='0' cellpadding='2' cellspacing='2' NOWRAP>");
+            out.println("<TR><TH>User Knowledge Bases</TH></TR>");
+            out.println("<TR><TD>No User Knowledge Bases loaded.</TD></TR>");
+            out.println("</TABLE></P>");
+        } else {
+%>
+<P><TABLE border="0" cellpadding="2" cellspacing="2" NOWRAP>
+  <TR><TH>User Knowledge Bases</TH></TR>
+<%
+            boolean oddU = true;
+            for (String kbNameU : userKBnames) {
+                KB kbU = userMgr.getKB(kbNameU);
+                HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?lang=" + language;
+%>
+  <TR VALIGN="center" <%= oddU ? "" : "bgcolor=#eeeeee" %>>
+    <TD><%= kbNameU %></TD>
+<%
+                out.println("<TD>");
+                if (oddU) oddU = false; else oddU = true;
+                if (kbU.constituents == null || kbU.constituents.isEmpty())
+                    out.println("No <A href=\"Manifest.jsp?kb=" + kbNameU + "\">constituents</A>");
+                else {
+                    out.print("(" + kbU.constituents.size() + ")&nbsp;");
+                    out.println("<A href=\"Manifest.jsp?kb=" + kbNameU + "\">Manifest</A>");
+                }
+                out.println("</TD>");
+                //NOT READY FOR THE PUBLIC
+                out.println("<TD><A href=\"Browse.jsp?kb=" + kbNameU + "\">Browse</A></TD>");
+                out.println("<TD><A href=\"Graph.jsp?kb=" + kbNameU  + "\">Graph</A></TD>");
+                out.println("<TD><A href=\"TestStmnt.jsp?kb=" + kbNameU + "\">Test Stmt</A></TD>");
+
+                if (isAdministrator) {
+                    out.println("<TD><A href=\"Diag.jsp?kb=" + kbNameU + "\">Diagnostics</A></TD>");
+                    if (kbU.eprover != null)
+                        out.println("<TD><A href=\"CCheck.jsp?kb=" + kbNameU + "&page=0\">Consistency Check</A></TD>");
+                    out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=inference&kb=" + kbNameU + "&lang=" + language + "\">Inference Tests</A></TD>");
+                    if (kbU.celt != null)
+                        out.println("<TD><A HREF=\"InferenceTestSuite.jsp?test=english&kb=" + kbNameU + "&lang=" + language + "\">CELT Tests</A></TD>");
+                    out.println("<TD><A href=\"WNDiag.jsp?kb=" + kbNameU + "&lang=" + language + "\">WordNet Check</A></TD>");
+                    out.println("<TD><A href=\"AskTell.jsp?kb=" + kbNameU + "\">Ask/Tell</A>&nbsp;</TD>");
+                    out.println("<TD><A href=\"KBs.jsp?remove=true&kb=" + kbNameU + "\">Remove</A></TD></TR>");
+                }
+            }
+%>
+</TABLE></P>
+<%
+        }
+    }
+}
+%>
+<P>
+<P>
+
+<!-- Add A New Knowledge Base -->
+<%
+    if (isAdministrator || role.equalsIgnoreCase("user")) { 
+        out.println("<hr>");        
+%>      
+<P>
+<b>Add a New Knowledge Base</b>
+<form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
   <table>
     <tr>
-      <td>
-        <b>KB Name:</b>&nbsp;
-      </td>
-      <td>
-        <input type="text" name="kb" size="60">
-      </td>
+      <td><b>KB Name:</b>&nbsp;</td>
+      <td><input type="text" name="kb" size="60"></td>
     </tr>
     <tr>
-      <td>
-        <b>KB Constituent:</b>&nbsp;
-      </td>
-      <td>
-        <input type="file" name="constituent" size="60">
-      </td>
+      <td><b>KB Constituent:</b>&nbsp;</td>
+      <td><input type="file" name="constituent" size="60"></td>
     </tr>
+<% if (isAdministrator) { %>
+    <tr>
+      <td><b>Make Global:</b>&nbsp;</td>
+      <td><input type="checkbox" name="makeGlobal" value="true"></td>
+    </tr>
+<% } %>
   </table>
-        <input type="submit" name="submit" value="Submit">
-    </form><p>
+  <input type="submit" name="submit" value="Submit">
+</form>
+<p>
 <%  }
-
   if (isAdministrator) {
       out.println("<a href=\"MiscUtilities.jsp?kb="
                   + kbName
@@ -139,7 +204,6 @@
       out.println(" | <a href=\"Mapping.jsp\">Ontology Mappings</a>");
       out.println(" | <a href=\"WordSense.jsp?lang=" + language + "\">Sense/Sentiment Analysis</a>");
       out.println("<p>");
-
       kbNames = KBmanager.getMgr().getKBnames().iterator();
       String kbName3 = null;
       boolean kbErrorsFound = false;
@@ -157,14 +221,12 @@
               out.println(HTMLformatter.formatErrorsWarnings(kb.warnings,kb));
           }
      }
-
      out.println("<p>\n");
      if (KBmanager.getMgr().getError().length() > 0) {
          out.print("<br/><b>");
          out.println("System Warnings and Error Notices</b>\n<br>\n");
          out.println(KBmanager.getMgr().getError());
      }
-
      if (!StringUtil.emptyString(removeResult))
      	out.println("<br/>" + removeResult + "<br/>");
   }
@@ -173,7 +235,6 @@
 <p>
 
 <%@ include file="Postlude.jsp" %>
+
 </BODY>
 </HTML>
-
-

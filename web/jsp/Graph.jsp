@@ -197,4 +197,3 @@ function setWidth(id) {
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>
-

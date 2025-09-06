@@ -28,7 +28,6 @@
     .ln { display: inline-block; width: 4ch; text-align: right; color: #555; }
     h3 { margin: 8px 0; }
 
-    /* Syntax highlighting */
     .comment { color: red; }
     .operator { color: darkblue; font-weight: bold; }
     .quantifier { color: darkblue; font-style: italic; }
@@ -44,21 +43,33 @@
 
   private static String highlightKif(String s) {
     if (s == null) return "";
-    String out = esc(s);
+    // 1) Split off a real KIF comment ';' that is not inside a string
+    //    (simple scan; good enough for code viewer)
+    boolean inStr = false;
+    int cutAt = -1;
+    for (int i = 0; i < s.length(); i++) {
+      char c = s.charAt(i);
+      if (c == '"' && (i == 0 || s.charAt(i-1) != '\\')) inStr = !inStr;
+      if (!inStr && c == ';') { cutAt = i; break; }
+    }
+    String code = (cutAt >= 0) ? s.substring(0, cutAt) : s;
+    String comment = (cutAt >= 0) ? s.substring(cutAt) : "";
 
-    // Comments
-    out = out.replaceAll("(;.*)$", "<span class='comment'>$1</span>");
+    // 2) Escape separately
+    String out = esc(code);
+    String com = esc(comment);
 
-    // Operators & quantifiers
-    out = out.replaceAll("\\b(and|or|not|=>|<=>)\\b", "<span class='operator'>$1</span>");
-    out = out.replaceAll("\\b(exists|forall)\\b", "<span class='quantifier'>$1</span>");
+    // 3) Token highlighting on the escaped code.
+    //    Note: after escaping, => becomes =&gt; and <=> becomes &lt;=&gt;.
+    out = out
+      .replaceAll("\\b(and|or|not)\\b", "<span class='operator'>$1</span>")
+      .replaceAll("\\b(exists|forall)\\b", "<span class='quantifier'>$1</span>")
+      .replaceAll("(\\?[A-Za-z0-9_-]+)", "<span class='variable'>$1</span>")
+      .replaceAll("\\b(instance)\\b", "<span class='instance'>$1</span>")
+      .replaceAll("(=\\&gt;|\\&lt;=\\&gt;)", "<span class='operator'>$1</span>");
 
-    // Variables
-    out = out.replaceAll("(\\?[A-Za-z0-9_-]+)", "<span class='variable'>$1</span>");
-
-    // Special keyword
-    out = out.replaceAll("\\b(instance)\\b", "<span class='instance'>$1</span>");
-
+    // 4) Re-attach escaped comment
+    if (!com.isEmpty()) out += "<span class='comment'>" + com + "</span>";
     return out;
   }
 %>

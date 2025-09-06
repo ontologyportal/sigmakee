@@ -282,7 +282,7 @@ public class Graph {
                 https = "http";
             else
                 https = "https";
-            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
+            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kb.name;
             if (show) {
                 graphsize++;
                 if (graphsize < 100)

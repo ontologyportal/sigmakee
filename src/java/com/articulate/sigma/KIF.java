@@ -34,6 +34,8 @@ import java.util.*;
  */
 public class KIF {
 
+    private static boolean debug = false;
+
     /*****************************************************************
      * A numeric constant denoting normal parse mode, in which syntax constraints are
      * enforced.
@@ -112,13 +114,13 @@ public class KIF {
         try {
             File f = new File(filename);
             if (!f.exists()) {
-                System.err.println("KIF.getKIFFileSize(): error file " + filename + " does not exist");
+                if (debug) System.err.println("KIF.getKIFFileSize(): error file " + filename + " does not exist");
                 return 0;
             }
             return f.length();
         }
         catch (Exception ex) {
-            System.err.println("KIF.getKIFFileSize(): error file " + ex.getMessage());
+            if (debug) System.err.println("KIF.getKIFFileSize(): error file " + ex.getMessage());
             ex.printStackTrace();
         }
         return 0;
@@ -220,7 +222,7 @@ public class KIF {
         if (r == null) {
             errStr = "No Input Reader Specified";
             errorSet.add(errStr);
-            System.err.println("Error in KIF.parse(): " + errStr);
+            if (debug) System.err.println("Error in KIF.parse(): " + errStr);
             return errorSet;
         }
         try {
@@ -297,7 +299,7 @@ public class KIF {
                             warning = ("Duplicate axiom at line: " + f.startLine + " of " + f.sourceFile + ": "
                                     + expression);
                             warningSet.add(warning);
-                            System.err.println(warning);
+                            if (debug) System.err.println(warning);
                             duplicateCount++;
                         }
                         if (mode == NORMAL_PARSE_MODE) { // Check arg validity ONLY in NORMAL_PARSE_MODE
@@ -425,7 +427,7 @@ public class KIF {
         catch (IOException | ParseException ex) {
 //            String message = ex.getMessage().replaceAll(":", "&#58;"); // HTMLformatter.formatErrors depends on :
             String message = ex.getMessage();
-            System.err.println("Error in KIF.parse(Reader): " + message);
+            if (debug) System.err.println("Error in KIF.parse(Reader): " + message);
             if (ex instanceof IOException)
                 ex.printStackTrace(System.err);
         }
@@ -504,7 +506,7 @@ public class KIF {
             String errString =  " error file " + fname + " does not exist";
             KBmanager.getMgr()
                     .setError(KBmanager.getMgr().getError() + "\n<br/>" + errString + "\n<br/>");
-            System.err.println("Error in KIF.readFile(): " + errString);
+            if (debug) System.err.println("Error in KIF.readFile(): " + errString);
             return;
         }
         this.filename = file.getCanonicalPath();
@@ -536,7 +538,7 @@ public class KIF {
                 pr.println(it.next().getFormula());
         }
         catch (Exception ex) {
-            System.err.println(ex.getMessage());
+            if (debug) System.err.println(ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -566,7 +568,7 @@ public class KIF {
             }
         }
         catch (Exception e) {
-            System.err.println("Error parsing " + formula);
+            if (debug) System.err.println("Error parsing " + formula);
             e.printStackTrace();
             return e.getMessage();
         }
@@ -587,7 +589,7 @@ public class KIF {
             String msg = e1.getMessage();
             if (e1 instanceof ParseException)
                 msg = msg + (" in statement starting at line " + ((ParseException) e1).getErrorOffset());
-            System.err.println(msg);
+            if (debug) System.err.println(msg);
         }
         File outfile = new File(filename + ".tptp");
         try (Writer fw = new FileWriter(outfile);
@@ -606,7 +608,7 @@ public class KIF {
             }
         }
         catch (Exception ex) {
-            System.err.println("Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage());
+            if (debug) System.err.println("Error writing " + outfile.getCanonicalPath() + ": " + ex.getMessage());
             ex.printStackTrace();
         }
     }
@@ -623,7 +625,7 @@ public class KIF {
         try (Reader r = new StringReader(exp)) {
             kif.parse(r);
         } catch (IOException ioe) {
-            System.err.println(ioe);
+            if (debug) System.err.println(ioe);
         }
         System.out.println(kif.formulaMap);
         List<String> al = kif.formulas.get("arg-0-documentation");

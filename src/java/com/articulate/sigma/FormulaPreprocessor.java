@@ -186,9 +186,7 @@ public class FormulaPreprocessor {
      */
     public Map<String,Set<String>> findAllTypeRestrictions(Formula form, KB kb) {
 
-        if (debug) System.out.println("findAllTypeRestrictions: form \n" + form);
         Map<String,Set<String>> varDomainTypes = computeVariableTypes(form, kb);
-        if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions: varDomainTypes " + varDomainTypes);
         // get variable types which are explicitly defined in formula
         Map<String,Set<String>> varExplicitTypes = findExplicitTypesClassesInAntecedent(kb,form);
         if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions: varExplicitTypes " + varExplicitTypes);
@@ -215,7 +213,7 @@ public class FormulaPreprocessor {
                 types.addAll(explicitTypes);
             varmap.put(var, types);
         }
-        if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions: returning: " + varmap);
+        if (debug) System.out.println("FormulaPreprocessor.findAllTypeRestrictions(): returning: " + varmap);
         return varmap;
     }
 
@@ -381,7 +379,7 @@ public class FormulaPreprocessor {
                 if (debug)
                     for (int i = 1; i < f.listLength(); i++) {
                         Formula newF = new Formula(f.getArgument(i));
-                        System.out.println("addTypeRestrictionsRecurse: " + f.getArgument(i) + " : " + newF + " : " + newF.getFormula());
+                        if (debug) System.out.println("addTypeRestrictionsRecurse: " + f.getArgument(i) + " : " + newF + " : " + newF.getFormula());
                     }
                 // recurse from the first argument if the formula is not in (exists ...) / (forall ...) scope
                 for (int i = 1; i < f.listLength(); i++)
@@ -1134,8 +1132,12 @@ public class FormulaPreprocessor {
                     //if (debug) System.out.println("preProcess: fnew: " + fnew);
                     form.errors.addAll(fnew.getErrors());
                     fnew.sourceFile = form.sourceFile;
-                    if (!StringUtil.emptyString(theNewFormula))
+                    if (!StringUtil.emptyString(theNewFormula)) {
                         results.add(fnew);
+
+                        // NEW: generate THF translation for this formula
+                        fnew.computeTHF(kb);
+                    }
                     if (debug) System.out.println("FormulaPreprocessor.preProcess(): results: " + results);
                 }
             }

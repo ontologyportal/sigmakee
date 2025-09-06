@@ -31,9 +31,14 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,17 +55,116 @@ import org.json.simple.JSONValue;
 @WebListener
 public class KButilities implements ServletContextListener {
 
-    /** Uses a fixed pool, which is more predictable and avoids deadlocks;
-    thread count can be changed by passing a system property:
-    java -Dsigma.exec.parallelism=6 ...
-    */
-    private static final int PAR = Integer.getInteger("sigma.exec.parallelism", 6);
-//    public static final ExecutorService EXECUTOR_SERVICE =
-//        Executors.newFixedThreadPool(PAR);
-    public static final ExecutorService EXECUTOR_SERVICE =
-        Executors.newWorkStealingPool();
+    private static final int PAR = Integer.getInteger("sigma.exec.parallelism", Runtime.getRuntime().availableProcessors());
+    private static volatile ExecutorService currentExecutorService;
+    private static final Object executorLock = new Object();
+    private static volatile boolean isJEditMode = false;
 
+    // Create the appropriate ExecutorService based on context
+    private static ExecutorService createExecutorService() {
+        // Check if we're in single-threaded mode (jEdit context)
+        String parallelism = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
+        isJEditMode = "1".equals(parallelism);
+        
+        if (isJEditMode) {
+            // For jEdit: use single-threaded executor to prevent deadlocks
+            System.out.println("KBUtilities: Creating single-threaded executor for jEdit mode");
+            return Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "SIGMA-jEdit-Thread");
+                t.setDaemon(false); // Don't make it daemon to ensure completion
+                return t;
+            });
+        } else {
+            // For translation: use fixed thread pool for predictable performance
+            System.out.println("KBUtilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
+            return Executors.newFixedThreadPool(PAR, r -> {
+                Thread t = new Thread(r, "SIGMA-Translation-Thread");
+                t.setDaemon(false);
+                return t;
+            });
+        }
+    }
 
+    // Lazy initialization with context detection
+    public static ExecutorService getExecutorService() {
+        if (currentExecutorService == null || currentExecutorService.isShutdown()) {
+            synchronized (executorLock) {
+                if (currentExecutorService == null || currentExecutorService.isShutdown()) {
+                    currentExecutorService = createExecutorService();
+                }
+            }
+        }
+        return currentExecutorService;
+    }
+
+    // Public property for backwards compatibility
+    public static final ExecutorService EXECUTOR_SERVICE = new ExecutorService() {
+        @Override
+        public void shutdown() {
+            getExecutorService().shutdown();
+        }
+        
+        @Override
+        public List<Runnable> shutdownNow() {
+            return getExecutorService().shutdownNow();
+        }
+        
+        @Override
+        public boolean isShutdown() {
+            return getExecutorService().isShutdown();
+        }
+        
+        @Override
+        public boolean isTerminated() {
+            return getExecutorService().isTerminated();
+        }
+        
+        @Override
+        public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
+            return getExecutorService().awaitTermination(timeout, unit);
+        }
+        
+        @Override
+        public <T> Future<T> submit(Callable<T> task) {
+            return getExecutorService().submit(task);
+        }
+        
+        @Override
+        public <T> Future<T> submit(Runnable task, T result) {
+            return getExecutorService().submit(task, result);
+        }
+        
+        @Override
+        public Future<?> submit(Runnable task) {
+            return getExecutorService().submit(task);
+        }
+        
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException {
+            return getExecutorService().invokeAll(tasks);
+        }
+        
+        @Override
+        public <T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException {
+            return getExecutorService().invokeAll(tasks, timeout, unit);
+        }
+        
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException {
+            return getExecutorService().invokeAny(tasks);
+        }
+        
+        @Override
+        public <T> T invokeAny(Collection<? extends Callable<T>> tasks, long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+            return getExecutorService().invokeAny(tasks, timeout, unit);
+        }
+        
+        @Override
+        public void execute(Runnable command) {
+            getExecutorService().execute(command);
+        }
+    };
+    
     /** A thread local pool for the Kryo serializer */
     public static final ThreadLocal<Kryo> kryoLocal = ThreadLocal.withInitial(() -> {
         Kryo kryo = new Kryo();
@@ -105,6 +209,26 @@ public class KButilities implements ServletContextListener {
                 } catch (IOException ex) {}
     }
 
+    /** ***************************************************************
+     * Force a refresh of the ExecutorService - useful when switching contexts
+     */
+    public static void refreshExecutorService() {
+        synchronized (executorLock) {
+            if (currentExecutorService != null && !currentExecutorService.isShutdown()) {
+                try {
+                    currentExecutorService.shutdown();
+                    if (!currentExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+                        currentExecutorService.shutdownNow();
+                    }
+                } catch (InterruptedException e) {
+                    currentExecutorService.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+            }
+            currentExecutorService = null; // Will be recreated on next access
+        }
+    }
+
     /** *************************************************************
      */
     public static boolean isRelation(KB kb, String term) {
@@ -140,31 +264,32 @@ public class KButilities implements ServletContextListener {
 
         SUMOtoTFAform.initOnce();
         SUMOtoTFAform.varmap = SUMOtoTFAform.fp.findAllTypeRestrictions(f, kb);
+
         if (!FormulaPreprocessor.errors.isEmpty()) {
             errors.addAll(FormulaPreprocessor.errors);
             FormulaPreprocessor.errors.clear();
             return false;
         }
-        if (debug) System.out.println("hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
+        if (debug) System.out.println("\nKButilities.hasCorrectTypes() varmap: " + SUMOtoTFAform.varmap);
         Map<String, Set<String>> explicit = SUMOtoTFAform.fp.findExplicitTypes(kb, f);
         if (debug) System.out.println("hasCorrectTypes() explicit: " + explicit);
         KButilities.mergeToMap(SUMOtoTFAform.varmap,explicit,kb);
         String error;
         if (SUMOtoTFAform.inconsistentVarTypes()) {
             error = "inconsistent types in " + SUMOtoTFAform.varmap;
-            System.err.println("hasCorrectTypes(): " + error);
+            //System.err.println("KButilities.hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             SUMOtoTFAform.errors.clear();
             return false;
         }
         if (SUMOtoTFAform.typeConflict(f)) {
             error = "Type conflict: " + SUMOtoTFAform.errors;
-            System.err.println("hasCorrectTypes(): " + error);
+            //System.err.println("KButilities.hasCorrectTypes(): " + error);
             errors.addAll(SUMOtoTFAform.errors);
             SUMOtoTFAform.errors.clear();
             return false;
         }
-        if (debug) System.out.println("hasCorrectTypes() no conflicts in: " + f);
+        if (debug) System.out.println("KButilities.hasCorrectTypes() no conflicts in: " + f);
         return true;
     }
 
@@ -1485,15 +1610,32 @@ public class KButilities implements ServletContextListener {
      * of any main class where the executor is invoked.
      */
     public static void shutDownExecutorService() {
-        EXECUTOR_SERVICE.shutdown();
-        try {
-            if (!EXECUTOR_SERVICE.awaitTermination(10, TimeUnit.SECONDS)) {
-                EXECUTOR_SERVICE.shutdownNow();
+        synchronized (executorLock) {
+            if (currentExecutorService != null) {
+                System.out.println("KBUtilities.shutDownExecutorService(): Initiating executor shutdown");
+                currentExecutorService.shutdown();
+                try {
+                    // Give translation processes more time to complete
+                    int timeoutSeconds = isJEditMode ? 10 : 60;
+                    if (!currentExecutorService.awaitTermination(timeoutSeconds, TimeUnit.SECONDS)) {
+                        System.out.println("KBUtilities.shutDownExecutorService(): Forcing immediate shutdown");
+                        List<Runnable> unfinishedTasks = currentExecutorService.shutdownNow();
+                        System.out.println("KBUtilities.shutDownExecutorService(): " + unfinishedTasks.size() + " tasks were cancelled");
+                        
+                        // Give forceful shutdown a moment to complete
+                        if (!currentExecutorService.awaitTermination(10, TimeUnit.SECONDS)) {
+                            System.err.println("KBUtilities.shutDownExecutorService(): ExecutorService did not terminate cleanly");
+                        }
+                    }
+                    System.out.println("KBUtilities.shutDownExecutorService(): ExecutorService shutdown complete");
+                } catch (InterruptedException e) {
+                    System.out.println("KBUtilities.shutDownExecutorService(): Shutdown interrupted, forcing immediate termination");
+                    currentExecutorService.shutdownNow();
+                    Thread.currentThread().interrupt();
+                }
+                currentExecutorService = null;
             }
-        } catch (InterruptedException e) {
-            EXECUTOR_SERVICE.shutdownNow();
         }
-//        System.out.println("KButilities.shutDownExecutorService(): ExecutorService shutdown");
     }
 
     /** ***************************************************************
@@ -1621,4 +1763,3 @@ public class KButilities implements ServletContextListener {
         }
     }
 }
-

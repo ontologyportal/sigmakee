@@ -1,17 +1,5 @@
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+package com.articulate.sigma;
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
-*/
-
-import com.articulate.sigma.KifFileChecker;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -20,24 +8,19 @@ import javax.servlet.http.Part;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-/** *************************************************************
- * Servlet that validates uploaded SUO-KIF files and forwards the results
- * to a JSP for display.
+/**
+ * Validates uploaded SUO-KIF files and forwards results to the JSP.
  */
 @WebServlet("/CheckKifFile")
 @MultipartConfig
 public class KifFileCheckServlet extends HttpServlet {
-    
-    /** *************************************************************
-     * Reads an entire InputStream into a UTF-8 String.
-     *
-     * @param in input stream to read (the caller is responsible for closing it)
-     * @return the UTF-8 decoded contents of the stream
-     * @throws IOException if an I/O error occurs while reading
-     */
-    private static String readUtf8(InputStream in) throws IOException {
+    boolean debug = true;
+    // ---------- utils ----------
 
+    private static String readUtf8(InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[8192];
         int n;
@@ -45,66 +28,182 @@ public class KifFileCheckServlet extends HttpServlet {
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
-    /** *************************************************************
-     * Handles POST requests that upload a SUO-KIF file for validation.
-     * 
-     * @param request HTTP request carrying the uploaded file and parameters
-     * @param response HTTP response
-     * @throws IOException if reading input or forwarding fails
-     * @throws ServletException if request processing or forwarding fails
+    // A form plus where it starts in the original file (1-based)
+    private static final class FormSpan {
+        final String text;
+        final int startLine;
+        FormSpan(String t, int s) { text = t; startLine = s; }
+    }
+
+    /**
+     * Split KIF text into balanced s-expressions, tracking the starting line
+     * of each form. Handles ; comments and quoted strings.
      */
+    private static List<FormSpan> splitKifFormsWithLines(String text) {
+        List<FormSpan> forms = new ArrayList<>();
+        String[] lines = text.replace("\r\n","\n").replace("\r","\n").split("\n", -1);
+
+        StringBuilder cur = new StringBuilder();
+        int depth = 0;
+        boolean inStr = false;
+        int formStart = 1;
+
+        for (int ln = 0; ln < lines.length; ln++) {
+            String rawLine = lines[ln];
+            String line = rawLine;
+
+            // strip ; comments (outside strings)
+            StringBuilder sb = new StringBuilder();
+            boolean cut = false;
+            for (int i = 0; i < line.length(); i++) {
+                char c = line.charAt(i);
+                if (c == '"' && (i == 0 || line.charAt(i-1) != '\\')) {
+                    inStr = !inStr;
+                }
+                if (!inStr && c == ';') { cut = true; break; }
+                sb.append(c);
+            }
+            if (cut) line = sb.toString();
+
+            // track depth (outside strings)
+            for (int i = 0; i < line.length(); i++) {
+                char c = line.charAt(i);
+                if (c == '"' && (i == 0 || line.charAt(i-1) != '\\')) {
+                    inStr = !inStr;
+                } else if (!inStr) {
+                    if (c == '(') depth++;
+                    else if (c == ')') depth--;
+                }
+            }
+
+            if (cur.length() == 0) formStart = ln + 1;
+            if (cur.length() > 0) cur.append('\n');
+            cur.append(rawLine);
+
+            if (depth == 0 && !inStr && cur.toString().trim().length() > 0) {
+                forms.add(new FormSpan(cur.toString(), formStart));
+                cur.setLength(0);
+            }
+        }
+        if (cur.toString().trim().length() > 0) {
+            forms.add(new FormSpan(cur.toString(), formStart));
+        }
+        return forms;
+    }
+
+    private static String adjustErrorLineNumbers(String msg, int offset) {
+        if (offset <= 1) return msg;
+        Pattern p = Pattern.compile("^Line\\s+(\\d+):", Pattern.MULTILINE);
+        Matcher m = p.matcher(msg);
+        StringBuffer sb = new StringBuffer();
+        while (m.find()) {
+            int local = Integer.parseInt(m.group(1));
+            int global = local + (offset - 1);
+            m.appendReplacement(sb, "Line " + global + ":");
+        }
+        m.appendTail(sb);
+        return sb.toString();
+    }
+
+    // ---------- servlet ----------
+
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
-        boolean includeBelow = request.getParameter("includeBelow") != null;
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
+
+        // read UI toggle
+        final boolean includeBelow = request.getParameter("includeBelow") != null;
         request.setAttribute("includeBelow", includeBelow);
-        List<String> errors = java.util.Collections.emptyList();
-        List<String> lines  = null;
-        String fileName     = null;
-        if (request.getContentType() != null
-                && request.getContentType().toLowerCase(java.util.Locale.ROOT).startsWith("multipart/")) {
+
+        List<String> lines = null;
+        List<String> errorsOut = new ArrayList<>();
+        String fileName = null;
+
+        try {
+            // Validate multipart + file
+            String ct = request.getContentType();
+            if (ct == null || !ct.toLowerCase(Locale.ROOT).startsWith("multipart/")) {
+                request.setAttribute("errorMessage", "Please upload a .kif file.");
+                forward(request, response);
+                return;
+            }
+
             Part filePart = request.getPart("kifFile");
             if (filePart == null || filePart.getSize() == 0) {
                 request.setAttribute("errorMessage", "No file uploaded.");
-                request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
+                forward(request, response);
                 return;
             }
+
             fileName = filePart.getSubmittedFileName();
-            if (fileName == null || !fileName.toLowerCase(java.util.Locale.ROOT).endsWith(".kif")) {
+            if (fileName == null || !fileName.toLowerCase(Locale.ROOT).endsWith(".kif")) {
                 request.setAttribute("errorMessage", "Only .kif files are allowed.");
-                request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
+                forward(request, response);
                 return;
             }
+
+            // Read text (UTF-8) and normalize newlines
             String text;
             try (InputStream in = filePart.getInputStream()) {
-                text = readUtf8(in);
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                byte[] buf = new byte[8192];
+                int n;
+                while ((n = in.read(buf)) != -1) out.write(buf, 0, n);
+                text = new String(out.toByteArray(), java.nio.charset.StandardCharsets.UTF_8);
             }
-            lines = java.util.Arrays.asList(text.split("\\R", -1));
-            try (Reader r = new StringReader(text)) {
-                errors = KifFileChecker.check(r, fileName, includeBelow);
-            } catch (Exception e) {
-                request.setAttribute("errorMessage", "Error while checking uploaded file: " + e.getMessage());
+            // Strip UTF-8 BOM if present
+            if (!text.isEmpty() && text.charAt(0) == '\uFEFF') {
+                text = text.substring(1);
             }
-        } else {
-            request.setAttribute("errorMessage", "Please upload a .kif file.");
-        }
-        boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
-        if (errors != null) {
-            java.util.regex.Pattern p = java.util.regex.Pattern.compile("^Line\\s+(\\d+):");
-            for (String e : errors) {
-                java.util.regex.Matcher m = p.matcher(e);
+            text = text.replace("\r\n", "\n").replace("\r", "\n");
+            lines = Arrays.asList(text.split("\n", -1));
+
+            // Get KB
+            KBmanager mgr = KBmanager.getMgr();
+            String kbName = mgr.getPref("sumokbname");
+            if (kbName == null) kbName = "SUMO";
+            KB kb = mgr.getKB(kbName);
+            if (kb == null) {
+                request.setAttribute("errorMessage", "KB not available: " + kbName);
+                forward(request, response);
+                return;
+            }
+            
+            if (debug) System.out.println("\n\n*****************************************************************" + 
+                                            "\nKifFileCheckerServlet.doPost() Running KifFileChecker.check() on file: " + fileName);
+            errorsOut = KifFileChecker.check(kb, lines, includeBelow);
+            if (debug) System.out.println("\n\n*****************************************************************" + 
+                                            "\nKifFileCheckServlet.java doPost() errors: " + errorsOut);
+
+            // Build error mask for UI (highlight lines)
+            boolean[] errorMask = new boolean[lines.size()];
+            Pattern linePat = Pattern.compile("^Line\\s+(\\d+):");
+            for (String e : errorsOut) {
+                Matcher m = linePat.matcher(e);
                 if (m.find()) {
                     try {
                         int ln = Integer.parseInt(m.group(1));
                         if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
-                    } catch (NumberFormatException ignore) {
-                    }
+                    } catch (NumberFormatException ignore) { /* no-op */ }
                 }
             }
+            request.setAttribute("errorMask", errorMask);
+
+        } catch (Exception ex) {
+            request.setAttribute("errorMessage", "Error while checking uploaded file: " + ex.getMessage());
         }
-        request.setAttribute("errorMask", errorMask);
+
+        // Always populate these so the JSP can render whatever we have
         request.setAttribute("fileName", fileName);
         request.setAttribute("fileContent", lines);
-        request.setAttribute("errors", errors);
+        request.setAttribute("errors", errorsOut);
+
+        forward(request, response);
+    }
+
+
+    private void forward(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
         request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
     }
 }

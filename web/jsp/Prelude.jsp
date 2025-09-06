@@ -23,7 +23,7 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
-
+boolean debug = false;
 List<String> userPages = new ArrayList<>();
 userPages.add("AllPictures.jsp");
 userPages.add("Browse.jsp");
@@ -39,30 +39,31 @@ userPages.add("SimpleBrowse.jsp");
 userPages.add("TreeView.jsp");
 userPages.add("WordNet.jsp");
 userPages.add("CheckKifFile.jsp");
+userPages.add("Preferences.jsp");
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 
 String username = (String) session.getAttribute("user");
 String role = (String) session.getAttribute("role");
+String language = (String) session.getAttribute("language");
 if (username != null && role != null)
-    System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
+    if (debug) System.out.println("Prelude.jsp: username:role  " + username + " : " + role);
 else
-    System.out.println("Prelude.jsp: null username or role");
+    if (debug) System.out.println("Prelude.jsp: null username or role");
 String welcomeString = " : Welcome guest : <a href=\"login.html\">log in</a>";
 if (!StringUtil.emptyString(username))
     welcomeString = " : Welcome " + username;
-System.out.println("Prelude.jsp: KBmanager initialized  " + KBmanager.initialized);
-System.out.println("Prelude.jsp: KBmanager initializing  " + KBmanager.initializing);
+if (debug) System.out.println("Prelude.jsp: KBmanager initialized  " + KBmanager.initialized);
+if (debug) System.out.println("Prelude.jsp: KBmanager initializing  " + KBmanager.initializing);
 KBmanager mgr = KBmanager.getMgr();
 
-if (StringUtil.emptyString(role)) { // role is [guest | user | admin]
+if (StringUtil.emptyString(role)) {
     role = "guest";
 }
 
 if (!KBmanager.initialized) {
-    // Entry point from the web app into SigmaKEE
-    System.out.println("Prelude.jsp: SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
-    mgr.initializeOnce(); // <- first call for KB initialization at startup 2/17/25 (tdn)
+    if (debug) System.out.println("Prelude.jsp: SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
+    mgr.initializeOnce();
     System.out.println("Prelude.jsp: initializing.  Redirecting to init.jsp.");
     response.sendRedirect("init.jsp");
     return;
@@ -89,16 +90,25 @@ if (StringUtil.emptyString(kbName)) {
 }
 
 KB kb = mgr.getKB(kbName);
-if (kb != null)
+if (kb == null) {
+    UserKBmanager userMgr = (UserKBmanager) session.getAttribute("kbManager");
+    if (userMgr != null) {
+        kb = userMgr.getKB(kbName);
+    }
+}
+if (kb != null) {
     TaxoModel.kbName = kbName;
+}
 
-String filename = ""; // an ontology file to edit
-String line = ""; // the line of the ontology to place a cursor
-String language = ""; // natural language for NL generation
-String flang = request.getParameter("flang");    // formal language
-flang = HTMLformatter.processFormalLanguage(flang);
-language = request.getParameter("lang");
-language = HTMLformatter.processNaturalLanguage(language,kb);
+String filename = "";
+String line = "";
+
+String langParam = request.getParameter("lang");
+if (StringUtil.isNonEmptyString(langParam)) {
+    language = HTMLformatter.processNaturalLanguage(langParam, kb);
+    session.setAttribute("language", language);
+}
+
 String hostname = mgr.getPref("hostname");
 if (hostname == null)
     hostname = "localhost";
@@ -108,4 +118,38 @@ if (port == null)
 String term = request.getParameter("term");
 if (StringUtil.emptyString(term))
     term = "";
+%>
+
+<%
+String reqLang = request.getParameter("lang");
+if (StringUtil.isNonEmptyString(reqLang)) {
+    session.setAttribute("language", reqLang);
+}
+
+String reqFlang = request.getParameter("flang");
+if (StringUtil.isNonEmptyString(reqFlang)) {
+    session.setAttribute("flang", reqFlang);
+}
+
+String reqTree = request.getParameter("treeView");
+if (StringUtil.isNonEmptyString(reqTree)) {
+    session.setAttribute("treeView", reqTree);
+}
+
+if (StringUtil.emptyString(language)) {
+    language = "EnglishLanguage";
+    session.setAttribute("language", language);
+}
+
+String flang = (String) session.getAttribute("flang");
+if (StringUtil.emptyString(flang)) {
+    flang = "SUO-KIF";
+    session.setAttribute("flang", flang);
+}
+
+String treeView = (String) session.getAttribute("treeView");
+if (StringUtil.emptyString(treeView)) {
+    treeView = "default"; // whatever makes sense
+    session.setAttribute("treeView", treeView);
+}
 %>

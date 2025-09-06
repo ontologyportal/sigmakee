@@ -649,7 +649,7 @@ public class SUMOformulaToTPTPformula {
      * A test method.
      */
     public static void main(String[] args) {
-
+        
         System.out.println("INFO in SUMOformulaToTPTPformula.main()");
         if (args != null && args.length > 1 && args[0].equals("-h")) {
             showHelp();

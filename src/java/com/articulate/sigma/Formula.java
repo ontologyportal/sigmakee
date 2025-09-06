@@ -23,7 +23,7 @@ about individual SUO-KIF formulas.
 package com.articulate.sigma;
 
 import com.articulate.sigma.utils.StringUtil;
-
+import com.articulate.sigma.trans.THF;
 import java.io.*;
 import java.util.*;
 
@@ -215,6 +215,23 @@ public class Formula implements Comparable, Serializable {
      * might cause theFormula to expand to several TPTP formulas.
      */
     public Set<String> theTptpFormulas = new HashSet<>();
+    
+    public List<String> theThfFormulas = new ArrayList<>();
+
+    public void computeTHF(KB kb) {
+    try {
+        THF thf = new THF();
+        // false = not a conjecture; if you want to support queries later,
+        // add a parameter to choose
+        String thfStr = thf.oneKIF2THF(this, false, kb);
+        if (thfStr != null && !thfStr.isEmpty()) {
+            theThfFormulas.add(thfStr);
+        }
+    } catch (Exception e) {
+        System.err.println("Error computing THF for formula: " + this);
+        e.printStackTrace();
+    }
+}
 
     //any extra sort signatures not computed in advance
     public Set<String> tffSorts = new HashSet<>();
@@ -2401,7 +2418,10 @@ public class Formula implements Comparable, Serializable {
     /** ***************************************************************
      * Test whether a Formula is a simple list of terms (including
      * functional terms).
-     *
+     * 
+     * (instance Mary1 Woman) → Simple clause
+     * (and (instance Mary1 Woman) (instance Bob1 Man)) → Not a simple clause
+     * 
      * @param kb the current knowledge base
      * @return true if a Formula is a simple list of terms (including
      * functional terms)

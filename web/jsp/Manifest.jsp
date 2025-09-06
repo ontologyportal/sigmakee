@@ -115,15 +115,29 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
         }
     }
     if (delete != null) {
-        int i = kb.constituents.indexOf(constituent.intern());
-        if (i == -1)
-            System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
-        else {
-            kb.constituents.remove(i);
-            KBmanager.getMgr().writeConfiguration();
+        if (role != null && role.equalsIgnoreCase("admin") && !(username != null && !"guest".equalsIgnoreCase(username))) {
+            // --- Global KB removal (admin only, not a user KB) ---
+            int i = kb.constituents.indexOf(constituent.intern());
+            if (i == -1) {
+                System.out.println("Error in Manifest.jsp: No such constituent: " + constituent.intern());
+            } else {
+                kb.constituents.remove(i);
+                KBmanager.getMgr().writeConfiguration();
+            }
+            kb.reload();
+        } else {
+            // --- User KB removal ---
+            UserKBmanager userMgr = (UserKBmanager) session.getAttribute("kbManager");
+            if (userMgr != null) {
+                String msg = userMgr.removeConstituent(kbName, constituent);
+                System.out.println("Manifest.jsp (user removal): " + msg);
+            } else {
+                System.err.println("Manifest.jsp: No user manager in session for deletion.");
+            }
         }
-	kb.reload();
     }
+
+
     else if (constituent != null) {
         kb.addConstituent(constituent);
         KBmanager.getMgr().writeConfiguration();

@@ -640,6 +640,23 @@ public class KB implements Serializable {
     }
 
     /***************************************************************
+     * Returns all classes that the given term is an instance of.
+     * @param term The term to check.
+     * @return A Set of class names.
+     */
+    public Set<String> getInstanceTypes(String term) {
+        Set<String> types = new HashSet<>();
+        List<Formula> instanceFormulas = askWithRestriction(1, term, 0, "instance");
+        for (Formula f : instanceFormulas) {
+            String cls = f.getStringArgument(2);
+            if (StringUtil.isNonEmptyString(cls)) {
+                types.add(cls);
+            }
+        }
+        return types;
+    }
+
+    /***************************************************************
      * Returns
      * true if i is an Attribute, else returns false.
      *
@@ -4092,7 +4109,7 @@ public class KB implements Serializable {
         System.out.println("  h - show this help screen");
         System.out.println("  t - run test");
         System.out.println("  a \"<query>\"- ask query");
-        System.out.println("  l - load/rebuild KB files");
+        System.out.println("  l - load/rebuild add files");
         System.out.println("  v - ask query of Vampire");
         System.out.println("  e - ask query of EProver");
         System.out.println("  L - ask query of LEO-IIIr");

@@ -1222,4 +1222,3 @@ public class HTMLformatter {
         }
     }
 }
-

@@ -74,8 +74,16 @@ public class TPTPutil {
 
         //System.out.println("INFO in Formula.htmlTPTPFormat(): " + f.toString());
         //System.out.println("INFO in Formula.htmlTPTPFormat(): theTptpFormulas.size()" + f.theTptpFormulas.size());
-        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1)
-            return "No TPTP formula.  May not be expressible in strict first order.";
+        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1) {
+            KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
+            try {
+                SUMOformulaToTPTPformula trans = new SUMOformulaToTPTPformula();
+                trans.tptpParse(f, false, kb);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
         StringBuilder result = new StringBuilder();
         boolean inComment, inToken, inQuantifier;
         StringBuilder token;

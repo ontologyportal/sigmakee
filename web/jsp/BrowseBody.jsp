@@ -45,7 +45,7 @@
         if (StringUtil.isValidRegex(".*" + term + ".*"))
             show.append(HTMLformatter.termList(kb.getREMatch(".*" + term + ".*",true),HTMLformatter.kbHref));
     }
-    show.append(HTMLformatter.showNeighborTerms(kb,term));
+    show.append(HTMLformatter.showNeighborTerms(kb,term, language));
     Map<String,List<String>> tm = WordNet.wn.getSenseKeysFromWord(term);
     if (tm != null) {
         show.append("<td width=\"10%\"><img src=\"pixmaps/1pixel.gif\" width=\"1\" height=\"1\" border=\"0\"></td>");
