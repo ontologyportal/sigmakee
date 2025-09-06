@@ -96,39 +96,37 @@ public class DiagnosticsTest extends IntegrationTestBase {
 
     @Test
     public void testOverloadedGetVariableLinks() {
-        // need to change the path to point to a valid KIF file on your system
         File kifFile = new File(System.getenv("SIGMA_SRC") + "/test/integration/java/resources/test.kif");
         assertTrue(kifFile.exists()); 
         Map<String, Set<String>> links = Diagnostics.getVariableLinks(kifFile, kb);
-        // assertTrue(links.containsKey("?WARGAMING"));
-        // assertTrue(links.containsKey("?MILITARYOFFICER"));
-        // assertTrue(links.containsKey("?SIMULATION"));
-        // assertTrue(links.containsKey("?TOOL"));
+        assertTrue(links.containsKey("?WARGAMING"));
+        assertTrue(links.containsKey("?MILITARYOFFICER"));
+        assertTrue(links.containsKey("?SIMULATION"));
+        assertTrue(links.containsKey("?TOOL"));
 
-        // assertEquals(Set.of("?MILITARYOFFICER", "?SIMULATION", "?TOOL"), links.get("?WARGAMING"));
-        // assertEquals(Set.of("?WARGAMING"), links.get("?MILITARYOFFICER"));
-        // assertEquals(Set.of("?WARGAMING"), links.get("?SIMULATION"));
-        // assertEquals(Set.of("?WARGAMING"), links.get("?TOOL"));
+        assertEquals(Set.of("?MILITARYOFFICER", "?SIMULATION", "?TOOL"), links.get("?WARGAMING"));
+        
+        assertEquals(Set.of("?WARGAMING"), links.get("?MILITARYOFFICER"));
+        assertEquals(Set.of("?WARGAMING"), links.get("?SIMULATION"));
+        assertEquals(Set.of("?WARGAMING"), links.get("?TOOL"));
             
-        assertTrue(links.containsKey("?SA"));
-        assertTrue(links.containsKey("?H"));
-        assertTrue(links.containsKey("?HELP"));
-        assertTrue(links.containsKey("?A"));
-        assertTrue(links.containsKey("?T"));
-        assertTrue(links.containsKey("?REST"));
-        assertTrue(links.containsKey("?P"));
-        assertTrue(links.containsKey("?E"));
+        // assertTrue(links.containsKey("?SA"));
+        // assertTrue(links.containsKey("?H"));
+        // assertTrue(links.containsKey("?HELP"));
+        // assertTrue(links.containsKey("?T"));
+        // assertTrue(links.containsKey("?REST"));
+        // assertTrue(links.containsKey("?P"));
+        // assertTrue(links.containsKey("?E"));
 
         // from (agent ?T ?SA), (agent ?HELP ?SA), (patient ?HELP ?H), (instance ?A Animal)
-        assertEquals(Set.of("?T","?HELP","?E","?REST","?P"), links.get("?SA"));
-        assertEquals(Set.of("?SA"), links.get("?T"));
-        assertEquals(Set.of("?SA","?H"), links.get("?HELP"));
-        assertEquals(Set.of("?HELP"), links.get("?H"));
-        assertTrue(links.get("?A").isEmpty()); 
+        // assertEquals(Set.of("?T","?HELP","?E","?REST","?P"), links.get("?SA"));
+        // assertEquals(Set.of("?SA"), links.get("?T"));
+        // assertEquals(Set.of("?SA","?H"), links.get("?HELP"));
+        // assertEquals(Set.of("?HELP"), links.get("?H"));
 
-        // from (path ?E ?SA), (located ?REST ?SA), (located ?P ?SA)
-        assertEquals(Set.of("?SA"), links.get("?E"));
-        assertEquals(Set.of("?SA"), links.get("?REST"));
-        assertEquals(Set.of("?SA"), links.get("?P"));
+        // // from (path ?E ?SA), (located ?REST ?SA), (located ?P ?SA)
+        // assertEquals(Set.of("?SA"), links.get("?E"));
+        // assertEquals(Set.of("?SA"), links.get("?REST"));
+        // assertEquals(Set.of("?SA"), links.get("?P"));
     }
 }
