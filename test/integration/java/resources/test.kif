@@ -1,9 +1,31 @@
-(=>
-  (instance ?DRIVE Driving)
-  (exists (?VEHICLE ?PASSENGER)
-    (and
-      (instance ?VEHICLE Vehicle)
-      (patient ?DRIVE ?VEHICLE))))
+(subclass ServiceAnimal Attribute)
+(documentation ServiceAnimal EnglishLanguage "A service animal is an animal that has been trained to assist a disabled person. [from Wikipedia]")
+(termFormat EnglishLanguage ServiceAnimal "service animal")
 
-;; 1 error:Quantifier not in statement
-;; 1 warning: Variable(s) only used once: ?PASSENGER
+(subclass Training Guiding)
+
+(=>
+  (instance ?SA ServiceAnimal)
+  (hasPurpose ?SA
+    (exists (?H ?HELP ?T)
+      (and
+        (instance ?H Human)
+        (instance ?HELP Helping)
+        (instance ?T Training)
+        (agent ?T ?SA)
+        (agent ?HELP ?SA)
+        (patient ?HELP ?H)))))
+      
+(=>
+  (instance ?SA ServiceAnimal)
+  (modalAttribute
+    (exists (?REST ?P ?E)
+      (and
+        (instance ?REST Restaurant)
+        (instance ?P Airplane)
+        (instance ?E Entering)
+          (or
+            (path ?E ?SA)
+            (located ?REST ?SA)
+            (located ?P ?SA)))) Legal))
+      

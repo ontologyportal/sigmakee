@@ -97,7 +97,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
     @Test
     public void testOverloadedGetVariableLinks() {
         // need to change the path to point to a valid KIF file on your system
-        File kifFile = new File("/Users/sujihancock/Desktop/ServiceAnimal.kif");
+        File kifFile = new File(System.getenv("SIGMA_SRC") + "/test/integration/java/resources/test.kif");
         assertTrue(kifFile.exists()); 
         Map<String, Set<String>> links = Diagnostics.getVariableLinks(kifFile, kb);
         // assertTrue(links.containsKey("?WARGAMING"));
