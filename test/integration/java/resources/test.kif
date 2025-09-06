@@ -1,0 +1,9 @@
+(=>
+  (instance ?DRIVE Driving)
+  (exists (?VEHICLE ?PASSENGER)
+    (and
+      (instance ?VEHICLE Vehicle)
+      (patient ?DRIVE ?VEHICLE))))
+
+;; 1 error:Quantifier not in statement
+;; 1 warning: Variable(s) only used once: ?PASSENGER

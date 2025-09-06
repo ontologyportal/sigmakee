@@ -1394,7 +1394,6 @@ public class Diagnostics {
                     System.err.println("Error processing input: " + e);
                 }
             }
-
             // Results output
             System.out.printf("Resuls of getVariableLinks():%n");
             for (String key : varLinksParentMap.keySet()) {
