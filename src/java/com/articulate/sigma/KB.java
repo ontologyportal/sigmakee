@@ -2973,8 +2973,8 @@ public class KB implements Serializable {
         addConstituentInfo(file);
         System.out.println("\nINFO in KB.addConstituent(): added " + file.formulaMap.values().size() + " formulas and "
                 + file.terms.size() + " terms.");
-        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
-
+        System.out.println("INFO in KB.addConstituent(): " + file.filename + " loaded in: " +
+                (System.currentTimeMillis() - millis) / KButilities.ONE_K + " seconds");
     }
 
     /*****************************************************************
@@ -4123,13 +4123,13 @@ public class KB implements Serializable {
         if (args != null && args.length > 0 && args[0].equals("-h"))
             showHelp();
         else {
-            try{
+            try {
                 // Check for "N" before initializing the KBmanager
                 if (args != null && args.length > 1 && (args[0].contains("N") || args[1].contains("N")))
                     SUMOKBtoTPTPKB.rapidParsing = false;
 
                 System.out.println("KB.main(): SUMOKBtoTPTPKB.rapidParsing==" + SUMOKBtoTPTPKB.rapidParsing);
-                
+
                 // Clear single-threaded mode for translation (if it was set)
                 System.clearProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
 
@@ -4239,8 +4239,8 @@ public class KB implements Serializable {
                 // Ensure ExecutorService is properly shut down
                 System.out.println("KB.main(): Shutting down ExecutorService");
                 KButilities.shutDownExecutorService();
-                System.out.println("KB.main(): Process complete");  
+                System.out.println("KB.main(): Process complete");
             }
         }
     }
-}   
+}
