@@ -2134,8 +2134,10 @@ public class KBcache implements Serializable {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -a - show All cache contents");
+        System.out.println("  -f - show statistics");
         System.out.println("  -s - show size of cache elements");
         System.out.println("  -c term - show children of term");
+        System.out.println("  -v term - show arity (valence) of relation");
         System.out.println("  -t - show complete state of cache");
     }
 
@@ -2158,13 +2160,19 @@ public class KBcache implements Serializable {
             }
             KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
             System.out.println("**** Finished loading KB ***");
-            System.out.println(HTMLformatter.showStatistics(kb));
+
             KBcache nkbc = kb.kbCache;
             if (args.length > 0 && args[0].equals("-a")) {
                 showAll(nkbc);
             }
             else if (args.length > 0 && args[0].equals("-s")) {
                 showSizes(nkbc);
+            }
+            else if (args.length > 0 && args[0].equals("-f")) {
+                System.out.println(HTMLformatter.showStatistics(kb));
+            }
+            else if (args.length > 0 && args[0].equals("-v")) {
+                System.out.println("The arity of " + args[1] + " is " + nkbc.valences.get(args[1]));
             }
             else if (args.length > 1 && args[0].equals("-c")) {
                 showChildrenOf(nkbc,args[1]);
