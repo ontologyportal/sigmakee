@@ -140,6 +140,9 @@ public class KBcache implements Serializable {
 
     private static final float LOAD_FACTOR = 0.75f;
 
+    public static HashMap<String,Integer> logOpValences = new HashMap<>();
+
+
     /****************************************************************
      * empty constructor for testing only
      */
@@ -168,7 +171,16 @@ public class KBcache implements Serializable {
         disjointRelations = new HashSet<>(kbin.getCountTerms()/163,LOAD_FACTOR);
         disjoint = new HashSet<>(kbin.getCountTerms() * 2103,LOAD_FACTOR);
         this.kb = kbin;
+        logOpValences.put("not",1);
+        logOpValences.put("exists",2);
+        logOpValences.put("forall",2);
+        logOpValences.put("equals",2);
+        logOpValences.put("=>",2);
+        logOpValences.put("<=>",2);
+        valences.putAll(logOpValences);
     }
+
+
 
     /****************************************************************
      */
