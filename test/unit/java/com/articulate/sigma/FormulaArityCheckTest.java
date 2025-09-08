@@ -58,4 +58,53 @@ public class FormulaArityCheckTest extends UnitTestBase {
         assertNotNull(output);
     }
 
+    @Test
+    public void testArityCheck3() throws AssertionFailedError {
+
+        String input = "(instance ?x)";
+        Formula f = new Formula();
+        f.read(input);
+        String output = PredVarInst.hasCorrectArity(f, kb);
+        assertNotNull(output);
+    }
+    
+    @Test
+    public void testArityCheck4() throws AssertionFailedError {
+
+        String input = "(instance ?x ?y)";
+        Formula f = new Formula();
+        f.read(input);
+        String output = PredVarInst.hasCorrectArity(f, kb);
+        assertNotNull(output);
+    }
+
+    @Test
+    public void testArityCheck5() throws AssertionFailedError {
+
+        String input = "(=> (instance ?x) (instance ?y Human))";
+        Formula f = new Formula();
+        f.read(input);
+        String output = PredVarInst.hasCorrectArity(f, kb);
+        assertNotNull(output);
+    }
+    
+    @Test
+    public void testArityCheck6() throws AssertionFailedError {
+
+        String input = "(exists (?x) (instance ?x))";
+        Formula f = new Formula();
+        f.read(input);
+        String output = PredVarInst.hasCorrectArity(f, kb);
+        assertNotNull(output);
+    }
+    
+    @Test
+    public void testArityCheck7() throws AssertionFailedError {
+
+        String input = "(exists (?x) (and (instance ?x) (instance ?y Human))";
+        Formula f = new Formula();
+        f.read(input);
+        String output = PredVarInst.hasCorrectArity(f, kb);
+        assertNotNull(output);
+    }
 }
