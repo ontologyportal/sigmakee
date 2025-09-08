@@ -333,19 +333,20 @@ public class PredVarInst {
     /** ***************************************************************
      * @return null if correct arity, otherwise return a message
      */
-    private static String hasCorrectArityRecurse(Formula f, KB kb)
+    private static String hasCorrectArityRecurseOld(Formula f, KB kb)
             throws IllegalArgumentException, TypeNotPresentException {
 
-        //System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
+        if (debug) System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
         if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() ||
                 Formula.atom(f.getFormula()) || f.isVariable())
             return null;
         String rel = f.getStringArgument(0);
+        if (debug) System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): rel: " + rel);
         List<Formula> argList = f.complexArgumentsToArrayList(1);
         if (argList == null || argList.isEmpty()) {
             return null;
         }
-        //System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): args" + l);
+        if (debug) System.out.print("INFO in PredVarInst.hasCorrectArityRecurse(): args: " + argList);
         int val = 0;
         //if the relation position is also a list, this condition is due to Formula.cdr()
         if (Formula.listP(rel)) {
@@ -370,7 +371,7 @@ public class PredVarInst {
                 }
             }
             if (kb.kbCache == null || !kb.kbCache.transInstOf(rel, "VariableArityRelation")) {
-                //System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
+                if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
                 if (val > 0 && val != argList.size()) {
                     System.err.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
                             val + " but found " + argList.size() + " for relation " + rel + " in formula: " + f);
@@ -402,6 +403,64 @@ public class PredVarInst {
             res = hasCorrectArityRecurse(k, kb);
             if (!StringUtil.emptyString(res))
                 return res;
+        }
+        return null;
+    }
+
+    /** ***************************************************************
+     * @return null if correct arity, otherwise return a message
+     * TODO: handle minimum arity of 'and', 'or' and 'xor'
+     */
+    private static String hasCorrectArityRecurse(Formula f, KB kb)
+            throws IllegalArgumentException, TypeNotPresentException {
+
+        StringBuffer result = new StringBuffer();
+        if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): " + f);
+        if (f == null || StringUtil.emptyString(f.getFormula()) || f.empty() ||
+                Formula.atom(f.getFormula()) || f.isVariable())
+            return null;
+
+        String rel = f.getStringArgument(0);
+        List<Formula> argList = f.complexArgumentsToArrayList(1);
+        if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): rel: " + rel);
+        if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse(): args: " + argList);
+        if (argList == null || argList.isEmpty()) {
+            return null;
+        }
+        Integer intval = null;
+        if (kb.kbCache != null && kb.kbCache.valences != null)
+            intval = kb.kbCache.valences.get(rel);
+        else {
+            System.out.println("ERROR KBcache or valences is null");
+            throw new IllegalArgumentException();
+        }
+        if (intval == null) {
+            if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith(Formula.V_PREF)) {
+                System.out.printf("%nINFO in PredVarInst.hasCorrectArityRecurse(): " +
+                        "Predicate %s does not have an arity defined in KB, " +
+                        "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
+                throw new IllegalArgumentException();
+            }
+        }
+        for (Formula tempf : argList) {
+            String res = hasCorrectArityRecurse(tempf,kb);
+            if (!StringUtil.emptyString(res))
+                result.append(res);
+        }
+        if (Formula.isVariable(rel))
+            return result.toString();
+        if (intval != null && intval == argList.size())
+            result.toString();
+        else {
+            if (kb.kbCache == null || !kb.kbCache.transInstOf(rel, "VariableArityRelation")) {
+                if (intval != null && intval > 0 && intval != argList.size()) {
+                    System.err.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
+                            intval + " but found " + argList.size() + " for relation " + rel + " in formula: " + f);
+                    throw new IllegalArgumentException(rel);
+                }
+            }
+            else
+                if (debug) System.out.println("INFO in PredVarInst.hasCorrectArityRecurse() variable arity: " + f);
         }
         return null;
     }
