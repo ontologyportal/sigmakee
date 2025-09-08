@@ -109,7 +109,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
     }
 
     @Test
-    public void testArityCheck7() throws AssertionFailedError {
+    public void testArityCheck8() throws AssertionFailedError {
 
         String input = "(exists (?x ?y ?z) (and (instance ?x ?y) (instance ?z Human))";
         Formula f = new Formula();
@@ -120,7 +120,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
 
     
     @Test
-    public void testArityCheck7() throws AssertionFailedError {
+    public void testArityCheck9() throws AssertionFailedError {
 
         String input = "(instance ?x ?y)";
         Formula f = new Formula();
