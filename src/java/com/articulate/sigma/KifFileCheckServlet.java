@@ -1,5 +1,3 @@
-package com.articulate.sigma;
-
 /** This code is copyright Articulate Software (c) 2003.
     Some portions copyright Teknowledge (c) 2003 and reused under
     the terms of the GNU license. This software is released under
@@ -14,7 +12,7 @@ package com.articulate.sigma;
     in Working Notes of the IJCAI-2003 Workshop on Ontology and
     Distributed Systems, August 9, Acapulco, Mexico.
 */
-
+package com.articulate.sigma;
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -53,32 +51,26 @@ public class KifFileCheckServlet extends HttpServlet {
         List<String> errors = Collections.emptyList();
         List<String> lines = null;
         String fileName = null;
-
         if (request.getContentType() != null &&
                 request.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
-
             Part filePart = request.getPart("kifFile");
             if (filePart == null || filePart.getSize() == 0) {
                 request.setAttribute("errorMessage", "No file uploaded.");
                 request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
                 return;
             }
-
             fileName = filePart.getSubmittedFileName();
             if (fileName == null || !fileName.toLowerCase(Locale.ROOT).endsWith(".kif")) {
                 request.setAttribute("errorMessage", "Only .kif files are allowed.");
                 request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
                 return;
             }
-
             String text;
             try (InputStream in = filePart.getInputStream()) {
                 text = readUtf8(in);
             }
-
             // Split into lines for JSP display
             lines = Arrays.asList(text.split("\\R", -1));
-
             try {
                 errors = KifFileChecker.check(text);
             } catch (Exception e) {
@@ -88,12 +80,10 @@ public class KifFileCheckServlet extends HttpServlet {
         } else {
             request.setAttribute("errorMessage", "Please upload a .kif file.");
         }
-
         // Highlight lines with errors
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
             for (String e : errors) {
-                // Expect format: line:col: SEVERITY: message
                 String[] parts = e.split(":", 3);
                 if (parts.length >= 2) {
                     try {
@@ -105,7 +95,6 @@ public class KifFileCheckServlet extends HttpServlet {
                 }
             }
         }
-
         request.setAttribute("errorMask", errorMask);
         request.setAttribute("fileName", fileName);
         request.setAttribute("fileContent", lines);

@@ -1,18 +1,29 @@
-package com.articulate.sigma;
+/** This code is copyright Articulate Software (c) 2003.  Some
+portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
+license.  This software is released under the GNU Public License
+<http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
+by use of this code, to credit Articulate Software and Teknowledge in any
+writings, briefings, publications, presentations, or other representations
+of any software which incorporates, builds on, or uses this code.  Please
+cite the following article in any publication with references:
 
+Pease, A., (2003). The Sigma Ontology Development Environment, in Working
+Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+August 9, Acapulco, Mexico. see also
+http://sigmakee.sourceforge.net
+*/
+
+package com.articulate.sigma;
 import com.articulate.sigma.parsing.SuokifApp;
 import com.articulate.sigma.parsing.SuokifVisitor;
 import com.articulate.sigma.trans.SUMOtoTFAform;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
-
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-// import errorlist.DefaultErrorSource;
 
 /**
  * Headless KIF checker that mirrors SUMOjEdit.checkErrorsBody logic,
@@ -21,20 +32,21 @@ import java.util.regex.Pattern;
  * No UI / jEdit dependencies.
  */
 public class KifFileChecker {
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /**
-     * Headless version of SUMOjEdit.checkErrorsBody().
-     * Collects syntax + semantic errors, returns as strings with line/col/severity.
+     * Runs syntax and semantic checks on KIF content, returning diagnostics.
+     * @param contents raw KIF text to check
+     * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
     public static List<String> check(String contents) {
 
         SUMOtoTFAform.initOnce();
         List<String> msgs = new ArrayList<>();
         if (contents == null) contents = "";
-
         int counter = 0, idx, line, offset;
         // ---------- 1) Syntax Errors ----------
+        if (debug) System.out.println("*******************************************************");
         SuokifVisitor sv = SuokifApp.process(contents);
         if (!sv.errors.isEmpty()) {
             for (String er : sv.errors) {
@@ -43,25 +55,21 @@ public class KifFileChecker {
                 msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "ERROR", er));
             }
             return msgs;
-        } else System.out.println("KifFileChecker.check() -> SuokifApp.process() No Errors Found");
-        
+        } else if (debug) System.out.println("KifFileChecker.check() -> SuokifApp.process() No Errors Found");
         // ---------- 2) Parse to KIF ----------
-        KIF kif = new KIF();              // ✅ create new KIF object
-        kif.filename = "(buffer)";        // give it a pseudo filename
+        KIF kif = new KIF();
+        kif.filename = "(buffer)";
         try (Reader r = new StringReader(contents)) {
-            kif.parse(r);                 // parse the contents into this kif
+            kif.parse(r);
         } catch (Exception e) {
             msgs.add(fmt(1, 1, "ERROR", "Parse failure: " + e));
             return msgs;
         }
-
         if (!parseKif(kif, contents, msgs)) {
             return msgs;
-        } else System.out.println("KifFileChecker.check() -> parseKif() No Errors Found");
-        
+        } else if (debug) System.out.println("KifFileChecker.check() -> parseKif() No Errors Found");
         KB kb = SUMOtoTFAform.kb;
         FormulaPreprocessor fp = SUMOtoTFAform.fp;
-
         // ---------- 3) Semantic checks ----------
         Set<String> notBelowEntityTerms = new HashSet<>();
         Set<String> unknownTerms = new HashSet<>();
@@ -70,22 +78,18 @@ public class KifFileChecker {
         String err, term;
         FileSpec defn;
         for (Formula f : kif.formulaMap.values()) {
-            System.out.println("\n---------------------------------------------\n" + 
+            if (debug) System.out.println("\n---------------------------------------------\n" + 
                                  "KifFileChecker.check() -> Checking formula \n" + f.toString());
-            
             // Quantifier Not In Statement
             if (Diagnostics.quantifierNotInStatement(f)) {
                 msgs.add(fmt(f.startLine, 1, "ERROR", "Quantifier not in statement"));
-            } else System.out.println("KifFileChecker.check() -> Diagnostics.quantifierNotInStatement() false");
-
+            } else if (debug) System.out.println("KifFileChecker.check() -> Diagnostics.quantifierNotInStatement() false");
             // Variables used once
             Set<String> singleUse = Diagnostics.singleUseVariables(f);
             if (singleUse != null && !singleUse.isEmpty()) {
-                for (String v : singleUse) {
+                for (String v : singleUse)
                     msgs.add(fmt(f.startLine, 1, "WARNING", "Variable(s) only used once: " + v));
-                }
-            } else System.out.println("KifFileChecker.check() -> singleUserVariables() " + singleUse);
-
+            } else if (debug) System.out.println("KifFileChecker.check() -> singleUserVariables() " + singleUse);
             // Preprocessor warnings/errors
             processed = fp.preProcess(f, false, kb);
             if (f.errors != null && !f.errors.isEmpty()) {
@@ -97,39 +101,33 @@ public class KifFileChecker {
                     msgs.add(fmt(f.startLine, 1, "WARNING", w));
                 }
             }
-
             // Sumo to TFA form errors
             if (SUMOtoTFAform.errors != null && !f.errors.isEmpty() && processed.size() == 1) {
                 for (String er : SUMOtoTFAform.errors) {
                     msgs.add(fmt(f.startLine, 1, "ERROR", er));
-                    System.out.println("KifFileChecker.check() -> SUMOtoTFAform error: " + er);
+                    if (debug) System.out.println("KifFileChecker.check() -> SUMOtoTFAform error: " + er);
                 }
                 SUMOtoTFAform.errors.clear();
             }
-
             // KButilities isValidFormula()
             if (!KButilities.isValidFormula(kb, f.toString())) {
                 for (String er : KButilities.errors) {
                     msgs.add(fmt(f.startLine, 1, "ERROR", er));
                 }
                 KButilities.errors.clear();
-            } else System.out.println("KifFileChecker.check() -> KButilities.isValidFormula() true");
-
-
+            } else if (debug) System.out.println("KifFileChecker.check() -> KButilities.isValidFormula() true");
             // Unquantified variables in consequent
             unquant = Diagnostics.unquantInConsequent(f);
             if (unquant != null && !unquant.isEmpty()) {
                 for (String uq : unquant) {
                     msgs.add(fmt(f.startLine, 1, "ERROR", "Unquantified var: " + uq));
                 }
-            } else System.out.println("KifFileChecker.check() -> f.collectUnquantifiedVariables() " + unquant);
-
+            } else if (debug) System.out.println("KifFileChecker.check() -> f.collectUnquantifiedVariables() " + unquant);
             // PredVarInst arity check
             term = PredVarInst.hasCorrectArity(f, kb);
             if (!StringUtil.emptyString(term)) {
                 msgs.add(fmt(f.startLine, 1, "ERROR", "Arity error of predicate: " + term));
-            } else System.out.println("KifFileChecker.check() -> PredVarInst.hasCorrectArity() " + term);
-        
+            } else if (debug) System.out.println("KifFileChecker.check() -> PredVarInst.hasCorrectArity() " + term);
             // Term below Entity + unknown terms
             terms = f.collectTerms();
             for (String t : terms) {
@@ -148,14 +146,28 @@ public class KifFileChecker {
                     unknownTerms.add(t);
                     err = "unknown term: " + t;
                     msgs.add(fmt(f.startLine, 0, "WARNING", err));
-                    System.out.println("KifFileChecker.check() -> " + err);
+                    if (debug) System.out.println("KifFileChecker.check() -> " + err);
                 }
 
             }
         }
-
+        // Sort messages by line number, then column number
+        msgs.sort(Comparator.comparingInt((String m) -> {
+            try {
+                return Integer.parseInt(m.split(":")[0]);
+            } catch (Exception e) {
+                return Integer.MAX_VALUE; // put malformed lines at the end
+            }
+        }).thenComparingInt(m -> {
+            try {
+                return Integer.parseInt(m.split(":")[1]);
+            } catch (Exception e) {
+                return Integer.MAX_VALUE;
+            }
+        }));
         return msgs;
     }
+
 
     /**
      * ***************************************************************
@@ -168,8 +180,10 @@ public class KifFileChecker {
     }
 
     /**
-     * ***************************************************************
-     * @return a FileSpec with searched term info
+     * Builds a FileSpec for the first matching definition of a term in a list of formulas.
+     * @param forms list of candidate formulas
+     * @param currentFName current filename (no path)
+     * @return FileSpec containing the definition’s filepath and line number
      */
     private static FileSpec filespecFromForms(java.util.List<Formula> forms, String currentFName) {
 
@@ -202,7 +216,6 @@ public class KifFileChecker {
 
         if (StringUtil.emptyString(kif.filename))
             kif.filename = "(buffer)";
-
         String currentFName = FileUtil.noPath(kif.filename);
         java.util.List<Formula> forms = kb.askWithRestriction(0, "instance", 1, term);
         if (forms != null && !forms.isEmpty())
@@ -225,7 +238,12 @@ public class KifFileChecker {
         return null; // nothing found
     }
 
-
+    /**
+     * Prints usage statistics for a parsed KIF file including terms, axioms, and rules.
+     * @param kif parsed KIF object
+     * @param filename source filename of the KIF
+     * @param kb knowledge base to resolve definitions
+     */
     public void showStats(KIF kif, String filename, KB kb) {
 
         try {
@@ -233,7 +251,6 @@ public class KifFileChecker {
             int otherTermCount = 0;
             FileSpec defn;
             String thisNoPath;
-
             for (String t : kif.terms) {
                 if (t == null) {
                     System.out.println("showStats(): null term");
@@ -251,7 +268,6 @@ public class KifFileChecker {
                 else {
                     thisNoPath = FileUtil.noPath(defn.filepath);
                 }
-
                 if (thisNoPath.equals(filename) || StringUtil.emptyString(thisNoPath)) {
                     System.out.println("showStats(): ******* in this file: " + t);
                     termCount++;
@@ -261,11 +277,9 @@ public class KifFileChecker {
                     }
                 }
             }
-
             System.out.println("showStats(): # terms: " + termCount);
             System.out.println("showStats(): # terms used from other files: " + otherTermCount);
             System.out.println("showStats(): # axioms: " + kif.formulaMap.keySet().size());
-
             int ruleCount = 0;
             for (Formula f : kif.formulaMap.values()) {
                 if (f.isRule()) {
@@ -274,21 +288,18 @@ public class KifFileChecker {
             }
             System.out.println("showStats(): # rules: " + ruleCount);
             System.out.println("showStats(): done reading kif file");
-
         } catch (Exception e) {
             String msg = "Error in showStats() with: " + kif.filename + ": " + e;
             System.err.println(msg);
             e.printStackTrace();
         }
-
         System.out.println("showStats(): complete");
     }
 
-
-        /**
-     * ***************************************************************
-     * sigmaAntlr generates line offsets
-     * @return the line offset of where the error/warning begins
+    /**
+     * Extracts the numeric column offset from an error/warning line string.
+     * @param line error/warning line text
+     * @return offset as int (0 if none found)
      */
     private static int getOffset(String line) {
 
@@ -296,7 +307,6 @@ public class KifFileChecker {
         Pattern p = Pattern.compile("\\:(\\d+)\\:");
         Matcher m = p.matcher(line);
         if (m.find()) {
-//            Log.log(Log.MESSAGE, this, ":getOffset(): found offset number: " + m.group(1));
             try {
                 result = Integer.parseInt(m.group(1));
             } catch (NumberFormatException nfe) {}
@@ -306,6 +316,11 @@ public class KifFileChecker {
         return result;
     }
 
+    /**
+     * Determines if a term should be skipped from semantic checks.
+     * @param t term string
+     * @return true if logical operator, Entity, variable, number, or quoted string
+     */
     private static boolean skip(String t) {
         return Diagnostics.LOG_OPS.contains(t)
                 || "Entity".equals(t)
@@ -314,46 +329,72 @@ public class KifFileChecker {
                 || StringUtil.isQuotedString(t);
     }
 
+    /**
+     * Checks whether a term exists in the given knowledge base.
+     * @param kb knowledge base instance
+     * @param t term string
+     * @return true if KB contains the term, false otherwise
+     */
     private static boolean isKnownTerm(KB kb, String t) {
+
         try {
             if (kb != null && kb.containsTerm(t)) return true;
         } catch (Throwable ignore) {}
         return false;
     }
 
+    /**
+     * Parses KIF content into a KIF object and collects warnings/errors.
+     * @param kif target KIF object
+     * @param contents KIF text content
+     * @param msgs output list for formatted error/warning messages
+     * @return true if parse succeeded, false otherwise
+     */
     private static boolean parseKif(KIF kif, String contents, List<String> msgs) {
+
         boolean retVal = false;
         try (Reader r = new StringReader(contents)) {
             kif.parse(r);
-            System.out.println("parseKif(): done reading kif file");
+            if (debug) System.out.println("parseKif(): done reading kif file");
             retVal = true;
         } catch (Exception e) {
             String msg = "Error in parseKif() with: " + kif.filename + ": " + e;
             System.err.println(msg);
             msgs.add(fmt(1, 1, "ERROR", msg));
         } finally {
-            // Surface warnings and errors in the same text format
-            for (String warn : kif.warningSet) {
-                int line = getLineNum(warn);
-                int col  = getOffset(warn);
-                msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "WARNING", warn));
-            }
             for (String er : kif.errorSet) {
                 int line = getLineNum(er);
                 int col  = getOffset(er);
                 msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "ERROR", er));
             }
+            for (String warn : kif.warningSet) {
+                int line = getLineNum(warn);
+                int col  = getOffset(warn);
+                msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "WARNING", warn));
+            }
         }
         return retVal;
     }
 
-
+    /**
+     * Formats diagnostics into "line:col: SEVERITY: message".
+     * @param line1 line number
+     * @param col1 column number
+     * @param sev severity string (ERROR/WARNING)
+     * @param msg message text
+     * @return formatted diagnostic string
+     */
     private static String fmt(int line1, int col1, String sev, String msg) {
         return line1 + ":" + col1 + ": " + sev + ": " + msg;
     }
 
-    // Mirrors SUMOjEdit’s extractors so line/col match existing diagnostics
+    /**
+     * Extracts line number from an error/warning line string.
+     * @param line error/warning line text
+     * @return line number (0 if not found)
+     */
     private static int getLineNum(String line) {
+
         int result = -1;
         Matcher m = Pattern.compile("(\\d+):").matcher(line);
         if (m.find()) { try { result = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
@@ -368,10 +409,50 @@ public class KifFileChecker {
         return Math.max(0, result);
     }
 
-    // private static int getOffset(String line) {
-    //     int result = -1;
-    //     Matcher m = Pattern.compile("\\:(\\d+)\\:").matcher(line);
-    //     if (m.find()) { try { result = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
-    //     return Math.max(0, result);
-    // }
+        /** ***************************************************************
+     * Print CLI usage information.
+     */
+    public static void showHelp() {
+        System.out.println("KifFileChecker - Headless KIF syntax/semantic checker");
+        System.out.println("Options:");
+        System.out.println("  -h              Show this help screen");
+        System.out.println("  -c <file.kif>   Check the given KIF file and print diagnostics");
     }
+
+    /** ***************************************************************
+     * Command-line entry point.
+     * Usage examples:
+     *   java com.articulate.sigma.KifFileChecker -h
+     *   java com.articulate.sigma.KifFileChecker -c myfile.kif
+     */
+    public static void main(String[] args) {
+        if (args == null || args.length == 0 || "-h".equals(args[0])) {
+            showHelp();
+            return;
+        }
+
+        if ("-c".equals(args[0]) && args.length > 1) {
+            String fname = args[1];
+            try {
+                String contents = String.join("\n", FileUtil.readLines(fname));
+                List<String> errors = check(contents);        
+                System.out.println("*******************************************************");
+                if (errors.isEmpty()) {
+                    System.out.println("No errors found in " + fname);
+                } else {
+                    System.out.println("Diagnostics for " + fname + ":");
+                    for (String e : errors) {
+                        System.out.println(e);
+                    }
+                }
+            } catch (Exception e) {
+                    
+            System.out.println("*******************************************************");
+                System.err.println("Failed to read or check file: " + fname);
+                e.printStackTrace();
+            }
+        } else {
+            showHelp();
+        }
+    }
+}
