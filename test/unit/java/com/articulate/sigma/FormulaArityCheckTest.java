@@ -75,6 +75,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
         Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
+        System.out.println("Test4 output: " + output);
         assertNotNull(output);
     }
 
