@@ -14,6 +14,8 @@ cd $ONTOLOGYPORTAL_GIT/SUMOjEdit
 git pull
 cd $ONTOLOGYPORTAL_GIT/sumonlp
 git pull
+cd $ONTOLOGYPORTAL_GIT/sigmanlp
+git pull
 cd $ONTOLOGYPORTAL_GIT/sigmaAntlr
 git pull
 rm $CATALINA_HOME/logs/*.*
