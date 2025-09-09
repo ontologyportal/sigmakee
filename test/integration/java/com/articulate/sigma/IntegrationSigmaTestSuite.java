@@ -21,7 +21,8 @@ import org.junit.runners.Suite;
     PredVarInstIntegrationTest.class,
     SUMOformulaToTPTPformulaTest.class, // <- already tested in the UnitTestSuite
     TPTP3Test.class,
-    WSDwKBtest.class
+    WSDwKBtest.class,
+    DiagnosticsTest.class
 })
 public class IntegrationSigmaTestSuite extends IntegrationTestBase {
 

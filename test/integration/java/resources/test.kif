@@ -1,0 +1,14 @@
+(subclass Wargaming Game)
+(documentation Wargaming EnglishLanguage "a type of strategy game which realistically simulates warfare")
+(termFormat EnglishLanguage Wargaming "wargaming")
+
+(=>
+  (instance ?WARGAMING Wargaming)
+  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)
+    (and
+      (instance ?MILITARYOFFICER MilitaryOfficer)
+      (instance ?SIMULATION Imagining)
+      (instance ?TOOL Device)
+      (agent ?WARGAMING ?MILITARYOFFICER)
+      (patient ?WARGAMING ?SIMULATION)
+      (instrument ?WARGAMING ?TOOL))))

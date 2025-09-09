@@ -16,11 +16,14 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.Formula;
 import com.articulate.sigma.KB;
 import com.articulate.sigma.KBmanager;
+import com.articulate.sigma.tp.EProver;
+import com.articulate.sigma.tp.LEO;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -284,6 +287,7 @@ public class TPTPutil {
         System.out.println("TPTPutil class");
         System.out.println("  options (with a leading '-'):");
         System.out.println("  f <file> - parse a TPTP3 proof file and output source axioms in SUO-KIF");
+        System.out.println("  i <query> <file> - get a proof and output to file");
         System.out.println("  l <file> - parse a TPTP3 proof and substitute in legal argument text");
         System.out.println("  t - run test");
         System.out.println("  h - show this help");
@@ -329,7 +333,20 @@ public class TPTPutil {
                     e.printStackTrace();
                 }
             }
-            else if (args != null && args.length > 1 && args[0].contains("i")) {
+            else if (args != null && args.length > 2 && args[0].contains("i")) {
+                int timeout = 30;
+                if (args[0].contains("p"))
+                    TPTP3ProofProcessor.tptpProof = true;
+                Vampire vamp = kb.askVampire(args[1], timeout, 1);
+                System.out.println("KB.main(): completed Vampire query with result: " + StringUtil.arrayListToCRLFString(vamp.output));
+                tpp = new TPTP3ProofProcessor();
+                tpp.parseProofOutput(vamp.output, args[1], kb, vamp.qlist);
+                ArrayList<String> out = new ArrayList<>();
+                for (TPTPFormula ps : tpp.proof)
+                    out.add(ps.toString());
+                FileUtil.writeLines(args[2],out);
+            }
+            else if (args != null && args.length > 1 && args[0].contains("l")) {
                 try {
                     KB.force = true;
                     kb.loadVampire();
