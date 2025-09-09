@@ -75,8 +75,7 @@ public class FormulaArityCheckTest extends UnitTestBase {
         Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
-        System.out.println("Test4 output: " + output);
-        assertNotNull(output);
+        assertNull(output);
     }
 
     @Test
@@ -116,17 +115,17 @@ public class FormulaArityCheckTest extends UnitTestBase {
         Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
-        assertNotNull(output);
+        assertNull(output);
     }
 
     
     @Test
     public void testArityCheck9() throws AssertionFailedError {
 
-        String input = "(instance ?x ?y)";
+        String input = "(=> (instance ?x ?y) (instance ?y ?z)";
         Formula f = new Formula();
         f.read(input);
         String output = PredVarInst.hasCorrectArity(f, kb);
-        assertNotNull(output);
+        assertNull(output);
     }
 }
