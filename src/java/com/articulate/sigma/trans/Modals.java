@@ -101,7 +101,7 @@ public class Modals {
                 List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
                 if (sig == null) {
                     if (!Formula.isVariable(f.car()))
-                        System.out.println("Error in processRecurse(): null signature for " + f.car());
+                        System.err.println("Error in processRecurse(): null signature for " + f.car());
                     else {
                         Formula result = new Formula();
                         result.read(fstring.toString());
