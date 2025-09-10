@@ -33,6 +33,11 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
     public static boolean debug = false;
+    // New maps and sets to track local definitions
+    private static final Map<String, Set<String>> localInstances = new HashMap<>();
+    private static final Map<String, Set<String>> localSubclasses = new HashMap<>();
+    private static final Set<String> localIndividuals = new HashSet<>();
+    private static final Set<String> localClasses = new HashSet<>();
 
     /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
@@ -68,6 +73,7 @@ public class KifFileChecker {
         if (!parseKif(kif, contents, msgs)) {
             return msgs;
         } else if (debug) System.out.println("KifFileChecker.check() -> parseKif() No Errors Found");
+        harvestLocalFacts(kif);
         KB kb = SUMOtoTFAform.kb;
         FormulaPreprocessor fp = SUMOtoTFAform.fp;
         // ---------- 3) Semantic checks ----------
@@ -136,19 +142,35 @@ public class KifFileChecker {
                     || StringUtil.isQuotedString(t)) {
                     continue;
                 }
-                if (Diagnostics.termNotBelowEntity(t, kb) && !notBelowEntityTerms.contains(t)) {
-                    notBelowEntityTerms.add(t);
-                    msgs.add(fmt(f.startLine, 1, "ERROR", "term not below Entity: " + t));
+                boolean coveredByLocal = false;
+                // If it's a locally introduced individual, check its class chain
+                if (localIndividuals.contains(t)) {
+                    Set<String> classes = localInstances.getOrDefault(t, Collections.emptySet());
+                    for (String c : classes) {
+                        if ("Entity".equals(c) || kb.isSubclass(c, "Entity") || localClasses.contains(c)) {
+                            coveredByLocal = true;
+                            break;
+                        }
+                    }
                 }
-                // Unknown term check (no definition in KB)
-                defn = findDefn(t, kb, kif);
-                if (defn == null && !unknownTerms.contains(t)) {
-                    unknownTerms.add(t);
-                    err = "unknown term: " + t;
-                    msgs.add(fmt(f.startLine, 0, "WARNING", err));
-                    if (debug) System.out.println("KifFileChecker.check() -> " + err);
+                // If it's a locally introduced class, allow it
+                else if (localClasses.contains(t)) {
+                    coveredByLocal = true;
                 }
 
+                if (!coveredByLocal) {
+                    if (Diagnostics.termNotBelowEntity(t, kb) && !notBelowEntityTerms.contains(t)) {
+                        notBelowEntityTerms.add(t);
+                        msgs.add(fmt(f.startLine, 1, "ERROR", "term not below Entity: " + t));
+                    }
+
+                    // defn = findDefn(t, kb, kif);
+                    // if (defn == null && !unknownTerms.contains(t)) {
+                    //     unknownTerms.add(t);
+                    //     err = "unknown term: " + t;
+                    //     msgs.add(fmt(f.startLine, 0, "WARNING", err));
+                    // }
+                }
             }
         }
         // Sort messages by line number, then column number
@@ -168,6 +190,45 @@ public class KifFileChecker {
         return msgs;
     }
 
+    /** Collect local facts from formulas: instance, subclass, names. */
+    private static void harvestLocalFacts(KIF kif) {
+        localInstances.clear();
+        localSubclasses.clear();
+        localIndividuals.clear();
+        localClasses.clear();
+
+        for (Formula f : kif.formulaMap.values()) {
+            if (f == null || f.atom()) continue;
+            String functor = f.car();
+            List<String> args = f.argumentsToArrayListString(1);
+            if (args == null) continue;
+
+            if ("instance".equals(functor) && args.size() == 2) {
+                String indiv = args.get(0), cls = args.get(1);
+                if (isConst(indiv) && isConst(cls)) {
+                    localIndividuals.add(indiv);
+                    localClasses.add(cls);
+                    localInstances.computeIfAbsent(indiv, k -> new HashSet<>()).add(cls);
+                }
+            }
+            else if ("subclass".equals(functor) && args.size() == 2) {
+                String child = args.get(0), parent = args.get(1);
+                if (isConst(child) && isConst(parent)) {
+                    localClasses.add(child);
+                    localClasses.add(parent);
+                    localSubclasses.computeIfAbsent(child, k -> new HashSet<>()).add(parent);
+                }
+            }
+            else if ("names".equals(functor) && args.size() == 2) {
+                String target = args.get(1);
+                if (isConst(target)) localIndividuals.add(target);
+            }
+        }
+    }
+
+    private static boolean isConst(String tok) {
+        return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
+    }
 
     /**
      * ***************************************************************

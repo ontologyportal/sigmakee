@@ -24,7 +24,7 @@
     .success { color: #077d3f; }
     pre { margin: 0; background: #f8f8f8; border: 0; font-family: ui-monospace, monospace; color: #000; }
     .row { display: inline-block; padding: 0 4px; }
-    .row.bad { background: #ffd6d6; }
+    .row.bad { text-decoration: red wavy underline; }
     .ln { display: inline-block; width: 4ch; text-align: right; color: #555; }
     h3 { margin: 8px 0; }
 
@@ -47,7 +47,7 @@
     String out = esc(s);
 
     // Comments
-    out = out.replaceAll("(;.*)$", "<span class='comment'>$1</span>");
+    out = out.replaceAll("(^|\\s)(;.*)", "$1<span class='comment'>$2</span>");
 
     // Operators & quantifiers
     out = out.replaceAll("\\b(and|or|not|=>|<=>)\\b", "<span class='operator'>$1</span>");
@@ -87,16 +87,17 @@
   <div class="scroller msg errors-box"><%= esc(errorMessage) %></div>
 <%
   } else if (fileName != null) {
-      java.util.Set<Integer> errorLines = new java.util.HashSet<>();
-      if (errors != null) {
-          java.util.regex.Pattern p = java.util.regex.Pattern.compile("^Line\\s+(\\d+):");
-          for (String e : errors) {
-              java.util.regex.Matcher m = p.matcher(e);
-              if (m.find()) {
-                  try { errorLines.add(Integer.parseInt(m.group(1))); } catch (NumberFormatException ignore) {}
-              }
-          }
-      }
+    java.util.Set<Integer> errorLines = new java.util.HashSet<>();
+    java.util.regex.Pattern p = java.util.regex.Pattern.compile("^(\\d+):");
+    for (String e : errors) {
+        String l = e.trim();
+        java.util.regex.Matcher m = p.matcher(l);
+        if (m.find()) {
+            try {
+                errorLines.add(Integer.parseInt(m.group(1)));
+            } catch (NumberFormatException ignore) {}
+        }
+    }
 %>
   <div class="layout">
     <!-- Left column: Code -->
