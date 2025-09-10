@@ -567,7 +567,7 @@ public class THFnew {
         if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
         String filename = kbDir + sep + kb.name + ".thf";
          try (Writer fstream = new FileWriter(filename);
-            BufferedWriter out = new BufferedWriter(fstream)) {
+            Writer out = new BufferedWriter(fstream)) {
             out.write(Modals.getTHFHeader() + "\n");
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
