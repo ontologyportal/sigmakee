@@ -155,7 +155,7 @@ public class Modals {
         Formula result = processRecurse(f,kb,worldNum);
         String fstring = result.getFormula();
         result.read(fstring);
-        HashSet<String> types = new HashSet<>();
+        Set<String> types = new HashSet<>();
         types.add("World");
         for (int i = 1; i <= worldNum; i++)
             result.varTypeCache.put("?W" + i,types);
