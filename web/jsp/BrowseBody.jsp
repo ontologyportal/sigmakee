@@ -11,7 +11,15 @@
     for Logical Theories. AI Communications 26, pp79-97.  See also
     http://github.com/ontologyportal
 */
+language = (String) session.getAttribute("lang");
+if (language == null || language.isEmpty()) {
+    language = "EnglishLanguage";
+}
 
+flang = (String) session.getAttribute("flang");
+if (flang == null || flang.isEmpty()) {
+    flang = "KIF";
+}
  show = new StringBuilder();       // Variable to contain the HTML page generated.
  String formattedFormula = null;
  term = request.getParameter("term");

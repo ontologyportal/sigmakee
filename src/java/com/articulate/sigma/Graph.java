@@ -43,7 +43,7 @@ public class Graph {
 
     public Set<String> errors = new TreeSet<>();
 
-    public static boolean debug = false;
+    public static boolean debug = true;
 
     /** *************************************************************
      */
@@ -189,6 +189,8 @@ public class Graph {
     public Set<String> createBoundedSizeGraph(KB kb, String term, String relation,
                                         int size, boolean instances, String language) {
 
+        if (debug) System.out.println("Graph.createBoundedSizeGraph(" + kb.name + ", " + term + ", " + relation + ", " + 
+                                      size + ", " + instances + ", " + language + ")");
         Set<String> result = new LinkedHashSet<>();
         Set<String> oldresult = new LinkedHashSet<>();
         int above = 1;
@@ -224,6 +226,8 @@ public class Graph {
     public Set<String> createGraph(KB kb, String term, String relation,
                                  int above, int below, int termLimit, boolean instances, String language) {
 
+        if (debug) System.out.println("Graph.createGraph(" + kb.name + ", " + term + ", " + relation + ", " + 
+                                      above + ", " + below + ", " + termLimit + ", " + instances + ", " + language + ")");
         graphsize = 0;
         Set<String> result = new LinkedHashSet<>();  // a list of Strings
         Set<String> checkAbove = new HashSet<>();
@@ -246,6 +250,8 @@ public class Graph {
                                       int above, int below, int level,
                                       boolean show, boolean instances, String language) {
 
+        if (debug) System.out.println("Graph.createGraphBody(" + kb.name + ", " + check + ", " + term + ", " + relation + ", " + 
+                                      above + ", " + below + ", " + level + ", " + show + ", " + instances + ", " + language + ")");
         Set<String> result = new LinkedHashSet<>();
         int graphMax = Integer.parseInt(KBmanager.getMgr().getPref("adminBrowserLimit"));
         if (!check.contains(term) && graphsize < graphMax) {
@@ -282,7 +288,7 @@ public class Graph {
                 https = "http";
             else
                 https = "https";
-            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + kb.language + "&kb=" + kb.name;
+            String kbHref = https + "://" + hostname + ":" + port + "/sigma/Browse.jsp?lang=" + language + "&kb=" + kb.name;
             if (show) {
                 graphsize++;
                 if (graphsize < 100)

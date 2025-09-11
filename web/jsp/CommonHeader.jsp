@@ -18,6 +18,35 @@
 */
 %>
 
+<%
+    // --- Natural Language handling ---
+    if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
+        session.setAttribute("lang", request.getParameter("lang"));
+        language = request.getParameter("lang");
+    }
+    String sessionLang = (String) session.getAttribute("lang");
+    if (sessionLang != null && !sessionLang.isEmpty()) {
+        language = sessionLang;
+    }
+    else if (language == null || language.isEmpty()) {
+        language = "EnglishLanguage";
+    }
+
+    // --- Formal Language handling ---
+    if (request.getParameter("flang") != null && !request.getParameter("flang").isEmpty()) {
+        session.setAttribute("flang", request.getParameter("flang"));
+        flang = request.getParameter("flang");
+    }
+    if (sessionFlang != null && !sessionFlang.isEmpty()) {
+        flang = sessionFlang;
+    }
+    else if (flang == null || flang.isEmpty()) {
+        // Pick your default formal language
+        flang = "KIF";  // for example
+    }
+%>
+
+
 <TABLE width="95%" cellspacing="0" cellpadding="0">
   <TR>
       <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
@@ -61,8 +90,18 @@
         out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
 %>
         </b>
-        <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>&nbsp;
-        <p><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
+        <b>Language:&nbsp;
+        <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
+            <%= HTMLformatter.createMenu("lang", language, kb.availableLanguages(), "onchange='this.form.submit()'")%>
+            <input type="hidden" name="kb" value="<%=kbName%>" />
+        </form>
+        </b>&nbsp;
+        <b>Formal Language:&nbsp;
+        <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
+            <%= HTMLformatter.createMenu("flang", flang, HTMLformatter.availableFormalLanguages, "onchange='this.form.submit()'") %>
+            <input type="hidden" name="kb" value="<%=kbName%>" />
+        </form>
+
       <br>
       </td>
   </TR>

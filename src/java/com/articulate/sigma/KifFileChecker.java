@@ -1,499 +1,519 @@
-/** This code is copyright Articulate Software (c) 2003.  Some portions
-copyright Teknowledge (c) 2003 and reused under the terms of the GNU license.
-This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-Users of this code also consent, by use of this code, to credit Articulate Software
-and Teknowledge in any writings, briefings, publications, presentations, or
-other representations of any software which incorporates, builds on, or uses this
-code.  Please cite the following article in any publication with references:
+/** This code is copyright Articulate Software (c) 2003.  Some
+portions copyright Teknowledge (c) 2003 and reused under the termsof the GNU
+license.  This software is released under the GNU Public License
+<http://www.gnu.org/copyleft/gpl.html>.  Users of this code also consent,
+by use of this code, to credit Articulate Software and Teknowledge in any
+writings, briefings, publications, presentations, or other representations
+of any software which incorporates, builds on, or uses this code.  Please
+cite the following article in any publication with references:
 
-Pease, A., (2003). The Sigma Ontology Development Environment,
-in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
-August 9, Acapulco, Mexico.
+Pease, A., (2003). The Sigma Ontology Development Environment, in Working
+Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
+August 9, Acapulco, Mexico. see also
+http://sigmakee.sourceforge.net
 */
 
 package com.articulate.sigma;
-import java.io.*;
+import com.articulate.sigma.parsing.SuokifApp;
+import com.articulate.sigma.parsing.SuokifVisitor;
+import com.articulate.sigma.trans.SUMOtoTFAform;
+import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.FileUtil;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
- * Validates a .kif file for common SUO-KIF issues:
- *   • Balanced parentheses across lines
- *   • Logical operator shapes (via Formula.validArgs + a few explicit checks)
- *   • Unquantified variables (checked ONLY at top level)
- *   • Arity checks (KB signatures with small built-ins)
- *   • Light semantics: arguments “below Entity” for instance/subclass
- *     using Diagnostics.termNotBelowEntity(...) + local declarations
- *   • Unknown head symbol (flags misspelled predicates like "ibnstance")
- *   • Recurses into nested formulas (and/or/not/exists/forall/=>/<=>)
+ * Headless KIF checker that mirrors SUMOjEdit.checkErrorsBody logic,
+ * but returns diagnostics as strings: "line:col: SEVERITY: message".
+ *
+ * No UI / jEdit dependencies.
  */
 public class KifFileChecker {
+    public static boolean debug = false;
+    // New maps and sets to track local definitions
+    private static final Map<String, Set<String>> localInstances = new HashMap<>();
+    private static final Map<String, Set<String>> localSubclasses = new HashMap<>();
+    private static final Set<String> localIndividuals = new HashSet<>();
+    private static final Set<String> localClasses = new HashSet<>();
 
-    private static final Map<String, Integer> BUILTIN_ARITY = new HashMap<>();
-    static {
-        BUILTIN_ARITY.put("instance", 2);
-        BUILTIN_ARITY.put("subclass", 2);
-        BUILTIN_ARITY.put("names",    2);
-        BUILTIN_ARITY.put("editor",   2);
-        BUILTIN_ARITY.put("attribute",2);
-    }
-
-    /** *************************************************************
-     * Validate a character stream of SUO-KIF with optional “below Entity”
-     * semantic checks.
-
-     * @param reader character stream containing SUO-KIF
-     * @param sourceName a label used in messages (e.g., file name)
-     * @param includeBelow when true, enforce “below Entity/Attribute” checks
-     * @return a list of error/warning messages; empty if none
-     * @throws IOException if reading the stream fails
+    /**
+     * Runs syntax and semantic checks on KIF content, returning diagnostics.
+     * @param contents raw KIF text to check
+     * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
-    public static List<String> check(Reader reader, String sourceName, boolean includeBelow) throws IOException {
+    public static List<String> check(String contents) {
 
-        final List<String> out = new ArrayList<>();
-        final StringBuilder buf = new StringBuilder();
-        final Set<String> localClasses = new HashSet<>();
-        int lineNo = 0, startLine = 0;
-        final KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        try (BufferedReader br = new BufferedReader(reader)) {
-            String raw;
-            while ((raw = br.readLine()) != null) {
-                lineNo++;
-                final String trimmed = raw.trim();
-                if (trimmed.isEmpty() || trimmed.startsWith(";")) continue;
-
-                if (buf.length() == 0) {
-                    startLine = lineNo;
-                } else {
-                    buf.append('\n');
+        SUMOtoTFAform.initOnce();
+        List<String> msgs = new ArrayList<>();
+        if (contents == null) contents = "";
+        int counter = 0, idx, line, offset;
+        // ---------- 1) Syntax Errors ----------
+        if (debug) System.out.println("*******************************************************");
+        SuokifVisitor sv = SuokifApp.process(contents);
+        if (!sv.errors.isEmpty()) {
+            for (String er : sv.errors) {
+                line = getLineNum(er);
+                int col  = getOffset(er);
+                msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "ERROR", er));
+            }
+            return msgs;
+        } else if (debug) System.out.println("KifFileChecker.check() -> SuokifApp.process() No Errors Found");
+        // ---------- 2) Parse to KIF ----------
+        KIF kif = new KIF();
+        kif.filename = "(buffer)";
+        try (Reader r = new StringReader(contents)) {
+            kif.parse(r);
+        } catch (Exception e) {
+            msgs.add(fmt(1, 1, "ERROR", "Parse failure: " + e));
+            return msgs;
+        }
+        if (!parseKif(kif, contents, msgs)) {
+            return msgs;
+        } else if (debug) System.out.println("KifFileChecker.check() -> parseKif() No Errors Found");
+        harvestLocalFacts(kif);
+        KB kb = SUMOtoTFAform.kb;
+        FormulaPreprocessor fp = SUMOtoTFAform.fp;
+        // ---------- 3) Semantic checks ----------
+        Set<String> notBelowEntityTerms = new HashSet<>();
+        Set<String> unknownTerms = new HashSet<>();
+        Set<String> result, unquant, terms;
+        Set<Formula> processed;
+        String err, term;
+        FileSpec defn;
+        for (Formula f : kif.formulaMap.values()) {
+            if (debug) System.out.println("\n---------------------------------------------\n" + 
+                                 "KifFileChecker.check() -> Checking formula \n" + f.toString());
+            // Quantifier Not In Statement
+            if (Diagnostics.quantifierNotInStatement(f)) {
+                msgs.add(fmt(f.startLine, 1, "ERROR", "Quantifier not in statement"));
+            } else if (debug) System.out.println("KifFileChecker.check() -> Diagnostics.quantifierNotInStatement() false");
+            // Variables used once
+            Set<String> singleUse = Diagnostics.singleUseVariables(f);
+            if (singleUse != null && !singleUse.isEmpty()) {
+                for (String v : singleUse)
+                    msgs.add(fmt(f.startLine, 1, "WARNING", "Variable(s) only used once: " + v));
+            } else if (debug) System.out.println("KifFileChecker.check() -> singleUserVariables() " + singleUse);
+            // Preprocessor warnings/errors
+            processed = fp.preProcess(f, false, kb);
+            if (f.errors != null && !f.errors.isEmpty()) {
+                for (String er : f.errors) {
+                    msgs.add(fmt(f.startLine, 1, "ERROR", er));
                 }
-                buf.append(raw);
-                final String chunkRaw = buf.toString();
-                final String chunk    = chunkRaw.trim();
-                Formula probe = new Formula(); probe.read(chunk);
-                if (!probe.isBalancedList()) continue;
-                Formula f = new Formula();
-                f.read(chunk);
-                f.startLine = startLine;
-                f.endLine   = lineNo;
-                f.setSourceFile(sourceName);
-                validateDeep(f, sourceName, startLine, kb, localClasses, out,
-                            /*topLevel=*/true, includeBelow, chunkRaw);
-                buf.setLength(0);
+            } else if (f.warnings != null && !f.warnings.isEmpty()) {
+                for (String w : f.warnings) {
+                    msgs.add(fmt(f.startLine, 1, "WARNING", w));
+                }
+            }
+            // Sumo to TFA form errors
+            if (SUMOtoTFAform.errors != null && !f.errors.isEmpty() && processed.size() == 1) {
+                for (String er : SUMOtoTFAform.errors) {
+                    msgs.add(fmt(f.startLine, 1, "ERROR", er));
+                    if (debug) System.out.println("KifFileChecker.check() -> SUMOtoTFAform error: " + er);
+                }
+                SUMOtoTFAform.errors.clear();
+            }
+            // KButilities isValidFormula()
+            if (!KButilities.isValidFormula(kb, f.toString())) {
+                for (String er : KButilities.errors) {
+                    msgs.add(fmt(f.startLine, 1, "ERROR", er));
+                }
+                KButilities.errors.clear();
+            } else if (debug) System.out.println("KifFileChecker.check() -> KButilities.isValidFormula() true");
+            // Unquantified variables in consequent
+            unquant = Diagnostics.unquantInConsequent(f);
+            if (unquant != null && !unquant.isEmpty()) {
+                for (String uq : unquant) {
+                    msgs.add(fmt(f.startLine, 1, "ERROR", "Unquantified var: " + uq));
+                }
+            } else if (debug) System.out.println("KifFileChecker.check() -> f.collectUnquantifiedVariables() " + unquant);
+            // PredVarInst arity check
+            term = PredVarInst.hasCorrectArity(f, kb);
+            if (!StringUtil.emptyString(term)) {
+                msgs.add(fmt(f.startLine, 1, "ERROR", "Arity error of predicate: " + term));
+            } else if (debug) System.out.println("KifFileChecker.check() -> PredVarInst.hasCorrectArity() " + term);
+            // Term below Entity + unknown terms
+            terms = f.collectTerms();
+            for (String t : terms) {
+                if (Diagnostics.LOG_OPS.contains(t) || "Entity".equals(t)
+                    || Formula.isVariable(t) || StringUtil.isNumeric(t)
+                    || StringUtil.isQuotedString(t)) {
+                    continue;
+                }
+                boolean coveredByLocal = false;
+                // If it's a locally introduced individual, check its class chain
+                if (localIndividuals.contains(t)) {
+                    Set<String> classes = localInstances.getOrDefault(t, Collections.emptySet());
+                    for (String c : classes) {
+                        if ("Entity".equals(c) || kb.isSubclass(c, "Entity") || localClasses.contains(c)) {
+                            coveredByLocal = true;
+                            break;
+                        }
+                    }
+                }
+                // If it's a locally introduced class, allow it
+                else if (localClasses.contains(t)) {
+                    coveredByLocal = true;
+                }
+
+                if (true) {
+                    if (Diagnostics.termNotBelowEntity(t, kb) && !notBelowEntityTerms.contains(t)) {
+                        notBelowEntityTerms.add(t);
+                        msgs.add(fmt(f.startLine, 1, "ERROR", "term not below Entity: " + t));
+                    }
+
+                    // defn = findDefn(t, kb, kif);
+                    // if (defn == null && !unknownTerms.contains(t)) {
+                    //     unknownTerms.add(t);
+                    //     err = "unknown term: " + t;
+                    //     msgs.add(fmt(f.startLine, 0, "WARNING", err));
+                    // }
+                }
             }
         }
-        if (buf.length() > 0) out.add(lineMsg(startLine, "Unbalanced parentheses nearby."));
-        return out;
-    }
-
-    /** *************************************************************
-    * Recursively validate a formula and all sentence-valued subformulas.
-    * 
-    * @param f the current formula
-    * @param fileName source label for messages
-    * @param startLine first line number of the current balanced chunk
-    * @param kb the knowledge base used for signatures and taxonomy
-    * @param localClasses locally declared classes collected so far
-    * @param out destination list for messages
-    * @param topLevel true when f is the top-level formula of the chunk
-    * @param includeBelow toggle for semantic checks that rely on the taxonomy
-    */
-    private static void validateDeep(Formula f,
-                                    String fileName,
-                                    int startLine,
-                                    KB kb,
-                                    Set<String> localClasses,
-                                    List<String> out,
-                                    boolean topLevel,
-                                    boolean includeBelow,
-                                    String sourceText) {
-    
-        recordLocalClassFacts(f, localClasses, kb, includeBelow);
-        out.addAll(validateFormula(f, fileName, startLine, kb, localClasses, topLevel, includeBelow));
-        final String pred = f.car();
-        if (pred == null || pred.isEmpty()) return;
-        final List<String> args = f.argumentsToArrayListString(1);
-        if (args == null) return;
-        switch (pred) {
-            case "not":
-                if (!args.isEmpty())
-                    descend(args.get(0), f, fileName, startLine, kb, localClasses, out,
-                            /*topLevel=*/false, includeBelow, sourceText);
-                break;
-            case "and":
-            case "or":
-            case "=>":
-            case "<=>":
-                for (String a : args)
-                    descend(a, f, fileName, startLine, kb, localClasses, out,
-                            /*topLevel=*/false, includeBelow, sourceText);
-                break;
-            case "exists":
-            case "forall":
-                if (args.size() >= 2)
-                    descend(args.get(1), f, fileName, startLine, kb, localClasses, out,
-                            /*topLevel=*/false, includeBelow, sourceText);
-                break;
-            default:
-                break;
-        }
-    }
-
-    /** *************************************************************
-     * Parse and validate a child S-expression if present.
-     * 
-     * @param s child string (potential S-expression)
-     * @param parent the parent formula (used for end line and source)
-     * @param fileName source label
-     * @param startLine start line of the parent chunk
-     * @param kb knowledge base for semantic/arity checks
-     * @param localClasses locally declared classes
-     * @param out destination list for messages
-     * @param topLevel always false for descendants
-     * @param includeBelow toggle for semantic checks
-     */
-    private static void descend(String s,
-                                Formula parent,
-                                String fileName,
-                                int parentStartLine,
-                                KB kb,
-                                Set<String> localClasses,
-                                List<String> out,
-                                boolean topLevel,
-                                boolean includeBelow,
-                                String parentText) {
-    
-        if (s == null) return;
-        s = s.trim();
-        if (!s.startsWith("(")) return;
-        Formula g = new Formula();
-        g.read(s);
-        if (!g.isBalancedList()) return;
-        int childStartLine = estimateStartLine(parentText, s, parentStartLine);
-        g.startLine = childStartLine;
-        g.endLine   = parent.endLine;
-        g.setSourceFile(fileName);
-        validateDeep(g, fileName, childStartLine, kb, localClasses, out,
-                    /*topLevel=*/false, includeBelow, s);
-    }
-
-    /** *************************************************************
-     * Validate one balanced formula (non-recursive).
-     * 
-     * @param f the formula to validate
-     * @param fileName source label for messages
-     * @param startLine first line number of the current balanced chunk
-     * @param kb knowledge base for signatures/taxonomy
-     * @param localClasses locally declared classes available for this chunk
-     * @param topLevel true to enable the unquantified-variable check
-     * @param includeBelow toggle for taxonomy-based checks
-     * @return a list of messages for this formula; possibly empty
-     */
-    private static List<String> validateFormula(Formula f, String fileName, int startLine, KB kb, Set<String> localClasses, boolean topLevel, boolean includeBelow) {
-        
-        final List<String> errors = new ArrayList<>();
-        final Set<String> seen = new HashSet<>();
-        checkArgsAndErrors(f, fileName, startLine, errors, seen);
-        if (topLevel) checkUnquantifiedVariables(f, startLine, errors, seen);
-        final String pred = f.car();
-        final List<String> args = (pred == null || pred.isEmpty()) ? null : f.argumentsToArrayListString(1);
-        if (includeBelow) checkUnknownPredicate(pred, kb, fileName, startLine, errors, seen);
-        checkOperatorShapes(pred, args, f, startLine, errors, seen);
-        checkArity(pred, args, f, kb, startLine, errors, seen);
-        if (kb != null && args != null && includeBelow) checkSemanticConstraints(pred, args, f, kb, localClasses, startLine, errors, seen);
-        checkNamesOperator(pred, args, f, startLine, errors, seen);
-        return errors;
-    }
-
-    /**
-     * Run built-in argument checks and collect formula-level errors.
-     *
-     * @param f the formula being validated
-     * @param fileName label for the source
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkArgsAndErrors(Formula f, String fileName, int line, List<String> errors, Set<String> seen) {
-    
-        String argError = f.validArgs(fileName, line);
-        if (!argError.isEmpty()) addMsg(errors, seen, line, argError);
-        for (String err : f.getErrors()) addMsg(errors, seen, line, err);
-    }
-
-    /**
-     * Check for unquantified variables at the top level.
-     *
-     * @param f the formula being validated
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkUnquantifiedVariables(Formula f, int line, List<String> errors, Set<String> seen) {
-    
-        Set<String> unq = f.collectUnquantifiedVariables();
-        if (!f.isRule() && !unq.isEmpty()) addMsg(errors, seen, line, "Unquantified variables → " + unq);
-    }
-
-    /**
-     * Check if a predicate is unknown (not in SUMO and not logical).
-     *
-     * @param pred predicate string
-     * @param kb knowledge base to check against
-     * @param fileName label for the source
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkUnknownPredicate(String pred, KB kb, String fileName, int line, List<String> errors, Set<String> seen) {
-    
-        if (pred == null || pred.isEmpty()) return;
-        if (!Formula.isLogicalOperator(pred) && !Formula.isVariable(pred)) {
-            boolean known = (kb != null) && !Diagnostics.termNotBelowEntity(pred, kb);
-            if (!known) addMsg(errors, seen, line, "Unknown predicate/operator '" + pred + "' (not a SUMO term below Entity).");
-        }
-    }
-
-    /**
-     * Check operator-specific constraints like "not", "=>" and "<=>".
-     *
-     * @param pred predicate string
-     * @param args list of arguments
-     * @param f formula being validated
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkOperatorShapes(String pred, List<String> args, Formula f, int line, List<String> errors, Set<String> seen) {
-    
-        if ("not".equals(pred) && size(args) != 1) addMsg(errors, seen, line, "'not' must have exactly one argument → " + inlineFormula(f));
-        if (("=>".equals(pred) || "<=>".equals(pred)) && size(args) != 2) addMsg(errors, seen, line, "'" + pred + "' must have exactly two arguments → " + inlineFormula(f));
-    }
-
-    /**
-     * Validate predicate arity against KB signatures or built-in rules.
-     *
-     * @param pred predicate string
-     * @param args list of arguments
-     * @param f formula being validated
-     * @param kb knowledge base to check against
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkArity(String pred, List<String> args, Formula f, KB kb, int line, List<String> errors, Set<String> seen) {
-    
-        int expected = expectedArity(pred, kb);
-        if (expected != -1 && args != null && args.size() != expected) addMsg(errors, seen, line, "Arity error for '" + pred + "'. Expected " + expected + " args, found " + args.size() + " → " + inlineFormula(f));
-    }
-
-    /**
-     * Validate semantic constraints on predicates like instance, subclass, attribute.
-     *
-     * @param pred predicate string
-     * @param args list of arguments
-     * @param f formula being validated
-     * @param kb knowledge base to check against
-     * @param localClasses locally declared classes
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkSemanticConstraints(String pred, List<String> args, Formula f, KB kb, Set<String> localClasses, int line, List<String> errors, Set<String> seen) {
-    
-        if ("instance".equals(pred) && args.size() == 2) {
-            String cls = args.get(1);
-            if (!isBelowEntity(cls, localClasses, kb, true)) addMsg(errors, seen, line, "'instance' expects a Class below Entity as arg2, found: " + cls);
-        } else if ("subclass".equals(pred) && args.size() == 2) {
-            boolean ok1 = isBelowEntity(args.get(0), localClasses, kb, true);
-            boolean ok2 = isBelowEntity(args.get(1), localClasses, kb, true);
-            if (!ok1 || !ok2) addMsg(errors, seen, line, "'subclass' expects Classes below Entity → " + inlineFormula(f));
-        } else if ("attribute".equals(pred) && args.size() == 2) {
-            String attr = args.get(1);
-            boolean attrOK = kb.kbCache.subclassOf(attr, "Attribute") || kb.kbCache.transInstOf(attr, "Attribute");
-            if (!attrOK) addMsg(errors, seen, line, "'attribute' expects arg2 below Attribute, found: " + attr);
-        }
-    }
-
-    /**
-     * Validate the "names" operator requires a quoted string as first argument.
-     *
-     * @param pred predicate string
-     * @param args list of arguments
-     * @param f formula being validated
-     * @param line current line number
-     * @param errors list to collect error messages
-     * @param seen deduplication set
-     */
-    private static void checkNamesOperator(String pred, List<String> args, Formula f, int line, List<String> errors, Set<String> seen) {
-    
-        if ("names".equals(pred) && args != null && args.size() == 2) {
-            String s = args.get(0);
-            if (!isQuoted(s)) addMsg(errors, seen, line, "'names' arg1 must be a quoted string → " + inlineFormula(f));
-        }
-    }
-
-    /** *************************************************************
-     * Record locally declared classes introduced by the current literal.
-     *
-     * @param f the current formula
-     * @param localClasses mutable set of locally known classes
-     * @param kb knowledge base used to confirm C2 where applicable
-     * @param includeBelow whether to consult the KB for C2
-     */
-    private static void recordLocalClassFacts(Formula f, Set<String> localClasses, KB kb, boolean includeBelow) {
-        
-        final String pred = f.car();
-        if (pred == null || pred.isEmpty()) 
-            return;
-        final List<String> args = f.argumentsToArrayListString(1);
-        if (args == null) 
-            return;
-        if ("subclass".equals(pred) && args.size() == 2) {
-            localClasses.add(args.get(0));
-            if (includeBelow && kb != null && !Diagnostics.termNotBelowEntity(args.get(1), kb)) {
-                localClasses.add(args.get(1));
+        // Sort messages by line number, then column number
+        msgs.sort(Comparator.comparingInt((String m) -> {
+            try {
+                return Integer.parseInt(m.split(":")[0]);
+            } catch (Exception e) {
+                return Integer.MAX_VALUE; // put malformed lines at the end
             }
-        } else if ("instance".equals(pred) && args.size() == 2 && "Class".equals(args.get(1))) {
-            localClasses.add(args.get(0));
+        }).thenComparingInt(m -> {
+            try {
+                return Integer.parseInt(m.split(":")[1]);
+            } catch (Exception e) {
+                return Integer.MAX_VALUE;
+            }
+        }));
+        return msgs;
+    }
+
+    /** Collect local facts from formulas: instance, subclass, names. */
+    private static void harvestLocalFacts(KIF kif) {
+        localInstances.clear();
+        localSubclasses.clear();
+        localIndividuals.clear();
+        localClasses.clear();
+
+        for (Formula f : kif.formulaMap.values()) {
+            if (f == null || f.atom()) continue;
+            String functor = f.car();
+            List<String> args = f.argumentsToArrayListString(1);
+            if (args == null) continue;
+
+            if ("instance".equals(functor) && args.size() == 2) {
+                String indiv = args.get(0), cls = args.get(1);
+                if (isConst(indiv) && isConst(cls)) {
+                    localIndividuals.add(indiv);
+                    localClasses.add(cls);
+                    localInstances.computeIfAbsent(indiv, k -> new HashSet<>()).add(cls);
+                }
+            }
+            else if ("subclass".equals(functor) && args.size() == 2) {
+                String child = args.get(0), parent = args.get(1);
+                if (isConst(child) && isConst(parent)) {
+                    localClasses.add(child);
+                    localClasses.add(parent);
+                    localSubclasses.computeIfAbsent(child, k -> new HashSet<>()).add(parent);
+                }
+            }
+            else if ("names".equals(functor) && args.size() == 2) {
+                String target = args.get(1);
+                if (isConst(target)) localIndividuals.add(target);
+            }
         }
     }
 
-    /** *************************************************************
-     * Return true if term should be considered “below Entity”.
-     *
-     * @param term symbol to test
-     * @param localClasses locally declared classes for the current chunk
-     * @param kb knowledge base providing taxonomy
-     * @param includeBelow toggle for performing the taxonomy check
-     * @return true if considered below Entity; false otherwise
-     */
-    private static boolean isBelowEntity(String term, Set<String> localClasses, KB kb, boolean includeBelow) {
-
-        if (!includeBelow) return true; 
-        if (term == null || term.isEmpty()) return false;
-        if (localClasses != null && localClasses.contains(term)) return true;
-        if (kb == null) return false;
-        return !Diagnostics.termNotBelowEntity(term, kb);
+    private static boolean isConst(String tok) {
+        return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
     }
 
-    /** *************************************************************
-     * Determine expected arity for a predicate.
-     * 
-     * @param pred predicate symbol
-     * @param kb knowledge base to query for the signature
-     * @return expected number of arguments, or -1 if not known
+    /**
+     * ***************************************************************
+     * Utility class that contains searched term line and filepath information
      */
-    private static int expectedArity(String pred, KB kb) {
+    public static class FileSpec {
 
-        if (kb == null || kb.kbCache == null) return -1;
-        final List<String> sig = kb.kbCache.getSignature(pred);
-        return (sig == null) ? -1 : sig.size() - 1; // subtract predicate position
+        public String filepath = "";
+        public int line = -1;
     }
 
-    /** *************************************************************
-     * Replace all newlines in the given string with spaces,
-     * and trim leading/trailing whitespace.
-     *
-     * @param s the input string (may be null)
-     * @return a single-line, trimmed version of the string,
-     *         or "" if input is null
+    /**
+     * Builds a FileSpec for the first matching definition of a term in a list of formulas.
+     * @param forms list of candidate formulas
+     * @param currentFName current filename (no path)
+     * @return FileSpec containing the definition’s filepath and line number
      */
-    private static String flatten(String s) {
-        return (s == null) ? "" : s.replaceAll("[\\r\\n]+", " ").trim();
-    }
+    private static FileSpec filespecFromForms(java.util.List<Formula> forms, String currentFName) {
 
-    /** *************************************************************
-     * Convert a Formula to a compact, single-line string.
-     *
-     * @param f the Formula object (may be null)
-     * @return a normalized one-line string representation of the formula,
-     *         or "" if the formula is null or has no content
-     */
-    private static String inlineFormula(Formula f) {
-
-        String s = (f == null) ? "" : f.getFormula();
-        return (s == null) ? "" : s.replaceAll("\\s+", " ").trim();
-    }
-
-    /** *************************************************************
-     * Add a line-numbered error message if it has not already been seen.
-     *
-     * @param errors list to collect error messages
-     * @param seen set of already-added messages (deduplication)
-     * @param line the line number to prefix in the error message
-     * @param msg the raw error message (may span multiple lines)
-     */
-    private static void addMsg(List<String> errors, Set<String> seen, int line, String msg) {
-        String one = flatten(msg);
-        if (seen.add(one)) errors.add(lineMsg(line, one));
-    }
-
-    /** *************************************************************
-     * Return only the first line of a string.
-     *
-     * @param s the input string (may be null)
-     * @return the substring up to the first newline,
-     *         or the whole string if no newline is found,
-     *         or "" if input is null
-     */
-    private static String oneLine(String s) {
-        if (s == null) return "";
-        int i = s.indexOf('\n');
-        return (i >= 0) ? s.substring(0, i) : s;
-    }
-
-    /** *************************************************************
-     * Estimate the starting line number of a child S-expression
-     * by locating it within the parent's raw text and counting newlines.
-     *
-     * @param parentText the full text of the parent formula
-     * @param childText the raw text of the child formula
-     * @param parentStartLine the line number where the parent starts
-     * @return approximate line number where the child begins
-     */
-    private static int estimateStartLine(String parentText, String childText, int parentStartLine) {
-
-        if (parentText == null || childText == null) return parentStartLine;
-        int idx = parentText.indexOf(childText);
-        if (idx < 0) return parentStartLine;
-        int newlines = 0;
-        for (int i = 0; i < idx; i++) {
-            if (parentText.charAt(i) == '\n') newlines++;
+        FileSpec fs = new FileSpec();
+        for (Formula f : forms) {
+            if (FileUtil.noPath(f.getSourceFile()).equals(currentFName) && !f.getSourceFile().endsWith("_Cache.kif")) {
+                fs.filepath = f.sourceFile;
+                fs.line = f.startLine - 1; // jedit starts from 0, SUMO starts from 1
+                return fs;
+            }
         }
-        return parentStartLine + newlines;
+        for (Formula f : forms) {
+            if (!f.getSourceFile().endsWith("_Cache.kif")) {
+                fs.filepath = f.sourceFile;
+                fs.line = f.startLine - 1; // jedit starts from 0, SUMO starts from 1
+                return fs;
+            }
+        }
+        return fs;
     }
 
-    /** *************************************************************
-     * Null-safe list size helper.
-     *
-     * @param l list whose size is needed
-     * @return 0 if is null; otherwise l.size()
+    /**
+     * ***************************************************************
+     * Note that the "definition" of a term is collection of axioms so look for,
+     * in order: instance, subclass, subAttribute, subrelation, domain, documentation
+     * @param term the term to search for
+     * @return a FileSpec with searched term info
      */
-    private static int size(List<?> l) { 
-        
-        return (l == null) ? 0 : l.size(); 
+    private static FileSpec findDefn(String term, KB kb, KIF kif) {
+
+        if (StringUtil.emptyString(kif.filename))
+            kif.filename = "(buffer)";
+        String currentFName = FileUtil.noPath(kif.filename);
+        java.util.List<Formula> forms = kb.askWithRestriction(0, "instance", 1, term);
+        if (forms != null && !forms.isEmpty())
+            return(filespecFromForms(forms, currentFName));
+        forms = kb.askWithRestriction(0, "subclass", 1, term);
+        if (forms != null && !forms.isEmpty())
+            return(filespecFromForms(forms, currentFName));
+        forms = kb.askWithRestriction(0, "subAttribute", 1, term);
+        if (forms != null && !forms.isEmpty())
+            return(filespecFromForms(forms, currentFName));
+        forms = kb.askWithRestriction(0, "subrelation", 1, term);
+        if (forms != null && !forms.isEmpty())
+            return(filespecFromForms(forms, currentFName));
+        forms = kb.askWithRestriction(0, "domain", 1, term);
+        if (forms != null && !forms.isEmpty())
+            return(filespecFromForms(forms, currentFName));
+        forms = kb.askWithRestriction(0, "documentation", 1, term);
+        if (forms != null && !forms.isEmpty())
+            return(filespecFromForms(forms, currentFName));
+        return null; // nothing found
     }
 
-    /** *************************************************************
-     * Test whether a string is a quoted literal (minimal check).
-     *
-     * @param s candidate string
-     * @return true if non-null, length ≥ 2, starts and ends with a double quote
+    /**
+     * Prints usage statistics for a parsed KIF file including terms, axioms, and rules.
+     * @param kif parsed KIF object
+     * @param filename source filename of the KIF
+     * @param kb knowledge base to resolve definitions
      */
-    private static boolean isQuoted(String s) {
+    public void showStats(KIF kif, String filename, KB kb) {
 
-        return s != null && s.length() >= 2 && s.startsWith("\"") && s.endsWith("\"");
+        try {
+            int termCount = 0;
+            int otherTermCount = 0;
+            FileSpec defn;
+            String thisNoPath;
+            for (String t : kif.terms) {
+                if (t == null) {
+                    System.out.println("showStats(): null term");
+                    continue;
+                }
+                defn = findDefn(t, kb, kif);
+                if (defn == null) {
+                    if (!Formula.isLogicalOperator(t)) {
+                        System.out.println("showStats(): no definition found for: " + t);
+                        continue;
+                    } else {
+                        thisNoPath = "";
+                    }
+                }
+                else {
+                    thisNoPath = FileUtil.noPath(defn.filepath);
+                }
+                if (thisNoPath.equals(filename) || StringUtil.emptyString(thisNoPath)) {
+                    System.out.println("showStats(): ******* in this file: " + t);
+                    termCount++;
+                } else {
+                    if (!Formula.isLogicalOperator(t)) {
+                        otherTermCount++;
+                    }
+                }
+            }
+            System.out.println("showStats(): # terms: " + termCount);
+            System.out.println("showStats(): # terms used from other files: " + otherTermCount);
+            System.out.println("showStats(): # axioms: " + kif.formulaMap.keySet().size());
+            int ruleCount = 0;
+            for (Formula f : kif.formulaMap.values()) {
+                if (f.isRule()) {
+                    ruleCount++;
+                }
+            }
+            System.out.println("showStats(): # rules: " + ruleCount);
+            System.out.println("showStats(): done reading kif file");
+        } catch (Exception e) {
+            String msg = "Error in showStats() with: " + kif.filename + ": " + e;
+            System.err.println(msg);
+            e.printStackTrace();
+        }
+        System.out.println("showStats(): complete");
     }
 
-    /** *************************************************************
-     * Format a message prefixed with a line number.
-     *
-     * @param line the starting line of the formula that produced the message
-     * @param msg the human-readable message
-     * @return a string in the form "Line <line>: <msg>"
+    /**
+     * Extracts the numeric column offset from an error/warning line string.
+     * @param line error/warning line text
+     * @return offset as int (0 if none found)
      */
-    private static String lineMsg(int line, String msg) {
+    private static int getOffset(String line) {
 
-        return "Line " + line + ": " + msg;
+        int result = -1;
+        Pattern p = Pattern.compile("\\:(\\d+)\\:");
+        Matcher m = p.matcher(line);
+        if (m.find()) {
+            try {
+                result = Integer.parseInt(m.group(1));
+            } catch (NumberFormatException nfe) {}
+        }
+        if (result < 0)
+            result = 0;
+        return result;
+    }
+
+    /**
+     * Determines if a term should be skipped from semantic checks.
+     * @param t term string
+     * @return true if logical operator, Entity, variable, number, or quoted string
+     */
+    private static boolean skip(String t) {
+        return Diagnostics.LOG_OPS.contains(t)
+                || "Entity".equals(t)
+                || Formula.isVariable(t)
+                || StringUtil.isNumeric(t)
+                || StringUtil.isQuotedString(t);
+    }
+
+    /**
+     * Checks whether a term exists in the given knowledge base.
+     * @param kb knowledge base instance
+     * @param t term string
+     * @return true if KB contains the term, false otherwise
+     */
+    private static boolean isKnownTerm(KB kb, String t) {
+
+        try {
+            if (kb != null && kb.containsTerm(t)) return true;
+        } catch (Throwable ignore) {}
+        return false;
+    }
+
+    /**
+     * Parses KIF content into a KIF object and collects warnings/errors.
+     * @param kif target KIF object
+     * @param contents KIF text content
+     * @param msgs output list for formatted error/warning messages
+     * @return true if parse succeeded, false otherwise
+     */
+    private static boolean parseKif(KIF kif, String contents, List<String> msgs) {
+
+        boolean retVal = false;
+        try (Reader r = new StringReader(contents)) {
+            kif.parse(r);
+            if (debug) System.out.println("parseKif(): done reading kif file");
+            retVal = true;
+        } catch (Exception e) {
+            String msg = "Error in parseKif() with: " + kif.filename + ": " + e;
+            System.err.println(msg);
+            msgs.add(fmt(1, 1, "ERROR", msg));
+        } finally {
+            for (String er : kif.errorSet) {
+                int line = getLineNum(er);
+                int col  = getOffset(er);
+                msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "ERROR", er));
+            }
+            for (String warn : kif.warningSet) {
+                int line = getLineNum(warn);
+                int col  = getOffset(warn);
+                msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "WARNING", warn));
+            }
+        }
+        return retVal;
+    }
+
+    /**
+     * Formats diagnostics into "line:col: SEVERITY: message".
+     * @param line1 line number
+     * @param col1 column number
+     * @param sev severity string (ERROR/WARNING)
+     * @param msg message text
+     * @return formatted diagnostic string
+     */
+    private static String fmt(int line1, int col1, String sev, String msg) {
+        return line1 + ":" + col1 + ": " + sev + ": " + msg;
+    }
+
+    /**
+     * Extracts line number from an error/warning line string.
+     * @param line error/warning line text
+     * @return line number (0 if not found)
+     */
+    private static int getLineNum(String line) {
+
+        int result = -1;
+        Matcher m = Pattern.compile("(\\d+):").matcher(line);
+        if (m.find()) { try { result = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
+        if (result < 0) {
+            m = Pattern.compile("line:(\\d+)").matcher(line);
+            if (m.find()) { try { result = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
+        }
+        if (result < 0) {
+            m = Pattern.compile("line&#58; (\\d+)").matcher(line);
+            if (m.find()) { try { result = Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {} }
+        }
+        return Math.max(0, result);
+    }
+
+        /** ***************************************************************
+     * Print CLI usage information.
+     */
+    public static void showHelp() {
+        System.out.println("KifFileChecker - Headless KIF syntax/semantic checker");
+        System.out.println("Options:");
+        System.out.println("  -h              Show this help screen");
+        System.out.println("  -c <file.kif>   Check the given KIF file and print diagnostics");
+    }
+
+    /** ***************************************************************
+     * Command-line entry point.
+     * Usage examples:
+     *   java com.articulate.sigma.KifFileChecker -h
+     *   java com.articulate.sigma.KifFileChecker -c myfile.kif
+     */
+    public static void main(String[] args) {
+        if (args == null || args.length == 0 || "-h".equals(args[0])) {
+            showHelp();
+            return;
+        }
+
+        if ("-c".equals(args[0]) && args.length > 1) {
+            String fname = args[1];
+            try {
+                String contents = String.join("\n", FileUtil.readLines(fname));
+                List<String> errors = check(contents);        
+                System.out.println("*******************************************************");
+                if (errors.isEmpty()) {
+                    System.out.println("No errors found in " + fname);
+                } else {
+                    System.out.println("Diagnostics for " + fname + ":");
+                    for (String e : errors) {
+                        System.out.println(e);
+                    }
+                }
+            } catch (Exception e) {
+                    
+            System.out.println("*******************************************************");
+                System.err.println("Failed to read or check file: " + fname);
+                e.printStackTrace();
+            }
+        } else {
+            showHelp();
+        }
     }
 }
