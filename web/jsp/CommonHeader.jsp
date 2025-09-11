@@ -19,22 +19,33 @@
 %>
 
 <%
-    // First: capture any new language selection from the request
+    // --- Natural Language handling ---
     if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
         session.setAttribute("lang", request.getParameter("lang"));
         language = request.getParameter("lang");
     }
-
-    // Second: fall back to what’s already in the session
     String sessionLang = (String) session.getAttribute("lang");
     if (sessionLang != null && !sessionLang.isEmpty()) {
         language = sessionLang;
     }
     else if (language == null || language.isEmpty()) {
-        // Default if nothing set
         language = "EnglishLanguage";
     }
+
+    // --- Formal Language handling ---
+    if (request.getParameter("flang") != null && !request.getParameter("flang").isEmpty()) {
+        session.setAttribute("flang", request.getParameter("flang"));
+        flang = request.getParameter("flang");
+    }
+    if (sessionFlang != null && !sessionFlang.isEmpty()) {
+        flang = sessionFlang;
+    }
+    else if (flang == null || flang.isEmpty()) {
+        // Pick your default formal language
+        flang = "KIF";  // for example
+    }
 %>
+
 
 <TABLE width="95%" cellspacing="0" cellpadding="0">
   <TR>
@@ -85,7 +96,12 @@
             <input type="hidden" name="kb" value="<%=kbName%>" />
         </form>
         </b>&nbsp;
-        <p><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
+        <b>Formal Language:&nbsp;
+        <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
+            <%= HTMLformatter.createMenu("flang", flang, HTMLformatter.availableFormalLanguages, "onchange='this.form.submit()'") %>
+            <input type="hidden" name="kb" value="<%=kbName%>" />
+        </form>
+
       <br>
       </td>
   </TR>

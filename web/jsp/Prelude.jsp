@@ -95,8 +95,22 @@ if (kb != null)
 String filename = ""; // an ontology file to edit
 String line = ""; // the line of the ontology to place a cursor
 
+// --- Formal Language handling ---
 String flang = request.getParameter("flang");    // formal language
 flang = HTMLformatter.processFormalLanguage(flang);
+if (request.getParameter("flang") != null && !request.getParameter("flang").isEmpty()) {
+    session.setAttribute("flang", request.getParameter("flang"));
+    flang = request.getParameter("flang");
+}
+String sessionFlang = (String) session.getAttribute("flang");
+if (sessionFlang != null && !sessionFlang.isEmpty()) {
+    flang = sessionFlang;
+}
+else if (flang == null || flang.isEmpty()) {
+    flang = "KIF";  // <-- pick a default formal language
+}
+flang = HTMLformatter.processFormalLanguage(flang);
+
 
 String language = "EnglishLanguage"; // natural language for NL generation
 language = language = (String) session.getAttribute("lang");
