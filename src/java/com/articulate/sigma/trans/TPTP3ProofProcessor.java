@@ -39,7 +39,7 @@ import static com.igormaznitsa.prologparser.terms.TermType.*;
 
 public class TPTP3ProofProcessor {
 
-    public static boolean debug = false;
+    public static boolean debug = true;
     public String status;
     public boolean noConjecture = false;
     public boolean inconsistency = false;
@@ -258,9 +258,7 @@ public class TPTP3ProofProcessor {
      */
     public List<Integer> parseSupports(String supportId) {
 
-        if (debug) {
-            System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
-        }
+        if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
 
         List<Integer> prems = new ArrayList<>();
         if (supportId.startsWith("[") && !supportId.equals("[]")) {
@@ -273,9 +271,7 @@ public class TPTP3ProofProcessor {
             String[] supportSet = supportId.split(",");
             Integer stepnum;
             for (String supportSet1 : supportSet) {
-                if (debug) {
-                    System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet1);
-                }
+                if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet1);
                 if (!supportSet1.contains(Formula.LP)) {
                     if (!supportSet1.trim().startsWith("[symmetry]")) {
                         stepnum = getNumFromIDtable(supportSet1.trim());
@@ -318,27 +314,19 @@ public class TPTP3ProofProcessor {
      */
     public ProofStep parseProofStep(String line) {
 
-        if (debug) {
-            System.out.println("-----------------------");
-        }
-        if (debug) {
-            System.out.println("parseProofStep() line: " + line);
-        }
+        if (debug) System.out.println("-----------------------");
+        if (debug) System.out.println("parseProofStep() line: " + line);
         if (StringUtil.emptyString(line)) {
             return null;
         }
         line = line.replaceAll(System.lineSeparator(), "");
         if (line.startsWith("%")) {
-            if (debug) {
-                System.out.println("TPTP3ProofProcessor.parseProofStep() skipping comment: " + line);
-            }
+            if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep() skipping comment: " + line);
             return null;
         }
         ProofStep ps = new ProofStep();
         line = line.replaceAll("\\$answer\\(", "answer(");
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
-        }
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
         try {
             TPTPVisitor sv = new TPTPVisitor();
             sv.parseString(line);
@@ -765,21 +753,12 @@ public class TPTP3ProofProcessor {
      */
     public void parseProofOutput(List<String> lines, String kifQuery, KB kb, StringBuilder qlist) {
 
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: "
-                    + lines);
-        }
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): # lines: "
-                    + lines.size());
-        }
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " + lines);
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): # lines: " + lines.size());
         if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
             lines = joinNreverseInputLines(lines);
         }
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): after reverse: "
-                    + lines);
-        }
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): after reverse: " + lines);
         try {
             String bracketedAnswers, szs_status = "SZS status", scratch;
             boolean inProof = false, finishAnswersTuple = false;
@@ -787,19 +766,11 @@ public class TPTP3ProofProcessor {
             TPTPVisitor sv;
             TPTPFormula step;
             for (String line : lines) {
-                if (debug) {
-                    System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): looking at line: " + line);
-                }
-                if (debug) {
-                    System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): in proof: " + inProof);
-                }
-                if (debug) {
-                    System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): finishAnswersTuple: " + finishAnswersTuple);
-                }
+                if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): looking at line: " + line);
+                if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): in proof: " + inProof);
+                if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): finishAnswersTuple: " + finishAnswersTuple);
                 if (line.contains("SZS output start")) {
-                    if (debug) {
-                        System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found proof, setting inconsistency to true");
-                    }
+                    if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found proof, setting inconsistency to true");
                     noConjecture = true; // if conjecture or negated_conjecture found in the proof then it's not inconsistent
                     inProof = true;
                     continue;
@@ -813,14 +784,10 @@ public class TPTP3ProofProcessor {
                     }
                     else
                         status = scratch;
-                    if (debug) {
-                        System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): tpp.status: " + status);
-                    }
+                    if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): tpp.status: " + status);
                 }
                 if (line.contains("SZS answers")) {
-                    if (debug) {
-                        System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found answer line: " + line);
-                    }
+                    if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): found answer line: " + line);
                     if (!finishAnswersTuple) {
                         end = line.lastIndexOf("]");
                         if (end == -1 || (line.length() < end + 1)) {
@@ -840,13 +807,9 @@ public class TPTP3ProofProcessor {
                             line = line.substring(period + 2);
                         }
                         sv = new TPTPVisitor();
-                        if (debug) {
-                            System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): line: " + line);
-                        }
+                        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): line: " + line);
                         sv.parseString(line);
-                        if (debug) {
-                            System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): result: " + sv.result);
-                        }
+                        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): result: " + sv.result);
                         if (sv.result != null) {
                             if (sv.result.values().size() > 1) {
                                 System.err.println("Error in TPTP3ProofProcessor.parseProofOutput(ar,2): more than one line in " + line);
@@ -855,22 +818,16 @@ public class TPTP3ProofProcessor {
                             if (step.role.equals("negated_conjecture") || step.role.equals("conjecture")) {
                                 noConjecture = false;
                             }
-                            if (debug) {
-                                System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step.sumo: " + step.sumo);
-                            }
-                            if (debug) {
-                                System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step type: " + step.role);
-                            }
+                            if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step.sumo: " + step.sumo);
+                            if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): step type: " + step.role);
                             if (!step.role.equals("type")) {
                                 proof.add(step);
                             }
                             if (step.sumo.equals("false")) {
                                 containsFalse = true;
                             }
-                            if (debug) {
-                                System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): adding line: "
+                            if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar,2): adding line: "
                                         + line + "\nas " + sv.result);
-                            }
                         }
                     }
                 }
@@ -884,38 +841,22 @@ public class TPTP3ProofProcessor {
         } catch (Exception ex) {
             System.err.println(ex.getMessage());
         }
-        if (debug) {
-            System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): before pruning: " + this);
-        }
-        if (debug) {
-            System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): here: ");
-        }
-        if (debug) {
-            System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): bindings: " + bindings);
-        }
-        if (debug) {
-            System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): query: " + kifQuery);
-        }
+        if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): before pruning: " + this);
+        if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): here: ");
+        if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): bindings: " + bindings);
+        if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): query: " + kifQuery);
         processAnswersFromProof(qlist, kifQuery);
         findTypesForSkolemTerms(kb);
         proof = TPTPFormula.normalizeProofStepNumbers(proof);
-        if (debug) {
-            System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): result: " + this);
-        }
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): idTable: " + idTable);
-        }
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): proof ids: ");
-        }
+        if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(ar,2): result: " + this);
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): idTable: " + idTable);
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(lnr): proof ids: ");
         if (debug) {
             for (TPTPFormula ps : proof) {
                 System.out.println(ps.name);
             }
         }
-        if (debug) {
-            System.out.println("TPTP3ProofProcess.parseProofOutput(): returning bindings: " + bindings);
-        }
+        if (debug) System.out.println("TPTP3ProofProcess.parseProofOutput(): returning bindings: " + bindings);
     }
 
     /**
@@ -1387,17 +1328,11 @@ public class TPTP3ProofProcessor {
         StringBuilder list;
         String listStr, english;
         for (TPTPFormula step : result) {
-            if (debug) {
-                System.out.println("TPTP3ProofProcessor.simpPara(): step: " + step);
-            }
-            if (debug) {
-                System.out.println("TPTP3ProofProcessor.simpPara(): step sumo : " + step.sumo);
-            }
+            if (debug)  System.out.println("TPTP3ProofProcessor.simpPara(): step: " + step);
+            if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): step sumo : " + step.sumo);
             if (Pattern.compile("\\(ans\\d").matcher(step.sumo).find()) {
                 step.sumo = FormulaUtil.removeAnswerClause(new Formula(step.sumo));
-                if (debug) {
-                    System.out.println("TPTP3ProofProcessor.simpPara(): after remove answer : " + step.sumo);
-                }
+                if (debug) System.out.println("TPTP3ProofProcessor.simpPara(): after remove answer : " + step.sumo);
             }
             System.out.print(step.name + ".  ");
             if (step.supports.size() > 1) {
@@ -1424,10 +1359,6 @@ public class TPTP3ProofProcessor {
             }
             System.out.println();
         }
-        //System.out.println("TPTP3ProofProcessor.main() bindings: " + tpp.bindingMap);
-        //System.out.println("TPTP3ProofProcessor.main() skolems: " + tpp.skolemTypes);
-        //String link = tpp.createProofDotGraph();
-        //System.out.println("Dot graph at: " + link);
     }
 
     /**
