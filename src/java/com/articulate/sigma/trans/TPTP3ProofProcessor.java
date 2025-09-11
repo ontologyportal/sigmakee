@@ -258,9 +258,7 @@ public class TPTP3ProofProcessor {
      */
     public List<Integer> parseSupports(String supportId) {
 
-        if (debug) {
-            System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
-        }
+        if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): " + supportId);
 
         List<Integer> prems = new ArrayList<>();
         if (supportId.startsWith("[") && !supportId.equals("[]")) {
@@ -273,9 +271,7 @@ public class TPTP3ProofProcessor {
             String[] supportSet = supportId.split(",");
             Integer stepnum;
             for (String supportSet1 : supportSet) {
-                if (debug) {
-                    System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet1);
-                }
+                if (debug) System.out.println("Info in TPTP3ProofProcessor.parseSupports(): support element: " + supportSet1);
                 if (!supportSet1.contains(Formula.LP)) {
                     if (!supportSet1.trim().startsWith("[symmetry]")) {
                         stepnum = getNumFromIDtable(supportSet1.trim());
@@ -318,27 +314,19 @@ public class TPTP3ProofProcessor {
      */
     public ProofStep parseProofStep(String line) {
 
-        if (debug) {
-            System.out.println("-----------------------");
-        }
-        if (debug) {
-            System.out.println("parseProofStep() line: " + line);
-        }
+        if (debug) System.out.println("-----------------------");
+        if (debug) System.out.println("parseProofStep() line: " + line);
         if (StringUtil.emptyString(line)) {
             return null;
         }
         line = line.replaceAll(System.lineSeparator(), "");
         if (line.startsWith("%")) {
-            if (debug) {
-                System.out.println("TPTP3ProofProcessor.parseProofStep() skipping comment: " + line);
-            }
+            if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep() skipping comment: " + line);
             return null;
         }
         ProofStep ps = new ProofStep();
         line = line.replaceAll("\\$answer\\(", "answer(");
-        if (debug) {
-            System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
-        }
+        if (debug) System.out.println("TPTP3ProofProcessor.parseProofStep(): after remove $answer: " + line);
         try {
             TPTPVisitor sv = new TPTPVisitor();
             sv.parseString(line);
