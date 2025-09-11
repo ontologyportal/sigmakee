@@ -18,6 +18,24 @@
 */
 %>
 
+<%
+    // First: capture any new language selection from the request
+    if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
+        session.setAttribute("lang", request.getParameter("lang"));
+        language = request.getParameter("lang");
+    }
+
+    // Second: fall back to what’s already in the session
+    String sessionLang = (String) session.getAttribute("lang");
+    if (sessionLang != null && !sessionLang.isEmpty()) {
+        language = sessionLang;
+    }
+    else if (language == null || language.isEmpty()) {
+        // Default if nothing set
+        language = "EnglishLanguage";
+    }
+%>
+
 <TABLE width="95%" cellspacing="0" cellpadding="0">
   <TR>
       <TD align="left" valign="top"><img src="pixmaps/sigmaSymbol-gray.gif"></TD>
@@ -61,7 +79,12 @@
         out.println(HTMLformatter.createMenu("kb",kbName,kbnames));
 %>
         </b>
-        <b>Language:&nbsp;<%= HTMLformatter.createMenu("lang",language,kb.availableLanguages()) %></b>&nbsp;
+        <b>Language:&nbsp;
+        <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
+            <%= HTMLformatter.createMenu("lang", language, kb.availableLanguages(), "onchange='this.form.submit()'")%>
+            <input type="hidden" name="kb" value="<%=kbName%>" />
+        </form>
+        </b>&nbsp;
         <p><b>Formal Language:&nbsp;</b><%= HTMLformatter.createMenu("flang",flang,HTMLformatter.availableFormalLanguages) %>
       <br>
       </td>

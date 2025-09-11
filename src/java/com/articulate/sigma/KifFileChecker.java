@@ -158,7 +158,7 @@ public class KifFileChecker {
                     coveredByLocal = true;
                 }
 
-                if (!coveredByLocal) {
+                if (true) {
                     if (Diagnostics.termNotBelowEntity(t, kb) && !notBelowEntityTerms.contains(t)) {
                         notBelowEntityTerms.add(t);
                         msgs.add(fmt(f.startLine, 1, "ERROR", "term not below Entity: " + t));

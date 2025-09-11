@@ -94,17 +94,25 @@ if (kb != null)
 
 String filename = ""; // an ontology file to edit
 String line = ""; // the line of the ontology to place a cursor
-String language = ""; // natural language for NL generation
+
 String flang = request.getParameter("flang");    // formal language
 flang = HTMLformatter.processFormalLanguage(flang);
-language = request.getParameter("lang");
+
+String language = "EnglishLanguage"; // natural language for NL generation
+language = language = (String) session.getAttribute("lang");
 language = HTMLformatter.processNaturalLanguage(language,kb);
+if (language == null || language.isEmpty()) {
+    language = "EnglishLanguage";
+}
+
 String hostname = mgr.getPref("hostname");
 if (hostname == null)
     hostname = "localhost";
+
 String port = mgr.getPref("port");
 if (port == null)
     port = "8080";
+
 String term = request.getParameter("term");
 if (StringUtil.emptyString(term))
     term = "";
