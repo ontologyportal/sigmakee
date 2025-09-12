@@ -43,7 +43,7 @@ public class Graph {
 
     public Set<String> errors = new TreeSet<>();
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /** *************************************************************
      */
