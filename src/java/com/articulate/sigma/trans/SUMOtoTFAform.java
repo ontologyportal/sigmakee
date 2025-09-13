@@ -2346,6 +2346,7 @@ public class SUMOtoTFAform {
      */
     public static String process(Formula f, boolean query) {
 
+        initOnce();
         SUMOformulaToTPTPformula.hideNumbers = false;
         if (kb == null) {
             System.err.println("Error in SUMOtoTFAform.process(): null kb");
