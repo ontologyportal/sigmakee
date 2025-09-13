@@ -373,7 +373,7 @@ August 9, Acapulco, Mexico.
             filename = kbDir + File.separator + "OMW" +
                     File.separator + lcodes.get(i)  + File.separator +
                     "wn-data-" + lcodes.get(i) + ".tab";
-            System.out.print(filename);
+            System.out.print(filename + "\n");
             readOMWformat(filename,lcodes.get(i));
         }
         serialize();
