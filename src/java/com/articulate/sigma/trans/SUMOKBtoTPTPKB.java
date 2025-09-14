@@ -796,6 +796,5 @@ public class SUMOKBtoTPTPKB {
             System.out.println("File written: " + filename);
         else
             System.err.println("Could not write: " + filename);
-        KButilities.shutDownExecutorService();
     }
 }
