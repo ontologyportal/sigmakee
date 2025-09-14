@@ -681,7 +681,7 @@ public class Formula implements Comparable, Serializable {
                     if (j < end)
                         ans = LP + input.substring(j, end).trim() + RP;
                     else
-                        ans = "()";
+                        ans = LP+RP;
                 }
             }
         }
