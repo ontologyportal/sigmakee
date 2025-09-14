@@ -46,17 +46,13 @@
     if (s == null) return "";
     String out = esc(s);
 
-    // Comments
     out = out.replaceAll("(^|\\s)(;.*)", "$1<span class='comment'>$2</span>");
 
-    // Operators & quantifiers
     out = out.replaceAll("\\b(and|or|not|=>|<=>)\\b", "<span class='operator'>$1</span>");
     out = out.replaceAll("\\b(exists|forall)\\b", "<span class='quantifier'>$1</span>");
 
-    // Variables
     out = out.replaceAll("(\\?[A-Za-z0-9_-]+)", "<span class='variable'>$1</span>");
 
-    // Special keyword
     out = out.replaceAll("\\b(instance)\\b", "<span class='instance'>$1</span>");
 
     return out;
@@ -64,9 +60,10 @@
 %>
 <h3>Check KIF File For Errors</h3>
 <div class="card">
-  <form method="post" action="CheckKifFile" enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+  <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
+        enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
     <label>
-      <input label="Select a .kif file" type="file" name="kifFile" accept=".kif" required/>
+      <input label="Select a .kif file" type="file" name="kifFile" id="kifFile" accept=".kif" required/>
     </label>
     <label style="display:flex; align-items:center; gap:8px; margin:0;">
       <input type="checkbox" name="includeBelow" value="1"
@@ -77,6 +74,20 @@
     <button type="submit">Upload & Check</button>
   </form>
 </div>
+<script>
+function checkFileSize() {
+  const fileInput = document.getElementById("kifFile");
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const maxSize = 200 * 1024; // 70 KB
+    if (file.size > maxSize) {
+      alert("File is too large. Maximum allowed size is 70 KB.");
+      return false; // prevent form submission
+    }
+  }
+  return true;
+}
+</script>
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
   String fileName = (String) request.getAttribute("fileName");
@@ -88,7 +99,7 @@
 <%
   } else if (fileName != null) {
     java.util.Set<Integer> errorLines = new java.util.HashSet<>();
-    java.util.regex.Pattern p = java.util.regex.Pattern.compile("^(\\d+):");
+    java.util.regex.Pattern p = java.util.regex.Pattern.compile("Line\\s*#(\\d+)");
     for (String e : errors) {
         String l = e.trim();
         java.util.regex.Matcher m = p.matcher(l);
@@ -97,7 +108,8 @@
                 errorLines.add(Integer.parseInt(m.group(1)));
             } catch (NumberFormatException ignore) {}
         }
-    }
+}
+
 %>
   <div class="layout">
     <!-- Left column: Code -->

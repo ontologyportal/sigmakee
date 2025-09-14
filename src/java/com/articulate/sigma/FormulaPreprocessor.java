@@ -723,7 +723,7 @@ public class FormulaPreprocessor {
                 List<Formula> args = f.complexArgumentsToArrayList(1);
                 if (args == null) {
                     errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): no arguments found in: \n" + f;
-                    System.err.println(errStr);
+                    if (debug) System.err.println(errStr);
                     errors.add(errStr);
                 }
                 if (pred.equals(Formula.EQUAL) && args.size() > 1) {
@@ -748,10 +748,10 @@ public class FormulaPreprocessor {
                                         !pred.equals(Formula.EQUAL)) {
                                     errStr = "Error in FormulaPreprocessor.computeVariableTypesRecurse(): " +
                                             "no type information for arg " + argnum + " of relation " + pred + " in formula: \n" + f;
-                                    System.err.println(errStr);
-                                    System.err.printf("Formula origin: %s%n", f.sourceFile);
-                                    System.err.println("sig: " + kb.kbCache.getSignature(pred));
-                                    System.err.println("sig count: " + kb.kbCache.signatures.keySet().size());
+                                    if (debug) System.err.println(errStr);
+                                    if (debug) System.err.printf("Formula origin: %s%n", f.sourceFile);
+                                    if (debug) System.err.println("sig: " + kb.kbCache.getSignature(pred));
+                                    if (debug) System.err.println("sig count: " + kb.kbCache.signatures.keySet().size());
                                     errors.add(errStr);
                                 }
                             }

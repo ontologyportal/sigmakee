@@ -265,7 +265,7 @@ public class PredVarInst {
         int arity;
         for (String var : varTypes.keySet()) {
             if (predVarArity == null || var == null || predVarArity.get(var) == null)
-                System.out.println("instantiatePredVars(): pred var arity null for: " + var +
+                if (debug) System.out.println("instantiatePredVars(): pred var arity null for: " + var +
                     " in " + input);
             // 3.1 check: predVarArity should match arity of substituted relation
             rels = kb.kbCache.predicates;
@@ -352,7 +352,7 @@ public class PredVarInst {
 
         if (rel.equals("and") || rel.equals("or") || rel.equals("xor")) {
             if (argList.size() < 2)
-                System.err.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity >=2" +
+                if (debug) System.err.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity >=2" +
                     " but found " + argList.size() + " for relation " + rel + " in formula: " + f);
         }
 
@@ -360,12 +360,12 @@ public class PredVarInst {
         if (kb.kbCache != null && kb.kbCache.valences != null)
             intval = kb.kbCache.valences.get(rel);
         else {
-            System.out.println("ERROR KBcache or valences is null");
+            if (debug) System.out.println("ERROR KBcache or valences is null");
             throw new IllegalArgumentException();
         }
         if (intval == null) {
             if (!LOGICAL_TERMS.contains(rel) && !rel.startsWith(Formula.V_PREF)) {
-                System.out.printf("%nINFO in PredVarInst.hasCorrectArityRecurse(): " +
+                if (debug) System.out.printf("%nINFO in PredVarInst.hasCorrectArityRecurse(): " +
                         "Predicate %s does not have an arity defined in KB, " +
                         "can't get the arity number!\n%s\n", rel, f, f.getSourceFile(), f.startLine);
                 throw new IllegalArgumentException();
@@ -383,7 +383,7 @@ public class PredVarInst {
         else {
             if (kb.kbCache == null || !kb.kbCache.transInstOf(rel, "VariableArityRelation")) {
                 if (intval != null && intval > 0 && intval != argList.size()) {
-                    System.err.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
+                    if (debug) System.err.println("Error in PredVarInst.hasCorrectArityRecurse() expected arity " +
                             intval + " but found " + argList.size() + " for relation " + rel + " in formula: " + f);
                     throw new IllegalArgumentException(rel);
                 }
@@ -405,7 +405,7 @@ public class PredVarInst {
             res = hasCorrectArityRecurse(f,kb);
         }
         catch (IllegalArgumentException e){
-            System.err.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
+            if (debug) System.err.printf("FileName:%s\nLine number:%d\n",f.getSourceFile(),f.startLine);
             res = e.getMessage();
         }
         return res;
@@ -517,7 +517,7 @@ public class PredVarInst {
 
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("INFO in PredVarInst.test(): completed loading KBs");
+        if (debug) System.out.println("INFO in PredVarInst.test(): completed loading KBs");
         String formStr = "(=> " +
         "(and " +
         "(instance ?SOUND RadiatingSound) " +
@@ -534,8 +534,8 @@ public class PredVarInst {
         "(destination ?HEAR ?HUMAN) " +
         "(origin ?HEAR ?OBJ))) agent ?HUMAN)))) ";
         Formula f = new Formula(formStr);
-        System.out.println("INFO in PredVarInst.arityTest(): formula: " + f);
-        System.out.println("INFO in PredVarInst.arityTest(): correct arity: " + hasCorrectArity(f,kb));
+        if (debug) System.out.println("INFO in PredVarInst.arityTest(): formula: " + f);
+        if (debug) System.out.println("INFO in PredVarInst.arityTest(): correct arity: " + hasCorrectArity(f,kb));
     }
 
     /** ***************************************************************
@@ -544,14 +544,14 @@ public class PredVarInst {
 
         KBmanager.getMgr().initializeOnce();
         KB kb = KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"));
-        System.out.println("INFO in PredVarInst.test(): completed loading KBs");
+        if (debug) System.out.println("INFO in PredVarInst.test(): completed loading KBs");
         if (kb.kbCache.transInstOf("exhaustiveAttribute","VariableArityRelation")) {
-            System.out.println("INFO in PredVarInst.test() variable arity: ");
+            if (debug) System.out.println("INFO in PredVarInst.test() variable arity: ");
         }
         else
-            System.out.println("INFO in PredVarInst.test() not variable arity: ");
-        System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.instanceOf.get("partition"));
-        System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.insts.contains("partition"));
+            if (debug) System.out.println("INFO in PredVarInst.test() not variable arity: ");
+        if (debug) System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.instanceOf.get("partition"));
+        if (debug) System.out.println("INFO in PredVarInst.test(): " + kb.kbCache.insts.contains("partition"));
         //String formStr = "(=> (inverse ?REL1 ?REL2) (forall (?INST1 ?INST2) (<=> (?REL1 ?INST1 ?INST2) (?REL2 ?INST2 ?INST1))))";
         String formStr = "(<=> (instance ?REL TransitiveRelation) " +
         "(forall (?INST1 ?INST2 ?INST3) " +
@@ -559,13 +559,13 @@ public class PredVarInst {
         "(?REL ?INST2 ?INST3)) (?REL ?INST1 ?INST3))))";
         //Formula f = kb.formulaMap.get(formStr);
         Formula f = new Formula(formStr);
-        System.out.println("Formula: " + f);
-        System.out.println("Pred vars: " + gatherPredVars(kb,f));
-        System.out.println("Pred vars with types: " + findPredVarTypes(f,kb));
+        if (debug) System.out.println("Formula: " + f);
+        if (debug) System.out.println("Pred vars: " + gatherPredVars(kb,f));
+        if (debug) System.out.println("Pred vars with types: " + findPredVarTypes(f,kb));
         FormulaPreprocessor fp = new FormulaPreprocessor();
-        System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(kb,f));
-        System.out.println("Instantiated: " + instantiatePredVars(f,kb));
-        System.out.println();
+        if (debug) System.out.println("Explicit types: " + fp.findExplicitTypesInAntecedent(kb,f));
+        if (debug) System.out.println("Instantiated: " + instantiatePredVars(f,kb));
+        if (debug) System.out.println();
 
         formStr = "(=> " +
         "(instance ?JURY Jury) " +
@@ -576,9 +576,9 @@ public class PredVarInst {
         "(agent ?DECISION ?JURY))) ?JURY))";
         //f = kb.formulaMap.get(formStr);
         f = new Formula(formStr);
-        System.out.println("Formula: " + f);
-        System.out.println("Pred vars: " + gatherPredVars(kb,f));
-        System.out.println("Instantiated: " + instantiatePredVars(f,kb));
+        if (debug) System.out.println("Formula: " + f);
+        if (debug) System.out.println("Pred vars: " + gatherPredVars(kb,f));
+        if (debug) System.out.println("Instantiated: " + instantiatePredVars(f,kb));
 
     }
 
