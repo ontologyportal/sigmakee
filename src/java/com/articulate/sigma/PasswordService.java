@@ -308,7 +308,8 @@ public final class PasswordService implements ServletContextListener {
     public void onlineRegister(User u) {
 
         if (u != null)
-            mailModerator(u);
+            // mailModerator(u);
+            boolean t = true;
         else
             System.err.println("Error in PasswordService.onlineRegister(): unable to register user");
     }
