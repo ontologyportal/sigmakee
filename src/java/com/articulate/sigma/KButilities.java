@@ -321,7 +321,7 @@ public class KButilities implements ServletContextListener {
             String error = "Formula rejected due to arity error of predicate " + term
                     + " in formula: \n" + f.getFormula();
             errors.add(error);
-            System.err.println("isValidFormula(): Error: " + error);
+            if (debug) System.err.println("isValidFormula(): Error: " + error);
             return false;
         }
         if (!hasCorrectTypes(kb,f))
