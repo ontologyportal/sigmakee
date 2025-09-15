@@ -70,9 +70,9 @@ public List<String> check(String contents) {
         msgs.add(fmt(1, 1, "ERROR", "Parse failure: " + e));
         return msgs;
     }
-    if (!parseKif(kif, contents, msgs)) {
-        return msgs;
-    }
+    // if (!parseKif(kif, contents, msgs)) {
+    //     return msgs;
+    // }
 
     String[] bufferLines = contents.split("\n", -1);
     harvestLocalFacts(kif);
