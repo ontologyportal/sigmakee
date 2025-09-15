@@ -169,11 +169,27 @@ else
     echo "Ant sigmakee compile completed successfully."
 fi
 
-echo "\n\nSIGMA has been installed! Close and re-open your command line interface (or run 'source ~/.bashrc')."
-echo "To start the server:"
-echo "startup.sh"
-echo "Then point your browser to: http://localhost:8080/sigma/login.html"
-echo "username: admin     password: admin"
-echo "The first time logging in can take several minutes while the system is indexing. For low memory machines, restrict Knowledge Bases loaded in \$HOME/.sigmakee/KBs/config.xml"
-echo "To shutdown the server:"
-echo "shutdown.sh"
+
+
+output=$(env SIGMA_HOME="$SIGMA_HOME" \
+           ONTOLOGYPORTAL_GIT="$ONTOLOGYPORTAL_GIT" \
+           SIGMA_SRC="$SIGMA_SRC" \
+           CATALINA_OPTS="$CATALINA_OPTS" \
+           CATALINA_HOME="$CATALINA_HOME" \
+           SIGMA_CP="$SIGMA_CP" \
+           bash VerifyInstall.sh 2>&1 | tee /dev/tty; exit ${PIPESTATUS[0]})
+exit_code=$?
+
+if [ $exit_code -eq 0 ]; then
+  echo -e "\n\nSIGMA has been installed! Close and re-open your command line interface (or run 'source ~/.bashrc')."
+  echo "To start the server:"
+  echo "startup.sh"
+  echo "Then point your browser to: http://localhost:8080/sigma/login.html"
+  echo "username: admin     password: admin"
+  echo "The first time logging in can take several minutes while the system is indexing. For low memory machines, restrict Knowledge Bases loaded in \$HOME/.sigmakee/KBs/config.xml"
+  echo "To shutdown the server:"
+  echo "shutdown.sh"
+else
+  echo "Install verification was not successful. Please contact apease@articulatesoftware.com for assistance."
+fi
+
