@@ -167,13 +167,13 @@ public List<String> check(String contents) {
         }
     }
 
-    // Sort messages by line then column
+    Pattern linePattern = Pattern.compile("Line\\s*#(\\d+)");
     msgs.sort(Comparator.comparingInt((String m) -> {
-        try { return Integer.parseInt(m.split(":")[0]); }
-        catch (Exception e) { return Integer.MAX_VALUE; }
-    }).thenComparingInt(m -> {
-        try { return Integer.parseInt(m.split(":")[1]); }
-        catch (Exception e) { return Integer.MAX_VALUE; }
+        Matcher matcher = linePattern.matcher(m);
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        return Integer.MAX_VALUE;
     }));
 
     return msgs;
