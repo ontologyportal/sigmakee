@@ -101,7 +101,7 @@ public class Modals {
                 List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
                 if (sig == null) {
                     if (!Formula.isVariable(f.car()))
-                        System.out.println("Error in processRecurse(): null signature for " + f.car());
+                        System.err.println("Error in processRecurse(): null signature for " + f.car());
                     else {
                         Formula result = new Formula();
                         result.read(fstring.toString());
@@ -155,7 +155,7 @@ public class Modals {
         Formula result = processRecurse(f,kb,worldNum);
         String fstring = result.getFormula();
         result.read(fstring);
-        HashSet<String> types = new HashSet<>();
+        Set<String> types = new HashSet<>();
         types.add("World");
         for (int i = 1; i <= worldNum; i++)
             result.varTypeCache.put("?W" + i,types);

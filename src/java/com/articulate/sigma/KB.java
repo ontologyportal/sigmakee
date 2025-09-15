@@ -79,9 +79,6 @@ import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import tptp_parser.TPTPFormula;
 
@@ -103,14 +100,14 @@ public class KB implements Serializable {
     /** The name of the knowledge base. */
     public String name;
 
-    /* An ArrayList of Strings that are the full canonical pathnames of the
-     * files that comprise the KB.    */
+    /** An ArrayList of Strings that are the full canonical pathnames of the
+     * files that comprise the KB. */
     public List<String> constituents = new ArrayList<>();
 
     /** The natural language in which axiom paraphrases should be presented. */
     public String language = "EnglishLanguage";
 
-    /* The location of preprocessed KIF files, suitable for loading into
+    /** The location of preprocessed KIF files, suitable for loading into
      * EProver.     */
     public String kbDir = null;
 
@@ -120,10 +117,10 @@ public class KB implements Serializable {
     /** a cache built through lazy evaluation of the taxonomic depth of each term */
     public Map<String,Integer> termDepthCache = new HashMap<>();
 
-    /* A SortedSet of Strings, which are all the terms in the KB.     */
+    /** A SortedSet of Strings, which are all the terms in the KB.     */
     public Set<String> terms = new TreeSet<>();
 
-    // A Map from all uppercase terms to their possibly mixed case original versions
+    /** A Map from all uppercase terms to their possibly mixed case original versions */
     public Map<String,String> capterms = new HashMap<>();
 
     /** The String constant that is the suffix for file of user assertions. */
@@ -138,36 +135,36 @@ public class KB implements Serializable {
     /** The String constant that is the suffix for THF file of user assertions. */
     public static final String _userAssertionsTHF = "_UserAssertions.thf";
 
-    /* The String constant that is the suffix for files of cached assertions.     */
+    /** The String constant that is the suffix for files of cached assertions.     */
     public static final String _cacheFileSuffix = "_Cache.kif";
 
-    /* A Map of all the Formula objects in the KB. Each key is a String
+    /** A Map of all the Formula objects in the KB. Each key is a String
      * representation of a Formula. Each value is the Formula object
      * corresponding to the key.     */
     public Map<String, Formula> formulaMap = new HashMap<>();
 
-    /* A HashMap of ArrayLists of String formulae, containing all the formulae
+    /** A HashMap of ArrayLists of String formulae, containing all the formulae
      * in the KB. Keys are the formula itself, a formula ID, and term indexes
      * created in KIF.createKey(). The actual formula can be retrieved by using
      * the returned String as the key for the variable formulaMap     */
     public Map<String, List<String>> formulas = new HashMap<>();
 
-    /* The natural language formatting strings for relations in the KB. It is a
+    /** The natural language formatting strings for relations in the KB. It is a
      * HashMap of language keys and HashMap values. The interior HashMap is term
      * name keys and String values of a format.     */
     private Map<String, Map<String, String>> formatMap = new HashMap<>();
 
-    /* language keys and HashMap values. The interior HashMap is term name keys
+    /** language keys and HashMap values. The interior HashMap is term name keys
      * and String values of a termFormat.     */
     private Map<String, Map<String, String>> termFormatMap = new HashMap<>();
 
-    /* Language keys and HashMap values for relations in the KB. The interior
-    *  HashMap is term name keys and a list of all the associated format strings.
+    /** Language keys and HashMap values for relations in the KB. The interior
+     * HashMap is term name keys and a list of all the associated format strings.
      */
     private Map<String, Map<String, List<String>>> formatMapAll = new HashMap<>();
 
-    /* language keys and HashMap values for termFormats. The interior HashMap is
-    *  is term name keys and a list of all associated termFormat strings.
+    /** language keys and HashMap values for termFormats. The interior HashMap is
+     *  is term name keys and a list of all associated termFormat strings.
      */
     private Map<String, Map<String, List<String>>> termFormatMapAll = new HashMap<>();
 
@@ -177,7 +174,7 @@ public class KB implements Serializable {
     /** Warnings found during loading of the KB constituents. */
     public Set<String> warnings = new TreeSet<>();
 
-    /* Future: If true, the contents of the KB have been modified without
+    /** Future: If true, the contents of the KB have been modified without
      * updating the caches     */
     public boolean modifiedContents = false;
 
@@ -187,12 +184,12 @@ public class KB implements Serializable {
 
     public KBcache kbCache = null;
 
-    // maps TPTP axiom IDs to SUMO formulas
+    /** maps TPTP axiom IDs to SUMO formulas */
     public static Map<String,Formula> axiomKey = new HashMap<>();
 
     public Map<String, Integer> termFrequency = new HashMap<>();
 
-    // force regeneration of TPTP file
+    /** force regeneration of TPTP file */
     public static boolean force = false;
 
     public static boolean debug = false;

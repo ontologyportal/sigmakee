@@ -70,7 +70,7 @@ public class KButilities implements ServletContextListener {
             System.out.println("KButilities: Creating single-threaded executor for jEdit mode");
             return Executors.newSingleThreadExecutor(r -> {
                 Thread t = new Thread(r, "SIGMA-jEdit-Thread");
-                t.setDaemon(false); // Don't make it daemon to ensure completion
+                t.setDaemon(true); // Make it daemon to ensure JVM exits cleanly
                 return t;
             });
         } else {
@@ -78,7 +78,7 @@ public class KButilities implements ServletContextListener {
             System.out.println("KButilities: Creating fixed thread pool (" + PAR + " threads) for translation mode");
             return Executors.newFixedThreadPool(PAR, r -> {
                 Thread t = new Thread(r, "SIGMA-Translation-Thread");
-                t.setDaemon(false); // Don't make it daemon to ensure completion
+                t.setDaemon(true); // Make it daemon to ensure JVM exits cleanly
                 return t;
             });
         }

@@ -714,6 +714,5 @@ public class SUMOKBtoTFAKB extends SUMOKBtoTPTPKB {
             System.out.println("File written: " + filename);
         } else
             System.err.println("Could not write: " + filename);
-        KButilities.shutDownExecutorService();
     }
 }
