@@ -437,6 +437,20 @@ public class Diagnostics {
     }
 
     /** *****************************************************************
+     * @return true if an existential is found in the antecedent of a rule.
+     */
+    public static boolean existentialInAntecedent(Formula f) {
+
+        if (!f.isRule())
+            return false;
+        String ant = FormulaUtil.antecedent(f);
+        if (ant.contains("(exists "))
+            return true;
+        else
+            return false;
+    }
+
+    /** *****************************************************************
      * @return true if a quantifiers in a quantifier list is not found
      * in the body of the statement.
      */
