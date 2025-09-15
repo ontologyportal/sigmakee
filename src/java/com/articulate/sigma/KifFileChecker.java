@@ -90,7 +90,11 @@ public List<String> check(String contents) {
             msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
                          "ERROR", "Quantifier not in statement"));
         }
-
+        // Existential quantifier in Antecedent
+        if (Diagnostics.existentialInAntecedent(f)) {
+            msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
+                         "ERROR", "Existential quantifier in Antecedent"));
+        }
         // Single-use variables
         Set<String> singleUse = Diagnostics.singleUseVariables(f);
         if (singleUse != null) {
