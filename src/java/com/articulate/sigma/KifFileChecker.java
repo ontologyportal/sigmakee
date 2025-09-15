@@ -145,14 +145,6 @@ public List<String> check(String contents) {
             }
         }
 
-        // // Arity check
-        // String term = PredVarInst.hasCorrectArity(f, kb);
-        // if (!StringUtil.emptyString(term)) {
-        //     reportAllOccurrencesInBuffer(term,
-        //             "Arity error of predicate: " + term,
-        //             bufferLines, msgs, "ERROR");
-        // }
-
         // Term below Entity + unknown terms
         Set<String> terms = f.collectTerms();
         for (String t : terms) {
@@ -160,9 +152,8 @@ public List<String> check(String contents) {
 
             boolean coveredByLocal = localIndividuals.contains(t) || localClasses.contains(t);
             if (!coveredByLocal && Diagnostics.termNotBelowEntity(t, kb)) {
-                reportAllOccurrencesInBuffer(t,
-                        "term not below Entity: " + t,
-                        bufferLines, msgs, "ERROR");
+            msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
+                                        "ERROR", "Term not below Entity: " + t));
             }
         }
     }
