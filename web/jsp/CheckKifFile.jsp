@@ -63,7 +63,7 @@
   <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
         enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
     <label>
-      <input label="Select a .kif file" type="file" name="kifFile" id="kifFile" accept=".kif" required/>
+      <input label="Select a .kif file" type="file" name="kifFile" id="kifFile" accept=".kif,.txt"  required/>
     </label>
     <label style="display:flex; align-items:center; gap:8px; margin:0;">
       <input type="checkbox" name="includeBelow" value="1"

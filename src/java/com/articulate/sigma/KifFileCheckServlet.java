@@ -71,8 +71,8 @@ public class KifFileCheckServlet extends HttpServlet {
             }
 
             fileName = filePart.getSubmittedFileName();
-            if (fileName == null || !fileName.toLowerCase(Locale.ROOT).endsWith(".kif")) {
-                request.setAttribute("errorMessage", "Only .kif files are allowed.");
+            if (fileName == null || (!fileName.toLowerCase(Locale.ROOT).endsWith(".kif") && !fileName.toLowerCase(Locale.ROOT).endsWith(".txt"))) {
+                request.setAttribute("errorMessage", "Only .kif & .txt files are allowed.");
                 request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
                 return;
             }
@@ -94,7 +94,7 @@ public class KifFileCheckServlet extends HttpServlet {
                         "Error while checking uploaded file: " + e.getMessage());
             }
         } else {
-            request.setAttribute("errorMessage", "Please upload a .kif file.");
+            request.setAttribute("errorMessage", "Please upload a .kif or .txt file.");
         }
 
         // Highlight lines with errors
