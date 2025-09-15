@@ -12,7 +12,9 @@
     in Working Notes of the IJCAI-2003 Workshop on Ontology and
     Distributed Systems, August 9, Acapulco, Mexico.
 */
+
 package com.articulate.sigma;
+
 import javax.servlet.annotation.MultipartConfig;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -21,13 +23,19 @@ import javax.servlet.http.Part;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.concurrent.*;
+
+@WebServlet("/CheckKifFile")
+@MultipartConfig(
+    fileSizeThreshold = 1024,         // buffer to disk after 1 KB
+    maxFileSize = 190 * 1024,          // 70 KB per file
+    maxRequestSize = 200 * 1024        // 80 KB total request size
+)
 
 /**
  * Servlet that validates uploaded SUO-KIF files and forwards the results
  * to a JSP for display.
  */
-@WebServlet("/CheckKifFile")
-@MultipartConfig
 public class KifFileCheckServlet extends HttpServlet {
 
     /** *************************************************************
@@ -51,28 +59,36 @@ public class KifFileCheckServlet extends HttpServlet {
         List<String> errors = Collections.emptyList();
         List<String> lines = null;
         String fileName = null;
+
         if (request.getContentType() != null &&
                 request.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
+
             Part filePart = request.getPart("kifFile");
             if (filePart == null || filePart.getSize() == 0) {
                 request.setAttribute("errorMessage", "No file uploaded.");
                 request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
                 return;
             }
+
             fileName = filePart.getSubmittedFileName();
             if (fileName == null || !fileName.toLowerCase(Locale.ROOT).endsWith(".kif")) {
                 request.setAttribute("errorMessage", "Only .kif files are allowed.");
                 request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
                 return;
             }
+
             String text;
             try (InputStream in = filePart.getInputStream()) {
                 text = readUtf8(in);
             }
+
             // Split into lines for JSP display
             lines = Arrays.asList(text.split("\\R", -1));
+
+            // Enqueue request for sequential processing ---
             try {
-                errors = KifFileChecker.check(text);
+                Future<List<String>> future = KifCheckWorker.submit(text);
+                errors = future.get(); // block until job is processed
             } catch (Exception e) {
                 request.setAttribute("errorMessage",
                         "Error while checking uploaded file: " + e.getMessage());
@@ -80,6 +96,7 @@ public class KifFileCheckServlet extends HttpServlet {
         } else {
             request.setAttribute("errorMessage", "Please upload a .kif file.");
         }
+
         // Highlight lines with errors
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
@@ -95,6 +112,7 @@ public class KifFileCheckServlet extends HttpServlet {
                 }
             }
         }
+
         request.setAttribute("errorMask", errorMask);
         request.setAttribute("fileName", fileName);
         request.setAttribute("fileContent", lines);
