@@ -320,8 +320,8 @@ public class SUMOKBtoTPTPKB {
 
         KB.axiomKey = axiomKey;
         KBmanager.serialize();
-        System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
-        System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
+        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): axiomKey: " + axiomKey.size());
+        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile(): seconds: " + (System.currentTimeMillis() - millis) / KButilities.ONE_K);
 
         axiomIndex.set(1); // reset
         counter              = 0; // reset
@@ -378,9 +378,9 @@ public class SUMOKBtoTPTPKB {
                 continue;
             if (counter++ % 100 == 0) /*System.out.print(".");*/ progressSb.append(".");
             if ((counter % 4000) == 1) {
-                System.out.print(progressSb.toString() + "x");
+                if (debug) System.out.print(progressSb.toString() + "x");
                 progressSb.setLength(0);
-                System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
+                if (debug) System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
             }
             if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
             processed = fp.preProcess(f,false,kb);
@@ -392,13 +392,9 @@ public class SUMOKBtoTPTPKB {
                 for (Formula f3 : withRelnRenames) {
                     switch (lang) {
                         case "fof":
-                            if (debug) {
-                                System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", Formula.SPACE));
-                            }
+                            if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", Formula.SPACE));
                             result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
-                            if (debug) {
-                                System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
-                            }
+                            if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                             if (result != null) {
                                 f.theTptpFormulas.add(result);
                             }
@@ -407,9 +403,7 @@ public class SUMOKBtoTPTPKB {
                             stfa = new SUMOtoTFAform();
                             SUMOtoTFAform.kb = kb;
                             pw.println("% tff input: " + f3.format("", "", Formula.SPACE));
-                            if (debug) {
-                                System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
-                            }
+                            if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tff input: " + f3.format("", "", " "));
                             stfa.sorts = stfa.missingSorts(f3);
                             if (stfa.sorts != null && !stfa.sorts.isEmpty()) {
                                 f3.tffSorts.addAll(stfa.sorts);
@@ -457,10 +451,10 @@ public class SUMOKBtoTPTPKB {
                     pw.println("% empty, already written or filtered formula, skipping : " + theTPTPFormula);
             }
         } // end outer (main) for loop
-        System.out.println();
+        if (debug) System.out.println();
         printVariableArityRelationContent(pw,relationMap,getSanitizedKBname(),axiomIndex);
         printTFFNumericConstants(pw);
-        System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
+        if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() CWA: " + CWA);
         if (CWA)
             pw.println(StringUtil.arrayListToCRLFString(CWAUNA.run(kb)));
         if (conjecture != null) {  //----Print conjecture if one has been supplied
@@ -540,9 +534,9 @@ public class SUMOKBtoTPTPKB {
                         return;
                     if (counter++ % 100 == 0) progressSb.append(".");
                     if ((counter % 4000) == 1) {
-                        System.out.print(progressSb.toString() + "x");
+                        if (debug) System.out.print(progressSb.toString() + "x");
                         progressSb.setLength(0);
-                        System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
+                        if (debug) System.out.printf("%nSUMOKBtoTPTPKB.writeFile(%s) : still working. %d%% done.%n",fileName, counter*100/total);
                     }
                     if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : process: " + f);
                     processed = fp.preProcess(f,false,kb);
@@ -554,13 +548,9 @@ public class SUMOKBtoTPTPKB {
                         for (Formula f3 : withRelnRenames) {
                             switch (lang) {
                                 case "fof":
-                                    if (debug) {
-                                        System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", " "));
-                                    }
+                                    if (debug) System.out.println("SUMOKBtoTPTPKB.writeFile() : % tptp input: " + f3.format("", "", " "));
                                     result = SUMOformulaToTPTPformula.tptpParseSUOKIFString(f3.getFormula(), false);
-                                    if (debug) {
-                                        System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
-                                    }
+                                    if (debug) System.out.println("INFO in SUMOKBtoTPTPKB.writeFile(): result: " + result);
                                     if (result != null)
                                         f.theTptpFormulas.add(result);
                                     break;
@@ -626,7 +616,7 @@ public class SUMOKBtoTPTPKB {
         } // end outer (main) loop
 
         // Wait for all tasks to complete with individual timeout handling
-        System.out.println("SUMOKBtoTPTPKB._tWriteFile(): Waiting for " + futures.size() + " tasks to complete...");
+        if (debug) System.out.println("SUMOKBtoTPTPKB._tWriteFile(): Waiting for " + futures.size() + " tasks to complete...");
         int completed = 0;
         List<Future<?>> failed = new ArrayList<>();
 
@@ -636,7 +626,7 @@ public class SUMOKBtoTPTPKB {
                 f.get(30, TimeUnit.MINUTES); // 30-minute timeout per task
                 completed++;
                 if (completed % 1000 == 0) {
-                    System.out.println("SUMOKBtoTPTPKB._tWriteFile(): Completed " + completed + "/" + futures.size() + " tasks");
+                    if (debug) System.out.println("SUMOKBtoTPTPKB._tWriteFile(): Completed " + completed + "/" + futures.size() + " tasks");
                 }
             } catch (TimeoutException e) {
                 System.err.println("SUMOKBtoTPTPKB._tWriteFile(): Task " + i + " timed out, cancelling...");

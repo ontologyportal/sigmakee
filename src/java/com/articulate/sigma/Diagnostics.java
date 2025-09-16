@@ -380,10 +380,15 @@ public class Diagnostics {
 
         Set<String> result = new HashSet<>();
         Set<String> vars = f.collectAllVariables();
+
         int index, index2;
+        if (debug) System.out.println("\nDiagnostics.singleUseVariables() Formula \n" + f);
         for (String v : vars) {
+            if (debug) System.out.println("Diagnostics.singleUseVariables() Variable : " + v);
             index = f.getFormula().indexOf(v);
+            if (debug) System.out.println("Diagnostics.singleUseVariables() Found at index : " + index);
             index2 = f.getFormula().indexOf(v,index+v.length());
+            if (debug) System.out.println("Diagnostics.singleUseVariables() Found at index : " + index2);
             if (index2 == -1)
                 result.add(v);
         }
@@ -429,6 +434,20 @@ public class Diagnostics {
                 return result;
         }
         return result;
+    }
+
+    /** *****************************************************************
+     * @return true if an existential is found in the antecedent of a rule.
+     */
+    public static boolean existentialInAntecedent(Formula f) {
+
+        if (!f.isRule())
+            return false;
+        String ant = FormulaUtil.antecedent(f);
+        if (ant.contains("(exists "))
+            return true;
+        else
+            return false;
     }
 
     /** *****************************************************************
