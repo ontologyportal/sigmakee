@@ -289,9 +289,6 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
     return -1; // not found
 }
 
-
-
-
     /**
      * ***************************************************************
      * Utility class that contains searched term line and filepath information
@@ -508,7 +505,7 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
      * @return formatted diagnostic string
      */
     private static String fmt(int line1, int col1, String sev, String msg) {
-        return sev + " on Line #" + line1 + ": " + msg;
+        return sev + " in Formula on Line #" + line1 + ": " + msg;
     }
 
     /**
