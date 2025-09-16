@@ -488,7 +488,11 @@
         </git>
     </target>
     <target name="build.E">
-        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
+        <chmod perm="ugo+rx">
+        <fileset dir="${programs.dir}/E">
+            <include name="**/*.sh"/>
+            <include name="**/configure*"/>
+        </fileset>
         <exec executable="sh" dir="${programs.dir}/E">
             <arg value="-c"/>
             <arg value="./configure"/>
@@ -680,7 +684,7 @@ export ONTOLOGYPORTAL_GIT=$HOME/workspace
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
 export CATALINA_OPTS="${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
-export PATH=$CATALINA_HOME/bin:$PATH
+export PATH=$CATALINA_HOME/bin:${programs.dir}/vampire/build:${programs.dir}/E/PROVER:$PATH
 export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
 </echo>
     </target>
@@ -693,7 +697,7 @@ export ONTOLOGYPORTAL_GIT=$HOME/workspace
 export SIGMA_SRC=$ONTOLOGYPORTAL_GIT/${web.app.name}
 export CATALINA_OPTS="${run.jvmargs}"
 export CATALINA_HOME=${programs.dir}/apache-tomcat-${tomcat.version}
-export PATH=$CATALINA_HOME/bin:$PATH
+export PATH=$CATALINA_HOME/bin:${programs.dir}/vampire/build:${programs.dir}/E/PROVER:$PATH
 export SIGMA_CP=$SIGMA_SRC/build/${web.app.name}.jar:$SIGMA_SRC/lib/*
 </echo>
     </target>
