@@ -488,7 +488,7 @@
         </git>
     </target>
     <target name="build.E">
-        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
+        <chmod file="${programs.dir}/E/configure" perm="ugo+rx"/>
         <exec executable="sh" dir="${programs.dir}/E">
             <arg value="-c"/>
             <arg value="./configure"/>
