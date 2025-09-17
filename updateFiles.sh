@@ -11,6 +11,8 @@ git pull
 cd $ONTOLOGYPORTAL_GIT/TPTP-ANTLR
 git pull
 cd $ONTOLOGYPORTAL_GIT/SUMOjEdit
+rm build.properties
+rm build.number
 git pull
 cd $ONTOLOGYPORTAL_GIT/sumonlp
 git pull
