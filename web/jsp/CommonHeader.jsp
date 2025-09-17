@@ -72,8 +72,26 @@
             if (pageName == null || !pageName.equals("Graph"))
                 out.println("<A href=\"Graph.jsp?kb=" + kbName + "&term=" + term + "&inst=inst" +
                 "&lang=" + language + "\"><B>Graph</B></A>&nbsp;|&nbsp");
-            if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("NLP")))
-                out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
+            boolean nlpAvailable = false;
+                try {
+                    String nlpPath = application.getRealPath("/sigmanlp/NLP.jsp");
+                    if (nlpPath != null) {
+                        java.io.File nlpFile = new java.io.File(nlpPath);
+                        if (nlpFile.exists()) {
+                            nlpAvailable = true;
+                        }
+                    }
+                }
+                catch (Exception e) {
+                    // leave nlpAvailable as false
+                }
+                if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("NLP"))) {
+                    if (nlpAvailable) {
+                        out.println("<A href=\"" + HTMLformatter.createHrefStart() + "/sigmanlp/NLP.jsp\"><b>NLP</b></A>&nbsp;|&nbsp");
+                    } else {
+                        out.println("<A href=\"#\" onclick=\"alert('NLP feature is not installed on this system.'); return false;\"><b>NLP</b></A>&nbsp;|&nbsp");
+                    }
+                }
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
                 out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
             if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("CheckKifFile")))
