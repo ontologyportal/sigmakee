@@ -61,9 +61,17 @@ public class KButilities implements ServletContextListener {
 
     // Create the appropriate ExecutorService based on context
     private static ExecutorService createExecutorService() {
-        // Check if we're in single-threaded mode (jEdit context)
-        String parallelism = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
-        isJEditMode = "1".equals(parallelism);
+        // Prefer explicit sigma.exec.mode; fallback to legacy ForkJoinPool property
+        String mode = System.getProperty("sigma.exec.mode"); // "jedit-single" or "parallel"
+        if ("jedit-single".equalsIgnoreCase(mode)) {
+            isJEditMode = true;
+        } else if ("parallel".equalsIgnoreCase(mode)) {
+            isJEditMode = false;
+        } else {
+            // Legacy behavior for backward-compatibility
+            String parallelism = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
+            isJEditMode = "1".equals(parallelism);
+        }
 
         if (isJEditMode) {
             // For jEdit: use single-threaded executor to prevent deadlocks
