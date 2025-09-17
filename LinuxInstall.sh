@@ -72,7 +72,9 @@ set_and_persist "export ONTOLOGYPORTAL_GIT=\"\$HOME/workspace\""
 set_and_persist "export SIGMA_SRC=\"\$ONTOLOGYPORTAL_GIT/sigmakee\""
 set_and_persist "export CATALINA_OPTS=\"\$CATALINA_OPTS -Xmx10g -Xss1m\""
 set_and_persist "export CATALINA_HOME=\"\$HOME/Programs/apache-tomcat-9.0.107\""
-set_and_persist "export PATH=\"\$CATALINA_HOME/bin:\$PATH\""
+set_and_persist "export VAMPIRE_HOME=\"\$HOME/Programs/vampire/build\""
+set_and_persist "export E_HOME=\"\$HOME/Programs/E/PROVER\""
+set_and_persist "export PATH=\"\$VAMPIRE_HOME:\$E_HOME:\$CATALINA_HOME/bin:\$PATH\""
 set_and_persist "export SIGMA_CP=\"\$SIGMA_SRC/build/sigmakee.jar:\$SIGMA_SRC/lib/*\""
 
 # Source the .bashrc file to apply changes

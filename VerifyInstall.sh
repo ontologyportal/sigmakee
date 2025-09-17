@@ -51,6 +51,11 @@ print_header() {
 ########################################################
 # Check if the output contains "MISSING PREREQUISITES"
 ########################################################
+if [ -z "${SIGMA_SRC-}" ]; then
+  echo "The \$SIGMA_SRC environment variable is not set or is empty. Did you restart your command line interface after installation?"
+  echo "Technical note: the \$SIMGA_SRC environment variable is set in the ~/.bashrc file, and should be set to wherever the workspace/sigmakee folder is."
+  exit 1
+fi
 print_header "Checking that prerequisites were installed correctly"
 output=$(source $SIGMA_SRC/VerifyInstallationPrerequisites.sh | tee /dev/tty)
 if echo "$output" | grep -q "MISSING PREREQUISITES"; then
@@ -198,15 +203,15 @@ check_files "${files[@]}"
 
 ############################################################
 # Run a basic test of the knowledge base.
-# java -Xmx40g -cp "$SIGMA_CP" com.articulate.sigma.KB -t
+# java -Xmx20g -cp "$SIGMA_CP" com.articulate.sigma.KB -t
 ############################################################
 print_header "Knowledge Base stress test"
 
 echo "Building and testing knowledge base ... This may take several minutes."
-if java -Xmx40g -cp "$SIGMA_CP" com.articulate.sigma.KB -t 2>/dev/null | grep -qF "KB.test()"; then
+if java -Xmx20g -cp "$SIGMA_CP" com.articulate.sigma.KB -t 2>/dev/null | grep -qF "KB.test()"; then
   echo "Successfully built and ran stress tests on Knowledge Base."
 else
-  echo "Did not successfully run knowledge tests: java -Xmx40g -cp \"$SIGMA_CP\" com.articulate.sigma.KB -t"
+  echo "Did not successfully run knowledge tests: java -Xmx20g -cp \"$SIGMA_CP\" com.articulate.sigma.KB -t"
   exit 1
 fi
 
@@ -233,7 +238,12 @@ fi
 
 while true; do
   # Sometimes it takes some time to unpack the .war file, keep trying for a minute.
-  output=$(curl -s "http://localhost:8080/sigma/login.html")
+  output=$(curl -s --fail "http://localhost:8080/sigma/login.html") || {
+    echo "Waiting for server to load Sigmakee ..."
+    sleep $interval
+    elapsed=$((elapsed + interval))
+    continue
+  }
   if echo "$output" | grep -qF "<title>Sigma Login</title>"; then
     echo "Sigmakee is successfully running."
     break
@@ -255,11 +265,11 @@ while true; do
 done
 
 # Shutdown Tomcat server
-./shutdown.sh > /dev/null 2>&1 &
+shutdown.sh > /dev/null 2>&1
 
 ###################################################################
 #
 # Success, probably!!!!
 #
 ###################################################################
-echo "Finished build verification. Checks indicate a successful installation!"
+echo -e "\n\nFinished build verification. Checks indicate a successful installation!"
