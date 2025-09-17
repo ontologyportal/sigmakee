@@ -431,8 +431,8 @@
             </args>
         </git>
     </target>
-    <!-- If on macOS, install tomcat w/ Homebrew -->
-    <target name="install.tomcat" unless="isUnixNotMac">
+    <!-- If on macOS, can also install tomcat w/ Homebrew -->
+    <target name="install.tomcat">
         <get src="https://archive.apache.org/dist/tomcat/tomcat-9/v${tomcat.version}/bin/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}" tryGzipEncoding="true"/>
         <unzip src="${programs.dir}/apache-tomcat-${tomcat.version}.zip" dest="${programs.dir}"/>
         <chmod dir="${programs.dir}/apache-tomcat-${tomcat.version}/bin" perm="ugo+rx" includes="**/*.sh"/>
@@ -488,7 +488,12 @@
         </git>
     </target>
     <target name="build.E">
-        <chmod dir="${programs.dir}/E/configure" perm="ugo+rx"/>
+       <chmod perm="ugo+rx">
+            <fileset dir="${programs.dir}/E">
+                <include name="**/*.sh"/>
+                <include name="**/configure*"/>
+            </fileset>
+        </chmod>
         <exec executable="sh" dir="${programs.dir}/E">
             <arg value="-c"/>
             <arg value="./configure"/>
