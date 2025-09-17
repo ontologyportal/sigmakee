@@ -73,12 +73,12 @@
         <description>Default lead directory for all Sigma knowledge base out files</description>
     </context-param>
 
-<!--    <security-role>
+  <!-- <security-role>
       <role-name>tomcat</role-name>
-    </security-role>
+    </security-role> -->
 
     <welcome-file-list>
-        <welcome-file>login.html</welcome-file>
-    </welcome-file-list>-->
+        <welcome-file>KBs.jsp</welcome-file>
+    </welcome-file-list>
 
 </web-app>

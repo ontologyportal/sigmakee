@@ -70,9 +70,9 @@ public List<String> check(String contents) {
         msgs.add(fmt(1, 1, "ERROR", "Parse failure: " + e));
         return msgs;
     }
-    if (!parseKif(kif, contents, msgs)) {
-        return msgs;
-    }
+    // if (!parseKif(kif, contents, msgs)) {
+    //     return msgs;
+    // }
 
     String[] bufferLines = contents.split("\n", -1);
     harvestLocalFacts(kif);
@@ -90,7 +90,11 @@ public List<String> check(String contents) {
             msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
                          "ERROR", "Quantifier not in statement"));
         }
-
+        // Existential quantifier in Antecedent
+        if (Diagnostics.existentialInAntecedent(f)) {
+            msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
+                         "ERROR", "Existential quantifier in Antecedent"));
+        }
         // Single-use variables
         Set<String> singleUse = Diagnostics.singleUseVariables(f);
         if (singleUse != null) {
@@ -145,14 +149,6 @@ public List<String> check(String contents) {
             }
         }
 
-        // // Arity check
-        // String term = PredVarInst.hasCorrectArity(f, kb);
-        // if (!StringUtil.emptyString(term)) {
-        //     reportAllOccurrencesInBuffer(term,
-        //             "Arity error of predicate: " + term,
-        //             bufferLines, msgs, "ERROR");
-        // }
-
         // Term below Entity + unknown terms
         Set<String> terms = f.collectTerms();
         for (String t : terms) {
@@ -160,20 +156,19 @@ public List<String> check(String contents) {
 
             boolean coveredByLocal = localIndividuals.contains(t) || localClasses.contains(t);
             if (!coveredByLocal && Diagnostics.termNotBelowEntity(t, kb)) {
-                reportAllOccurrencesInBuffer(t,
-                        "term not below Entity: " + t,
-                        bufferLines, msgs, "ERROR");
+            msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
+                                        "ERROR", "Term not below Entity: " + t));
             }
         }
     }
 
-    // Sort messages by line then column
+    Pattern linePattern = Pattern.compile("Line\\s*#(\\d+)");
     msgs.sort(Comparator.comparingInt((String m) -> {
-        try { return Integer.parseInt(m.split(":")[0]); }
-        catch (Exception e) { return Integer.MAX_VALUE; }
-    }).thenComparingInt(m -> {
-        try { return Integer.parseInt(m.split(":")[1]); }
-        catch (Exception e) { return Integer.MAX_VALUE; }
+        Matcher matcher = linePattern.matcher(m);
+        if (matcher.find()) {
+            return Integer.parseInt(matcher.group(1));
+        }
+        return Integer.MAX_VALUE;
     }));
 
     return msgs;
@@ -293,9 +288,6 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
 
     return -1; // not found
 }
-
-
-
 
     /**
      * ***************************************************************
@@ -513,7 +505,7 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
      * @return formatted diagnostic string
      */
     private static String fmt(int line1, int col1, String sev, String msg) {
-        return sev + " on Line #" + line1 + ": " + msg;
+        return sev + " in Formula on Line #" + line1 + ": " + msg;
     }
 
     /**

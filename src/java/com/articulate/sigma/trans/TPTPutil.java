@@ -75,8 +75,12 @@ public class TPTPutil {
 
         //System.out.println("INFO in Formula.htmlTPTPFormat(): " + f.toString());
         //System.out.println("INFO in Formula.htmlTPTPFormat(): theTptpFormulas.size()" + f.theTptpFormulas.size());
-        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1)
+        if (f.theTptpFormulas == null || f.theTptpFormulas.size() < 1){
+            String tff = SUMOtoTFAform.process(f, false);
+            if (tff != null)
+                return htmlizeSUMOTFA(tff, hyperlink);
             return "No TPTP formula.  May not be expressible in strict first order.";
+        }
         StringBuilder result = new StringBuilder();
         boolean inComment, inToken, inQuantifier;
         StringBuilder token;
@@ -204,6 +208,68 @@ public class TPTPutil {
         }
         return result.toString();
     }
+
+        /** ***************************************************************
+     * Take a plain SUMOtoTFAform string and wrap every s__ token
+     * in a hyperlink, similar to htmlTPTPFormat().
+     *
+     * @param tfa        the raw SUMOtoTFAform string
+     * @param hyperlink  the base URL (e.g. "http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term=")
+     * @return HTML-formatted string with linked terms
+     */
+    public static String htmlizeSUMOTFA(String tfa, String hyperlink) {
+        if (tfa == null || tfa.isEmpty())
+            return "";
+
+        StringBuilder result = new StringBuilder();
+        StringBuilder token = new StringBuilder();
+        boolean inToken = false;
+
+        for (int i = 0; i < tfa.length(); i++) {
+            char ch = tfa.charAt(i);
+
+            if (inToken) {
+                if (!Character.isJavaIdentifierPart(ch) && ch != '_') {
+                    // end of token
+                    String tok = token.toString();
+                    result.append("<a href=\"")
+                          .append(hyperlink)
+                          .append(tok)
+                          .append("\">")
+                          .append(tok)
+                          .append("</a>");
+                    token.setLength(0);
+                    inToken = false;
+                    result.append(ch);
+                } else {
+                    token.append(ch);
+                }
+            } else {
+                // detect start of s__ token
+                if (ch == 's' && i + 2 < tfa.length() && tfa.charAt(i+1) == '_' && tfa.charAt(i+2) == '_') {
+                    inToken = true;
+                    token.append("s__");
+                    i += 2; // skip ahead
+                } else {
+                    result.append(ch);
+                }
+            }
+        }
+
+        // flush last token if it ended the string
+        if (inToken && token.length() > 0) {
+            String tok = token.toString();
+            result.append("<a href=\"")
+                  .append(hyperlink)
+                  .append(tok)
+                  .append("\">")
+                  .append(tok)
+                  .append("</a>");
+        }
+
+        return result.toString();
+    }
+
 
     /** ***************************************************************
      * Is the axiom in a proof a source authored axiom from SUMO,
