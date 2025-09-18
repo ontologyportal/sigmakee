@@ -1951,13 +1951,28 @@ public class Formula implements Comparable, Serializable {
         if (fcar.empty())
             return resultSet;
         if (debug) System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
-    	if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
+    	if (isQuantifier(fcar.theFormula)) {
+            // if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
             if (!remainder.listP()) {
                 System.err.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
                 return resultSet;
             }
+            if (fcar.theFormula.equals(KAPPAFN)) {
+            // KappaFn’s first argument is a single variable
+                String bindingVar = remainder.car();
+                if (bindingVar.startsWith("?")) {
+                    resultSet.add(bindingVar);
+                }
+            }
+        else {
+            // Normal forall/exists case: first arg is a variable list
+            Formula varlist = new Formula();
+            varlist.read(remainder.car());
+            resultSet.addAll(varlist.collectAllVariables());
+            resultSet.addAll(remainder.cdrAsFormula().collectQuantifiedVariables());
+        }
             Formula varlist = new Formula();
             varlist.read(remainder.car());
             resultSet.addAll(varlist.collectAllVariables());
@@ -2459,7 +2474,8 @@ public class Formula implements Comparable, Serializable {
 
         return (!StringUtil.emptyString(pred)
                 && (pred.equals(EQUANT)
-                    || pred.equals(UQUANT)));
+                    || pred.equals(UQUANT)
+                    || pred.equals(KAPPAFN)));
     }
 
     /** *****************************************************************
