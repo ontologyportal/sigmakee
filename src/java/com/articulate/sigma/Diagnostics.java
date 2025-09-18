@@ -379,6 +379,8 @@ public class Diagnostics {
     public static Set<String> singleUseVariables(Formula f) {
 
         Set<String> result = new HashSet<>();
+        if (f.isHigherOrder(KBmanager.getMgr().getKB(KBmanager.getMgr().getPref("sumokbname"))))
+            return result;
         Set<String> vars = f.collectAllVariables();
 
         int index, index2;
@@ -460,6 +462,7 @@ public class Diagnostics {
                 !f.listP() || f.empty())
             return false;
         if (!Arrays.asList(Formula.UQUANT, Formula.EQUANT).contains(f.car())) {
+            
             Formula f1 = new Formula();
             f1.read(f.car());
             Formula f2 = new Formula();
@@ -480,15 +483,17 @@ public class Diagnostics {
                 Formula restForm = new Formula();
                 restForm.read(rest);
                 restForm.read(restForm.cdr());
-                if (quantifierNotInStatement(restForm))
+                if (quantifierNotInStatement(restForm)){
                     return true;
+                }
             }
             String var;
             if (qList != null) {
                 for (int i = 0; i < qList.size(); i++) {
                     var = (String) qList.get(i);
-                    if (!body.contains(var))
+                    if (!body.contains(var)){
                         return true;
+                    }
                 }
             }
         }
