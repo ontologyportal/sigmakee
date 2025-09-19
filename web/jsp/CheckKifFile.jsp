@@ -73,8 +73,25 @@
       min-width: 2.5em;
     }
 
+    /* Error line highlighting */
+    .CodeMirror-line-error {
+      background-color: #ffebee;
+      border-bottom: 2px wavy #d32f2f;
+      position: relative;
+    }
+
+    .CodeMirror .error-line {
+      background-color: #ffebee !important;
+    }
+
+    .CodeMirror .error-line-gutter {
+      background-color: #ffcdd2 !important;
+      color: #d32f2f !important;
+      font-weight: bold;
+    }
+
     /* KIF syntax highlighting for CodeMirror */
-    .cm-kif-comment { color: #708090; }
+    .cm-kif-comment { color: red; }
     .cm-kif-operator { color: #0000CD; font-weight: bold; }
     .cm-kif-quantifier { color: #0000CD; font-style: italic; }
     .cm-kif-variable { color: #3399ff; }
@@ -100,21 +117,22 @@
 %>
 <h3>Check KIF File For Errors</h3>
 <div class="card">
-  <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
-        enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-    <label>
-      <input label="Select a .kif file" type="file" name="kifFile" id="kifFile" accept=".kif,.txt"  required/>
-    </label>
-    <label style="display:flex; align-items:center; gap:8px; margin:0;">
-      <input type="checkbox" name="includeBelow" value="1"
-        <%= (request.getAttribute("includeBelow") == null
-            || Boolean.TRUE.equals(request.getAttribute("includeBelow"))) ? "checked" : "" %> />
-      Terms Below Entity Errors
-    </label>
-    <button type="submit">Upload</button>
-  </form>
+    <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
+      enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+  <label>
+    <input label="Select a .kif file" type="file" name="kifFile" id="kifFile" accept=".kif,.txt" required/>
+  </label>
+</form>
 </div>
 <script>
+document.getElementById("kifFile").addEventListener("change", function() {
+  if (this.files.length > 0) {
+    if (checkFileSize()) {
+      this.form.submit();
+    }
+  }
+});
+
 // Define KIF mode for CodeMirror
 CodeMirror.defineMode("kif", function() {
   return {
@@ -145,7 +163,7 @@ CodeMirror.defineMode("kif", function() {
       }
 
       // Handle operators
-      if (stream.match(/\b(?:and|or|not|=>|<=>)\b/)) {
+      if (stream.match(/(?:\band\b|\bor\b|\bnot\b|=>|<=>)/)) {
         return "kif-operator";
       }
 
@@ -182,10 +200,42 @@ function initializeCodeMirror() {
     placeholder: "Enter your KIF code here or upload a file above...",
     indentUnit: 2,
     tabSize: 2,
-    lineWrapping: false,
+    lineWrapping: true,
     autoCloseBrackets: true,
     matchBrackets: true
   });
+
+  // Apply error highlighting if errorMask is available
+  highlightErrorLines();
+}
+
+function highlightErrorLines() {
+  // Get error mask from JSP
+  const errorMask = [<%
+    boolean[] errorMask = (boolean[]) request.getAttribute("errorMask");
+    if (errorMask != null) {
+      for (int i = 0; i < errorMask.length; i++) {
+        if (i > 0) out.print(", ");
+        out.print(errorMask[i] ? "true" : "false");
+      }
+    }
+  %>];
+
+  if (errorMask && errorMask.length > 0 && codeEditor) {
+    // Clear any existing error highlighting
+    codeEditor.eachLine(function(lineHandle) {
+      codeEditor.removeLineClass(lineHandle, "background", "error-line");
+      codeEditor.removeLineClass(lineHandle, "gutter", "error-line-gutter");
+    });
+
+    // Apply error highlighting to lines with errors
+    for (let i = 0; i < errorMask.length; i++) {
+      if (errorMask[i]) {
+        codeEditor.addLineClass(i, "background", "error-line");
+        codeEditor.addLineClass(i, "gutter", "error-line-gutter");
+      }
+    }
+  }
 }
 
 function checkFileSize() {
@@ -214,15 +264,6 @@ function submitCodeForCheck() {
   codeInput.name = 'codeContent';
   codeInput.value = codeContent;
 
-  const includeBelow = document.querySelector('input[name="includeBelow"]');
-  if (includeBelow && includeBelow.checked) {
-    const includeBelowInput = document.createElement('input');
-    includeBelowInput.type = 'hidden';
-    includeBelowInput.name = 'includeBelow';
-    includeBelowInput.value = '1';
-    form.appendChild(includeBelowInput);
-  }
-
   form.appendChild(codeInput);
   document.body.appendChild(form);
   form.submit();
@@ -242,7 +283,7 @@ function downloadKifFile() {
   // Create a temporary download link
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'kiffile.kif';
+  a.download = 'kif_file.kif';
   document.body.appendChild(a);
   a.click();
 
@@ -325,6 +366,14 @@ function downloadKifFile() {
 document.addEventListener('DOMContentLoaded', function() {
   initializeCodeMirror();
 });
+
+// Re-highlight errors when content changes (for file uploads)
+function refreshErrorHighlighting() {
+  if (codeEditor) {
+    // Small delay to ensure content is updated
+    setTimeout(highlightErrorLines, 100);
+  }
+}
 </script>
 </body>
 </html>

@@ -24,6 +24,8 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.*;
+
 
 @WebServlet("/CheckKifFile")
 @MultipartConfig(
@@ -127,10 +129,11 @@ public class KifFileCheckServlet extends HttpServlet {
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
             for (String e : errors) {
-                String[] parts = e.split(":", 3);
-                if (parts.length >= 2) {
+                Pattern p = Pattern.compile("#(\\d+):");
+                Matcher m = p.matcher(e);
+                if (m.find()) {
                     try {
-                        int ln = Integer.parseInt(parts[0]);
+                        int ln = Integer.parseInt(m.group(1));
                         if (ln >= 1 && ln <= errorMask.length) {
                             errorMask[ln - 1] = true;
                         }
@@ -150,10 +153,6 @@ public class KifFileCheckServlet extends HttpServlet {
         if (isCodeSubmission) {
             request.setAttribute("codeContent", text);
         }
-
-        // Preserve the includeBelow checkbox state
-        String includeBelow = request.getParameter("includeBelow");
-        request.setAttribute("includeBelow", "1".equals(includeBelow));
 
         request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
     }
