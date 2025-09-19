@@ -202,8 +202,9 @@ public class GenPropFormulas {
         filename.append(fname);
         System.out.println("GenPropFormulas.run(): filename: " + filename.toString());
         System.out.println("GenPropFormulas.run(): stmts: " + stmts);
+
         try (Writer fw = new FileWriter(fname);
-             PrintWriter pw = new PrintWriter(fw)) {
+            PrintWriter pw = new PrintWriter(fw)) {
             for (String s : stmts)
                 pw.println(s);
         }
@@ -213,48 +214,61 @@ public class GenPropFormulas {
             e.printStackTrace();
         }
 
-        // Find path to vampire
-        KBmanager mgr = KBmanager.getMgr();
-        SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
-        for (SimpleElement el : config.getChildElements()) {
-            if (el.getTagName().equals("preference")) {
-                if (el.getAttribute("name").contains("vampire"))
-                    mgr.setPref("vampire", el.getAttribute("value"));
-                if (el.getAttribute("name").contains("eprover"))
-                    mgr.setPref("eprover", el.getAttribute("value"));
+        SZSonto result = SZSonto.OTHER;
+
+        try {
+            // Find path to vampire
+            KBmanager mgr = KBmanager.getMgr();
+            SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
+            for (SimpleElement el : config.getChildElements()) {
+                if (el.getTagName().equals("preference")) {
+                    if (el.getAttribute("name").contains("vampire"))
+                        mgr.setPref("vampire", el.getAttribute("value"));
+                    if (el.getAttribute("name").contains("eprover"))
+                        mgr.setPref("eprover", el.getAttribute("value"));
+                }
+            }
+            if (mgr.getPref("vampire").isEmpty())
+                KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
+            Vampire.mode = Vampire.ModeType.CASC; // default
+            System.out.println("GenPropFormulas.run(): before vampire");
+            if (mgr.getPref("eprover").isEmpty())
+                KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
+
+            boolean sat = false;
+            vamp.run(f,5);
+            boolean proof = false;
+            for (String s : vamp.output) {
+                if (s.contains("Refutation found"))
+                    proof = true;
+                if (s.contains("Saturation"))
+                    sat = true;
+            }
+            if (proof) {
+                System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");
+                vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+                result = SZSonto.CONTRA;
+            }
+            else if (sat) {
+                System.out.println("run(): Saturation: statement " + stmts);
+                vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+                result = SZSonto.SAT;
+            }
+            else {
+                System.out.println("run(): no proof: statement " + stmts);
+                result = SZSonto.OTHER;
             }
         }
-        if (mgr.getPref("vampire").isEmpty())
-            KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
-        Vampire.mode = Vampire.ModeType.CASC; // default
-        System.out.println("GenPropFormulas.run(): before vampire");
-        if (mgr.getPref("eprover").isEmpty())
-            KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
+        finally {
+            // Always attempt to delete the temporary file
+            if (f.exists() && !f.delete()) {
+                System.err.println("Warning: could not delete temp file " + f.getAbsolutePath());
+            }
+        }
 
-        boolean sat = false;
-        vamp.run(f,5);
-        boolean proof = false;
-        for (String s : vamp.output) {
-            if (s.contains("Refutation found"))
-                proof = true;
-            if (s.contains("Saturation"))
-                sat = true;
-        }
-        if (proof) {
-            System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");
-            vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-            return SZSonto.CONTRA;
-        }
-        else if (sat) {
-            System.out.println("run(): Saturation: statement " + stmts);
-            vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-            return SZSonto.SAT;
-        }
-        else {
-            System.out.println("run(): no proof: statement " + stmts);
-            return SZSonto.OTHER;
-        }
+        return result;
     }
+
 
     /** ***************************************************************
      * Randomly generate a propositional formula with the given number of
