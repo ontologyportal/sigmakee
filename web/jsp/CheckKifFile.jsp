@@ -12,11 +12,13 @@
   <meta charset="UTF-8">
   <title>Check KIF File</title>
 
-  <!-- CodeMirror -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/default.min.css">
+   <!-- CodeMirror -->
+   <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
+   <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
+   <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
 
-  <!-- ✅ All CSS merged here -->
+
+  <!-- All CSS here -->
   <style>
     body { font-family: system-ui, sans-serif; margin: 24px; }
     .card { border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px; }
@@ -49,6 +51,17 @@
       font-size: 14px;
     }
     .download-button:hover { background: #1e7e34; }
+
+    .upload-button {
+      background: #20c997;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .upload-button:hover { background: #1aa179; }
 
     /* CodeMirror customization */
     .CodeMirror {
@@ -104,6 +117,14 @@
       margin-bottom: 8px;
     }
     .button-group { display: flex; gap: 8px; }
+
+    /* File name display */
+    .file-name-display {
+      font-family: monospace;
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
   </style>
 </head>
 <body>
@@ -113,23 +134,32 @@
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
   }
 %>
-<h3>Check KIF File For Errors</h3>
 <div class="card">
-    <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
-      enctype="multipart/form-data" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
-  <label>
-    <input label="Select a .kif file" type="file" name="kifFile" id="kifFile" accept=".kif,.txt" required/>
-  </label>
+
+<!-- Hidden form for file upload -->
+<form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
+      enctype="multipart/form-data" style="display:none;" id="uploadForm">
+  <input type="file" name="kifFile" id="kifFile" accept=".kif,.txt" required />
 </form>
-</div>
+
 <script>
-document.getElementById("kifFile").addEventListener("change", function() {
-  if (this.files.length > 0) {
-    if (checkFileSize()) {
-      this.form.submit();
+  const fileInput = document.getElementById('kifFile');
+  const fileNameSpan = document.getElementById('file-name');
+  const uploadForm = document.getElementById('uploadForm');
+
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files.length > 0) {
+      if (fileNameSpan) {
+        fileNameSpan.textContent = 'Uploaded: ' + fileInput.files[0].name;
+      }
+      // Auto-submit the form when file is selected
+      uploadForm.submit();
+    } else {
+      if (fileNameSpan) {
+        fileNameSpan.textContent = '';
+      }
     }
-  }
-});
+  });
 
 // Define KIF mode for CodeMirror
 CodeMirror.defineMode("kif", function() {
@@ -195,7 +225,7 @@ function initializeCodeMirror() {
     mode: "kif",
     lineNumbers: true,
     theme: "default",
-    placeholder: "Enter your KIF code here or upload a file above...",
+    placeholder: "Enter your KIF code here or upload a file using the Upload button...",
     indentUnit: 2,
     tabSize: 2,
     lineWrapping: true,
@@ -247,6 +277,10 @@ function checkFileSize() {
     }
   }
   return true;
+}
+
+function triggerFileUpload() {
+  document.getElementById('kifFile').click();
 }
 
 function submitCodeForCheck() {
@@ -303,12 +337,18 @@ function downloadKifFile() {
   <!-- Left column: Code -->
   <div>
     <div class="editor-header">
-      <h3>KIF Code Editor</h3>
+      <h3>SUO-KIF Code Editor</h3>
       <div class="button-group">
+        <button type="button" class="upload-button" onclick="triggerFileUpload()">Upload</button>
         <button type="button" class="download-button" onclick="downloadKifFile()">Download</button>
         <button type="button" class="check-button" onclick="submitCodeForCheck()">Check</button>
       </div>
     </div>
+    <% if (fileName != null) { %>
+    <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
+    <% } else { %>
+    <div class="file-name-display" id="file-name"></div>
+    <% } %>
     <textarea id="codeEditor" style="display: none;"><%=
       codeContent != null ? esc(codeContent) :
       (fileContent != null ? String.join("\n", fileContent) : "")
