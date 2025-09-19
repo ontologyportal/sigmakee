@@ -22,8 +22,12 @@
   <style>
     body { font-family: system-ui, sans-serif; margin: 24px; }
     .card { border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px; }
-    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; }
-    .scroller { max-height: 60vh; overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; align-items: stretch;}
+    .layout > div {
+      display: flex;
+      flex-direction: column;
+    }
+    .scroller { height: 59vh; overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
     .msg { padding: 12px; white-space: pre-line; }
     .errors-box { color: #b00020; }
     .success { color: #077d3f; }
@@ -67,7 +71,7 @@
     .CodeMirror {
       border: 1px solid #ddd;
       border-radius: 6px;
-      height: 400px;
+      height: 60vh;
       font-family: ui-monospace, monospace;
       font-size: 14px;
       line-height: 1.4;
@@ -338,17 +342,17 @@ function downloadKifFile() {
   <div>
     <div class="editor-header">
       <h3>SUO-KIF Code Editor</h3>
+        <% if (fileName != null) { %>
+        <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
+        <% } else { %>
+        <div class="file-name-display" id="file-name"></div>
+        <% } %>
       <div class="button-group">
         <button type="button" class="upload-button" onclick="triggerFileUpload()">Upload</button>
         <button type="button" class="download-button" onclick="downloadKifFile()">Download</button>
         <button type="button" class="check-button" onclick="submitCodeForCheck()">Check</button>
       </div>
     </div>
-    <% if (fileName != null) { %>
-    <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
-    <% } else { %>
-    <div class="file-name-display" id="file-name"></div>
-    <% } %>
     <textarea id="codeEditor" style="display: none;"><%=
       codeContent != null ? esc(codeContent) :
       (fileContent != null ? String.join("\n", fileContent) : "")
