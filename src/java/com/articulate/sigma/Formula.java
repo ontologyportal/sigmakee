@@ -1747,7 +1747,8 @@ public class Formula implements Comparable, Serializable {
 
         String carstr = f.car();
         if (Formula.atom(carstr) && Formula.isLogicalOperator(carstr)) {
-            if (carstr.equals(Formula.EQUANT) || carstr.equals(Formula.UQUANT)) {
+            if (isQuantifier(carstr)) {
+                if (true) System.out.println("Formula.collectQuantifiedUnquantifiedVariablesRecurse(): carstr" + carstr);
                 String varString = f.getStringArgument(1);
                 String[] varArray = (varString.substring(1, varString.length()-1)).split(SPACE);
                 quantifiedVariables.addAll(Arrays.asList(varArray));
@@ -1955,6 +1956,7 @@ public class Formula implements Comparable, Serializable {
         if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT) || fcar.theFormula.equals(KAPPAFN)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
+            if (debug) System.out.println("Formula.collectQuantifiedVariables(): remainder \n" + remainder.toString());
             if (!remainder.listP()) {
                 System.err.println("Error in Formula.collectQuantifiedVariables(): incorrect quantification: " + this.toString());
                 return resultSet;
@@ -1982,6 +1984,8 @@ public class Formula implements Comparable, Serializable {
             resultSet.addAll(this.cdrAsFormula().collectQuantifiedVariables());
     	}
         quantVarsCache.addAll(resultSet);
+        if (debug) System.out.println("Formula.collectQuantifiedVariables(): " + "resultSet \n" + resultSet);
+            
     	return resultSet;
     }
 
@@ -2470,9 +2474,10 @@ public class Formula implements Comparable, Serializable {
      */
     public static boolean isQuantifier(String pred) {
 
-        return (!StringUtil.emptyString(pred)
-                && (pred.equals(EQUANT)
-                    || pred.equals(UQUANT)));
+        return (!StringUtil.emptyString(pred) 
+            && (pred.equals(EQUANT) 
+            || pred.equals(UQUANT) 
+            || pred.equals(KAPPAFN)));
     }
 
     /** *****************************************************************

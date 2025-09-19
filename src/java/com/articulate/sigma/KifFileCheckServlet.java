@@ -1,17 +1,17 @@
 /** This code is copyright Articulate Software (c) 2003.
-    Some portions copyright Teknowledge (c) 2003 and reused under
-    the terms of the GNU license. This software is released under
-    the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
-    Users of this code also consent, by use of this code, to credit
-    Articulate Software and Teknowledge in any writings, briefings,
-    publications, presentations, or other representations of any
-    software which incorporates, builds on, or uses this code.
-    Please cite the following article in any publication with references:
+ Some portions copyright Teknowledge (c) 2003 and reused under
+ the terms of the GNU license. This software is released under
+ the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
+ Users of this code also consent, by use of this code, to credit
+ Articulate Software and Teknowledge in any writings, briefings,
+ publications, presentations, or other representations of any
+ software which incorporates, builds on, or uses this code.
+ Please cite the following article in any publication with references:
 
-    Pease, A., (2003). The Sigma Ontology Development Environment,
-    in Working Notes of the IJCAI-2003 Workshop on Ontology and
-    Distributed Systems, August 9, Acapulco, Mexico.
-*/
+ Pease, A., (2003). The Sigma Ontology Development Environment,
+ in Working Notes of the IJCAI-2003 Workshop on Ontology and
+ Distributed Systems, August 9, Acapulco, Mexico.
+ */
 
 package com.articulate.sigma;
 
@@ -24,12 +24,14 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
+import java.util.regex.*;
+
 
 @WebServlet("/CheckKifFile")
 @MultipartConfig(
-    fileSizeThreshold = 1024,         // buffer to disk after 1 KB
-    maxFileSize = 190 * 1024,          // 70 KB per file
-    maxRequestSize = 200 * 1024        // 80 KB total request size
+        fileSizeThreshold = 1024,         // buffer to disk after 1 KB
+        maxFileSize = 190 * 1024,          // 70 KB per file
+        maxRequestSize = 200 * 1024        // 80 KB total request size
 )
 
 /**
@@ -50,7 +52,8 @@ public class KifFileCheckServlet extends HttpServlet {
     }
 
     /** *************************************************************
-     * Handles POST requests that upload a SUO-KIF file for validation.
+     * Handles POST requests that upload a SUO-KIF file for validation
+     * or submit code content directly from the editor.
      */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
@@ -59,8 +62,31 @@ public class KifFileCheckServlet extends HttpServlet {
         List<String> errors = Collections.emptyList();
         List<String> lines = null;
         String fileName = null;
+        String text = null;
+        boolean isCodeSubmission = false;
 
-        if (request.getContentType() != null &&
+        // Check if this is a direct code submission from the editor
+        String codeContent = request.getParameter("codeContent");
+        if (codeContent != null && !codeContent.trim().isEmpty()) {
+            // Handle direct code submission
+            text = codeContent;
+            fileName = "Editor Content";
+            isCodeSubmission = true;
+
+            // Split into lines for JSP display
+            lines = Arrays.asList(text.split("\\R", -1));
+
+            // Validate the code content
+            try {
+                Future<List<String>> future = KifCheckWorker.submit(text);
+                errors = future.get(); // block until job is processed
+            } catch (Exception e) {
+                request.setAttribute("errorMessage",
+                        "Error while checking code content: " + e.getMessage());
+            }
+        }
+        // Handle file upload
+        else if (request.getContentType() != null &&
                 request.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
 
             Part filePart = request.getPart("kifFile");
@@ -77,7 +103,6 @@ public class KifFileCheckServlet extends HttpServlet {
                 return;
             }
 
-            String text;
             try (InputStream in = filePart.getInputStream()) {
                 text = readUtf8(in);
             }
@@ -94,17 +119,21 @@ public class KifFileCheckServlet extends HttpServlet {
                         "Error while checking uploaded file: " + e.getMessage());
             }
         } else {
-            request.setAttribute("errorMessage", "Please upload a .kif or .txt file.");
+            // Neither file upload nor code content submission
+            request.setAttribute("errorMessage", "Please upload a .kif or .txt file or enter code in the editor.");
+            request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
+            return;
         }
 
         // Highlight lines with errors
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
             for (String e : errors) {
-                String[] parts = e.split(":", 3);
-                if (parts.length >= 2) {
+                Pattern p = Pattern.compile("#(\\d+):");
+                Matcher m = p.matcher(e);
+                if (m.find()) {
                     try {
-                        int ln = Integer.parseInt(parts[0]);
+                        int ln = Integer.parseInt(m.group(1));
                         if (ln >= 1 && ln <= errorMask.length) {
                             errorMask[ln - 1] = true;
                         }
@@ -113,10 +142,18 @@ public class KifFileCheckServlet extends HttpServlet {
             }
         }
 
+        // Set attributes for JSP
         request.setAttribute("errorMask", errorMask);
         request.setAttribute("fileName", fileName);
         request.setAttribute("fileContent", lines);
         request.setAttribute("errors", errors);
+
+        // If this was a code submission, also set the codeContent attribute
+        // so the JSP can preserve the editor content
+        if (isCodeSubmission) {
+            request.setAttribute("codeContent", text);
+        }
+
         request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
     }
 }
