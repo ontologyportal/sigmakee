@@ -1951,7 +1951,8 @@ public class Formula implements Comparable, Serializable {
         if (fcar.empty())
             return resultSet;
         if (debug) System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
-    	if (isQuantifier(fcar.theFormula)) {
+    	// if (isQuantifier(fcar.theFormula)) {
+        if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT) || fcar.theFormula.equals(KAPPAFN)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
             if (!remainder.listP()) {
