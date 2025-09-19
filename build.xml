@@ -244,6 +244,7 @@
             <zipfileset dir="${web.dir}/jsp"/>
             <zipfileset file="${web.dir}/simple.css"/>
             <zipfileset dir="${web.dir}/pixmaps" prefix="pixmaps"/>
+            <zipfileset dir="${web.dir}/javascript" prefix="javascript"/>
             <lib dir="${basedir}/lib">
                 <exclude name="junit*"/>
                 <exclude name="hamcrest-core*"/>
