@@ -30,6 +30,21 @@
     String depth = request.getParameter("depth");
     if (StringUtil.emptyString(depth))
         depth = "5";
+        
+    // Clamp between 1 and 7
+    int numVarsInt = 3;
+    int depthInt = 5;
+
+    try {
+        numVarsInt = Math.max(1, Math.min(7, Integer.parseInt(numVars)));
+    } catch (NumberFormatException e) {
+        numVarsInt = 3; // fallback
+    }
+    try {
+        depthInt = Math.max(1, Math.min(7, Integer.parseInt(depth)));
+    } catch (NumberFormatException e) {
+        depthInt = 5; // fallback
+    }
     String action = request.getParameter("submit");
     String erase = request.getParameter("erase");
 
@@ -47,12 +62,21 @@
 
     <b>Create logic problem with solutions</b><P>
     <table>
-        <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="<%=numVars %>"></td></tr>
-        <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="<%=depth %>"></td></tr>
+        <tr>
+        <td align="right">Number of variables:&nbsp;</td>
+        <td>
+            <input type="number" id="numVars" name="numVars" min="1" max="7" step="1" value="<%=numVars %>">
+        </td>
+        </tr>
+        <tr>
+        <td align="right">Formula depth:&nbsp;</td>
+        <td>
+            <input type="number" id="depth" name="depth" min="1" max="7" step="1" value="<%=depth %>">
+        </td>
+        </tr>
         <tr><td align="right"><input type="submit" name="submit" value="submit">&nbsp;&nbsp;</td>
         <td><input type="submit" name="erase" value="erase"></td></tr>
     </table>
-
 </form><p>
 
 <%
@@ -63,7 +87,7 @@
             numVars = "3";
         if (depth == null)
             depth = "5";
-        gpf.generateFormulas(10,Integer.parseInt(numVars),Integer.parseInt(depth));
+        gpf.generateFormulas(10, numVarsInt, depthInt);
         out.println();
         out.println("<hr><br>");
         out.println("<b>Contradiction</b>:<br> ");
