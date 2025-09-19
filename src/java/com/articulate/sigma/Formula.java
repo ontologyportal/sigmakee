@@ -1952,7 +1952,6 @@ public class Formula implements Comparable, Serializable {
             return resultSet;
         if (debug) System.out.println("Formula.collectQuantifiedVariables(): car: " + fcar);
     	if (isQuantifier(fcar.theFormula)) {
-            // if (fcar.theFormula.equals(UQUANT) || fcar.theFormula.equals(EQUANT)) {
             Formula remainder = new Formula();
             remainder.read(this.cdr());
             if (!remainder.listP()) {
@@ -1960,14 +1959,12 @@ public class Formula implements Comparable, Serializable {
                 return resultSet;
             }
             if (fcar.theFormula.equals(KAPPAFN)) {
-            // KappaFn’s first argument is a single variable
                 String bindingVar = remainder.car();
                 if (bindingVar.startsWith("?")) {
                     resultSet.add(bindingVar);
                 }
             }
         else {
-            // Normal forall/exists case: first arg is a variable list
             Formula varlist = new Formula();
             varlist.read(remainder.car());
             resultSet.addAll(varlist.collectAllVariables());
@@ -2474,8 +2471,7 @@ public class Formula implements Comparable, Serializable {
 
         return (!StringUtil.emptyString(pred)
                 && (pred.equals(EQUANT)
-                    || pred.equals(UQUANT)
-                    || pred.equals(KAPPAFN)));
+                    || pred.equals(UQUANT)));
     }
 
     /** *****************************************************************
