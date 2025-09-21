@@ -115,26 +115,26 @@ public class GenPropFormulas {
      */
     public static String simplifyCNF(String cnf) {
 
-        System.out.println("simplifyCNF(): before: " + cnf);
+        if (debug) System.out.println("simplifyCNF(): before: " + cnf);
         HashSet<String> newclauseset = new HashSet<>();
         String[] clauses = cnf.split(", ");
         for (String s : clauses) {
-            System.out.println("simplifyCNF(): clause: " + s);
+            if (debug) System.out.println("simplifyCNF(): clause: " + s);
             HashSet<String> newclause = new HashSet<>();
             String clause = StringUtil.removeEnclosingCharPair(s.trim(),1,'(',')');
-            System.out.println("simplifyCNF(): without parens: " + clause);
+            if (debug) System.out.println("simplifyCNF(): without parens: " + clause);
             if (!clause.contains("|")) {
                 newclauseset.add(clause);
                 continue;
             }
             String[] literals = clause.split("\\|");
-            System.out.println("simplifyCNF(): literals: " + Arrays.toString(literals));
+            if (debug) System.out.println("simplifyCNF(): literals: " + Arrays.toString(literals));
             for (String l : literals)
                 newclause.add(l);
             String newClauseStr = newclause.toString().replace(",","|");
             newclauseset.add(Formula.LP + StringUtil.removeEnclosingCharPair(newClauseStr,1,'[',']') + Formula.RP);
         }
-        System.out.println("simplifyCNF(): after: " + newclauseset);
+        if (debug) System.out.println("simplifyCNF(): after: " + newclauseset);
         return StringUtil.removeEnclosingCharPair(newclauseset.toString(),1,'[',']');
     }
 
@@ -200,70 +200,62 @@ public class GenPropFormulas {
             f = new File(fname);
         }
         filename.append(fname);
-        System.out.println("GenPropFormulas.run(): filename: " + filename.toString());
-        System.out.println("GenPropFormulas.run(): stmts: " + stmts);
+
+        if (debug) System.out.println("GenPropFormulas.run(): filename: " + filename.toString());
+        if (debug) System.out.println("GenPropFormulas.run(): stmts: " + stmts);
 
         try (Writer fw = new FileWriter(fname);
             PrintWriter pw = new PrintWriter(fw)) {
             for (String s : stmts)
                 pw.println(s);
-        }
-        catch (IOException e) {
-            System.err.println("GenPropFormulas.run(): Error in writeStatements(): " + e.getMessage());
-            System.err.println("GenPropFormulas.run(): Error writing file " + fname + "\n" + e.getMessage());
+        } catch (IOException e) {
+            if (debug) System.err.println("GenPropFormulas.run(): Error writing file " + fname + " - " + e.getMessage());
             e.printStackTrace();
         }
 
-        SZSonto result = SZSonto.OTHER;
-
-        try {
-            // Find path to vampire
-            KBmanager mgr = KBmanager.getMgr();
-            SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
-            for (SimpleElement el : config.getChildElements()) {
-                if (el.getTagName().equals("preference")) {
-                    if (el.getAttribute("name").contains("vampire"))
-                        mgr.setPref("vampire", el.getAttribute("value"));
-                    if (el.getAttribute("name").contains("eprover"))
-                        mgr.setPref("eprover", el.getAttribute("value"));
-                }
-            }
-            if (mgr.getPref("vampire").isEmpty())
-                KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
-            Vampire.mode = Vampire.ModeType.CASC; // default
-            System.out.println("GenPropFormulas.run(): before vampire");
-            if (mgr.getPref("eprover").isEmpty())
-                KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
-
-            boolean sat = false;
-            vamp.run(f,5);
-            boolean proof = false;
-            for (String s : vamp.output) {
-                if (s.contains("Refutation found"))
-                    proof = true;
-                if (s.contains("Saturation"))
-                    sat = true;
-            }
-            if (proof) {
-                System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");
-                vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-                result = SZSonto.CONTRA;
-            }
-            else if (sat) {
-                System.out.println("run(): Saturation: statement " + stmts);
-                vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
-                result = SZSonto.SAT;
-            }
-            else {
-                System.out.println("run(): no proof: statement " + stmts);
-                result = SZSonto.OTHER;
+        // Run provers
+        KBmanager mgr = KBmanager.getMgr();
+        SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
+        for (SimpleElement el : config.getChildElements()) {
+            if (el.getTagName().equals("preference")) {
+                if (el.getAttribute("name").contains("vampire"))
+                    mgr.setPref("vampire", el.getAttribute("value"));
+                if (el.getAttribute("name").contains("eprover"))
+                    mgr.setPref("eprover", el.getAttribute("value"));
             }
         }
-        finally {
-            // Always attempt to delete the temporary file
-            if (f.exists() && !f.delete()) {
-                System.err.println("Warning: could not delete temp file " + f.getAbsolutePath());
-            }
+
+        if (mgr.getPref("vampire").isEmpty())
+            mgr.setPref("vampire","/home/apease/workspace/vampire/vampire");
+        if (mgr.getPref("eprover").isEmpty())
+            mgr.setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
+
+        Vampire.mode = Vampire.ModeType.CASC;
+        if (debug) System.out.println("GenPropFormulas.run(): before vampire");
+
+        boolean sat = false;
+        vamp.run(f,5);
+        boolean proof = false;
+        for (String s : vamp.output) {
+            if (s.contains("Refutation found"))
+                proof = true;
+            if (s.contains("Saturation"))
+                sat = true;
+        }
+
+        // Determine result
+        SZSonto result;
+        if (proof) {
+            result = SZSonto.CONTRA;
+        } else if (sat) {
+            result = SZSonto.SAT;
+        } else {
+            result = SZSonto.OTHER;
+        }
+
+        // 🔑 Delete the temporary prob file
+        if (f.exists() && !f.delete()) {
+            if (debug) System.err.println("Warning: could not delete " + f.getAbsolutePath());
         }
 
         return result;
@@ -299,6 +291,183 @@ public class GenPropFormulas {
             }
         }
     }
+
+    /**
+     * Store generated formulas HTML into a per-(numvars,depth) file.
+     * Each entry is delimited with a marker for indexing later.
+     */
+    public static void storeGeneratedFormulas(String html, int numvars, int depth) {
+        String filename = System.getProperty("user.home")
+                + "/.sigmakee/KBs/GeneratedFormulas/numvars"
+                + numvars + "_depth" + depth + ".html";
+        File outFile = new File(filename);
+        // Ensure parent directory exists
+        File parent = outFile.getParentFile();
+        if (parent != null && !parent.exists()) {
+            if (!parent.mkdirs()) {
+                System.err.println("Failed to create directory: " + parent.getAbsolutePath());
+                return;
+            }
+        }
+        try (FileWriter fw = new FileWriter(outFile, true); // true = append
+            PrintWriter pw = new PrintWriter(fw)) {
+            // Write delimiter, then entry
+            pw.println(html);
+        } catch (IOException e) {
+            System.err.println("Error writing generated formulas file: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Retrieve a specific entry given numvars, depth, and index.
+     * Index starts at 0 (first entry).
+     */
+    public String getGeneratedFormula(int numvars, int depth, int index) {
+
+     String filename = System.getProperty("user.home")
+                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                + numvars + "_depth" + depth + ".html";
+        File inFile = new File(filename);
+        if (!inFile.exists()) {
+            System.err.println("File does not exist: " + filename);
+            return null;
+        }
+        try {
+            String content = new String(java.nio.file.Files.readAllBytes(inFile.toPath()));
+            String[] entries = content.split("<!--DELIMITER-->");
+            if (index < 0 || index >= entries.length) {
+                System.err.println("Index out of range. Total entries: " + entries.length);
+                return null;
+            }
+            return entries[index].trim();
+        } catch (IOException e) {
+            System.err.println("Error reading generated formulas file: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Retrieve a random entry given numvars and depth.
+     * Returns the HTML of a randomly selected formula entry.
+     */
+    public static String getRandomGeneratedFormula(int numvars, int depth) {
+
+        if (debug) System.out.println("Getting RAND");
+        String filename = System.getProperty("user.home")
+                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                + numvars + "_depth" + depth + ".html";
+
+        File inFile = new File(filename);
+        if (!inFile.exists()) {
+            System.err.println("File does not exist: " + filename);
+            return null;
+        }
+
+        try {
+            String content = new String(java.nio.file.Files.readAllBytes(inFile.toPath()));
+
+            // Split by the exact delimiter
+            String[] entries = content.split("<!--DELIMITER-->");
+
+            if (entries.length == 0) {
+                System.err.println("No entries found in file: " + filename);
+                return null;
+            }
+
+            // Pick random index
+            java.util.Random rand = new java.util.Random();
+            int index = rand.nextInt(entries.length - 1);
+            if (debug) System.out.println("Getting " + index);
+            return entries[index].trim();
+        } catch (IOException e) {
+            if (debug) System.err.println("Error reading generated formulas file: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Generate cached formulas for all combinations of numvars and depth
+     * between 1 and 7 (inclusive). This will sequentially create or append
+     * entries into the cache files with the same styling as the JSP.
+     */
+    public static void populateCachedFormulas() {
+        GenPropFormulas gpf = new GenPropFormulas();
+
+        for (int numvars = 1; numvars <= 7; numvars++) {
+            for (int depth = 1; depth <= 7; depth++) {
+                if (debug) System.out.println("Generating cache for numvars=" + numvars + ", depth=" + depth);
+
+                for (int i = 0; i <= 10; i++) {
+                    FileWriter fw = null;
+                    PrintWriter fileOut = null;
+
+                    try {
+                        boolean notNull;
+                        gpf.init();
+                        gpf.generateFormulas(10, numvars, depth);
+                        
+                        if(gpf.contraResults != null && gpf.tautResults != null && gpf.satResults != null){
+                            i--;
+                            continue;
+                        } 
+                        // Path for the HTML output file, unique to numVars/depth
+                        String filePath = System.getProperty("user.home")
+                                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                                + numvars + "_depth" + depth + ".html";
+
+                        fw = new FileWriter(filePath, true); // append mode
+                        fileOut = new PrintWriter(fw);
+
+                        // Contradictions
+                        fileOut.println("<hr><br>");
+                        fileOut.println("<b>Contradiction</b>:<br>");
+                        for (String s : gpf.contraResults) {
+                            fileOut.println(s + "<br>");
+                            fileOut.println("CNF: " + gpf.CNF.get(s) + "<br>");
+                            fileOut.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+                            fileOut.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
+                        }
+
+                        // Tautologies
+                        fileOut.println("<hr><br>");
+                        fileOut.println("<b>Tautology</b>:<br>");
+                        for (String s : gpf.tautResults) {
+                            fileOut.println(s + "<br>");
+                            fileOut.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
+                            fileOut.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+                            fileOut.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
+                        }
+
+                        // Satisfiable
+                        fileOut.println("<hr><br>");
+                        fileOut.println("<b>Satisfiable</b>:<br>");
+                        for (String s : gpf.satResults) {
+                            fileOut.println(s + "<br>");
+                            fileOut.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
+                            fileOut.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+                            fileOut.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
+                        }
+                        // Always add delimiter
+                        fileOut.println("<!--DELIMITER-->");
+
+                    } catch (Exception e) {
+                        System.err.println("Error generating formulas for numvars=" + numvars
+                                + ", depth=" + depth + ": " + e.getMessage());
+                        e.printStackTrace();
+                    } finally {
+                        if (fileOut != null) fileOut.close();
+                        try {
+                            if (fw != null) fw.close();
+                        } catch (IOException ignore) {}
+                    }
+                }
+            }
+        }
+    }
+
 
     /** ***************************************************************
      */
@@ -379,7 +548,7 @@ public class GenPropFormulas {
         String CNFresult = formatCNF(ecnf.output);
         if (CNFresult.isEmpty())
             CNFresult = form;
-        System.out.println("generateCNFandLinks(): CNF for " + form + " is " + CNFresult);
+        if (debug) System.out.println("generateCNFandLinks(): CNF for " + form + " is " + CNFresult);
         CNF.put(form,CNFresult);
         String encoded = encodeTT(formStr);
         truthTables.put(formStr,encoded);
@@ -397,9 +566,9 @@ public class GenPropFormulas {
 
         while (count < targetCount && iter < 200) {
             String form = f.generate("", numvars, depth).toString();
-            System.out.println("\n*************************\ngenerateFormulas(): form: " + form);
+            if (debug) System.out.println("\n*************************\ngenerateFormulas(): form: " + form);
             String wrappedForm = "fof(conj,axiom," + form + ").";
-            System.out.println("generateFormulas(): wrapped: " + wrappedForm);
+            if (debug) System.out.println("generateFormulas(): wrapped: " + wrappedForm);
             Set<String> stmts = new HashSet<>();
             stmts.add(wrappedForm);
             StringBuilder filename = new StringBuilder();
@@ -407,8 +576,8 @@ public class GenPropFormulas {
             HashSet<String> negstmts = new HashSet<>();
             String negWrappedForm = "fof(conj,axiom,~(" + form + ")).";
             String negForm = "~(" + form + Formula.RP;
-            System.out.println("generateFormulas(): neg form: " + negForm);
-            System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
+            if (debug) System.out.println("generateFormulas(): neg form: " + negForm);
+            if (debug) System.out.println("generateFormulas(): neg wrapped: " + negWrappedForm);
             negstmts.add(negWrappedForm);
             StringBuilder negfilename = new StringBuilder();
             SZSonto negresult = run(negstmts,negfilename);
@@ -438,6 +607,10 @@ public class GenPropFormulas {
         printResults();
     }
 
+    public static void retrieveCachedGeneratedFormulas(int depth, int numVars){
+        
+    }
+
     /** ***************************************************************
      */
     public static void printHelp() {
@@ -446,7 +619,9 @@ public class GenPropFormulas {
         System.out.println("  options:");
         System.out.println("  -h - show this help screen");
         System.out.println("  -g numvars depth - generate formulas with these params");
+        System.out.println("  -r numvars depth - get random cached formula ");
         System.out.println("  -c - test format CNF ");
+        System.out.println("  -p - Populate cached formulas");
     }
 
     /** ***************************************************************
@@ -487,6 +662,14 @@ public class GenPropFormulas {
                     System.out.println(gpf.truthTables.get(s));
                     System.out.println(gpf.tableaux.get(s));
                 }
+            }
+            if (args.length > 2 && args[0].equals("-r") && args[1] != null && args[2] != null ) {
+                System.out.println(getRandomGeneratedFormula(Integer.parseInt(args[1]), Integer.parseInt(args[2])));
+            }
+            if (args.length > 2 && args[0].equals("-p") && args[1] != null && args[2] != null ) {
+                System.out.println("Populating Formula Cache...");
+                populateCachedFormulas();
+                System.out.println("Formula Cache Successfully Populated!");
             }
             if (args.length > 0 && args[0].equals("-c")) {
                 debug = true;
