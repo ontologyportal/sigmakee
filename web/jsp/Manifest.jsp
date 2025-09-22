@@ -224,7 +224,6 @@ if (role != null && role.equalsIgnoreCase("admin")) {
 		</form>
 <%
 //	}
-}
 %>
 <P>
 <hr><b>Reload constituents</b>
@@ -233,7 +232,7 @@ if (role != null && role.equalsIgnoreCase("admin")) {
 	<input type="submit" name="reload" value="Reload">
 </form>
 <P>
-
+<% } %>
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <hr><b>Add a new constituent</b>
     <form name="kbUploader" id="kbUploader" action="AddConstituent.jsp" method="POST" enctype="multipart/form-data">
