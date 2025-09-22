@@ -147,7 +147,7 @@
           kbName3 = (String) kbNames.next();
           kb = (KB) KBmanager.getMgr().getKB(kbName3);
           System.out.println("INFO in KBs.jsp href: " + HTMLformatter.kbHref);
-          if (!kb.errors.isEmpty()) {
+/*          if (!kb.errors.isEmpty()) {
               out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
               kbErrorsFound = true;
            	  out.println(HTMLformatter.formatErrorsWarnings(kb.errors,kb));
@@ -155,7 +155,7 @@
           if (!kb.warnings.isEmpty()) {
               out.println("<br/><b>Warnings in KB " + kb.name + "</b><br>\n");
               out.println(HTMLformatter.formatErrorsWarnings(kb.warnings,kb));
-          }
+          }*/
      }
 
      out.println("<p>\n");

@@ -77,12 +77,6 @@
                 <input type="checkbox" id="generate" name="generate" value="true">
             </td>
         </tr>
-        <tr>
-            <td align="right">Populate full cache:&nbsp;</td>
-            <td>
-                <input type="submit" name="populate" value="Populate Cache">
-            </td>
-        </tr>
         <% } %>
         <tr>
             <td align="right">
