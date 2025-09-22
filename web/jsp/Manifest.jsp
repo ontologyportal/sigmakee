@@ -33,7 +33,7 @@ August 9, Acapulco, Mexico.  See also https://github.com/ontologyportal/sigmakee
     String reload = request.getParameter("reload");
     String refetch = request.getParameter("refetch");
     String result = "";
-
+    boolean isAdministrator = role.equalsIgnoreCase("admin");
     if (role == null || !role.equalsIgnoreCase("admin")) {
     	saveAs = null;
     	saveFile = null;
@@ -276,22 +276,25 @@ if (role != null && role.equalsIgnoreCase("admin")) {
 <% }
   HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/Browse.jsp?";
   String er = KBmanager.getMgr().getError();
-  if (!kb.errors.isEmpty()) {
-      Set<String> errors = kb.errors;
-      out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
-      out.println(HTMLformatter.formatErrorsWarnings(errors,kb));
-  }
-  if (!kb.warnings.isEmpty()) {
-      Set<String> warns = kb.warnings;
-      out.println("<br/><b>Warnings in KB " + kb.name + "</b><br>\n");
-      out.println(HTMLformatter.formatErrorsWarnings(warns,kb));
-  }
+  
+  if (isAdministrator) {
+    if (!kb.errors.isEmpty()) {
+        Set<String> errors = kb.errors;
+        out.println("<br/><b>Errors in KB " + kb.name + "</b><br>\n");
+        out.println(HTMLformatter.formatErrorsWarnings(errors,kb));
+    }
+    if (!kb.warnings.isEmpty()) {
+        Set<String> warns = kb.warnings;
+        out.println("<br/><b>Warnings in KB " + kb.name + "</b><br>\n");
+        out.println(HTMLformatter.formatErrorsWarnings(warns,kb));
+    }
 
-  if (StringUtil.isNonEmptyString(er))
-      out.println(er);
-  else
-      if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
+    if (StringUtil.isNonEmptyString(er))
+        out.println(er);
+    else
+        if (StringUtil.isNonEmptyString(constituent) && StringUtil.emptyString(delete))
           out.println("File " + constituent + " loaded successfully.");
+}
 %>
 <P>
   <a href="KBs.jsp">Return to home page</a><p>
