@@ -74,7 +74,7 @@
 
     int limit = 25;
     if (role != null && !role.equalsIgnoreCase("guest")) {
-        limit = 200;
+        limit = 100;
     }
     show.append(HTMLformatter.browserSectionFormatLimit(term,"", kb, language,flang,start,limit,arg,type));
  }
