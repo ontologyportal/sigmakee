@@ -49,7 +49,7 @@ public class HTMLformatter {
     public static String language = "EnglishLanguage";
 
     public static List<String> availableFormalLanguages =
-            new ArrayList<>(Arrays.asList("SUO-KIF", "TPTP", "traditionalLogic", "OWL"));
+            new ArrayList<>(Arrays.asList("SUO-KIF", "TPTP"/*, "traditionalLogic", "OWL"*/));
 
     public static boolean debug = false;
 
