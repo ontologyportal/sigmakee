@@ -112,7 +112,7 @@
         </b>
         <b>Language:&nbsp;
         <form method="get" action="<%=pageName%>.jsp" style="display:inline;">
-            <%= HTMLformatter.createMenu("lang", language, kb.availableLanguages(), "onchange='this.form.submit()'")%>
+            <%= if (kb != null) HTMLformatter.createMenu("lang", language, kb.availableLanguages(), "onchange='this.form.submit()'")%>
             <input type="hidden" name="kb" value="<%=kbName%>" />
         </form>
         </b>&nbsp;
