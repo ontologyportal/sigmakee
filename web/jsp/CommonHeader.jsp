@@ -94,6 +94,8 @@
                 }
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
                 out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
+            if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("LogLearn")))
+                out.println("<A href=\"LogLearn.jsp\"><b>Log Learn</b></A>&nbsp;|&nbsp;");
             if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("CheckKifFile")))
                 out.println("<A href=\"CheckKifFile.jsp\"><b>Check KIF File</b></A>&nbsp;|&nbsp;");
             if (role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("manageUsers"))) {

@@ -253,11 +253,6 @@ public class GenPropFormulas {
             result = SZSonto.OTHER;
         }
 
-        // 🔑 Delete the temporary prob file
-        if (f.exists() && !f.delete()) {
-            if (debug) System.err.println("Warning: could not delete " + f.getAbsolutePath());
-        }
-
         return result;
     }
 
@@ -409,7 +404,7 @@ public class GenPropFormulas {
                         gpf.init();
                         gpf.generateFormulas(10, numvars, depth);
                         
-                        if(gpf.contraResults != null && gpf.tautResults != null && gpf.satResults != null){
+                        if(gpf.contraResults == null && gpf.tautResults == null && gpf.satResults == null){
                             i--;
                             continue;
                         } 
@@ -554,6 +549,10 @@ public class GenPropFormulas {
         truthTables.put(formStr,encoded);
         encoded = encodeTab(formStr);
         tableaux.put(formStr,encoded);
+
+        if (fname.exists() && !fname.delete()) {
+            if (debug) System.err.println("Warning: could not delete " + fname.getAbsolutePath());
+        }
     }
 
     /** ***************************************************************
