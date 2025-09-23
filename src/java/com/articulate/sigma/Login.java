@@ -10,9 +10,9 @@ public class Login {
      */
     public static String validateUser(String inputUserid, String inputPwd) {
         
-        // if (inputUserid != null && inputUserid.equalsIgnoreCase("admin") &&
-        //     inputPwd.equalsIgnoreCase("admin"))
-        //     return "admin";
+        if (inputUserid != null && inputUserid.equalsIgnoreCase("admin") &&
+            inputPwd.equalsIgnoreCase("admin"))
+            return "admin";
         return "user";
     }
 

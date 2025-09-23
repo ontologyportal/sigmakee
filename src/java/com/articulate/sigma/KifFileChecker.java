@@ -32,71 +32,19 @@ import java.util.regex.Pattern;
  * No UI / jEdit dependencies.
  */
 public class KifFileChecker {
+    public static boolean debug = false;
 
-    public static boolean debug = true;
-
-    /** ***************************************************************
-     * Print CLI usage information.
-     */
-    public static void showHelp() {
-        System.out.println("KifFileChecker - Headless KIF syntax/semantic checker");
-        System.out.println("Options:");
-        System.out.println("  -h              Show this help screen");
-        System.out.println("  -c <file.kif>   Check the given KIF file and print diagnostics");
-    }
-
-    /** ***************************************************************
-     * Command-line entry point.
-     * Usage examples:
-     *   java com.articulate.sigma.KifFileChecker -h
-     *   java com.articulate.sigma.KifFileChecker -c myfile.kif
-     */
-    public static void main(String[] args) {
-
-        if (args == null || args.length == 0 || "-h".equals(args[0])) {
-            showHelp();
-            return;
-        }
-        if ("-c".equals(args[0]) && args.length > 1) {
-            String fname = args[1];
-            try {
-                KifFileChecker kfc = new KifFileChecker();
-                String contents = String.join("\n", FileUtil.readLines(fname));
-                List<ErrRec> errors = kfc.check(contents);
-                System.out.println("*******************************************************");
-                if (errors.isEmpty()) {
-                    System.out.println("No errors found in " + fname);
-                } else {
-                    System.out.println("Diagnostics for " + fname + ":");
-                    for (ErrRec e : errors) {
-                        System.out.println(e.toString());
-                    }
-                }
-            } catch (Exception e) {        
-            System.out.println("*******************************************************");
-                System.err.println("Failed to read or check file: " + fname);
-                e.printStackTrace();
-            }
-        } else {
-            showHelp();
-        }
-    }
-
-    /** ***************************************************************
-     * Check KIF content without a filename.
-     * @param contents the KIF text to check
-     * @return list of error and warning diagnostics
-     */
-    public static List<ErrRec> check(String contents) {
-        return check(contents, "(buffer)");
-    }
-
-    /** ***************************************************************
+    /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
-    public static List<ErrRec> check(String contents, String fileName) {
+    public List<String> check(String contents) {
+
+        Map<String, Set<String>> localInstances = new HashMap<>();
+        Map<String, Set<String>> localSubclasses = new HashMap<>();
+        Set<String> localIndividuals = new HashSet<>();
+        Set<String> localClasses = new HashSet<>();
 
         Set<String> localIndividuals = new HashSet<>();
         Set<String> localSubclasses = new HashSet<>();
@@ -112,6 +60,10 @@ public class KifFileChecker {
         for (Formula f : localKif.formulaMap.values())
             harvestLocalFacts(f, localIndividuals, localSubclasses);
         String[] bufferLines = contents.split("\n", -1);
+        for (Formula f : kif.formulaMap.values()) {
+            harvestLocalFacts(f, localInstances, localSubclasses, localIndividuals, localClasses);
+        }
+
         KB kb = SUMOtoTFAform.kb;
         for (Formula f : localKif.formulaMap.values()) {
             if (debug) System.out.println("Checking formula: " + f);
@@ -420,42 +372,49 @@ public class KifFileChecker {
         return new int[]{-1, -1};
     }
 
-    private static boolean isTermChar(char c) {
-        return Character.isLetterOrDigit(c) || c == '.' || c == '_';
-    }
+private static boolean isTermChar(char c) {
+    return Character.isLetterOrDigit(c) || c == '-' || c == '_';
+}
 
-    /** ***************************************************************
-     * Recursively collect local individuals and subclasses from formulas.
-     *
-     * @param f                 formula to traverse
-     * @param localIndividuals  set to populate with individuals
-     * @param localSubclasses   set to populate with subclasses
-     */
-    private static void harvestLocalFacts(Formula f, Set<String> localIndividuals, Set<String> localSubclasses) {
+
+    /** Recursively collect local facts: instance, subclass, etc. */
+    private void harvestLocalFacts(Formula f,
+                                Map<String, Set<String>> localInstances,
+                                Map<String, Set<String>> localSubclasses,
+                                Set<String> localIndividuals,
+                                Set<String> localClasses) {
 
         if (f == null || f.atom()) return;
+
         String functor = f.car();
         List<String> args = f.argumentsToArrayListString(1);
-        if (args != null && args.size() == 2){
-            String indivOrChild = args.get(0), parentClass = args.get(1);
-            if(isConst(indivOrChild) && isConst(parentClass)){
-                if ("instance".equals(functor)) {
-                    localIndividuals.add(indivOrChild);
-                } else if ("subclass".equals(functor) && args != null && args.size() == 2) {
-                    localSubclasses.add(indivOrChild);
-                }
+
+        if ("instance".equals(functor) && args != null && args.size() == 2) {
+            String indiv = args.get(0), cls = args.get(1);
+            if (isConst(indiv) && isConst(cls)) {
+                localIndividuals.add(indiv);
+                if (debug) System.out.println("Local individual: " + indiv);
             }
         }
-        if (f.listP())
-            for (int i = 1; i < f.listLength(); i++) 
-                harvestLocalFacts(f.getArgument(i), localIndividuals, localSubclasses);
+        else if ("subclass".equals(functor) && args != null && args.size() == 2) {
+            String child = args.get(0), parent = args.get(1);
+            if (isConst(child) && isConst(parent)) {
+                localClasses.add(child);
+                if (debug) System.out.println("Local class: " + child);
+            }
+        }
+
+        // 🔁 Recurse into all argument subformulas
+        if (f.listP()) {
+            for (int i = 1; i < f.listLength(); i++) {
+                Formula sub = f.getArgument(i);
+                harvestLocalFacts(sub, localInstances, localSubclasses, localIndividuals, localClasses);
+            }
+        }
     }
 
-    /** ***************************************************************
-     * Check if a token represents a constant rather than a variable or literal.
-     * @param tok token string
-     * @return true if constant, false otherwise
-     */
+
+
     private static boolean isConst(String tok) {
         return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
     }
