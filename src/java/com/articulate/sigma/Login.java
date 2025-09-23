@@ -9,8 +9,8 @@ public class Login {
      * else is given read-only privileges.
      */
     public static String validateUser(String inputUserid, String inputPwd) {
-
-        if (inputUserid.equalsIgnoreCase("admin") &&
+        
+        if (inputUserid != null && inputUserid.equalsIgnoreCase("admin") &&
             inputPwd.equalsIgnoreCase("admin"))
             return "admin";
         return "user";

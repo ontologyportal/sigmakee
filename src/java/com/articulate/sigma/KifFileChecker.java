@@ -33,10 +33,6 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
     public static boolean debug = false;
-    private Map<String, Set<String>> localInstances = new HashMap<>();
-    private Map<String, Set<String>> localSubclasses = new HashMap<>();
-    private Set<String> localIndividuals = new HashSet<>();
-    private Set<String> localClasses = new HashSet<>();
 
     /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
@@ -44,6 +40,11 @@ public class KifFileChecker {
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
     public List<String> check(String contents) {
+
+        Map<String, Set<String>> localInstances = new HashMap<>();
+        Map<String, Set<String>> localSubclasses = new HashMap<>();
+        Set<String> localIndividuals = new HashSet<>();
+        Set<String> localClasses = new HashSet<>();
 
         SUMOtoTFAform.initOnce();
         List<String> msgs = new ArrayList<>();
@@ -75,7 +76,9 @@ public class KifFileChecker {
         // }
 
         String[] bufferLines = contents.split("\n", -1);
-        harvestLocalFacts(kif);
+        for (Formula f : kif.formulaMap.values()) {
+            harvestLocalFacts(f, localInstances, localSubclasses, localIndividuals, localClasses);
+        }
 
         KB kb = SUMOtoTFAform.kb;
         FormulaPreprocessor fp = SUMOtoTFAform.fp;
@@ -189,33 +192,43 @@ private static boolean isTermChar(char c) {
 }
 
 
-    /** Collect local facts from formulas: instance, subclass, names. */
-    private void harvestLocalFacts(KIF kif) {
-        localInstances.clear();
-        localSubclasses.clear();
-        localIndividuals.clear();
-        localClasses.clear();
+    /** Recursively collect local facts: instance, subclass, etc. */
+    private void harvestLocalFacts(Formula f,
+                                Map<String, Set<String>> localInstances,
+                                Map<String, Set<String>> localSubclasses,
+                                Set<String> localIndividuals,
+                                Set<String> localClasses) {
 
-        for (Formula f : kif.formulaMap.values()) {
-            if (f == null || f.atom()) continue;
-            String functor = f.car();
-            List<String> args = f.argumentsToArrayListString(1);
-            if (args == null) continue;
+        if (f == null || f.atom()) return;
 
-            if ("instance".equals(functor) && args.size() == 2) {
-                String indiv = args.get(0), cls = args.get(1);
-                if (isConst(indiv) && isConst(cls)) {
-                    localIndividuals.add(indiv);
-                }
+        String functor = f.car();
+        List<String> args = f.argumentsToArrayListString(1);
+
+        if ("instance".equals(functor) && args != null && args.size() == 2) {
+            String indiv = args.get(0), cls = args.get(1);
+            if (isConst(indiv) && isConst(cls)) {
+                localIndividuals.add(indiv);
+                if (debug) System.out.println("Local individual: " + indiv);
             }
-            else if ("subclass".equals(functor) && args.size() == 2) {
-                String child = args.get(0), parent = args.get(1);
-                if (isConst(child) && isConst(parent)) {
-                    localClasses.add(child);
-                }
+        }
+        else if ("subclass".equals(functor) && args != null && args.size() == 2) {
+            String child = args.get(0), parent = args.get(1);
+            if (isConst(child) && isConst(parent)) {
+                localClasses.add(child);
+                if (debug) System.out.println("Local class: " + child);
+            }
+        }
+
+        // 🔁 Recurse into all argument subformulas
+        if (f.listP()) {
+            for (int i = 1; i < f.listLength(); i++) {
+                Formula sub = f.getArgument(i);
+                harvestLocalFacts(sub, localInstances, localSubclasses, localIndividuals, localClasses);
             }
         }
     }
+
+
 
     private static boolean isConst(String tok) {
         return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
