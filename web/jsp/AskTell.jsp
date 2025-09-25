@@ -17,6 +17,19 @@ if (!role.equalsIgnoreCase("admin")) {
     response.sendRedirect("login.html");
     return;
 }
+<%
+public static String FormulaToEnglish(String formula) {
+    try {
+        if (formula == null || formula.trim().isEmpty() || !formula.trim().startsWith("(")) {
+            return null;
+        }
+        return LanguageFormatter.toEnglish(formula);
+    } catch (Exception e) {
+            return null;
+        }  
+}
+%>
+
 
   String systemsDir = KBmanager.getMgr().getPref("systemsDir");
 %>
@@ -247,6 +260,16 @@ if (!role.equalsIgnoreCase("admin")) {
         	out.println("<a href=\"" + link + "\">graphical proof</a><P>");
         	System.out.println("in AskTell.jsp: HTML format results --------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+            out.println("<p><b>Proof Results in English</b></br>");
+            for (TPTPFormula ps : tpp.proof) {
+                if (ps != null && !StringUtil.emptyString(ps.sumo)) {
+                    String english = FormulaToEnglish(ps.sumo);
+                    if (english != null) {
+                        out.println("<b>SUMO-KIF:</b>" + ps.sumo + "</br>");
+                        out.println("<b>English:</b>" + english + "</br>");
+                    }
+                }
+            }
             System.out.println("in AskTell.jsp: EProver status: " + tpp.status);
             if (!StringUtil.emptyString(tpp.status))
                 out.println("Status: " + tpp.status);
@@ -275,6 +298,16 @@ if (!role.equalsIgnoreCase("admin")) {
             tpp.processAnswersFromProof(vampire.qlist,stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+            out.println("<p><b>Proof Results in English</b></br>");
+            for (TPTPFormula ps : tpp.proof) {
+                if (ps != null && !StringUtil.emptyString(ps.sumo)) {
+                    String english = FormulaToEnglish(ps.sumo);
+                    if (english != null) {
+                        out.println("<b>SUMO-KIF:</b>" + ps.sumo + "</br>");
+                        out.println("<b>English:</b>" + english + "</br>");
+                    }
+                }
+            }
         }
     }
     if (inferenceEngine.equals("LEO")) {
@@ -293,6 +326,16 @@ if (!role.equalsIgnoreCase("admin")) {
             tpp.processAnswersFromProof(kb.leo.qlist,stmt);
             System.out.println("in AskTell.jsp: sending the HTML formatter--------------");
             out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
+            out.println("<p><b>Proof Results in English</b></br>");
+            for (TPTPFormula ps : tpp.proof) {
+                if (ps != null && !StringUtil.emptyString(ps.sumo)) {
+                    String english = FormulaToEnglish(ps.sumo);
+                    if (english != null) {
+                        out.println("<b>SUMO-KIF:</b>" + ps.sumo + "</br>");
+                        out.println("<b>English:</b>" + english + "</br>");
+                    }
+                }
+            }
         }
 
     }
