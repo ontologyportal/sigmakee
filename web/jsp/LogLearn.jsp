@@ -11,7 +11,11 @@
      * This software is released under the GNU Public License
      * http://www.gnu.org/copyleft/gpl.html
      */
-
+    
+    if (role.equals("guest")){
+      response.sendRedirect("KBs.jsp");
+    }
+    
     GenPropFormulas gpf = new GenPropFormulas();
     String sigmaHome = System.getenv("SIGMA_HOME");
     if (StringUtil.emptyString(sigmaHome))
