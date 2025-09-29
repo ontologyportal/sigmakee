@@ -331,11 +331,9 @@ function downloadKifFile() {
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
   String fileName = (String) request.getAttribute("fileName");
-  List<String> errors = (List<String>) request.getAttribute("errors");
+  List<KifFileChecker.ErrRec> errors = (List<KifFileChecker.ErrRec>) request.getAttribute("errors");
   List<String> fileContent = (List<String>) request.getAttribute("fileContent");
   String codeContent = (String) request.getAttribute("codeContent");
-
-  // Always show the layout now
 %>
 <div class="layout">
   <!-- Left column: Code -->
@@ -380,29 +378,25 @@ function downloadKifFile() {
       }
     } else {
       java.util.Set<Integer> errorLines = new java.util.HashSet<>();
-      java.util.regex.Pattern p = java.util.regex.Pattern.compile("Line\\s*#(\\d+)");
-      for (String e : errors) {
-          String l = e.trim();
-          java.util.regex.Matcher m = p.matcher(l);
-          if (m.find()) {
-              try {
-                  errorLines.add(Integer.parseInt(m.group(1)));
-              } catch (NumberFormatException ignore) {}
+
+      for (KifFileChecker.ErrRec e : errors) {
+          if (e.line >= 0) {
+              errorLines.add(e.line + 1); // ErrRec.line is 0-based, convert to 1-based if needed
           }
       }
 
       boolean first = true;
-      for (String e : errors) {
+      for (KifFileChecker.ErrRec e : errors) {
           if (!first) out.print("<br/><br/>");
-          out.print(esc(e));
+          out.print(esc(e.toString()));   // or esc(e.msg) if you only want the message
           first = false;
       }
     }
 %>
+
     </div>
   </div>
 </div>
-<%@ include file="Postlude.jsp" %>
 <script>
 // Initialize CodeMirror on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -417,5 +411,7 @@ function refreshErrorHighlighting() {
   }
 }
 </script>
+
+<%@ include file="Postlude.jsp" %>
 </body>
 </html>

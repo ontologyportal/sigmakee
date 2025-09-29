@@ -33,13 +33,42 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
     public static boolean debug = false;
+    
+    public enum Severity {
+        ERROR,
+        WARNING
+    }
 
+    public static final class ErrRec {
+        public final Severity severity;
+        public final String file;
+        public final int line;
+        public final int start;
+        public final int end;
+        public final String msg;
+
+        public ErrRec(Severity severity, String file, int line, int start, int end, String msg) {
+            this.severity = severity;
+            this.file = file;
+            this.line = line;
+            this.start = start;
+            this.end = end;
+            this.msg = msg;
+        }
+
+        @Override
+        public String toString() {
+            return severity + " in " + file + " at line " + (line+1) + ": " + msg;
+        }
+    }
     /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
-    public List<String> check(String contents) {
+    // Inside KifFileChecker.java
+
+    public List<KifFileChecker.ErrRec> check(String contents) {
 
         Map<String, Set<String>> localInstances = new HashMap<>();
         Map<String, Set<String>> localSubclasses = new HashMap<>();
@@ -47,7 +76,7 @@ public class KifFileChecker {
         Set<String> localClasses = new HashSet<>();
 
         SUMOtoTFAform.initOnce();
-        List<String> msgs = new ArrayList<>();
+        List<KifFileChecker.ErrRec> msgs = new ArrayList<>();
         if (contents == null) contents = "";
         if (debug) System.out.println("*******************************************************");
 
@@ -57,26 +86,35 @@ public class KifFileChecker {
             for (String er : sv.errors) {
                 int line = getLineNum(er);
                 int col  = getOffset(er);
-                msgs.add(fmt(line == 0 ? 1 : line, Math.max(col, 1), "ERROR", er));
+                msgs.add(new KifFileChecker.ErrRec(
+                    Severity.ERROR,
+                    "(buffer)",
+                    (line == 0 ? line : line - 1), // jEdit uses 0-based line numbers
+                    Math.max(col, 1),              // start offset
+                    Math.max(col, 1) + 1,          // end offset
+                    er                             // the message text
+                ));
             }
             return msgs;
         }
 
         // ---------- 2) Parse to KIF ----------
-        KIF kif = new KIF();
-        kif.filename = "(buffer)";
+        KIF localKif = new KIF();
+        localKif.filename = "(buffer)";
         try (Reader r = new StringReader(contents)) {
-            kif.parse(r);
+            localKif.parse(r);
         } catch (Exception e) {
-            msgs.add(fmt(1, 1, "ERROR", "Parse failure: " + e));
+            msgs.add(new KifFileChecker.ErrRec(
+                Severity.ERROR,
+                localKif.filename,
+                0, 0, 1,
+                "Parse error: " + e.getMessage()
+            ));
             return msgs;
         }
-        // if (!parseKif(kif, contents, msgs)) {
-        //     return msgs;
-        // }
 
         String[] bufferLines = contents.split("\n", -1);
-        for (Formula f : kif.formulaMap.values()) {
+        for (Formula f : localKif.formulaMap.values()) {
             harvestLocalFacts(f, localInstances, localSubclasses, localIndividuals, localClasses);
         }
 
@@ -84,26 +122,40 @@ public class KifFileChecker {
         FormulaPreprocessor fp = SUMOtoTFAform.fp;
 
         // ---------- 3) Semantic checks ----------
-        for (Formula f : kif.formulaMap.values()) {
+        for (Formula f : localKif.formulaMap.values()) {
             int formulaLine = findFormulaInBuffer(f.toString(), bufferLines);
             if (debug) System.out.println("Checking formula: " + f);
 
             // Quantifier not in statement
             if (Diagnostics.quantifierNotInStatement(f)) {
-                msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                            "ERROR", "Quantified variable not used in statement body"));
+                msgs.add(new KifFileChecker.ErrRec(
+                    Severity.ERROR, localKif.filename,
+                    (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                    1, 2,
+                    "Quantified variable not used in statement body"
+                ));
             }
+
             // Existential quantifier in Antecedent
             if (Diagnostics.existentialInAntecedent(f)) {
-                msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                            "ERROR", "Existential quantifier in Antecedent"));
+                msgs.add(new KifFileChecker.ErrRec(
+                    Severity.ERROR, localKif.filename,
+                    (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                    1, 2,
+                    "Existential quantifier in Antecedent"
+                ));
             }
+
             // Single-use variables
             Set<String> singleUse = Diagnostics.singleUseVariables(f);
             if (singleUse != null) {
                 for (String v : singleUse) {
-                    msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                        "ERROR", "Variable used only once: " + v));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.ERROR, localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                        1, 2,
+                        "Variable used only once: " + v
+                    ));
                 }
             }
 
@@ -111,14 +163,20 @@ public class KifFileChecker {
             Set<Formula> processed = fp.preProcess(f, false, kb);
             if (f.errors != null) {
                 for (String er : f.errors) {
-                    msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                                "ERROR", er));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.ERROR, localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                        1, 2, er
+                    ));
                 }
             }
             if (f.warnings != null) {
                 for (String w : f.warnings) {
-                    msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                                "WARNING", w));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.WARNING, localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                        1, 2, w
+                    ));
                 }
             }
 
@@ -126,8 +184,11 @@ public class KifFileChecker {
             if (SUMOtoTFAform.errors != null && !SUMOtoTFAform.errors.isEmpty()
                     && processed.size() == 1) {
                 for (String er : SUMOtoTFAform.errors) {
-                    msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                                "ERROR", er));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.ERROR, localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                        1, 2, er
+                    ));
                 }
                 SUMOtoTFAform.errors.clear();
             }
@@ -135,8 +196,11 @@ public class KifFileChecker {
             // KButilities validity check
             if (!KButilities.isValidFormula(kb, f.toString())) {
                 for (String er : KButilities.errors) {
-                    msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                                "ERROR", er));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.ERROR, localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                        1, 2, er
+                    ));
                 }
                 KButilities.errors.clear();
             }
@@ -145,32 +209,39 @@ public class KifFileChecker {
             Set<String> unquant = Diagnostics.unquantInConsequent(f);
             if (unquant != null) {
                 for (String uq : unquant) {
-                    msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1, "ERROR", "Unquantified variable in consequent: " + uq));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.ERROR, localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1,
+                        1, 2,
+                        "Unquantified variable in consequent: " + uq
+                    ));
                 }
             }
-
-            // Term below Entity + unknown terms
+            // ✅ Term below Entity + unknown terms
             Set<String> terms = f.collectTerms();
             for (String t : terms) {
                 if (skip(t)) continue;
 
                 boolean coveredByLocal = localIndividuals.contains(t) || localClasses.contains(t);
                 if (!coveredByLocal && Diagnostics.termNotBelowEntity(t, kb)) {
-                msgs.add(fmt(formulaLine > 0 ? formulaLine : f.startLine, 1,
-                                            "ERROR", "Term not below Entity: " + t));
+                    msgs.add(new KifFileChecker.ErrRec(
+                        Severity.ERROR,
+                        localKif.filename,
+                        (formulaLine > 0 ? formulaLine : f.startLine) - 1, // keep consistency
+                        1, 2,
+                        "Term not below Entity: " + t
+                    ));
                 }
             }
         }
 
-        Pattern linePattern = Pattern.compile("Line\\s*#(\\d+)");
-        msgs.sort(Comparator.comparingInt((String m) -> {
-            Matcher matcher = linePattern.matcher(m);
-            if (matcher.find()) {
-                return Integer.parseInt(matcher.group(1));
+            // ---------- 4) Done, return results ----------
+        if (true) {
+            System.out.println("KifFileChecker.check(): returning " + msgs.size() + " diagnostics:");
+            for (ErrRec e : msgs) {
+                System.out.println("  " + e.toString());
             }
-            return Integer.MAX_VALUE;
-        }));
-
+        }
         return msgs;
     }
 
@@ -188,7 +259,7 @@ private static int findTermInLine(String line, String term, int startPos) {
 }
 
 private static boolean isTermChar(char c) {
-    return Character.isLetterOrDigit(c) || c == '-' || c == '_';
+    return Character.isLetterOrDigit(c) || c == '.' || c == '_';
 }
 
 
@@ -540,14 +611,14 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
             try {
                 KifFileChecker kfc = new KifFileChecker();
                 String contents = String.join("\n", FileUtil.readLines(fname));
-                List<String> errors = kfc.check(contents);        
+                List<KifFileChecker.ErrRec> errors = kfc.check(contents);
                 System.out.println("*******************************************************");
                 if (errors.isEmpty()) {
                     System.out.println("No errors found in " + fname);
                 } else {
                     System.out.println("Diagnostics for " + fname + ":");
-                    for (String e : errors) {
-                        System.out.println(e);
+                    for (KifFileChecker.ErrRec e : errors) {
+                        System.out.println(e.toString());
                     }
                 }
             } catch (Exception e) {

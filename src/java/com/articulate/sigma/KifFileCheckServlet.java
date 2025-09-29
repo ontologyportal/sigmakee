@@ -59,7 +59,7 @@ public class KifFileCheckServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
-        List<String> errors = Collections.emptyList();
+        List<KifFileChecker.ErrRec> errors = Collections.emptyList();
         List<String> lines = null;
         String fileName = null;
         String text = null;
@@ -78,7 +78,7 @@ public class KifFileCheckServlet extends HttpServlet {
 
             // Validate the code content
             try {
-                Future<List<String>> future = KifCheckWorker.submit(text);
+                Future<List<KifFileChecker.ErrRec>> future = KifCheckWorker.submit(text);
                 errors = future.get(); // block until job is processed
             } catch (Exception e) {
                 request.setAttribute("errorMessage",
@@ -112,7 +112,7 @@ public class KifFileCheckServlet extends HttpServlet {
 
             // Enqueue request for sequential processing ---
             try {
-                Future<List<String>> future = KifCheckWorker.submit(text);
+                Future<List<KifFileChecker.ErrRec>> future = KifCheckWorker.submit(text);
                 errors = future.get(); // block until job is processed
             } catch (Exception e) {
                 request.setAttribute("errorMessage",
@@ -128,16 +128,10 @@ public class KifFileCheckServlet extends HttpServlet {
         // Highlight lines with errors
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
-            for (String e : errors) {
-                Pattern p = Pattern.compile("#(\\d+):");
-                Matcher m = p.matcher(e);
-                if (m.find()) {
-                    try {
-                        int ln = Integer.parseInt(m.group(1));
-                        if (ln >= 1 && ln <= errorMask.length) {
-                            errorMask[ln - 1] = true;
-                        }
-                    } catch (NumberFormatException ignore) { }
+            for (KifFileChecker.ErrRec e : errors) {   // CHANGED
+                int ln = e.line + 1; // since ErrRec stores 0-based line
+                if (ln >= 1 && ln <= errorMask.length) {
+                    errorMask[ln - 1] = true;
                 }
             }
         }
