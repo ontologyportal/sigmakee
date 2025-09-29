@@ -1,4 +1,5 @@
 <%@include file="Prelude.jsp" %>
+<%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-present,
     Infosys (c) 2017-2020.
@@ -17,7 +18,7 @@ if (!role.equalsIgnoreCase("admin")) {
     response.sendRedirect("login.html");
     return;
 }
-<%
+<%!
 public static String FormulaToEnglish(String formula) {
     try {
         if (formula == null || formula.trim().isEmpty() || !formula.trim().startsWith("(")) {
@@ -40,7 +41,7 @@ public static String FormulaToEnglish(String formula) {
 </HEAD>
 <%
     System.out.println("INFO in AskTell.jsp");
-    StringBuilder status = new StringBuilder();
+    StringBuffer status = new StringBuffer();
     ArrayList processedStmts = null;
 
     String req = request.getParameter("request");
@@ -89,21 +90,21 @@ public static String FormulaToEnglish(String formula) {
             inferenceEngine = "Vampire";
     }
     System.out.println("INFO in AskTell.jsp: Engine: " + inferenceEngine);
-    if (request.getParameter("maxAnswers") != null)
+    if (request.getParameter("maxAnswers") != null) 
         maxAnswers = Integer.parseInt(request.getParameter("maxAnswers"));
     if (request.getParameter("timeout") != null)
         timeout= Integer.parseInt(request.getParameter("timeout"));
-
+    
     if ((kbName == null) || kbName.equals("")) {
         System.out.println("Error: No knowledge base specified");
         return;
     }
-
+    
     if (stmt != null)
         System.out.println("  text box input: " + stmt.trim());
 
     if (stmt == null || stmt.equalsIgnoreCase("null"))   // check if there is an attribute for stmt
-        stmt = "(instance ?X Relation)";
+        stmt = "(instance ?X Relation)";    
     else {
         if (stmt.trim().charAt(0) != '(')
             english = true;
@@ -116,7 +117,7 @@ public static String FormulaToEnglish(String formula) {
             }
         }
     }
-
+            
     if (english) {
         englishStatement = stmt;
         if (!KBmanager.getMgr().getPref("loadCELT").equalsIgnoreCase("yes") || kb.celt == null) {
@@ -131,7 +132,7 @@ public static String FormulaToEnglish(String formula) {
         }
         System.out.println("INFO in AskTell.jsp: Completed translation.");
     }
-
+    
     if (stmt == null || stmt.length() < 2 || stmt.trim().charAt(0) != '(') {
         syntaxError = true;
         status.append("<font color='red'>Error: Syntax Error or parsing failure in statement: " + englishStatement + "</font><br>\n");
@@ -187,7 +188,7 @@ public static String FormulaToEnglish(String formula) {
         String pageString = "Inference Interface";
     %>
     <%@include file="CommonHeader.jsp" %>
-
+    
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>
     <br>
@@ -263,10 +264,10 @@ public static String FormulaToEnglish(String formula) {
             out.println("<p><b>Proof Results in English</b></br>");
             for (TPTPFormula ps : tpp.proof) {
                 if (ps != null && !StringUtil.emptyString(ps.sumo)) {
-                    String english = FormulaToEnglish(ps.sumo);
-                    if (english != null) {
+                    String englishTranslation = FormulaToEnglish(ps.sumo);
+                    if (englishTranslation != null) {
                         out.println("<b>SUMO-KIF:</b>" + ps.sumo + "</br>");
-                        out.println("<b>English:</b>" + english + "</br>");
+                        out.println("<b>English:</b>" + englishTranslation + "</br>");
                     }
                 }
             }
@@ -284,11 +285,11 @@ public static String FormulaToEnglish(String formula) {
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
         if (vampireMode.equals("Custom"))
             com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
-        if (req.equalsIgnoreCase("ask") && (vampire == null || vampire.output == null))
+        if (vampire == null || vampire.output == null)
             out.println("<font color='red'>Error.  No response from Vampire.</font>");
-        else if (vampire != null && (vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
+        else if ((vampire.output != null) && (vampire.output.indexOf("Syntax error detected") != -1))
             out.println("<font color='red'>A syntax error was detected in your input.</font>");
-        else if (vampire != null && vampire.output != null) {
+        else if (vampire.output != null) {
             System.out.println("in AskTell.jsp: trying Vampire--------------");
             com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
@@ -301,10 +302,10 @@ public static String FormulaToEnglish(String formula) {
             out.println("<p><b>Proof Results in English</b></br>");
             for (TPTPFormula ps : tpp.proof) {
                 if (ps != null && !StringUtil.emptyString(ps.sumo)) {
-                    String english = FormulaToEnglish(ps.sumo);
-                    if (english != null) {
+                    String englishTranslation = FormulaToEnglish(ps.sumo);
+                    if (englishTranslation != null) {
                         out.println("<b>SUMO-KIF:</b>" + ps.sumo + "</br>");
-                        out.println("<b>English:</b>" + english + "</br>");
+                        out.println("<b>English:</b>" + englishTranslation + "</br>");
                     }
                 }
             }
@@ -329,10 +330,10 @@ public static String FormulaToEnglish(String formula) {
             out.println("<p><b>Proof Results in English</b></br>");
             for (TPTPFormula ps : tpp.proof) {
                 if (ps != null && !StringUtil.emptyString(ps.sumo)) {
-                    String english = FormulaToEnglish(ps.sumo);
-                    if (english != null) {
+                    String englishTranslation = FormulaToEnglish(ps.sumo);
+                    if (englishTranslation != null) {
                         out.println("<b>SUMO-KIF:</b>" + ps.sumo + "</br>");
-                        out.println("<b>English:</b>" + english + "</br>");
+                        out.println("<b>English:</b>" + englishTranslation + "</br>");
                     }
                 }
             }
@@ -346,4 +347,3 @@ public static String FormulaToEnglish(String formula) {
 
 </BODY>
 </HTML>
-
