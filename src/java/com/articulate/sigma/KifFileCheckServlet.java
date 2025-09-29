@@ -120,7 +120,11 @@ public class KifFileCheckServlet extends HttpServlet {
 
             // Enqueue request for sequential processing ---
             try {
+<<<<<<< HEAD
                 Future<List<ErrRec>> future = KifCheckWorker.submit(text);
+=======
+                Future<List<KifFileChecker.ErrRec>> future = KifCheckWorker.submit(text);
+>>>>>>> 4bb97797 (Added ErrRec class to check kif file)
                 errors = future.get(); // block until job is processed
             } catch (Exception e) {
                 request.setAttribute("errorMessage",
@@ -136,7 +140,11 @@ public class KifFileCheckServlet extends HttpServlet {
         // Highlight lines with errors
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
+<<<<<<< HEAD
             for (ErrRec e : errors) {   // CHANGED
+=======
+            for (KifFileChecker.ErrRec e : errors) {   // CHANGED
+>>>>>>> 4bb97797 (Added ErrRec class to check kif file)
                 int ln = e.line + 1; // since ErrRec stores 0-based line
                 if (ln >= 1 && ln <= errorMask.length) {
                     errorMask[ln - 1] = true;

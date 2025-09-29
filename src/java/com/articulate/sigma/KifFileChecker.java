@@ -33,13 +33,42 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
     public static boolean debug = false;
+    
+    public enum Severity {
+        ERROR,
+        WARNING
+    }
 
+    public static final class ErrRec {
+        public final Severity severity;
+        public final String file;
+        public final int line;
+        public final int start;
+        public final int end;
+        public final String msg;
+
+        public ErrRec(Severity severity, String file, int line, int start, int end, String msg) {
+            this.severity = severity;
+            this.file = file;
+            this.line = line;
+            this.start = start;
+            this.end = end;
+            this.msg = msg;
+        }
+
+        @Override
+        public String toString() {
+            return severity + " in " + file + " at line " + (line+1) + ": " + msg;
+        }
+    }
     /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
-    public List<String> check(String contents) {
+    // Inside KifFileChecker.java
+
+    public List<KifFileChecker.ErrRec> check(String contents) {
 
         Map<String, Set<String>> localInstances = new HashMap<>();
         Map<String, Set<String>> localSubclasses = new HashMap<>();
@@ -60,7 +89,7 @@ public class KifFileChecker {
         for (Formula f : localKif.formulaMap.values())
             harvestLocalFacts(f, localIndividuals, localSubclasses);
         String[] bufferLines = contents.split("\n", -1);
-        for (Formula f : kif.formulaMap.values()) {
+        for (Formula f : localKif.formulaMap.values()) {
             harvestLocalFacts(f, localInstances, localSubclasses, localIndividuals, localClasses);
         }
 
@@ -373,7 +402,7 @@ public class KifFileChecker {
     }
 
 private static boolean isTermChar(char c) {
-    return Character.isLetterOrDigit(c) || c == '-' || c == '_';
+    return Character.isLetterOrDigit(c) || c == '.' || c == '_';
 }
 
 
