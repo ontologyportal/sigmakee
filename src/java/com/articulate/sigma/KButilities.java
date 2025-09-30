@@ -180,7 +180,19 @@ public class KButilities implements ServletContextListener {
         return kryo;
     });
 
-    public static final String SIGMA_HOME = System.getenv("SIGMA_HOME");
+    public static final String SIGMA_HOME =
+        (System.getenv("SIGMA_HOME") != null && !System.getenv("SIGMA_HOME").isEmpty()
+                ? System.getenv("SIGMA_HOME")
+                : System.getProperty("user.home") + File.separator + ".sigmakee");
+
+    // One-time log: runs when KButilities class is loaded
+    static {
+        final String env = System.getenv("SIGMA_HOME");
+        final String msg = (env == null || env.isEmpty())
+                ? "SIGMA_HOME not set in environment; defaulting to " + SIGMA_HOME
+                : "SIGMA_HOME set to " + SIGMA_HOME;
+        System.out.println("[KButilities] " + msg);
+    }
 
     public static final int ONE_K = 1000;
 
