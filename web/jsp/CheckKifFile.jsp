@@ -17,7 +17,6 @@
    <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
    <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
 
-
   <!-- All CSS here -->
   <style>
     body { font-family: system-ui, sans-serif; margin: 24px; }
@@ -138,7 +137,20 @@
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
   }
 %>
+
 <div class="card">
+<div class="language-select">
+  <label>
+    <input type="radio" name="language" value="kif" checked 
+           onchange="switchLanguage(this.value)">
+    SUO-KIF
+  </label>
+  <label style="margin-left:16px;">
+    <input type="radio" name="language" value="tptp" 
+           onchange="switchLanguage(this.value)">
+    TPTP
+  </label>
+</div>
 
 <!-- Hidden form for file upload -->
 <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
@@ -308,9 +320,13 @@ function submitCodeForCheck() {
 function downloadKifFile() {
   const codeContent = codeEditor.getValue();
   if (!codeContent.trim()) {
-    alert("No content to download. Please enter some KIF code first.");
+    alert("No content to download. Please enter some code first.");
     return;
   }
+
+  // Ask the user for a filename
+  const fileName = prompt("Enter a filename:");
+  if (!fileName) return; // user cancelled
 
   // Create a blob with the code content
   const blob = new Blob([codeContent], { type: 'text/plain' });
@@ -319,14 +335,17 @@ function downloadKifFile() {
   // Create a temporary download link
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'kif_file.kif';
+  a.download = fileName;  // Suggests filename to browser
   document.body.appendChild(a);
+
+  // Trigger click → browser should show Save As dialog
   a.click();
 
   // Clean up
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
+
 </script>
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
