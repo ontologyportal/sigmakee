@@ -165,6 +165,9 @@
             margin-left: 10px;
             justify-content: flex-start;
             position: relative;
+            border: 3px solid;
+            padding: 10px;
+            border-radius: 4px;
         }
 
         .beta-branch {
@@ -183,6 +186,24 @@
             position: absolute;
             border-top: 2px solid #333;
             z-index: 1;
+        }
+
+        .separator-bar {
+            height: 3px;
+            margin: 10px auto;
+            border-radius: 2px;
+            width: 40%;
+            position: relative;
+        }
+
+        .separator-bar.beta-bar {
+            width: 100%;
+        }
+
+        .alpha-tick {
+            width: 3px;
+            height: 10px;
+            margin: 5px auto;
         }
 
         .formula-container {
@@ -259,6 +280,15 @@
     <script>
         let groupCounter = 0;
 
+        function getRandomColor() {
+            const letters = '0123456789ABCDEF';
+            let color = '#';
+            for (let i = 0; i < 6; i++) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
+        }
+
         function autoResize(input) {
             const measurer = document.getElementById('textMeasurer');
             measurer.textContent = input.value || input.placeholder;
@@ -315,8 +345,8 @@
                 </div>
 
                 <div class="button-container" style="display: ${!showButtons ? 'none' : 'flex'}; gap: 10px; justify-content: flex-start; margin: 2px 0; margin-left: -30px;">
-                    <button class="rule-button" onclick="addAlphaRule('${groupId}')">α</button>
-                    <button class="rule-button" onclick="addBetaRule('${groupId}')">β</button>
+                    <button class="rule-button" onclick="addAlphaRule('${groupId}')">alpha</button>
+                    <button class="rule-button" onclick="addBetaRule('${groupId}')">beta</button>
                 </div>
             `;
 
@@ -367,6 +397,69 @@
                 input.classList.add('invalid');
                 statusButton.classList.add('invalid');
             }
+
+            // Check if this group is part of an alpha-group
+            const parentAlpha = group.parentElement;
+            if (parentAlpha && parentAlpha.classList.contains('alpha-group')) {
+                // Apply status to both alpha rules in the group
+                const alphaGroups = parentAlpha.querySelectorAll(':scope > .formula-group');
+                alphaGroups.forEach(alphaGroup => {
+                    const alphaStatusButton = alphaGroup.querySelector('.status-button');
+                    const alphaInput = alphaGroup.querySelector('.formula-input');
+
+                    if (alphaStatusButton && alphaInput) {
+                        alphaStatusButton.setAttribute('data-state', newState);
+                        alphaStatusButton.textContent = newLabel;
+
+                        alphaInput.classList.remove('valid', 'invalid');
+                        alphaStatusButton.classList.remove('valid', 'invalid');
+
+                        if (newState === 'valid') {
+                            alphaInput.classList.add('valid');
+                            alphaStatusButton.classList.add('valid');
+                        } else if (newState === 'invalid') {
+                            alphaInput.classList.add('invalid');
+                            alphaStatusButton.classList.add('invalid');
+                        }
+                    }
+
+                    // Apply to children of each alpha rule
+                    applyStatusToChildren(alphaGroup, newState, newLabel);
+                });
+            } else {
+                // If not in an alpha group, just apply to children normally
+                applyStatusToChildren(group, newState, newLabel);
+            }
+        }
+
+        function applyStatusToChildren(parentGroup, state, label) {
+            // Find all child formula groups (exclude the parent itself)
+            const childGroups = parentGroup.querySelectorAll('.formula-group');
+
+            childGroups.forEach(childGroup => {
+                // Skip if this is the parent group itself
+                if (childGroup === parentGroup) return;
+
+                const childStatusButton = childGroup.querySelector('.status-button');
+                const childInput = childGroup.querySelector('.formula-input');
+
+                if (childStatusButton && childInput) {
+                    childStatusButton.setAttribute('data-state', state);
+                    childStatusButton.textContent = label;
+
+                    // Update input styling
+                    childInput.classList.remove('valid', 'invalid');
+                    childStatusButton.classList.remove('valid', 'invalid');
+
+                    if (state === 'valid') {
+                        childInput.classList.add('valid');
+                        childStatusButton.classList.add('valid');
+                    } else if (state === 'invalid') {
+                        childInput.classList.add('invalid');
+                        childStatusButton.classList.add('invalid');
+                    }
+                }
+            });
         }
 
         function addAlphaRule(parentId) {
@@ -381,12 +474,25 @@
             const alphaContainer = document.createElement('div');
             alphaContainer.className = 'alpha-group';
 
+            // Add top tick mark with random color
+            const topTick = document.createElement('div');
+            topTick.className = 'alpha-tick';
+            const randomColor = getRandomColor();
+            topTick.style.backgroundColor = randomColor;
+            alphaContainer.appendChild(topTick);
+
             // Create two formula groups in series
             // First group has no buttons, second group has buttons
             const group1 = createFormulaGroup(false, false);
-            const group2 = createFormulaGroup(false, true);
-
             alphaContainer.appendChild(group1);
+
+            // Add middle tick mark with same color
+            const middleTick = document.createElement('div');
+            middleTick.className = 'alpha-tick';
+            middleTick.style.backgroundColor = randomColor;
+            alphaContainer.appendChild(middleTick);
+
+            const group2 = createFormulaGroup(false, true);
             alphaContainer.appendChild(group2);
 
             parentGroup.appendChild(alphaContainer);
@@ -404,6 +510,10 @@
             const betaContainer = document.createElement('div');
             betaContainer.className = 'beta-group';
 
+            // Set random border color for the beta container
+            const randomColor = getRandomColor();
+            betaContainer.style.borderColor = randomColor;
+
             // Create two branches in parallel, both with buttons
             const branch1 = document.createElement('div');
             branch1.className = 'beta-branch';
@@ -419,6 +529,7 @@
             betaContainer.appendChild(branch1);
             betaContainer.appendChild(branch2);
 
+            // Add the beta container
             parentGroup.appendChild(betaContainer);
         }
 
@@ -436,9 +547,14 @@
                 // Remove the group or its container
                 let containerToRemove = group.parentElement;
 
-                // If it's in a beta-branch, remove the entire beta-group (both branches)
+                // If it's in a beta-branch, remove the entire beta-group (both branches) and separator
                 if (containerToRemove.className === 'beta-branch') {
                     const betaGroup = containerToRemove.parentElement;
+                    // Remove the separator bar before the beta group
+                    const previousSibling = betaGroup.previousElementSibling;
+                    if (previousSibling && previousSibling.classList.contains('separator-bar')) {
+                        previousSibling.remove();
+                    }
                     betaGroup.remove();
                 } else if (containerToRemove.className === 'alpha-group') {
                     containerToRemove.remove();
