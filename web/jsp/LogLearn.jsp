@@ -1,4 +1,5 @@
 <%@ include	file="Prelude.jsp" %>
+<%@ page import="java.net.URLEncoder, java.nio.charset.Charset" %>
 
 <html>
   <head>
@@ -71,7 +72,9 @@
             out.println(s + "<br>");
             out.println("CNF: " + gpf.CNF.get(s) + "<br>");
             out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
+            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
         }
         out.println("<hr><br>");
         out.println("<b>Tautology</b>:<br>");
@@ -79,7 +82,9 @@
             out.println(s + "<br>");
             out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
             out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
+            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
         }
         out.println("<hr><br>");
         out.println("<b>Satisfiable</b>:<br>");
@@ -87,7 +92,9 @@
             out.println(s + "<br>");
             out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
             out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><p>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
+            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
         }
     }
     if (erase != null && erase.equalsIgnoreCase("erase")) {
