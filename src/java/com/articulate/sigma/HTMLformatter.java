@@ -679,15 +679,15 @@ public class HTMLformatter {
                 sourceFilename = srcfile.getName();
                 if (StringUtil.isNonEmptyString(sourceFilename)) {
                     jeditcmd = KBmanager.getMgr().getPref("jedit");
-                    if (!StringUtil.emptyString(jeditcmd)) {
-                        show.append("<a href=\"").append(kbHref).append("&file=").append(sourceFilename).append("&line=").append(f.startLine).append("\">");
-                    }
+                    // if (!StringUtil.emptyString(jeditcmd)) {
+                    //     show.append("<a href=\"").append(kbHref).append("&file=").append(sourceFilename).append("&line=").append(f.startLine).append("\">");
+                    // }
                     show.append(sourceFilename);
                     show.append(" ").append(f.startLine).append("-").append(f.endLine);
-                    if (!StringUtil.emptyString(jeditcmd))
-                        show.append("</a>");
+                //     if (!StringUtil.emptyString(jeditcmd))
+                //         show.append("</a>");
                 }
-                show.append("</a>");
+                // show.append("</a>");
                 show.append("</td>\n<td width=\"40%\" valign=\"top\">");
                 if (!Formula.DOC_PREDICATES.contains(arg0))
                     pph = NLGUtils.htmlParaphrase(kbHref, f.getFormula(),
