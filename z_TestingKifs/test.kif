@@ -1,0 +1,60 @@
+;Mary is a woman.
+(instance Mary1 Woman)
+(names "Mary" Mary1)
+
+;All men are mortal.
+(=>
+    (instance ?M Man)
+    (attribute ?M Mortal))
+
+;Some men are plumbers.
+(exists (?P ?M)
+    (and
+        (instance ?P Plumber)
+        (instance ?M Man)
+        (attribute ?M ?P)))
+        
+;Rachael is the editor of the newspaper.
+(instance Rachael1 Woman)
+(names "Rachael" Rachael1)
+(subclass RachaelsNewspaper DomesticDog)
+(editor Rachael1 RachaelsNewspaper)
+
+;8a) Tom is shorter than Bill.
+(instance Tom1 Human)
+(names "Tom" Tom1)
+(instance Bill1 Human)
+(names "Bill" Bill1)
+(=>
+    (and
+        (instance ?BILLSHEIGHT Height)
+        (height Bill1 ?BILLSHEIGHT)
+        (instance ?TOMSHEIGHT Height)
+        (height Tom1 ?TOMSHEIGHT))
+    (lessThan ?TOMSHEIGHT ?BILLSHEIGHT))
+
+;8b) The Hope Diamond is the most expensive diamond.
+(instance HopeDiamond1 Diamond)
+(names "The Hope Diamond" HopeDiamond1)
+(instance HopePrice CurrencyMeasure)
+(appraisedValue HopeDiamond1 HopePrice)
+(=>
+    (and
+        (instance ?DIAMOND Diamond)
+        (instance ?OTHERPRICE CurrencyMeasure)
+        (appraisedValue ?DIAMOND ?OTHERPRICE)
+        (not
+            (equal ?DIAMOND HopeDiamond1)))
+    (greaterThan HopePrice ?OTHERPRICE))
+
+;8c) Bill is the wealthiest man.
+(instance Bill1 Man)
+(names "Bill" Bill1)
+(instance BillsValue CurrencyMeasure)
+(equal BillsValue (WealthFn (PropertyFn Bill1)))
+(=>
+    (and
+        (instance ?MAN Man)
+        (not
+            (equal ?MAN Bill1)))
+    (greaterThan BillsValue (Wealthn (PropertyFn ?MAN))))

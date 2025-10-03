@@ -1,0 +1,47 @@
+;; =====================================================
+;; This file is designed to throw errors for all kinds
+;; of KifFileChecker errors. Each section has a minimal
+;; formula that isolates one error type.
+;; =====================================================
+
+;; ---------- Local Instances and subclasses ----------
+(subclass Controlling Process)
+(instance Mary1 Woman)
+(names "Mary" Mary1)
+(instance Hello Controlling)
+
+;; ---------- Syntax Error ----------
+(exists (?S)
+    (and
+        (instance ?S Human)
+        (attribute ?S Mortal)))
+
+;; ---------- Quantifier not in statement ----------
+(forall (?X)
+    (instance Mary1 Woman))
+
+;; ---------- Existential quantifier in antecedent ----------
+(=> 
+	(exists (?X) 
+  	(instance ?X Human))
+  (instance ?X Mortal))
+
+;; ---------- Single-use variable ----------
+(exists (?X)
+	(instance Shaun Human))
+
+;; ---------- Unquantified variable in consequent ----------
+(=>
+	(instance Shaun Human)
+  (instance ?X Man))
+
+;; ---------- Has Correct Arity ----------
+(instance Shaun)
+
+;; ---------- Term not below Entity ----------
+(instance Shaun Hooman)
+
+;; ---------- SUMOtoTFAform Error Types ----------
+(instance ShaunsNewspaper Newspaper)
+(instance Shawn Human)
+(editor Shawn ShaunsNewspaper)

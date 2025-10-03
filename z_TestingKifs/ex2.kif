@@ -1,0 +1,107 @@
+(instance Simon Thief)
+
+;Every man has a dog.
+(=>
+    (instance ?M Man)
+    (exists (?D)
+        (and
+            (instance ?D DomesticDog)
+            (possesses ?M ?D))))
+       
+;Some people like broccoli.
+(exists (?H ?B)
+        (and
+            (instance ?H Human)
+            (instance ?B Broccoli)
+            (likes ?H ?B)))
+           
+;All people that love broccoli hate ice cream
+(=>
+        (and
+            (instance ?H Human)
+            (instance ?B Broccoli)
+            (instance ?I IceCream)
+            (love ?H ?B))
+        (hate ?H ?I))
+
+;Bill has a dog
+(instance Bill1 Human)
+(names "Bill" Bill1)
+(instance Dog1 DomesticDog)
+(possesses Bill1 Dog1)
+
+;Dogs that lick Bill like Jane
+(instance Bill1 Human)
+(names "Bill" Bill1)
+(instance Jane1 Human)
+(names "Jane" Jane1)
+(=>
+    (and
+        (instance ?D DomesticDog)
+        (instance ?L Licking)
+        (agent ?L ?D)
+        (patient ?L Bill1))
+    (likes ?D Jane1))
+
+;If someone likes dogs, he or she likes some vegetable.
+(=>
+    (and
+        (instance ?SOMEONE Human)
+        (instance ?DOG DomesticDog)
+        (likes ?SOMEONE ?DOG))
+    (exists (?VEGETABLE)
+        (and
+            (instance ?VEGETABLE Vegetable)
+            (likes ?SOMEONE ?VEGETABLE))))
+
+;People who are sad or lonely like dogs
+(=>
+    (and
+        (instance ?PEOPLE Human)
+        (instance ?DOG DomesticDog)
+        (or
+            (attribute ?PEOPLE Unhappiness)
+            (attribute ?PEOPLE Lonely)))
+    (likes ?PEOPLE ?DOG))
+   
+;Everyone who likes broccoli likes a dog or a cat
+(=>
+    (and
+        (instance ?EVERYONE Human)
+        (instance ?BROCCOLI Broccoli)
+        (likes ?EVERYONE ?BROCCOLI))
+    (exists (?DOG ?CAT)
+        (and
+            (instance ?DOG DomesticDog)
+            (instance ?CAT DomesticCat)
+            (or
+                (likes ?EVERYONE ?DOG)
+                (likes ?EVERYONE ?CAT)))))
+           
+;People who like dogs or cats hate mice
+(=>
+    (and
+        (instance ?PEOPLE Human)
+        (instance ?DOG DomesticDog)
+        (instance ?CAT DomesticCat)
+        (instance ?MOUSE Mouse)
+        (or
+            (likes ?PEOPLE ?DOG)
+            (likes ?PEOPLE ?CAT)))
+    (hates ?PEOPLE ?MOUSE))
+   
+;If it is raining I take my umbrella
+(instance Me Self) 
+(instance MyUmbrella Umbrella)
+(=>
+    (holdsDuring ?TIME
+        (and
+            (instance ?PRECIPITATION Precipitation)
+            (time ?PRECIPITATION ?TIME)))
+    (holdsDuring ?TIME
+        (exists (?TAKING)
+            (and
+                (instance ?TAKING Taking)
+                (agent ?TAKING Me)
+                (patient ?TAKING MyUmbrella)
+                (time ?TAKING ?TIME)))))
