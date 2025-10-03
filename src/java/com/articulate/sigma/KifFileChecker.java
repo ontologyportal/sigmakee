@@ -33,22 +33,21 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
     public static boolean debug = false;
-    
-    public enum Severity {
-        ERROR,
-        WARNING
-    }
+
+    public enum Severity { ERROR, WARNING }
+    public static final int ERROR = 1;
+    public static final int WARNING = 2;
 
     public static final class ErrRec {
-        public final Severity severity;
+        public final int type;
         public final String file;
         public final int line;
         public final int start;
         public final int end;
         public final String msg;
 
-        public ErrRec(Severity severity, String file, int line, int start, int end, String msg) {
-            this.severity = severity;
+        public ErrRec(int type, String file, int line, int start, int end, String msg) {
+            this.type = type;
             this.file = file;
             this.line = line;
             this.start = start;
@@ -58,17 +57,21 @@ public class KifFileChecker {
 
         @Override
         public String toString() {
-            return severity + " in " + file + " at line " + (line+1) + ": " + msg;
+            String sev = (type == WARNING) ? "WARNING" : "ERROR";
+            return sev + " in " + file + " at line " + (line+1) + ": " + msg;
         }
     }
+
+    public static List<KifFileChecker.ErrRec> check(String contents) {
+        return check(contents, "(buffer)");
+    }
+
     /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
-    // Inside KifFileChecker.java
-
-    public List<KifFileChecker.ErrRec> check(String contents) {
+    public static List<KifFileChecker.ErrRec> check(String contents, String fileName) {
 
         Map<String, Set<String>> localInstances = new HashMap<>();
         Map<String, Set<String>> localSubclasses = new HashMap<>();
@@ -87,8 +90,8 @@ public class KifFileChecker {
                 int line = getLineNum(er);
                 int col  = getOffset(er);
                 msgs.add(new KifFileChecker.ErrRec(
-                    Severity.ERROR,
-                    "(buffer)",
+                    0,
+                    fileName,
                     (line == 0 ? line : line - 1), // jEdit uses 0-based line numbers
                     Math.max(col, 1),              // start offset
                     Math.max(col, 1) + 1,          // end offset
@@ -100,13 +103,12 @@ public class KifFileChecker {
 
         // ---------- 2) Parse to KIF ----------
         KIF localKif = new KIF();
-        localKif.filename = "(buffer)";
         try (Reader r = new StringReader(contents)) {
             localKif.parse(r);
         } catch (Exception e) {
             msgs.add(new KifFileChecker.ErrRec(
-                Severity.ERROR,
-                localKif.filename,
+                1,
+                fileName,
                 0, 0, 1,
                 "Parse error: " + e.getMessage()
             ));
@@ -129,7 +131,8 @@ public class KifFileChecker {
             // Quantifier not in statement
             if (Diagnostics.quantifierNotInStatement(f)) {
                 msgs.add(new KifFileChecker.ErrRec(
-                    Severity.ERROR, localKif.filename,
+                    1, 
+                    fileName,
                     (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                     1, 2,
                     "Quantified variable not used in statement body"
@@ -139,7 +142,8 @@ public class KifFileChecker {
             // Existential quantifier in Antecedent
             if (Diagnostics.existentialInAntecedent(f)) {
                 msgs.add(new KifFileChecker.ErrRec(
-                    Severity.ERROR, localKif.filename,
+                    1, 
+                    fileName,
                     (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                     1, 2,
                     "Existential quantifier in Antecedent"
@@ -151,7 +155,8 @@ public class KifFileChecker {
             if (singleUse != null) {
                 for (String v : singleUse) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.ERROR, localKif.filename,
+                        1, 
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                         1, 2,
                         "Variable used only once: " + v
@@ -164,7 +169,8 @@ public class KifFileChecker {
             if (f.errors != null) {
                 for (String er : f.errors) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.ERROR, localKif.filename,
+                        1, 
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                         1, 2, er
                     ));
@@ -173,7 +179,8 @@ public class KifFileChecker {
             if (f.warnings != null) {
                 for (String w : f.warnings) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.WARNING, localKif.filename,
+                        2, 
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                         1, 2, w
                     ));
@@ -185,7 +192,8 @@ public class KifFileChecker {
                     && processed.size() == 1) {
                 for (String er : SUMOtoTFAform.errors) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.ERROR, localKif.filename,
+                        1, 
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                         1, 2, er
                     ));
@@ -197,7 +205,8 @@ public class KifFileChecker {
             if (!KButilities.isValidFormula(kb, f.toString())) {
                 for (String er : KButilities.errors) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.ERROR, localKif.filename,
+                        1, 
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                         1, 2, er
                     ));
@@ -210,14 +219,15 @@ public class KifFileChecker {
             if (unquant != null) {
                 for (String uq : unquant) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.ERROR, localKif.filename,
+                        1, 
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1,
                         1, 2,
                         "Unquantified variable in consequent: " + uq
                     ));
                 }
             }
-            // ✅ Term below Entity + unknown terms
+            // Term below Entity + unknown terms
             Set<String> terms = f.collectTerms();
             for (String t : terms) {
                 if (skip(t)) continue;
@@ -225,8 +235,8 @@ public class KifFileChecker {
                 boolean coveredByLocal = localIndividuals.contains(t) || localClasses.contains(t);
                 if (!coveredByLocal && Diagnostics.termNotBelowEntity(t, kb)) {
                     msgs.add(new KifFileChecker.ErrRec(
-                        Severity.ERROR,
-                        localKif.filename,
+                        1,
+                        fileName,
                         (formulaLine > 0 ? formulaLine : f.startLine) - 1, // keep consistency
                         1, 2,
                         "Term not below Entity: " + t
@@ -235,7 +245,7 @@ public class KifFileChecker {
             }
         }
 
-            // ---------- 4) Done, return results ----------
+        // ---------- 4) Done, return results ----------
         if (true) {
             System.out.println("KifFileChecker.check(): returning " + msgs.size() + " diagnostics:");
             for (ErrRec e : msgs) {
@@ -245,36 +255,33 @@ public class KifFileChecker {
         return msgs;
     }
 
-/** Find a term in a line with boundary checks */
-private static int findTermInLine(String line, String term, int startPos) {
-    int pos = line.indexOf(term, startPos);
-    while (pos != -1) {
-        boolean validStart = (pos == 0 || !isTermChar(line.charAt(pos - 1)));
-        boolean validEnd = (pos + term.length() >= line.length()
-                || !isTermChar(line.charAt(pos + term.length())));
-        if (validStart && validEnd) return pos;
-        pos = line.indexOf(term, pos + 1);
+    /** Find a term in a line with boundary checks */
+    private static int findTermInLine(String line, String term, int startPos) {
+        int pos = line.indexOf(term, startPos);
+        while (pos != -1) {
+            boolean validStart = (pos == 0 || !isTermChar(line.charAt(pos - 1)));
+            boolean validEnd = (pos + term.length() >= line.length()
+                    || !isTermChar(line.charAt(pos + term.length())));
+            if (validStart && validEnd) return pos;
+            pos = line.indexOf(term, pos + 1);
+        }
+        return -1;
     }
-    return -1;
-}
 
-private static boolean isTermChar(char c) {
-    return Character.isLetterOrDigit(c) || c == '.' || c == '_';
-}
-
+    private static boolean isTermChar(char c) {
+        return Character.isLetterOrDigit(c) || c == '.' || c == '_';
+    }
 
     /** Recursively collect local facts: instance, subclass, etc. */
-    private void harvestLocalFacts(Formula f,
+    private static void harvestLocalFacts(Formula f,
                                 Map<String, Set<String>> localInstances,
                                 Map<String, Set<String>> localSubclasses,
                                 Set<String> localIndividuals,
                                 Set<String> localClasses) {
 
         if (f == null || f.atom()) return;
-
         String functor = f.car();
         List<String> args = f.argumentsToArrayListString(1);
-
         if ("instance".equals(functor) && args != null && args.size() == 2) {
             String indiv = args.get(0), cls = args.get(1);
             if (isConst(indiv) && isConst(cls)) {
@@ -289,8 +296,6 @@ private static boolean isTermChar(char c) {
                 if (debug) System.out.println("Local class: " + child);
             }
         }
-
-        // 🔁 Recurse into all argument subformulas
         if (f.listP()) {
             for (int i = 1; i < f.listLength(); i++) {
                 Formula sub = f.getArgument(i);
@@ -305,47 +310,45 @@ private static boolean isTermChar(char c) {
         return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
     }
 
-/** Find where a formula string appears in the buffer by matching all lines consecutively. */
-private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) {
-    if (formulaStr == null || formulaStr.isEmpty()) return -1;
+    /** Find where a formula string appears in the buffer by matching all lines consecutively. */
+    private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) {
+        if (formulaStr == null || formulaStr.isEmpty()) return -1;
 
-    // Split into trimmed, non-empty formula lines
-    String[] rawFormulaLines = formulaStr.split("\\R");
-    List<String> formulaLines = new ArrayList<>();
-    for (String line : rawFormulaLines) {
-        String t = line.trim();
-        if (!t.isEmpty()) {
-            formulaLines.add(t);
-        }
-    }
-    if (formulaLines.isEmpty()) return -1;
-
-    if (debug) {
-        // System.out.println("KifFileChecker.findFormulaInBuffer(): candidate formula lines:");
-        for (String l : formulaLines) System.out.println("  >> " + l);
-    }
-
-    // Scan the buffer for a block of consecutive lines matching the formula
-    for (int i = 0; i <= bufferLines.length - formulaLines.size(); i++) {
-        boolean match = true;
-        for (int j = 0; j < formulaLines.size(); j++) {
-            String bufLine = bufferLines[i + j].trim();
-            if (!bufLine.contains(formulaLines.get(j))) {
-                match = false;
-                break;
+        // Split into trimmed, non-empty formula lines
+        String[] rawFormulaLines = formulaStr.split("\\R");
+        List<String> formulaLines = new ArrayList<>();
+        for (String line : rawFormulaLines) {
+            String t = line.trim();
+            if (!t.isEmpty()) {
+                formulaLines.add(t);
             }
         }
-        if (match) {
-            // if (debug) { System.out.println("KifFileChecker.findFormulaInBuffer(): matched full formula starting at buffer line " + (i + 1));}
-            return i + 1; // return 1-based start line of the formula
+        if (formulaLines.isEmpty()) return -1;
+
+        if (debug) {
+            // System.out.println("KifFileChecker.findFormulaInBuffer(): candidate formula lines:");
+            for (String l : formulaLines) System.out.println("  >> " + l);
         }
+
+        // Scan the buffer for a block of consecutive lines matching the formula
+        for (int i = 0; i <= bufferLines.length - formulaLines.size(); i++) {
+            boolean match = true;
+            for (int j = 0; j < formulaLines.size(); j++) {
+                String bufLine = bufferLines[i + j].trim();
+                if (!bufLine.contains(formulaLines.get(j))) {
+                    match = false;
+                    break;
+                }
+            }
+            if (match) {
+                return i + 1; // return 1-based start line of the formula
+            }
+        }
+
+        return -1;
     }
 
-    return -1; // not found
-}
-
-    /**
-     * ***************************************************************
+    /** ***************************************************************
      * Utility class that contains searched term line and filepath information
      */
     public static class FileSpec {
@@ -584,7 +587,7 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
         return Math.max(0, result);
     }
 
-        /** ***************************************************************
+    /** ***************************************************************
      * Print CLI usage information.
      */
     public static void showHelp() {
@@ -601,11 +604,11 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
      *   java com.articulate.sigma.KifFileChecker -c myfile.kif
      */
     public static void main(String[] args) {
+
         if (args == null || args.length == 0 || "-h".equals(args[0])) {
             showHelp();
             return;
         }
-
         if ("-c".equals(args[0]) && args.length > 1) {
             String fname = args[1];
             try {
@@ -621,8 +624,7 @@ private static int findFormulaInBuffer(String formulaStr, String[] bufferLines) 
                         System.out.println(e.toString());
                     }
                 }
-            } catch (Exception e) {
-                    
+            } catch (Exception e) {        
             System.out.println("*******************************************************");
                 System.err.println("Failed to read or check file: " + fname);
                 e.printStackTrace();
