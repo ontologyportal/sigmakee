@@ -33,22 +33,21 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
     public static boolean debug = false;
-    
-    public enum Severity {
-        ERROR,
-        WARNING
-    }
+
+    public enum Severity { ERROR, WARNING }
+    public static final int ERROR = 1;
+    public static final int WARNING = 2;
 
     public static final class ErrRec {
-        public final Severity severity;
+        public final int type;
         public final String file;
         public final int line;
         public final int start;
         public final int end;
         public final String msg;
 
-        public ErrRec(Severity severity, String file, int line, int start, int end, String msg) {
-            this.severity = severity;
+        public ErrRec(int type, String file, int line, int start, int end, String msg) {
+            this.type = type;
             this.file = file;
             this.line = line;
             this.start = start;
@@ -58,17 +57,21 @@ public class KifFileChecker {
 
         @Override
         public String toString() {
-            return severity + " in " + file + " at line " + (line+1) + ": " + msg;
+            String sev = (type == WARNING) ? "WARNING" : "ERROR";
+            return sev + " in " + file + " at line " + (line+1) + ": " + msg;
         }
     }
+
+    public static List<KifFileChecker.ErrRec> check(String contents) {
+        return check(contents, "(buffer)");
+    }
+
     /**
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
      */
-    // Inside KifFileChecker.java
-
-    public List<KifFileChecker.ErrRec> check(String contents) {
+    public static List<KifFileChecker.ErrRec> check(String contents, String fileName) {
 
         Map<String, Set<String>> localInstances = new HashMap<>();
         Map<String, Set<String>> localSubclasses = new HashMap<>();
@@ -405,19 +408,20 @@ private static boolean isTermChar(char c) {
     return Character.isLetterOrDigit(c) || c == '.' || c == '_';
 }
 
+    private static boolean isTermChar(char c) {
+        return Character.isLetterOrDigit(c) || c == '.' || c == '_';
+    }
 
     /** Recursively collect local facts: instance, subclass, etc. */
-    private void harvestLocalFacts(Formula f,
+    private static void harvestLocalFacts(Formula f,
                                 Map<String, Set<String>> localInstances,
                                 Map<String, Set<String>> localSubclasses,
                                 Set<String> localIndividuals,
                                 Set<String> localClasses) {
 
         if (f == null || f.atom()) return;
-
         String functor = f.car();
         List<String> args = f.argumentsToArrayListString(1);
-
         if ("instance".equals(functor) && args != null && args.size() == 2) {
             String indiv = args.get(0), cls = args.get(1);
             if (isConst(indiv) && isConst(cls)) {
@@ -432,8 +436,6 @@ private static boolean isTermChar(char c) {
                 if (debug) System.out.println("Local class: " + child);
             }
         }
-
-        // 🔁 Recurse into all argument subformulas
         if (f.listP()) {
             for (int i = 1; i < f.listLength(); i++) {
                 Formula sub = f.getArgument(i);
