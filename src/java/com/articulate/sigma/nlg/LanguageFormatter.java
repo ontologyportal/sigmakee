@@ -24,6 +24,7 @@ import com.google.common.collect.Sets;
 import edu.stanford.nlp.ling.CoreAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
 
+import java.io.IOException;
 import java.util.*;
 
 /** ***************************************************************
@@ -60,12 +61,16 @@ public class LanguageFormatter {
     // FIXME: Verify that we handle all operators, then delete this field.
     private static final List<String> notReadyOperators = Lists.newArrayList();
 
+    private static final String OLLAMA_HOST = "http://127.0.0.1:11434";
+
     /**
      * "Informal" NLG refers to natural language generation in which the formal logic terms are expressions are
      * eliminated--e.g. "a man drives" instead of "there exist a process and an agent such that the process is an instance of driving and
      * the agent is an instance of human and the agent is an agent of the process".
      */
     private boolean doInformalNLG = false;
+
+    public static boolean paraphraseLLM = true;
 
     public void setDoInformalNLG(boolean doIt) {
         doInformalNLG = doIt;
@@ -244,7 +249,15 @@ public class LanguageFormatter {
         catch (Exception ex) {
             ex.printStackTrace();
         }
-        if (debug) System.out.println("htmlParaphrase(): " + outputMap);
+        if (debug) System.out.println("htmlParaphrase() - outputMap: " + outputMap);
+
+        // nlFormat = paraphrased with links!
+        // e.g <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=instrument">instrument</a> is an <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=instance">instance</a> of <a href="http://localhost:8080/sigma/Browse.jsp?lang=EnglishLanguage&kb=SUMO&term=Relation">relation</a>
+
+        if (paraphraseLLM){
+            nlFormat = paraphraseWithLLM(nlFormat);
+        }
+
         return nlFormat;
     }
 
@@ -385,6 +398,48 @@ public class LanguageFormatter {
         }
         ans = result.toString();
         return ans;
+    }
+
+    private String paraphraseWithLLM (String initialText) {
+
+        String prompt =
+                "You are an expert at rewriting formal or structured English sentences (derived from SUMO logical statements) "
+                        + "into more natural English while keeping the logical meaning and terminology intact.\n"
+                        + "When rewriting, follow these rules:\n"
+                        + "Keep all SUMO-related terms or placeholders (e.g., entity, relation, process) unchanged.\n"
+                        + "Make the sentence grammatical, fluent, and natural for a human reader.\n"
+                        + "Preserve logical quantifiers or structure (e.g., “for all”, “if”, “then”, “not”, “is an instance of”).\n"
+                        + "Only add small grammatical adjustments (articles, pluralization, verb forms, etc.) to improve readability.\n"
+                        + "Do not simplify or paraphrase away the logical meaning.\n"
+                        + "Answer only with the rewrited sentence, nothing else!"
+                        + "Input sentence: ";
+
+
+        String model = "llama3.2";
+
+        String cleanedText = removeLinks(initialText);
+        prompt = prompt + cleanedText;
+
+        System.out.println(prompt);
+
+        OllamaClient ollama = new OllamaClient(OLLAMA_HOST);
+
+        String out = "";
+        try {
+            out = ollama.generate(model, prompt);
+        } catch (IOException e) {
+            System.out.println(" ERROR | LanguageFormatter | paraphraseWithLLM : " + e);
+        }
+        return out;
+    }
+
+
+        private String removeLinks(String initialText){
+        if (initialText == null) return null;
+        // Replace <a ...> and </a> tags with nothing, keeping only the inner text
+        return initialText.replaceAll("<a[^>]*>", "")   // remove opening <a ...>
+                .replaceAll("</a>", "")       // remove closing </a>
+                .trim();
     }
 
     /*****************************************************************
