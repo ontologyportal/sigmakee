@@ -33,10 +33,10 @@ if (!role.equalsIgnoreCase("admin")) {
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String cwa = request.getParameter("CWA");
-    String modusPomensParam = request.getParameter("ModusPomens");
-    boolean modusPomens = "yes".equalsIgnoreCase(modusPomensParam)
-            || "on".equalsIgnoreCase(modusPomensParam)
-            || "true".equalsIgnoreCase(modusPomensParam);
+    String modensPonensParam = request.getParameter("ModensPonens");
+    boolean modensPonens = "yes".equalsIgnoreCase(modensPonensParam)
+            || "on".equalsIgnoreCase(modensPonensParam)
+            || "true".equalsIgnoreCase(modensPonensParam);
     if (StringUtil.emptyString(cwa))
         cwa = "no";
     if (cwa.equals("yes"))
@@ -165,8 +165,8 @@ if (!role.equalsIgnoreCase("admin")) {
                 if (vampireMode.equals("Custom"))
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
 //                vampire = kb.askVampire(stmt, timeout, maxAnswers);
-                vampire = modusPomens
-                        ? kb.askVampireModusPomens(stmt, timeout, maxAnswers)
+                vampire = modensPonens
+                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
                         : kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println("Vampire output: " + vampire.toString());
@@ -227,9 +227,9 @@ if (!role.equalsIgnoreCase("admin")) {
       <input type="radio" id="Custom" name="vampireMode" value="Custom"
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
           <label>Custom mode</label>]
-        <input type="checkbox" id="ModusPomens" name="ModusPomens" value="yes" <% if (modusPomens) { out.print(" CHECKED"); } %> >
-        <label for="ModusPomens">ModusPomens</label>
-        <span title="Runs Vampire with modus-ponens-only routine in authored-only axioms Proof">&#9432;</span><br>
+        <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
+        <label for="ModensPonens">Modens Ponens</label>
+        <span title="Runs Vampire with modens-ponens-only routine in authored-only axioms Proof">&#9432;</span><br>
 
 
     <input type="checkbox" name="showProofInEnglish" value="yes"

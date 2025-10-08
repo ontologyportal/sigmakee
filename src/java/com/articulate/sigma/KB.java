@@ -1958,7 +1958,7 @@ public class KB implements Serializable {
      * STEPS:
      * 1 - AskVampire to get the first output
      * 2 - Process the output to keep only the authored axioms
-     * 3 - Send new command to vampire with modus pomens options
+     * 3 - Send new command to vampire with modens ponens options
      * 4 - Return Vampire object for further processing from AskTell.jsp
      *
      * @param suoKifFormula
@@ -1967,7 +1967,7 @@ public class KB implements Serializable {
      * @return
      */
 
-    public Vampire askVampireModusPomens(String suoKifFormula, int timeout, int maxAnswers){
+    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
 
         // STEP 1
         System.out.println("\n\nSTEP 1\n\n");
