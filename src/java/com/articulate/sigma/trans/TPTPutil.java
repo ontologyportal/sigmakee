@@ -429,7 +429,7 @@ public class TPTPutil {
                 conjecture = oneLine(step.toString());
             }
         }
-        if (conjecture == null) System.out.println("% No Conjecture found!");
+        if (conjecture == null) System.out.println("-- ERROR: TPTPUtil.writeMinTPTP: No Conjecture found!");
 
         FileUtil.writeLines(outPath, out); // overwrite = false append
     }
@@ -437,6 +437,36 @@ public class TPTPutil {
     private static String oneLine(String s) {
         String t = s.replace('\r', ' ').replace('\n', ' ').trim().replaceAll("\\s+", " ");
         return t.endsWith(".") ? t : (t + ".");
+    }
+
+    public static void processProofLines(List<String> inputLines) {
+
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        KBmanager.getMgr().initializeOnce();
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        KB kb = KBmanager.getMgr().getKB(kbName);
+
+        // Clear file before processing
+        List<String> lines = clearProofFile(inputLines);
+
+        String query = Formula.LP;
+        StringBuilder answerVars = new StringBuilder("");
+
+        // Parse proof output
+        tpp.parseProofOutput(lines, query, kb, answerVars);
+
+        System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
+        System.out.println("TPTPutil.main(): showing only source axioms ");
+
+        for (TPTPFormula step : tpp.proof) {
+            if (TPTPutil.sourceAxiom(step)) {  // keep only authored axioms
+                Formula f = new Formula(step.sumo);
+                System.out.println(f.format("", "  ", "\n"));
+            }
+        }
+
+        // Write minimal TPTP file with authored axioms
+        writeMinTPTP(tpp.proof);
     }
 
 
@@ -475,12 +505,12 @@ public class TPTPutil {
                 try {
                     List<String> lines = FileUtil.readLines(args[1],false);
 
-                    System.out.println("---- DEBUG: File lines read ----");
-                    System.out.println("Total lines: " + lines.size());
-                    for (int i = 0; i < lines.size(); i++) {
-                        System.out.println("Line " + i + ": " + lines.get(i));
-                    }
-                    System.out.println("---- END DEBUG ----");
+//                    System.out.println("---- DEBUG: File lines read ----");
+//                    System.out.println("Total lines: " + lines.size());
+//                    for (int i = 0; i < lines.size(); i++) {
+//                        System.out.println("Line " + i + ": " + lines.get(i));
+//                    }
+//                    System.out.println("---- END DEBUG ----");
 
                     // Clear file before processing from TPTP3ProofProcessor.parseProofOutput
                     lines = clearProofFile(lines);

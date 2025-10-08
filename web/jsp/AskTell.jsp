@@ -33,6 +33,10 @@ if (!role.equalsIgnoreCase("admin")) {
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String cwa = request.getParameter("CWA");
+    String modusPomensParam = request.getParameter("ModusPomens");
+    boolean modusPomens = "yes".equalsIgnoreCase(modusPomensParam)
+            || "on".equalsIgnoreCase(modusPomensParam)
+            || "true".equalsIgnoreCase(modusPomensParam);
     if (StringUtil.emptyString(cwa))
         cwa = "no";
     if (cwa.equals("yes"))
@@ -160,7 +164,10 @@ if (!role.equalsIgnoreCase("admin")) {
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
                 if (vampireMode.equals("Custom"))
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
-                vampire = kb.askVampire(stmt, timeout, maxAnswers);
+//                vampire = kb.askVampire(stmt, timeout, maxAnswers);
+                vampire = modusPomens
+                        ? kb.askVampireModusPomens(stmt, timeout, maxAnswers)
+                        : kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println("Vampire output: " + vampire.toString());
             }
@@ -219,7 +226,10 @@ if (!role.equalsIgnoreCase("admin")) {
           <label>Avatar mode</label>
       <input type="radio" id="Custom" name="vampireMode" value="Custom"
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
-          <label>Custom mode</label>]<BR>
+          <label>Custom mode</label>
+      <input type="checkbox" id="ModusPomens" name="ModusPomens" value="yes"
+            <% if (modusPomens) { out.print(" CHECKED"); } %> >
+          <label>ModusPomens</label>]<BR>
 
     <input type="checkbox" name="showProofInEnglish" value="yes"
            <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
