@@ -226,10 +226,11 @@ if (!role.equalsIgnoreCase("admin")) {
           <label>Avatar mode</label>
       <input type="radio" id="Custom" name="vampireMode" value="Custom"
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
-          <label>Custom mode</label>
-      <input type="checkbox" id="ModusPomens" name="ModusPomens" value="yes"
-            <% if (modusPomens) { out.print(" CHECKED"); } %> >
-          <label>ModusPomens</label>]<BR>
+          <label>Custom mode</label>]
+        <input type="checkbox" id="ModusPomens" name="ModusPomens" value="yes" <% if (modusPomens) { out.print(" CHECKED"); } %> >
+        <label for="ModusPomens">ModusPomens</label>
+        <span title="Runs Vampire with modus-ponens-only routine in authored-only axioms Proof">&#9432;</span><br>
+
 
     <input type="checkbox" name="showProofInEnglish" value="yes"
            <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
