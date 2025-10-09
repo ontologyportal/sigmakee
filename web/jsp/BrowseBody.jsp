@@ -37,7 +37,7 @@ if (flang == null || flang.isEmpty()) {
         }
         catch (NumberFormatException nfe) {}
     }
-    HTMLformatter.launchEditor(filename,l);
+    //HTMLformatter.launchEditor(filename,l);
  }
  HTMLformatter.kbHref = HTMLformatter.createHrefStart() + "/sigma/" + parentPage + "?lang=" + language + "&flang=" + flang + "&kb=" + kbName;
  if (kb != null && StringUtil.emptyString(term) && StringUtil.emptyString(relTerm) &&

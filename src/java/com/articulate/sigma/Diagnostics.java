@@ -284,7 +284,7 @@ public class Diagnostics {
                         isInstanceSubsumed = false;
                         isNaN = true;
                         inst = it2.next();
-                        try {   // For diagnostics, try to avoid treating numbers as bonafide terms.
+                        try {
                             dval = Double.parseDouble(inst);
                             isNaN = Double.isNaN(dval);
                         }

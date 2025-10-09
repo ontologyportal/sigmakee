@@ -11,105 +11,31 @@
 <head>
   <meta charset="UTF-8">
   <title>Check KIF File</title>
-
-   <!-- CodeMirror -->
    <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
    <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
    <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
-
-  <!-- All CSS here -->
   <style>
-    body { font-family: system-ui, sans-serif; margin: 24px; }
-    .card { border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px; }
-    .layout { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; align-items: stretch;}
-    .layout > div {
-      display: flex;
-      flex-direction: column;
-    }
-    .scroller { height: 59vh; overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-    .msg { padding: 12px; white-space: pre-line; }
-    .errors-box { color: #b00020; }
-    .success { color: #077d3f; }
-    h3 { margin: 8px 0; }
-
-    /* Buttons */
-    .check-button {
-      background: #007bff;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    .check-button:hover { background: #0056b3; }
-
-    .download-button {
-      background: #28a745;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    body {font-family: system-ui, sans-serif; margin: 24px;}
+    .card {border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px;}
+    .layout {display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; align-items: stretch;}
+    .layout > div {display: flex; flex-direction: column;}
+    .scroller { height: 59vh; overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff;}
+    .msg { padding: 12px; white-space: pre-line;}
+    .errors-box { color: #b00020;}
+    .success { color: #077d3f;}
+    h3 {margin: 8px 0;}
+    .check-button {background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;}
+    .check-button:hover {background: #0056b3;}
+    .download-button {background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;}
     .download-button:hover { background: #1e7e34; }
-
-    .upload-button {
-      background: #20c997;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-    }
+    .upload-button {background: #20c997; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;}
     .upload-button:hover { background: #1aa179; }
-
-    /* CodeMirror customization */
-    .CodeMirror {
-      border: 1px solid #ddd;
-      border-radius: 6px;
-      height: 60vh;
-      font-family: ui-monospace, monospace;
-      font-size: 14px;
-      line-height: 1.4;
-    }
-
-    .CodeMirror-gutters {
-      background: #f0f0f0;
-      border-right: 1px solid #ddd;
-    }
-
-    .CodeMirror-linenumber {
-      color: #666;
-      padding: 0 8px;
-      min-width: 2.5em;
-    }
-
-    /* Error line highlighting */
-    .CodeMirror-line-error {
-      background-color: #ffebee;
-      border-bottom: 2px wavy #d32f2f;
-      position: relative;
-    }
-
-    .CodeMirror .error-line {
-      background-color: #ffebee !important;
-    }
-
-    .CodeMirror .error-line-gutter {
-      /* background-color: #ffcdd2 !important; */
-      /* color: #d32f2f !important; */
-      /* font-weight: bold; */
-    }
-    /* Inline error text highlighting */
-    .CodeMirror .error-text {
-      background-color: #ffebee;
-      border-bottom: 2px wavy #d32f2f;
-    }
-
-    /* KIF syntax highlighting for CodeMirror */
+    .CodeMirror {border: 1px solid #ddd; border-radius: 6px; height: 60vh; font-family: ui-monospace, monospace; font-size: 14px; line-height: 1.4;}
+    .CodeMirror-gutters {background: #f0f0f0; border-right: 1px solid #ddd;}
+    .CodeMirror-linenumber {color: #666; padding: 0 8px; min-width: 2.5em;}
+    .CodeMirror-line-error {background-color: #ffebee; border-bottom: 2px wavy #d32f2f; position: relative;}
+    .CodeMirror .error-line {background-color: #ffebee !important;}
+    .CodeMirror .error-text {background-color: #ffebee; border-bottom: 2px wavy #d32f2f;}
     .cm-kif-comment { color: red; }
     .cm-kif-operator { color: #0000CD; font-weight: bold; }
     .cm-kif-quantifier { color: #0000CD; font-style: italic; }
@@ -117,32 +43,17 @@
     .cm-kif-instance { color: #228B22; font-weight: bold; }
     .cm-kif-string { color: #B22222; }
     .cm-kif-number { color: #FF4500; }
-
-    .editor-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-    }
+    .editor-header {display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
     .button-group { display: flex; gap: 8px; }
-
-    /* File name display */
-    .file-name-display {
-      font-family: monospace;
-      font-size: 12px;
-      color: #666;
-      margin-top: 4px;
-    }
+    .file-name-display {font-family: monospace; font-size: 12px; color: #666; margin-top: 4px;}
   </style>
 </head>
 <body>
-
 <%!
   private static String esc(String s) {
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
   }
 %>
-
 <div class="card">
 <div class="language-select">
   <label>
@@ -156,24 +67,20 @@
     TPTP
   </label>
 </div>
-
 <!-- Hidden form for file upload -->
 <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
       enctype="multipart/form-data" style="display:none;" id="uploadForm">
   <input type="file" name="kifFile" id="kifFile" accept=".kif,.txt" required />
 </form>
-
 <script>
   const fileInput = document.getElementById('kifFile');
   const fileNameSpan = document.getElementById('file-name');
   const uploadForm = document.getElementById('uploadForm');
-
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
       if (fileNameSpan) {
         fileNameSpan.textContent = 'Uploaded: ' + fileInput.files[0].name;
       }
-      // Auto-submit the form when file is selected
       uploadForm.submit();
     } else {
       if (fileNameSpan) {
@@ -182,56 +89,27 @@
     }
   });
 
-// Define KIF mode for CodeMirror
 CodeMirror.defineMode("kif", function() {
   return {
     token: function(stream, state) {
-      // Handle comments
-      if (stream.match(/;.*/)) {
+      if (stream.match(/;.*/))
         return "kif-comment";
-      }
-
-      // Handle strings
-      if (stream.match(/"(?:[^"\\]|\\.)*"/)) {
+      if (stream.match(/"(?:[^"\\]|\\.)*"/))
         return "kif-string";
-      }
-
-      // Handle numbers
-      if (stream.match(/\b\d+(?:\.\d+)?\b/)) {
+      if (stream.match(/\b\d+(?:\.\d+)?\b/))
         return "kif-number";
-      }
-
-      // Handle variables
-      if (stream.match(/\?[A-Za-z0-9_-]+/)) {
+      if (stream.match(/\?[A-Za-z0-9_-]+/))
         return "kif-variable";
-      }
-
-      // Handle quantifiers
-      if (stream.match(/\b(?:exists|forall)\b/)) {
+      if (stream.match(/\b(?:exists|forall)\b/))
         return "kif-quantifier";
-      }
-
-      // Handle operators
-      if (stream.match(/(?:\band\b|\bor\b|\bnot\b|=>|<=>)/)) {
+      if (stream.match(/(?:\band\b|\bor\b|\bnot\b|=>|<=>)/))
         return "kif-operator";
-      }
-
-      // Handle instance keywords
-      if (stream.match(/\b(?:instance|subclass|domain|range)\b/)) {
+      if (stream.match(/\b(?:instance|subclass|domain|range)\b/))
         return "kif-instance";
-      }
-
-      // Handle parentheses
-      if (stream.match(/[()]/)) {
+      if (stream.match(/[()]/))
         return "bracket";
-      }
-
-      // Skip whitespace
-      if (stream.match(/\s+/)) {
+      if (stream.match(/\s+/))
         return null;
-      }
-
-      // Default: advance one character
       stream.next();
       return null;
     }
@@ -239,7 +117,6 @@ CodeMirror.defineMode("kif", function() {
 });
 
 let codeEditor;
-
 function initializeCodeMirror() {
   const textarea = document.getElementById("codeEditor");
   codeEditor = CodeMirror.fromTextArea(textarea, {
@@ -253,8 +130,6 @@ function initializeCodeMirror() {
     autoCloseBrackets: true,
     matchBrackets: true
   });
-
-  // Apply error highlighting if errorMask is available
   highlightErrorLines();
 }
 
@@ -275,13 +150,9 @@ function initializeCodeMirror() {
 let errorMarks = [];
 
 function highlightErrorLines() {
-  // Clear previous marks
-  for (const mark of errorMarks) {
+  for (const mark of errorMarks)
     mark.clear();
-  }
   errorMarks = [];
-
-  // Highlight error ranges inline
   if (errors && errors.length > 0 && codeEditor) {
     for (const err of errors) {
       const from = { line: err.line, ch: err.start };
@@ -290,8 +161,6 @@ function highlightErrorLines() {
       errorMarks.push(mark);
     }
   }
-
-  // Optional: keep gutter highlighting for entire lines using errorMask
   const errorMask = [<%
     boolean[] errorMask = (boolean[]) request.getAttribute("errorMask");
     if (errorMask != null) {
@@ -301,17 +170,14 @@ function highlightErrorLines() {
       }
     }
   %>];
-
   if (errorMask && errorMask.length > 0 && codeEditor) {
     codeEditor.eachLine(function(lineHandle) {
       codeEditor.removeLineClass(lineHandle, "gutter", "error-line-gutter");
     });
 
-    for (let i = 0; i < errorMask.length; i++) {
-      if (errorMask[i]) {
+    for (let i = 0; i < errorMask.length; i++)
+      if (errorMask[i])
         codeEditor.addLineClass(i, "gutter", "error-line-gutter");
-      }
-    }
   }
 }
 

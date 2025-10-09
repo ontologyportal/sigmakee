@@ -82,7 +82,7 @@ public class KifFileChecker {
         }
     }
 
-    /**
+    /** ***************************************************************
      * Check KIF content without a filename.
      * @param contents the KIF text to check
      * @return list of error and warning diagnostics
@@ -91,7 +91,7 @@ public class KifFileChecker {
         return check(contents, "(buffer)");
     }
 
-    /**
+    /** ***************************************************************
      * Runs syntax and semantic checks on KIF content, returning diagnostics.
      * @param contents raw KIF text to check
      * @return list of error/warning strings in "line:col: SEVERITY: message" format
@@ -140,7 +140,7 @@ public class KifFileChecker {
      */
     public static void CheckQuantifiedVariableNotInStatement(String fileName, Formula f, String formulaText, int formulaStartLine, List<ErrRec> msgs){
         
-        String errorMessage = "Quantified variable not used in statement body";
+        String errorMessage = "Quantified variable not used in statement body - ";
         if (Diagnostics.quantifierNotInStatement(f)) {
             String[] quantifiers = { "forall", "exists" };
             int[] rel = { -1, -1 };
@@ -155,7 +155,9 @@ public class KifFileChecker {
             if (foundQuant != null) {
                 int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + rel[0];
                 int absCol = rel[1];
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + foundQuant.length(), errorMessage));
+                String[] lines = formulaText.split("\n", -1);
+                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
+                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + foundQuant.length(), errorMessage + offendingLine));
             } else {
                 errorMessage += " (no quantifier found in text)";
                 msgs.add(new ErrRec(0, fileName, f.startLine - 1, 0, 1, errorMessage));
@@ -165,7 +167,6 @@ public class KifFileChecker {
 
     /** ***************************************************************
      * Check for existential quantifiers in antecedents (illegal).
-     *
      * @param fileName         logical filename
      * @param f                formula to check
      * @param formulaText      raw text of the formula
@@ -174,16 +175,18 @@ public class KifFileChecker {
      */
     public static void CheckExistentialInAntecedent(String fileName, Formula f, String formulaText, int formulaStartLine, List<ErrRec> msgs) {
 
-        String errorMessage = "Existential quantifier in antecedent";
+        String errorMessage = "Existential quantifier in antecedent - ";
         if (Diagnostics.existentialInAntecedent(f)) {
             int[] rel = findLineInFormula(formulaText, "exists");
             int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
             int absCol = rel[1] >= 0 ? rel[1] : 0;
-            msgs.add(new ErrRec(1, fileName, absLine, absCol, absCol + 7, errorMessage));
+            String[] lines = formulaText.split("\n", -1);
+            String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
+            msgs.add(new ErrRec(1, fileName, absLine, absCol, absCol + 7, errorMessage + offendingLine));
         }
     }
 
-    /**
+    /** ***************************************************************
      * Check for variables that appear only once in a formula.
      * @param fileName         logical filename
      * @param f                formula to check
@@ -193,19 +196,21 @@ public class KifFileChecker {
      */
     public static void CheckSingleUseVariables(String fileName, Formula f, String formulaText, int formulaStartLine, List<ErrRec> msgs){
         
-        String errorMessage = "Variable used only once: ";
+        String errorMessage = "Variable used only once - ";
         Set<String> singleUse = Diagnostics.singleUseVariables(f);
         if (singleUse != null) {
             for (String v : singleUse) {
                 int[] rel = findLineInFormula(formulaText, v);
                 int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
-                msgs.add(new ErrRec(1, fileName, absLine, absCol, absCol + v.length(), errorMessage + v));
+                String[] lines = formulaText.split("\n", -1);
+                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
+                msgs.add(new ErrRec(1, fileName, absLine, absCol, absCol + v.length(), errorMessage + offendingLine));
             }
         }
     }
 
-    /**
+    /** ***************************************************************
      * Check for unquantified variables appearing in the consequent of implications.
      * @param fileName         logical filename
      * @param f                formula to check
@@ -215,19 +220,21 @@ public class KifFileChecker {
      */
     public static void CheckUnquantInConsequent(String fileName, Formula f, String formulaText, int formulaStartLine, List<ErrRec> msgs){
         
-        String errorMessage = "Unquantified variable in consequent: ";
+        String errorMessage = "Unquantified variable in consequent - ";
         Set<String> unquant = Diagnostics.unquantInConsequent(f);
         if (unquant != null) {
             for (String uq : unquant) {
                 int[] rel = findLineInFormula(formulaText, uq);
                 int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + uq.length(), errorMessage + uq));
+                String[] lines = formulaText.split("\n", -1);
+                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
+                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + uq.length(), errorMessage + offendingLine));
             }
         }
     }
 
-    /**
+    /** ***************************************************************
      * Run FormulaPreprocessor and record errors/warnings.
      * @param fileName         logical filename
      * @param kb               knowledge base
@@ -249,7 +256,7 @@ public class KifFileChecker {
         return processed;
     }
 
-    /**
+    /** ***************************************************************
      * Check for translation errors after SUMO → TFA conversion.
      * @param fileName         logical filename
      * @param f                formula
@@ -267,7 +274,7 @@ public class KifFileChecker {
         }
     }
 
-    /**
+    /** ***************************************************************
      * Check if the formula is structurally valid in the KB.
      * @param fileName         logical filename
      * @param f                formula
@@ -286,7 +293,7 @@ public class KifFileChecker {
         }
     }
 
-    /**
+    /** ***************************************************************
      * Check that all terms are below Entity in the KB hierarchy.
      * @param fileName         logical filename
      * @param f                formula
@@ -306,12 +313,14 @@ public class KifFileChecker {
                 int[] rel = findLineInFormula(formulaText, t);
                 int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + t.length(), "Term not below Entity: " + t));
+                String[] lines = formulaText.split("\n", -1);
+                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
+                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + t.length(), "Term not below Entity: " + offendingLine));
             }
         }
     }
 
-    /**
+    /** ***************************************************************
      * Sort diagnostic messages by line, column, type, and text.
      * @param msgs list of error records to sort
      */
@@ -328,7 +337,7 @@ public class KifFileChecker {
         });
     }
 
-    /**
+    /** ***************************************************************
      * Check for syntax errors during parsing.
      * @param contents KIF text
      * @param fileName logical filename
@@ -346,7 +355,7 @@ public class KifFileChecker {
         }
     }
  
-    /**
+    /** ***************************************************************
      * Convert raw KIF string into a KIF object, collecting parse errors.
      * @param contents KIF text
      * @param fileName logical filename
@@ -364,7 +373,7 @@ public class KifFileChecker {
         return localKif;
     }
 
-    /**
+    /** ***************************************************************
      * Extract a formula's exact text between line numbers.
      *
      * @param bufferLines full text split into lines
@@ -383,7 +392,7 @@ public class KifFileChecker {
         return sb.toString();
     }
 
-    /**
+    /** ***************************************************************
      * Find the relative line and column offset of a substring (e.g., error term)
      * within a multi-line formula string.
      * @param formulaText the full text of the formula
@@ -415,7 +424,7 @@ public class KifFileChecker {
         return Character.isLetterOrDigit(c) || c == '.' || c == '_';
     }
 
-    /**
+    /** ***************************************************************
      * Recursively collect local individuals and subclasses from formulas.
      *
      * @param f                 formula to traverse
@@ -442,7 +451,7 @@ public class KifFileChecker {
                 harvestLocalFacts(f.getArgument(i), localIndividuals, localSubclasses);
     }
 
-    /**
+    /** ***************************************************************
      * Check if a token represents a constant rather than a variable or literal.
      * @param tok token string
      * @return true if constant, false otherwise
@@ -451,7 +460,7 @@ public class KifFileChecker {
         return !(Formula.isVariable(tok) || StringUtil.isNumeric(tok) || StringUtil.isQuotedString(tok));
     }
 
-    /**
+    /** ***************************************************************
      * Find where a formula string appears in the buffer.
      * @param formulaStr  formula text
      * @param bufferLines full text split into lines
@@ -504,7 +513,7 @@ public class KifFileChecker {
         return result;
     }
 
-    /**
+    /** ***************************************************************
      * Parses KIF content into a KIF object and collects warnings/errors as ErrRec.
      * @param kif target KIF object
      * @param contents KIF text content
