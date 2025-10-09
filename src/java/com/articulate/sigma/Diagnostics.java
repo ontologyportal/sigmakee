@@ -1227,6 +1227,19 @@ public class Diagnostics {
             HashMap<String, HashSet<String>> map = findOrphanVars(f);
             mergeResults(links, map);
         }
+
+        System.out.println("\nVariable links from kif file:\n");
+        for (String var : links.keySet()) {
+            System.out.println(var + " -> " + links.get(var));
+        }
+
+        int orphanVar = 0;
+        for (String var : links.keySet()) {
+            if (links.get(var).isEmpty()) {
+                System.out.println("\nOrphan variable found: " + var);
+                orphanVar++;
+            }
+        }
         return links;
     }
 
@@ -1430,10 +1443,6 @@ public class Diagnostics {
                 } catch (IOException e) {
                     System.err.println("Error processing input: " + e);
                 }
-            }
-            System.out.println("\n\n\nVariable links from kif file:\n");
-            for (String key : varLinksParentMap.keySet()) {
-                System.out.println(key + " -> " + varLinksParentMap.get(key));
             }
 
             Formula formulaTest1 = new Formula("(=>\n" +
