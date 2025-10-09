@@ -34,9 +34,37 @@ import java.util.regex.Pattern;
 public class KifFileChecker {
     public static boolean debug = true;
 
+<<<<<<< HEAD
     public enum Severity { ERROR, WARNING }
     public static final int ERROR = 1;
     public static final int WARNING = 2;
+=======
+    /** ***************************************************************
+     * Unified error record class (shared with SUMOjEdit)
+     */
+    public static final class ErrRec {
+        public final int type;          // ErrorSource.ERROR or ErrorSource.WARNING
+        public final String file;
+        public final int line, start, end; // line/col info
+        public final String msg;
+
+        public ErrRec(int type, String file, int line, int start, int end, String msg) {
+            this.type = type;
+            this.file = file;
+            this.line = line;
+            this.start = start;
+            this.end = end;
+            this.msg = msg;
+        }
+    }
+
+    /**
+ * Runs syntax and semantic checks on KIF content, returning diagnostics.
+ * @param contents raw KIF text to check
+ * @return list of error/warning strings in "line:col: SEVERITY: message" format
+ */
+public List<String> check(String contents) {
+>>>>>>> master
 
     public static final class ErrRec {
         public final int type;

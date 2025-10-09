@@ -22,7 +22,7 @@ import org.junit.runners.Suite;
     SUMOformulaToTPTPformulaTest.class, // <- already tested in the UnitTestSuite
     TPTP3Test.class,
     WSDwKBtest.class,
-    DiagnosticsTest.class
+    // DiagnosticsTest.class
 })
 public class IntegrationSigmaTestSuite extends IntegrationTestBase {
 

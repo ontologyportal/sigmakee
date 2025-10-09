@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 <%@ include file="Prelude.jsp" %>
+=======
+<%@ include	file="Prelude.jsp" %>
+<%@ page import="java.net.URLEncoder, java.nio.charset.Charset" %>
+>>>>>>> master
 
 <html>
 <head>
@@ -93,6 +98,7 @@
     </table>
 </form><p>
 <%
+<<<<<<< HEAD
     String populate = request.getParameter("populate");
 
     if ("admin".equalsIgnoreCase(role) && populate != null) {
@@ -197,6 +203,50 @@
                 out.println("<p>No cached formulas found for numVars=" + numVarsInt
                             + ", depth=" + depthInt + "</p>");
         }
+=======
+    if (action != null && action.equalsIgnoreCase("submit")) {
+        out.println("Generate formulas<br>");
+        gpf.init();
+        if (numVars == null)
+            numVars = "3";
+        if (depth == null)
+            depth = "5";
+        gpf.generateFormulas(10,Integer.parseInt(numVars),Integer.parseInt(depth));
+        out.println();
+        out.println("<hr><br>");
+        out.println("<b>Contradiction</b>:<br> ");
+        for (String s : gpf.contraResults) {
+            out.println(s + "<br>");
+            out.println("CNF: " + gpf.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
+            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+        }
+        out.println("<hr><br>");
+        out.println("<b>Tautology</b>:<br>");
+        for (String s : gpf.tautResults) {
+            out.println(s + "<br>");
+            out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
+            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+        }
+        out.println("<hr><br>");
+        out.println("<b>Satisfiable</b>:<br>");
+        for (String s : gpf.satResults) {
+            out.println(s + "<br>");
+            out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
+            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
+            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
+            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+        }
+    }
+    if (erase != null && erase.equalsIgnoreCase("erase")) {
+        gpf.init();
+>>>>>>> master
     }
 %>
 

@@ -64,6 +64,13 @@ if (!role.equalsIgnoreCase("admin")) {
     int maxAnswers = 1;
     int timeout = 30;
 
+    Boolean showEnglish = (Boolean) session.getAttribute("showProofInEnglish");
+    if (req != null) { // form submitted
+        showEnglish = "yes".equalsIgnoreCase(request.getParameter("showProofInEnglish"));
+        session.setAttribute("showProofInEnglish", showEnglish);
+    }
+    if (showEnglish == null) showEnglish = true; // first load default = ON
+
     String eproverExec = KBmanager.getMgr().getPref("eprover");
     String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
     File ep = new File(eproverExec);
@@ -214,6 +221,10 @@ if (!role.equalsIgnoreCase("admin")) {
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
           <label>Custom mode</label>]<BR>
 
+    <input type="checkbox" name="showProofInEnglish" value="yes"
+           <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
+    <label>Show English Paraphrases</label><BR>
+
     <INPUT type="submit" name="request" value="Ask">
 
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
@@ -224,6 +235,10 @@ if (!role.equalsIgnoreCase("admin")) {
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
+//    boolean showEnglish = "yes".equalsIgnoreCase(request.getParameter("showProofInEnglish"));
+    System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
+    HTMLformatter.proofParaphraseInEnglish = showEnglish;
+
     if (status != null && status.toString().length() > 0) {
         out.println("Status: ");
         out.println(status.toString());

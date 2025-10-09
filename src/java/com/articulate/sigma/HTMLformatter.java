@@ -48,6 +48,8 @@ public class HTMLformatter {
     // set by BrowseBody.jsp or SimpleBrowseBody.jsp
     public static String language = "EnglishLanguage";
 
+    public static boolean proofParaphraseInEnglish = true;
+
     public static List<String> availableFormalLanguages =
             new ArrayList<>(Arrays.asList("SUO-KIF", "TPTP"/*, "traditionalLogic", "OWL"*/));
 
@@ -246,7 +248,9 @@ public class HTMLformatter {
                 result.append("[<a href=\"VampProofSteps.html\">").append(step.infRule).append("</a>]");
         }
         result.append("</td><td width=\"40%\" valign=\"top\">");
-        if (StringUtil.isNonEmptyString(language)) {
+        // if proof paraphrase in English is checked in AskTell.jsp page return the paraphrased version of the proof
+        if (StringUtil.isNonEmptyString(language) && (proofParaphraseInEnglish)) {
+
             String pph = NLGUtils.htmlParaphrase(kbHref,
                     f.getFormula(),
                     KBmanager.getMgr().getKB(kbName).getFormatMap(language),
@@ -264,6 +268,10 @@ public class HTMLformatter {
                 // pph = ("&#x202b;" + pph + "&#x202c;");
             }
             result.append(pph);
+        }else{
+            // if proof paraphrase in English is not checked in AskTell.jsp page return the suo-kif version
+//            result.append(f.getFormula());
+              result.append("");
         }
         result.append("</td>");
         return result.toString();
