@@ -32,8 +32,7 @@ public class KifCheckWorker {
                 try {
                     Job job = queue.take();
                     try {
-                        // Updated: check() now returns List<ErrRec>
-                        List<KifFileChecker.ErrRec> result = job.checker.check(job.contents);
+                        List<ErrRec> result = job.checker.check(job.contents);
                         job.future.complete(result);
                     } catch (Exception e) {
                         job.future.completeExceptionally(e);
@@ -52,7 +51,7 @@ public class KifCheckWorker {
      * @param contents KIF contents as string
      * @return Future that will complete with a list of ErrRec objects
      */
-    public static Future<List<KifFileChecker.ErrRec>> submit(String contents) {
+    public static Future<List<ErrRec>> submit(String contents) {
         Job job = new Job(contents, new KifFileChecker());
         queue.add(job);
         return job.future;
@@ -61,7 +60,7 @@ public class KifCheckWorker {
     private static class Job {
         final String contents;
         final KifFileChecker checker;
-        final CompletableFuture<List<KifFileChecker.ErrRec>> future = new CompletableFuture<>();
+        final CompletableFuture<List<ErrRec>> future = new CompletableFuture<>();
 
         Job(String contents, KifFileChecker checker) {
             this.contents = contents;

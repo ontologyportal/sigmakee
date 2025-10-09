@@ -99,9 +99,14 @@
     }
 
     .CodeMirror .error-line-gutter {
-      background-color: #ffcdd2 !important;
-      color: #d32f2f !important;
-      font-weight: bold;
+      /* background-color: #ffcdd2 !important; */
+      /* color: #d32f2f !important; */
+      /* font-weight: bold; */
+    }
+    /* Inline error text highlighting */
+    .CodeMirror .error-text {
+      background-color: #ffebee;
+      border-bottom: 2px wavy #d32f2f;
     }
 
     /* KIF syntax highlighting for CodeMirror */
@@ -253,8 +258,40 @@ function initializeCodeMirror() {
   highlightErrorLines();
 }
 
+  const errors = [
+    <%
+      List<ErrRec> errs = (List<ErrRec>) request.getAttribute("errors");
+      if (errs != null) {
+          boolean first = true;
+          for (ErrRec e : errs) {
+              if (!first) out.print(", ");
+              out.print("{ line: " + e.line + ", start: " + e.start + ", end: " + e.end + " }");
+              first = false;
+          }
+      }
+    %>
+  ];
+
+let errorMarks = [];
+
 function highlightErrorLines() {
-  // Get error mask from JSP
+  // Clear previous marks
+  for (const mark of errorMarks) {
+    mark.clear();
+  }
+  errorMarks = [];
+
+  // Highlight error ranges inline
+  if (errors && errors.length > 0 && codeEditor) {
+    for (const err of errors) {
+      const from = { line: err.line, ch: err.start };
+      const to = { line: err.line, ch: err.end };
+      const mark = codeEditor.markText(from, to, { className: "error-text" });
+      errorMarks.push(mark);
+    }
+  }
+
+  // Optional: keep gutter highlighting for entire lines using errorMask
   const errorMask = [<%
     boolean[] errorMask = (boolean[]) request.getAttribute("errorMask");
     if (errorMask != null) {
@@ -266,21 +303,18 @@ function highlightErrorLines() {
   %>];
 
   if (errorMask && errorMask.length > 0 && codeEditor) {
-    // Clear any existing error highlighting
     codeEditor.eachLine(function(lineHandle) {
-      codeEditor.removeLineClass(lineHandle, "background", "error-line");
       codeEditor.removeLineClass(lineHandle, "gutter", "error-line-gutter");
     });
 
-    // Apply error highlighting to lines with errors
     for (let i = 0; i < errorMask.length; i++) {
       if (errorMask[i]) {
-        codeEditor.addLineClass(i, "background", "error-line");
         codeEditor.addLineClass(i, "gutter", "error-line-gutter");
       }
     }
   }
 }
+
 
 function checkFileSize() {
   const fileInput = document.getElementById("kifFile");
@@ -350,7 +384,7 @@ function downloadKifFile() {
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
   String fileName = (String) request.getAttribute("fileName");
-  List<KifFileChecker.ErrRec> errors = (List<KifFileChecker.ErrRec>) request.getAttribute("errors");
+  List<ErrRec> errors = (List<ErrRec>) request.getAttribute("errors");
   List<String> fileContent = (List<String>) request.getAttribute("fileContent");
   String codeContent = (String) request.getAttribute("codeContent");
 %>
@@ -367,6 +401,7 @@ function downloadKifFile() {
       <div class="button-group">
         <button type="button" class="upload-button" onclick="triggerFileUpload()">Upload</button>
         <button type="button" class="download-button" onclick="downloadKifFile()">Download</button>
+        <button type="button" class="check-button" onclick="formatBuffer()">Format</button>
         <button type="button" class="check-button" onclick="submitCodeForCheck()">Check</button>
       </div>
     </div>
@@ -398,14 +433,14 @@ function downloadKifFile() {
     } else {
       java.util.Set<Integer> errorLines = new java.util.HashSet<>();
 
-      for (KifFileChecker.ErrRec e : errors) {
+      for (ErrRec e : errors) {
           if (e.line >= 0) {
               errorLines.add(e.line + 1); // ErrRec.line is 0-based, convert to 1-based if needed
           }
       }
 
       boolean first = true;
-      for (KifFileChecker.ErrRec e : errors) {
+      for (ErrRec e : errors) {
           if (!first) out.print("<br/><br/>");
           out.print(esc(e.toString()));   // or esc(e.msg) if you only want the message
           first = false;

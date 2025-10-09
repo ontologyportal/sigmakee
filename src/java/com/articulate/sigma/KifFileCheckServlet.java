@@ -59,7 +59,7 @@ public class KifFileCheckServlet extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
-        List<KifFileChecker.ErrRec> errors = Collections.emptyList();
+        List<ErrRec> errors = Collections.emptyList();
         List<String> lines = null;
         String fileName = null;
         String text = null;
@@ -67,6 +67,14 @@ public class KifFileCheckServlet extends HttpServlet {
 
         // Check if this is a direct code submission from the editor
         String codeContent = request.getParameter("codeContent");
+        String action = request.getParameter("action");
+        if ("format".equals(action) && codeContent != null) {
+            String formatted = format(codeContent);
+            response.setContentType("text/plain; charset=UTF-8");
+            response.getWriter().write(formatted);
+            return;
+        }
+
         if (codeContent != null && !codeContent.trim().isEmpty()) {
             // Handle direct code submission
             text = codeContent;
@@ -78,7 +86,7 @@ public class KifFileCheckServlet extends HttpServlet {
 
             // Validate the code content
             try {
-                Future<List<KifFileChecker.ErrRec>> future = KifCheckWorker.submit(text);
+                Future<List<ErrRec>> future = KifCheckWorker.submit(text);
                 errors = future.get(); // block until job is processed
             } catch (Exception e) {
                 request.setAttribute("errorMessage",
@@ -112,7 +120,7 @@ public class KifFileCheckServlet extends HttpServlet {
 
             // Enqueue request for sequential processing ---
             try {
-                Future<List<KifFileChecker.ErrRec>> future = KifCheckWorker.submit(text);
+                Future<List<ErrRec>> future = KifCheckWorker.submit(text);
                 errors = future.get(); // block until job is processed
             } catch (Exception e) {
                 request.setAttribute("errorMessage",
@@ -128,7 +136,7 @@ public class KifFileCheckServlet extends HttpServlet {
         // Highlight lines with errors
         boolean[] errorMask = new boolean[lines != null ? lines.size() : 0];
         if (errors != null) {
-            for (KifFileChecker.ErrRec e : errors) {   // CHANGED
+            for (ErrRec e : errors) {   // CHANGED
                 int ln = e.line + 1; // since ErrRec stores 0-based line
                 if (ln >= 1 && ln <= errorMask.length) {
                     errorMask[ln - 1] = true;
@@ -149,5 +157,32 @@ public class KifFileCheckServlet extends HttpServlet {
         }
 
         request.getRequestDispatcher("/CheckKifFile.jsp").forward(request, response);
+    }
+
+    /** ***************************************************************
+     * Pretty-prints / autoformats a block of SUO-KIF text.
+     * This uses the KIF parser and then re-serializes each formula in canonical order.
+     *
+     * @param contents raw KIF string
+     * @return formatted KIF string (canonical), or original if parsing fails
+     */
+    public static String format(String contents) {
+        if (contents == null || contents.trim().isEmpty()) {
+            return contents;
+        }
+
+        KIF kif = new KIF();
+        try (java.io.StringReader sr = new java.io.StringReader(contents)) {
+            kif.parse(sr);
+        } catch (Exception e) {
+            System.err.println("KifFileChecker.format(): parse failed - returning original: " + e.getMessage());
+            return contents;
+        }
+
+        StringBuilder sb = new StringBuilder();
+        for (Formula f : kif.formulasOrdered.values()) {
+            sb.append(f.toString()).append("\n");
+        }
+        return sb.toString();
     }
 }
