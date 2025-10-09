@@ -14,11 +14,6 @@
    <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
    <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
    <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
-<<<<<<< HEAD
-=======
-
-  <!-- All CSS here -->
->>>>>>> 702aca4e (Now allowing users to name the files they download)
   <style>
     body {font-family: system-ui, sans-serif; margin: 24px;}
     .card {border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px;}
@@ -59,7 +54,6 @@
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
   }
 %>
-
 <div class="card">
 <div class="language-select">
   <label>
@@ -73,10 +67,6 @@
     TPTP
   </label>
 </div>
-<<<<<<< HEAD
-=======
-
->>>>>>> 702aca4e (Now allowing users to name the files they download)
 <!-- Hidden form for file upload -->
 <form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
       enctype="multipart/form-data" style="display:none;" id="uploadForm">
