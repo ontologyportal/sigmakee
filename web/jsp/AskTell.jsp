@@ -24,6 +24,36 @@ if (!role.equalsIgnoreCase("admin")) {
 <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - Ask/Tell</TITLE>
 
+    <script type="text/javascript">
+        function toggleVampireOptions() {
+            var vampireRadio = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
+            var isVampireSelected = vampireRadio && vampireRadio.checked && !vampireRadio.disabled;
+
+            // Get all Vampire mode radio buttons
+            var cascRadio = document.getElementById('CASC');
+            var avatarRadio = document.getElementById('Avatar');
+            var customRadio = document.getElementById('Custom');
+            var modensPonensCheckbox = document.getElementById('ModensPonens');
+
+            // Disable/enable based on Vampire selection
+            if (cascRadio) cascRadio.disabled = !isVampireSelected;
+            if (avatarRadio) avatarRadio.disabled = !isVampireSelected;
+            if (customRadio) customRadio.disabled = !isVampireSelected;
+            if (modensPonensCheckbox) modensPonensCheckbox.disabled = !isVampireSelected;
+        }
+
+        window.onload = function() {
+            // Set initial state when page loads
+            toggleVampireOptions();
+
+            // Add change event listeners to all inference engine radio buttons
+            var radioButtons = document.querySelectorAll('input[name="inferenceEngine"]');
+            radioButtons.forEach(function(radio) {
+                radio.addEventListener('change', toggleVampireOptions);
+            });
+        };
+    </script>
+
 </HEAD>
 <%
     System.out.println("INFO in AskTell.jsp");
@@ -206,17 +236,17 @@ if (!role.equalsIgnoreCase("admin")) {
     Choose an inference engine:<BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (inferenceEngine.equals("LEO")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'" >
+           onclick="document.getElementById('SoTPTPControl').style.display='none'" >
     LEO-III <BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (inferenceEngine.equals("EProver")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if (kb.eprover == null) { %> DISABLED <% } %> >
+           onclick="document.getElementById('SoTPTPControl').style.display='none'"
+        <% if (kb.eprover == null) { %> DISABLED <% } %> >
     EProver <BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (inferenceEngine.equals("Vampire")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if (KBmanager.getMgr().getPref("vampire") == null) { %> DISABLED <% } %> >
+           onclick="document.getElementById('SoTPTPControl').style.display='none'"
+        <% if (KBmanager.getMgr().getPref("vampire") == null) { %> DISABLED <% } %> >
     Vampire : [
       <input type="radio" id="CASC" name="vampireMode" value="CASC"
           <% if (vampireMode.equals("CASC")) { out.print(" CHECKED"); } %> >
