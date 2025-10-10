@@ -1,3 +1,4 @@
+<%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
 <%@include file="Prelude.jsp" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-present,
@@ -123,6 +124,13 @@ if (!role.equalsIgnoreCase("admin")) {
         session.setAttribute("showProofInEnglish", showEnglish);
     }
     if (showEnglish == null) showEnglish = true; // first load default = ON
+
+    Boolean llmProof = (Boolean) session.getAttribute("showProofFromLLM");
+    if (req != null) { // form submitted
+        llmProof = "yes".equalsIgnoreCase(request.getParameter("showProofFromLLM"));
+        session.setAttribute("showProofFromLLM", llmProof);
+    }
+    if (llmProof == null) llmProof = false; // first load default = OFF
 
     String eproverExec = KBmanager.getMgr().getPref("eprover");
     String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
@@ -291,6 +299,10 @@ if (!role.equalsIgnoreCase("admin")) {
            <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
     <label>Show English Paraphrases</label><BR>
 
+    <input type="checkbox" name="showProofFromLLM" value="yes"
+           <% if (Boolean.TRUE.equals(llmProof)) { %>checked<% } %> >
+    <label>Use LLM for Paraphrasing</label><BR>
+
     <INPUT type="submit" name="request" value="Ask">
 
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
@@ -303,6 +315,9 @@ if (!role.equalsIgnoreCase("admin")) {
 <%
     System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
+
+    System.out.println("AskTell.jsp / showProofFromLLM = "+llmProof);
+    LanguageFormatter.paraphraseLLM = llmProof;
 
     if (status != null && status.toString().length() > 0) {
         out.println("Status: ");
