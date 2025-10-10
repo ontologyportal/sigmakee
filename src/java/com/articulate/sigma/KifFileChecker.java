@@ -107,8 +107,8 @@ public class KifFileChecker {
         if (!msgs.isEmpty())
             return msgs;
         KIF localKif = StringToKif(contents, fileName, msgs);
-        if (!parseKif(localKif, contents, fileName, msgs))
-            return msgs;
+        // if (!parseKif(localKif, contents, fileName, msgs))
+        //     return msgs;
         for (Formula f : localKif.formulaMap.values())
             harvestLocalFacts(f, localIndividuals, localSubclasses);
         String[] bufferLines = contents.split("\n", -1);
