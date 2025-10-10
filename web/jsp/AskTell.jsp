@@ -25,35 +25,30 @@ if (!role.equalsIgnoreCase("admin")) {
 <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - Ask/Tell</TITLE>
 
-    <script type="text/javascript">
+    <script>
         function toggleVampireOptions() {
-            var vampireRadio = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
-            var isVampireSelected = vampireRadio && vampireRadio.checked && !vampireRadio.disabled;
+            const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
+            const casc = document.getElementById('CASC');
+            const avatar = document.getElementById('Avatar');
+            const custom = document.getElementById('Custom');
+            const mp = document.getElementById('ModensPonens');
+            const drop = document.getElementById('dropOnePremise');
 
-            // Get all Vampire mode radio buttons
-            var cascRadio = document.getElementById('CASC');
-            var avatarRadio = document.getElementById('Avatar');
-            var customRadio = document.getElementById('Custom');
-            var modensPonensCheckbox = document.getElementById('ModensPonens');
-            var dropSimplePremiseCheckbox = document.getElementById('dropOnePremise');
+            const vampireOn = vamp && vamp.checked && !vamp.disabled;
 
-            // Disable/enable based on Vampire selection
-            if (cascRadio) cascRadio.disabled = !isVampireSelected;
-            if (avatarRadio) avatarRadio.disabled = !isVampireSelected;
-            if (customRadio) customRadio.disabled = !isVampireSelected;
-            if (modensPonensCheckbox) modensPonensCheckbox.disabled = !isVampireSelected;
-            if (dropSimplePremiseCheckbox) dropSimplePremiseCheckbox.disabled = !isVampireSelected;
+            [casc, avatar, custom, mp].forEach(el => { if (el) el.disabled = !vampireOn; });
+
+            const mpOn = vampireOn && mp && mp.checked;
+            if (drop) {
+                drop.disabled = !mpOn;
+                if (!mpOn) drop.checked = false; // optional: uncheck when disabled
+            }
         }
 
-        window.onload = function() {
-            // Set initial state when page loads
+        window.onload = function () {
             toggleVampireOptions();
-
-            // Add change event listeners to all inference engine radio buttons
-            var radioButtons = document.querySelectorAll('input[name="inferenceEngine"]');
-            radioButtons.forEach(function(radio) {
-                radio.addEventListener('change', toggleVampireOptions);
-            });
+            document.querySelectorAll('input[name="inferenceEngine"], #ModensPonens')
+                .forEach(el => el.addEventListener('change', toggleVampireOptions));
         };
     </script>
 
@@ -287,13 +282,12 @@ if (!role.equalsIgnoreCase("admin")) {
 
       <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
         <label for="ModensPonens">Modens Ponens</label>
-        <span title="Runs Vampire with modens-ponens-only routine in authored-only axioms Proof">&#9432;</span>
+        <span title="Runs Vampire with modens-ponens-only routine in authored-only axioms Proof">&#9432;</span> [
 
       <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
             <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
-        <label for="dropOnePremise">Drop One-Premise Formulas</label>
+        <label for="dropOnePremise">Drop One-Premise Formulas</label>]
     <br>
-
 
     <input type="checkbox" name="showProofInEnglish" value="yes"
            <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
