@@ -311,10 +311,66 @@ public class KButilities implements ServletContextListener {
         return true;
     }
 
+    // Store the formula text context for error offset lookup
+    private static final ThreadLocal<String> formulaTextContext = new ThreadLocal<>();
+
+    public static void setFormulaTextContext(String text) {
+        formulaTextContext.set(text);
+    }
+
+    public static void clearFormulaTextContext() {
+        formulaTextContext.remove();
+    }
+
+    private static String getFormulaTextContext() {
+        return formulaTextContext.get();
+    }
+
+
+    // /** *************************************************************
+    //  * Checks for overall validity of the given formula
+    //  *
+    //  * @param kb the knowledge base to check typing against
+    //  * @param form the formula to check
+    //  */
+    // public static boolean isValidFormula(KB kb, String form) {
+
+    //     SUMOtoTFAform.initOnce();
+    //     String result;
+    //     KIF kif = new KIF();
+    //     try {
+    //         result = kif.parseStatement(form);
+    //     }
+    //     catch (Exception e) {
+    //         e.printStackTrace();
+    //         result = "";
+    //     }
+    //     if (!StringUtil.emptyString(result)) {
+    //         errors.addAll(kif.errorSet);
+    //         kif.errorSet.clear();
+    //         if (debug) System.out.println("isValidFormula(): Error: " + result);
+    //         return false;
+    //     }
+    //     Formula f = new Formula(form);
+    //     String term = PredVarInst.hasCorrectArity(f, kb);
+    //     if (!StringUtil.emptyString(term)) {
+    //         String error = "Formula rejected due to arity error of predicate " + term
+    //                 + " in formula: \n" + f.getFormula();
+    //         errors.add(error);
+    //         if (debug) System.err.println("isValidFormula(): Error: " + error);
+    //         return false;
+    //     }
+    //     if (!hasCorrectTypes(kb,f))
+    //         return false;
+    //     if (debug) System.out.println("isValidFormula() valid formula: " + form);
+    //     return true;
+    // }
+
     /** *************************************************************
-     * Checks for overall validity of the given formula
+     * Checks for overall validity of the given formula.
+     * Uses thread-local formulaText to calculate relative line:col offsets.
      *
-     * @param kb the knowledge base to check typing against
+     * @param kb   the knowledge base to check typing against
      * @param form the formula to check
      */
     public static boolean isValidFormula(KB kb, String form) {
@@ -324,30 +380,97 @@ public class KButilities implements ServletContextListener {
         KIF kif = new KIF();
         try {
             result = kif.parseStatement(form);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             result = "";
         }
         if (!StringUtil.emptyString(result)) {
+            // Parser error found
             errors.addAll(kif.errorSet);
             kif.errorSet.clear();
-            if (debug) System.out.println("isValidFormula(): Error: " + result);
+            if (debug) System.out.println("isValidFormula(): Parser Error: " + result);
             return false;
         }
+
         Formula f = new Formula(form);
+
+        // ---------- Arity Check ----------
         String term = PredVarInst.hasCorrectArity(f, kb);
         if (!StringUtil.emptyString(term)) {
-            String error = "Formula rejected due to arity error of predicate " + term
-                    + " in formula: \n" + f.getFormula();
+            int[] rel = findRelativeOffset(term);
+            String error = formatError(rel, "Arity error for predicate " + term + " in formula: " + f.getFormula());
             errors.add(error);
-            if (debug) System.err.println("isValidFormula(): Error: " + error);
+            if (debug) System.err.println("isValidFormula(): " + error);
             return false;
         }
-        if (!hasCorrectTypes(kb,f))
+
+        // ---------- Type Check ----------
+        if (!hasCorrectTypes(kb, f)) {
+            // Type errors should already have been added inside hasCorrectTypes if needed.
             return false;
+        }
+
         if (debug) System.out.println("isValidFormula() valid formula: " + form);
         return true;
+    }
+
+
+    // Holds the formula text currently being validated (per thread)
+    private static final ThreadLocal<String> formulaContext = new ThreadLocal<>();
+
+    /** *************************************************************
+     * Allow callers (e.g., KifFileChecker) to set the current formula text.
+     */
+    public static void setFormulaContext(String text) {
+        formulaContext.set(text);
+    }
+
+    /** *************************************************************
+     * Clear thread-local context to avoid leaking between checks.
+     */
+    public static void clearFormulaContext() {
+        formulaContext.remove();
+    }
+
+    /** *************************************************************
+     * Finds the relative line and column within the thread-local formula context.
+     * Returns [-1,-1] if not found.
+     */
+    private static int[] findRelativeOffset(String term) {
+        String formulaText = formulaContext.get();
+        if (formulaText == null || term == null || term.isEmpty()) {
+            return new int[]{-1, -1};
+        }
+        String[] lines = formulaText.split("\n", -1);
+        for (int i = 0; i < lines.length; i++) {
+            int searchStart = 0;
+            while (searchStart < lines[i].length()) {
+                int pos = lines[i].indexOf(term, searchStart);
+                if (pos == -1) break;
+                boolean validStart = (pos == 0 || !isTermChar(lines[i].charAt(pos - 1)));
+                boolean validEnd = (pos + term.length() >= lines[i].length() || !isTermChar(lines[i].charAt(pos + term.length())));
+                if (validStart && validEnd) {
+                    return new int[]{i, pos}; // line index, column offset
+                }
+                searchStart = pos + 1;
+            }
+        }
+        return new int[]{-1, -1};
+    }
+
+    /** *************************************************************
+     * Formats the error with line:col from the relative offset if available.
+     */
+    private static String formatError(int[] rel, String msg) {
+        if (rel[0] >= 0 && rel[1] >= 0) {
+            return String.format("%d:%d: %s", rel[0] + 1, rel[1] + 1, msg);
+        } else {
+            return msg;
+        }
+    }
+
+    private static boolean isTermChar(char c) {
+        return Character.isLetterOrDigit(c) || c == '.' || c == '_';
     }
 
     /** *************************************************************

@@ -274,24 +274,44 @@ public class KifFileChecker {
         }
     }
 
-    /** ***************************************************************
-     * Check if the formula is structurally valid in the KB.
-     * @param fileName         logical filename
-     * @param f                formula
-     * @param formulaStartLine buffer line offset
-     * @param kb               knowledge base
-     * @param formulaText      raw text of the formula
-     * @param msgs             list to collect error records
-     */
-    private static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
-        
+/** ***************************************************************
+ * Check if the formula is structurally valid in the KB.
+ * @param fileName         logical filename
+ * @param f                formula
+ * @param formulaStartLine buffer line offset
+ * @param kb               knowledge base
+ * @param formulaText      raw text of the formula
+ * @param msgs             list to collect error records
+ */
+private static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
+
+    KButilities.setFormulaContext(formulaText);
+    try {
         if (!KButilities.isValidFormula(kb, formulaText)) {
-            int line = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1);
-            for (String er : KButilities.errors)
-                msgs.add(new ErrRec(0, fileName, line, 1, 2, er));
+            for (String er : KButilities.errors) {
+                int relLine = 0;
+                int relCol = 0;
+                java.util.regex.Matcher m = java.util.regex.Pattern.compile("^(\\d+):(\\d+):").matcher(er);
+                if (m.find()) {
+                    relLine = Integer.parseInt(m.group(1));
+                    relCol = Integer.parseInt(m.group(2));
+                }
+                int absLine = (formulaStartLine - 1) + relLine;
+                int absCol = relCol;
+                String formattedError = String.format(
+                        "ERROR in %s at line %d: %s",
+                        fileName, absLine, er
+                );
+                msgs.add(new ErrRec(0, fileName, absLine - 1, Math.max(absCol, 1), Math.max(absCol, 1) + 1, formattedError));
+            }
             KButilities.errors.clear();
         }
+    } finally {
+        KButilities.clearFormulaContext();
     }
+}
+
+
 
     /** ***************************************************************
      * Check that all terms are below Entity in the KB hierarchy.
