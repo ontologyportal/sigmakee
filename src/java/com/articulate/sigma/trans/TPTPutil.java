@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import tptp_parser.TPTPFormula;
 
@@ -408,6 +410,86 @@ public class TPTPutil {
         finalLines.add(lines.get(endIdx));     // % SZS output end ...
 
         return finalLines;
+    }
+
+
+
+    public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
+        List<String> out = new ArrayList<>();
+        int n = proofLines.size();
+        for (int i = 0; i < n; ) {
+            String ln = proofLines.get(i);
+            String trim = ln.trim();
+
+            // Not a FOF start? just copy and move on
+            if (!trim.startsWith("fof(")) {
+                out.add(ln);
+                i++;
+                continue;
+            }
+
+            // --- collect the whole fof(...) block ---
+            List<String> block = new ArrayList<>();
+            int balance = 0;               // parenthesis balance
+            boolean started = false;       // saw the first '(' of fof(
+            while (i < n) {
+                String cur = proofLines.get(i);
+                block.add(cur);
+
+                // update balance
+                for (char c : cur.toCharArray()) {
+                    if (c == '(') { balance++; started = true; }
+                    else if (c == ')') { balance--; }
+                }
+                i++;
+
+                // end of block when we've closed everything and see a period
+                if (started && balance == 0 && cur.trim().endsWith(".")) break;
+            }
+
+            // Decide keep/drop using the concatenated block text
+            String full = String.join(" ", block).trim();
+
+            // light parse: fof(name, role, ...
+            int pOpen = full.indexOf('('); if (pOpen < 0) { out.addAll(block); continue; }
+            int firstComma = full.indexOf(',', pOpen + 1); if (firstComma < 0) { out.addAll(block); continue; }
+            int secondComma = full.indexOf(',', firstComma + 1); if (secondComma < 0) { out.addAll(block); continue; }
+            String role = full.substring(firstComma + 1, secondComma).trim().toLowerCase();
+
+            // drop conjecture & negated_conjecture entirely
+            if (role.contains("conjecture")) { out.addAll(block); continue; }
+
+            // always keep axioms
+            if (role.equals("axiom")) { out.addAll(block); continue; }
+
+            // check parents count in inference(...,[parents])
+            int inf = full.indexOf("inference(");
+            if (inf < 0) { out.addAll(block); continue; } // play safe
+
+            int lastLB = full.lastIndexOf('[');
+            int lastRB = full.lastIndexOf(']');
+            if (lastLB < 0 || lastRB < 0 || lastRB < lastLB) { out.addAll(block); continue; }
+
+            String parentsBlob = full.substring(lastLB + 1, lastRB).trim();
+            int parentCount = 0;
+            if (!parentsBlob.isEmpty()) {
+                for (String tok : parentsBlob.split(",")) if (!tok.trim().isEmpty()) parentCount++;
+            }
+
+            // keep only multi-premise steps
+            if (parentCount >= 2) out.addAll(block);
+            // else drop the whole block
+        }
+        return out;
+    }
+
+
+
+    private static int countNumbers(String s) {
+        Matcher m = Pattern.compile("\\d+").matcher(s);
+        int c = 0;
+        while (m.find()) c++;
+        return c;
     }
 
     // Save authored axioms + conjecture as clean TPTP, one fof(...) per line.

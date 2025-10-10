@@ -741,15 +741,41 @@ public class TPTP3ProofProcessor {
     }
 
     /**
-     * ***************************************************************
-     * Compute binding and proof from the theorem prover's response. Leave out
-     * the statements of relation sorts that is part of the TFF proof output.
+     * Parses TPTP (Thousands of Problems for Theorem Provers) proof output from a theorem prover
+     * and extracts proof steps, answer bindings, and status information.
      *
-     * @param lines these are proof lines fof/cnf returned by the inference engine
-     * @param kifQuery is the order Vampire and EProver will follow when reporting
-     * @param kb the given knowledge base to process a proof from
-     * @param qlist is the list of quantified variables in order of the original
-     * answers
+     * This method processes the textual output lines from automated theorem provers (such as Vampire or E Prover),
+     * identifying and extracting:
+     * <ul>
+     *   <li>SZS status information (e.g., "Refutation", "Theorem", "CounterSatisfiable")</li>
+     *   <li>Answer bindings for query variables in bracketed format</li>
+     *   <li>Individual proof steps in TPTP formula format (fof/cnf/tff)</li>
+     *   <li>Proof metadata including support relationships and inference rules</li>
+     * </ul>
+     *
+     * The method performs several post-processing operations:
+     * <ul>
+     *   <li>Detects potential knowledge base inconsistencies (refutations without conjectures)</li>
+     *   <li>Strips proof step numbers from Vampire output if present</li>
+     *   <li>Filters out type declarations in TFF proofs</li>
+     *   <li>Normalizes proof step numbering for consistent display</li>
+     *   <li>Extracts types for Skolem terms introduced during proving</li>
+     * </ul>
+     *
+     * Special handling for Vampire prover: Input lines are joined and reversed before processing
+     * since Vampire presents proofs in reverse order.
+     *
+     * @param lines the proof output lines returned by the theorem prover
+     * @param kifQuery the original query in KIF (Knowledge Interchange Format) syntax
+     * @param kb the knowledge base being queried
+     * @param qlist a StringBuilder containing the list of quantified variables in order,
+     *              used for answer extraction and binding
+     *
+     * @see TPTPVisitor
+     * @see TPTPFormula
+     * @see #processAnswers(String)
+     * @see #processAnswersFromProof(StringBuilder, String)
+     * @see #findTypesForSkolemTerms(KB)
      */
     public void parseProofOutput(List<String> lines, String kifQuery, KB kb, StringBuilder qlist) {
 

@@ -34,12 +34,14 @@ if (!role.equalsIgnoreCase("admin")) {
             var avatarRadio = document.getElementById('Avatar');
             var customRadio = document.getElementById('Custom');
             var modensPonensCheckbox = document.getElementById('ModensPonens');
+            var dropSimplePremiseCheckbox = document.getElementById('dropOnePremise');
 
             // Disable/enable based on Vampire selection
             if (cascRadio) cascRadio.disabled = !isVampireSelected;
             if (avatarRadio) avatarRadio.disabled = !isVampireSelected;
             if (customRadio) customRadio.disabled = !isVampireSelected;
             if (modensPonensCheckbox) modensPonensCheckbox.disabled = !isVampireSelected;
+            if (dropSimplePremiseCheckbox) dropSimplePremiseCheckbox.disabled = !isVampireSelected;
         }
 
         window.onload = function() {
@@ -63,10 +65,27 @@ if (!role.equalsIgnoreCase("admin")) {
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String cwa = request.getParameter("CWA");
-    String modensPonensParam = request.getParameter("ModensPonens");
-    boolean modensPonens = "yes".equalsIgnoreCase(modensPonensParam)
-            || "on".equalsIgnoreCase(modensPonensParam)
-            || "true".equalsIgnoreCase(modensPonensParam);
+
+    // --- ModensPonens: read/update session + use boolean for rendering ---
+    Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
+    if (req != null) {
+        modensPonens = request.getParameter("ModensPonens") != null
+                || "yes".equalsIgnoreCase(request.getParameter("ModensPonens"))
+                || "on".equalsIgnoreCase(request.getParameter("ModensPonens"))
+                || "true".equalsIgnoreCase(request.getParameter("ModensPonens"));
+        session.setAttribute("ModensPonens", modensPonens);
+    }
+    if (modensPonens == null) modensPonens = false;
+
+    // --- dropOnePremise: read/update session + global ---
+    Boolean dropOnePremise = (Boolean) session.getAttribute("dropOnePremise");
+    if (req != null) { // form submitted
+        dropOnePremise = request.getParameter("dropOnePremise") != null;
+        session.setAttribute("dropOnePremise", dropOnePremise);
+    }
+    if (dropOnePremise == null) dropOnePremise = false;
+    KB.dropOnePremiseFormulas = dropOnePremise;
+
     if (StringUtil.emptyString(cwa))
         cwa = "no";
     if (cwa.equals("yes"))
@@ -257,9 +276,15 @@ if (!role.equalsIgnoreCase("admin")) {
       <input type="radio" id="Custom" name="vampireMode" value="Custom"
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
           <label>Custom mode</label>]
-        <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
+
+      <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
         <label for="ModensPonens">Modens Ponens</label>
-        <span title="Runs Vampire with modens-ponens-only routine in authored-only axioms Proof">&#9432;</span><br>
+        <span title="Runs Vampire with modens-ponens-only routine in authored-only axioms Proof">&#9432;</span>
+
+      <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
+            <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
+        <label for="dropOnePremise">Drop One-Premise Formulas</label>
+    <br>
 
 
     <input type="checkbox" name="showProofInEnglish" value="yes"
@@ -276,7 +301,6 @@ if (!role.equalsIgnoreCase("admin")) {
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
-//    boolean showEnglish = "yes".equalsIgnoreCase(request.getParameter("showProofInEnglish"));
     System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
 

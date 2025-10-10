@@ -200,6 +200,8 @@ public class KB implements Serializable {
     /** TPTP query of a SUO-KIF formula */
     private Set<String> tptpQuery = null;
 
+    public static boolean dropOnePremiseFormulas = false;
+
     /***************************************************************
      */
     public KB() {
@@ -1959,7 +1961,8 @@ public class KB implements Serializable {
      * 1 - AskVampire to get the first output
      * 2 - Process the output to keep only the authored axioms
      * 3 - Send new command to vampire with modens ponens options
-     * 4 - Return Vampire object for further processing from AskTell.jsp
+     * 4 - If selected drop the one premise formulas.
+     * 5 - Return Vampire object for further processing from AskTell.jsp
      *
      * @param suoKifFormula
      * @param timeout
@@ -1993,8 +1996,20 @@ public class KB implements Serializable {
         } catch (Exception e){
             System.out.println("-- ERROR KB.askVampireModusPomens: "+e.getMessage());
         }
-        System.out.println("vampire_pomens.output: "+vampire_pomens.output);
+        for (String line : vampire_pomens.output) {
+            System.out.println(line);
+        }
 
+        // STEP 4
+        if (dropOnePremiseFormulas) {
+            System.out.println("\n\nSTEP 4: Dropping one-premise formulas\n\n");
+            vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
+            for (String line : vampire_pomens.output) {
+                System.out.println(line);
+            }
+        }
+
+        // STEP 5
         return vampire_pomens;
     }
 
