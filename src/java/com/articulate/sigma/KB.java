@@ -1960,9 +1960,10 @@ public class KB implements Serializable {
      * STEPS:
      * 1 - AskVampire to get the first output
      * 2 - Process the output to keep only the authored axioms
-     * 3 - Send new command to vampire with modens ponens options
-     * 4 - If selected drop the one premise formulas.
-     * 5 - Return Vampire object for further processing from AskTell.jsp
+     * 3 - Send new command to vampire with Modens Ponens options
+     * 4 - If wanted drop the one premise formulas.
+     * 5 - Replace the new proof's infRules with the original ones.
+     * 6 - Return Vampire object for further processing from AskTell.jsp
      *
      * @param suoKifFormula
      * @param timeout
@@ -1973,16 +1974,12 @@ public class KB implements Serializable {
     public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
 
         // STEP 1
-        System.out.println("\n\nSTEP 1\n\n");
         Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers);
-        System.out.println("vampire_initial.output: "+vampire_initial.output);
 
         // STEP 2
-        System.out.println("\n\nSTEP 2\n\n");
-        TPTPutil.processProofLines(vampire_initial.output);
+        List<TPTPFormula> authored_lines = TPTPutil.processProofLines(vampire_initial.output);
 
         // STEP 3
-        System.out.println("\n\nSTEP 3\n\n");
         Vampire vampire_pomens = new Vampire();
         File kb = new File("min-problem.tptp");
         List<String> cmds = Arrays.asList(
@@ -1993,23 +1990,20 @@ public class KB implements Serializable {
         );
         try{
             vampire_pomens.runCustom(kb, 10, cmds);
+            vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireModusPomens: "+e.getMessage());
-        }
-        for (String line : vampire_pomens.output) {
-            System.out.println(line);
+            System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
         }
 
         // STEP 4
         if (dropOnePremiseFormulas) {
-            System.out.println("\n\nSTEP 4: Dropping one-premise formulas\n\n");
             vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-            for (String line : vampire_pomens.output) {
-                System.out.println(line);
-            }
         }
 
         // STEP 5
+        vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
+
+        // STEP 6
         return vampire_pomens;
     }
 

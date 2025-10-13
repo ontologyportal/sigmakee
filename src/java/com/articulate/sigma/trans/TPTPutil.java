@@ -22,9 +22,8 @@ import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -353,7 +352,7 @@ public class TPTPutil {
      * merges multi-line fof(...) statements into single lines,
      * and returns the processed list ready for TPTP3ProofProcessor.
      */
-    private static List<String> clearProofFile(List<String> lines) {
+    public static List<String> clearProofFile(List<String> lines) {
         // --- 0) locate markers and status ---
         String statusLine = null;
         int startIdx = -1;
@@ -415,85 +414,158 @@ public class TPTPutil {
 
 
     public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
-        List<String> out = new ArrayList<>();
-        int n = proofLines.size();
-        for (int i = 0; i < n; ) {
+        class Node {
+            String id, role, text;
+            List<String> parents = new ArrayList<>();
+            int parentsL, parentsR; // indices in text for rewriting
+            boolean keep;
+        }
+        List<Node> nodes = new ArrayList<>();
+        Map<String, Node> byId = new LinkedHashMap<>();
+
+        // -------- PASS 1: collect complete fof(...) blocks, parse id/role/parents ----------
+        for (int i = 0; i < proofLines.size(); ) {
             String ln = proofLines.get(i);
-            String trim = ln.trim();
-
-            // Not a FOF start? just copy and move on
-            if (!trim.startsWith("fof(")) {
-                out.add(ln);
-                i++;
-                continue;
+            if (!ln.trim().startsWith("fof(")) { // non-fof line stays as-is (add as a pseudo-node)
+                Node n = new Node(); n.id = null; n.role = "nonfof"; n.text = ln; n.keep = true; nodes.add(n); i++; continue;
             }
-
-            // --- collect the whole fof(...) block ---
             List<String> block = new ArrayList<>();
-            int balance = 0;               // parenthesis balance
-            boolean started = false;       // saw the first '(' of fof(
-            while (i < n) {
-                String cur = proofLines.get(i);
+            int bal = 0; boolean started = false;
+            while (i < proofLines.size()) {
+                String cur = proofLines.get(i++);
                 block.add(cur);
+                for (char c : cur.toCharArray()) { if (c == '(') { bal++; started = true; } else if (c == ')') bal--; }
+                if (started && bal == 0 && cur.trim().endsWith(".")) break;
+            }
+            String full = String.join(" ", block);
+            Node n = new Node(); n.text = full;
 
-                // update balance
-                for (char c : cur.toCharArray()) {
-                    if (c == '(') { balance++; started = true; }
-                    else if (c == ')') { balance--; }
+            int pOpen = full.indexOf('(');
+            int c1 = full.indexOf(',', pOpen + 1);
+            int c2 = full.indexOf(',', c1 + 1);
+            n.id = (pOpen >= 0 && c1 > pOpen) ? full.substring(pOpen + 1, c1).trim() : null;
+            n.role = (c1 >= 0 && c2 > c1) ? full.substring(c1 + 1, c2).trim().toLowerCase() : "plain";
+
+            // locate the last [...] which is the parents list per TPTP inference(...,[...],[PARENTS])
+            int lb = full.lastIndexOf('['), rb = full.lastIndexOf(']');
+            n.parentsL = lb; n.parentsR = rb;
+            if (lb >= 0 && rb > lb) {
+                String blob = full.substring(lb + 1, rb).trim();
+                if (!blob.isEmpty()) {
+                    for (String t : blob.split(",")) {
+                        String id = t.trim();
+                        if (!id.isEmpty()) n.parents.add(id);
+                    }
                 }
-                i++;
-
-                // end of block when we've closed everything and see a period
-                if (started && balance == 0 && cur.trim().endsWith(".")) break;
             }
+            nodes.add(n);
+            if (n.id != null) byId.put(n.id, n);
+        }
 
-            // Decide keep/drop using the concatenated block text
-            String full = String.join(" ", block).trim();
+        // -------- PASS 2: decide keep/drop (axioms & any role with >=2 parents; keep conjectures) ----------
+        for (Node n : nodes) {
+            if (n.role.equals("nonfof")) { n.keep = true; continue; }
+            if (n.id == null) { n.keep = true; continue; }
+            if (n.role.contains("conjecture")) { n.keep = true; continue; } // keep conjecture & negated_conjecture
+            if ("axiom".equals(n.role)) { n.keep = true; continue; }
+            // count parents
+            int pc = n.parents.size();
+            n.keep = pc >= 2; // drop single-premise (0 or 1) inference steps
+        }
 
-            // light parse: fof(name, role, ...
-            int pOpen = full.indexOf('('); if (pOpen < 0) { out.addAll(block); continue; }
-            int firstComma = full.indexOf(',', pOpen + 1); if (firstComma < 0) { out.addAll(block); continue; }
-            int secondComma = full.indexOf(',', firstComma + 1); if (secondComma < 0) { out.addAll(block); continue; }
-            String role = full.substring(firstComma + 1, secondComma).trim().toLowerCase();
-
-            // drop conjecture & negated_conjecture entirely
-            if (role.contains("conjecture")) { out.addAll(block); continue; }
-
-            // always keep axioms
-            if (role.equals("axiom")) { out.addAll(block); continue; }
-
-            // check parents count in inference(...,[parents])
-            int inf = full.indexOf("inference(");
-            if (inf < 0) { out.addAll(block); continue; } // play safe
-
-            int lastLB = full.lastIndexOf('[');
-            int lastRB = full.lastIndexOf(']');
-            if (lastLB < 0 || lastRB < 0 || lastRB < lastLB) { out.addAll(block); continue; }
-
-            String parentsBlob = full.substring(lastLB + 1, lastRB).trim();
-            int parentCount = 0;
-            if (!parentsBlob.isEmpty()) {
-                for (String tok : parentsBlob.split(",")) if (!tok.trim().isEmpty()) parentCount++;
+        // -------- PASS 3: lifting map: for any dropped node, map it to first kept ancestor ----------
+        Map<String,String> liftMemo = new HashMap<>();
+        Function<String,String> lift = new Function<String,String>() {
+            @Override public String apply(String id) {
+                if (id == null) return null;
+                if (liftMemo.containsKey(id)) return liftMemo.get(id);
+                Node n = byId.get(id);
+                String ans;
+                if (n == null) { ans = id; }                         // unknown → leave as-is
+                else if (n.keep) { ans = id; }                       // already kept
+                else if (n.parents.isEmpty()) { ans = id; }          // no parents to climb → leave
+                else if (n.parents.size() == 1) {                    // single chain: climb
+                    ans = this.apply(n.parents.get(0));
+                } else {                                             // multi-parent (rare for dropped): pick first
+                    ans = this.apply(n.parents.get(0));
+                }
+                liftMemo.put(id, ans);
+                return ans;
             }
+        };
 
-            // keep only multi-premise steps
-            if (parentCount >= 2) out.addAll(block);
-            // else drop the whole block
+        // -------- PASS 4: emit with rewired parents; drop nodes not kept ----------
+        List<String> out = new ArrayList<>();
+        for (Node n : nodes) {
+            if (n.role.equals("nonfof")) { out.add(n.text); continue; }
+            if (n.id == null) { out.add(n.text); continue; }
+            if (!n.keep) continue;
+
+            // Rewire only if we have an inference parents list to rewrite
+            if (n.parentsL >= 0 && n.parentsR > n.parentsL) {
+                List<String> rewired = new ArrayList<>();
+                for (String p : n.parents) {
+                    String lp = lift.apply(p);
+                    if (lp != null && !lp.isEmpty()) rewired.add(lp);
+                }
+                // de-duplicate while preserving order
+                LinkedHashSet<String> dedup = new LinkedHashSet<>(rewired);
+                String newParents = String.join(",", dedup);
+
+                StringBuilder sb = new StringBuilder();
+                sb.append(n.text, 0, n.parentsL + 1)
+                        .append(newParents)
+                        .append(n.text.substring(n.parentsR));
+                out.add(sb.toString());
+            } else {
+                out.add(n.text);
+            }
         }
         return out;
     }
 
 
-
-    private static int countNumbers(String s) {
-        Matcher m = Pattern.compile("\\d+").matcher(s);
-        int c = 0;
-        while (m.find()) c++;
-        return c;
+    static String norm(String s) {
+        return s == null ? "" : s.replaceAll("\\s+", " ").trim();
     }
 
+    public static List<String> replaceFOFinfRule(List<String> proofLines, List<TPTPFormula> authored_lines) {
+        Pattern filePat = Pattern.compile("file\\([^)]*\\)");
+
+        for (TPTPFormula authored_step : authored_lines) {
+            String targetFormula = norm(authored_step.formula);
+            if (targetFormula.startsWith("(") && targetFormula.endsWith(")")) {
+                targetFormula = targetFormula.substring(1, targetFormula.length() - 1);
+            }
+            String replacement = authored_step.infRule; // must be full: file('path',tag)
+
+            for (int i = 0; i < proofLines.size(); i++) {
+                String original = proofLines.get(i);
+                String line = original; // keep original for printing
+                String lineTrim = original.trim();
+
+                boolean startsFof = lineTrim.startsWith("fof(");
+                boolean hasRole = line.contains(",axiom,") || line.contains(",conjecture,");
+                boolean containsFormula = norm(original).contains(targetFormula);
+
+                if (startsFof && hasRole) {
+                    if (containsFormula) {
+                        Matcher m = filePat.matcher(original);
+                        if (m.find()) {
+                            String replaced = m.replaceAll(replacement);
+                            proofLines.set(i, replaced);
+                        }
+                    }
+                }
+            }
+        }
+
+        return proofLines;
+    }
+
+
     // Save authored axioms + conjecture as clean TPTP, one fof(...) per line.
-    private static void writeMinTPTP(List<TPTPFormula> proof) {
+    private static List<TPTPFormula> writeMinTPTP(List<TPTPFormula> proof) {
 
         String outName = "min-problem.tptp";
 
@@ -501,19 +573,24 @@ public class TPTPutil {
                 .toAbsolutePath().toString();
 
         List<String> out = new ArrayList<String>();
+        List<TPTPFormula> authored_lines = new ArrayList<>();
         out.add("% Generated by TPTPutil: authored axioms + conjecture");
         String conjecture = null;
 
         for (TPTPFormula step : proof) {
             if (TPTPutil.sourceAxiom(step)) {          // only authored axioms
                 out.add(oneLine(step.toString()));     // TPTP 'fof(...)' line
-            } else if ("conjecture".equals(step.role)) {
+                authored_lines.add(step);
+            }
+            if ("conjecture".equals(step.role)) {
                 conjecture = oneLine(step.toString());
             }
         }
         if (conjecture == null) System.out.println("-- ERROR: TPTPUtil.writeMinTPTP: No Conjecture found!");
 
         FileUtil.writeLines(outPath, out); // overwrite = false append
+
+        return authored_lines;
     }
 
     private static String oneLine(String s) {
@@ -521,7 +598,7 @@ public class TPTPutil {
         return t.endsWith(".") ? t : (t + ".");
     }
 
-    public static void processProofLines(List<String> inputLines) {
+    public static List<TPTPFormula> processProofLines(List<String> inputLines) {
 
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         KBmanager.getMgr().initializeOnce();
@@ -540,15 +617,8 @@ public class TPTPutil {
         System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
         System.out.println("TPTPutil.main(): showing only source axioms ");
 
-        for (TPTPFormula step : tpp.proof) {
-            if (TPTPutil.sourceAxiom(step)) {  // keep only authored axioms
-                Formula f = new Formula(step.sumo);
-                System.out.println(f.format("", "  ", "\n"));
-            }
-        }
-
         // Write minimal TPTP file with authored axioms
-        writeMinTPTP(tpp.proof);
+        return writeMinTPTP(tpp.proof);
     }
 
 
