@@ -1,6 +1,5 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ page import="com.articulate.sigma.Formula" %>
-<%@ page import="com.articulate.sigma.trans.TPTPutil" %>
+<%@ page import="com.articulate.sigma.TPTPFormatter" %>
 <!DOCTYPE html>
 <html>
 <head>
@@ -32,15 +31,24 @@
             border: 1px solid #ccc;
             background: #f9f9f9;
             padding: 16px;
-            white-space: normal;
+            white-space: pre-wrap;
             overflow-x: auto;
             font-size: 15px;
+        }
+        .formatted-output pre {
+            margin: 0;                /* ✨ remove extra white space above and below */
+            padding: 0;
+            white-space: pre-wrap;    /* keep line breaks and wrapping */
+        }
+        .error {
+            color: #b00020;
+            white-space: pre-wrap;
         }
     </style>
 </head>
 <body>
 
-<h1>TPTP Formula HTML Formatter</h1>
+<h1>TPTP Formula Formatter</h1>
 
 <form method="post">
     <label for="tptpInput">Enter a TPTP Formula:</label><br>
@@ -53,22 +61,33 @@
 <%
     String tptpInput = request.getParameter("tptpInput");
     if (tptpInput != null && !tptpInput.trim().isEmpty()) {
-        Formula f = new Formula();
-        f.theTptpFormulas.add(tptpInput);
+        TPTPFormatter formatter = new TPTPFormatter();
+        String formatted = formatter.formatTptpText(tptpInput, "(web-form)");
 
-        String html = TPTPutil.htmlTPTPFormat(
-            f,
-            "http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term=",
-            false // set true for traditional logic symbols like ∀, ∃
-        );
+        if (formatted != null) {
+            // ✅ Strip leading spaces on the first line before displaying
+            String[] lines = formatted.split("\\R", -1);
+            if (lines.length > 0) {
+                lines[0] = lines[0].replaceFirst("^\\s+", "");
+            }
+            formatted = String.join(System.lineSeparator(), lines);
+            System.out.println(formatted);
 %>
     <h2>Formatted Output:</h2>
     <div class="formatted-output">
-        <%= html %>
+        <pre><%= formatted %></pre>
     </div>
 <%
+        } else {
+%>
+    <div class="formatted-output">
+        <pre><%= formatted %></pre>
+    </div>
+<%
+        }
     }
 %>
+
 
 </body>
 </html>
