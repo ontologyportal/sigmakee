@@ -39,6 +39,7 @@ userPages.add("SimpleBrowse.jsp");
 userPages.add("TreeView.jsp");
 userPages.add("WordNet.jsp");
 userPages.add("CheckKifFile.jsp");
+userPages.add("TPTPEditor.jsp");
 String URLString = request.getRequestURL().toString();
 String pageURLString = URLString.substring(URLString.lastIndexOf("/") + 1);
 

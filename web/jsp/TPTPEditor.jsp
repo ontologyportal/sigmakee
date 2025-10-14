@@ -267,6 +267,36 @@ async function formatBuffer() {
   }
 }
 </script>
+<script>
+function checkTPTP() {
+  const codeContent = codeEditor.getValue();
+  if (!codeContent.trim()) {
+    alert("Nothing to check.");
+    return;
+  }
+
+  // Dynamically create a form to POST to the same servlet
+  const form = document.createElement('form');
+  form.method = 'post';
+  form.action = 'FormatTPTP';  // ✅ same servlet
+  form.style.display = 'none';
+
+  const codeInput = document.createElement('input');
+  codeInput.type = 'hidden';
+  codeInput.name = 'code';
+  codeInput.value = codeContent;
+  form.appendChild(codeInput);
+
+  const modeInput = document.createElement('input');
+  modeInput.type = 'hidden';
+  modeInput.name = 'mode';
+  modeInput.value = 'check';
+  form.appendChild(modeInput);
+
+  document.body.appendChild(form);
+  form.submit();
+}
+</script>
 
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
@@ -289,7 +319,7 @@ async function formatBuffer() {
         <button type="button" class="upload-button" onclick="triggerFileUpload()">Upload</button>
         <button type="button" class="download-button" onclick="downloadTPTPFile()">Download</button>
         <button type="button" class="check-button" onclick="formatBuffer()">Format</button>
-        <button type="button" class="check-button" onclick="submitCodeForCheck()">Check</button>
+        <button type="button" class="check-button" onclick="checkTPTP()">Check</button>
       </div>
     </div>
     <textarea id="codeEditor" style="display: none;"><%=
