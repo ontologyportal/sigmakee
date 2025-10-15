@@ -1977,7 +1977,8 @@ public class KB implements Serializable {
         Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers);
 
         // STEP 2
-        List<TPTPFormula> authored_lines = TPTPutil.processProofLines(vampire_initial.output);
+        List<TPTPFormula> proof = TPTPutil.processProofLines(vampire_initial.output);
+        List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
 
         // STEP 3
         Vampire vampire_pomens = new Vampire();

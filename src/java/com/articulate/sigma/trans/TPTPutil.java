@@ -411,8 +411,76 @@ public class TPTPutil {
         return finalLines;
     }
 
+    // TODO: tpp.renumberProof(tpp.simplifyProof(1)) needs refactoring for handling orphan references.
+    // TODO: This method will replace the custom made one.
+//    public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
+//        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+//        KBmanager.getMgr().initializeOnce();
+//        String kbName = KBmanager.getMgr().getPref("sumokbname");
+//        KB kb = KBmanager.getMgr().getKB(kbName);
+//
+//        List<String> cleaned_proofLines = clearProofFile(proofLines);
+//
+//        tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
+//
+//        List<TPTPFormula> keep = tpp.renumberProof(tpp.simplifyProof(1)); // drop 1-premise, rewire+renumber
+//
+//        List<String> firstComments = new ArrayList<>();
+//        List<String> lastComments = new ArrayList<>();
+//
+//        boolean beforeFOF = true;
+//        boolean afterFOF = false;
+//
+//        for (String line : cleaned_proofLines) {
+//            String trim = line.trim();
+//            if (beforeFOF && trim.startsWith("%")) {
+//                firstComments.add(line);
+//            } else if (trim.startsWith("fof(")) {
+//                beforeFOF = false;
+//            } else if (!beforeFOF && trim.startsWith("%")) {
+//                afterFOF = true;
+//                lastComments.add(line);
+//            } else if (afterFOF && trim.startsWith("%")) {
+//                lastComments.add(line);
+//            }
+//        }
+//
+//        List<String> fofBody = new ArrayList<>();
+//        for (TPTPFormula f : keep) {
+//            String target = f.formula.replaceAll("\\s+", ""); // normalized target
+//            for (String line : cleaned_proofLines) {
+//                String normLine = line.replaceAll("\\s+", "");
+//                if (normLine.contains(target)) { // found the line containing the formula
+//                    fofBody.add(line);
+//                    break; // stop searching once matched
+//                }
+//            }
+//        }
+//
+//        // --- build final output ---
+//        List<String> finalLines = new ArrayList<>();
+//        finalLines.addAll(firstComments);
+//        finalLines.addAll(fofBody);
+//        finalLines.addAll(lastComments);
+//
+//        return finalLines;
+//    }
 
 
+
+    /**
+     * Processes a list of first-order logic proof lines (in TPTP FOF format) by
+     * eliminating inference steps that depend on fewer than two premises, while
+     * preserving conjectures, axioms, and other non-droppable lines. The parent
+     * relationships for dropped nodes are rewired to their first kept ancestor.
+     *
+     * @param proofLines a list of strings where each string represents a line in a
+     *        TPTP FOF proof. These lines may include logical formulas, inferences,
+     *        and other content relevant to the proof.
+     * @return a list of processed lines where eligible inference steps based on
+     *         fewer than two premises are removed, and parent dependencies are
+     *         appropriately rewired for remaining nodes.
+     */
     public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
         class Node {
             String id, role, text;
@@ -565,7 +633,7 @@ public class TPTPutil {
 
 
     // Save authored axioms + conjecture as clean TPTP, one fof(...) per line.
-    private static List<TPTPFormula> writeMinTPTP(List<TPTPFormula> proof) {
+    public static List<TPTPFormula> writeMinTPTP(List<TPTPFormula> proof) {
 
         String outName = "min-problem.tptp";
 
@@ -618,7 +686,7 @@ public class TPTPutil {
         System.out.println("TPTPutil.main(): showing only source axioms ");
 
         // Write minimal TPTP file with authored axioms
-        return writeMinTPTP(tpp.proof);
+        return tpp.proof;
     }
 
 
