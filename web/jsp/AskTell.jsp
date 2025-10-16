@@ -1,4 +1,5 @@
 <%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
+<%@ page import="com.articulate.sigma.utils.StringUtil" %>
 <%@include file="Prelude.jsp" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-present,
@@ -126,6 +127,21 @@ if (!role.equalsIgnoreCase("admin")) {
         session.setAttribute("showProofFromLLM", llmProof);
     }
     if (llmProof == null) llmProof = false; // first load default = OFF
+
+    // ---- Ollama availability check ----
+    boolean ollamaUp = false;
+    try {
+        ollamaUp = LanguageFormatter.checkOllamaHealth();
+    } catch (Exception ignore) {
+        ollamaUp = false;
+        System.out.println("ERROR - There was an error while attemping to Test Ollama Availability!");
+    }
+
+// If Ollama is down, force the toggle off so server logic never tries to call it
+    if (!ollamaUp) {
+        llmProof = false;
+        session.setAttribute("showProofFromLLM", false);
+    }
 
     String eproverExec = KBmanager.getMgr().getPref("eprover");
     String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
@@ -294,8 +310,13 @@ if (!role.equalsIgnoreCase("admin")) {
     <label>Show English Paraphrases</label><BR>
 
     <input type="checkbox" name="showProofFromLLM" value="yes"
-           <% if (Boolean.TRUE.equals(llmProof)) { %>checked<% } %> >
-    <label>Use LLM for Paraphrasing</label><BR>
+        <%= (Boolean.TRUE.equals(llmProof) && ollamaUp) ? "checked" : "" %>
+        <%= ollamaUp ? "" : "disabled" %> >
+    <label>Use LLM for Paraphrasing</label>
+    <% if (!ollamaUp) { %>
+    <span title="Ollama is not running. Start Ollama to enable LLM paraphrasing.">&#9432;</span>
+    <% } %>
+    <br>
 
     <INPUT type="submit" name="request" value="Ask">
 

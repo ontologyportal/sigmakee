@@ -433,6 +433,13 @@ public class LanguageFormatter {
         return out;
     }
 
+        public static boolean checkOllamaHealth(){
+            String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+            if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+            OllamaClient oc = new OllamaClient(ollamaHost, 1000, 1500); // short timeouts
+            return oc.isHealthy();
+        }
+
 
         private String removeLinks(String initialText){
         if (initialText == null) return null;

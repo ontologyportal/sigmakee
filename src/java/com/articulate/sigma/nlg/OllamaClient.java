@@ -148,6 +148,23 @@ public class OllamaClient {
         return -1;
     }
 
+    public boolean isHealthy() {
+        HttpURLConnection conn = null;
+        try {
+            URL url = new URL(baseUrl + "/api/version"); // lightweight endpoint
+            conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(connectTimeoutMs);
+            conn.setReadTimeout(readTimeoutMs);
+            int code = conn.getResponseCode();
+            return (200 <= code && code < 300);
+        } catch (IOException e) {
+            return false;
+        } finally {
+            if (conn != null) conn.disconnect();
+        }
+    }
+
     // ===== Demo CLI =====
     // Usage:
     //   java -Djava.net.preferIPv4Stack=true com.articulate.sigma.nlg.OllamaClient "http://127.0.0.1:11434" "llama3.2" "Explain SUO-KIF in one sentence."
