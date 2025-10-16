@@ -1,7 +1,8 @@
 <%@ include file="Prelude.jsp" %>
+<%@ page import="com.articulate.sigma.*, java.util.List" %>
 <%
-    String pageName = "CheckKifFile";
-    String pageString = "Check KIF File";
+    String pageName = "Editor";
+    String pageString = "Editor";
     if (welcomeString == null) welcomeString = "";
 %>
 <%@ include file="CommonHeader.jsp" %>
@@ -10,136 +11,11 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Check KIF File</title>
+  <title>Editor</title>
    <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
    <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
    <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
-  <style>
-    body {font-family: system-ui, sans-serif; margin: 24px;}
-    .card {border: 1px solid #000; padding: 16px; margin: 12px 0; border-radius: 4px;}
-    .layout {display: flex; flex-direction: column; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 12px; align-items: stretch;}
-    .layout > div {display: flex; flex-direction: column;}
-    .scroller { height: 59vh; overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fff;}
-    .msg { padding: 12px; white-space: pre-line;}
-    .errors-box { color: #b00020;}
-    .success { color: #077d3f;}
-    h3 {margin: 8px 0;}
-    .check-button {background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;}
-    .check-button:hover {background: #0056b3;}
-    .download-button {background: #28a745; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;}
-    .download-button:hover { background: #1e7e34; }
-    .upload-button {background: #20c997; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 14px;}
-    .upload-button:hover { background: #1aa179; }
-    .CodeMirror {border: 1px solid #ddd; border-radius: 6px; height: 60vh; font-family: ui-monospace, monospace; font-size: 14px; line-height: 1.4;}
-    .CodeMirror-gutters {background: #f0f0f0; border-right: 1px solid #ddd;}
-    .CodeMirror-linenumber {color: #666; padding: 0 8px; min-width: 2.5em;}
-    .CodeMirror-line-error {background-color: #ffebee; border-bottom: 2px wavy #d32f2f; position: relative;}
-    .CodeMirror .error-line {background-color: #ffebee !important;}
-    .CodeMirror .error-text {background-color: #ffebee; border-bottom: 2px wavy #d32f2f;}
-    .cm-kif-comment { color: red; }
-    .cm-kif-operator { color: #0000CD; font-weight: bold; }
-    .cm-kif-quantifier { color: #0000CD; font-style: italic; }
-    .cm-kif-variable { color: #3399ff; }
-    .cm-kif-instance { color: #228B22; font-weight: bold; }
-    .cm-kif-string { color: #B22222; }
-    .cm-kif-number { color: #FF4500; }
-    .editor-header {display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
-    .button-group { display: flex; gap: 8px; }
-    .file-name-display {font-family: monospace; font-size: 12px; color: #666; margin-top: 4px;}
-    .file-menu-bar {
-    display: flex;
-    justify-content: flex-start;
-    margin-bottom: 8px;
-    }
-
-    .dropdown {
-    position: relative;
-    display: inline-block;
-    }
-
-    .dropdown-content a {
-    display: block;
-    padding: 8px 12px;
-    color: #333;
-    text-decoration: none;
-    font-size: 14px;
-    }
-
-    .dropdown-content a:hover {
-    background-color: #f0f0f0;
-    }
-
-    .dropdown-content {
-        display: none;
-        position: absolute;
-        background-color: #fff;
-        min-width: 140px;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        border-radius: 4px;
-        z-index: 100;
-        margin-top: 4px;
-    }
-    .tab-bar {
-    display: flex;
-    align-items: center;
-    background: #f8f8f8;
-    border-bottom: 1px solid #ccc;
-    border-radius: 6px 6px 0 0;
-    padding: 4px 8px;
-    margin-bottom: 4px;
-    }
-
-    .tab {
-    padding: 6px 12px;
-    border: 1px solid #ccc;
-    border-bottom: none;
-    border-radius: 6px 6px 0 0;
-    background: #e9e9e9;
-    margin-right: 4px;
-    cursor: pointer;
-    user-select: none;
-    font-size: 13px;
-    }
-
-    .tab .close-btn {
-        margin-left: 6px;
-        color: #666;
-        font-weight: bold;
-        cursor: pointer;
-        transition: color 0.2s ease;
-        padding: 0 4px; 
-    }
-    
-    .tab .close-btn:hover {
-    color: #c00;
-    }
-
-    .tab.active {
-    background: white;
-    border-bottom: 1px solid white;
-    font-weight: bold;
-    }
-
-    .tab:hover {
-    background: #f0f0f0;
-    }
-
-    .add-tab {
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 4px 10px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-left: auto;
-    }
-
-    .add-tab:hover {
-    background: #0056b3;
-    }
-
-  </style>
+   <link rel="stylesheet" href="Editor.css">
 </head>
 <body>
 <%!
@@ -147,17 +23,20 @@
     return (s == null) ? "" : s.replace("&","&amp;").replace("<","&lt;").replace(">","&gt;");
   }
 %>
-
 <div class="card">
-<!-- Hidden form for file upload -->
-<form method="post" action="CheckKifFile" onsubmit="return checkFileSize();"
+<form method="post" action="Editor" onsubmit="return checkFileSize();"
       enctype="multipart/form-data" style="display:none;" id="uploadForm">
   <input type="file" name="kifFile" id="kifFile" accept=".kif,.txt" required />
 </form>
+
 <script>
   const fileInput = document.getElementById('kifFile');
   const fileNameSpan = document.getElementById('file-name');
   const uploadForm = document.getElementById('uploadForm');
+  let errorMarks = [];
+  let codeEditors = [];
+  let activeTab = 0;
+
   fileInput.addEventListener('change', () => {
     if (fileInput.files.length > 0) {
       if (fileNameSpan) {
@@ -215,21 +94,19 @@ function initializeCodeMirror() {
   highlightErrorLines();
 }
 
-  const errors = [
-    <%
-      List<ErrRec> errs = (List<ErrRec>) request.getAttribute("errors");
-      if (errs != null) {
-          boolean first = true;
-          for (ErrRec e : errs) {
-              if (!first) out.print(", ");
-              out.print("{ line: " + e.line + ", start: " + e.start + ", end: " + e.end + " }");
-              first = false;
-          }
-      }
-    %>
-  ];
-
-let errorMarks = [];
+const errors = [
+  <%
+    List<ErrRec> errs = (List<ErrRec>) request.getAttribute("errors");
+    if (errs != null) {
+        boolean first = true;
+        for (ErrRec e : errs) {
+            if (!first) out.print(", ");
+            out.print("{ line: " + e.line + ", start: " + e.start + ", end: " + e.end + " }");
+            first = false;
+        }
+    }
+  %>
+];
 
 function highlightErrorLines() {
   for (const mark of errorMarks)
@@ -263,15 +140,14 @@ function highlightErrorLines() {
   }
 }
 
-
 function checkFileSize() {
   const fileInput = document.getElementById("kifFile");
   if (fileInput.files.length > 0) {
     const file = fileInput.files[0];
-    const maxSize = 200 * 1024; // 200 KB
+    const maxSize = 200 * 1024;
     if (file.size > maxSize) {
       alert("File is too large. Maximum allowed size is 200 KB.");
-      return false; // prevent form submission
+      return false;
     }
   }
   return true;
@@ -281,57 +157,24 @@ function triggerFileUpload() {
   document.getElementById('kifFile').click();
 }
 
-function submitCodeForCheck() {
-  const codeContent = codeEditor.getValue();
-
-  // Create a form dynamically to submit the code content
-  const form = document.createElement('form');
-  form.method = 'post';
-  form.action = 'CheckKifFile';
-
-  const codeInput = document.createElement('input');
-  codeInput.type = 'hidden';
-  codeInput.name = 'codeContent';
-  codeInput.value = codeContent;
-
-  form.appendChild(codeInput);
-  document.body.appendChild(form);
-  form.submit();
-}
-
 function downloadTPTPFile() {
   const codeContent = codeEditor.getValue();
   if (!codeContent.trim()) {
     alert("No content to download. Please enter some code first.");
     return;
   }
-
-  // Ask the user for a filename
   const fileName = prompt("Enter a filename:");
-  if (!fileName) return; // user cancelled
-
-  // Create a blob with the code content
+  if (!fileName) return; 
   const blob = new Blob([codeContent], { type: 'text/plain' });
   const url = window.URL.createObjectURL(blob);
-
-  // Create a temporary download link
   const a = document.createElement('a');
   a.href = url;
-  a.download = fileName;  // Suggests filename to browser
+  a.download = fileName;
   document.body.appendChild(a);
-
-  // Trigger click → browser should show Save As dialog
   a.click();
-
-  // Clean up
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
 }
-
-</script>
-<script>
-let codeEditors = []; // store each tab’s content
-let activeTab = 0;
 
 function addTab(name = null) {
   if (!name) {
@@ -339,22 +182,17 @@ function addTab(name = null) {
     if (!inputName) return;
     name = inputName.trim();
   }
-
   const tabBar = document.getElementById("tabBar");
   const newIndex = codeEditors.length;
-
-  // Create tab element
   const tab = document.createElement("div");
   tab.className = "tab";
   tab.setAttribute("data-index", newIndex);
-
   const label = document.createElement("span");
   label.textContent = name;
   label.onclick = (e) => {
     if (e.target.classList.contains("close-btn")) return;
     switchTab(newIndex);
   };
-
   const closeBtn = document.createElement("span");
   closeBtn.textContent = 'x';
   closeBtn.className = "close-btn";
@@ -362,7 +200,6 @@ function addTab(name = null) {
     e.stopPropagation();
     closeTab(newIndex);
   };
-
   tab.appendChild(label);
   tab.appendChild(closeBtn);
   tabBar.appendChild(tab);
@@ -389,8 +226,6 @@ document.addEventListener("DOMContentLoaded", function() {
   codeEditors.push("");
 });
 
-</script>
-<script>
 async function formatBuffer() {
   const codeContent = codeEditor.getValue();
   if (!codeContent.trim()) {
@@ -416,43 +251,40 @@ async function formatBuffer() {
     alert("An error occurred while formatting.");
   }
 }
-</script>
-<script>
-function checkTPTP() {
+
+async function checkTPTP() {
   const codeContent = codeEditor.getValue();
-  if (!codeContent.trim()) {
-    alert("Nothing to check.");
-    return;
+  if (!codeContent.trim()) return alert("Nothing to check.");
+  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
+  const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
+  try {
+    const response = await fetch("EditorServlet", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      body:
+        "mode=check" +
+        "&fileName=" + encodeURIComponent(fileName) +
+        "&code=" + encodeURIComponent(codeContent)
+    });
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, "text/html");
+    const newErrorBox = doc.querySelector(".scroller.msg");
+    const currentErrorBox = document.querySelector(".scroller.msg");
+    if (newErrorBox && currentErrorBox)
+      currentErrorBox.replaceWith(newErrorBox);
+    refreshErrorHighlighting();
+  } catch (err) {
+    alert("Error checking file: " + err);
   }
-
-  const form = document.createElement('form');
-  form.method = 'post';
-  form.action = 'FormatTPTP';
-  form.style.display = 'none';
-
-  const codeInput = document.createElement('input');
-  codeInput.type = 'hidden';
-  codeInput.name = 'code';
-  codeInput.value = codeContent;
-  form.appendChild(codeInput);
-
-  const modeInput = document.createElement('input');
-  modeInput.type = 'hidden';
-  modeInput.name = 'mode';
-  modeInput.value = 'check';
-  form.appendChild(modeInput);
-
-  document.body.appendChild(form);
-  form.submit();
 }
-</script>
-<script>
+
 function toggleDropdown() {
   const content = document.getElementById("dropdownContent");
-  const arrow = document.getElementById("fileArrow");
   const isVisible = content.style.display === "block";
   content.style.display = isVisible ? "none" : "block";
-  arrow.textContent = isVisible ? "›" : "▾";
 }
 
 document.addEventListener("click", (e) => {
@@ -468,6 +300,9 @@ document.addEventListener("click", (e) => {
 function closeTab(index) {
   const tabs = document.querySelectorAll(".tab");
   if (index < 0 || index >= tabs.length) return;
+  const tabName = tabs[index].querySelector("span").textContent;
+  const confirmClose = confirm(`Are you sure you want to close "${tabName}"?`);
+  if (!confirmClose) return;
   tabs[index].remove();
   codeEditors.splice(index, 1);
   if (activeTab === index) {
@@ -482,8 +317,13 @@ function closeTab(index) {
   const updatedTabs = document.querySelectorAll(".tab");
   updatedTabs.forEach((tab, i) => tab.setAttribute("data-index", i));
 }
-</script>
 
+function refreshErrorHighlighting() {
+  if (codeEditor)
+    setTimeout(highlightErrorLines, 100);
+}
+
+</script>
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
   String fileName = (String) request.getAttribute("fileName");
@@ -492,29 +332,29 @@ function closeTab(index) {
   String codeContent = (String) request.getAttribute("codeContent");
 %>
 <div class="layout">
-  <!-- Left column: Code -->
   <div>
     <div class="editor-header">
         <div class="file-menu-bar">
-            <div class="dropdown" id="fileDropdown">
-                <span class="dropdown-label" onclick="toggleDropdown()">File</span>
-                <div class="dropdown-content" id="dropdownContent">
-                <a href="#" onclick="addTab()">New</a>
-                <a href="#" onclick="triggerFileUpload()">Upload</a>
-                <a href="#" onclick="downloadTPTPFile()">Download</a>
-                <a href="#" onclick="formatBuffer()">Format</a>
-                <a href="#" onclick="checkTPTP()">Check</a>
-                </div>
+          <div class="dropdown" id="fileDropdown">
+            <span class="dropdown-file-label" onclick="toggleDropdown()">File</span>
+            <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
+            <span class="dropdown-file-label" onclick="checkTPTP()">Check</span>
+            <div class="dropdown-content" id="dropdownContent">
+              <a href="#" onclick="addTab()">New</a>
+              <a href="#" onclick="triggerFileUpload()">Upload</a>
+              <a href="#" onclick="downloadTPTPFile()">Download</a>
+              <a href="#" onclick="formatBuffer()">Format</a>
+              <a href="#" onclick="checkTPTP()">Check</a>
             </div>
-            </div>
-      <h3>Editor</h3>
+          </div>
+        </div>
         <% if (fileName != null) { %>
         <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
         <% } else { %>
         <div class="file-name-display" id="file-name"></div>
         <% } %>
     </div>
-    <!-- Tab bar -->
+    <hr class="divider">
     <div class="tab-bar" id="tabBar">
         <div class="tab active" data-index="0">
             <span onclick="switchTab(0)">example.kif</span>
@@ -526,8 +366,6 @@ function closeTab(index) {
       (fileContent != null ? String.join("\n", fileContent) : "")
     %></textarea>
   </div>
-
-  <!-- Right column: Errors -->
   <div>
     <div class="scroller msg <%= (errors == null || errors.isEmpty()) ? "success" : "errors-box" %>">
 <%
@@ -547,33 +385,21 @@ function closeTab(index) {
       }
     } else {
       java.util.Set<Integer> errorLines = new java.util.HashSet<>();
-
       for (ErrRec e : errors) {
-          if (e.line >= 0) {
-              errorLines.add(e.line + 1); // ErrRec.line is 0-based, convert to 1-based if needed
-          }
+          if (e.line >= 0)
+              errorLines.add(e.line + 1);
       }
       boolean first = true;
       for (ErrRec e : errors) {
           if (!first) out.print("<br/><br/>");
-          out.print(esc(e.toString()));   // or esc(e.msg) if you only want the message
+          out.print(esc(e.toString()));
           first = false;
       }
     }
 %>
-
     </div>
   </div>
 </div>
-<script>
-
-function refreshErrorHighlighting() {
-  if (codeEditor) {
-    setTimeout(highlightErrorLines, 100);
-  }
-}
-</script>
-
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>
