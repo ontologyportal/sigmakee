@@ -70,7 +70,7 @@ public class LanguageFormatter {
      */
     private boolean doInformalNLG = false;
 
-    public static boolean paraphraseLLM = true;
+    public static boolean paraphraseLLM = false;
 
     public void setDoInformalNLG(boolean doIt) {
         doInformalNLG = doIt;
