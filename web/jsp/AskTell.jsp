@@ -1,3 +1,5 @@
+<%@ page import="com.articulate.sigma.nlg.LanguageFormatter" %>
+<%@ page import="com.articulate.sigma.utils.StringUtil" %>
 <%@include file="Prelude.jsp" %>
 <%
 /** This code is copyright Teknowledge (c) 2003, Articulate Software (c) 2003-present,
@@ -24,6 +26,33 @@ if (!role.equalsIgnoreCase("admin")) {
 <HEAD>
   <TITLE>Sigma Knowledge Engineering Environment - Ask/Tell</TITLE>
 
+    <script>
+        function toggleVampireOptions() {
+            const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
+            const casc = document.getElementById('CASC');
+            const avatar = document.getElementById('Avatar');
+            const custom = document.getElementById('Custom');
+            const mp = document.getElementById('ModensPonens');
+            const drop = document.getElementById('dropOnePremise');
+
+            const vampireOn = vamp && vamp.checked && !vamp.disabled;
+
+            [casc, avatar, custom, mp].forEach(el => { if (el) el.disabled = !vampireOn; });
+
+            const mpOn = vampireOn && mp && mp.checked;
+            if (drop) {
+                drop.disabled = !mpOn;
+                if (!mpOn) drop.checked = false; // optional: uncheck when disabled
+            }
+        }
+
+        window.onload = function () {
+            toggleVampireOptions();
+            document.querySelectorAll('input[name="inferenceEngine"], #ModensPonens')
+                .forEach(el => el.addEventListener('change', toggleVampireOptions));
+        };
+    </script>
+
 </HEAD>
 <%
     System.out.println("INFO in AskTell.jsp");
@@ -33,6 +62,27 @@ if (!role.equalsIgnoreCase("admin")) {
     String req = request.getParameter("request");
     String stmt = request.getParameter("stmt");
     String cwa = request.getParameter("CWA");
+
+    // --- ModensPonens: read/update session + use boolean for rendering ---
+    Boolean modensPonens = (Boolean) session.getAttribute("ModensPonens");
+    if (req != null) {
+        modensPonens = request.getParameter("ModensPonens") != null
+                || "yes".equalsIgnoreCase(request.getParameter("ModensPonens"))
+                || "on".equalsIgnoreCase(request.getParameter("ModensPonens"))
+                || "true".equalsIgnoreCase(request.getParameter("ModensPonens"));
+        session.setAttribute("ModensPonens", modensPonens);
+    }
+    if (modensPonens == null) modensPonens = false;
+
+    // --- dropOnePremise: read/update session + global ---
+    Boolean dropOnePremise = (Boolean) session.getAttribute("dropOnePremise");
+    if (req != null) { // form submitted
+        dropOnePremise = request.getParameter("dropOnePremise") != null;
+        session.setAttribute("dropOnePremise", dropOnePremise);
+    }
+    if (dropOnePremise == null) dropOnePremise = false;
+    KB.dropOnePremiseFormulas = dropOnePremise;
+
     if (StringUtil.emptyString(cwa))
         cwa = "no";
     if (cwa.equals("yes"))
@@ -70,6 +120,28 @@ if (!role.equalsIgnoreCase("admin")) {
         session.setAttribute("showProofInEnglish", showEnglish);
     }
     if (showEnglish == null) showEnglish = true; // first load default = ON
+
+    Boolean llmProof = (Boolean) session.getAttribute("showProofFromLLM");
+    if (req != null) { // form submitted
+        llmProof = "yes".equalsIgnoreCase(request.getParameter("showProofFromLLM"));
+        session.setAttribute("showProofFromLLM", llmProof);
+    }
+    if (llmProof == null) llmProof = false; // first load default = OFF
+
+    // ---- Ollama availability check ----
+    boolean ollamaUp = false;
+    try {
+        ollamaUp = LanguageFormatter.checkOllamaHealth();
+    } catch (Exception ignore) {
+        ollamaUp = false;
+        System.out.println("ERROR - There was an error while attemping to Test Ollama Availability!");
+    }
+
+// If Ollama is down, force the toggle off so server logic never tries to call it
+    if (!ollamaUp) {
+        llmProof = false;
+        session.setAttribute("showProofFromLLM", false);
+    }
 
     String eproverExec = KBmanager.getMgr().getPref("eprover");
     String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
@@ -160,7 +232,10 @@ if (!role.equalsIgnoreCase("admin")) {
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
                 if (vampireMode.equals("Custom"))
                     com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
-                vampire = kb.askVampire(stmt, timeout, maxAnswers);
+//                vampire = kb.askVampire(stmt, timeout, maxAnswers);
+                vampire = modensPonens
+                        ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
+                        : kb.askVampire(stmt, timeout, maxAnswers);
                 System.out.println("INFO in AskTell.jsp------------------------------------");
                 System.out.println("Vampire output: " + vampire.toString());
             }
@@ -199,17 +274,17 @@ if (!role.equalsIgnoreCase("admin")) {
     Choose an inference engine:<BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="LEO" <% if (inferenceEngine.equals("LEO")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'" >
+           onclick="document.getElementById('SoTPTPControl').style.display='none'" >
     LEO-III <BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="EProver" <% if (inferenceEngine.equals("EProver")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if (kb.eprover == null) { %> DISABLED <% } %> >
+           onclick="document.getElementById('SoTPTPControl').style.display='none'"
+        <% if (kb.eprover == null) { %> DISABLED <% } %> >
     EProver <BR>
 
     <INPUT TYPE=RADIO NAME="inferenceEngine" VALUE="Vampire" <% if (inferenceEngine.equals("Vampire")) {%>CHECKED<%}%>
-    onclick="document.getElementById('SoTPTPControl').style.display='none'"
-    <% if (KBmanager.getMgr().getPref("vampire") == null) { %> DISABLED <% } %> >
+           onclick="document.getElementById('SoTPTPControl').style.display='none'"
+        <% if (KBmanager.getMgr().getPref("vampire") == null) { %> DISABLED <% } %> >
     Vampire : [
       <input type="radio" id="CASC" name="vampireMode" value="CASC"
           <% if (vampireMode.equals("CASC")) { out.print(" CHECKED"); } %> >
@@ -219,11 +294,29 @@ if (!role.equalsIgnoreCase("admin")) {
           <label>Avatar mode</label>
       <input type="radio" id="Custom" name="vampireMode" value="Custom"
           <% if (vampireMode.equals("Custom")) { out.print(" CHECKED"); } %> >
-          <label>Custom mode</label>]<BR>
+          <label>Custom mode</label>]
+
+      <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
+        <label for="ModensPonens">Modens Ponens</label>
+        <span title="Runs Vampire with modens-ponens-only routine in authored-only axioms Proof">&#9432;</span> [
+
+      <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
+            <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
+        <label for="dropOnePremise">Drop One-Premise Formulas</label>]
+    <br>
 
     <input type="checkbox" name="showProofInEnglish" value="yes"
            <% if (Boolean.TRUE.equals(showEnglish)) { %>checked<% } %> >
     <label>Show English Paraphrases</label><BR>
+
+    <input type="checkbox" name="showProofFromLLM" value="yes"
+        <%= (Boolean.TRUE.equals(llmProof) && ollamaUp) ? "checked" : "" %>
+        <%= ollamaUp ? "" : "disabled" %> >
+    <label>Use LLM for Paraphrasing</label>
+    <% if (!ollamaUp) { %>
+    <span title="Ollama is not running. Start Ollama to enable LLM paraphrasing.">&#9432;</span>
+    <% } %>
+    <br>
 
     <INPUT type="submit" name="request" value="Ask">
 
@@ -235,9 +328,11 @@ if (!role.equalsIgnoreCase("admin")) {
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
-//    boolean showEnglish = "yes".equalsIgnoreCase(request.getParameter("showProofInEnglish"));
     System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
+
+    System.out.println("AskTell.jsp / showProofFromLLM = "+llmProof);
+    LanguageFormatter.paraphraseLLM = llmProof;
 
     if (status != null && status.toString().length() > 0) {
         out.println("Status: ");

@@ -741,15 +741,41 @@ public class TPTP3ProofProcessor {
     }
 
     /**
-     * ***************************************************************
-     * Compute binding and proof from the theorem prover's response. Leave out
-     * the statements of relation sorts that is part of the TFF proof output.
+     * Parses TPTP (Thousands of Problems for Theorem Provers) proof output from a theorem prover
+     * and extracts proof steps, answer bindings, and status information.
      *
-     * @param lines these are proof lines fof/cnf returned by the inference engine
-     * @param kifQuery is the order Vampire and EProver will follow when reporting
-     * @param kb the given knowledge base to process a proof from
-     * @param qlist is the list of quantified variables in order of the original
-     * answers
+     * This method processes the textual output lines from automated theorem provers (such as Vampire or E Prover),
+     * identifying and extracting:
+     * <ul>
+     *   <li>SZS status information (e.g., "Refutation", "Theorem", "CounterSatisfiable")</li>
+     *   <li>Answer bindings for query variables in bracketed format</li>
+     *   <li>Individual proof steps in TPTP formula format (fof/cnf/tff)</li>
+     *   <li>Proof metadata including support relationships and inference rules</li>
+     * </ul>
+     *
+     * The method performs several post-processing operations:
+     * <ul>
+     *   <li>Detects potential knowledge base inconsistencies (refutations without conjectures)</li>
+     *   <li>Strips proof step numbers from Vampire output if present</li>
+     *   <li>Filters out type declarations in TFF proofs</li>
+     *   <li>Normalizes proof step numbering for consistent display</li>
+     *   <li>Extracts types for Skolem terms introduced during proving</li>
+     * </ul>
+     *
+     * Special handling for Vampire prover: Input lines are joined and reversed before processing
+     * since Vampire presents proofs in reverse order.
+     *
+     * @param lines the proof output lines returned by the theorem prover
+     * @param kifQuery the original query in KIF (Knowledge Interchange Format) syntax
+     * @param kb the knowledge base being queried
+     * @param qlist a StringBuilder containing the list of quantified variables in order,
+     *              used for answer extraction and binding
+     *
+     * @see TPTPVisitor
+     * @see TPTPFormula
+     * @see #processAnswers(String)
+     * @see #processAnswersFromProof(StringBuilder, String)
+     * @see #findTypesForSkolemTerms(KB)
      */
     public void parseProofOutput(List<String> lines, String kifQuery, KB kb, StringBuilder qlist) {
 
@@ -1203,33 +1229,28 @@ public class TPTP3ProofProcessor {
      * Look through the chain of supporting steps for a source axiom or an axiom
      * with more than one premise.
      */
-    private String renumberOneSupport(Map<String, TPTPFormula> ftable,
-            String sup) {
-
-        if (debug) {
-            System.out.println("renumberOneSupport(): get formula for: " + sup);
-        }
+    private String renumberOneSupport(Map<String,TPTPFormula> ftable, String sup) {
+        if (debug) System.out.println("renumberOneSupport(): get formula for: " + sup);
         TPTPFormula f = ftable.get(sup);
-        if (debug) {
-            System.out.println("renumberOneSupport(): formula: " + f);
-        }
-        if (f.supports.isEmpty()) {
-            return sup;
-        }
-        String newsup = f.supports.get(0);
-        while ((f.supports.size() < 2) && !TPTPutil.sourceAxiom(f) && !f.supports.isEmpty()) {
-            newsup = f.supports.get(0);
-            if (debug) {
-                System.out.println("renumberOneSupport(): first support: " + newsup);
-            }
+        if (f == null) return sup;                                // unknown id → leave as-is
+        if (debug) System.out.println("renumberOneSupport(): formula: " + f);
+
+        // Don’t lift: axioms or multi-premise (or no supports)
+        if (f.supports == null || f.supports.size() != 1 || TPTPutil.sourceAxiom(f)) return sup;
+
+        String newsup = sup;
+        Set<String> seen = new HashSet<>();                       // cycle guard
+        while (f != null && f.supports != null && f.supports.size() == 1 && !TPTPutil.sourceAxiom(f) && seen.add(f.name)) {
+            newsup = f.supports.get(0);                           // climb first parent
+            if (debug) System.out.println("renumberOneSupport(): first support: " + newsup);
             f = ftable.get(newsup);
-            if (f == null) {
-                System.out.println("renumberOneSupport(): Error no formula: " + newsup);
+            if (f == null) {                                      // broken link → stop at last known
+                if (debug) System.out.println("renumberOneSupport(): Error no formula: " + newsup);
+                break;
             }
+            if (f.supports == null || f.supports.size() != 1 || TPTPutil.sourceAxiom(f)) break;
         }
-        if (debug) {
-            System.out.println("renumberOneSupport(): returning: " + newsup);
-        }
+        if (debug) System.out.println("renumberOneSupport(): returning: " + newsup);
         return newsup;
     }
 
@@ -1303,6 +1324,48 @@ public class TPTP3ProofProcessor {
             result.add(ps);
         }
         return result;
+    }
+
+    /** Format a TPTPFormula as a single fof(...) line. */
+    public static String toFOFLine(final TPTPFormula f) {
+        final String name = (f.name == null || f.name.isEmpty()) ? "f0" : f.name;
+        final String role = (f.role == null || f.role.isEmpty()) ? "plain" : f.role;
+        final String body = ensureParenWrapped(collapseWs(f.formula));
+
+        final String source;
+        if (TPTPutil.sourceAxiom(f)) {
+            // Authored axiom → file('path',unknown)
+            System.out.println("ROLE: " + f.role);
+            System.out.println("infRule: " + f.infRule);
+            System.out.println("sourceFile: " + f.sourceFile);
+            String path = "";
+
+            path = (f.infRule == null || f.infRule.isEmpty()) ? "unknown" : f.infRule;
+            source = path;
+
+        } else {
+            // derived step → inference(rule, attrs, [supports])
+            final String rule =
+                    (f.infRule != null && !f.infRule.isEmpty()) ? f.infRule
+                            : ("negated_conjecture".equalsIgnoreCase(role) ? "negated_conjecture" : "resolution");
+            final String attrs = "negated_conjecture".equalsIgnoreCase(rule) ? "[status(cth)]" : "[]";
+            final String supp =
+                    (f.supports != null && !f.supports.isEmpty()) ? "[" + String.join(",", f.supports) + "]" : "[]";
+            source = "inference(" + rule + "," + attrs + "," + supp + ")";
+        }
+        return "fof(" + name + "," + role + ", " + body + ", " + source + ").";
+    }
+
+    /* ---------- tiny helpers (no new deps) ---------- */
+    private static String collapseWs(String s) {
+        return (s == null) ? "" : s.replaceAll("\\s+", " ").trim();
+    }
+    private static String ensureParenWrapped(String s) {
+        if (s.isEmpty()) return "( )";
+        return (s.startsWith("(") && s.endsWith(")")) ? s : "( " + s + " )";
+    }
+    private static String escapeSingleQuotes(String s) {
+        return s.replace("'", "\\'");
     }
 
     /**
