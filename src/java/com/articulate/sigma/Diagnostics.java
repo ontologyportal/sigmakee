@@ -1,5 +1,5 @@
 package com.articulate.sigma;
-
+import com.articulate.sigma.trans.*;
 /** This code is copyright Articulate Software (c) 2003.
  This software is released under the GNU Public License <http://www.gnu.org/copyleft/gpl.html>.
  Users of this code also consent, by use of this code, to credit Articulate Software
@@ -34,7 +34,7 @@ public class Diagnostics {
     public static List<String> LOG_OPS = Arrays.asList(Formula.AND,Formula.OR,Formula.XOR,Formula.NOT,Formula.EQUANT,
             Formula.UQUANT,Formula.IF,Formula.IFF, "holds");
 
-    public static Map<String, Set<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
+    public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
 
     private static final int RESULT_LIMIT = 100;
 
@@ -1137,176 +1137,231 @@ public class Diagnostics {
     }
 
     /** ***************************************************************
-     * Recursively extract variables from a KIF formula
+     * Recursively searches a formual for variable co-occurrences. Each variable is linked to others it appears with.
      *
-     * @param f the original Formula to process
-     * @param kb the current knowledge base
-     * @return a map where each variable is collected from its containing atom as its key
+     * @param f the formula to check
+     * @return a map where each variable is linked to others it co-occurs with
      */
-    public static Map<String, Set<String>> extractVariables(Formula f, KB kb) {
-
-        Map<String, Set<String>> links = new HashMap<>();
-
-        if (f.getFormula() == null || f.getFormula().isBlank())
-            return links;
-
-        KIF kifInstance = new KIF();
-        String parsedf = kifInstance.parseStatement(f.getFormula()); // getFormula() translates formula into a string
-        if (parsedf != null && !parsedf.isBlank()) {
-            System.err.println("Error in: " + Diagnostics.class.getName() + "extractVariables: " + parsedf);
-            return links;
-        }
-
-        Set<String> variables;
-        List<String> simpleArgs;
-        List<Formula> complexArgs;
-
-        // check if formula is a simple argument
-        if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
-            simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
-            variables = new HashSet<>();
-            for (String arg : simpleArgs) {
-                if (new Formula(arg).isVariable())
-                    variables.add(arg); // extracts ?H from (instance ?H Human)
-            }
-            if (!variables.isEmpty())
-                links.put(f.getFormula(), variables);
-        }
-        else { // recursive case
-            if (Formula.isQuantifier(f.car()))
-                complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
-            else
-                complexArgs = f.complexArgumentsToArrayList(1);
-            for (Formula complexForm : complexArgs)
-                links.putAll(extractVariables(complexForm, kb));
-        }
-        return links;
+    public static HashMap<String,HashSet<String>> findOrphanVars(Formula f) {
+        HashSet<String> parents = new HashSet<>();
+        return findOrphanVarsRecurse(f, parents);
     }
 
-    /** ***************************************************************
-     * Recursively extract variable co-occurrences from a KIF formula
+    /**
+     * Goes through a formula and finds which variables appear together.
+     * Each variable is linked to others it co-occurs with.
      *
-     * @param f the original Formula to process
-     * @param kb the current knowledge base
-     * @return a map where each variable is linked to others it appears with
+     * @param f the formula to check
+     * @param parents variables from the parent level
+     * @return a map showing which variables are connected
      */
-    public static Map<String, Set<String>> getVariableLinks(Formula f, KB kb) {
+    private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(Formula f, HashSet<String> parents) {
+        // create a map to store variables and the ones they are linked to
+        HashMap<String,HashSet<String>> result = new HashMap<>();
+    
+        // BASE CASE
+        // return if formula is empty
+        if (f.empty()) 
+                return result;
+        // if formula is a variable, connect it with its parent variables
+        if (f.isVariable())
+                return addLinks(parents,f);
+        // return if formula is atomic
+        if (f.atom())
+                return result;
 
-        Map<String, Set<String>> links = new HashMap<>();
-
-        if (f.getFormula() == null || f.getFormula().isBlank())
-            return links;
-
-        KIF kifInstance = new KIF();
-        String parsedf = kifInstance.parseStatement(f.getFormula()); // getFormula() translates formula into a string
-        if (parsedf != null && !parsedf.isBlank()) {
-            System.err.println("Error in: " + Diagnostics.class.getName() + "getVariableLinks: " + parsedf);
-            return links;
+        //RECURSIVE CASE
+        // extract subformulas inside the main formula
+        List<Formula> args;
+        if (f.car().equals("exists") || f.car().equals("forall")) {
+            // if formula starts with a quantifier, skip the first two arguments (quantifier and var list)
+            // without this, variables in the quantifier list would be incorrectly linked to others in the body
+            args = f.complexArgumentsToArrayList(2);
+        } else {
+            args = f.complexArgumentsToArrayList(1);
         }
 
-        Set<String> variables;
-        List<String> simpleArgs;
-        List<Formula> complexArgs;
-        Map<String, Set<String>> tempMap;
-        Set<String> linkedVars;
+        // process each argument recursively if formula starts with a logical operator (ex: and, exists)
+        if (Formula.isLogicalOperator(f.car())) {
+                for (Formula arg : args)
+                        mergeResults(result, findOrphanVarsRecurse(arg, parents));
+        }
 
-        // check if formula is a simple argument
-        if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
-            simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
-            variables = new HashSet<>();
-            for (String arg : simpleArgs) {
-                if (new Formula(arg).isVariable())
-                    variables.add(arg); // extracts ?H from (instance ?H Human)
-            }
-            for (String var : variables) {
-                linkedVars = new HashSet<>(variables);
-                linkedVars.remove(var); // prevents self links (?X -> {?X})
-                if (links.containsKey(var)) { // if the variable already exists in the map
-                    links.get(var).addAll(linkedVars); // merges other variables that exists for var
-                } else {
-                    links.put(var, linkedVars); // create a new entry with the variable and its linked variables
-                }
-            }
+        // collectVariables() finds all variables that appear inside these subformulas
+        HashSet<String> newparents = collectVariables(args);
+        
+        // mergeResults connects variable links from each subformula into the result map
+        for (Formula arg : args) {
+            mergeResults(result, findOrphanVarsRecurse(arg, newparents));
         }
-        else { // recursive case
-            if (Formula.isQuantifier(f.car()))
-                complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
-            else
-                complexArgs = f.complexArgumentsToArrayList(1);
-            for (Formula complexForm : complexArgs) {
-                tempMap = getVariableLinks(complexForm, kb);
-                for (String key : tempMap.keySet()) {
-                    if (links.containsKey(key)) { // if the variable already exists in the map
-                        links.get(key).addAll(tempMap.get(key)); // add the linked variables to the existing set
-                    } else {
-                        links.put(key, new HashSet<>(tempMap.get(key)));
-                    }
-                }
-            }
-        }
-        return links;
+
+        // links all variables to each other (bidirectional links)
+        mergeResults(result, addAllLinks(newparents, new HashMap<>()));
+
+        return result;
     }
 
-    /** ***************************************************************
-     * Recursively extract variable co-occurrences from a KIF file
-     *
-     * @param fKif the KIF file to process
-     * @param kb the current knowledge base
-     * @return a map where each variable is linked to others it appears with
+    /*
+     * Parses a KIF file and finds all variables that appear together
+     * 
+     * @param fKif the KIF file to parse
+     * @return a map where each variable is linked to others it co-occurs with
      */
-    public static Map<String, Set<String>> getVariableLinks(File fKif, KB kb) {
-
-        Map<String, Set<String>> links = new HashMap<>();
-
+    private static HashMap<String, HashSet<String>> parseFormulaFile(File fKif) {
+        HashMap<String, HashSet<String>> links = new HashMap<>();
         if (!fKif.exists())
             return links;
 
         KIF kifInstance = new KIF();
         kifInstance.setParseMode(KIF.RELAXED_PARSE_MODE);
         try {
-            kifInstance.readFile(fKif.getPath()); // getFormula() translates formula into a string
+            kifInstance.readFile(fKif.getPath());
         } catch (Exception e) {
-            System.err.println("Error in: " + Diagnostics.class.getName() + "getVariableLinks: " + e);
+            System.err.println("Error in: " + Diagnostics.class.getName() + " parseFormulaFile(): " + e);
             return links;
         }
 
-        Set<String> variables;
-        List<String> simpleArgs;
-        List<Formula> complexArgs;
-        Set<String> linkedVars;
-        Formula f;
         Set<String> keys = kifInstance.formulaMap.keySet();
-
         for (String key : keys) {
-            f = kifInstance.formulaMap.get(key);
-            // check if formula is a simple argument
-            if (f.isSimpleClause(kb)) { // base case: if the formula is a simple argument
-                simpleArgs = f.argumentsToArrayListString(1); // get the variables in the formula
-                variables = new HashSet<>();
-                for (String arg : simpleArgs) {
-                    if (new Formula(arg).isVariable())
-                        variables.add(arg); // extracts ?H from (instance ?H Human)
-                }
-                for (String var : variables) {
-                    linkedVars = new HashSet<>(variables);
-                    linkedVars.remove(var); // prevents self links (?X -> {?X})
-                    if (links.containsKey(var)) { // if the variable already exists in the map
-                        links.get(var).addAll(linkedVars); // merges other variables that exists for var
-                    } else {
-                        links.put(var, linkedVars); // create a new entry with the variable and its linked variables
-                    }
-                }
-            }
-            else {
-                if (Formula.isQuantifier(f.car()))
-                    complexArgs = f.complexArgumentsToArrayList(2); // Don't allow quantifier args here
-                else
-                    complexArgs = f.complexArgumentsToArrayList(1);
-                for (Formula complexForm : complexArgs)
-                    links.putAll(getVariableLinks(complexForm, kb));
+            Formula f = kifInstance.formulaMap.get(key);
+            HashMap<String, HashSet<String>> map = findOrphanVars(f);
+            mergeResults(links, map);
+        }
+
+        System.out.println("\nVariable links from kif file:\n");
+        for (String var : links.keySet()) {
+            System.out.println(var + " -> " + links.get(var));
+        }
+
+        int orphanVar = 0;
+        for (String var : links.keySet()) {
+            if (links.get(var).isEmpty()) {
+                System.out.println("\nOrphan variable found: " + var);
+                orphanVar++;
             }
         }
         return links;
+    }
+
+    /**
+     * Finds all variables inside the given list of formulas,
+     * including variables inside nested subformulas.
+     *
+     * @param args a list of formulas to look through
+     * @return all variable names found
+     */
+    private static HashSet<String> collectVariables(List<Formula> args) {
+        // set to store all variable names
+        HashSet<String> vars = new HashSet<>();
+        for (Formula arg : args) {
+            if (arg.isVariable()) {
+                vars.add(arg.getFormula());
+            }
+            List<Formula> subargs = arg.complexArgumentsToArrayList(1);
+            if (subargs != null) {
+                // check subformula for variables
+                for (Formula subarg : subargs) {
+                    if (subarg.isVariable()) {
+                        vars.add(subarg.getFormula());
+                    }
+                }
+            }
+        }
+        return vars;
+    }
+
+    /**
+     * Merges all entries from the source map into the target map.
+     *
+     * @param target the map to add to
+     * @param source the map to copy from
+     */
+    private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
+        for (String key : source.keySet()) {
+            HashSet<String> vals = source.get(key);
+            // if target already has the key, add all new values to its set
+            if (target.containsKey(key))
+                target.get(key).addAll(vals);
+            // otherwise, create a new entry in the target map
+            else
+                target.put(key, new HashSet<>(vals));
+        }
+    }
+
+    /**
+     * Creates bidirectional links between a single variable and its parent variables.
+     * 
+     * @param parents the set of variables from the parent
+     * @param f the formula containing the variable to be linked
+     * @return a map connecting the variable to all parent variables (bidirectional)
+     */
+    private static HashMap<String,HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
+        HashMap<String,HashSet<String>> result = new HashMap<>();
+
+        // get the string form of the variable (ex: "?X")
+        String formulaString = f.getFormula(); 
+
+        if (formulaString.isEmpty()) {
+            return result;
+        }
+        if (!result.containsKey(formulaString)) {
+            result.put(formulaString, new HashSet<>());
+        }
+        for (String var : parents) {
+            // skip self-links
+            if (var.equals(formulaString)) {
+                continue;  
+            }
+            // ensure both variable and parent are in the map
+            if (!result.containsKey(var)) {
+                result.put(var, new HashSet<>());
+            }
+            // add bidirectional links
+            result.get(var).add(formulaString);
+            result.get(formulaString).add(var);
+        }
+        return result;
+    }
+
+    /**
+     * Connects all variables found together in the same formula.
+     * Each variable in 'parents' is linked to every other variable in the same set.
+     *
+     * @param parents variables that co-occur in this level of the formula
+     * @param map map of previously established variable links (empty or partially filled)
+     * @return a map of all variables connected to one another bidirectionally
+     */
+    private static HashMap<String,HashSet<String>> addAllLinks(HashSet<String> parents, HashMap<String,HashSet<String>> map) {
+        // copy the input map to avoid modifying the original reference
+        HashMap<String,HashSet<String>> result = new HashMap<>();
+        for (Map.Entry<String,HashSet<String>> entry : map.entrySet()) {
+            result.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+
+        // collect all variable keys and values present in the map
+        HashSet<String> links = new HashSet<>();
+        links.addAll(result.keySet());
+
+        for (HashSet<String> s : result.values()) {
+            links.addAll(s);
+        }
+
+        // for each variable pair, create a two-way connection
+        for (String var : links) {
+            for (String parent : parents) {
+                if (parent.equals(var)) {
+                    continue;
+                }
+                if (!result.containsKey(var)) {
+                    result.put(var, new HashSet<>());
+                } if (!result.containsKey(parent)) {
+                    result.put(parent, new HashSet<>());
+                } 
+                result.get(var).add(parent);
+                result.get(parent).add(var);
+            }
+        }
+        return result;
     }
 
     /** ***************************************************************
@@ -1376,48 +1431,106 @@ public class Diagnostics {
             showHelp();
         }
         else if (args != null && args.length > 0 && args[0].equals("-v")) {
-//            Formula simpleFormula = new Formula("(instance ?H Human)");
-//            varLinksParentMap.putAll(getVariableLinks(simpleFormula, kb));
-
-//            Formula complexFormula = new Formula("(=>\n" +
-//                                                 "  (and\n" +
-//                                                 "    (P ?A ?B)\n" +
-//                                                 "    (P ?B ?C))\n" +
-//                                                 "  (exists (?X ?Z)\n" +
-//                                                 "    (and\n" +
-//                                                 "      (Q ?X)\n" +
-//                                                 "      (M ?Z ?C))))"
-//                                                );
-//            Formula complexFormula = new Formula("(=>\n" +
-//                                                   "  (instance ?WARGAMING Wargaming)\n" +
-//                                                   "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
-//                                                   "    (and\n" +
-//                                                   "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
-//                                                   "      (instance ?SIMULATION Imagining)\n" +
-//                                                   "      (instance ?TOOL Device)\n" +
-//                                                   "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
-//                                                   "      (patient ?WARGAMING ?SIMULATION)\n" +
-//                                                   "      (instrument ?WARGAMING ?TOOL))))"
-//                                                );
-
-//            varLinksParentMap.putAll(getVariableLinks(complexFormula, kb));
-
             if (args[1] != null && !args[1].isBlank()) {
                 String path = args[1];
                 Path inPath = Paths.get(path);
+
                 try (Stream<Path> paths = Files.walk(inPath)) {
                     paths.filter(f -> f.toString().endsWith(".kif")).sorted().forEach(f -> {
-                        varLinksParentMap.putAll(getVariableLinks(f.toFile(), kb));
+                        HashMap<String, HashSet<String>> fileVarLinks = parseFormulaFile(f.toFile());
+                        mergeResults(varLinksParentMap, fileVarLinks);
                     });
                 } catch (IOException e) {
                     System.err.println("Error processing input: " + e);
                 }
             }
-            // Results output
-            System.out.printf("Resuls of getVariableLinks():%n");
-            for (String key : varLinksParentMap.keySet()) {
-               System.out.println("  " + key + " -> " + varLinksParentMap.get(key));
-            }
+
+            Formula formulaTest1 = new Formula("(=>\n" +
+                                                  "  (instance ?WARGAMING Wargaming)\n" +
+                                                  "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
+                                                  "    (and\n" +
+                                                  "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
+                                                  "      (instance ?SIMULATION Imagining)\n" +
+                                                  "      (instance ?TOOL Device)\n" +
+                                                  "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
+                                                  "      (patient ?WARGAMING ?SIMULATION)\n" +
+                                                  "      (instrument ?WARGAMING ?TOOL))))"
+                                               );
+            Formula formultaTest2 = new Formula("(=>\n" + 
+                                "  (instance ?MC MaritimeClaimArea)\n" + 
+                                "  (modalAttribute\n" + 
+                                "    (exists (?HM ?NAV)\n" + 
+                                "      (and\n" + 
+                                "        (instance ?HM HydrographicMeasuring)\n" + 
+                                "        (instance ?NAV Guiding)\n" + 
+                                "        (patient ?HM ?MC)\n" + 
+                                "        (patient ?NAV ?HM))) Likely))"
+                                );  
+            Formula formulaTest3 = new Formula(
+                "(=>\n" +
+                "  (instance ?SA ServiceAnimal)\n" +
+                "  (hasPurpose ?SA\n" +
+                "    (exists (?H ?HELP ?T)\n" +
+                "      (and\n" +
+                "        (instance ?H Human)\n" +
+                "        (instance ?HELP Helping)\n" +
+                "        (instance ?T Training)\n" +
+                "        (agent ?T ?SA)\n" +
+                "        (patient ?HELP ?H)))))\n\n" + 
+
+                "(=>\n" +
+                "  (instance ?SA ServiceAnimal)\n" +
+                "  (modalAttribute ?SA\n" +
+                "    (exists (?REST ?P ?E)\n" +
+                "      (and\n" +
+                "        (instance ?REST Restaurant)\n" +
+                "        (instance ?P Airplane)\n" +
+                "        (instance ?E Entering)\n" +
+                "        (or\n" +
+                "          (path ?E ?SA)\n" +
+                "          (located ?REST ?SA)\n" +
+                "          (located ?P ?SA)))) Legal)))"
+            );
+            Formula test3pt1 = new Formula(
+                "(=>\n" +
+                "  (instance ?SA ServiceAnimal)\n" +
+                "  (hasPurpose ?SA\n" +
+                "    (exists (?H ?HELP ?T)\n" +
+                "      (and\n" +
+                "        (instance ?H Human)\n" +
+                "        (instance ?HELP Helping)\n" +
+                "        (instance ?T Training)\n" +
+                "        (agent ?T ?SA)\n" +
+                "        (patient ?HELP ?H)))))"
+                );
+
+            Formula test3pt2 = new Formula(
+                "(=>\n" +
+                "  (instance ?SA ServiceAnimal)\n" +
+                "  (modalAttribute ?SA\n" +
+                "    (exists (?REST ?P ?E)\n" +
+                "      (and\n" +
+                "        (instance ?REST Restaurant)\n" +
+                "        (instance ?P Airplane)\n" +
+                "        (instance ?E Entering)\n" +
+                "        (or\n" +
+                "          (path ?E ?SA)\n" +
+                "          (located ?REST ?SA)\n" +
+                "          (located ?P ?SA)))) Legal)))"
+            );
+            Formula orphanTest1 = new Formula("(=>\n" + 
+                                "  (instance ?MC MaritimeClaimArea)\n" + 
+                                "  (modalAttribute\n" + 
+                                "    (exists (?HM ?NAV ?P ?S)\n" + 
+                                "      (and\n" + 
+                                "        (instance ?HM HydrographicMeasuring)\n" + 
+                                "        (instance ?NAV Guiding)\n" + 
+                                "        (patient ?HM ?MC)\n" + 
+                                "        (patient ?NAV ?HM))) Likely))"
+                                );
+            // Formula orphanTest2 = new Formula("(exists (?A ?B ?C) (and (agent ?A ?B)))");
+            // varLinksParentMap.putAll(findOrphanVars(test3pt2));
+            // System.out.println("\n\n\nResults of findOrphanVars()\n" + varLinksParentMap);
         }
     }
 }

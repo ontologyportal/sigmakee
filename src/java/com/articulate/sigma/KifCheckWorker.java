@@ -23,6 +23,7 @@ import java.util.concurrent.*;
  * returning results via Future to avoid concurrency issues in KifFileChecker.
  */
 public class KifCheckWorker {
+
     private static final BlockingQueue<Job> queue = new LinkedBlockingQueue<>();
 
     static {
@@ -31,19 +32,26 @@ public class KifCheckWorker {
                 try {
                     Job job = queue.take();
                     try {
-                        List<String> result = job.checker.check(job.contents);
+                        List<ErrRec> result = job.checker.check(job.contents);
                         job.future.complete(result);
                     } catch (Exception e) {
                         job.future.completeExceptionally(e);
                     }
-                } catch (InterruptedException ignored) {}
+                } catch (InterruptedException ignored) {
+                }
             }
         });
         worker.setDaemon(true);
         worker.start();
     }
 
-    public static Future<List<String>> submit(String contents) {
+    /**
+     * Submit a KIF buffer to be checked asynchronously.
+     *
+     * @param contents KIF contents as string
+     * @return Future that will complete with a list of ErrRec objects
+     */
+    public static Future<List<ErrRec>> submit(String contents) {
         Job job = new Job(contents, new KifFileChecker());
         queue.add(job);
         return job.future;
@@ -52,7 +60,8 @@ public class KifCheckWorker {
     private static class Job {
         final String contents;
         final KifFileChecker checker;
-        final CompletableFuture<List<String>> future = new CompletableFuture<>();
+        final CompletableFuture<List<ErrRec>> future = new CompletableFuture<>();
+
         Job(String contents, KifFileChecker checker) {
             this.contents = contents;
             this.checker = checker;
