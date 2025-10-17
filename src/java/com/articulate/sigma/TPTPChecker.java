@@ -28,25 +28,17 @@ public class TPTPChecker {
      */
     public static List<ErrRec> check(String contents, String fileName) {
         List<ErrRec> results = new ArrayList<>();
-        if (contents == null || contents.isBlank()) {
+        if (contents == null || contents.isBlank())
             return results;
-        }
-
         try {
             File tmp = writeTempFile(contents, ".tptp");
-            // Run tptp4X with warning, SZS status, and machine-readable output
             ProcessOutput po = runTptp4x(tmp, "-w", "-z", "-u", "machine");
-            if (!po.err.isBlank()) {
-                results.addAll(parseTptpOutput(fileName, po.err, 2));  // 2 = error
-            }
-            if (!po.out.isBlank()) {
-                results.addAll(parseTptpOutput(fileName, po.out, 1));  // 1 = warning
-            }
+            if (!po.err.isBlank())
+                results.addAll(parseTptpOutput(fileName, po.err, 2));
+            if (!po.out.isBlank())
+                results.addAll(parseTptpOutput(fileName, po.out, 1));
         } catch (Throwable t) {
-            results.add(new ErrRec(
-                    2, fileName, 0, 0, 1,
-                    "TPTP check failed: " + t.getMessage()
-            ));
+            results.add(new ErrRec(2, fileName, 0, 0, 1,"TPTP check failed: " + t.getMessage()));
         }
         return results;
     }
@@ -64,29 +56,22 @@ public class TPTPChecker {
         String[] lines = text.split("\\R");
         for (String line : lines) {
             if (line.isBlank()) continue;
-
             int lineNum = 0;
             int start = 0;
             int end = 1;
             String msg = line;
-
-            // ✅ Match "Line 4 Char 19"
             java.util.regex.Matcher m = java.util.regex.Pattern
                     .compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)")
                     .matcher(line);
-
             if (m.find()) {
                 try {
-                    lineNum = Integer.parseInt(m.group(1)) - 1;  // convert to 0-based
+                    lineNum = Integer.parseInt(m.group(1)) - 1;
                     start = Integer.parseInt(m.group(2)) - 1;
                     end = start + 1;
                 } catch (NumberFormatException ignored) { }
             }
-
-            // Only add meaningful errors (e.g. SZS SyntaxError or Token errors)
-            if (line.contains("SZS status") || line.contains("SyntaxError") || m.find()) {
+            if (line.contains("SZS status") || line.contains("SyntaxError") || m.find())
                 recs.add(new ErrRec(severity, fileName, lineNum, start, end, msg));
-            }
         }
         return recs;
     }
@@ -102,20 +87,19 @@ public class TPTPChecker {
             File tmp = writeTempFile(inputText, ".tptp");
             ProcessOutput po = runTptp4x(tmp, "-ftptp", "-uhuman");
             if (po.code == 0 && po.out != null && !po.out.isBlank()) {
-                String[] lines = po.out.split("\\R", -1); // split on any line break, keep trailing empty lines
-                if (lines.length > 0) {
-                    lines[0] = lines[0].replaceFirst("^\\s+", ""); // remove leading whitespace from first line
-                }
+                String[] lines = po.out.split("\\R", -1);
+                if (lines.length > 0)
+                    lines[0] = lines[0].replaceFirst("^\\s+", "");
                 return String.join(System.lineSeparator(), lines);
             } else {
                 System.err.println("[TPTPChecker] Formatting failed for: " + fileName);
                 System.err.println(po.err != null && !po.err.isBlank() ? po.err : po.out);
-                return null;
+                return inputText;
             }
         } catch (Throwable t) {
             System.err.println("[TPTPChecker] Exception formatting " + fileName + ": " + t.getMessage());
             t.printStackTrace();
-            return null;
+            return inputText;
         }
     }
 
@@ -155,45 +139,10 @@ public class TPTPChecker {
         final int code;
         final String out;
         final String err;
-
         ProcessOutput(int code, String out, String err) {
             this.code = code;
             this.out = out;
             this.err = err;
-        }
-    }
-
-    public static void main(String[] args) {
-        if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
-            showHelp();
-            return;
-        }
-        if (args[0].equals("-f")) {
-            if (args.length < 2) {
-                System.err.println("Error: No TPTP formula provided after -f.");
-                showHelp();
-                System.exit(1);
-            }
-            StringBuilder sb = new StringBuilder();
-            for (int i = 1; i < args.length; i++) {
-                sb.append(args[i]).append(" ");
-            }
-
-            String inputFormula = sb.toString().trim();
-            TPTPChecker formatter = new TPTPChecker();
-            String formatted = formatter.formatTptpText(inputFormula, "(command-line)");
-
-            if (formatted != null) {
-                System.out.println("=== Formatted TPTP ===");
-                System.out.println(formatted);
-            } else {
-                System.err.println("Failed to format input.");
-                System.exit(1);
-            }
-        } else {
-            System.err.println("Unknown option: " + args[0]);
-            showHelp();
-            System.exit(1);
         }
     }
 
@@ -208,5 +157,36 @@ public class TPTPChecker {
         System.out.println("  java com.articulate.sigma.TPTPChecker -f \"fof(ax1, axiom, (p => q)).\"");
         System.out.println();
         System.out.println("Note: Requires 'tptp4X' to be installed and available on your PATH.");
+    }
+
+    public static void main(String[] args) {
+        if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
+            showHelp();
+            return;
+        }
+        if (args[0].equals("-f")) {
+            if (args.length < 2) {
+                System.err.println("Error: No TPTP formula provided after -f.");
+                showHelp();
+                System.exit(1);
+            }
+            StringBuilder sb = new StringBuilder();
+            for (int i = 1; i < args.length; i++)
+                sb.append(args[i]).append(" ");
+            String inputFormula = sb.toString().trim();
+            TPTPChecker formatter = new TPTPChecker();
+            String formatted = formatter.formatTptpText(inputFormula, "(command-line)");
+            if (formatted != null) {
+                System.out.println("=== Formatted TPTP ===");
+                System.out.println(formatted);
+            } else {
+                System.err.println("Failed to format input.");
+                System.exit(1);
+            }
+        } else {
+            System.err.println("Unknown option: " + args[0]);
+            showHelp();
+            System.exit(1);
+        }
     }
 }

@@ -77,7 +77,7 @@
             if (role != null && role.equalsIgnoreCase("admin") &&  (pageName == null || !pageName.equals("Prefs")))
                 out.println("<A href=\"Properties.jsp\"><b>Prefs</b></A>&nbsp;|&nbsp");
             if (role != null && !role.equalsIgnoreCase("guest") && (pageName == null || !pageName.equals("CheckKifFile")))
-                out.println("<A href=\"CheckKifFile.jsp\"><b>Check KIF File</b></A>&nbsp;|&nbsp;");
+                out.println("<A href=\"Editor.jsp\"><b>Editor</b></A>&nbsp;|&nbsp;");
             if (role != null && role.equalsIgnoreCase("admin") && (pageName == null || !pageName.equals("manageUsers"))) {
                 out.println("<A href=\"ManageUsers.jsp\"><b>Manage Users</b></A>&nbsp;|&nbsp;");
             }
