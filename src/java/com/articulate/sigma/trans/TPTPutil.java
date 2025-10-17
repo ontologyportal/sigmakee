@@ -411,185 +411,50 @@ public class TPTPutil {
         return finalLines;
     }
 
-    // TODO: tpp.renumberProof(tpp.simplifyProof(1)) needs refactoring for handling orphan references.
-    // TODO: This method will replace the custom made one.
-//    public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
-//        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
-//        KBmanager.getMgr().initializeOnce();
-//        String kbName = KBmanager.getMgr().getPref("sumokbname");
-//        KB kb = KBmanager.getMgr().getKB(kbName);
-//
-//        List<String> cleaned_proofLines = clearProofFile(proofLines);
-//
-//        tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
-//
-//        List<TPTPFormula> keep = tpp.renumberProof(tpp.simplifyProof(1)); // drop 1-premise, rewire+renumber
-//
-//        List<String> firstComments = new ArrayList<>();
-//        List<String> lastComments = new ArrayList<>();
-//
-//        boolean beforeFOF = true;
-//        boolean afterFOF = false;
-//
-//        for (String line : cleaned_proofLines) {
-//            String trim = line.trim();
-//            if (beforeFOF && trim.startsWith("%")) {
-//                firstComments.add(line);
-//            } else if (trim.startsWith("fof(")) {
-//                beforeFOF = false;
-//            } else if (!beforeFOF && trim.startsWith("%")) {
-//                afterFOF = true;
-//                lastComments.add(line);
-//            } else if (afterFOF && trim.startsWith("%")) {
-//                lastComments.add(line);
-//            }
-//        }
-//
-//        List<String> fofBody = new ArrayList<>();
-//        for (TPTPFormula f : keep) {
-//            String target = f.formula.replaceAll("\\s+", ""); // normalized target
-//            for (String line : cleaned_proofLines) {
-//                String normLine = line.replaceAll("\\s+", "");
-//                if (normLine.contains(target)) { // found the line containing the formula
-//                    fofBody.add(line);
-//                    break; // stop searching once matched
-//                }
-//            }
-//        }
-//
-//        // --- build final output ---
-//        List<String> finalLines = new ArrayList<>();
-//        finalLines.addAll(firstComments);
-//        finalLines.addAll(fofBody);
-//        finalLines.addAll(lastComments);
-//
-//        return finalLines;
-//    }
 
-
-
-    /**
-     * Processes a list of first-order logic proof lines (in TPTP FOF format) by
-     * eliminating inference steps that depend on fewer than two premises, while
-     * preserving conjectures, axioms, and other non-droppable lines. The parent
-     * relationships for dropped nodes are rewired to their first kept ancestor.
-     *
-     * @param proofLines a list of strings where each string represents a line in a
-     *        TPTP FOF proof. These lines may include logical formulas, inferences,
-     *        and other content relevant to the proof.
-     * @return a list of processed lines where eligible inference steps based on
-     *         fewer than two premises are removed, and parent dependencies are
-     *         appropriately rewired for remaining nodes.
-     */
     public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
-        class Node {
-            String id, role, text;
-            List<String> parents = new ArrayList<>();
-            int parentsL, parentsR; // indices in text for rewriting
-            boolean keep;
-        }
-        List<Node> nodes = new ArrayList<>();
-        Map<String, Node> byId = new LinkedHashMap<>();
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        KBmanager.getMgr().initializeOnce();
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        KB kb = KBmanager.getMgr().getKB(kbName);
 
-        // -------- PASS 1: collect complete fof(...) blocks, parse id/role/parents ----------
-        for (int i = 0; i < proofLines.size(); ) {
-            String ln = proofLines.get(i);
-            if (!ln.trim().startsWith("fof(")) { // non-fof line stays as-is (add as a pseudo-node)
-                Node n = new Node(); n.id = null; n.role = "nonfof"; n.text = ln; n.keep = true; nodes.add(n); i++; continue;
-            }
-            List<String> block = new ArrayList<>();
-            int bal = 0; boolean started = false;
-            while (i < proofLines.size()) {
-                String cur = proofLines.get(i++);
-                block.add(cur);
-                for (char c : cur.toCharArray()) { if (c == '(') { bal++; started = true; } else if (c == ')') bal--; }
-                if (started && bal == 0 && cur.trim().endsWith(".")) break;
-            }
-            String full = String.join(" ", block);
-            Node n = new Node(); n.text = full;
+        List<String> cleaned_proofLines = clearProofFile(proofLines);
 
-            int pOpen = full.indexOf('(');
-            int c1 = full.indexOf(',', pOpen + 1);
-            int c2 = full.indexOf(',', c1 + 1);
-            n.id = (pOpen >= 0 && c1 > pOpen) ? full.substring(pOpen + 1, c1).trim() : null;
-            n.role = (c1 >= 0 && c2 > c1) ? full.substring(c1 + 1, c2).trim().toLowerCase() : "plain";
+        tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
+        List<TPTPFormula> keep = tpp.simplifyProof(1); // drop 1-premise,
+        List<TPTPFormula> renumberProof = tpp.renumberProof(keep); // rewire+renumber
 
-            // locate the last [...] which is the parents list per TPTP inference(...,[...],[PARENTS])
-            int lb = full.lastIndexOf('['), rb = full.lastIndexOf(']');
-            n.parentsL = lb; n.parentsR = rb;
-            if (lb >= 0 && rb > lb) {
-                String blob = full.substring(lb + 1, rb).trim();
-                if (!blob.isEmpty()) {
-                    for (String t : blob.split(",")) {
-                        String id = t.trim();
-                        if (!id.isEmpty()) n.parents.add(id);
-                    }
-                }
-            }
-            nodes.add(n);
-            if (n.id != null) byId.put(n.id, n);
-        }
-
-        // -------- PASS 2: decide keep/drop (axioms & any role with >=2 parents; keep conjectures) ----------
-        for (Node n : nodes) {
-            if (n.role.equals("nonfof")) { n.keep = true; continue; }
-            if (n.id == null) { n.keep = true; continue; }
-            if (n.role.contains("conjecture")) { n.keep = true; continue; } // keep conjecture & negated_conjecture
-            if ("axiom".equals(n.role)) { n.keep = true; continue; }
-            // count parents
-            int pc = n.parents.size();
-            n.keep = pc >= 2; // drop single-premise (0 or 1) inference steps
-        }
-
-        // -------- PASS 3: lifting map: for any dropped node, map it to first kept ancestor ----------
-        Map<String,String> liftMemo = new HashMap<>();
-        Function<String,String> lift = new Function<String,String>() {
-            @Override public String apply(String id) {
-                if (id == null) return null;
-                if (liftMemo.containsKey(id)) return liftMemo.get(id);
-                Node n = byId.get(id);
-                String ans;
-                if (n == null) { ans = id; }                         // unknown → leave as-is
-                else if (n.keep) { ans = id; }                       // already kept
-                else if (n.parents.isEmpty()) { ans = id; }          // no parents to climb → leave
-                else if (n.parents.size() == 1) {                    // single chain: climb
-                    ans = this.apply(n.parents.get(0));
-                } else {                                             // multi-parent (rare for dropped): pick first
-                    ans = this.apply(n.parents.get(0));
-                }
-                liftMemo.put(id, ans);
-                return ans;
-            }
-        };
-
-        // -------- PASS 4: emit with rewired parents; drop nodes not kept ----------
-        List<String> out = new ArrayList<>();
-        for (Node n : nodes) {
-            if (n.role.equals("nonfof")) { out.add(n.text); continue; }
-            if (n.id == null) { out.add(n.text); continue; }
-            if (!n.keep) continue;
-
-            // Rewire only if we have an inference parents list to rewrite
-            if (n.parentsL >= 0 && n.parentsR > n.parentsL) {
-                List<String> rewired = new ArrayList<>();
-                for (String p : n.parents) {
-                    String lp = lift.apply(p);
-                    if (lp != null && !lp.isEmpty()) rewired.add(lp);
-                }
-                // de-duplicate while preserving order
-                LinkedHashSet<String> dedup = new LinkedHashSet<>(rewired);
-                String newParents = String.join(",", dedup);
-
-                StringBuilder sb = new StringBuilder();
-                sb.append(n.text, 0, n.parentsL + 1)
-                        .append(newParents)
-                        .append(n.text.substring(n.parentsR));
-                out.add(sb.toString());
-            } else {
-                out.add(n.text);
+        List<String> firstComments = new ArrayList<>();
+        List<String> lastComments = new ArrayList<>();
+        boolean beforeFOF = true;
+        boolean afterFOF = false;
+        // Keep the comments before and after the fof lines
+        for (String line : cleaned_proofLines) {
+            String trim = line.trim();
+            if (beforeFOF && trim.startsWith("%")) {
+                firstComments.add(line);
+            } else if (trim.startsWith("fof(")) {
+                beforeFOF = false;
+            } else if (!beforeFOF && trim.startsWith("%")) {
+                afterFOF = true;
+                lastComments.add(line);
+            } else if (afterFOF && trim.startsWith("%")) {
+                lastComments.add(line);
             }
         }
-        return out;
+
+        // Build the fof lines from the renumbered proof
+        List<String> fofBody = new ArrayList<>();
+        for (TPTPFormula step : renumberProof) fofBody.add(TPTP3ProofProcessor.toFOFLine(step));
+
+        // --- build final output ---
+        List<String> finalLines = new ArrayList<>();
+        finalLines.addAll(firstComments);
+        finalLines.addAll(fofBody);
+        finalLines.addAll(lastComments);
+
+        // reverse the lines again
+        return TPTP3ProofProcessor.joinNreverseInputLines(finalLines);
     }
 
 

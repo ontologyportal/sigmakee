@@ -422,7 +422,10 @@ public class LanguageFormatter {
 
         System.out.println(prompt);
 
-        OllamaClient ollama = new OllamaClient(OLLAMA_HOST);
+        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+
+        OllamaClient ollama = new OllamaClient(ollamaHost);
 
         String out = "";
         try {
