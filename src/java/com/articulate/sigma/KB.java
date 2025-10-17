@@ -197,6 +197,11 @@ public class KB implements Serializable {
     /** Progress bar text capture */
     private StringBuilder progressSb = new StringBuilder();
 
+    /** TPTP query of a SUO-KIF formula */
+    private Set<String> tptpQuery = null;
+
+    public static boolean dropOnePremiseFormulas = false;
+
     /***************************************************************
      */
     public KB() {
@@ -1921,6 +1926,7 @@ public class KB implements Serializable {
                         tptpquery.add(theTPTPstatement);
                     }
                     try {
+                        tptpQuery = tptpquery;
                         System.out.println("KB.askVampire(): calling with: " + s + ", " + timeout + ", " + tptpquery);
                         System.out.println("KB.askVampire(): qlist: " + SUMOformulaToTPTPformula.qlist);
                         System.out.println("KB.askVampire(): mode before: " + Vampire.mode);
@@ -1934,6 +1940,7 @@ public class KB implements Serializable {
                         System.out.println("KB.askVampire(): mode: " + Vampire.mode);
                         vampire.run(this, s, timeout, tptpquery);
                         vampire.qlist = SUMOformulaToTPTPformula.qlist;
+//                        System.out.println("DEBUG: vampire.output: "+vampire.output);
                         return vampire;
                     }
                     catch (Exception e) {
@@ -1945,8 +1952,63 @@ public class KB implements Serializable {
             else
                 System.err.println("Error in KB.askVampire(): no TPTP formula translation for query: " + query);
         }
+
         return null;
     }
+
+    /**
+     * STEPS:
+     * 1 - AskVampire to get the first output
+     * 2 - Process the output to keep only the authored axioms
+     * 3 - Send new command to vampire with Modens Ponens options
+     * 4 - If wanted drop the one premise formulas.
+     * 5 - Replace the new proof's infRules with the original ones.
+     * 6 - Return Vampire object for further processing from AskTell.jsp
+     *
+     * @param suoKifFormula
+     * @param timeout
+     * @param maxAnswers
+     * @return
+     */
+
+    public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
+
+        // STEP 1
+        Vampire vampire_initial = askVampire(suoKifFormula, timeout, maxAnswers);
+
+        // STEP 2
+        List<TPTPFormula> proof = TPTPutil.processProofLines(vampire_initial.output);
+        List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
+
+        // STEP 3
+        Vampire vampire_pomens = new Vampire();
+        File kb = new File("min-problem.tptp");
+        List<String> cmds = Arrays.asList(
+                "--input_syntax","tptp",
+                "--proof","tptp",                  // <-- TSTP-style proof lines
+                "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
+                "-fde","none","-updr","off"
+        );
+        try{
+            vampire_pomens.runCustom(kb, 10, cmds);
+            vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
+        } catch (Exception e){
+            System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
+        }
+
+        // STEP 4
+        if (dropOnePremiseFormulas) {
+            vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
+        }
+
+        // STEP 5
+        vampire_pomens.output = TPTPutil.replaceFOFinfRule(vampire_pomens.output, authored_lines);
+
+        // STEP 6
+        return vampire_pomens;
+    }
+
+
 
     /***************************************************************
      * Return a SUMO-formatted proof string
