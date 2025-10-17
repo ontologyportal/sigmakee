@@ -19,11 +19,13 @@ import com.articulate.sigma.KBmanager;
 import com.articulate.sigma.tp.Vampire;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
+import com.articulate.sigma.utils.FileUtil;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import tptp_parser.TPTPFormula;
 
@@ -344,6 +346,215 @@ public class TPTPutil {
         System.out.println(TPTPutil.htmlTPTPFormat(f,"http://sigma.ontologyportal.org:4040/sigma?kb=SUMO&term=",false));
     }
 
+    /**
+     * Cleans a Vampire proof log file so only the valid proof lines remain.
+     * Keeps only lines between "% SZS output start" and "% SZS output end",
+     * merges multi-line fof(...) statements into single lines,
+     * and returns the processed list ready for TPTP3ProofProcessor.
+     */
+    public static List<String> clearProofFile(List<String> lines) {
+        // --- 0) locate markers and status ---
+        String statusLine = null;
+        int startIdx = -1;
+        int endIdx = -1;
+
+        for (int i = 0; i < lines.size(); i++) {
+            String l = lines.get(i);
+            if (statusLine == null && l.contains("% SZS status")) statusLine = l;
+            if (startIdx == -1 && l.contains("% SZS output start")) startIdx = i;
+            if (startIdx != -1 && l.contains("% SZS output end")) { endIdx = i; break; }
+        }
+
+        // Fallback: if we didn't find a proper proof block, return empty (caller can handle)
+        if (startIdx == -1 || endIdx == -1 || endIdx < startIdx) {
+            System.err.println("[clearProofFile] No SZS proof block found.");
+            return new ArrayList<String>();
+        }
+
+        // --- 1) extract the proof section, inclusive of start/end ---
+        List<String> section = new ArrayList<String>(lines.subList(startIdx, endIdx + 1));
+
+        // --- 2) merge multi-line fof(...) into single lines ---
+        List<String> mergedFofs = new ArrayList<String>();
+        StringBuilder current = new StringBuilder();
+        boolean insideFof = false;
+
+        for (int i = 0; i < section.size(); i++) {
+            String trimmed = section.get(i).trim();
+
+            // skip markers here; we'll add them explicitly later
+            if (trimmed.contains("% SZS output start") || trimmed.contains("% SZS output end")) {
+                continue;
+            }
+
+            if (trimmed.startsWith("fof(")) {
+                insideFof = true;
+                current.setLength(0);
+                current.append(trimmed);
+            } else if (insideFof) {
+                current.append(" ").append(trimmed);
+            }
+
+            if (insideFof && trimmed.endsWith(").")) {
+                mergedFofs.add(current.toString());
+                insideFof = false;
+            }
+        }
+
+        // --- 3) build the final list: status + start + merged fof + end ---
+        List<String> finalLines = new ArrayList<String>();
+        if (statusLine != null) finalLines.add(statusLine);
+        finalLines.add(lines.get(startIdx));   // % SZS output start ...
+        finalLines.addAll(mergedFofs);
+        finalLines.add(lines.get(endIdx));     // % SZS output end ...
+
+        return finalLines;
+    }
+
+
+    public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        KBmanager.getMgr().initializeOnce();
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        KB kb = KBmanager.getMgr().getKB(kbName);
+
+        List<String> cleaned_proofLines = clearProofFile(proofLines);
+
+        tpp.parseProofOutput(cleaned_proofLines, "", kb, new StringBuilder());  // builds tpp.proof (List<TPTPFormula>)
+        List<TPTPFormula> keep = tpp.simplifyProof(1); // drop 1-premise,
+        List<TPTPFormula> renumberProof = tpp.renumberProof(keep); // rewire+renumber
+
+        List<String> firstComments = new ArrayList<>();
+        List<String> lastComments = new ArrayList<>();
+        boolean beforeFOF = true;
+        boolean afterFOF = false;
+        // Keep the comments before and after the fof lines
+        for (String line : cleaned_proofLines) {
+            String trim = line.trim();
+            if (beforeFOF && trim.startsWith("%")) {
+                firstComments.add(line);
+            } else if (trim.startsWith("fof(")) {
+                beforeFOF = false;
+            } else if (!beforeFOF && trim.startsWith("%")) {
+                afterFOF = true;
+                lastComments.add(line);
+            } else if (afterFOF && trim.startsWith("%")) {
+                lastComments.add(line);
+            }
+        }
+
+        // Build the fof lines from the renumbered proof
+        List<String> fofBody = new ArrayList<>();
+        for (TPTPFormula step : renumberProof) fofBody.add(TPTP3ProofProcessor.toFOFLine(step));
+
+        // --- build final output ---
+        List<String> finalLines = new ArrayList<>();
+        finalLines.addAll(firstComments);
+        finalLines.addAll(fofBody);
+        finalLines.addAll(lastComments);
+
+        // reverse the lines again
+        return TPTP3ProofProcessor.joinNreverseInputLines(finalLines);
+    }
+
+
+    static String norm(String s) {
+        return s == null ? "" : s.replaceAll("\\s+", " ").trim();
+    }
+
+    public static List<String> replaceFOFinfRule(List<String> proofLines, List<TPTPFormula> authored_lines) {
+        Pattern filePat = Pattern.compile("file\\([^)]*\\)");
+
+        for (TPTPFormula authored_step : authored_lines) {
+            String targetFormula = norm(authored_step.formula);
+            if (targetFormula.startsWith("(") && targetFormula.endsWith(")")) {
+                targetFormula = targetFormula.substring(1, targetFormula.length() - 1);
+            }
+            String replacement = authored_step.infRule; // must be full: file('path',tag)
+
+            for (int i = 0; i < proofLines.size(); i++) {
+                String original = proofLines.get(i);
+                String line = original; // keep original for printing
+                String lineTrim = original.trim();
+
+                boolean startsFof = lineTrim.startsWith("fof(");
+                boolean hasRole = line.contains(",axiom,") || line.contains(",conjecture,");
+                boolean containsFormula = norm(original).contains(targetFormula);
+
+                if (startsFof && hasRole) {
+                    if (containsFormula) {
+                        Matcher m = filePat.matcher(original);
+                        if (m.find()) {
+                            String replaced = m.replaceAll(replacement);
+                            proofLines.set(i, replaced);
+                        }
+                    }
+                }
+            }
+        }
+
+        return proofLines;
+    }
+
+
+    // Save authored axioms + conjecture as clean TPTP, one fof(...) per line.
+    public static List<TPTPFormula> writeMinTPTP(List<TPTPFormula> proof) {
+
+        String outName = "min-problem.tptp";
+
+        String outPath = java.nio.file.Paths.get(System.getProperty("user.dir"), outName)
+                .toAbsolutePath().toString();
+
+        List<String> out = new ArrayList<String>();
+        List<TPTPFormula> authored_lines = new ArrayList<>();
+        out.add("% Generated by TPTPutil: authored axioms + conjecture");
+        String conjecture = null;
+
+        for (TPTPFormula step : proof) {
+            if (TPTPutil.sourceAxiom(step)) {          // only authored axioms
+                out.add(oneLine(step.toString()));     // TPTP 'fof(...)' line
+                authored_lines.add(step);
+            }
+            if ("conjecture".equals(step.role)) {
+                conjecture = oneLine(step.toString());
+            }
+        }
+        if (conjecture == null) System.out.println("-- ERROR: TPTPUtil.writeMinTPTP: No Conjecture found!");
+
+        FileUtil.writeLines(outPath, out); // overwrite = false append
+
+        return authored_lines;
+    }
+
+    private static String oneLine(String s) {
+        String t = s.replace('\r', ' ').replace('\n', ' ').trim().replaceAll("\\s+", " ");
+        return t.endsWith(".") ? t : (t + ".");
+    }
+
+    public static List<TPTPFormula> processProofLines(List<String> inputLines) {
+
+        TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+        KBmanager.getMgr().initializeOnce();
+        String kbName = KBmanager.getMgr().getPref("sumokbname");
+        KB kb = KBmanager.getMgr().getKB(kbName);
+
+        // Clear file before processing
+        List<String> lines = clearProofFile(inputLines);
+
+        String query = Formula.LP;
+        StringBuilder answerVars = new StringBuilder("");
+
+        // Parse proof output
+        tpp.parseProofOutput(lines, query, kb, answerVars);
+
+        System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
+        System.out.println("TPTPutil.main(): showing only source axioms ");
+
+        // Write minimal TPTP file with authored axioms
+        return tpp.proof;
+    }
+
+
     /** ***************************************************************
      */
     public static void showHelp() {
@@ -378,20 +589,35 @@ public class TPTPutil {
             if (args != null && args.length > 1 && args[0].contains("f")) {
                 try {
                     List<String> lines = FileUtil.readLines(args[1],false);
+
+//                    System.out.println("---- DEBUG: File lines read ----");
+//                    System.out.println("Total lines: " + lines.size());
+//                    for (int i = 0; i < lines.size(); i++) {
+//                        System.out.println("Line " + i + ": " + lines.get(i));
+//                    }
+//                    System.out.println("---- END DEBUG ----");
+
+                    // Clear file before processing from TPTP3ProofProcessor.parseProofOutput
+                    lines = clearProofFile(lines);
+
                     String query = Formula.LP;
                     StringBuilder answerVars = new StringBuilder("");
-                    System.out.println("input: " + lines + "\n");
+//                    System.out.println("input: \n" + lines + "\n");
                     tpp.parseProofOutput(lines, query, kb,answerVars);
                     System.out.println("TPTPutil.main(): " + tpp.proof.size() + " steps ");
                     System.out.println("TPTPutil.main(): showing only source axioms ");
                     Formula f;
-                    for (TPTPFormula step : tpp.proof) {
-                        //System.out.println(step);
-                        if (TPTPutil.sourceAxiom(step)) {
+                    for (TPTPFormula step : tpp.proof) { // all steps not only authored & derived
+                        if (TPTPutil.sourceAxiom(step)) { // filters only the authored axioms
                             f = new Formula(step.sumo);
                             System.out.println(f.format("","  ","\n"));
                         }
                     }
+
+                    // Creates a new TPTP file in the curent directory that contains only the
+                    // authored axioms.
+                    writeMinTPTP(tpp.proof);
+
                 }
                 catch (Exception e) {
                     e.printStackTrace();
