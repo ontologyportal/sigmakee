@@ -107,8 +107,8 @@ public class KifFileChecker {
         if (!msgs.isEmpty())
             return msgs;
         KIF localKif = StringToKif(contents, fileName, msgs);
-        if (!parseKif(localKif, contents, fileName, msgs))
-            return msgs;
+        // if (!parseKif(localKif, contents, fileName, msgs))
+        //     return msgs;
         for (Formula f : localKif.formulaMap.values())
             harvestLocalFacts(f, localIndividuals, localSubclasses);
         String[] bufferLines = contents.split("\n", -1);
@@ -367,6 +367,8 @@ public class KifFileChecker {
         KIF localKif = new KIF();
         try (Reader r = new StringReader(contents)) {
             localKif.parse(r);
+            for (String er : localKif.errorSet)
+                msgs.add(new ErrRec(0, fileName, 0, 0, 1, er));
         } catch (Exception e) {
             msgs.add(new ErrRec(1, fileName, 0, 0, 1, "Parse error: " + e.getMessage()));
         }
