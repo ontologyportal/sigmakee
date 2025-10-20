@@ -40,16 +40,13 @@ public class EditorServlet extends HttpServlet {
         String action = req.getParameter("action");
         String fileName = req.getParameter("fileName");
         String text = null;
-
         if (code != null && !code.isBlank())
             text = code;
         else if (codeContent != null && !codeContent.isBlank())
             text = codeContent;
-
         // Fallback if uploaded file
         if (text == null && req.getContentType() != null &&
                 req.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
-
             Part filePart = req.getPart("kifFile");
             if (filePart != null && filePart.getSize() > 0) {
                 fileName = filePart.getSubmittedFileName();
@@ -66,7 +63,12 @@ public class EditorServlet extends HttpServlet {
         if (fileName == null)
             fileName = "Untitled.kif"; // default if not specified
 
-        boolean isTptp = fileName.toLowerCase().endsWith(".tptp");
+        boolean isTptp = fileName.toLowerCase().endsWith(".tptp") 
+                        || fileName.toLowerCase().endsWith(".tff")
+                        || fileName.toLowerCase().endsWith(".p")
+                        || fileName.toLowerCase().endsWith(".fof")
+                        || fileName.toLowerCase().endsWith(".cnf")
+                        || fileName.toLowerCase().endsWith(".thf");
         List<ErrRec> errors = Collections.emptyList();
         List<String> lines = Arrays.asList(text.split("\\R", -1));
 
