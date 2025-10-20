@@ -462,11 +462,18 @@ public class TPTPutil {
         return s == null ? "" : s.replaceAll("\\s+", " ").trim();
     }
 
+    private static String stripVarNumbers(String s) {
+        if (s == null) return "";
+        // Removes digits after ?X or X (TPTP variable names)
+        return s.replaceAll("\\?[A-Z]+\\d+", "?X")
+                .replaceAll("\\bX\\d+\\b", "X");
+    }
+
     public static List<String> replaceFOFinfRule(List<String> proofLines, List<TPTPFormula> authored_lines) {
         Pattern filePat = Pattern.compile("file\\([^)]*\\)");
 
         for (TPTPFormula authored_step : authored_lines) {
-            String targetFormula = norm(authored_step.formula);
+            String targetFormula = stripVarNumbers(norm(authored_step.formula));
             if (targetFormula.startsWith("(") && targetFormula.endsWith(")")) {
                 targetFormula = targetFormula.substring(1, targetFormula.length() - 1);
             }
@@ -479,7 +486,7 @@ public class TPTPutil {
 
                 boolean startsFof = lineTrim.startsWith("fof(");
                 boolean hasRole = line.contains(",axiom,") || line.contains(",conjecture,");
-                boolean containsFormula = norm(original).contains(targetFormula);
+                boolean containsFormula = stripVarNumbers(norm(original)).contains(targetFormula);
 
                 if (startsFof && hasRole) {
                     if (containsFormula) {
