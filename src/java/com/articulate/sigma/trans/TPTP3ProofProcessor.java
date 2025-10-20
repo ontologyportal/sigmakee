@@ -1341,7 +1341,12 @@ public class TPTP3ProofProcessor {
             String path = "";
 
             path = (f.infRule == null || f.infRule.isEmpty()) ? "unknown" : f.infRule;
-            source = path;
+
+            if ("definition".equals(f.infRule)) {
+                source = "introduced(definition,[],[choice_axiom])";
+            }else{
+                source = path;
+            }
 
         } else {
             // derived step → inference(rule, attrs, [supports])
