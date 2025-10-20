@@ -317,17 +317,103 @@ if (!role.equalsIgnoreCase("admin")) {
     <span title="Ollama is not running. Start Ollama to enable LLM paraphrasing.">&#9432;</span>
     <% } %>
     <br>
+    <br>
 
     <INPUT type="submit" name="request" value="Ask">
 
 <% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <INPUT type="submit" name="request" value="Tell"><BR>
 <% } %>
+
+    <hr>
+
+    <%
+        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        File[] tqFiles = (testDir == null) ? new File[0]
+                : new File(testDir).listFiles((d,n) -> n.endsWith(".tq"));
+        if (tqFiles == null) tqFiles = new File[0];
+        Arrays.sort(tqFiles, Comparator.comparing(File::getName));
+    %>
+
+    <b>Run a saved test (.tq):</b>
+    <select name="testName">
+        <% for (File f : tqFiles) { %>
+        <option value="<%= f.getName() %>"><%= f.getName() %></option>
+        <% } %>
+    </select>
+    <input type="submit" name="request" value="RunTest">
+    <hr>
+    <br>
+
 </FORM>
 <table ALIGN='LEFT' WIDTH='80%'><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
 <%
+
+    if ("RunTest".equalsIgnoreCase(req)) {
+        // Reset user assertions so tests don’t contaminate each other
+        try { InferenceTestSuite.resetAllForInference(kb); } catch (IOException ignore) {}
+
+        InferenceTestSuite its = new InferenceTestSuite();
+        String testPath = KBmanager.getMgr().getPref("inferenceTestDir")
+                + File.separator + request.getParameter("testName");
+
+        // --- Read the .tq ---
+        InferenceTestSuite.InfTestData itd = its.readTestFile(new File(testPath));
+        if (itd == null) {
+            status.append("<font color='red'>Could not read test file.</font><br>");
+        } else {
+            // Load any extra statements the test needs
+            for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
+
+            // Default max answers / timeout
+            int maxAns = Math.max(1, (itd.expectedAnswers == null) ? 1 : itd.expectedAnswers.size());
+            int tmo = InferenceTestSuite.overrideTimeout
+                    ? InferenceTestSuite._DEFAULT_TIMEOUT
+                    : Math.max(1, itd.timeout);
+
+            // Preprocess query → possibly multiple first-order variants
+            FormulaPreprocessor fp = new FormulaPreprocessor();
+            Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
+
+            com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
+                    new com.articulate.sigma.trans.TPTP3ProofProcessor();
+
+            // Ask the chosen prover (reuse your MP / mode toggles)
+            for (Formula q : qs) {
+                String qstr = q.getFormula();
+                if ("EProver".equals(inferenceEngine)) {
+                    com.articulate.sigma.tp.EProver ep_run = kb.askEProver(qstr, tmo, maxAns);
+                    tpp.parseProofOutput(ep_run.output, qstr, kb, ep_run.qlist);
+                } else if ("Vampire".equals(inferenceEngine)) {
+                    if ("CASC".equals(vampireMode))
+                        com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
+                    if ("Avatar".equals(vampireMode))
+                        com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
+                    if ("Custom".equals(vampireMode))
+                        com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
+
+                    com.articulate.sigma.tp.Vampire v = (Boolean.TRUE.equals(modensPonens))
+                            ? kb.askVampireModensPonens(qstr, tmo, maxAns)
+                            : kb.askVampire(qstr, tmo, maxAns);
+                    tpp.parseProofOutput(v.output, qstr, kb, v.qlist);
+                } else if ("LEO".equals(inferenceEngine)) {
+                    com.articulate.sigma.tp.LEO leo = kb.askLeo(qstr, tmo, maxAns);
+                    tpp.parseProofOutput(leo.output, qstr, kb, leo.qlist);
+                }
+            }
+
+            // Render like the “Ask” branch (graph link + HTML table)
+            String link = tpp.createProofDotGraph();
+            if (tpp.proof.size() > 0)
+                out.println("<a href=\"" + link + "\">graphical proof</a><P>");
+            tpp.processAnswersFromProof(null, itd.query);   // keep if you want bindings extraction
+            out.println(HTMLformatter.formatTPTP3ProofResult(
+                    tpp, itd.query, lineHtml, kbName, language));
+        }
+    }
+
     System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
     HTMLformatter.proofParaphraseInEnglish = showEnglish;
 
