@@ -1291,7 +1291,7 @@ public class TPTP3ProofProcessor {
         }
         List<TPTPFormula> result = new ArrayList<>();
         for (TPTPFormula ps : proof) {
-            if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps)) {
+            if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps) || ps.role.equals("negated_conjecture")) {
                 result.add(ps);
             }
         }
@@ -1341,7 +1341,12 @@ public class TPTP3ProofProcessor {
             String path = "";
 
             path = (f.infRule == null || f.infRule.isEmpty()) ? "unknown" : f.infRule;
-            source = path;
+
+            if ("definition".equals(f.infRule)) {
+                source = "introduced(definition,[],[choice_axiom])";
+            }else{
+                source = path;
+            }
 
         } else {
             // derived step → inference(rule, attrs, [supports])
