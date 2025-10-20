@@ -1291,7 +1291,7 @@ public class TPTP3ProofProcessor {
         }
         List<TPTPFormula> result = new ArrayList<>();
         for (TPTPFormula ps : proof) {
-            if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps)) {
+            if ((ps.supports.size() != 1) || TPTPutil.sourceAxiom(ps) || ps.role.equals("negated_conjecture")) {
                 result.add(ps);
             }
         }
