@@ -23,9 +23,8 @@
   }
 %>
 <div class="card">
-<form method="post" action="Editor" onsubmit="return checkFileSize();"
-      enctype="multipart/form-data" style="display:none;" id="uploadForm">
-  <input type="file" name="kifFile" id="kifFile" accept=".kif,.txt" required />
+<form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
+  <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
 </form>
 
 <script src="/sigma/javascript/editor.js"></script>

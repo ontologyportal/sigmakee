@@ -9,31 +9,38 @@ let activeTab = 0;
 // Event Listeners
 
 fileInput.addEventListener('change', () => {
-if (fileInput.files.length > 0) {
-    if (fileNameSpan) {
-    fileNameSpan.textContent = 'Uploaded: ' + fileInput.files[0].name;
-    }
-    uploadForm.submit();
-} else {
-    if (fileNameSpan) {
-    fileNameSpan.textContent = '';
-    }
-}
+  if (fileInput.files.length === 0) {
+    console.warn("No file selected.");
+    return;
+  }
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const contents = e.target.result;
+    console.log(`📄 Loaded file: ${file.name} (${contents.length} chars)`);
+    openFileInNewTab(file.name, contents);
+  };
+  reader.onerror = (e) => {
+    console.error("Error reading file:", e);
+    alert("Error reading file.");
+  };
+  reader.readAsText(file);
+  toggleDropdown();
 });
 
 document.addEventListener("DOMContentLoaded", function() {
-initializeCodeMirror();
-codeEditors.push("");
+  initializeCodeMirror();
+  codeEditors.push("");
 });
 
 document.addEventListener("click", (e) => {
-const dropdown = document.getElementById("fileDropdown");
-const content = document.getElementById("dropdownContent");
-const arrow = document.getElementById("fileArrow");
-if (!dropdown.contains(e.target)) {
+  const dropdown = document.getElementById("fileDropdown");
+  const content = document.getElementById("dropdownContent");
+  const arrow = document.getElementById("fileArrow");
+  if (!dropdown.contains(e.target)) {
     content.style.display = "none";
     arrow.textContent = "›";
-}
+  }
 });
 
 // ------------------------------------------------------------------
@@ -61,51 +68,51 @@ return { colorMap, keywords };
 }
 
 CodeMirror.defineMode("kif", function() {
-return {
+  return {
     token: function(stream, state) {
-    if (stream.match(/;.*/))
+      if (stream.match(/;.*/))
         return "kif-comment";
-    if (stream.match(/"(?:[^"\\]|\\.)*"/))
+      if (stream.match(/"(?:[^"\\]|\\.)*"/))
         return "kif-string";
-    if (stream.match(/\b\d+(?:\.\d+)?\b/))
+      if (stream.match(/\b\d+(?:\.\d+)?\b/))
         return "kif-number";
-    if (stream.match(/\?[A-Za-z0-9_-]+/))
+      if (stream.match(/\?[A-Za-z0-9_-]+/))
         return "kif-variable";
-    if (stream.match(/\b(?:exists|forall)\b/))
+      if (stream.match(/\b(?:exists|forall)\b/))
         return "kif-quantifier";
-    if (stream.match(/(?:\band\b|\bor\b|\bnot\b|=>|<=>)/))
+      if (stream.match(/(?:\band\b|\bor\b|\bnot\b|=>|<=>)/))
         return "kif-operator";
-    if (stream.match(/\b(?:instance|subclass|domain|range)\b/))
+      if (stream.match(/\b(?:instance|subclass|domain|range)\b/))
         return "kif-instance";
-    if (stream.match(/[()]/))
+      if (stream.match(/[()]/))
         return "bracket";
-    if (stream.match(/\s+/))
+      if (stream.match(/\s+/))
         return null;
-    stream.next();
-    return null;
+      stream.next();
+      return null;
     }
-};
+  };
 });
 
 async function defineKifMode() {
 const { colorMap, keywords } = await loadKifColors();
 CodeMirror.defineMode("kif", function() {
-    return {
+  return {
     token: function(stream, state) {
-        if (stream.match(/;.*/)) return colorMap.COMMENT1;
-        if (stream.match(/"(?:[^"\\]|\\.)*"/)) return colorMap.LITERAL1;
-        if (stream.match(/\b\d+(?:\.\d+)?\b/)) return "number";
-        if (stream.match(/\?[A-Za-z0-9_-]+/)) return colorMap.KEYWORD4;
-        for (const type in keywords) {
-        for (const word of keywords[type]) {
-            if (stream.match(new RegExp(`\\b${word}\\b`))) return colorMap[type];
-        }
-        }
-        if (stream.match(/[()]/)) return "bracket";
-        stream.next();
-        return null;
+      if (stream.match(/;.*/)) return colorMap.COMMENT1;
+      if (stream.match(/"(?:[^"\\]|\\.)*"/)) return colorMap.LITERAL1;
+      if (stream.match(/\b\d+(?:\.\d+)?\b/)) return "number";
+      if (stream.match(/\?[A-Za-z0-9_-]+/)) return colorMap.KEYWORD4;
+      for (const type in keywords) {
+      for (const word of keywords[type]) {
+        if (stream.match(new RegExp(`\\b${word}\\b`))) return colorMap[type];
+      }
+      }
+      if (stream.match(/[()]/)) return "bracket";
+      stream.next();
+      return null;
     }
-    };
+  };
 });
 }
 
@@ -113,14 +120,13 @@ CodeMirror.defineMode("kif", function() {
 // Editor Functions
 
 let codeEditor;
-
 function initializeCodeMirror() {
-const textarea = document.getElementById("codeEditor");
-const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-let fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
-let ext = fileName.split('.').pop().toLowerCase();
-let placeholderText = `Enter your ${ext === 'kif' ? 'KIF' : 'TPTP'} code here...`;
-codeEditor = CodeMirror.fromTextArea(textarea, {
+  const textarea = document.getElementById("codeEditor");
+  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
+  let fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
+  let ext = fileName.split('.').pop().toLowerCase();
+  let placeholderText = `Enter your ${ext === 'kif' ? 'KIF' : 'TPTP'} code here...`;
+  codeEditor = CodeMirror.fromTextArea(textarea, {
     mode: ext === "kif" ? "kif" : "tptp",
     lineNumbers: true,
     theme: "default",
@@ -130,8 +136,8 @@ codeEditor = CodeMirror.fromTextArea(textarea, {
     lineWrapping: true,
     autoCloseBrackets: true,
     matchBrackets: true
-});
-highlightErrorLines();
+  });
+  highlightErrorLines();
 }
 
 let errors = window.initialErrors || [];
@@ -141,7 +147,6 @@ function highlightErrorLines() {
   for (const mark of errorMarks)
     mark.clear();
   errorMarks = [];
-
   if (errors && errors.length > 0 && codeEditor) {
     for (const err of errors) {
       const from = { line: err.line, ch: err.start };
@@ -159,10 +164,9 @@ function highlightErrorLines() {
   }
 }
 
-
 function refreshErrorHighlighting() {
-    if (codeEditor)
-        setTimeout(highlightErrorLines, 100);
+  if (codeEditor)
+    setTimeout(highlightErrorLines, 100);
 }
 
 // ------------------------------------------------------------------
@@ -261,7 +265,6 @@ async function formatBuffer() {
   }
 }
 
-
 // ------------------------------------------------------------------
 // Tabs Management
 
@@ -330,6 +333,36 @@ if (codeEditors.length > 0) {
 const updatedTabs = document.querySelectorAll(".tab");
 updatedTabs.forEach((tab, i) => tab.setAttribute("data-index", i));
 }
+
+function openFileInNewTab(fileName, fileContents) {
+  if (!fileName) {
+    console.error("openFileInNewTab: missing file name.");
+    return;
+  }
+
+  // Save current buffer before switching
+  if (codeEditors.length > activeTab && codeEditor) {
+    codeEditors[activeTab] = codeEditor.getValue();
+  }
+
+  // Create the new tab
+  addTab(fileName);
+
+  // Set tab content and mode
+  const ext = fileName.split('.').pop().toLowerCase();
+  const mode = ext === 'kif' ? 'kif' : 'tptp';
+  codeEditor.setOption('mode', mode);
+  codeEditor.setValue(fileContents || "");
+
+  // Store it in the editors array
+  codeEditors[activeTab] = fileContents || "";
+
+  // Update the filename display
+  if (fileNameSpan) fileNameSpan.textContent = 'Opened: ' + fileName;
+
+  console.log(`✅ Created new tab "${fileName}" with ${fileContents?.length || 0} chars`);
+}
+
 
 // ------------------------------------------------------------------
 // Extraneous for now
