@@ -1181,10 +1181,10 @@ public class Diagnostics {
             args = f.complexArgumentsToArrayList(1);
         }
 
-        // process each argument recursively if formula starts with a logical operator (ex: and, exists)
+        // process each argument recursively if formula starts with a logical operator (ex: and, or, not)
         if (Formula.isLogicalOperator(f.car())) {
-                for (Formula arg : args)
-                        mergeResults(result, findOrphanVarsRecurse(arg, parents));
+            for (Formula arg : args)
+                mergeResults(result, findOrphanVarsRecurse(arg, parents));
         }
 
         // collectVariables() finds all variables that appear inside these subformulas
@@ -1198,6 +1198,127 @@ public class Diagnostics {
         // links all variables to each other (bidirectional links)
         mergeResults(result, addAllLinks(newparents, new HashMap<>()));
 
+        return result;
+    }
+
+    /**
+     * Finds all variables inside the given list of formulas,
+     * including variables inside nested subformulas.
+     *
+     * @param args a list of formulas to look through
+     * @return all variable names found
+     */
+    private static HashSet<String> collectVariables(List<Formula> args) {
+        // set to hold variable names
+        HashSet<String> vars = new HashSet<>();
+        for (Formula arg : args) {
+            if (arg.isVariable()) {
+                vars.add(arg.getFormula());
+            }
+            List<Formula> subargs = arg.complexArgumentsToArrayList(1);
+            if (subargs != null) {
+                // check subformula for variables
+                for (Formula subarg : subargs) {
+                    if (subarg.isVariable()) {
+                        vars.add(subarg.getFormula());
+                    }
+                }
+            }
+        }
+        return vars;
+    }
+
+    /**
+     * Merges all entries from the source map into the target map.
+     *
+     * @param target the map to add to
+     * @param source the map to copy from
+     */
+    private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
+        for (String key : source.keySet()) {
+            HashSet<String> keyValues = source.get(key); // values associated with the key from source
+            // if there's an adjacency set for 'key' in 'target', union all neighbors from 'keyValues' into it
+            if (target.containsKey(key))
+                target.get(key).addAll(keyValues);
+            // otherwise, create a new entry in the target map
+            else
+                target.put(key, new HashSet<>(keyValues));
+        }
+    }
+
+    /**
+     * Creates bidirectional links between a single variable and its parent variables.
+     * 
+     * @param parents the set of variables from the parent
+     * @param f the formula containing the variable to be linked
+     * @return a map connecting the variable to all parent variables (bidirectional)
+     */
+    private static HashMap<String,HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
+        HashMap<String,HashSet<String>> result = new HashMap<>();
+
+        // get the string form of the variable (ex: "?X")
+        String formulaString = f.getFormula(); 
+
+        if (formulaString.isEmpty()) {
+            return result;
+        }
+        if (!result.containsKey(formulaString)) { // create new entry with connections if it's not present
+            result.put(formulaString, new HashSet<>());
+        }
+        for (String var : parents) {
+            // skip self-links
+            if (var.equals(formulaString)) {
+                continue;  
+            }
+            // ensure both variable and parent are in the map
+            if (!result.containsKey(var)) {
+                result.put(var, new HashSet<>());
+            }
+            // add bidirectional links
+            result.get(var).add(formulaString);
+            result.get(formulaString).add(var);
+        }
+        return result;
+    }
+
+    /**
+     * Connects all variables found together in the same formula.
+     * Each variable in 'parents' is linked to every other variable in the same set.
+     *
+     * @param parents variables that co-occur in this level of the formula
+     * @param map map of previously established variable links (empty or partially filled)
+     * @return a map of all variables connected to one another bidirectionally
+     */
+    private static HashMap<String,HashSet<String>> addAllLinks(HashSet<String> parents, HashMap<String,HashSet<String>> map) {
+        // copy the input map to avoid modifying the original reference
+        HashMap<String,HashSet<String>> result = new HashMap<>();
+        for (Map.Entry<String,HashSet<String>> entry : map.entrySet()) {
+            result.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+
+        // collect all variable keys and values present in the map
+        HashSet<String> links = new HashSet<>();
+        links.addAll(result.keySet());
+
+        for (HashSet<String> s : result.values()) {
+            links.addAll(s);
+        }
+
+        // link everything already in 'result' to each parent
+        for (String var : links) {
+            for (String parent : parents) {
+                if (parent.equals(var)) {
+                    continue;
+                }
+                if (!result.containsKey(var)) {
+                    result.put(var, new HashSet<>());
+                } if (!result.containsKey(parent)) {
+                    result.put(parent, new HashSet<>());
+                } 
+                result.get(var).add(parent);
+                result.get(parent).add(var);
+            }
+        }
         return result;
     }
 
@@ -1242,128 +1363,6 @@ public class Diagnostics {
         }
         return links;
     }
-
-    /**
-     * Finds all variables inside the given list of formulas,
-     * including variables inside nested subformulas.
-     *
-     * @param args a list of formulas to look through
-     * @return all variable names found
-     */
-    private static HashSet<String> collectVariables(List<Formula> args) {
-        // set to store all variable names
-        HashSet<String> vars = new HashSet<>();
-        for (Formula arg : args) {
-            if (arg.isVariable()) {
-                vars.add(arg.getFormula());
-            }
-            List<Formula> subargs = arg.complexArgumentsToArrayList(1);
-            if (subargs != null) {
-                // check subformula for variables
-                for (Formula subarg : subargs) {
-                    if (subarg.isVariable()) {
-                        vars.add(subarg.getFormula());
-                    }
-                }
-            }
-        }
-        return vars;
-    }
-
-    /**
-     * Merges all entries from the source map into the target map.
-     *
-     * @param target the map to add to
-     * @param source the map to copy from
-     */
-    private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
-        for (String key : source.keySet()) {
-            HashSet<String> vals = source.get(key);
-            // if target already has the key, add all new values to its set
-            if (target.containsKey(key))
-                target.get(key).addAll(vals);
-            // otherwise, create a new entry in the target map
-            else
-                target.put(key, new HashSet<>(vals));
-        }
-    }
-
-    /**
-     * Creates bidirectional links between a single variable and its parent variables.
-     * 
-     * @param parents the set of variables from the parent
-     * @param f the formula containing the variable to be linked
-     * @return a map connecting the variable to all parent variables (bidirectional)
-     */
-    private static HashMap<String,HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
-        HashMap<String,HashSet<String>> result = new HashMap<>();
-
-        // get the string form of the variable (ex: "?X")
-        String formulaString = f.getFormula(); 
-
-        if (formulaString.isEmpty()) {
-            return result;
-        }
-        if (!result.containsKey(formulaString)) {
-            result.put(formulaString, new HashSet<>());
-        }
-        for (String var : parents) {
-            // skip self-links
-            if (var.equals(formulaString)) {
-                continue;  
-            }
-            // ensure both variable and parent are in the map
-            if (!result.containsKey(var)) {
-                result.put(var, new HashSet<>());
-            }
-            // add bidirectional links
-            result.get(var).add(formulaString);
-            result.get(formulaString).add(var);
-        }
-        return result;
-    }
-
-    /**
-     * Connects all variables found together in the same formula.
-     * Each variable in 'parents' is linked to every other variable in the same set.
-     *
-     * @param parents variables that co-occur in this level of the formula
-     * @param map map of previously established variable links (empty or partially filled)
-     * @return a map of all variables connected to one another bidirectionally
-     */
-    private static HashMap<String,HashSet<String>> addAllLinks(HashSet<String> parents, HashMap<String,HashSet<String>> map) {
-        // copy the input map to avoid modifying the original reference
-        HashMap<String,HashSet<String>> result = new HashMap<>();
-        for (Map.Entry<String,HashSet<String>> entry : map.entrySet()) {
-            result.put(entry.getKey(), new HashSet<>(entry.getValue()));
-        }
-
-        // collect all variable keys and values present in the map
-        HashSet<String> links = new HashSet<>();
-        links.addAll(result.keySet());
-
-        for (HashSet<String> s : result.values()) {
-            links.addAll(s);
-        }
-
-        // for each variable pair, create a two-way connection
-        for (String var : links) {
-            for (String parent : parents) {
-                if (parent.equals(var)) {
-                    continue;
-                }
-                if (!result.containsKey(var)) {
-                    result.put(var, new HashSet<>());
-                } if (!result.containsKey(parent)) {
-                    result.put(parent, new HashSet<>());
-                } 
-                result.get(var).add(parent);
-                result.get(parent).add(var);
-            }
-        }
-        return result;
-    }
-
     /** ***************************************************************
      */
     public static void showHelp() {
