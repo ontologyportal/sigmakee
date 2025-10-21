@@ -35,6 +35,9 @@ h3 { margin: 8px 0;}
 .CodeMirror .cm-comment  { color: #999; font-style: italic; }
 .CodeMirror .cm-string   { color: rgb(204, 0, 187); }
 .CodeMirror .cm-literal  { color: rgb(127, 0, 121); }
-.CodeMirror .cm-number { color: #ff6600; font-weight: bold; }
-.CodeMirror .cm-bracket { color: #888; }
+.CodeMirror .cm-number   { color: #ff6600; font-weight: bold; }
+.CodeMirror .cm-bracket  { color: #888; }
+.CodeMirror .cm-operator { color: #aa5500; font-weight: bold; }
+.CodeMirror .cm-markup   { color: #0088cc; }
+.CodeMirror .cm-null     { color: #666; }
 

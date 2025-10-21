@@ -77,7 +77,11 @@ async function defineModeFromXML(modeName, xmlPath) {
   const xml = parser.parseFromString(xmlText, 'text/xml');
 
   // Extract keyword sets by tag name
-  const tagTypes = ['KEYWORD1', 'KEYWORD2', 'KEYWORD3', 'KEYWORD4', 'LITERAL1', 'LITERAL2', 'COMMENT1', 'FUNCTION'];
+  const tagTypes = [
+    'KEYWORD1', 'KEYWORD2', 'KEYWORD3', 'KEYWORD4',
+    'LITERAL1', 'LITERAL2', 'COMMENT1', 'FUNCTION',
+    'OPERATOR', 'MARKUP', 'NULL'
+  ];
   const keywords = {};
   for (const tag of tagTypes)
     keywords[tag] = [...xml.getElementsByTagName(tag)].map(n => n.textContent);
@@ -94,6 +98,9 @@ async function defineModeFromXML(modeName, xmlPath) {
     'LITERAL1': 'string',
     'LITERAL2': 'literal',
     'FUNCTION': 'function',
+    'OPERATOR': 'operator',
+    'MARKUP': 'markup',
+    'NULL': 'null'
   };
 
   // Register mode
@@ -102,13 +109,13 @@ async function defineModeFromXML(modeName, xmlPath) {
       token: function(stream, state) {
         // Comments
         if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
-
+        
         // Literals
         if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
         if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
 
         // Numbers
-        if (stream.match(/\b\d+(?:\.\d+)?\b/)) return "number";
+        if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
 
         // Variables
         if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
@@ -130,7 +137,6 @@ async function defineModeFromXML(modeName, xmlPath) {
       }
     };
   });
-
   console.log(`✅ Mode "${modeName}" loaded from ${xmlPath}`);
 }
 
