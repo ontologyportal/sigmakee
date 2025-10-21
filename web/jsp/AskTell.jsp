@@ -83,6 +83,12 @@ if (!role.equalsIgnoreCase("admin")) {
     if (dropOnePremise == null) dropOnePremise = false;
     KB.dropOnePremiseFormulas = dropOnePremise;
 
+    String selectedTest = (String) session.getAttribute("selectedTest");
+    if (req != null && request.getParameter("testName") != null) {
+        selectedTest = request.getParameter("testName");
+        session.setAttribute("selectedTest", selectedTest);
+    }
+
     if (StringUtil.emptyString(cwa))
         cwa = "no";
     if (cwa.equals("yes"))
@@ -333,12 +339,21 @@ if (!role.equalsIgnoreCase("admin")) {
                 : new File(testDir).listFiles((d,n) -> n.endsWith(".tq"));
         if (tqFiles == null) tqFiles = new File[0];
         Arrays.sort(tqFiles, Comparator.comparing(File::getName));
-    %>
 
+        // --- pick default (first file) if nothing selected yet ---
+        if (selectedTest == null && tqFiles.length > 0)
+            selectedTest = tqFiles[0].getName();
+    %>
+    <hr>
     <b>Run a saved test (.tq):</b>
     <select name="testName">
-        <% for (File f : tqFiles) { %>
-        <option value="<%= f.getName() %>"><%= f.getName() %></option>
+        <% for (File f : tqFiles) {
+            String fname = f.getName();
+            boolean isSelected = fname.equals(selectedTest);
+        %>
+        <option value="<%= fname %>" <%= isSelected ? "selected" : "" %>>
+            <%= fname %>
+        </option>
         <% } %>
     </select>
     <input type="submit" name="request" value="RunTest">
