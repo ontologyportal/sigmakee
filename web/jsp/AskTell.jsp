@@ -24,6 +24,17 @@
         .muted { color:#666; font-size:0.9em; }
     </style>
 
+    <style>
+        .proof-thumb-wrap { margin: 8px 0 14px; display: inline-block; position: relative; }
+        .proof-thumb { max-width: 400px; height: auto; border:1px solid #ccc; border-radius:4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,.15); cursor: zoom-in; }
+        .proof-badge {
+            position: absolute; left: 6px; top: 6px; background: rgba(0,0,0,.65);
+            color:#fff; font-size:12px; padding:2px 6px; border-radius:3px;
+        }
+        .proof-caption { color:#666; font-size:.9em; margin-top:4px; }
+    </style>
+
     <script>
         function toggleVampireOptions() {
             const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
@@ -374,31 +385,50 @@
 
                     String imgPath = null;
                     try {
-                        imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                        imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
                     } catch (Exception _ignore) { imgPath = null; }
 
-                    if (imgPath != null) {
-                        // Where the webapp serves /graph from:
-                        String webGraphDir = application.getRealPath("/graph");
-                        if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+                    if (imgPath != null && tpp.proof.size() > 0) {
+                        // Ensure the png is inside the webapp so Tomcat can serve it
+                        String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
+                        if (webGraphDir != null) {
+                            File onDisk = new File(imgPath);
+                            File webDir  = new File(webGraphDir);
+                            if (!webDir.exists()) webDir.mkdirs();
 
-                        File onDisk = new File(imgPath);
-                        File webDir  = new File(webGraphDir);
-                        if (!webDir.exists()) webDir.mkdirs();
+                            // Make a unique name to avoid cache/collisions
+                            String baseName = onDisk.getName();              // e.g. proof.dot.png
+                            String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
+                            File webImg = new File(webDir, stamped);
 
-                        // If the image is not already under the webapp’s /graph, copy it there
-                        File webImg = new File(webDir, onDisk.getName());
-                        try {
-                            if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
-                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            try {
+                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                                String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
+
+                                // Cache-buster on the <img> only, so browser always fetches the latest bitmap
+                                String imgUrl = url + "?v=" + System.currentTimeMillis();
+
+                                // Optional label shows engine/mode on top-left of the image
+                                String badge = "Vampire".equals(inferenceEngine)
+                                        ? ("Vampire (" + vampireMode + ")")
+                                        : inferenceEngine;
+
+                                out.println(
+                                        "<div class='proof-thumb-wrap'>" +
+                                                "<span class='proof-badge'>" + badge + "</span>" +
+                                                "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
+                                                "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
+                                                "</a>" +
+                                                "<div class='proof-caption'>Click to open full-size</div>" +
+                                                "</div>"
+                                );
                             }
-                            String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
-                            out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
-                        }
-                        catch (Exception copyEx) {
-                            // Fall back: show a file:// link for local debugging (not ideal for remote clients)
-                            out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
-                                    + "Path: " + imgPath + "</span><br>");
+                            catch (Exception copyEx) {
+                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
+                                        + imgPath + "</span><br>");
+                            }
                         }
                     }
 
@@ -418,31 +448,50 @@
 
                     String imgPath = null;
                     try {
-                        imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                        imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
                     } catch (Exception _ignore) { imgPath = null; }
 
-                    if (imgPath != null) {
-                        // Where the webapp serves /graph from:
-                        String webGraphDir = application.getRealPath("/graph");
-                        if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+                    if (imgPath != null && tpp.proof.size() > 0) {
+                        // Ensure the png is inside the webapp so Tomcat can serve it
+                        String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
+                        if (webGraphDir != null) {
+                            File onDisk = new File(imgPath);
+                            File webDir  = new File(webGraphDir);
+                            if (!webDir.exists()) webDir.mkdirs();
 
-                        File onDisk = new File(imgPath);
-                        File webDir  = new File(webGraphDir);
-                        if (!webDir.exists()) webDir.mkdirs();
+                            // Make a unique name to avoid cache/collisions
+                            String baseName = onDisk.getName();              // e.g. proof.dot.png
+                            String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
+                            File webImg = new File(webDir, stamped);
 
-                        // If the image is not already under the webapp’s /graph, copy it there
-                        File webImg = new File(webDir, onDisk.getName());
-                        try {
-                            if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
-                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            try {
+                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
+                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                                String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
+
+                                // Cache-buster on the <img> only, so browser always fetches the latest bitmap
+                                String imgUrl = url + "?v=" + System.currentTimeMillis();
+
+                                // Optional label shows engine/mode on top-left of the image
+                                String badge = "Vampire".equals(inferenceEngine)
+                                        ? ("Vampire (" + vampireMode + ")")
+                                        : inferenceEngine;
+
+                                out.println(
+                                        "<div class='proof-thumb-wrap'>" +
+                                                "<span class='proof-badge'>" + badge + "</span>" +
+                                                "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
+                                                "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
+                                                "</a>" +
+                                                "<div class='proof-caption'>Click to open full-size</div>" +
+                                                "</div>"
+                                );
                             }
-                            String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
-                            out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
-                        }
-                        catch (Exception copyEx) {
-                            // Fall back: show a file:// link for local debugging (not ideal for remote clients)
-                            out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
-                                    + "Path: " + imgPath + "</span><br>");
+                            catch (Exception copyEx) {
+                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
+                                        + imgPath + "</span><br>");
+                            }
                         }
                     }
 
@@ -467,31 +516,50 @@
                         /** Ensure web-visible graph path + build a proper URL */
                         String imgPath = null;
                         try {
-                            imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                            imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
                         } catch (Exception _ignore) { imgPath = null; }
 
-                        if (imgPath != null) {
-                            // Where the webapp serves /graph from:
-                            String webGraphDir = application.getRealPath("/graph");
-                            if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+                        if (imgPath != null && tpp.proof.size() > 0) {
+                            // Ensure the png is inside the webapp so Tomcat can serve it
+                            String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
+                            if (webGraphDir != null) {
+                                File onDisk = new File(imgPath);
+                                File webDir  = new File(webGraphDir);
+                                if (!webDir.exists()) webDir.mkdirs();
 
-                            File onDisk = new File(imgPath);
-                            File webDir  = new File(webGraphDir);
-                            if (!webDir.exists()) webDir.mkdirs();
+                                // Make a unique name to avoid cache/collisions
+                                String baseName = onDisk.getName();              // e.g. proof.dot.png
+                                String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
+                                File webImg = new File(webDir, stamped);
 
-                            // If the image is not already under the webapp’s /graph, copy it there
-                            File webImg = new File(webDir, onDisk.getName());
-                            try {
-                                if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
-                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                try {
+                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
+                                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                                    String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
+
+                                    // Cache-buster on the <img> only, so browser always fetches the latest bitmap
+                                    String imgUrl = url + "?v=" + System.currentTimeMillis();
+
+                                    // Optional label shows engine/mode on top-left of the image
+                                    String badge = "Vampire".equals(inferenceEngine)
+                                            ? ("Vampire (" + vampireMode + ")")
+                                            : inferenceEngine;
+
+                                    out.println(
+                                            "<div class='proof-thumb-wrap'>" +
+                                                    "<span class='proof-badge'>" + badge + "</span>" +
+                                                    "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
+                                                    "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
+                                                    "</a>" +
+                                                    "<div class='proof-caption'>Click to open full-size</div>" +
+                                                    "</div>"
+                                    );
                                 }
-                                String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
-                                out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
-                            }
-                            catch (Exception copyEx) {
-                                // Fall back: show a file:// link for local debugging (not ideal for remote clients)
-                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
-                                        + "Path: " + imgPath + "</span><br>");
+                                catch (Exception copyEx) {
+                                    out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
+                                            + imgPath + "</span><br>");
+                                }
                             }
                         }
 
@@ -510,31 +578,50 @@
 
                         String imgPath = null;
                         try {
-                            imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                            imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
                         } catch (Exception _ignore) { imgPath = null; }
 
-                        if (imgPath != null) {
-                            // Where the webapp serves /graph from:
-                            String webGraphDir = application.getRealPath("/graph");
-                            if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+                        if (imgPath != null && tpp.proof.size() > 0) {
+                            // Ensure the png is inside the webapp so Tomcat can serve it
+                            String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
+                            if (webGraphDir != null) {
+                                File onDisk = new File(imgPath);
+                                File webDir  = new File(webGraphDir);
+                                if (!webDir.exists()) webDir.mkdirs();
 
-                            File onDisk = new File(imgPath);
-                            File webDir  = new File(webGraphDir);
-                            if (!webDir.exists()) webDir.mkdirs();
+                                // Make a unique name to avoid cache/collisions
+                                String baseName = onDisk.getName();              // e.g. proof.dot.png
+                                String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
+                                File webImg = new File(webDir, stamped);
 
-                            // If the image is not already under the webapp’s /graph, copy it there
-                            File webImg = new File(webDir, onDisk.getName());
-                            try {
-                                if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
-                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                try {
+                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
+                                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                                    String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
+
+                                    // Cache-buster on the <img> only, so browser always fetches the latest bitmap
+                                    String imgUrl = url + "?v=" + System.currentTimeMillis();
+
+                                    // Optional label shows engine/mode on top-left of the image
+                                    String badge = "Vampire".equals(inferenceEngine)
+                                            ? ("Vampire (" + vampireMode + ")")
+                                            : inferenceEngine;
+
+                                    out.println(
+                                            "<div class='proof-thumb-wrap'>" +
+                                                    "<span class='proof-badge'>" + badge + "</span>" +
+                                                    "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
+                                                    "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
+                                                    "</a>" +
+                                                    "<div class='proof-caption'>Click to open full-size</div>" +
+                                                    "</div>"
+                                    );
                                 }
-                                String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
-                                out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
-                            }
-                            catch (Exception copyEx) {
-                                // Fall back: show a file:// link for local debugging (not ideal for remote clients)
-                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
-                                        + "Path: " + imgPath + "</span><br>");
+                                catch (Exception copyEx) {
+                                    out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
+                                            + imgPath + "</span><br>");
+                                }
                             }
                         }
 
