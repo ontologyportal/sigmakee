@@ -92,6 +92,9 @@ public class TPTPChecker {
                     lines[0] = lines[0].replaceFirst("^\\s+", "");
                 return String.join(System.lineSeparator(), lines);
             } else {
+                System.err.println("[TPTPChecker] STDOUT:\n" + po.out);
+                System.err.println("[TPTPChecker] STDERR:\n" + po.err);
+                System.err.println("[TPTPChecker] Temp file: " + tmp.getAbsolutePath());
                 System.err.println("[TPTPChecker] Formatting failed for: " + fileName);
                 System.err.println(po.err != null && !po.err.isBlank() ? po.err : po.out);
                 return inputText;

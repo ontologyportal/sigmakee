@@ -125,7 +125,7 @@ function initializeCodeMirror() {
   const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
   let fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
   let ext = fileName.split('.').pop().toLowerCase();
-  let placeholderText = `Enter your ${ext === 'kif' ? 'KIF' : 'TPTP'} code here...`;
+  let placeholderText = `Enter your code here...`;
   codeEditor = CodeMirror.fromTextArea(textarea, {
     mode: ext === "kif" ? "kif" : "tptp",
     lineNumbers: true,
