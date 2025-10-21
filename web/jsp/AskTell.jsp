@@ -331,9 +331,18 @@
                     out.println("<font color='red'>Could not read test file.</font>");
                 } else {
                     for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
-                    int maxAns = Math.max(1, (itd.expectedAnswers==null)?1:itd.expectedAnswers.size());
-                    int tmo = InferenceTestSuite.overrideTimeout ? InferenceTestSuite._DEFAULT_TIMEOUT
-                            : Math.max(1, itd.timeout);
+
+                    // Use the maxAns and timeout values from the tq files
+//                    int maxAns = Math.max(1, (itd.expectedAnswers==null)?1:itd.expectedAnswers.size());
+//                    int tmo = InferenceTestSuite.overrideTimeout ? InferenceTestSuite._DEFAULT_TIMEOUT
+//                            : Math.max(1, itd.timeout);
+
+                    // Always use page values, ignore .tq and suite override
+                    int maxAns = Math.max(1, maxAnswers);
+                    int tmo = Math.max(1, timeout);
+
+                    System.out.println("Max Answers = "+maxAns);
+                    System.out.println("Time-out = "+tmo);
 
                     FormulaPreprocessor fp = new FormulaPreprocessor();
                     Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
