@@ -368,8 +368,40 @@
                             tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
                         }
                     }
-                    String link = tpp.createProofDotGraph();
-                    if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+//                    String link = tpp.createProofDotGraph();
+//                    if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+                    String imgPath = null;
+                    try {
+                        imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                    } catch (Exception _ignore) { imgPath = null; }
+
+                    if (imgPath != null) {
+                        // Where the webapp serves /graph from:
+                        String webGraphDir = application.getRealPath("/graph");
+                        if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+
+                        File onDisk = new File(imgPath);
+                        File webDir  = new File(webGraphDir);
+                        if (!webDir.exists()) webDir.mkdirs();
+
+                        // If the image is not already under the webapp’s /graph, copy it there
+                        File webImg = new File(webDir, onDisk.getName());
+                        try {
+                            if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
+                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
+                            out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
+                        }
+                        catch (Exception copyEx) {
+                            // Fall back: show a file:// link for local debugging (not ideal for remote clients)
+                            out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
+                                    + "Path: " + imgPath + "</span><br>");
+                        }
+                    }
+
                     tpp.processAnswersFromProof(null, itd.query);
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
                 }
@@ -380,8 +412,41 @@
                     eProver = kb.askEProver(stmt, timeout, maxAnswers);
                     com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                     tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
-                    String link = tpp.createProofDotGraph();
-                    out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+//                    String link = tpp.createProofDotGraph();
+//                    out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+                    String imgPath = null;
+                    try {
+                        imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                    } catch (Exception _ignore) { imgPath = null; }
+
+                    if (imgPath != null) {
+                        // Where the webapp serves /graph from:
+                        String webGraphDir = application.getRealPath("/graph");
+                        if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+
+                        File onDisk = new File(imgPath);
+                        File webDir  = new File(webGraphDir);
+                        if (!webDir.exists()) webDir.mkdirs();
+
+                        // If the image is not already under the webapp’s /graph, copy it there
+                        File webImg = new File(webDir, onDisk.getName());
+                        try {
+                            if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
+                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            }
+                            String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
+                            out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
+                        }
+                        catch (Exception copyEx) {
+                            // Fall back: show a file:// link for local debugging (not ideal for remote clients)
+                            out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
+                                    + "Path: " + imgPath + "</span><br>");
+                        }
+                    }
+
+
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
@@ -395,8 +460,41 @@
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
-                        String link = tpp.createProofDotGraph();
-                        if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+//                        String link = tpp.createProofDotGraph();
+//                        if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+                        /** Ensure web-visible graph path + build a proper URL */
+                        String imgPath = null;
+                        try {
+                            imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                        } catch (Exception _ignore) { imgPath = null; }
+
+                        if (imgPath != null) {
+                            // Where the webapp serves /graph from:
+                            String webGraphDir = application.getRealPath("/graph");
+                            if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+
+                            File onDisk = new File(imgPath);
+                            File webDir  = new File(webGraphDir);
+                            if (!webDir.exists()) webDir.mkdirs();
+
+                            // If the image is not already under the webapp’s /graph, copy it there
+                            File webImg = new File(webDir, onDisk.getName());
+                            try {
+                                if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
+                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                }
+                                String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
+                                out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
+                            }
+                            catch (Exception copyEx) {
+                                // Fall back: show a file:// link for local debugging (not ideal for remote clients)
+                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
+                                        + "Path: " + imgPath + "</span><br>");
+                            }
+                        }
+
                         tpp.processAnswersFromProof(vampire.qlist,stmt);
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
@@ -406,8 +504,40 @@
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(kb.leo.output, stmt, kb, kb.leo.qlist);
-                        String link = tpp.createProofDotGraph();
-                        if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+//                        String link = tpp.createProofDotGraph();
+//                        if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
+
+                        String imgPath = null;
+                        try {
+                            imgPath = tpp.createProofDotGraph();   // absolute path on disk, e.g. .../webapps/sigma/graph/proof.dot.png
+                        } catch (Exception _ignore) { imgPath = null; }
+
+                        if (imgPath != null) {
+                            // Where the webapp serves /graph from:
+                            String webGraphDir = application.getRealPath("/graph");
+                            if (webGraphDir == null) webGraphDir = new File(".").getAbsolutePath(); // fallback (shouldn't happen)
+
+                            File onDisk = new File(imgPath);
+                            File webDir  = new File(webGraphDir);
+                            if (!webDir.exists()) webDir.mkdirs();
+
+                            // If the image is not already under the webapp’s /graph, copy it there
+                            File webImg = new File(webDir, onDisk.getName());
+                            try {
+                                if (!onDisk.getCanonicalPath().equals(webImg.getCanonicalPath())) {
+                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                                }
+                                String url = request.getContextPath() + "/graph/" + webImg.getName();  // e.g. /sigma/graph/proof.dot.png
+                                out.println("<a href=\"" + url + "\" target=\"_blank\">graphical proof</a><p>");
+                            }
+                            catch (Exception copyEx) {
+                                // Fall back: show a file:// link for local debugging (not ideal for remote clients)
+                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. "
+                                        + "Path: " + imgPath + "</span><br>");
+                            }
+                        }
+
                         tpp.processAnswersFromProof(kb.leo.qlist,stmt);
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
