@@ -35,6 +35,30 @@
         .proof-caption { color:#666; font-size:.9em; margin-top:4px; }
     </style>
 
+    <!-- === Bouncing Sumo Spinner === -->
+    <style>
+        .spin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.85);
+            display: none;
+            z-index: 9999;
+        }
+        .bounce-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 120px;
+            height: 120px;
+            transform: translate(-50%, -50%);
+            animation: bounce 1.2s ease-in-out infinite;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); }
+            50% { transform: translate(-50%, -60%) scale(1.1); }
+        }
+    </style>
+
     <script>
         function toggleVampireOptions() {
             const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
@@ -646,5 +670,24 @@
 
 <p>
     <%@ include file="Postlude.jsp" %>
+
+
+    <div id="loading" class="spin-overlay">
+        <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
+    </div>
+
+    <script>
+        (function(){
+            const form = document.getElementById('AskTell');
+            let clicked=null;
+            form.querySelectorAll('input[type=submit]').forEach(b=>b.addEventListener('click',e=>clicked=e.target.value));
+            form.addEventListener('submit', function(){
+                const eng = document.querySelector('input[name="inferenceEngine"]:checked')?.value;
+                if (clicked==='Run' && eng==='Vampire')
+                    document.getElementById('loading').style.display='block';
+            });
+        })();
+    </script>
+
 </body>
 </html>
