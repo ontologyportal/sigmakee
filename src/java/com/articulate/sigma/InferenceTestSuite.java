@@ -82,6 +82,8 @@ public class InferenceTestSuite {
 
         public java.util.List<String> expected;
         public java.util.List<String> actual;
+
+        public List<String> proofText;
     }
 
     /** Runs exactly one .tq test file (like the inner body of test()) and returns the InfTestData. */
@@ -145,14 +147,17 @@ public class InferenceTestSuite {
                     case VAMPIRE:
                         com.articulate.sigma.tp.Vampire vampire = kb.askVampire(q, itd.timeout, maxAnswers);
                         tpp.parseProofOutput(vampire.output, q, kb, vampire.qlist);
+                        itd.proof = vampire.output;
                         break;
                     case EPROVER:
                         com.articulate.sigma.tp.EProver eprover = kb.askEProver(q, itd.timeout, maxAnswers);
                         tpp.parseProofOutput(eprover.output, q, kb, eprover.qlist);
+                        itd.proof = eprover.output;
                         break;
                     case LEO:
                         com.articulate.sigma.tp.LEO leo = kb.askLeo(q, itd.timeout, maxAnswers);
                         tpp.parseProofOutput(leo.output, q, kb, leo.qlist);
+                        itd.proof = leo.output;
                         break;
                     default:
                         System.err.println("Unknown prover: " + KBmanager.getMgr().prover);
@@ -223,6 +228,7 @@ public class InferenceTestSuite {
         r.html   = html;
         r.expected = (itd.expectedAnswers == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.expectedAnswers);
         r.actual   = (itd.actualAnswers   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.actualAnswers);
+        r.proofText = (itd.proof   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.proof);
         return r;
     }
 
@@ -428,6 +434,7 @@ public class InferenceTestSuite {
         public boolean success = false;
         public float execTime = 0;
         public String SZSstatus = "";
+        public List<String> proof = new ArrayList<>();
     }
 
     /** ***************************************************************

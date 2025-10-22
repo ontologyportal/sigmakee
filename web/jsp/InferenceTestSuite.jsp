@@ -33,31 +33,52 @@
             InferenceTestSuite its = new InferenceTestSuite();
             // ---- call your single-test method (add this to InferenceTestSuite) ----
             InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
-            pass = r.pass;
-            millis = r.millis;
-            detailsHtml = r.html;
+
+            // web-visible root for proofs (with fallback)
+            String proofsRoot = application.getRealPath("/proofs");
+            if (proofsRoot == null) {
+                proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
+            }
+            File sessionProofDir = new File(proofsRoot, session.getId());
+            if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
+
+            // unique, safe filename
+            String base = (tqName + "-" + mode + "-" + System.currentTimeMillis() + ".txt")
+                    .replaceAll("[^A-Za-z0-9._-]", "_");
+            File proofFile = new File(sessionProofDir, base);
+
+            // write file (each proof line on its own line)
+            try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
+                if (r.proofText != null) {
+                    for (String proof_line : r.proofText) {
+                        pw.println(proof_line);
+                    }
+                }
+            } catch (Exception ioex) {
+                // optional: log or display warning
+            }
+
+            // browser URL
+            String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
 
             Map<String,Object> cell = new HashMap<>();
-            String key = tqName + "|" + mode;  // e.g., "foo.tq|normal"
+            String key = tqName + "|" + mode;
             cell.put("pass",   r.pass);
             cell.put("millis", r.millis);
             cell.put("meta",   "(engine=" + esc(engine) + ", t=" + timeout + "s)");
-            cell.put("expected", r.expected);
-            cell.put("actual",   r.actual);
+            cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
+            cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
             cell.put("html",     r.html);
+            cell.put("proofUrl", proofUrl);                         // <-- add
+            cell.put("proofPath", proofFile.getAbsolutePath());     // optional
             cellMap.put(key, cell);
 
         } catch (Throwable ex) {
-            detailsHtml = "<pre style='color:#b00'>ERROR: " + ex.getClass().getSimpleName() + ": " + esc(ex.getMessage()) + "</pre>";
-            millis = System.currentTimeMillis() - t0;
-            pass = false;
         }
     }
 %>
 
 <%
-    String reloadMsg = null;
-
     if ("reloadKB".equalsIgnoreCase(action)) {
         long t0 = System.currentTimeMillis();
         try {
@@ -71,22 +92,38 @@
                 if (eproverExec != null && new File(eproverExec).exists()) kb.loadEProver();
             } catch (Exception ignore) {}
             try { kb.loadLeo(); } catch (Exception ignore) {}
-
-            reloadMsg = "KB reloaded in " + (System.currentTimeMillis() - t0) + " ms.";
         } catch (Exception ex) {
-            reloadMsg = "Reload failed: " + esc(ex.getMessage());
         }
     }
 %>
 
 <%
     if ("clearSession".equalsIgnoreCase(action)) {
+        // wipe session-stored results
         session.removeAttribute("cellMap");
         session.removeAttribute("runMeta");
-        reloadMsg = "Session test results cleared.";
 
-        // Force immediate page reload on the client
+        // delete this session's proofs folder
+        try {
+            String proofsRoot = application.getRealPath("/proofs");
+            java.io.File sessionDir = new java.io.File(proofsRoot, session.getId());
+            deleteRecursive(sessionDir);
+        } catch (Exception ignore) {}
+
+        // reload page immediately
         out.println("<script>window.location.href='InferenceTestSuite.jsp';</script>");
+        return;  // stop rendering this request
+    }
+%>
+
+<%!
+    private static void deleteRecursive(java.io.File f) {
+        if (f == null || !f.exists()) return;
+        if (f.isDirectory()) {
+            java.io.File[] kids = f.listFiles();
+            if (kids != null) for (java.io.File k : kids) deleteRecursive(k);
+        }
+        try { f.delete(); } catch (Exception ignore) {}
     }
 %>
 
@@ -141,6 +178,42 @@
         .tiny { font-size: 12px; color: #666; }
         .fileName { font-weight: bold; }
         .filePath { font-size: 12px; color: #777; word-wrap: break-word; }
+    </style>
+
+    <style>
+        /* Meta wrapper aligns the engine line + icon */
+        .metaWrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;         /* space between text and icon */
+        }
+
+        /* Bigger icon block */
+        .proofIcon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;      /* bigger clickable area */
+            height: 36px;
+            border-radius: 6px;
+            color: #1d75b8;
+            background: rgba(29,117,184,0.1);
+            text-decoration: none;
+            transition: all 0.15s ease;
+        }
+
+        .proofIcon:hover {
+            background: rgba(29,117,184,0.2);
+            transform: translateY(-2px);
+            color: #135c91;
+        }
+
+        .proofIcon svg {
+            width: 22px;   /* actual icon size */
+            height: 22px;
+            display: block;
+        }
     </style>
 
     <script>
@@ -229,9 +302,6 @@
 
             String metaN = (cN == null) ? "" : (String)cN.get("meta");
             String metaM = (cM == null) ? "" : (String)cM.get("meta");
-
-            String sumN = (cN == null) ? null : (String)cN.get("html");
-            String sumM = (cM == null) ? null : (String)cM.get("html");
     %>
     <tr>
         <!-- File column -->
@@ -250,13 +320,25 @@
         <td>
             <div class="cellHead">
                 <button class="runBtn" onclick="runOne('<%=esc(name)%>','normal'); return false;">RUN</button>
-                <span class="tiny"><%= esc(metaN) %></span>
+                <div class="metaWrap">
+                    <span class="tiny"><%= esc(metaN) %></span>
+                    <% String proofUrlN = (cN == null) ? null : (String)cN.get("proofUrl"); %>
+                    <% if (proofUrlN != null && proofUrlN.length() > 0) { %>
+                    <a class="proofIcon" href="<%= proofUrlN %>" target="_blank" title="View proof" aria-label="View proof">
+                        <svg width="18" height="18" viewBox="0 0 24 24" role="img" aria-hidden="true">
+                            <path fill="currentColor"
+                                  d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1v5h5M8 11h8v2H8v-2zm0 4h8v2H8v-2z"/>
+                        </svg>
+                    </a>
+                    <% } %>
+                </div>
             </div>
+
             <div>
                 <% if (cN == null) { %>
                 <span class='tiny'>- not run yet -</span>
                 <% } else { %>
-                    <div><%= (String)cN.get("html") %></div>
+                <div><%= (String)cN.get("html") %></div>
                 <% } %>
             </div>
         </td>
@@ -274,6 +356,13 @@
                     <div><%= (String)cM.get("html") %></div>
                 <% } %>
             </div>
+
+            <% String proofUrlM = (cM == null) ? null : (String)cM.get("proofUrl"); %>
+            <% if (proofUrlM != null && proofUrlM.length() > 0) { %>
+            <div class="tiny" style="margin-top:6px;">
+                <a href="<%= proofUrlM %>" target="_blank">View proof</a>
+            </div>
+            <% } %>
         </td>
     </tr>
     <%
