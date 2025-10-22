@@ -239,6 +239,8 @@
         String pageString = "Inference Interface";
     %>
     <%@include file="CommonHeader.jsp" %>
+    <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'>
+        <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
     <!-- ===== INPUT ===== -->
     <fieldset>

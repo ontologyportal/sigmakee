@@ -73,6 +73,164 @@ public class InferenceTestSuite {
     public static Set<String> metaPred = new HashSet(
             Arrays.asList("note", "time", "query", "answer"));
 
+
+
+    public static class OneResult {
+        public boolean pass;
+        public long millis;
+        public String html;
+
+        public java.util.List<String> expected;
+        public java.util.List<String> actual;
+    }
+
+    /** Runs exactly one .tq test file (like the inner body of test()) and returns the InfTestData. */
+    private InfTestData runSingleTestFile(final KB kb,
+                                          final String engine,        // "Vampire" | "EProver" | "LEO"
+                                          final int timeoutSec,
+                                          final String tqPath,
+                                          final boolean modusPonens) {
+
+        this.kb = kb;
+
+        // Choose prover (same mechanism test() uses)
+        switch (engine.toUpperCase()) {
+            case "EPROVER": KBmanager.getMgr().prover = KBmanager.Prover.EPROVER; break;
+            case "LEO":     KBmanager.getMgr().prover = KBmanager.Prover.LEO;     break;
+            default:        KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE; break;
+        }
+
+        // InferenceTestSuite.useModusPonens = modusPonens;
+
+        // Parse .tq → InfTestData (same as test())
+        final File tf = new File(tqPath);
+        InfTestData itd = readTestFile(tf);
+
+        // Apply timeout policy (mirror test(); if overrideTimeout is true, force default)
+        if (overrideTimeout) {
+            itd.timeout = timeoutSec > 0 ? timeoutSec : _DEFAULT_TIMEOUT;   // was _DEFAULT_TIMEOUT only
+        } else {
+            itd.timeout = timeoutSec > 0 ? timeoutSec : (itd.timeout > 0 ? itd.timeout : _DEFAULT_TIMEOUT);
+        }
+
+// --- Isolated assertion block (prevents KB pollution) ---
+        compareFiles(itd);
+
+// Step 1: assert formulas for this test
+        List<String> asserted = new ArrayList<>(itd.statements);
+        for (String s : asserted) {
+            kb.tell(s);
+        }
+
+        try {
+            // Step 2: reload KB before running queries
+            KBmanager.getMgr().loadKBforInference(kb);
+
+            // Step 3: run the queries as before
+            int maxAnswers = Math.max(1, itd.expectedAnswers.size());
+            Formula theQuery = new Formula();
+            theQuery.read(itd.query);
+            Set<Formula> theQueries = new FormulaPreprocessor().preProcess(theQuery, true, kb);
+
+            itd.actualAnswers = new ArrayList<>();
+            for (Formula f : theQueries) {
+                TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+                String q = f.getFormula();
+                if (f.isHigherOrder(kb) && !"thf".equals(SUMOformulaToTPTPformula.lang)) {
+                    System.out.println("Skipping higher-order query not in THF: " + q);
+                    continue;
+                }
+
+                switch (KBmanager.getMgr().prover) {
+                    case VAMPIRE:
+                        com.articulate.sigma.tp.Vampire vampire = kb.askVampire(q, itd.timeout, maxAnswers);
+                        tpp.parseProofOutput(vampire.output, q, kb, vampire.qlist);
+                        break;
+                    case EPROVER:
+                        com.articulate.sigma.tp.EProver eprover = kb.askEProver(q, itd.timeout, maxAnswers);
+                        tpp.parseProofOutput(eprover.output, q, kb, eprover.qlist);
+                        break;
+                    case LEO:
+                        com.articulate.sigma.tp.LEO leo = kb.askLeo(q, itd.timeout, maxAnswers);
+                        tpp.parseProofOutput(leo.output, q, kb, leo.qlist);
+                        break;
+                    default:
+                        System.err.println("Unknown prover: " + KBmanager.getMgr().prover);
+                }
+
+                if (tpp.status != null && tpp.status.startsWith("Theorem") && itd.actualAnswers.isEmpty())
+                    itd.actualAnswers.add("yes");
+
+                if (tpp.inconsistency) {
+                    itd.inconsistent = true;
+                    itd.actualAnswers = new ArrayList<>();
+                }
+
+                if (tpp.bindings != null) itd.actualAnswers.addAll(tpp.bindings);
+
+                boolean different = true;
+                if (tpp.proof != null && (tpp.status == null || !tpp.status.startsWith("Timeout"))) {
+                    different = !sameAnswers(tpp, itd.expectedAnswers);
+                }
+                itd.success = !(different || tpp.noConjecture);
+            }
+        }
+        finally {
+            try {
+                // Remove any test assertions
+                resetAllForInference(kb);
+            } catch (Exception e) {
+                System.err.println("Warning: could not reset KB after test: " + e.getMessage());
+            }
+        }
+        // --- end isolation block ---
+
+        return itd;
+    }
+
+    /** Thin wrapper for the JSP buttons: returns PASS/FAIL + time + a tiny HTML summary. */
+    public OneResult runOne(final KB kb,
+                            final String engine,
+                            final int timeoutSec,
+                            final String tqPath,
+                            final boolean modusPonens) {
+        long t0 = System.currentTimeMillis();
+        InfTestData itd;
+        try {
+            itd = runSingleTestFile(kb, engine, timeoutSec, tqPath, modusPonens);
+        } catch (Exception ex) {
+            OneResult err = new OneResult();
+            err.pass = false;
+            err.millis = System.currentTimeMillis() - t0;
+            err.html = "<div style='color:#b00'><b>ERROR:</b> "
+                    + (ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage())
+                    + "</div>";
+            return err;
+        }
+        long ms = System.currentTimeMillis() - t0;
+
+        boolean pass = itd.success && !itd.inconsistent;
+        String statusTag = pass ? "<b style='color:#0a0'>PASS</b>" : "<b style='color:#b00'>FAIL</b>";
+
+        String html = statusTag + " &bull; " + ms + " ms"
+                + "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>"
+                + "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>"
+                + (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
+
+        OneResult r = new OneResult();
+        r.pass   = pass;
+        r.millis = ms;
+        r.html   = html;
+        r.expected = (itd.expectedAnswers == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.expectedAnswers);
+        r.actual   = (itd.actualAnswers   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.actualAnswers);
+        return r;
+    }
+
+    private static String esc(String s){
+        if(s==null)return "";
+        return s.replace("&","&amp;").replace("<","&lt;")
+            .replace(">","&gt;").replace("\"","&quot;").replace("'","&#39;"); }
+
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
      * true if no answers are found or if any pair of answers
@@ -848,4 +1006,5 @@ public class InferenceTestSuite {
             showHelp();
     }
 }
+
 
