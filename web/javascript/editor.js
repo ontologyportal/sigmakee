@@ -34,15 +34,24 @@ document.addEventListener("DOMContentLoaded", async function() {
   initializeCodeMirror();
   console.log("📘 Using mode:", codeEditor.getOption("mode"));
   codeEditors.push("");
+
+  // ✅ Add another tab dynamically with its own contents
+  const exampleTPTP = `% Example TPTP file
+tff(mortal_rule, axiom,
+    (![X]: (man(X) => mortal(X)))
+).
+
+tff(socrates_fact, axiom,
+    man(socrates)
+).
+
+tff(query, conjecture,
+    mortal(socrates)
+).`;
+
+  openFileInNewTab("example.tptp", exampleTPTP);
 });
 
-document.addEventListener("click", (e) => {
-  const dropdown = document.getElementById("fileDropdown");
-  const content = document.getElementById("dropdownContent");
-  if (!dropdown.contains(e.target)) {
-    content.style.display = "none";
-  }
-});
 
 // ------------------------------------------------------------------
 // Syntax highlighting / coloring
@@ -71,12 +80,11 @@ return { colorMap, keywords };
 }
 
 async function defineModeFromXML(modeName, xmlPath) {
+
   const response = await fetch(xmlPath);
   const xmlText = await response.text();
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'text/xml');
-
-  // Extract keyword sets by tag name
   const tagTypes = [
     'KEYWORD1', 'KEYWORD2', 'KEYWORD3', 'KEYWORD4',
     'LITERAL1', 'LITERAL2', 'COMMENT1', 'FUNCTION',
@@ -85,10 +93,7 @@ async function defineModeFromXML(modeName, xmlPath) {
   const keywords = {};
   for (const tag of tagTypes)
     keywords[tag] = [...xml.getElementsByTagName(tag)].map(n => n.textContent);
-
   const commentStart = xml.querySelector('PROPERTY[NAME="lineComment"]')?.getAttribute('VALUE') || ';';
-
-  // Simple color classes mapping to your CSS
   const classMap = {
     'KEYWORD1': 'keyword1',
     'KEYWORD2': 'keyword2',

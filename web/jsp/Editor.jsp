@@ -92,7 +92,8 @@ window.initialErrorMask = [
     </div>
     <textarea id="codeEditor" style="display: none;"><%=
       codeContent != null ? esc(codeContent) :
-      (fileContent != null ? String.join("\n", fileContent) : "")
+      (fileContent != null ? String.join("\n", fileContent) :
+      esc("(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))\n"))
     %></textarea>
   </div>
   <div>
