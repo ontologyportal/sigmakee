@@ -19,7 +19,83 @@
         session.setAttribute("cellMap", cellMap);
     }
 
-    // Handle a single test run if requested
+    if ("runAll".equalsIgnoreCase(request.getParameter("action")) && inferenceTestDir != null) {
+        String type  = Optional.ofNullable(request.getParameter("runAllType")).orElse("normal"); // normal|mp|both
+        String phase = Optional.ofNullable(request.getParameter("phase")).orElse("normal");       // normal|mp (current)
+        int idx = 0; try { idx = Integer.parseInt(Optional.ofNullable(request.getParameter("idx")).orElse("0")); } catch(Exception ignore){}
+
+        File dir = new File(inferenceTestDir);
+        File[] files = dir.listFiles((d, n) -> n.toLowerCase().endsWith(".tq"));
+        if (files == null) files = new File[0];
+        Arrays.sort(files, Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
+
+        if (idx < files.length) {
+            tqName = files[idx].getName();
+
+            // decide mode to run this step
+            String modeAll = "normal";
+            if ("normal".equalsIgnoreCase(type)) modeAll = "normal";
+            else if ("mp".equalsIgnoreCase(type)) modeAll = "mp";
+            else /* both */ modeAll = "mp".equalsIgnoreCase(phase) ? "mp" : "normal";
+
+            // ---- RUN ONE (same as your single-test block) ----
+            try {
+                InferenceTestSuite its = new InferenceTestSuite();
+                String tqPath = inferenceTestDir + File.separator + tqName;
+                boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
+
+                InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
+
+                String proofsRoot = application.getRealPath("/proofs");
+                if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
+                File sessionProofDir = new File(proofsRoot, session.getId());
+                if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
+
+                String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
+                File proofFile = new File(sessionProofDir, base);
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
+                    if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
+                } catch (Exception ignore) {}
+
+                String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
+
+                Map<String,Object> cellMap2 = (Map<String,Object>) session.getAttribute("cellMap");
+                if (cellMap2 == null) { cellMap2 = new HashMap<>(); session.setAttribute("cellMap", cellMap2); }
+
+                Map<String,Object> cell = new HashMap<>();
+                String key = tqName + "|" + ("mp".equalsIgnoreCase(modeAll) ? "mp" : "normal");
+                cell.put("pass",   r.pass);
+                cell.put("millis", r.millis);
+                cell.put("meta",   "(engine=" + esc(engine) + ", t=" + timeout + "s)");
+                cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
+                cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
+                cell.put("html",     r.html);
+                cell.put("proofUrl", proofUrl);
+                cell.put("proofPath", proofFile.getAbsolutePath());
+                cellMap2.put(key, cell);
+            } catch (Throwable ignore) {}
+
+            // ---- compute next step ----
+            int nextIdx = idx; String nextPhase = phase; boolean hasNext = false;
+            if ("both".equalsIgnoreCase(type)) {
+                if ("normal".equalsIgnoreCase(phase)) { nextPhase = "mp"; hasNext = true; }
+                else { nextIdx = idx + 1; nextPhase = "normal"; hasNext = nextIdx < files.length; }
+            } else {
+                nextIdx = idx + 1; hasNext = nextIdx < files.length; nextPhase = "normal";
+                if ("mp".equalsIgnoreCase(type)) nextPhase = "mp";
+            }
+
+            // expose progress + next target to page
+            request.setAttribute("raType",  type);
+            request.setAttribute("raIdx",   idx);
+            request.setAttribute("raTot",   files.length);
+            request.setAttribute("raNext",  hasNext ? nextIdx : -1);
+            request.setAttribute("raNextName", hasNext ? files[nextIdx].getName() : "");
+            request.setAttribute("raNextPhase", nextPhase);
+        }
+    }
+
+// Handle a single test run if requested
     if ("run".equalsIgnoreCase(action) && inferenceTestDir != null && tqName != null) {
         String tqPath = inferenceTestDir + File.separator + tqName;
         boolean modusPonens = "mp".equalsIgnoreCase(mode);
@@ -180,39 +256,36 @@
         .filePath { font-size: 12px; color: #777; word-wrap: break-word; }
     </style>
 
+
     <style>
-        /* Meta wrapper aligns the engine line + icon */
-        .metaWrap {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;         /* space between text and icon */
+        /* === Buttons === */
+        .runAllGroup { display:flex; gap:10px; align-items:center; }
+        .runAllBtn {
+            background:#22aa44; color:#fff; border:0; border-radius:8px;
+            padding:10px 18px; font-size:15px; font-weight:700; cursor:pointer;
+            box-shadow:0 2px 6px rgba(0,0,0,.15);
         }
+        .runAllBtn:hover { filter:brightness(0.95); }
+        .runAllBtn.mp { background:#168a9e; }
+        .runAllBtn.both { background:#0a7f3f; }
 
-        /* Bigger icon block */
-        .proofIcon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;      /* bigger clickable area */
-            height: 36px;
-            border-radius: 6px;
-            color: #1d75b8;
-            background: rgba(29,117,184,0.1);
-            text-decoration: none;
-            transition: all 0.15s ease;
+        /* === Fieldset (configuration) === */
+        .configBox {
+            border:1px solid #bbb;
+            border-radius:6px;
+            padding:8px 14px 10px 14px;
+            background:#fafafa;
+            font-size:14px;
         }
-
-        .proofIcon:hover {
-            background: rgba(29,117,184,0.2);
-            transform: translateY(-2px);
-            color: #135c91;
+        .configBox legend {
+            font-size:14px;
+            padding:0 6px;
+            color:#333;
         }
-
-        .proofIcon svg {
-            width: 22px;   /* actual icon size */
-            height: 22px;
-            display: block;
+        .configBox select, .configBox input {
+            margin-left:4px;
+            font-size:13px;
+            padding:2px 4px;
         }
     </style>
 
@@ -254,6 +327,18 @@
         }
     </script>
 
+    <script>
+        function startRunAll(type){          // type: 'normal' | 'mp' | 'both'
+            const f = document.getElementById('runnerForm');
+            f.action.value = 'runAll';
+            f.runAllType.value = type;
+            f.idx.value = '0';
+            f.phase.value = (type === 'both') ? 'normal' : type; // first phase
+            f.submit();
+        }
+    </script>
+
+
 </head>
 <body style="face=Arial,Helvetica" bgcolor="#FFFFFF">
 
@@ -269,23 +354,42 @@
 
 <form id="runnerForm" method="POST" action="InferenceTestSuite.jsp">
     <!-- global controls persist across runs -->
-    <div class="controls">
-        <label><b>Engine:</b>
-            <select name="engine">
-                <option value="Vampire" <%= "Vampire".equals(engine) ? "selected" : "" %>>Vampire</option>
-                <option value="EProver" <%= "EProver".equals(engine) ? "selected" : "" %>>EProver</option>
-            </select>
-        </label>
-        <label><b>Timeout (sec):</b>
-            <input type="number" name="timeout" min="1" value="<%=timeout%>">
-        </label>
-        <span class="tiny">Tip: each RUN uses these settings.</span>
+
+    <!-- === Global Controls === -->
+    <div style="width:70%;margin:0 auto 20px auto;display:flex;justify-content:space-between;align-items:flex-end;">
+
+        <!-- Left: Run-All buttons -->
+        <div class="runAllGroup">
+            <button type="button" class="runAllBtn" onclick="startRunAll('normal')"> Run All (Normal)</button>
+            <button type="button" class="runAllBtn mp" onclick="startRunAll('mp')"> Run All (MP)</button>
+            <button type="button" class="runAllBtn both" onclick="startRunAll('both')"> Run All (Both)</button>
+        </div>
+
+        <!-- Right: Configuration box -->
+        <fieldset class="configBox">
+            <legend><b>Configuration</b></legend>
+            <label><b>Engine:</b>
+                <select name="engine">
+                    <option value="Vampire" <%= "Vampire".equals(engine) ? "selected" : "" %>>Vampire</option>
+                    <option value="EProver" <%= "EProver".equals(engine) ? "selected" : "" %>>EProver</option>
+                </select>
+            </label>
+            <label style="margin-left:12px;"><b>Timeout (sec):</b>
+                <input type="number" name="timeout" min="1" value="<%=timeout%>">
+            </label>
+        </fieldset>
     </div>
 
-    <!-- hidden fields set when clicking RUN -->
+    <!-- single-run fields (keep your existing) -->
     <input type="hidden" name="action" value="run">
     <input type="hidden" name="tq" value="">
     <input type="hidden" name="mode" value="">
+
+    <!-- run-all fields -->
+    <input type="hidden" name="runAllType" value="">
+    <input type="hidden" name="idx" value="">
+    <input type="hidden" name="phase" value="">
+
 </form>
 
 <%
@@ -393,6 +497,49 @@
     %>
     </tbody>
 </table>
+
+<%
+    Integer raIdx  = (Integer)request.getAttribute("raIdx");
+    Integer raTot  = (Integer)request.getAttribute("raTot");
+    Integer raNext = (Integer)request.getAttribute("raNext");
+    String  raType = (String) request.getAttribute("raType");
+    String  raNextName  = (String) request.getAttribute("raNextName");
+    String  raNextPhase = (String) request.getAttribute("raNextPhase");
+    if (raIdx != null && raTot != null) {
+        int stepsDone = ("both".equalsIgnoreCase(raType) ? (raIdx*2 + ("mp".equalsIgnoreCase((String)request.getParameter("phase"))?2:1)) : (raIdx+1));
+        int stepsTotal = ("both".equalsIgnoreCase(raType) ? raTot*2 : raTot);
+%>
+<div style="position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+              background:#eef7ee;border:1px solid #cfe6cf;padding:8px 12px;border-radius:6px;">
+    Running <b><%= esc(raType) %></b> | <b><%= stepsDone %></b> / <b><%= stepsTotal %></b>
+</div>
+<script>
+    (function(){
+        var next = <%= raNext == null ? -1 : raNext.intValue() %>;
+        var nextName  = "<%= esc(raNextName == null ? "" : raNextName) %>";
+        var nextPhase = "<%= esc(raNextPhase == null ? "normal" : raNextPhase) %>"; // 'normal' | 'mp'
+        if(next >= 0){
+            // show spinner on the next target row *before* submitting
+            try{
+                var sid = 'spinner-' + (nextName||'').replace(/[^A-Za-z0-9._-]/g,'_') + '-' + (nextPhase==='mp'?'mp':'normal');
+                var bid = 'btn-'     + (nextName||'').replace(/[^A-Za-z0-9._-]/g,'_') + '-' + (nextPhase==='mp'?'mp':'normal');
+                var sp = document.getElementById(sid); if (sp) sp.style.display='inline-block';
+                var bt = document.getElementById(bid); if (bt) { bt.disabled=true; bt.innerHTML="Running&hellip;"; }
+            }catch(e){}
+
+            // submit next step
+            const f = document.getElementById('runnerForm');
+            f.action.value    = 'runAll';
+            f.runAllType.value= "<%= esc(raType) %>";
+            f.idx.value       = String(next);
+            f.phase.value     = nextPhase;
+            f.submit();
+        }
+    })();
+</script>
+<% } %>
+
+
 <%
     } // inferenceTestDir != null
 %>
