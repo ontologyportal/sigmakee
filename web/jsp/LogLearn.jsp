@@ -45,8 +45,8 @@
     <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
 	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
 
-
-    <b>Create logic problem with solutions</b><P>
+    <p><a href="/sigma/TableauxWorksheet.jsp">Blank Tableau Worksheet</a></p>
+    <h2><b>Create logic problem with solutions</b></h2><P>
     <table>
         <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="<%=numVars %>"></td></tr>
         <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="<%=depth %>"></td></tr>
@@ -73,7 +73,7 @@
             out.println("CNF: " + gpf.CNF.get(s) + "<br>");
             out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
-            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
             out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
         }
         out.println("<hr><br>");
@@ -83,7 +83,7 @@
             out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
             out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
-            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
             out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
         }
         out.println("<hr><br>");
@@ -93,7 +93,7 @@
             out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
             out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
             out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
-            String worksheet = URLEncoder.encode(gpf.CNF.get(s), Charset.defaultCharset());
+            String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
             out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
         }
     }
