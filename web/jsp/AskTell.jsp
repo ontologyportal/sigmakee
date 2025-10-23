@@ -295,12 +295,12 @@
         Maximum answers: <input type="text" name="maxAnswers" value="<%=maxAnswers%>">
         &nbsp; Query time limit: <input type="text" name="timeout" value="<%=timeout%>"><br>
 
-        [ <input type="radio" id="TPTPlang" name="TPTPlang" value="tptp"
-        <% if (SUMOformulaToTPTPformula.lang.equals("fof")) { out.print(" CHECKED"); } %> >
-        <label>tptp mode</label>
-        <input type="radio" id="TPTPlang" name="TPTPlang" value="tff"
-            <% if (SUMOformulaToTPTPformula.lang.equals("tff")){ out.print(" CHECKED"); } %> >
-        <label>tff mode</label> ]
+        [ <input type="radio" id="langFof" name="TPTPlang" value="fof" <%= "fof".equals(TPTPlang)?"checked":"" %> >
+        <label for="langFof">tptp mode</label>
+
+        <input type="radio" id="langTff" name="TPTPlang" value="tff" <%= "tff".equals(TPTPlang)?"checked":"" %> >
+        <label for="langTff">tff mode</label>]
+
         &nbsp;&nbsp;<input type="checkbox" name="CWA" id="CWA" value="yes" <% if ("yes".equals(cwa)) {%>checked<%}%> >
         <label>Closed World Assumption</label><br>
 
