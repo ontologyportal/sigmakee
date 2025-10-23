@@ -32,24 +32,24 @@ document.addEventListener("DOMContentLoaded", async function() {
   await defineModeFromXML("kif", "LanguagesXML/kif.xml");
   await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
   initializeCodeMirror();
-  console.log("📘 Using mode:", codeEditor.getOption("mode"));
+  console.log("Using mode:", codeEditor.getOption("mode"));
   codeEditors.push("");
 
-  // ✅ Add another tab dynamically with its own contents
   const exampleTPTP = `% Example TPTP file
-tff(mortal_rule, axiom,
-    (![X]: (man(X) => mortal(X)))
-).
+  tff(mortal_rule, axiom,
+      (![X]: (man(X) => mortal(X)))
+  ).
 
-tff(socrates_fact, axiom,
-    man(socrates)
-).
+  tff(socrates_fact, axiom,
+      man(socrates)
+  ).
 
-tff(query, conjecture,
-    mortal(socrates)
-).`;
-
+  tff(query, conjecture,
+      mortal(socrates)
+  ).`;
   openFileInNewTab("example.tptp", exampleTPTP);
+  toggleDropdown();
+  switchTab(0);
 });
 
 

@@ -180,7 +180,6 @@
     <target name="build.antlr" depends="init">
         <echo message="SIGMA_HOME is set to: ${sigma.home}"/>
         <echo message="TPTP is set to: ${tptp.home}"/>
-        <!-- TPTP already builds SigmaUtils -->
         <ant antfile="${tptp.home}/build.xml" inheritAll="false" target="all"/>
         <copy todir="${basedir}/lib" file="${tptp.home}/tptp.jar"/>
         <copy todir="${basedir}/lib" file="${sigma.utils.home}/sigmaUtils.jar"/>
@@ -191,13 +190,17 @@
     <target name="compile" depends="build.antlr" description="Compile the project and place in ${build.classes}.">
         <mkdir dir="${build.classes}"/>
         <javac destdir="${build.classes}"
-               debug="on"
-               optimize="on"
-               deprecation="on"
-               includeantruntime="false"
-               classpathref="compile.classpath"
-               release="${javac.release}">
+            debug="on"
+            optimize="on"
+            deprecation="on"
+            includeantruntime="false"
+            release="${javac.release}">
             <src refid="core.sourcepath"/>
+            <classpath>
+                <path refid="compile.classpath"/>
+                <pathelement location="${tptp.home}/build/classes"/>
+                <pathelement location="${tptp.home}/tptp.jar"/>
+            </classpath>
         </javac>
     </target>
     <target name="compile.test" depends="compile" description="Compile the project's test classes.">
