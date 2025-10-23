@@ -320,27 +320,21 @@
         <td>
             <div class="cellHead">
                 <button class="runBtn" onclick="runOne('<%=esc(name)%>','normal'); return false;">RUN</button>
-                <div class="metaWrap">
-                    <span class="tiny"><%= esc(metaN) %></span>
-                    <% String proofUrlN = (cN == null) ? null : (String)cN.get("proofUrl"); %>
-                    <% if (proofUrlN != null && proofUrlN.length() > 0) { %>
-                    <a class="proofIcon" href="<%= proofUrlN %>" target="_blank" title="View proof" aria-label="View proof">
-                        <svg width="18" height="18" viewBox="0 0 24 24" role="img" aria-hidden="true">
-                            <path fill="currentColor"
-                                  d="M6 2h7l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm7 1v5h5M8 11h8v2H8v-2zm0 4h8v2H8v-2z"/>
-                        </svg>
-                    </a>
-                    <% } %>
-                </div>
+                <span class="tiny"><%= esc(metaN) %></span>
             </div>
-
             <div>
-                <% if (cN == null) { %>
-                <span class='tiny'>- not run yet -</span>
-                <% } else { %>
-                <div><%= (String)cN.get("html") %></div>
-                <% } %>
+                    <% if (cN == null) { %>
+                    <span class='tiny'>- not run yet -</span>
+                    <% } else { %>
+                    <div><%= (String)cN.get("html") %></div>
+                    <% } %>
             </div>
+            <% String proofUrlN = (cN == null) ? null : (String)cN.get("proofUrl"); %>
+            <% if (proofUrlN != null && proofUrlN.length() > 0) { %>
+            <div class="tiny" style="margin-top:6px;">
+                <a href="<%= proofUrlN %>" target="_blank">View proof</a>
+            </div>
+            <% } %>
         </td>
 
         <!-- ModusPonens column -->
