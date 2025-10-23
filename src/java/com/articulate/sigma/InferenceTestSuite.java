@@ -115,10 +115,10 @@ public class InferenceTestSuite {
             itd.timeout = timeoutSec > 0 ? timeoutSec : (itd.timeout > 0 ? itd.timeout : _DEFAULT_TIMEOUT);
         }
 
-// --- Isolated assertion block (prevents KB pollution) ---
+        // --- Isolated assertion block (prevents KB pollution) ---
         compareFiles(itd);
 
-// Step 1: assert formulas for this test
+        // Step 1: assert formulas for this test
         List<String> asserted = new ArrayList<>(itd.statements);
         for (String s : asserted) {
             kb.tell(s);
@@ -145,7 +145,12 @@ public class InferenceTestSuite {
 
                 switch (KBmanager.getMgr().prover) {
                     case VAMPIRE:
-                        com.articulate.sigma.tp.Vampire vampire = kb.askVampire(q, itd.timeout, maxAnswers);
+                        com.articulate.sigma.tp.Vampire vampire;
+                        if (modusPonens) {
+                            vampire = kb.askVampireModensPonens(q, itd.timeout, maxAnswers);
+                        }else{
+                            vampire = kb.askVampire(q, itd.timeout, maxAnswers);
+                        }
                         tpp.parseProofOutput(vampire.output, q, kb, vampire.qlist);
                         itd.proof = vampire.output;
                         break;

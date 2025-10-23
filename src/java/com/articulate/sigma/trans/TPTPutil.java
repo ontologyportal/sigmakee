@@ -353,10 +353,31 @@ public class TPTPutil {
      * and returns the processed list ready for TPTP3ProofProcessor.
      */
     public static List<String> clearProofFile(List<String> lines) {
+
+        List<String> firstComments = new ArrayList<>();
+        List<String> lastComments = new ArrayList<>();
+        boolean beforeFOF = true;
+        boolean afterFOF = false;
+        // Keep the comments before and after the fof lines
+        for (String line : lines) {
+            String trim = line.trim();
+            if (beforeFOF && trim.startsWith("%")) {
+                firstComments.add(line);
+            } else if (trim.startsWith("fof(")) {
+                beforeFOF = false;
+            } else if (!beforeFOF && trim.startsWith("%")) {
+                afterFOF = true;
+                lastComments.add(line);
+            } else if (afterFOF && trim.startsWith("%")) {
+                lastComments.add(line);
+            }
+        }
+
         // --- 0) locate markers and status ---
         String statusLine = null;
         int startIdx = -1;
         int endIdx = -1;
+
 
         for (int i = 0; i < lines.size(); i++) {
             String l = lines.get(i);
@@ -403,10 +424,9 @@ public class TPTPutil {
 
         // --- 3) build the final list: status + start + merged fof + end ---
         List<String> finalLines = new ArrayList<String>();
-        if (statusLine != null) finalLines.add(statusLine);
-        finalLines.add(lines.get(startIdx));   // % SZS output start ...
+        finalLines.addAll(firstComments);
         finalLines.addAll(mergedFofs);
-        finalLines.add(lines.get(endIdx));     // % SZS output end ...
+        finalLines.addAll(lastComments);
 
         return finalLines;
     }
