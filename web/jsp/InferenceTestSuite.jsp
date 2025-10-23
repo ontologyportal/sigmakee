@@ -216,14 +216,36 @@
         }
     </style>
 
+    <style>
+        .spinner {
+            display:none; width:14px; height:14px;
+            border:2px solid #ccc; border-top-color:#1d75b8;
+            border-radius:50%; animation:spin .8s linear infinite; margin-left:6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+
+
     <script>
+        function safeId(s){ return (s||'').replace(/[^A-Za-z0-9._-]/g,'_'); }
+
         function runOne(tq, mode) {
+            const sid = 'spinner-' + safeId(tq) + '-' + mode;
+            const bid = 'btn-'     + safeId(tq) + '-' + mode;
+
+            const sp = document.getElementById(sid);
+            if (sp) sp.style.display = 'inline-block';
+
+            const btn = document.getElementById(bid);
+            if (btn) { btn.disabled = true; btn.innerHTML = "Running&hellip;"; }
+
             const form = document.getElementById('runnerForm');
             form.tq.value = tq;
             form.mode.value = mode;
             form.submit();
         }
     </script>
+
 
     <script>
         function viewTestFile(fileName) {
@@ -296,7 +318,7 @@
             String name = f.getName();
             String kN = name + "|normal";
             String kM = name + "|mp";
-
+            String safeId = name.replaceAll("[^A-Za-z0-9._-]", "_");
             Map cN = (Map) cellMap.get(kN);
             Map cM = (Map) cellMap.get(kM);
 
@@ -319,8 +341,11 @@
         <!-- Normal column -->
         <td>
             <div class="cellHead">
-                <button class="runBtn" onclick="runOne('<%=esc(name)%>','normal'); return false;">RUN</button>
+                <button id="btn-<%=safeId%>-normal"
+                        class="runBtn"
+                        onclick="runOne('<%=esc(name)%>','normal'); return false;">RUN</button>
                 <span class="tiny"><%= esc(metaN) %></span>
+                <span id="spinner-<%=safeId%>-normal" class="spinner" aria-label="Running&hellip;" title="Running&hellip;"></span>
             </div>
             <div>
                     <% if (cN == null) { %>
@@ -340,8 +365,11 @@
         <!-- ModusPonens column -->
         <td>
             <div class="cellHead">
-                <button class="runBtn" onclick="runOne('<%=esc(name)%>','mp'); return false;">RUN</button>
+                <button id="btn-<%=safeId%>-mp"
+                        class="runBtn"
+                        onclick="runOne('<%=esc(name)%>','mp'); return false;">RUN</button>
                 <span class="tiny"><%= esc(metaM) %></span>
+                <span id="spinner-<%=safeId%>-mp" class="spinner" aria-label="Running&hellip;" title="Running&hellip;"></span>
             </div>
             <div>
                 <% if (cM == null) { %>
