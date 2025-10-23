@@ -11,8 +11,6 @@ import com.articulate.sigma.trans.*;
  in Working Notes of the IJCAI-2003 Workshop on Ontology and Distributed Systems,
  August 9, Acapulco, Mexico.
  */
-
-import com.articulate.sigma.trans.TPTP3ProofProcessor;
 import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 
@@ -35,7 +33,9 @@ public class Diagnostics {
             Formula.UQUANT,Formula.IF,Formula.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
-
+    
+    private static final Set<String> FN_WRAPPERS = Set.of("WhenFn", "BeginFn", "EndFn", "attribute");
+    
     private static final int RESULT_LIMIT = 100;
 
     /** *****************************************************************
@@ -1136,91 +1136,42 @@ public class Diagnostics {
         }
     }
 
-    /** ***************************************************************
-     * Recursively searches a formual for variable co-occurrences. Each variable is linked to others it appears with.
-     *
-     * @param f the formula to check
-     * @return a map where each variable is linked to others it co-occurs with
+    /**
+     * Builds a map of variable co-occurrences in a formula
+     * @param f the formula to analyze
+     * @return map from each variable to the set of variables it co-occurs with
      */
     public static HashMap<String,HashSet<String>> findOrphanVars(Formula f) {
         HashSet<String> parents = new HashSet<>();
-        return findOrphanVarsRecurse(f, parents);
+        return findOrphanVarsRecurse(f,parents);
     }
 
     /**
-     * Goes through a formula and finds which variables appear together.
-     * Each variable is linked to others it co-occurs with.
-     *
-     * @param f the formula to check
-     * @param parents variables from the parent level
-     * @return a map showing which variables are connected
+     * Collects variables from a list of formula arguments.
+     * Gets direct variable arguments (e.g., ?X) plus variables inside wrapper functions 
+     * such as, BeginFn, EndFn, WhenFn.
+     * 
+     * @param args the list of formula arguments to examine
+     * @return set of all variables found directly or inside wrapper functions
      */
-    private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(Formula f, HashSet<String> parents) {
-        // create a map to store variables and the ones they are linked to
-        HashMap<String,HashSet<String>> result = new HashMap<>();
-    
-        // BASE CASE
-        // return if formula is empty
-        if (f.empty()) 
-                return result;
-        // if formula is a variable, connect it with its parent variables
-        if (f.isVariable())
-                return addLinks(parents,f);
-        // return if formula is atomic
-        if (f.atom())
-                return result;
-
-        //RECURSIVE CASE
-        // extract subformulas inside the main formula
-        List<Formula> args;
-        if (f.car().equals("exists") || f.car().equals("forall")) {
-            // if formula starts with a quantifier, skip the first two arguments (quantifier and var list)
-            // without this, variables in the quantifier list would be incorrectly linked to others in the body
-            args = f.complexArgumentsToArrayList(2);
-        } else {
-            args = f.complexArgumentsToArrayList(1);
-        }
-
-        // process each argument recursively if formula starts with a logical operator (ex: and, or, not)
-        if (Formula.isLogicalOperator(f.car())) {
-            for (Formula arg : args)
-                mergeResults(result, findOrphanVarsRecurse(arg, parents));
-        }
-
-        // collectVariables() finds all variables that appear inside these subformulas
-        HashSet<String> newparents = collectVariables(args);
-        
-        // mergeResults connects variable links from each subformula into the result map
-        for (Formula arg : args) {
-            mergeResults(result, findOrphanVarsRecurse(arg, newparents));
-        }
-
-        // links all variables to each other (bidirectional links)
-        mergeResults(result, addAllLinks(newparents, new HashMap<>()));
-
-        return result;
-    }
-
-    /**
-     * Finds all variables inside the given list of formulas,
-     * including variables inside nested subformulas.
-     *
-     * @param args a list of formulas to look through
-     * @return all variable names found
-     */
-    private static HashSet<String> collectVariables(List<Formula> args) {
-        // set to hold variable names
+    private static HashSet<String> collectVarsIncludingFnWrappers(List<Formula> args) {
         HashSet<String> vars = new HashSet<>();
         for (Formula arg : args) {
             if (arg.isVariable()) {
+                // argument such as ?X
                 vars.add(arg.getFormula());
-            }
-            List<Formula> subargs = arg.complexArgumentsToArrayList(1);
-            if (subargs != null) {
-                // check subformula for variables
-                for (Formula subarg : subargs) {
-                    if (subarg.isVariable()) {
-                        vars.add(subarg.getFormula());
+            } else if (!arg.atom() && !arg.empty()) {
+                // complex formula argument, check for function wrappers
+                String head = arg.car();
+                if (FN_WRAPPERS.contains(head)) {
+                    // extract variables from inside function wrapper such as, e.g., get ?X from (BeginFn ?X)
+                    List<Formula> wrapperArgs = arg.complexArgumentsToArrayList(1);
+                    if (wrapperArgs != null) {
+                        for (Formula inner : wrapperArgs) {
+                            if (inner.isVariable()) {
+                                vars.add(inner.getFormula());
+                            }
+                        }
                     }
                 }
             }
@@ -1229,97 +1180,181 @@ public class Diagnostics {
     }
 
     /**
-     * Merges all entries from the source map into the target map.
-     *
-     * @param target the map to add to
-     * @param source the map to copy from
+     * Recursively traverses a formula to find variable co-occurrences.
+     * @param f the formula to traverse
+     * @param parents variables from the outer level that should link to variables found here.
+     * e.g., when processing (agent ?X ?Y) inside (containsFormula ?ACK (...)),
+     * parents = {?ACK} so ?X and ?Y will link to ?ACK
+     * @return map of variable co-occurrences found in this formula and its subformulas
      */
-    private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
-        for (String key : source.keySet()) {
-            HashSet<String> keyValues = source.get(key); // values associated with the key from source
-            // if there's an adjacency set for 'key' in 'target', union all neighbors from 'keyValues' into it
-            if (target.containsKey(key))
-                target.get(key).addAll(keyValues);
-            // otherwise, create a new entry in the target map
-            else
-                target.put(key, new HashSet<>(keyValues));
-        }
-    }
-
-    /**
-     * Creates bidirectional links between a single variable and its parent variables.
-     * 
-     * @param parents the set of variables from the parent
-     * @param f the formula containing the variable to be linked
-     * @return a map connecting the variable to all parent variables (bidirectional)
-     */
-    private static HashMap<String,HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
+    private static HashMap<String,HashSet<String>> findOrphanVarsRecurse(Formula f, HashSet<String> parents) {
         HashMap<String,HashSet<String>> result = new HashMap<>();
-
-        // get the string form of the variable (ex: "?X")
-        String formulaString = f.getFormula(); 
-
-        if (formulaString.isEmpty()) {
+        // ==== BASE CASES ====
+        // base case 1: empty or null formula
+        if (f == null || f.empty()) {
             return result;
         }
-        if (!result.containsKey(formulaString)) { // create new entry with connections if it's not present
-            result.put(formulaString, new HashSet<>());
+        // base case 2: found a variable, link it to all parent variables
+        // e.g., if parents = {?A, ?B} and f = ?C, create edges ?C<->?A and ?C<->?B
+        if (f.isVariable()) {
+            return addLinks(parents, f);
         }
-        for (String var : parents) {
-            // skip self-links
-            if (var.equals(formulaString)) {
-                continue;  
-            }
-            // ensure both variable and parent are in the map
-            if (!result.containsKey(var)) {
-                result.put(var, new HashSet<>());
-            }
-            // add bidirectional links
-            result.get(var).add(formulaString);
-            result.get(formulaString).add(var);
+        // base case 3: atom, no variables to link
+        if (f.atom()) {
+            return result;
         }
-        return result;
+
+        // ==== RECURSIVE CASES ====
+        String head = f.car(); // first element (operator, predicate, etc.)
+        // case 1: quantifiers
+        // skip the variable list, recurse into body with same parents
+        // e.g., (exists (?A ?B) BODY), skip (?A ?B), process BODY
+        if (head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) {
+            List<Formula> qargs = f.complexArgumentsToArrayList(2);
+            if (qargs != null && !qargs.isEmpty()) {
+                Formula body = qargs.get(0); // body is 2nd argument
+                mergeResults(result, findOrphanVarsRecurse(body, parents)); // e.g., (containsFormula ?ACK (exists (?X) (agent ?X ?Y)))
+                                                                            // ?ACK should link to ?X and ?Y found in the body
+            }
+            return result;
+        }
+
+        // arguments after the head
+        List<Formula> args = f.complexArgumentsToArrayList(1);
+        if (args == null) {
+            return result;
+        }
+
+        // case 2: logical operators (and, or, not, =>, etc.)
+        // modal predicates and equality are treated as non-logical
+        boolean isModal = Modals.formulaPreds.contains(head) || Modals.regHOLpred.contains(head);
+        boolean isEqual = Formula.EQUAL.contains(head);
+        if (Formula.isLogicalOperator(head) && !isModal && !isEqual) {
+            // For 'and', 'or', 'not', '=>', etc
+            for (Formula arg : args) {
+                mergeResults(result, findOrphanVarsRecurse(arg, parents));
+            }
+            return result;
+        }
+        
+        // case 3: (agent, patient, equal, holdsDuring, etc.)
+        // collect direct variable args plus vars inside wrapper functions
+        HashSet<String> coVars = collectVarsIncludingFnWrappers(args);
+
+        // recurse into arguments with coVars as the new parent context
+        // this links any variables found deeper to the variables at this level
+        // e.g., (equal ?T1 (ListOrderFn ?LIST ?N))
+        // coVars = {?T1} (plus any wrapper vars)
+        // When we recurse into (ListOrderFn ?LIST ?N), we pass {?T1} as parents
+        // ?LIST and ?N will link back to ?T1
+        for (Formula arg : args)
+            mergeResults(result, findOrphanVarsRecurse(arg, coVars));
+
+        // connect all variables at this level to all variables found in children
+        return addAllLinks(coVars, result);
     }
 
     /**
-     * Connects all variables found together in the same formula.
-     * Each variable in 'parents' is linked to every other variable in the same set.
-     *
-     * @param parents variables that co-occur in this level of the formula
-     * @param map map of previously established variable links (empty or partially filled)
-     * @return a map of all variables connected to one another bidirectionally
+     * Creates bidirectional links between a variable and all parent variables.
+     * Example: if parents = {?A, ?B} and f = ?C, creates edges ?C<->?A and ?C<->?B
+     * 
+     * @param parents the set of parent variables to link to
+     * @param f the variable formula to link
+     * @return map containing the new bidirectional edges (no self-links)
      */
-    private static HashMap<String,HashSet<String>> addAllLinks(HashSet<String> parents, HashMap<String,HashSet<String>> map) {
-        // copy the input map to avoid modifying the original reference
-        HashMap<String,HashSet<String>> result = new HashMap<>();
-        for (Map.Entry<String,HashSet<String>> entry : map.entrySet()) {
-            result.put(entry.getKey(), new HashSet<>(entry.getValue()));
+    private static HashMap<String, HashSet<String>> addLinks(HashSet<String> parents, Formula f) {
+        HashMap<String,HashSet<String>> out = new HashMap<>();
+        String var = f.getFormula(); // extracts variable name
+        
+        // initialize entry for this variable
+        if (!out.containsKey(var)) {
+            out.put(var, new HashSet<>());
         }
-
-        // collect all variable keys and values present in the map
-        HashSet<String> links = new HashSet<>();
-        links.addAll(result.keySet());
-
-        for (HashSet<String> s : result.values()) {
-            links.addAll(s);
+        // create bidirectional links between var and each parent
+        for (String p : parents) {
+            if (p.equals(var)) {
+                continue;
+            }
+            // add edge var to parent
+            out.get(var).add(p);
+            // add edge parent to var
+            if (!out.containsKey(p)) {
+                out.put(p, new HashSet<>());
+            }
+            out.get(p).add(var);
         }
+        return out;
+    }
 
-        // link everything already in 'result' to each parent
-        for (String var : links) {
-            for (String parent : parents) {
-                if (parent.equals(var)) {
+   /**
+     * Connects parent variables to all child variables discovered in subformulas.
+     * Creates bidirectional edges between each parent and each child variable.
+     * Example: if parentVars = {?A, ?B} and childrenMap contains {?C, ?D}, 
+     * creates edges ?A<->?C, ?A<->?D, ?B<->?C, ?B<->?D
+     * 
+     * @param parentVars variables at the current level (e.g., direct args to a predicate)
+     * @param childrenMap co-occurrence map from recursing into subformulas
+     * @return merged map with parent↔child edges added (no self-links)
+     */
+    private static HashMap<String, HashSet<String>> addAllLinks(HashSet<String> parentVars, HashMap<String, HashSet<String>> childrenMap) {
+        // a copy of the children's co-occurrence map
+        HashMap<String, HashSet<String>> out = new HashMap<>();
+        mergeResults(out, childrenMap);
+        // if no parents, just return the children's map unchanged
+        if (parentVars == null || parentVars.isEmpty()) {
+            return out;
+        }
+        // Collect all child variables mentioned anywhere in the children's map
+        // This includes: keys (variables with neighbors) + all values (neighbors themselves)
+        // Example: from {?X: [?Y], ?Y: [?X]}, collect {?X, ?Y}
+        HashSet<String> childVars = new HashSet<>(out.keySet());
+        for (HashSet<String> neighbors : out.values()) {
+            childVars.addAll(neighbors);
+        }
+        // ensure all parent and child vars have entries in the map
+        for (String parent : parentVars) {
+            out.putIfAbsent(parent, new HashSet<>());
+        }
+        for (String child : childVars) {
+            out.putIfAbsent(child, new HashSet<>());
+        }
+        // create bidirectional links between each parent and each child variable
+        for (String child : childVars) {
+            for (String parent : parentVars) {
+                if (parent.equals(child)) {
                     continue;
                 }
-                if (!result.containsKey(var)) {
-                    result.put(var, new HashSet<>());
-                } if (!result.containsKey(parent)) {
-                    result.put(parent, new HashSet<>());
-                } 
-                result.get(var).add(parent);
-                result.get(parent).add(var);
+                // add edge child to parent
+                out.get(child).add(parent);
+                
+                // add edge parent to child
+                out.get(parent).add(child);
             }
         }
-        return result;
+        return out;
+    }
+
+    /**
+     * Merges co-occurrence maps by combining neighbor sets for each variable.
+     * If a variable exists in both maps, their neighbor sets are unioned.
+     * If a variable only exists in source, it's added to target with its neighbors.
+     * 
+     * @param target the destination map to merge into (modified in place)
+     * @param source the source map to merge from (not modified)
+    */
+    private static void mergeResults (HashMap<String,HashSet<String>> target, HashMap<String,HashSet<String>> source) {
+        // process each variable and its neighbors from the source map
+        for (String variable : source.keySet()) {
+            HashSet<String> neighbors = source.get(variable);
+            if (target.containsKey(variable)) {
+               // merge the neighbor sets, e.g., target has {?X: [?Y]}, source has {?X: [?Z]} result: {?X: [?Y, ?Z]}
+                target.get(variable).addAll(neighbors);
+            } else {
+                // variable doesn't exist in target, add it with a copy of its neighbors
+                // e.g., source has {?A: [?B]}, target doesn't have ?A, result: add {?A: [?B]} to target
+                target.put(variable, new HashSet<>(neighbors));
+            }
+        }
     }
 
     /*
@@ -1351,7 +1386,7 @@ public class Diagnostics {
 
         System.out.println("\nVariable links from kif file:\n");
         for (String var : links.keySet()) {
-            System.out.println(var + " -> " + links.get(var));
+            System.out.println(var + ": " + links.get(var));
         }
 
         int orphanVar = 0;
@@ -1363,6 +1398,7 @@ public class Diagnostics {
         }
         return links;
     }
+
     /** ***************************************************************
      */
     public static void showHelp() {
@@ -1443,93 +1479,6 @@ public class Diagnostics {
                     System.err.println("Error processing input: " + e);
                 }
             }
-
-            Formula formulaTest1 = new Formula("(=>\n" +
-                                                  "  (instance ?WARGAMING Wargaming)\n" +
-                                                  "  (exists (?MILITARYOFFICER ?SIMULATION ?TOOL)\n" +
-                                                  "    (and\n" +
-                                                  "      (instance ?MILITARYOFFICER MilitaryOfficer)\n" +
-                                                  "      (instance ?SIMULATION Imagining)\n" +
-                                                  "      (instance ?TOOL Device)\n" +
-                                                  "      (agent ?WARGAMING ?MILITARYOFFICER)\n" +
-                                                  "      (patient ?WARGAMING ?SIMULATION)\n" +
-                                                  "      (instrument ?WARGAMING ?TOOL))))"
-                                               );
-            Formula formultaTest2 = new Formula("(=>\n" + 
-                                "  (instance ?MC MaritimeClaimArea)\n" + 
-                                "  (modalAttribute\n" + 
-                                "    (exists (?HM ?NAV)\n" + 
-                                "      (and\n" + 
-                                "        (instance ?HM HydrographicMeasuring)\n" + 
-                                "        (instance ?NAV Guiding)\n" + 
-                                "        (patient ?HM ?MC)\n" + 
-                                "        (patient ?NAV ?HM))) Likely))"
-                                );  
-            Formula formulaTest3 = new Formula(
-                "(=>\n" +
-                "  (instance ?SA ServiceAnimal)\n" +
-                "  (hasPurpose ?SA\n" +
-                "    (exists (?H ?HELP ?T)\n" +
-                "      (and\n" +
-                "        (instance ?H Human)\n" +
-                "        (instance ?HELP Helping)\n" +
-                "        (instance ?T Training)\n" +
-                "        (agent ?T ?SA)\n" +
-                "        (patient ?HELP ?H)))))\n\n" + 
-
-                "(=>\n" +
-                "  (instance ?SA ServiceAnimal)\n" +
-                "  (modalAttribute ?SA\n" +
-                "    (exists (?REST ?P ?E)\n" +
-                "      (and\n" +
-                "        (instance ?REST Restaurant)\n" +
-                "        (instance ?P Airplane)\n" +
-                "        (instance ?E Entering)\n" +
-                "        (or\n" +
-                "          (path ?E ?SA)\n" +
-                "          (located ?REST ?SA)\n" +
-                "          (located ?P ?SA)))) Legal)))"
-            );
-            Formula test3pt1 = new Formula(
-                "(=>\n" +
-                "  (instance ?SA ServiceAnimal)\n" +
-                "  (hasPurpose ?SA\n" +
-                "    (exists (?H ?HELP ?T)\n" +
-                "      (and\n" +
-                "        (instance ?H Human)\n" +
-                "        (instance ?HELP Helping)\n" +
-                "        (instance ?T Training)\n" +
-                "        (agent ?T ?SA)\n" +
-                "        (patient ?HELP ?H)))))"
-                );
-
-            Formula test3pt2 = new Formula(
-                "(=>\n" +
-                "  (instance ?SA ServiceAnimal)\n" +
-                "  (modalAttribute ?SA\n" +
-                "    (exists (?REST ?P ?E)\n" +
-                "      (and\n" +
-                "        (instance ?REST Restaurant)\n" +
-                "        (instance ?P Airplane)\n" +
-                "        (instance ?E Entering)\n" +
-                "        (or\n" +
-                "          (path ?E ?SA)\n" +
-                "          (located ?REST ?SA)\n" +
-                "          (located ?P ?SA)))) Legal)))"
-            );
-            Formula orphanTest1 = new Formula("(=>\n" + 
-                                "  (instance ?MC MaritimeClaimArea)\n" + 
-                                "  (modalAttribute\n" + 
-                                "    (exists (?HM ?NAV ?P ?S)\n" + 
-                                "      (and\n" + 
-                                "        (instance ?HM HydrographicMeasuring)\n" + 
-                                "        (instance ?NAV Guiding)\n" + 
-                                "        (patient ?HM ?MC)\n" + 
-                                "        (patient ?NAV ?HM))) Likely))"
-                                );
-            // Formula orphanTest2 = new Formula("(exists (?A ?B ?C) (and (agent ?A ?B)))");
-            // varLinksParentMap.putAll(findOrphanVars(test3pt2));
-            // System.out.println("\n\n\nResults of findOrphanVars()\n" + varLinksParentMap);
         }
     }
 }
