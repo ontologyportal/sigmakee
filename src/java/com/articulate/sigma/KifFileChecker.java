@@ -42,6 +42,7 @@ public class KifFileChecker {
         System.out.println("KifFileChecker - Headless KIF syntax/semantic checker");
         System.out.println("Options:");
         System.out.println("  -h              Show this help screen");
+        System.out.println("  -o              Find Orphan Variables");
         System.out.println("  -c <file.kif>   Check the given KIF file and print diagnostics");
     }
 
@@ -55,6 +56,26 @@ public class KifFileChecker {
 
         if (args == null || args.length == 0 || "-h".equals(args[0])) {
             showHelp();
+            return;
+        }
+        if ("-o".equals(args[0]) && args.length > 1) {
+            String fname = args[1];
+            try {
+                KifFileChecker kfc = new KifFileChecker();
+                String contents = String.join("\n", FileUtil.readLines(fname));
+                KIF kif = StringToKif(contents, fname, new ArrayList<>());
+                for (Formula f : kif.formulaMap.values()) {
+                    System.out.println("Formula: " + f);
+                    HashMap<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
+                    for (Map.Entry<String, HashSet<String>> e : links.entrySet()) {
+                        System.out.println("  " + e.getKey() + " ↔ " + e.getValue());
+                    }
+                    System.out.println("---------------------------------------------------");
+                }
+            } catch (Exception e) {
+                System.err.println("Failed to process " + fname);
+                e.printStackTrace();
+            }
             return;
         }
         if ("-c".equals(args[0]) && args.length > 1) {
@@ -120,6 +141,7 @@ public class KifFileChecker {
             CheckQuantifiedVariableNotInStatement(fileName, f, formulaText, formulaStartLine, msgs);
             CheckExistentialInAntecedent(fileName, f, formulaText, formulaStartLine, msgs);
             CheckSingleUseVariables(fileName, f, formulaText, formulaStartLine, msgs);
+            CheckOrphanVars(fileName, f, formulaText, formulaStartLine, msgs);
             CheckUnquantInConsequent(fileName, f, formulaText, formulaStartLine, msgs);
             Set<Formula> processed = CheckFormulaPreprocess(fileName, kb, f, formulaStartLine, msgs);
             CheckSUMOtoTFAformErrors(fileName, f, formulaStartLine, processed, msgs);
@@ -164,6 +186,31 @@ public class KifFileChecker {
             }
         }
     }
+
+    /** ***************************************************************
+     * Check for orphan variables — variables that do not co-occur
+     * with any others in the same logical context.
+     */
+    public static void CheckOrphanVars(String fileName, Formula f, String formulaText, int formulaStartLine, List<ErrRec> msgs) {
+
+        HashMap<String, HashSet<String>> cooccurs = Diagnostics.findOrphanVars(f);
+        for (Map.Entry<String, HashSet<String>> entry : cooccurs.entrySet()) {
+            String var = entry.getKey();
+            HashSet<String> linked = entry.getValue();
+
+            if (linked == null || linked.isEmpty()) {
+                int[] rel = findLineInFormula(formulaText, var);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1)
+                            + (rel[0] >= 0 ? rel[0] : 0);
+                int absCol = rel[1] >= 0 ? rel[1] : 0;
+                String[] lines = formulaText.split("\n", -1);
+                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
+                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + var.length(),
+                        "Orphan variable (no co-occurrence): " + offendingLine));
+            }
+        }
+    }
+
 
     /** ***************************************************************
      * Check for existential quantifiers in antecedents (illegal).

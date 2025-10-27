@@ -45,8 +45,7 @@ public class TPTPChecker {
             if (!po.out.isBlank())
                 results.addAll(parseTptpOutput(fileName, po.out, 1));
         } catch (Throwable t) {
-            results.add(new ErrRec(2, fileName, 0, 0, 1,
-                    "tptp4X check failed: " + t.getMessage()));
+            results.add(new ErrRec(2, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
         }
         return results;
     }
@@ -62,19 +61,14 @@ public class TPTPChecker {
         try {
             TPTPVisitor visitor = new TPTPVisitor();
             Map<String, TPTPFormula> parsed = visitor.parseString(contents);
-
-            // If no formulas were parsed, report as an error
             if (parsed == null || parsed.isEmpty()) {
                 errs.add(new ErrRec(2, fileName, 0, 0, 1,
                         "ANTLR parser found no valid formulas in input"));
             }
-
         } catch (Exception e) {
-            // Catch syntax or lexer exceptions
             errs.add(new ErrRec(2, fileName, 0, 0, 1,
                     "ANTLR parse error: " + e.getMessage()));
         }
-
         return errs;
     }
 
@@ -185,17 +179,13 @@ public class TPTPChecker {
         }
     }
 
-
     private static List<ErrRec> parseWithAntlr(String contents, String fileName) {
         List<ErrRec> results = new ArrayList<>();
-
         try {
             CharStream input = CharStreams.fromString(contents);
             TptpLexer lexer = new TptpLexer(input);
             CommonTokenStream tokens = new CommonTokenStream(lexer);
             TptpParser parser = new TptpParser(tokens);
-
-            // collect syntax errors
             parser.removeErrorListeners();
             parser.addErrorListener(new BaseErrorListener() {
                 @Override
@@ -204,7 +194,7 @@ public class TPTPChecker {
                                         int line, int charPositionInLine,
                                         String msg, RecognitionException e) {
                     results.add(new ErrRec(
-                            2, // severity = error
+                            2, 
                             fileName,
                             line - 1,
                             charPositionInLine,
@@ -213,10 +203,7 @@ public class TPTPChecker {
                     ));
                 }
             });
-
-            // top-level rule: normally 'tptp_file' or 'tptp_input'
             parser.tptp_file();
-
         } catch (Throwable t) {
             results.add(new ErrRec(
                     2,
