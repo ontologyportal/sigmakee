@@ -4,6 +4,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.tree.*;
+import tptp_parser.TPTPVisitor;
+import tptp_parser.TPTPFormula;
+import tptp_parser.TptpLexer;
+import tptp_parser.TptpParser;
 
 public class TPTPChecker {
 
@@ -30,6 +36,7 @@ public class TPTPChecker {
         List<ErrRec> results = new ArrayList<>();
         if (contents == null || contents.isBlank())
             return results;
+        results.addAll(checkWithAntlr(contents, fileName));
         try {
             File tmp = writeTempFile(contents, ".tptp");
             ProcessOutput po = runTptp4x(tmp, "-w", "-z", "-u", "machine");
@@ -38,10 +45,33 @@ public class TPTPChecker {
             if (!po.out.isBlank())
                 results.addAll(parseTptpOutput(fileName, po.out, 1));
         } catch (Throwable t) {
-            results.add(new ErrRec(2, fileName, 0, 0, 1,"TPTP check failed: " + t.getMessage()));
+            results.add(new ErrRec(2, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
         }
         return results;
     }
+
+
+    /**
+     * Parse TPTP text using the ANTLR-based TPTPVisitor.
+     * Returns ErrRecs for any syntax problems or empty results.
+     */
+    private static List<ErrRec> checkWithAntlr(String contents, String fileName) {
+        List<ErrRec> errs = new ArrayList<>();
+
+        try {
+            TPTPVisitor visitor = new TPTPVisitor();
+            Map<String, TPTPFormula> parsed = visitor.parseString(contents);
+            if (parsed == null || parsed.isEmpty()) {
+                errs.add(new ErrRec(2, fileName, 0, 0, 1,
+                        "ANTLR parser found no valid formulas in input"));
+            }
+        } catch (Exception e) {
+            errs.add(new ErrRec(2, fileName, 0, 0, 1,
+                    "ANTLR parse error: " + e.getMessage()));
+        }
+        return errs;
+    }
+
 
     /**
      * Parse TPTP4X output lines into ErrRec objects.
@@ -92,6 +122,9 @@ public class TPTPChecker {
                     lines[0] = lines[0].replaceFirst("^\\s+", "");
                 return String.join(System.lineSeparator(), lines);
             } else {
+                System.err.println("[TPTPChecker] STDOUT:\n" + po.out);
+                System.err.println("[TPTPChecker] STDERR:\n" + po.err);
+                System.err.println("[TPTPChecker] Temp file: " + tmp.getAbsolutePath());
                 System.err.println("[TPTPChecker] Formatting failed for: " + fileName);
                 System.err.println(po.err != null && !po.err.isBlank() ? po.err : po.out);
                 return inputText;
@@ -145,6 +178,45 @@ public class TPTPChecker {
             this.err = err;
         }
     }
+
+    private static List<ErrRec> parseWithAntlr(String contents, String fileName) {
+        List<ErrRec> results = new ArrayList<>();
+        try {
+            CharStream input = CharStreams.fromString(contents);
+            TptpLexer lexer = new TptpLexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            TptpParser parser = new TptpParser(tokens);
+            parser.removeErrorListeners();
+            parser.addErrorListener(new BaseErrorListener() {
+                @Override
+                public void syntaxError(Recognizer<?, ?> recognizer,
+                                        Object offendingSymbol,
+                                        int line, int charPositionInLine,
+                                        String msg, RecognitionException e) {
+                    results.add(new ErrRec(
+                            2, 
+                            fileName,
+                            line - 1,
+                            charPositionInLine,
+                            charPositionInLine + 1,
+                            "ANTLR syntax error: " + msg
+                    ));
+                }
+            });
+            parser.tptp_file();
+        } catch (Throwable t) {
+            results.add(new ErrRec(
+                    2,
+                    fileName,
+                    0,
+                    0,
+                    1,
+                    "ANTLR parse failed: " + t.getMessage()
+            ));
+        }
+        return results;
+    }
+
 
     private static void showHelp() {
         System.out.println("Usage: java com.articulate.sigma.TPTPChecker [options]");

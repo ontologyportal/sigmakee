@@ -92,7 +92,8 @@ window.initialErrorMask = [
     </div>
     <textarea id="codeEditor" style="display: none;"><%=
       codeContent != null ? esc(codeContent) :
-      (fileContent != null ? String.join("\n", fileContent) : "")
+      (fileContent != null ? String.join("\n", fileContent) :
+      esc("(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))\n"))
     %></textarea>
   </div>
   <div>
@@ -109,7 +110,7 @@ window.initialErrorMask = [
 <%
       } else {
 %>
-      Ready to check TPTP code. Enter code in the editor or upload a file.
+      Ready to check code.
 <%
       }
     } else {

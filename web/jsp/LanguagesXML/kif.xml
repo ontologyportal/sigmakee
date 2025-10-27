@@ -1,0 +1,83 @@
+<?xml version="1.0"?>
+
+<!DOCTYPE MODE SYSTEM "xmode.dtd">
+
+<MODE>
+    <PROPS>
+        <PROPERTY NAME="lineComment" VALUE=";" />
+        <PROPERTY NAME="noWordSep" VALUE="_-+?:" />
+        <PROPERTY NAME="unalignedOpenBrackets" VALUE="(" />
+        <PROPERTY NAME="unalignedCloseBrackets" VALUE=")" />
+        <PROPERTY NAME="multipleBracketIndent" VALUE="true" />
+        <PROPERTY NAME="noTabs" VALUE="true" />
+        <PROPERTY NAME="autoIndent" VALUE="simple" />
+        <PROPERTY NAME="maxLineLen" VALUE="70" />
+    </PROPS>
+
+    <RULES IGNORE_CASE="FALSE"
+           HIGHLIGHT_DIGITS="TRUE"
+           NO_WORD_SEP="_-+?:"
+           DIGIT_RE="-?\d+([./]\d+)?">
+
+        <MARK_FOLLOWING AT_WORD_START="TRUE" TYPE="KEYWORD4">?</MARK_FOLLOWING>
+        <MARK_FOLLOWING AT_WORD_START="TRUE" TYPE="KEYWORD4">@</MARK_FOLLOWING>
+
+        <EOL_SPAN TYPE="COMMENT1">;</EOL_SPAN>
+
+        <SPAN TYPE="LITERAL1" ESCAPE="\">
+            <BEGIN>"</BEGIN>
+            <END>"</END>
+        </SPAN>
+
+        <KEYWORDS>
+            <!-- Logical Operators -->
+            <KEYWORD1>forall</KEYWORD1>
+            <KEYWORD1>exists</KEYWORD1>
+            <KEYWORD1>and</KEYWORD1>
+            <KEYWORD1>or</KEYWORD1>
+            <KEYWORD1>not</KEYWORD1>
+            <KEYWORD1>&lt;=&gt;</KEYWORD1>
+            <KEYWORD1>=&gt;</KEYWORD1>
+
+            <!-- Comparison Operators -->
+            <KEYWORD1>equal</KEYWORD1>
+            <KEYWORD1>greaterThan</KEYWORD1>
+            <KEYWORD1>greaterThanOrEqualTo</KEYWORD1>
+            <KEYWORD1>lessThan</KEYWORD1>
+            <KEYWORD1>lessThanOrEqualTo</KEYWORD1>
+
+            <!-- Definition Predicates -->
+            <KEYWORD2>instance</KEYWORD2>
+            <KEYWORD2>subclass</KEYWORD2>
+            <KEYWORD2>domain</KEYWORD2>
+            <KEYWORD2>domainSubclass</KEYWORD2>
+            <KEYWORD2>range</KEYWORD2>
+            <KEYWORD2>rangeSubclass</KEYWORD2>
+            <KEYWORD2>subAttribute</KEYWORD2>
+            <KEYWORD2>subrelation</KEYWORD2>
+
+            <!-- Math Functions -->
+            <KEYWORD2>AdditionFn</KEYWORD2>
+            <KEYWORD2>SubtractionFn</KEYWORD2>
+            <KEYWORD2>MultiplicationFn</KEYWORD2>
+            <KEYWORD2>DivisionFn</KEYWORD2>
+            <KEYWORD2>FloorFn</KEYWORD2>
+            <KEYWORD2>RoundFn</KEYWORD2>
+            <KEYWORD2>CeilingFn</KEYWORD2>
+            <KEYWORD2>RemainderFn</KEYWORD2>
+
+            <!-- Document Predicates -->
+            <KEYWORD3>documentation</KEYWORD3>
+            <KEYWORD3>comment</KEYWORD3>
+            <KEYWORD3>format</KEYWORD3>
+            <KEYWORD3>termFormat</KEYWORD3>
+            <KEYWORD3>lexicon</KEYWORD3>
+            <KEYWORD3>externalImage</KEYWORD3>
+            <KEYWORD3>synonymousExternalConcept</KEYWORD3>
+
+            <!-- Logical Constants -->
+            <LITERAL2>True</LITERAL2>
+            <LITERAL2>False</LITERAL2>
+        </KEYWORDS>
+    </RULES>
+</MODE>

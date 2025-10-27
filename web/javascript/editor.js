@@ -28,20 +28,30 @@ fileInput.addEventListener('change', () => {
   toggleDropdown();
 });
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
+  await defineModeFromXML("kif", "LanguagesXML/kif.xml");
+  await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
   initializeCodeMirror();
+  console.log("Using mode:", codeEditor.getOption("mode"));
   codeEditors.push("");
+
+  const exampleTPTP = `% Example TPTP file
+  tff(mortal_rule, axiom,
+      (![X]: (man(X) => mortal(X)))
+  ).
+
+  tff(socrates_fact, axiom,
+      man(socrates)
+  ).
+
+  tff(query, conjecture,
+      mortal(socrates)
+  ).`;
+  openFileInNewTab("example.tptp", exampleTPTP);
+  toggleDropdown();
+  switchTab(0);
 });
 
-document.addEventListener("click", (e) => {
-  const dropdown = document.getElementById("fileDropdown");
-  const content = document.getElementById("dropdownContent");
-  const arrow = document.getElementById("fileArrow");
-  if (!dropdown.contains(e.target)) {
-    content.style.display = "none";
-    arrow.textContent = "›";
-  }
-});
 
 // ------------------------------------------------------------------
 // Syntax highlighting / coloring
@@ -53,68 +63,88 @@ const xmlText = await response.text();
 const parser = new DOMParser();
 const xml = parser.parseFromString(xmlText, 'text/xml');
 const colorMap = {
-    'KEYWORD1': 'cm-keyword1',
-    'KEYWORD2': 'cm-keyword2',
-    'KEYWORD3': 'cm-keyword3',
-    'KEYWORD4': 'cm-keyword4',
-    'COMMENT1': 'cm-comment',
-    'LITERAL1': 'cm-string',
-    'LITERAL2': 'cm-literal',
+  'KEYWORD1': 'keyword1',
+  'KEYWORD2': 'keyword2',
+  'KEYWORD3': 'keyword3',
+  'KEYWORD4': 'keyword4',
+  'COMMENT1': 'comment',
+  'LITERAL1': 'string',
+  'LITERAL2': 'literal',
+  'FUNCTION': 'function',
 };
+
 const keywords = {};
 for (const type in colorMap)
     keywords[type] = [...xml.getElementsByTagName(type)].map(n => n.textContent);
 return { colorMap, keywords };
 }
 
-CodeMirror.defineMode("kif", function() {
-  return {
-    token: function(stream, state) {
-      if (stream.match(/;.*/))
-        return "kif-comment";
-      if (stream.match(/"(?:[^"\\]|\\.)*"/))
-        return "kif-string";
-      if (stream.match(/\b\d+(?:\.\d+)?\b/))
-        return "kif-number";
-      if (stream.match(/\?[A-Za-z0-9_-]+/))
-        return "kif-variable";
-      if (stream.match(/\b(?:exists|forall)\b/))
-        return "kif-quantifier";
-      if (stream.match(/(?:\band\b|\bor\b|\bnot\b|=>|<=>)/))
-        return "kif-operator";
-      if (stream.match(/\b(?:instance|subclass|domain|range)\b/))
-        return "kif-instance";
-      if (stream.match(/[()]/))
-        return "bracket";
-      if (stream.match(/\s+/))
-        return null;
-      stream.next();
-      return null;
-    }
-  };
-});
+async function defineModeFromXML(modeName, xmlPath) {
 
-async function defineKifMode() {
-const { colorMap, keywords } = await loadKifColors();
-CodeMirror.defineMode("kif", function() {
-  return {
-    token: function(stream, state) {
-      if (stream.match(/;.*/)) return colorMap.COMMENT1;
-      if (stream.match(/"(?:[^"\\]|\\.)*"/)) return colorMap.LITERAL1;
-      if (stream.match(/\b\d+(?:\.\d+)?\b/)) return "number";
-      if (stream.match(/\?[A-Za-z0-9_-]+/)) return colorMap.KEYWORD4;
-      for (const type in keywords) {
-      for (const word of keywords[type]) {
-        if (stream.match(new RegExp(`\\b${word}\\b`))) return colorMap[type];
-      }
-      }
-      if (stream.match(/[()]/)) return "bracket";
-      stream.next();
-      return null;
-    }
+  const response = await fetch(xmlPath);
+  const xmlText = await response.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(xmlText, 'text/xml');
+  const tagTypes = [
+    'KEYWORD1', 'KEYWORD2', 'KEYWORD3', 'KEYWORD4',
+    'LITERAL1', 'LITERAL2', 'COMMENT1', 'FUNCTION',
+    'OPERATOR', 'MARKUP', 'NULL'
+  ];
+  const keywords = {};
+  for (const tag of tagTypes)
+    keywords[tag] = [...xml.getElementsByTagName(tag)].map(n => n.textContent);
+  const commentStart = xml.querySelector('PROPERTY[NAME="lineComment"]')?.getAttribute('VALUE') || ';';
+  const classMap = {
+    'KEYWORD1': 'keyword1',
+    'KEYWORD2': 'keyword2',
+    'KEYWORD3': 'keyword3',
+    'KEYWORD4': 'keyword4',
+    'COMMENT1': 'comment',
+    'LITERAL1': 'string',
+    'LITERAL2': 'literal',
+    'FUNCTION': 'function',
+    'OPERATOR': 'operator',
+    'MARKUP': 'markup',
+    'NULL': 'null'
   };
-});
+
+  // Register mode
+  CodeMirror.defineMode(modeName, function() {
+    return {
+      token: function(stream, state) {
+        // Comments
+        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
+        
+        // Literals
+        if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
+        if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
+
+        // Numbers
+        if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
+
+        // Variables
+        if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
+
+        // Keywords
+        for (const type in keywords) {
+          for (const word of keywords[type]) {
+            console.log("Word: " + word + ", Type:" + type);
+            if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
+          }
+        }
+
+        // Brackets
+        if (stream.match(/[(){}\[\]]/)) return "bracket";
+
+        // Default
+        stream.next();
+        return null;
+      }
+    };
+  });
+  console.log(`✅ Mode "${modeName}" loaded from ${xmlPath}`);
 }
+
 
 // ------------------------------------------------------------------
 // Editor Functions
@@ -125,12 +155,10 @@ function initializeCodeMirror() {
   const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
   let fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
   let ext = fileName.split('.').pop().toLowerCase();
-  let placeholderText = `Enter your ${ext === 'kif' ? 'KIF' : 'TPTP'} code here...`;
   codeEditor = CodeMirror.fromTextArea(textarea, {
     mode: ext === "kif" ? "kif" : "tptp",
     lineNumbers: true,
     theme: "default",
-    placeholder: placeholderText,
     indentUnit: 2,
     tabSize: 2,
     lineWrapping: true,
