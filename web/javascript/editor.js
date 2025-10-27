@@ -32,6 +32,9 @@ document.addEventListener("DOMContentLoaded", async function() {
   await defineModeFromXML("kif", "LanguagesXML/kif.xml");
   await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
   initializeCodeMirror();
+  if (window.initialErrors || window.initialErrorMask) {
+    highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
+  }
   console.log("Using mode:", codeEditor.getOption("mode"));
   codeEditors.push("");
 
@@ -48,8 +51,11 @@ document.addEventListener("DOMContentLoaded", async function() {
       mortal(socrates)
   ).`;
   openFileInNewTab("example.tptp", exampleTPTP);
-  toggleDropdown();
-  switchTab(0);
+toggleDropdown();
+
+// make sure the newly created tab (last one) stays active
+const tabs = document.querySelectorAll(".tab");
+if (tabs.length) switchTab(tabs.length - 1);
 });
 
 
@@ -128,7 +134,6 @@ async function defineModeFromXML(modeName, xmlPath) {
         // Keywords
         for (const type in keywords) {
           for (const word of keywords[type]) {
-            console.log("Word: " + word + ", Type:" + type);
             if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
           }
         }
@@ -171,26 +176,75 @@ function initializeCodeMirror() {
 let errors = window.initialErrors || [];
 let errorMask = window.initialErrorMask || [];
 
-function highlightErrorLines() {
-  for (const mark of errorMarks)
-    mark.clear();
-  errorMarks = [];
-  if (errors && errors.length > 0 && codeEditor) {
-    for (const err of errors) {
-      const from = { line: err.line, ch: err.start };
-      const to = { line: err.line, ch: err.end };
-      const mark = codeEditor.markText(from, to, { className: "error-text" });
-      errorMarks.push(mark);
-    }
+function renderErrorBox(errors = [], message = null) {
+  const box = document.querySelector(".scroller.msg");
+  if (!box) return;
+
+  if (message) {
+    box.classList.remove("success");
+    box.classList.add("errors-box");
+    box.textContent = message;
+    return;
   }
 
-  if (errorMask && errorMask.length > 0 && codeEditor) {
-    codeEditor.eachLine(lineHandle => codeEditor.removeLineClass(lineHandle, "gutter", "error-line-gutter"));
-    for (let i = 0; i < errorMask.length; i++)
-      if (errorMask[i])
-        codeEditor.addLineClass(i, "gutter", "error-line-gutter");
+  if (!errors.length) {
+    box.classList.remove("errors-box");
+    box.classList.add("success");
+    box.textContent = "✅ No errors found.";
+  } else {
+    box.classList.remove("success");
+    box.classList.add("errors-box");
+    // Pretty print each error similar to ErrRec.toString()
+    box.textContent = errors.map(e => {
+      const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
+      const lineHuman = (Number(e.line) ?? 0) + 1;
+      const colHuman  = (Number(e.start) ?? 0) + 1;
+      return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
+    }).join("\n\n");
   }
 }
+
+function highlightErrors(errors = [], mask = []) {
+  // Clear previous marks
+  for (const m of errorMarks) m.clear();
+  errorMarks = [];
+  if (!window.codeEditor) return;
+
+  // Clear previous gutter classes
+  codeEditor.eachLine(h => {
+    codeEditor.removeLineClass(h, "gutter", "error-line-gutter");
+    codeEditor.removeLineClass(h, "gutter", "warning-line-gutter");
+  });
+
+  // Apply line mask to gutter, if provided
+  if (Array.isArray(mask)) {
+    mask.forEach((isErr, i) => {
+      if (isErr) codeEditor.addLineClass(i, "gutter", "error-line-gutter");
+    });
+  }
+
+  if (!Array.isArray(errors) || errors.length === 0) return;
+
+  const lastLine = Math.max(0, codeEditor.lineCount() - 1);
+  for (const e of errors) {
+    const line = Math.max(0, Math.min(Number(e.line ?? 0), lastLine));
+    const text = codeEditor.getLine(line) || "";
+    const start = Math.max(0, Math.min(Number(e.start ?? 0), text.length));
+    const endRaw = Number(e.end ?? (start + 1));
+    const end = Math.max(start + 1, Math.min(endRaw, text.length || start + 1));
+
+    const from = { line, ch: start };
+    const to   = { line, ch: end };
+    const cls  = (Number(e.type) === 1) ? "warning-text" : "error-text";
+
+    const mark = codeEditor.markText(from, to, { className: cls, title: e.msg || "" });
+    errorMarks.push(mark);
+
+    // Also mark gutter for this exact line
+    codeEditor.addLineClass(line, "gutter", (Number(e.type) === 1) ? "warning-line-gutter" : "error-line-gutter");
+  }
+}
+
 
 function refreshErrorHighlighting() {
   if (codeEditor)
@@ -234,32 +288,43 @@ document.getElementById('kifFile').click();
 }
 
 async function check() {
-const codeContent = codeEditor.getValue();
-if (!codeContent.trim()) return alert("Nothing to check.");
-const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
-try {
-const response = await fetch("EditorServlet", {
-    method: "POST",
-    headers: {
-    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-    },
-    body:
-    "mode=check" +
-    "&fileName=" + encodeURIComponent(fileName) +
-    "&code=" + encodeURIComponent(codeContent)
-});
-const html = await response.text();
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, "text/html");
-const newErrorBox = doc.querySelector(".scroller.msg");
-const currentErrorBox = document.querySelector(".scroller.msg");
-if (newErrorBox && currentErrorBox)
-    currentErrorBox.replaceWith(newErrorBox);
-refreshErrorHighlighting();
-} catch (err) {
-alert("Error checking file: " + err);
-}
+  const codeContent = codeEditor.getValue();
+  if (!codeContent.trim()) return alert("Nothing to check.");
+
+  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
+  const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
+
+  try {
+    const res = await fetch("EditorServlet", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Accept": "application/json"
+      },
+      body: new URLSearchParams({
+        mode: "check",
+        fileName,
+        code: codeContent
+      }).toString()
+    });
+
+    // Fallback guard if server mislabels content-type
+    const isJson = (res.headers.get("content-type") || "").includes("application/json");
+    const payload = isJson ? await res.json() : JSON.parse(await res.text());
+
+    const serverErrors = Array.isArray(payload.errors) ? payload.errors : [];
+    console.log("Server Errors: " + serverErrors);
+    const mask = Array.isArray(payload.errorMask) ? payload.errorMask : [];
+
+    // Update right-hand box text/state
+    renderErrorBox(serverErrors, payload.message);
+
+    // Highlight directly in CodeMirror
+    highlightErrors(serverErrors, mask);
+  } catch (err) {
+    console.error("Check failed:", err);
+    alert("Error checking file: " + err);
+  }
 }
 
 async function formatBuffer() {
