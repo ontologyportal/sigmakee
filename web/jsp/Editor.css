@@ -11,13 +11,47 @@ h3 { margin: 8px 0;}
 .CodeMirror-gutters { background: #f0f0f0; border-right: 1px solid #ddd;}
 .CodeMirror-linenumber { color: #666; padding: 0 8px; min-width: 1.5em;}
 .CodeMirror .error-line { background-color: #ffebee !important;}
-.CodeMirror .error-text,
+.CodeMirror .error-text {
+  background: none !important;
+  position: relative;
+}
+.CodeMirror .error-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0px;
+  height: 4px;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    red 0,
+    red 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  background-size: 6px 4px;
+  pointer-events: none;
+}
 .CodeMirror .warning-text {
-  background-color: rgba(255, 0, 0, 0.35) !important;
-  border-radius: 2px;
-  border-bottom: 2px solid red !important;
-  display: inline-block !important; /* ensures visible background even for narrow chars */
-  min-width: 4px;                   /* give punctuation highlights some width */
+  background: none !important;
+  position: relative;
+}
+.CodeMirror .warning-text::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0px;
+  height: 4px;
+  background-image: repeating-linear-gradient(
+    -45deg,
+    orange 0,
+    orange 1px,
+    transparent 1px,
+    transparent 2px
+  );
+  background-size: 6px 4px;
+  pointer-events: none;
 }
 .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
 .file-name-display { font-family: monospace; font-size: 12px; color: #666; margin-top: 2px;}
