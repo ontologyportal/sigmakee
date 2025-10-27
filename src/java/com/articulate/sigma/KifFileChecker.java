@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * Print CLI usage information.
@@ -65,12 +65,12 @@ public class KifFileChecker {
                 String contents = String.join("\n", FileUtil.readLines(fname));
                 KIF kif = StringToKif(contents, fname, new ArrayList<>());
                 for (Formula f : kif.formulaMap.values()) {
-                    System.out.println("Formula: " + f);
+                    if (debug) System.out.println("Formula: " + f);
                     HashMap<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
                     for (Map.Entry<String, HashSet<String>> e : links.entrySet()) {
-                        System.out.println("  " + e.getKey() + " ↔ " + e.getValue());
+                        if (debug) System.out.println("  " + e.getKey() + " ↔ " + e.getValue());
                     }
-                    System.out.println("---------------------------------------------------");
+                    if (debug) System.out.println("---------------------------------------------------");
                 }
             } catch (Exception e) {
                 System.err.println("Failed to process " + fname);
@@ -84,17 +84,17 @@ public class KifFileChecker {
                 KifFileChecker kfc = new KifFileChecker();
                 String contents = String.join("\n", FileUtil.readLines(fname));
                 List<ErrRec> errors = kfc.check(contents);
-                System.out.println("*******************************************************");
+                if (debug) System.out.println("*******************************************************");
                 if (errors.isEmpty()) {
-                    System.out.println("No errors found in " + fname);
+                    if (debug) System.out.println("No errors found in " + fname);
                 } else {
-                    System.out.println("Diagnostics for " + fname + ":");
+                    if (debug) System.out.println("Diagnostics for " + fname + ":");
                     for (ErrRec e : errors) {
-                        System.out.println(e.toString());
+                        if (debug) System.out.println(e.toString());
                     }
                 }
             } catch (Exception e) {        
-            System.out.println("*******************************************************");
+            if (debug) System.out.println("*******************************************************");
                 System.err.println("Failed to read or check file: " + fname);
                 e.printStackTrace();
             }

@@ -11,7 +11,14 @@ h3 { margin: 8px 0;}
 .CodeMirror-gutters { background: #f0f0f0; border-right: 1px solid #ddd;}
 .CodeMirror-linenumber { color: #666; padding: 0 8px; min-width: 1.5em;}
 .CodeMirror .error-line { background-color: #ffebee !important;}
-.CodeMirror .error-text { background-color: #ffebee; border-bottom: 2px wavy #d32f2f;}
+.CodeMirror .error-text,
+.CodeMirror .warning-text {
+  background-color: rgba(255, 0, 0, 0.35) !important;
+  border-radius: 2px;
+  border-bottom: 2px solid red !important;
+  display: inline-block !important; /* ensures visible background even for narrow chars */
+  min-width: 4px;                   /* give punctuation highlights some width */
+}
 .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
 .file-name-display { font-family: monospace; font-size: 12px; color: #666; margin-top: 2px;}
 .file-menu-bar { display: flex; justify-content: flex-start; margin-bottom: 4px;}

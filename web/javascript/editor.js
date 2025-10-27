@@ -17,7 +17,6 @@ fileInput.addEventListener('change', () => {
   const reader = new FileReader();
   reader.onload = (e) => {
     const contents = e.target.result;
-    console.log(`📄 Loaded file: ${file.name} (${contents.length} chars)`);
     openFileInNewTab(file.name, contents);
   };
   reader.onerror = (e) => {
@@ -35,7 +34,6 @@ document.addEventListener("DOMContentLoaded", async function() {
   if (window.initialErrors || window.initialErrorMask) {
     highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
   }
-  console.log("Using mode:", codeEditor.getOption("mode"));
   codeEditors.push("");
 
   const exampleTPTP = `% Example TPTP file
@@ -52,10 +50,6 @@ document.addEventListener("DOMContentLoaded", async function() {
   ).`;
   openFileInNewTab("example.tptp", exampleTPTP);
 toggleDropdown();
-
-// make sure the newly created tab (last one) stays active
-const tabs = document.querySelectorAll(".tab");
-if (tabs.length) switchTab(tabs.length - 1);
 });
 
 
@@ -147,7 +141,6 @@ async function defineModeFromXML(modeName, xmlPath) {
       }
     };
   });
-  console.log(`✅ Mode "${modeName}" loaded from ${xmlPath}`);
 }
 
 
@@ -170,7 +163,6 @@ function initializeCodeMirror() {
     autoCloseBrackets: true,
     matchBrackets: true
   });
-  highlightErrorLines();
 }
 
 let errors = window.initialErrors || [];
@@ -205,59 +197,57 @@ function renderErrorBox(errors = [], message = null) {
 }
 
 function highlightErrors(errors = [], mask = []) {
-  // Clear previous marks
   for (const m of errorMarks) m.clear();
   errorMarks = [];
-  if (!window.codeEditor) return;
+
+  const editor = codeEditors[activeTab]?.cm || codeEditor;
+  console.log("ActiveTab: " + activeTab);
+  if (!editor) return;
 
   // Clear previous gutter classes
-  codeEditor.eachLine(h => {
-    codeEditor.removeLineClass(h, "gutter", "error-line-gutter");
-    codeEditor.removeLineClass(h, "gutter", "warning-line-gutter");
+  editor.eachLine(h => {
+    editor.removeLineClass(h, "gutter", "error-line-gutter");
+    editor.removeLineClass(h, "gutter", "warning-line-gutter");
   });
 
-  // Apply line mask to gutter, if provided
+  // Apply line mask
   if (Array.isArray(mask)) {
     mask.forEach((isErr, i) => {
-      if (isErr) codeEditor.addLineClass(i, "gutter", "error-line-gutter");
+      if (isErr) editor.addLineClass(i, "gutter", "error-line-gutter");
     });
   }
 
   if (!Array.isArray(errors) || errors.length === 0) return;
 
-  const lastLine = Math.max(0, codeEditor.lineCount() - 1);
+  const lastLine = Math.max(0, editor.lineCount() - 1);
   for (const e of errors) {
     const line = Math.max(0, Math.min(Number(e.line ?? 0), lastLine));
-    const text = codeEditor.getLine(line) || "";
+    const text = editor.getLine(line) || "";
     const start = Math.max(0, Math.min(Number(e.start ?? 0), text.length));
     const endRaw = Number(e.end ?? (start + 1));
     const end = Math.max(start + 1, Math.min(endRaw, text.length || start + 1));
 
-    const from = { line, ch: start };
-    const to   = { line, ch: end };
+    const from = { line, ch: e.start };
+    const to   = { line, ch: e.end };
     const cls  = (Number(e.type) === 1) ? "warning-text" : "error-text";
 
-    const mark = codeEditor.markText(from, to, { className: cls, title: e.msg || "" });
+    const mark = editor.markText(from, to, { className: cls, title: e.msg || "" });
+    
     errorMarks.push(mark);
 
-    // Also mark gutter for this exact line
-    codeEditor.addLineClass(line, "gutter", (Number(e.type) === 1) ? "warning-line-gutter" : "error-line-gutter");
+    editor.addLineClass(line, "gutter", cls === "warning-text"
+      ? "warning-line-gutter"
+      : "error-line-gutter");
   }
-}
-
-
-function refreshErrorHighlighting() {
-  if (codeEditor)
-    setTimeout(highlightErrorLines, 100);
 }
 
 // ------------------------------------------------------------------
 // Menu options
 
 function toggleDropdown() {
-const content = document.getElementById("dropdownContent");
-const isVisible = content.style.display === "block";
-content.style.display = isVisible ? "none" : "block";
+  const content = document.getElementById("dropdownContent");
+  const isVisible = content.style.display === "block";
+  content.style.display = isVisible ? "none" : "block";
 }
 
 function newFile(){
@@ -313,7 +303,16 @@ async function check() {
     const payload = isJson ? await res.json() : JSON.parse(await res.text());
 
     const serverErrors = Array.isArray(payload.errors) ? payload.errors : [];
-    console.log("Server Errors: " + serverErrors);
+    console.group("🔎 Server Errors");
+    if (Array.isArray(serverErrors) && serverErrors.length > 0) {
+      console.table(serverErrors); // shows each field in columns
+      serverErrors.forEach((err, i) => {
+        console.log(`#${i}:`, JSON.stringify(err, null, 2));
+      });
+    } else {
+      console.log("No errors received from server.");
+    }
+    console.groupEnd();
     const mask = Array.isArray(payload.errorMask) ? payload.errorMask : [];
 
     // Update right-hand box text/state
@@ -362,37 +361,37 @@ async function formatBuffer() {
 // Tabs Management
 
 function addTab(name = null) {
-if (!name) {
-const inputName = prompt("Enter a name for the new file:", "Untitled.kif");
-if (!inputName) return;
-name = inputName.trim();
-}
-const tabBar = document.getElementById("tabBar");
-const newIndex = codeEditors.length;
-const tab = document.createElement("div");
-tab.className = "tab";
-tab.setAttribute("data-index", newIndex);
-const label = document.createElement("span");
-label.textContent = name;
-label.onclick = (e) => {
-if (e.target.classList.contains("close-btn")) return;
-switchTab(newIndex);
-};
-const closeBtn = document.createElement("span");
-closeBtn.textContent = 'x';
-closeBtn.className = "close-btn";
-closeBtn.onclick = (e) => {
-e.stopPropagation();
-closeTab(newIndex);
-};
-tab.appendChild(label);
-tab.appendChild(closeBtn);
-tabBar.appendChild(tab);
-if (codeEditors.length > activeTab)
-codeEditors[activeTab] = codeEditor.getValue();
-codeEditors.push("");
-switchTab(newIndex, true);
-toggleDropdown();
+  if (!name) {
+  const inputName = prompt("Enter a name for the new file:", "Untitled.kif");
+  if (!inputName) return;
+  name = inputName.trim();
+  }
+  const tabBar = document.getElementById("tabBar");
+  const newIndex = codeEditors.length;
+  const tab = document.createElement("div");
+  tab.className = "tab";
+  tab.setAttribute("data-index", newIndex);
+  const label = document.createElement("span");
+  label.textContent = name;
+  label.onclick = (e) => {
+  if (e.target.classList.contains("close-btn")) return;
+  switchTab(newIndex);
+  };
+  const closeBtn = document.createElement("span");
+  closeBtn.textContent = 'x';
+  closeBtn.className = "close-btn";
+  closeBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeTab(newIndex);
+  };
+  tab.appendChild(label);
+  tab.appendChild(closeBtn);
+  tabBar.appendChild(tab);
+  if (codeEditors.length > activeTab)
+  codeEditors[activeTab] = codeEditor.getValue();
+  codeEditors.push({ cm: null, value: "" });
+  switchTab(newIndex, true);
+  toggleDropdown();
 }
 
 function switchTab(index, isNew = false) {
@@ -428,33 +427,48 @@ updatedTabs.forEach((tab, i) => tab.setAttribute("data-index", i));
 }
 
 function openFileInNewTab(fileName, fileContents) {
-  if (!fileName) {
-    console.error("openFileInNewTab: missing file name.");
-    return;
-  }
+  if (!fileName) return;
 
   // Save current buffer before switching
   if (codeEditors.length > activeTab && codeEditor) {
-    codeEditors[activeTab] = codeEditor.getValue();
+    codeEditors[activeTab].value = codeEditor.getValue();
   }
 
   // Create the new tab
   addTab(fileName);
 
-  // Set tab content and mode
   const ext = fileName.split('.').pop().toLowerCase();
   const mode = ext === 'kif' ? 'kif' : 'tptp';
-  codeEditor.setOption('mode', mode);
-  codeEditor.setValue(fileContents || "");
 
-  // Store it in the editors array
-  codeEditors[activeTab] = fileContents || "";
+  // Remove old CodeMirror DOM node if any
+  const old = document.querySelector(".CodeMirror");
+  if (old) old.remove();
 
-  // Update the filename display
+  // Create a new textarea
+  const textarea = document.createElement("textarea");
+  textarea.value = fileContents || "";
+  textarea.id = "codeEditor";
+  document.querySelector(".tab-bar").after(textarea);
+
+  // Create a fresh CodeMirror instance
+  codeEditor = CodeMirror.fromTextArea(textarea, {
+    mode,
+    lineNumbers: true,
+    theme: "default",
+    indentUnit: 2,
+    tabSize: 2,
+    lineWrapping: true,
+    autoCloseBrackets: true,
+    matchBrackets: true
+  });
+
+  // Store the instance & text
+  codeEditors[activeTab] = { cm: codeEditor, value: fileContents || "" };
+
   if (fileNameSpan) fileNameSpan.textContent = 'Opened: ' + fileName;
-
-  console.log(`✅ Created new tab "${fileName}" with ${fileContents?.length || 0} chars`);
+  console.log(`✅ Opened "${fileName}" as ${mode} with ${fileContents?.length || 0} chars`);
 }
+
 
 
 // ------------------------------------------------------------------

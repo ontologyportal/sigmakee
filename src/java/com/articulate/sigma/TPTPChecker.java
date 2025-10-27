@@ -13,6 +13,8 @@ import tptp_parser.TptpParser;
 
 public class TPTPChecker {
 
+    static boolean debug = false;
+
     /**
      * Run syntax & warning checks on TPTP content using tptp4X,
      * returning a list of ErrRec diagnostics.
@@ -21,6 +23,7 @@ public class TPTPChecker {
      * @return list of ErrRec objects (errors & warnings)
      */
     public static List<ErrRec> check(String contents) {
+    
         return check(contents, "(buffer)");
     }
 
@@ -33,6 +36,7 @@ public class TPTPChecker {
      * @return list of ErrRec objects
      */
     public static List<ErrRec> check(String contents, String fileName) {
+        
         List<ErrRec> results = new ArrayList<>();
         if (contents == null || contents.isBlank())
             return results;
@@ -45,33 +49,29 @@ public class TPTPChecker {
             if (!po.out.isBlank())
                 results.addAll(parseTptpOutput(fileName, po.out, 1));
         } catch (Throwable t) {
-            results.add(new ErrRec(2, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
+            results.add(new ErrRec(0, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
         }
         return results;
     }
-
 
     /**
      * Parse TPTP text using the ANTLR-based TPTPVisitor.
      * Returns ErrRecs for any syntax problems or empty results.
      */
     private static List<ErrRec> checkWithAntlr(String contents, String fileName) {
+        
         List<ErrRec> errs = new ArrayList<>();
-
         try {
             TPTPVisitor visitor = new TPTPVisitor();
             Map<String, TPTPFormula> parsed = visitor.parseString(contents);
             if (parsed == null || parsed.isEmpty()) {
-                errs.add(new ErrRec(2, fileName, 0, 0, 1,
-                        "ANTLR parser found no valid formulas in input"));
+                errs.add(new ErrRec(0, fileName, 0, 0, 1, "ANTLR parser found no valid formulas in input"));
             }
         } catch (Exception e) {
-            errs.add(new ErrRec(2, fileName, 0, 0, 1,
-                    "ANTLR parse error: " + e.getMessage()));
+            errs.add(new ErrRec(0, fileName, 0, 0, 1, "ANTLR parse error: " + e.getMessage()));
         }
         return errs;
     }
-
 
     /**
      * Parse TPTP4X output lines into ErrRec objects.
@@ -83,25 +83,40 @@ public class TPTPChecker {
      */
     private static List<ErrRec> parseTptpOutput(String fileName, String text, int severity) {
         List<ErrRec> recs = new ArrayList<>();
+        if (text == null || text.isBlank()) return recs;
+
         String[] lines = text.split("\\R");
         for (String line : lines) {
             if (line.isBlank()) continue;
+
             int lineNum = 0;
             int start = 0;
             int end = 1;
             String msg = line;
-            java.util.regex.Matcher m = java.util.regex.Pattern
-                    .compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)")
-                    .matcher(line);
-            if (m.find()) {
+
+            // --- Match either the SZS "Line X Char Y" form or "(file):X:Y" form
+            java.util.regex.Matcher m1 = java.util.regex.Pattern
+                .compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)").matcher(line);
+            java.util.regex.Matcher m2 = java.util.regex.Pattern
+                .compile(":(\\d+):(\\d+)").matcher(line);
+
+            if (m1.find()) {
                 try {
-                    lineNum = Integer.parseInt(m.group(1)) - 1;
-                    start = Integer.parseInt(m.group(2)) - 1;
-                    end = start + 1;
-                } catch (NumberFormatException ignored) { }
+                    lineNum = Integer.parseInt(m1.group(1)) - 1;  // 0-based for CodeMirror
+                    start   = Integer.parseInt(m1.group(2)) - 1;
+                    end     = start + 1;
+                } catch (NumberFormatException ignored) {}
+            } else if (m2.find()) {
+                try {
+                    lineNum = Integer.parseInt(m2.group(1)) - 1;
+                    start   = Integer.parseInt(m2.group(2)) - 1;
+                    end     = start + 1;
+                } catch (NumberFormatException ignored) {}
             }
-            if (line.contains("SZS status") || line.contains("SyntaxError") || m.find())
-                recs.add(new ErrRec(severity, fileName, lineNum, start, end, msg));
+
+            if (line.contains("SZS status") || line.contains("SyntaxError") || line.contains("ERROR") || line.contains("WARNING")) {
+                recs.add(new ErrRec(0, fileName, lineNum, start, end, msg));
+            }
         }
         return recs;
     }
@@ -113,6 +128,7 @@ public class TPTPChecker {
      * @return Formatted TPTP text, or null if formatting failed.
      */
     public static String formatTptpText(String inputText, String fileName) {
+        
         try {
             File tmp = writeTempFile(inputText, ".tptp");
             ProcessOutput po = runTptp4x(tmp, "-ftptp", "-uhuman");
@@ -140,6 +156,7 @@ public class TPTPChecker {
      * Utility: Write text to a temporary file.
      */
     private static File writeTempFile(String text, String extension) throws IOException {
+        
         File tempFile = File.createTempFile("tptp_format_", extension);
         tempFile.deleteOnExit();
         try (FileWriter writer = new FileWriter(tempFile)) {
@@ -152,6 +169,7 @@ public class TPTPChecker {
      * Utility: Run tptp4X and capture output.
      */
     private static ProcessOutput runTptp4x(File inputFile, String... args) throws IOException, InterruptedException {
+        
         String[] cmd = new String[args.length + 2];
         cmd[0] = "tptp4X";
         System.arraycopy(args, 0, cmd, 1, args.length);
@@ -169,6 +187,7 @@ public class TPTPChecker {
      * Simple holder for process output.
      */
     private static class ProcessOutput {
+        
         final int code;
         final String out;
         final String err;
@@ -180,6 +199,7 @@ public class TPTPChecker {
     }
 
     private static List<ErrRec> parseWithAntlr(String contents, String fileName) {
+        
         List<ErrRec> results = new ArrayList<>();
         try {
             CharStream input = CharStreams.fromString(contents);
@@ -194,7 +214,7 @@ public class TPTPChecker {
                                         int line, int charPositionInLine,
                                         String msg, RecognitionException e) {
                     results.add(new ErrRec(
-                            2, 
+                            0, 
                             fileName,
                             line - 1,
                             charPositionInLine,
@@ -206,7 +226,7 @@ public class TPTPChecker {
             parser.tptp_file();
         } catch (Throwable t) {
             results.add(new ErrRec(
-                    2,
+                    0,
                     fileName,
                     0,
                     0,
@@ -232,6 +252,7 @@ public class TPTPChecker {
     }
 
     public static void main(String[] args) {
+        
         if (args.length == 0 || args[0].equals("-h") || args[0].equals("--help")) {
             showHelp();
             return;
@@ -248,7 +269,7 @@ public class TPTPChecker {
             String inputFormula = sb.toString().trim();
             TPTPChecker formatter = new TPTPChecker();
             String formatted = formatter.formatTptpText(inputFormula, "(command-line)");
-            if (formatted != null) {
+            if (formatted != null && debug) {
                 System.out.println("=== Formatted TPTP ===");
                 System.out.println(formatted);
             } else {
