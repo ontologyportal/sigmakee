@@ -70,8 +70,8 @@ h3 { margin: 8px 0;}
 .tab:hover { background:#cbe0ff;}  
 .divider { border: none; border-top: 1px solid #ccc; margin: 4px 0 8px 0;}
 .CodeMirror .cm-keyword1 { color: #00428d; font-weight: bold; }
-.CodeMirror .cm-keyword2 { color: rgb(0, 130, 7); }
-.CodeMirror .cm-keyword3 { color: rgb(0, 126, 199); }
+.CodeMirror .cm-keyword2 { color: rgb(0, 130, 7); font-weight: bold}
+.CodeMirror .cm-keyword3 { color: rgb(0, 126, 199); font-weight: bold}
 .CodeMirror .cm-keyword4 { color: rgb(0, 221, 255); }
 .CodeMirror .cm-comment  { color: #999; font-style: italic; }
 .CodeMirror .cm-string   { color: rgb(204, 0, 187); }

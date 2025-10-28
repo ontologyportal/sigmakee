@@ -34,9 +34,13 @@ document.addEventListener("DOMContentLoaded", async function() {
   await defineModeFromXML("kif", "LanguagesXML/kif.xml");
   await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
   initializeCodeMirror();
+
   if (window.initialErrors || window.initialErrorMask)
     highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
+
   codeEditors.push("");
+
+  // 📘 Example TPTP
   const exampleTPTP = `% Example TPTP file
 tff(mortal_rule, axiom,
     (![X]: (man(X) => mortal(X)))
@@ -49,13 +53,41 @@ tff(socrates_fact, axiom,
 tff(query, conjecture,
     mortal(socrates)
 ).`;
+
+  // 📘 Example files for all TPTP dialects
+  const exampleTHF = `% Example THF (Typed Higher-Order Form)
+thf(example_thf, conjecture,
+    ( ![P: $i > $o, X: $i]: ( P @ X ) )
+).`;
+
+  const exampleTFF = `% Example TFF (Typed First-Order Form)
+tff(example_tff, axiom,
+    ![X: $i]: ( man(X) => mortal(X) )
+).`;
+
+  const exampleFOF = `% Example FOF (First-Order Form)
+fof(example_fof, axiom,
+    ![X]: ( man(X) => mortal(X) )
+).`;
+
+  const exampleCNF = `% Example CNF (Clausal Normal Form)
+cnf(example_cnf, axiom,
+    ( ~man(X) | mortal(X) )
+).`;
+
   openFileInNewTab("example.tptp", exampleTPTP);
+  openFileInNewTab("example.thf", exampleTHF);
+  openFileInNewTab("example.tff", exampleTFF);
+  openFileInNewTab("example.fof", exampleFOF);
+  openFileInNewTab("example.cnf", exampleCNF);
   toggleDropdown();
-  switchTab(0);
+  switchTab(0); // Show the first tab by default
 });
+
 
 // ------------------------------------------------------------------
 // Syntax highlighting / coloring
+
 async function loadKifColors() {
   const response = await fetch('/sigma/modes/kif.xml');
   const xmlText = await response.text();
@@ -78,7 +110,6 @@ async function loadKifColors() {
 }
 
 async function defineModeFromXML(modeName, xmlPath) {
-
   const response = await fetch(xmlPath);
   const xmlText = await response.text();
   const parser = new DOMParser();
@@ -109,52 +140,39 @@ async function defineModeFromXML(modeName, xmlPath) {
   CodeMirror.defineMode(modeName, function() {
   return {
     token: function(stream, state) {
-
       if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
       if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
       if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
-      if (stream.match(/\[[^\]]*\]/)) {
-        return classMap['LITERAL1']; // or 'string' directly if you prefer
-      }
-      // ✅ Match numbers that are standalone or inside parentheses — never attached to letters
+      if (stream.match(/\[[^\]]*\]/)) return classMap['LITERAL1'];
       if (stream.match(/\d+(?:\.\d+)?/)) {
         const cur = stream.current();
         const start = stream.start;
         const end = stream.pos;
         const prev = start > 0 ? stream.string.charAt(start - 1) : '';
         const next = end < stream.string.length ? stream.string.charAt(end) : '';
-
-        // Only allow numbers surrounded by whitespace, parentheses, or start/end of line
         const validBefore = !prev || /[\s(]/.test(prev);
         const validAfter = !next || /[\s)]/.test(next);
         const noLetterNearby = !(/[A-Za-z]/.test(prev) || /[A-Za-z]/.test(next));
-
-        if (validBefore && validAfter && noLetterNearby) {
+        if (validBefore && validAfter && noLetterNearby)
           return "number";
-        }
-
-        // ❌ If adjacent to letters, undo match (e.g., Mary123)
         stream.backUp(cur.length);
       }
-
       if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
-      for (const type in keywords) {
-        for (const word of keywords[type]) {
+      for (const type in keywords)
+        for (const word of keywords[type])
           if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
-        }
-      }
-      if (stream.match(/[()]/)) return classMap['MARKUP'];   // use .cm-markup for ( and )
-      if (stream.match(/[\[\]{}]/)) return "bracket";        // keep [] and {} as gray
+      if (stream.match(/[()]/)) return classMap['MARKUP'];
+      if (stream.match(/[\[\]{}]/)) return "bracket";
       stream.next();
       return null;
     }
   };
 });
-
 }
 
 // ------------------------------------------------------------------
 // Editor Functions
+
 function initializeCodeMirror() {
   const textarea = document.getElementById("codeEditor");
   const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
@@ -363,14 +381,14 @@ function addTab(name = null) {
   closeBtn.textContent = 'x';
   closeBtn.className = "close-btn";
   closeBtn.onclick = (e) => {
-  e.stopPropagation();
-  closeTab(newIndex);
+    e.stopPropagation();
+    closeTab(newIndex);
   };
   tab.appendChild(label);
   tab.appendChild(closeBtn);
   tabBar.appendChild(tab);
   if (codeEditors.length > activeTab)
-  codeEditors[activeTab] = codeEditor.getValue();
+    codeEditors[activeTab] = codeEditor.getValue();
   codeEditors.push({ cm: null, value: "" });
   switchTab(newIndex, true);
   toggleDropdown();
@@ -385,13 +403,11 @@ function switchTab(index, isNew = false) {
   if (isNew) codeEditor.setValue("");
   else if (codeEditors[index] !== undefined)
     codeEditor.setValue(codeEditors[index]);
-  // 🟢 Determine new mode based on file extension and update CodeMirror
   const activeTabElem = tabs[index]?.querySelector("span:not(.close-btn)");
   const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
   const ext = fileName.split(".").pop().toLowerCase();
   const mode = ext === "kif" ? "kif" : "tptp";
   codeEditor.setOption("mode", mode);
-  console.log(`🌀 Switched to tab ${index} (${fileName}) using mode: ${mode}`);
 }
 
 
@@ -457,9 +473,34 @@ function checkFileSize() {
     const file = fileInput.files[0];
     const maxSize = 200 * 1024;
     if (file.size > maxSize) {
-        alert("File is too large. Maximum allowed size is 200 KB.");
-        return false;
+      alert("File is too large. Maximum allowed size is 200 KB.");
+      return false;
     }
   }
   return true;
 }
+
+const exampleTHF = `% Example THF (Typed Higher-Order Form)
+thf(example_thf, conjecture,
+    ( ![P: $i > $o, X: $i]: ( P @ X ) )
+).`;
+
+const exampleTFF = `% Example TFF (Typed First-Order Form)
+tff(example_tff, axiom,
+    ![X: $i]: ( man(X) => mortal(X) )
+).`;
+
+const exampleFOF = `% Example FOF (First-Order Form)
+fof(example_fof, axiom,
+    ![X]: ( man(X) => mortal(X) )
+).`;
+
+const exampleCNF = `% Example CNF (Clausal Normal Form)
+cnf(example_cnf, axiom,
+    ( ~man(X) | mortal(X) )
+).`;
+
+const exampleP = `% Example P (Propositional)
+p(proposition, conjecture,
+    ( (a & b) => c )
+).`;
