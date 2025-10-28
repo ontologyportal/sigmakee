@@ -116,14 +116,35 @@ async function defineModeFromXML(modeName, xmlPath) {
       if (stream.match(/\[[^\]]*\]/)) {
         return classMap['LITERAL1']; // or 'string' directly if you prefer
       }
-      if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
+      // ✅ Match numbers that are standalone or inside parentheses — never attached to letters
+      if (stream.match(/\d+(?:\.\d+)?/)) {
+        const cur = stream.current();
+        const start = stream.start;
+        const end = stream.pos;
+        const prev = start > 0 ? stream.string.charAt(start - 1) : '';
+        const next = end < stream.string.length ? stream.string.charAt(end) : '';
+
+        // Only allow numbers surrounded by whitespace, parentheses, or start/end of line
+        const validBefore = !prev || /[\s(]/.test(prev);
+        const validAfter = !next || /[\s)]/.test(next);
+        const noLetterNearby = !(/[A-Za-z]/.test(prev) || /[A-Za-z]/.test(next));
+
+        if (validBefore && validAfter && noLetterNearby) {
+          return "number";
+        }
+
+        // ❌ If adjacent to letters, undo match (e.g., Mary123)
+        stream.backUp(cur.length);
+      }
+
       if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
       for (const type in keywords) {
         for (const word of keywords[type]) {
           if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
         }
       }
-      if (stream.match(/[(){}\[\]]/)) return "bracket";
+      if (stream.match(/[()]/)) return classMap['MARKUP'];   // use .cm-markup for ( and )
+      if (stream.match(/[\[\]{}]/)) return "bracket";        // keep [] and {} as gray
       stream.next();
       return null;
     }
