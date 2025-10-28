@@ -38,17 +38,17 @@ document.addEventListener("DOMContentLoaded", async function() {
     highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
   codeEditors.push("");
   const exampleTPTP = `% Example TPTP file
-  tff(mortal_rule, axiom,
-      (![X]: (man(X) => mortal(X)))
-  ).
+tff(mortal_rule, axiom,
+    (![X]: (man(X) => mortal(X)))
+).
 
-  tff(socrates_fact, axiom,
-      man(socrates)
-  ).
+tff(socrates_fact, axiom,
+    man(socrates)
+).
 
-  tff(query, conjecture,
-      mortal(socrates)
-  ).`;
+tff(query, conjecture,
+    mortal(socrates)
+).`;
   openFileInNewTab("example.tptp", exampleTPTP);
   toggleDropdown();
   switchTab(0);
@@ -109,7 +109,7 @@ async function defineModeFromXML(modeName, xmlPath) {
   CodeMirror.defineMode(modeName, function() {
     return {
       token: function(stream, state) {
-        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];        
+        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
         if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
         if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
         if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
@@ -354,12 +354,20 @@ function switchTab(index, isNew = false) {
   const tabs = document.querySelectorAll(".tab");
   tabs.forEach((tab, i) => tab.classList.toggle("active", i === index));
   if (codeEditors.length > activeTab)
-  codeEditors[activeTab] = codeEditor.getValue();
+    codeEditors[activeTab] = codeEditor.getValue();
   activeTab = index;
   if (isNew) codeEditor.setValue("");
   else if (codeEditors[index] !== undefined)
-  codeEditor.setValue(codeEditors[index]);
+    codeEditor.setValue(codeEditors[index]);
+  // 🟢 Determine new mode based on file extension and update CodeMirror
+  const activeTabElem = tabs[index]?.querySelector("span:not(.close-btn)");
+  const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
+  const ext = fileName.split(".").pop().toLowerCase();
+  const mode = ext === "kif" ? "kif" : "tptp";
+  codeEditor.setOption("mode", mode);
+  console.log(`🌀 Switched to tab ${index} (${fileName}) using mode: ${mode}`);
 }
+
 
 function closeTab(index) {
   const tabs = document.querySelectorAll(".tab");
