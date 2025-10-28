@@ -17,7 +17,6 @@
     welcomString should be derived from Prelude.jsp
 */
 %>
-
 <%
     // --- Natural Language handling ---
     if (request.getParameter("lang") != null && !request.getParameter("lang").isEmpty()) {
@@ -31,7 +30,6 @@
     else if (language == null || language.isEmpty()) {
         language = "EnglishLanguage";
     }
-
     // --- Formal Language handling ---
     if (request.getParameter("flang") != null && !request.getParameter("flang").isEmpty()) {
         session.setAttribute("flang", request.getParameter("flang"));
@@ -103,7 +101,6 @@
             <%= HTMLformatter.createMenu("flang", flang, HTMLformatter.availableFormalLanguages, "onchange='this.form.submit()'") %>
             <input type="hidden" name="kb" value="<%=kbName%>" />
         </form>
-
       <br>
       </td>
   </TR>

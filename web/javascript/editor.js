@@ -4,6 +4,9 @@ const uploadForm = document.getElementById('uploadForm');
 let errorMarks = [];
 let codeEditors = [];
 let activeTab = 0;
+let errors = window.initialErrors || [];
+let errorMask = window.initialErrorMask || [];
+let codeEditor;
 
 // ------------------------------------------------------------------
 // Event Listeners
@@ -17,7 +20,6 @@ fileInput.addEventListener('change', () => {
   const reader = new FileReader();
   reader.onload = (e) => {
     const contents = e.target.result;
-    console.log(`📄 Loaded file: ${file.name} (${contents.length} chars)`);
     openFileInNewTab(file.name, contents);
   };
   reader.onerror = (e) => {
@@ -32,9 +34,9 @@ document.addEventListener("DOMContentLoaded", async function() {
   await defineModeFromXML("kif", "LanguagesXML/kif.xml");
   await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
   initializeCodeMirror();
-  console.log("Using mode:", codeEditor.getOption("mode"));
+  if (window.initialErrors || window.initialErrorMask)
+    highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
   codeEditors.push("");
-
   const exampleTPTP = `% Example TPTP file
   tff(mortal_rule, axiom,
       (![X]: (man(X) => mortal(X)))
@@ -49,34 +51,29 @@ document.addEventListener("DOMContentLoaded", async function() {
   ).`;
   openFileInNewTab("example.tptp", exampleTPTP);
   toggleDropdown();
-  switchTab(0);
 });
-
 
 // ------------------------------------------------------------------
 // Syntax highlighting / coloring
-
 async function loadKifColors() {
-
-const response = await fetch('/sigma/modes/kif.xml');
-const xmlText = await response.text();
-const parser = new DOMParser();
-const xml = parser.parseFromString(xmlText, 'text/xml');
-const colorMap = {
-  'KEYWORD1': 'keyword1',
-  'KEYWORD2': 'keyword2',
-  'KEYWORD3': 'keyword3',
-  'KEYWORD4': 'keyword4',
-  'COMMENT1': 'comment',
-  'LITERAL1': 'string',
-  'LITERAL2': 'literal',
-  'FUNCTION': 'function',
-};
-
-const keywords = {};
-for (const type in colorMap)
+  const response = await fetch('/sigma/modes/kif.xml');
+  const xmlText = await response.text();
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(xmlText, 'text/xml');
+  const colorMap = {
+    'KEYWORD1': 'keyword1',
+    'KEYWORD2': 'keyword2',
+    'KEYWORD3': 'keyword3',
+    'KEYWORD4': 'keyword4',
+    'COMMENT1': 'comment',
+    'LITERAL1': 'string',
+    'LITERAL2': 'literal',
+    'FUNCTION': 'function',
+  };
+  const keywords = {};
+  for (const type in colorMap)
     keywords[type] = [...xml.getElementsByTagName(type)].map(n => n.textContent);
-return { colorMap, keywords };
+  return { colorMap, keywords };
 }
 
 async function defineModeFromXML(modeName, xmlPath) {
@@ -108,48 +105,29 @@ async function defineModeFromXML(modeName, xmlPath) {
     'NULL': 'null'
   };
 
-  // Register mode
   CodeMirror.defineMode(modeName, function() {
     return {
       token: function(stream, state) {
-        // Comments
-        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
-        
-        // Literals
+        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];        
         if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
         if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
-
-        // Numbers
         if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
-
-        // Variables
         if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
-
-        // Keywords
         for (const type in keywords) {
           for (const word of keywords[type]) {
-            console.log("Word: " + word + ", Type:" + type);
             if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
           }
         }
-
-        // Brackets
         if (stream.match(/[(){}\[\]]/)) return "bracket";
-
-        // Default
         stream.next();
         return null;
       }
     };
   });
-  console.log(`✅ Mode "${modeName}" loaded from ${xmlPath}`);
 }
-
 
 // ------------------------------------------------------------------
 // Editor Functions
-
-let codeEditor;
 function initializeCodeMirror() {
   const textarea = document.getElementById("codeEditor");
   const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
@@ -165,104 +143,145 @@ function initializeCodeMirror() {
     autoCloseBrackets: true,
     matchBrackets: true
   });
-  highlightErrorLines();
 }
 
-let errors = window.initialErrors || [];
-let errorMask = window.initialErrorMask || [];
+function renderErrorBox(errors = [], message = null) {
+  const box = document.querySelector(".scroller.msg");
+  if (!box) return;
+  if (message) {
+    box.classList.remove("success");
+    box.classList.add("errors-box");
+    box.textContent = message;
+    return;
+  }
+  if (!errors.length) {
+    box.classList.remove("errors-box");
+    box.classList.add("success");
+    box.textContent = "✅ No errors found.";
+  } else {
+    box.classList.remove("success");
+    box.classList.add("errors-box");
+    box.textContent = errors.map(e => {
+      const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
+      const lineHuman = (Number(e.line) ?? 0) + 1;
+      const colHuman  = (Number(e.start) ?? 0) + 1;
+      return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
+    }).join("\n\n");
+  }
+}
 
-function highlightErrorLines() {
-  for (const mark of errorMarks)
-    mark.clear();
+function highlightErrors(errors = [], mask = []) {
+  for (const m of errorMarks) m.clear();
   errorMarks = [];
-  if (errors && errors.length > 0 && codeEditor) {
-    for (const err of errors) {
-      const from = { line: err.line, ch: err.start };
-      const to = { line: err.line, ch: err.end };
-      const mark = codeEditor.markText(from, to, { className: "error-text" });
-      errorMarks.push(mark);
-    }
+  const editor = codeEditors[activeTab]?.cm || codeEditor;
+  console.log("ActiveTab: " + activeTab);
+  if (!editor) return;
+  editor.eachLine(h => {
+    editor.removeLineClass(h, "gutter", "error-line-gutter");
+    editor.removeLineClass(h, "gutter", "warning-line-gutter");
+  });
+  if (Array.isArray(mask)) {
+    mask.forEach((isErr, i) => {
+      if (isErr) editor.addLineClass(i, "gutter", "error-line-gutter");
+    });
   }
-
-  if (errorMask && errorMask.length > 0 && codeEditor) {
-    codeEditor.eachLine(lineHandle => codeEditor.removeLineClass(lineHandle, "gutter", "error-line-gutter"));
-    for (let i = 0; i < errorMask.length; i++)
-      if (errorMask[i])
-        codeEditor.addLineClass(i, "gutter", "error-line-gutter");
+  if (!Array.isArray(errors) || errors.length === 0) return;
+  const lastLine = Math.max(0, editor.lineCount() - 1);
+  for (const e of errors) {
+    const line = Math.max(0, Math.min(Number(e.line ?? 0), lastLine));
+    const text = editor.getLine(line) || "";
+    const start = Math.max(0, Math.min(Number(e.start ?? 0), text.length));
+    const endRaw = Number(e.end ?? (start + 1));
+    const end = Math.max(start + 1, Math.min(endRaw, text.length || start + 1));
+    const from = { line, ch: e.start };
+    const to   = { line, ch: e.end };
+    const cls  = (Number(e.type) === 1) ? "warning-text" : "error-text";
+    const mark = editor.markText(from, to, { className: cls, title: e.msg || "" });
+    errorMarks.push(mark);
+    editor.addLineClass(line, "gutter", cls === "warning-text"
+      ? "warning-line-gutter"
+      : "error-line-gutter");
   }
-}
-
-function refreshErrorHighlighting() {
-  if (codeEditor)
-    setTimeout(highlightErrorLines, 100);
 }
 
 // ------------------------------------------------------------------
 // Menu options
 
 function toggleDropdown() {
-const content = document.getElementById("dropdownContent");
-const isVisible = content.style.display === "block";
-content.style.display = isVisible ? "none" : "block";
+  const content = document.getElementById("dropdownContent");
+  const isVisible = content.style.display === "block";
+  content.style.display = isVisible ? "none" : "block";
 }
 
 function newFile(){
-addTab();
+  addTab();
 }
 
 function downloadFile() {
-const codeContent = codeEditor.getValue();
-if (!codeContent.trim()) {
-alert("No content to download. Please enter some code first.");
-return;
-}
-const fileName = prompt("Enter a filename:");
-if (!fileName) return; 
-const blob = new Blob([codeContent], { type: 'text/plain' });
-const url = window.URL.createObjectURL(blob);
-const a = document.createElement('a');
-a.href = url;
-a.download = fileName;
-document.body.appendChild(a);
-a.click();
-document.body.removeChild(a);
-window.URL.revokeObjectURL(url);
+  const codeContent = codeEditor.getValue();
+  if (!codeContent.trim()) {
+    alert("No content to download. Please enter some code first.");
+    return;
+  }
+  const fileName = prompt("Enter a filename:");
+  if (!fileName) return; 
+  const blob = new Blob([codeContent], { type: 'text/plain' });
+  const url = window.URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  window.URL.revokeObjectURL(url);
 }
 
 function triggerFileUpload() {
-document.getElementById('kifFile').click();
+  document.getElementById('kifFile').click();
 }
 
 async function check() {
-const codeContent = codeEditor.getValue();
-if (!codeContent.trim()) return alert("Nothing to check.");
-const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
-try {
-const response = await fetch("EditorServlet", {
-    method: "POST",
-    headers: {
-    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-    },
-    body:
-    "mode=check" +
-    "&fileName=" + encodeURIComponent(fileName) +
-    "&code=" + encodeURIComponent(codeContent)
-});
-const html = await response.text();
-const parser = new DOMParser();
-const doc = parser.parseFromString(html, "text/html");
-const newErrorBox = doc.querySelector(".scroller.msg");
-const currentErrorBox = document.querySelector(".scroller.msg");
-if (newErrorBox && currentErrorBox)
-    currentErrorBox.replaceWith(newErrorBox);
-refreshErrorHighlighting();
-} catch (err) {
-alert("Error checking file: " + err);
-}
+  const codeContent = codeEditor.getValue();
+  if (!codeContent.trim()) return alert("Nothing to check.");
+  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
+  const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
+  try {
+    const res = await fetch("EditorServlet", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+        "Accept": "application/json"
+      },
+      body: new URLSearchParams({
+        mode: "check",
+        fileName,
+        code: codeContent
+      }).toString()
+    });
+    const isJson = (res.headers.get("content-type") || "").includes("application/json");
+    const payload = isJson ? await res.json() : JSON.parse(await res.text());
+    const serverErrors = Array.isArray(payload.errors) ? payload.errors : [];
+    console.group("🔎 Server Errors");
+    if (Array.isArray(serverErrors) && serverErrors.length > 0) {
+      console.table(serverErrors);
+      serverErrors.forEach((err, i) => {
+        console.log(`#${i}:`, JSON.stringify(err, null, 2));
+      });
+    } else {
+      console.log("No errors received from server.");
+    }
+    console.groupEnd();
+    const mask = Array.isArray(payload.errorMask) ? payload.errorMask : [];
+    renderErrorBox(serverErrors, payload.message);
+    highlightErrors(serverErrors, mask);
+  } catch (err) {
+    console.error("Check failed:", err);
+    alert("Error checking file: " + err);
+  }
 }
 
 async function formatBuffer() {
+  check();
   const codeContent = codeEditor.getValue();
   if (!codeContent.trim()) {
     alert("No content to format.");
@@ -297,118 +316,115 @@ async function formatBuffer() {
 // Tabs Management
 
 function addTab(name = null) {
-if (!name) {
-const inputName = prompt("Enter a name for the new file:", "Untitled.kif");
-if (!inputName) return;
-name = inputName.trim();
-}
-const tabBar = document.getElementById("tabBar");
-const newIndex = codeEditors.length;
-const tab = document.createElement("div");
-tab.className = "tab";
-tab.setAttribute("data-index", newIndex);
-const label = document.createElement("span");
-label.textContent = name;
-label.onclick = (e) => {
-if (e.target.classList.contains("close-btn")) return;
-switchTab(newIndex);
-};
-const closeBtn = document.createElement("span");
-closeBtn.textContent = 'x';
-closeBtn.className = "close-btn";
-closeBtn.onclick = (e) => {
-e.stopPropagation();
-closeTab(newIndex);
-};
-tab.appendChild(label);
-tab.appendChild(closeBtn);
-tabBar.appendChild(tab);
-if (codeEditors.length > activeTab)
-codeEditors[activeTab] = codeEditor.getValue();
-codeEditors.push("");
-switchTab(newIndex, true);
-toggleDropdown();
+  if (!name) {
+  const inputName = prompt("Enter a name for the new file:", "Untitled.kif");
+  if (!inputName) return;
+  name = inputName.trim();
+  }
+  const tabBar = document.getElementById("tabBar");
+  const newIndex = codeEditors.length;
+  const tab = document.createElement("div");
+  tab.className = "tab";
+  tab.setAttribute("data-index", newIndex);
+  const label = document.createElement("span");
+  label.textContent = name;
+  label.onclick = (e) => {
+    if (e.target.classList.contains("close-btn")) return;
+    switchTab(newIndex);
+  };
+  const closeBtn = document.createElement("span");
+  closeBtn.textContent = 'x';
+  closeBtn.className = "close-btn";
+  closeBtn.onclick = (e) => {
+  e.stopPropagation();
+  closeTab(newIndex);
+  };
+  tab.appendChild(label);
+  tab.appendChild(closeBtn);
+  tabBar.appendChild(tab);
+  if (codeEditors.length > activeTab)
+  codeEditors[activeTab] = codeEditor.getValue();
+  codeEditors.push({ cm: null, value: "" });
+  switchTab(newIndex, true);
+  toggleDropdown();
 }
 
 function switchTab(index, isNew = false) {
-const tabs = document.querySelectorAll(".tab");
-tabs.forEach((tab, i) => tab.classList.toggle("active", i === index));
-if (codeEditors.length > activeTab)
-codeEditors[activeTab] = codeEditor.getValue();
-activeTab = index;
-if (isNew) codeEditor.setValue("");
-else if (codeEditors[index] !== undefined)
-codeEditor.setValue(codeEditors[index]);
+  const tabs = document.querySelectorAll(".tab");
+  tabs.forEach((tab, i) => tab.classList.toggle("active", i === index));
+  if (codeEditors.length > activeTab)
+  codeEditors[activeTab] = codeEditor.getValue();
+  activeTab = index;
+  if (isNew) codeEditor.setValue("");
+  else if (codeEditors[index] !== undefined)
+  codeEditor.setValue(codeEditors[index]);
 }
 
 function closeTab(index) {
-const tabs = document.querySelectorAll(".tab");
-if (index < 0 || index >= tabs.length) return;
-const tabName = tabs[index].querySelector("span").textContent;
-const confirmClose = confirm(`Are you sure you want to close "${tabName}"?`);
-if (!confirmClose) return;
-tabs[index].remove();
-codeEditors.splice(index, 1);
-if (activeTab === index) {
-if (codeEditors.length > 0) {
-    const newActive = Math.max(0, index - 1);
-    switchTab(newActive);
-} else {
-    codeEditor.setValue("");
-    activeTab = 0;
-}
-}
-const updatedTabs = document.querySelectorAll(".tab");
-updatedTabs.forEach((tab, i) => tab.setAttribute("data-index", i));
+  const tabs = document.querySelectorAll(".tab");
+  if (index < 0 || index >= tabs.length) return;
+  const tabName = tabs[index].querySelector("span").textContent;
+  const confirmClose = confirm(`Are you sure you want to close "${tabName}"?`);
+  if (!confirmClose) return;
+  tabs[index].remove();
+  codeEditors.splice(index, 1);
+  if (activeTab === index) {
+    if (codeEditors.length > 0) {
+      const newActive = Math.max(0, index - 1);
+      switchTab(newActive);
+    } else {
+      codeEditor.setValue("");
+      activeTab = 0;
+    }
+  }
+  const updatedTabs = document.querySelectorAll(".tab");
+  updatedTabs.forEach((tab, i) => tab.setAttribute("data-index", i));
 }
 
 function openFileInNewTab(fileName, fileContents) {
-  if (!fileName) {
-    console.error("openFileInNewTab: missing file name.");
-    return;
-  }
-
-  // Save current buffer before switching
-  if (codeEditors.length > activeTab && codeEditor) {
-    codeEditors[activeTab] = codeEditor.getValue();
-  }
-
-  // Create the new tab
+  if (!fileName) return;
+  if (codeEditors.length > activeTab && codeEditor)
+    codeEditors[activeTab].value = codeEditor.getValue();
   addTab(fileName);
-
-  // Set tab content and mode
   const ext = fileName.split('.').pop().toLowerCase();
   const mode = ext === 'kif' ? 'kif' : 'tptp';
-  codeEditor.setOption('mode', mode);
-  codeEditor.setValue(fileContents || "");
-
-  // Store it in the editors array
-  codeEditors[activeTab] = fileContents || "";
-
-  // Update the filename display
+  const old = document.querySelector(".CodeMirror");
+  if (old) old.remove();
+  const textarea = document.createElement("textarea");
+  textarea.value = fileContents || "";
+  textarea.id = "codeEditor";
+  document.querySelector(".tab-bar").after(textarea);
+  codeEditor = CodeMirror.fromTextArea(textarea, {
+    mode,
+    lineNumbers: true,
+    theme: "default",
+    indentUnit: 2,
+    tabSize: 2,
+    lineWrapping: true,
+    autoCloseBrackets: true,
+    matchBrackets: true
+  });
+  codeEditors[activeTab] = { cm: codeEditor, value: fileContents || "" };
   if (fileNameSpan) fileNameSpan.textContent = 'Opened: ' + fileName;
-
-  console.log(`✅ Created new tab "${fileName}" with ${fileContents?.length || 0} chars`);
+  console.log(`✅ Opened "${fileName}" as ${mode} with ${fileContents?.length || 0} chars`);
 }
-
 
 // ------------------------------------------------------------------
 // Extraneous for now
-
 function getActiveFileName() {
-const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-return activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
+  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
+  return activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
 }
 
 function checkFileSize() {
-const fileInput = document.getElementById("kifFile");
-if (fileInput.files.length > 0) {
-const file = fileInput.files[0];
-const maxSize = 200 * 1024;
-if (file.size > maxSize) {
-    alert("File is too large. Maximum allowed size is 200 KB.");
-    return false;
-}
-}
-return true;
+  const fileInput = document.getElementById("kifFile");
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    const maxSize = 200 * 1024;
+    if (file.size > maxSize) {
+        alert("File is too large. Maximum allowed size is 200 KB.");
+        return false;
+    }
+  }
+  return true;
 }
