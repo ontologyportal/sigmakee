@@ -51,6 +51,7 @@ document.addEventListener("DOMContentLoaded", async function() {
   ).`;
   openFileInNewTab("example.tptp", exampleTPTP);
   toggleDropdown();
+  switchTab(0);
 });
 
 // ------------------------------------------------------------------
