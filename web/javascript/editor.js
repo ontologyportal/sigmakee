@@ -99,7 +99,7 @@ async function defineModeFromXML(modeName, xmlPath) {
     'KEYWORD4': 'keyword4',
     'COMMENT1': 'comment',
     'LITERAL1': 'string',
-    'LITERAL2': 'literal',
+    'LITERAL2': 'string',
     'FUNCTION': 'function',
     'OPERATOR': 'operator',
     'MARKUP': 'markup',
@@ -107,24 +107,29 @@ async function defineModeFromXML(modeName, xmlPath) {
   };
 
   CodeMirror.defineMode(modeName, function() {
-    return {
-      token: function(stream, state) {
-        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
-        if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
-        if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
-        if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
-        if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
-        for (const type in keywords) {
-          for (const word of keywords[type]) {
-            if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
-          }
-        }
-        if (stream.match(/[(){}\[\]]/)) return "bracket";
-        stream.next();
-        return null;
+  return {
+    token: function(stream, state) {
+
+      if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
+      if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
+      if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
+      if (stream.match(/\[[^\]]*\]/)) {
+        return classMap['LITERAL1']; // or 'string' directly if you prefer
       }
-    };
-  });
+      if (stream.match(/(?:(?<=\()|\s|^)\d+(?:\.\d+)?(?=\)|\s|$)/)) return "number";
+      if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
+      for (const type in keywords) {
+        for (const word of keywords[type]) {
+          if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
+        }
+      }
+      if (stream.match(/[(){}\[\]]/)) return "bracket";
+      stream.next();
+      return null;
+    }
+  };
+});
+
 }
 
 // ------------------------------------------------------------------
