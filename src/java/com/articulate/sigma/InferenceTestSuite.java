@@ -222,10 +222,14 @@ public class InferenceTestSuite {
         boolean pass = itd.success && !itd.inconsistent;
         String statusTag = pass ? "<b style='color:#0a0'>PASS</b>" : "<b style='color:#b00'>FAIL</b>";
 
-        String html = statusTag + " &bull; " + ms + " ms"
-                + "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>"
-                + "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>"
-                + (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
+        String html =
+                statusTag +
+                        "&nbsp; &bull; &nbsp;" +
+                        "<span>" + ms + " ms </span>" +
+                        "<span class='infoTip' title='Total runtime: includes KB loading, multiple prover calls, and postprocessing.'>&#9432;</span>" +
+                        "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>" +
+                        "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>" +
+                        (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
 
         OneResult r = new OneResult();
         r.pass   = pass;
