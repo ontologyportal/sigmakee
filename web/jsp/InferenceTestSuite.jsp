@@ -375,6 +375,7 @@
                 </select>
             </label>
             <label style="margin-left:12px;"><b>Timeout (sec):</b>
+                <span class='infoTip' title='Time for each individual prover call, not total elapsed time'>&#9432;</span>
                 <input type="number" name="timeout" min="1" value="<%=timeout%>">
             </label>
         </fieldset>
