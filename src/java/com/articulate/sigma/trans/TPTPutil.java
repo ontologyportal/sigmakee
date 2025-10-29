@@ -474,7 +474,8 @@ public class TPTPutil {
         finalLines.addAll(lastComments);
 
         // reverse the lines again
-        return TPTP3ProofProcessor.joinNreverseInputLines(finalLines);
+//        return TPTP3ProofProcessor.joinNreverseInputLines(finalLines);
+        return finalLines;
     }
 
 
