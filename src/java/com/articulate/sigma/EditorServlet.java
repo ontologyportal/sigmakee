@@ -10,8 +10,8 @@ import java.util.concurrent.*;
 
 /**
  * Unified Editor Servlet for both .kif and .tptp code/files.
- * Supports "format" and "check" actions.
- * Determines which checker/formatter to use based on the file name or content.
+ * - "format": returns text/plain with formatted content.
+ * - "check":  returns application/json with the full list of ErrRec objects and an errorMask.
  */
 @WebServlet("/EditorServlet")
 @MultipartConfig(
@@ -21,7 +21,6 @@ import java.util.concurrent.*;
 )
 public class EditorServlet extends HttpServlet {
 
-    /** Utility: read stream as UTF-8 string */
     private static String readUtf8(InputStream in) throws IOException {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         byte[] buf = new byte[8192];
@@ -30,21 +29,42 @@ public class EditorServlet extends HttpServlet {
         return new String(out.toByteArray(), StandardCharsets.UTF_8);
     }
 
+    private static String jsonEscape(String s) {
+        if (s == null) return "";
+        StringBuilder b = new StringBuilder((int)(s.length() * 1.1));
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            switch (c) {
+                case '\\': b.append("\\\\"); break;
+                case '"':  b.append("\\\""); break;
+                case '\b': b.append("\\b");  break;
+                case '\f': b.append("\\f");  break;
+                case '\n': b.append("\\n");  break;
+                case '\r': b.append("\\r");  break;
+                case '\t': b.append("\\t");  break;
+                default:
+                    if (c < 0x20) {
+                        b.append(String.format("\\u%04x", (int)c));
+                    } else {
+                        b.append(c);
+                    }
+            }
+        }
+        return b.toString();
+    }
+
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws IOException, ServletException {
 
-        String mode = req.getParameter("mode");           // "format" or "check"
-        String code = req.getParameter("code");           // for TPTP editor
-        String codeContent = req.getParameter("codeContent"); // for KIF editor
+        String mode = req.getParameter("mode");
+        String code = req.getParameter("code");
+        String codeContent = req.getParameter("codeContent");
         String action = req.getParameter("action");
         String fileName = req.getParameter("fileName");
         String text = null;
-        if (code != null && !code.isBlank())
-            text = code;
-        else if (codeContent != null && !codeContent.isBlank())
-            text = codeContent;
-        // Fallback if uploaded file
+        if (code != null && !code.isBlank()) text = code;
+        else if (codeContent != null && !codeContent.isBlank()) text = codeContent;
         if (text == null && req.getContentType() != null &&
                 req.getContentType().toLowerCase(Locale.ROOT).startsWith("multipart/")) {
             Part filePart = req.getPart("kifFile");
@@ -53,29 +73,27 @@ public class EditorServlet extends HttpServlet {
                 text = readUtf8(filePart.getInputStream());
             }
         }
-
         if (text == null || text.trim().isEmpty()) {
-            req.setAttribute("errorMessage", "No content provided for checking or formatting.");
-            req.getRequestDispatcher("/Editor.jsp").forward(req, resp);
+            if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.setContentType("text/plain; charset=UTF-8");
+                resp.getWriter().write("No content provided for formatting.");
+            } else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.setContentType("application/json; charset=UTF-8");
+                resp.getWriter().write("{\"ok\":false,\"message\":\"No content provided for checking.\"}");
+            }
             return;
         }
-
-        if (fileName == null)
-            fileName = "Untitled.kif"; // default if not specified
-
-        boolean isTptp = fileName.toLowerCase().endsWith(".tptp") 
-                        || fileName.toLowerCase().endsWith(".tff")
-                        || fileName.toLowerCase().endsWith(".p")
-                        || fileName.toLowerCase().endsWith(".fof")
-                        || fileName.toLowerCase().endsWith(".cnf")
-                        || fileName.toLowerCase().endsWith(".thf");
-        List<ErrRec> errors = Collections.emptyList();
-        List<String> lines = Arrays.asList(text.split("\\R", -1));
-
-        // -------- Handle format request ----------
+        if (fileName == null) fileName = "Untitled.kif";
+        boolean isTptp = fileName.toLowerCase().endsWith(".tptp")
+                || fileName.toLowerCase().endsWith(".tff")
+                || fileName.toLowerCase().endsWith(".p")
+                || fileName.toLowerCase().endsWith(".fof")
+                || fileName.toLowerCase().endsWith(".cnf")
+                || fileName.toLowerCase().endsWith(".thf");
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
-
             try {
                 String formatted;
                 if (isTptp) {
@@ -84,7 +102,6 @@ public class EditorServlet extends HttpServlet {
                 } else {
                     formatted = formatKif(text);
                 }
-
                 if (formatted == null) {
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     resp.getWriter().write("Failed to format input.");
@@ -97,8 +114,10 @@ public class EditorServlet extends HttpServlet {
             }
             return;
         }
-
-        // -------- Handle check request ----------
+        List<ErrRec> errors = Collections.emptyList();
+        List<String> lines = Arrays.asList(text.split("\\R", -1));
+        boolean[] errorMask = new boolean[lines.size()];
+        String errorMessage = null;
         try {
             if (isTptp) {
                 errors = TPTPChecker.check(text, "(web-editor)");
@@ -107,30 +126,52 @@ public class EditorServlet extends HttpServlet {
                 errors = future.get();
             }
         } catch (Exception e) {
-            req.setAttribute("errorMessage", "Error while checking: " + e.getMessage());
+            errorMessage = "Error while checking: " + e.getMessage();
+            errors = Collections.emptyList();
         }
-
-        // Highlight mask
-        boolean[] errorMask = new boolean[lines.size()];
         if (errors != null) {
-            for (ErrRec e : errors) {
-                int ln = e.line + 1;
-                if (ln >= 1 && ln <= errorMask.length) {
-                    errorMask[ln - 1] = true;
-                }
+            for (ErrRec er : errors) {
+                int ln = er.line + 1; // ErrRec is 0-based; mask is 1-based for readability
+                if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
             }
         }
-
-        req.setAttribute("errorMask", errorMask);
-        req.setAttribute("errors", errors);
-        req.setAttribute("fileName", fileName);
-        req.setAttribute("fileContent", lines);
-        req.setAttribute("codeContent", text);
-
-        req.getRequestDispatcher("/Editor.jsp").forward(req, resp);
+        resp.setStatus(HttpServletResponse.SC_OK);
+        resp.setContentType("application/json; charset=UTF-8");
+        StringBuilder json = new StringBuilder(4096);
+        json.append("{\"ok\":true");
+        json.append(",\"fileName\":\"").append(jsonEscape(fileName)).append("\"");
+        if (errorMessage != null) {
+            json.append(",\"message\":\"").append(jsonEscape(errorMessage)).append("\"");
+        }
+        json.append(",\"errors\":[");
+        if (errors != null) {
+            for (int i = 0; i < errors.size(); i++) {
+                ErrRec e = errors.get(i);
+                json.append("{")
+                    .append("\"type\":").append(e.type).append(",")
+                    .append("\"file\":\"").append(jsonEscape(e.file == null ? "" : e.file)).append("\",")
+                    .append("\"line\":").append(e.line).append(",")
+                    .append("\"start\":").append(e.start).append(",")
+                    .append("\"end\":").append(e.end).append(",")
+                    .append("\"msg\":\"").append(jsonEscape(e.msg)).append("\"")
+                    .append("}");
+                if (i < errors.size() - 1) json.append(",");
+            }
+        }
+        json.append("]");
+        json.append(",\"errorMask\":[");
+        for (int i = 0; i < errorMask.length; i++) {
+            if (i > 0) json.append(",");
+            json.append(errorMask[i] ? "true" : "false");
+        }
+        json.append("]");
+        json.append(",\"isTptp\":").append(isTptp ? "true" : "false");
+        json.append(",\"lineCount\":").append(lines.size());
+        json.append("}");
+        resp.getWriter().write(json.toString());
     }
 
-    /** KIF autoformatter (migrated from KifFileCheckServlet) */
+    /** KIF auto-formatter (migrated from KifFileCheckServlet) */
     public static String formatKif(String contents) {
         if (contents == null || contents.trim().isEmpty()) return contents;
 

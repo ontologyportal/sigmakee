@@ -2477,7 +2477,8 @@ public class KB implements Serializable {
      */
     public int getCountTerms() {
 
-        return getTerms().size();
+        int termCount = getTerms().size();
+        return termCount;
     }
 
     /*****************************************************************
@@ -2498,7 +2499,7 @@ public class KB implements Serializable {
      * @return The int(eger) number of formulas in the knowledge base.
      */
     public int getCountAxioms() {
-
+        
         return formulaMap.size();
     }
 
