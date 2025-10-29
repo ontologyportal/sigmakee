@@ -128,6 +128,7 @@ public class TPTP3Test extends IntegrationTestBase {
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            vampire.output = TPTP3ProofProcessor.joinNreverseInputLines(vampire.output);
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();

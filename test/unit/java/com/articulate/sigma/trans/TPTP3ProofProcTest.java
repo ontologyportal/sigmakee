@@ -245,6 +245,8 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String query = "(instance ?X Relation)";
         StringBuilder sb = new StringBuilder("X0");
+
+        input = TPTP3ProofProcessor.joinNreverseInputLines(input);
         tpp.parseProofOutput(input,query,kb,sb);
         tpp.processAnswersFromProof(new StringBuilder("X"),query);
         String actual = tpp.bindingMap.toString();
