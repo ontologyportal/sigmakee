@@ -1987,7 +1987,8 @@ public class KB implements Serializable {
                 "--input_syntax","tptp",
                 "--proof","tptp",                  // <-- TSTP-style proof lines
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off"
+                "-fde","none","-updr","off",
+                "-t", Integer.toString(timeout)
         );
         try{
             vampire_pomens.runCustom(kb, 10, cmds);

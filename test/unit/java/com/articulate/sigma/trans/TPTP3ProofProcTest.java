@@ -241,10 +241,13 @@ public class TPTP3ProofProcTest extends UnitTestBase {
         input.add("fof(f393,negated_conjecture,( ~? [X16] : s__instance(X16,s__Relation)), inference(negated_conjecture,[],[f392])).");
         input.add("fof(f392,conjecture,( ? [X16] : s__instance(X16,s__Relation)), file('" + KBmanager.getMgr().getPref("kbDir") + "/temp-comb.tptp',query_0)).");
         input.add("fof(f915,plain,( ( ! [X0] : (ans0(X0)) )), introduced(answer_literal,[])).");
+        input.add("% SZS output end Proof for temp-comb");
         KBmanager.getMgr().prover = KBmanager.Prover.VAMPIRE;
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         String query = "(instance ?X Relation)";
         StringBuilder sb = new StringBuilder("X0");
+
+        input = TPTP3ProofProcessor.joinNreverseInputLines(input);
         tpp.parseProofOutput(input,query,kb,sb);
         tpp.processAnswersFromProof(new StringBuilder("X"),query);
         String actual = tpp.bindingMap.toString();
