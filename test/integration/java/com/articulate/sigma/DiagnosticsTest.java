@@ -483,7 +483,7 @@ public class DiagnosticsTest extends IntegrationTestBase {
     }
 
     @Test
-    public void orphanTest() {
+    public void threeVariablesOneOrphanTest() {
         // ?X and ?Y are connected, but ?Z is alone
         Formula f = new Formula(
             "(=> " +
@@ -508,5 +508,71 @@ public class DiagnosticsTest extends IntegrationTestBase {
         // ?Z is not connected to ?X or ?Y
         assertFalse(links.get("?X").contains("?Z"));
         assertFalse(links.get("?Y").contains("?Z"));
+    }
+
+    @Test
+    public void singleVariableRepeatedTest() {
+        // single variable ?T appearing on both sides of implication
+        // this should NOT be flagged as an orphan since it appears multiple times
+        Formula f = new Formula(
+            "(=> " +
+            "  (holdsDuring ?T (attribute EarthsMoon FullMoon)) " +
+            "  (holdsDuring ?T (moonLitPortion 1 FullMoon)))"
+        );
+        Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
+        
+        // ?T exists but has no neighbors (only variable in formula)
+        assertTrue(links.containsKey("?T"));
+        assertTrue(links.get("?T").isEmpty());
+        
+        // note: this should NOT trigger a warning because ?T appears twice
+    }
+
+    @Test
+    public void variablesConnectedThroughFunctionsTest() {
+        Formula f = new Formula(
+            "(=> " +
+            "  (and " +
+            "    (equal (MeasureFn ?X HourDuration) (TimeToFailureFn ?D)) " +
+            "    (attribute ?D NonRepairable) " +
+            "    (deviceFailTime ?D ?F) " +
+            "    (deviceUpTime ?D ?U) " +
+            "    (earlier ?U ?F)) " +
+            "  (duration " +
+            "    (TimeIntervalFn (BeginFn ?U) (BeginFn ?F)) " +
+            "    (MeasureFn ?X HourDuration)))"
+        );
+        Map<String, HashSet<String>> links = Diagnostics.findOrphanVars(f);
+        
+        // all variables should be fully connected
+        // ?X is connected to ?D, ?U, ?F through functions
+        assertTrue(links.containsKey("?X"));
+        assertTrue(links.get("?X").contains("?D"));
+        assertTrue(links.get("?X").contains("?U"));
+        assertTrue(links.get("?X").contains("?F"));
+        
+        // ?D is connected to ?X, ?U, ?F
+        assertTrue(links.containsKey("?D"));
+        assertTrue(links.get("?D").contains("?X"));
+        assertTrue(links.get("?D").contains("?U"));
+        assertTrue(links.get("?D").contains("?F"));
+        
+        // ?U is connected to all others
+        assertTrue(links.containsKey("?U"));
+        assertTrue(links.get("?U").contains("?D"));
+        assertTrue(links.get("?U").contains("?F"));
+        assertTrue(links.get("?U").contains("?X"));
+        
+        // ?F is connected to all others
+        assertTrue(links.containsKey("?F"));
+        assertTrue(links.get("?F").contains("?D"));
+        assertTrue(links.get("?F").contains("?U"));
+        assertTrue(links.get("?F").contains("?X"));
+        
+        // no self-links
+        assertFalse(links.get("?X").contains("?X"));
+        assertFalse(links.get("?D").contains("?D"));
+        assertFalse(links.get("?U").contains("?U"));
+        assertFalse(links.get("?F").contains("?F"));
     }
 }
