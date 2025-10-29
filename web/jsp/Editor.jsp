@@ -93,7 +93,7 @@ window.initialErrorMask = [
     <textarea id="codeEditor" style="display: none;"><%=
       codeContent != null ? esc(codeContent) :
       (fileContent != null ? String.join("\n", fileContent) :
-      esc(";ExampleKifFile\n(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))\n"))
+      esc("(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))\n"))
     %></textarea>
   </div>
   <div>

@@ -35,8 +35,8 @@
         session.setAttribute("flang", request.getParameter("flang"));
         flang = request.getParameter("flang");
     }
-    if (sessionFlang != null && !sessionFlang.isEmpty()) {
-        flang = sessionFlang;
+    if (flang != null && !flang.isEmpty()) {
+        flang = flang;
     }
     else if (flang == null || flang.isEmpty()) {
         // Pick your default formal language

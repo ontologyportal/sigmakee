@@ -261,26 +261,38 @@ function newFile(){
 }
 
 function downloadFile() {
-  const codeContent = codeEditor.getValue();
+  const editorObj = codeEditors[activeTab];
+  const editor = editorObj?.cm || codeEditor;
+  if (!editor || typeof editor.getValue !== "function") {
+    alert("No active editor instance found.");
+    return;
+  }
+  const codeContent = editor.getValue();
   if (!codeContent.trim()) {
     alert("No content to download. Please enter some code first.");
     return;
   }
-  const fileName = prompt("Enter a filename:");
-  if (!fileName) return; 
-  const blob = new Blob([codeContent], { type: 'text/plain' });
+  let fileName = "untitled.kif";
+  const tab = document.querySelector(`.tab[data-index="${activeTab}"] span:not(.close-btn)`);
+  if (tab) fileName = tab.textContent.trim();
+  const blob = new Blob([codeContent], { type: "text/plain" });
   const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
+  const a = document.createElement("a");
   a.href = url;
   a.download = fileName;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   window.URL.revokeObjectURL(url);
+  toggleDropdown();
 }
+
+
+
 
 function triggerFileUpload() {
   document.getElementById('kifFile').click();
+  toggleDropdown();
 }
 
 async function check() {
