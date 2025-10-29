@@ -40,7 +40,6 @@ document.addEventListener("DOMContentLoaded", async function() {
 
   codeEditors.push("");
 
-  // 📘 Example TPTP
   const exampleTPTP = `% Example TPTP file
 tff(mortal_rule, axiom,
     (![X]: (man(X) => mortal(X)))
@@ -54,7 +53,6 @@ tff(query, conjecture,
     mortal(socrates)
 ).`;
 
-  // 📘 Example files for all TPTP dialects
   const exampleTHF = `% Example THF (Typed Higher-Order Form)
 thf(example_thf, conjecture,
     ( ![P: $i > $o, X: $i]: ( P @ X ) )
