@@ -217,7 +217,11 @@ function highlightErrors(errors = [], mask = []) {
   for (const m of errorMarks) m.clear();
   errorMarks = [];
   const editor = codeEditors[activeTab]?.cm || codeEditor;
-  console.log("ActiveTab: " + activeTab);
+  errors.forEach((err, i) => {
+    console.log(`editor.highlightErrors(): #${i}:`, JSON.stringify(err, null, 2));
+  });
+  console.log("editor.highlightErrors(): ActiveTab: " + activeTab);
+  console.log("editor.highlightErrors(): Mask: " + mask);
   if (!editor) return;
   editor.eachLine(h => {
     editor.removeLineClass(h, "gutter", "error-line-gutter");
@@ -232,10 +236,6 @@ function highlightErrors(errors = [], mask = []) {
   const lastLine = Math.max(0, editor.lineCount() - 1);
   for (const e of errors) {
     const line = Math.max(0, Math.min(Number(e.line ?? 0), lastLine));
-    const text = editor.getLine(line) || "";
-    const start = Math.max(0, Math.min(Number(e.start ?? 0), text.length));
-    const endRaw = Number(e.end ?? (start + 1));
-    const end = Math.max(start + 1, Math.min(endRaw, text.length || start + 1));
     const from = { line, ch: e.start };
     const to   = { line, ch: e.end };
     const cls  = (Number(e.type) === 1) ? "warning-text" : "error-text";
@@ -304,16 +304,6 @@ async function check() {
     const isJson = (res.headers.get("content-type") || "").includes("application/json");
     const payload = isJson ? await res.json() : JSON.parse(await res.text());
     const serverErrors = Array.isArray(payload.errors) ? payload.errors : [];
-    console.group("🔎 Server Errors");
-    if (Array.isArray(serverErrors) && serverErrors.length > 0) {
-      console.table(serverErrors);
-      serverErrors.forEach((err, i) => {
-        console.log(`#${i}:`, JSON.stringify(err, null, 2));
-      });
-    } else {
-      console.log("No errors received from server.");
-    }
-    console.groupEnd();
     const mask = Array.isArray(payload.errorMask) ? payload.errorMask : [];
     renderErrorBox(serverErrors, payload.message);
     highlightErrors(serverErrors, mask);
