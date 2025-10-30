@@ -1987,7 +1987,8 @@ public class KB implements Serializable {
                 "--input_syntax","tptp",
                 "--proof","tptp",                  // <-- TSTP-style proof lines
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off"
+                "-fde","none","-updr","off",
+                "-t", Integer.toString(timeout)
         );
         try{
             vampire_pomens.runCustom(kb, 10, cmds);
@@ -2476,7 +2477,8 @@ public class KB implements Serializable {
      */
     public int getCountTerms() {
 
-        return getTerms().size();
+        int termCount = getTerms().size();
+        return termCount;
     }
 
     /*****************************************************************
@@ -2497,7 +2499,7 @@ public class KB implements Serializable {
      * @return The int(eger) number of formulas in the knowledge base.
      */
     public int getCountAxioms() {
-
+        
         return formulaMap.size();
     }
 

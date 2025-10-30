@@ -782,7 +782,8 @@ public class TPTP3ProofProcessor {
         if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): before reverse: " + lines);
         if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): # lines: " + lines.size());
         if (KBmanager.getMgr().prover == KBmanager.Prover.VAMPIRE) {
-            lines = joinNreverseInputLines(lines);
+//            lines = joinNreverseInputLines(lines);
+            lines = TPTPutil.clearProofFile(lines);
         }
         if (debug) System.out.println("TPTP3ProofProcessor.parseProofOutput(ar): after reverse: " + lines);
         try {

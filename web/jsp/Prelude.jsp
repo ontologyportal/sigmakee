@@ -97,19 +97,23 @@ String filename = ""; // an ontology file to edit
 String line = ""; // the line of the ontology to place a cursor
 
 // --- Formal Language handling ---
-String flang = request.getParameter("flang");    // formal language
-flang = HTMLformatter.processFormalLanguage(flang);
-if (request.getParameter("flang") != null && !request.getParameter("flang").isEmpty()) {
-    session.setAttribute("flang", request.getParameter("flang"));
-    flang = request.getParameter("flang");
+// Always prefer the session variable. Never use request parameters.
+String flang = (String) session.getAttribute("flang");
+
+// Default to SUO-KIF if unset
+if (flang == null || flang.isEmpty()) {
+    flang = "SUO-KIF";
+    session.setAttribute("flang", flang);
 }
-String sessionFlang = (String) session.getAttribute("flang");
-if (sessionFlang != null && !sessionFlang.isEmpty()) {
-    flang = sessionFlang;
+
+// Only process dropdown submissions (from form POST/GET)
+String flangParam = request.getParameter("flang");
+if (flangParam != null && !flangParam.isEmpty()) {
+    flang = HTMLformatter.processFormalLanguage(flangParam);
+    session.setAttribute("flang", flang);
 }
-else if (flang == null || flang.isEmpty()) {
-    flang = "KIF";  // <-- pick a default formal language
-}
+
+// Normalize
 flang = HTMLformatter.processFormalLanguage(flang);
 
 

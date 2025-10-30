@@ -22,6 +22,7 @@ import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.wordNet.WordNetUtilities;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
@@ -29,7 +30,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDateTime;
-
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import tptp_parser.*;
 
 /** A utility class that creates HTML-formatting Strings for various purposes. */
@@ -322,40 +325,66 @@ public class HTMLformatter {
         return dtf.format(now);
     }
 
-    /**************************************************************
-     * Show knowledge base statistics
+    /**
+     * Show knowledge base statistics with caching.
+     * If the statistics HTML cache exists and is newer than the KB manager
+     * serialization file (~/.sigmakee/KBs/kbmanager.ser), it reuses the cache.
+     * Otherwise, it recomputes and overwrites the cache.
      */
     public static String showStatistics(KB kb) {
 
-        StringBuilder show = new StringBuilder();
-        show.append("<b>Knowledge base statistics: </b> as of ");
-        show.append(getDate()).append("<br><table>");
-        show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
-        show.append("<td>  ").append(kb.getCountTerms());
-        show.append("</td><td> ").append(kb.getCountAxioms());
-        show.append("</td><td> ").append(kb.getCountRules());
-        show.append("</td></tr> </table><p>\n");
-
-        show.append("<table><tr><td>Relations: </td><td align=right>").append(kb.getCountRelations()).append("</td></tr>\n");
-        show.append("<tr><td>non-linguistic axioms: </td><td align=right>").append(KButilities.getCountNonLinguisticAxioms(kb)).append("</td></tr>\n");
-        show.append("</table>\n");
-
-        Map<String, Integer> stats = (HashMap) KButilities.countFormulaTypes(kb);
-        show.append("<P><table><tr><td>Ground tuples: </td><td align=right>").append(stats.get("ground")).append("</td></tr>\n");
-        show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>").append(stats.get("binary")).append("</td></tr>\n");
-        show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>").append(stats.get("higher-arity")).append("</td></tr>\n");
-        show.append("</table>\n");
-
-        show.append("<P><table><tr><td>Rules: </td><td align=right>").append(kb.getCountRules()).append("</td></tr>\n");
-        show.append("<tr><td>&nbsp;&nbsp;of which are</td><td> horn: </td><td align=right>").append(stats.get("horn")).append("</td></tr>\n");
-        show.append("<tr><td></td><td> first-order: </td><td align=right>").append(stats.get("first-order")).append("</td></tr>\n");
-        show.append("<tr><td></td><td> temporal: </td><td align=right>").append(stats.get("temporal")).append("</td></tr>\n");
-        show.append("<tr><td></td><td>modal: </td><td align=right>").append(stats.get("modal")).append("</td></tr>\n");
-        show.append("<tr><td></td><td>epistemic: </td><td align=right>").append(stats.get("epistemic")).append("</td></tr>\n");
-        show.append("<tr><td></td><td>other higher-order: </td><td align=right>").append(stats.get("otherHOL")).append("</td></tr>\n");
-        show.append("</table><P>\n");
-        return show.toString();
+        try {
+            String sigmaHome = System.getenv("SIGMA_HOME");
+            if (StringUtil.emptyString(sigmaHome))
+                sigmaHome = System.getProperty("user.home") + "/.sigmakee";
+            File kbManagerSer = new File(sigmaHome + "/KBs/kbmanager.ser");
+            File cacheDir = new File(sigmaHome + "/cache/statistics");
+            if (!cacheDir.exists()) cacheDir.mkdirs();
+            File cacheFile = new File(cacheDir, kb.name + "_stats.html");
+            long serLastModified = kbManagerSer.exists() ? kbManagerSer.lastModified() : 0L;
+            long cacheLastModified = cacheFile.exists() ? cacheFile.lastModified() : 0L;
+            if (cacheFile.exists() && cacheLastModified >= serLastModified) {
+                System.out.println("[showStatistics] Using cached HTML stats for " + kb.name);
+                return Files.readString(cacheFile.toPath(), StandardCharsets.UTF_8);
+            }
+            System.out.println("[showStatistics] Recomputing statistics for " + kb.name);
+            StringBuilder show = new StringBuilder();
+            show.append("<b>Knowledge base statistics: </b> as of ");
+            show.append(getDate()).append("<br><table>");
+            show.append("<tr bgcolor=#eeeeee><td>Total Terms</td><td>Total Axioms</td><td>Total Rules</td><tr><tr align='center'>\n");
+            show.append("<td>  ").append(kb.getCountTerms());
+            show.append("</td><td> ").append(kb.getCountAxioms());
+            show.append("</td><td> ").append(kb.getCountRules());
+            show.append("</td></tr> </table><p>\n");
+            show.append("<table><tr><td>Relations: </td><td align=right>").append(kb.getCountRelations()).append("</td></tr>\n");
+            show.append("<tr><td>non-linguistic axioms: </td><td align=right>")
+                .append(KButilities.getCountNonLinguisticAxioms(kb))
+                .append("</td></tr>\n</table>\n");
+            Map<String, Integer> stats = KButilities.countFormulaTypes(kb);
+            show.append("<P><table><tr><td>Ground tuples: </td><td align=right>").append(stats.get("ground")).append("</td></tr>\n");
+            show.append("<tr><td>&nbsp;&nbsp;of which are binary: </td><td align=right>").append(stats.get("binary")).append("</td></tr>\n");
+            show.append("<tr><td>&nbsp;&nbsp;of which arity more than binary: </td><td align=right>").append(stats.get("higher-arity")).append("</td></tr>\n</table>\n");
+            show.append("<P><table><tr><td>Rules: </td><td align=right>").append(kb.getCountRules()).append("</td></tr>\n");
+            show.append("<tr><td>&nbsp;&nbsp;of which are</td><td> horn: </td><td align=right>").append(stats.get("horn")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> first-order: </td><td align=right>").append(stats.get("first-order")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> temporal: </td><td align=right>").append(stats.get("temporal")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> modal: </td><td align=right>").append(stats.get("modal")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> epistemic: </td><td align=right>").append(stats.get("epistemic")).append("</td></tr>\n");
+            show.append("<tr><td></td><td> other higher-order: </td><td align=right>").append(stats.get("otherHOL")).append("</td></tr>\n");
+            show.append("</table><P>\n");
+            String html = show.toString();
+            try (BufferedWriter writer = Files.newBufferedWriter(cacheFile.toPath(), StandardCharsets.UTF_8)) {
+                writer.write(html);
+            }
+            System.out.println("[showStatistics] Cached HTML statistics written to " + cacheFile.getAbsolutePath());
+            return html;
+        } catch (Exception e) {
+            System.err.println("[showStatistics] Error generating cached stats for " + kb.name + ": " + e.getMessage());
+            e.printStackTrace(System.err);
+            return "[Error generating statistics for " + kb.name + "]";
+        }
     }
+
 
     /**************************************************************
      * Show knowledge base statistics

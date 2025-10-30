@@ -45,7 +45,7 @@ public class TPTPChecker {
             if (!po.out.isBlank())
                 results.addAll(parseTptpOutput(fileName, po.out, 1));
         } catch (Throwable t) {
-            results.add(new ErrRec(2, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
+            results.add(new ErrRec(0, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
         }
         return results;
     }
@@ -62,11 +62,11 @@ public class TPTPChecker {
             TPTPVisitor visitor = new TPTPVisitor();
             Map<String, TPTPFormula> parsed = visitor.parseString(contents);
             if (parsed == null || parsed.isEmpty()) {
-                errs.add(new ErrRec(2, fileName, 0, 0, 1,
+                errs.add(new ErrRec(0, fileName, 0, 0, 1,
                         "ANTLR parser found no valid formulas in input"));
             }
         } catch (Exception e) {
-            errs.add(new ErrRec(2, fileName, 0, 0, 1,
+            errs.add(new ErrRec(0, fileName, 0, 0, 1,
                     "ANTLR parse error: " + e.getMessage()));
         }
         return errs;
@@ -101,7 +101,7 @@ public class TPTPChecker {
                 } catch (NumberFormatException ignored) { }
             }
             if (line.contains("SZS status") || line.contains("SyntaxError") || m.find())
-                recs.add(new ErrRec(severity, fileName, lineNum, start, end, msg));
+                recs.add(new ErrRec(0, fileName, lineNum, start, end, msg));
         }
         return recs;
     }
@@ -194,7 +194,7 @@ public class TPTPChecker {
                                         int line, int charPositionInLine,
                                         String msg, RecognitionException e) {
                     results.add(new ErrRec(
-                            2, 
+                            0, 
                             fileName,
                             line - 1,
                             charPositionInLine,
@@ -206,7 +206,7 @@ public class TPTPChecker {
             parser.tptp_file();
         } catch (Throwable t) {
             results.add(new ErrRec(
-                    2,
+                    0,
                     fileName,
                     0,
                     0,
