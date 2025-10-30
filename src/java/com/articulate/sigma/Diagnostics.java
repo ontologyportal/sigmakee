@@ -1451,6 +1451,7 @@ public class Diagnostics {
                         System.out.println("\nWARNING in formula: " + f.getFormula());
                         System.out.println("  Orphan variable found: " + var);
                         hasOrphans = true;
+                        foundAnyWarnings = true;
                     }
                 }
             }
@@ -1468,12 +1469,7 @@ public class Diagnostics {
             }
             mergeResults(links, map);
         }
-        if (foundAnyWarnings) {
-            System.out.println("\nVariable links from kif file:\n");
-            for (String var : links.keySet()) {
-                System.out.println(var + ": " + links.get(var));
-            }
-        } else {
+        if (!foundAnyWarnings) {
             System.out.println("\nNo variable connectivity issues found.");
         }
         return links;
