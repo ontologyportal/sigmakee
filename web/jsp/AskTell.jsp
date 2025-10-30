@@ -82,7 +82,7 @@
             if (!sel || !sel.value) return;
             const name = sel.value.toLowerCase();
             // .tq via ViewTest.jsp, others directly from /tests/
-            const url = name.endsWith('.tq')
+            const url = name.endsWith('.tq') || name.endsWith('.tptp') || name.endsWith('.tff')
                 ? ('ViewTest.jsp?name=' + encodeURIComponent(sel.value))
                 : ('tests/' + encodeURIComponent(sel.value));
             window.open(url, '_blank');
