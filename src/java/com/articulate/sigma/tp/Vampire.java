@@ -82,6 +82,10 @@ public class Vampire {
 
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder();
+        if (mode == ModeType.AVATAR)
+            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
+        if (mode == ModeType.CASC)
+            opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
         if (mode == ModeType.CUSTOM)
             opts.append(System.getenv("VAMPIRE_OPTS"));
         for (String s : commands)
@@ -221,18 +225,16 @@ public class Vampire {
         }
         else
             System.out.println("Vampire.runCustom(): vampire executable: " + vampex);
-        String[] cmds = createCustomCommandList(executable, timeout, kbFile, commands);
+        String[] cmds = createCustomCommandList(executable, timeout, kbFile.getAbsoluteFile(), commands);
         System.out.println("Vampire.runCustom(): Custom command list:\n" + Arrays.toString(cmds));
-        //ArrayList<String> moreCommands = new ArrayList<>();
-        //moreCommands.add(cmds[0]);
-        //moreCommands.addAll(commands);
-        //moreCommands.addAll(Arrays.asList(cmds));
-        //System.out.println("Vampire.runCustom():  more command:\n" + moreCommands);
-        //cmds = moreCommands.toArray(cmds); // passes the type of the array to allow return of the right type
-        //System.out.println("Vampire.runCustom(): Initializing Vampire with:\n" + Arrays.toString(cmds));
 
         ProcessBuilder _builder = new ProcessBuilder(cmds);
         _builder.redirectErrorStream(true);
+
+        if (kbFile != null && kbFile.getParentFile() != null) {
+            _builder.directory(kbFile.getParentFile());
+            System.out.println("Vampire CWD: " + _builder.directory().getAbsolutePath());
+        }
 
         Process _vampire = _builder.start();
         //System.out.println("Vampire.run(): process: " + _vampire);
