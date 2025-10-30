@@ -347,10 +347,17 @@ public class TPTPutil {
     }
 
     /**
-     * Cleans a Vampire proof log file so only the valid proof lines remain.
-     * Keeps only lines between "% SZS output start" and "% SZS output end",
-     * merges multi-line fof(...) statements into single lines,
-     * and returns the processed list ready for TPTP3ProofProcessor.
+     * Cleans and normalizes the contents of a TPTP proof file.
+     *
+     * Steps performed:
+     * 1. Keeps comment lines ("%") that appear before the first fof(...) line and after the last one.
+     * 2. Merges multi-line fof(...) formulas into single lines by concatenating
+     *    their continuation lines until a closing ")." is found.
+     * 3. Returns a cleaned version of the proof containing:
+     *      - Header comments
+     *      - All compacted fof(...) lines
+     *      - Footer comments
+     *
      */
     public static List<String> clearProofFile(List<String> lines) {
 
@@ -409,7 +416,25 @@ public class TPTPutil {
         return finalLines;
     }
 
-
+    /**
+     * Processes a TPTP proof file and removes all proof steps
+     * that have only a single premise (e.g., trivial inferences or direct copies).
+     *
+     * Steps performed:
+     * 1. Initializes the Sigma knowledge base (KBmanager) to ensure ontology data is loaded.
+     * 2. Cleans the raw proof lines using clearProofFile(), preserving only header/footer comments
+     *    and merging multi-line fof(...) entries into single lines.
+     * 3. Parses the proof output into structured TPTPFormula objects.
+     * 4. Calls simplifyProof(1) to remove all single-premise proof steps.
+     * 5. Renumbers the remaining proof steps to maintain consistent references.
+     * 6. Reconstructs the proof by:
+     *      - Keeping the original header and footer comments.
+     *      - Converting each remaining TPTPFormula back into fof(...) format.
+     *      - Combining them into a normalized list of proof lines.
+     *
+     * Returns a cleaned proof where all trivial one-premise derivations are dropped,
+     * maintaining logical consistency and readability.
+     */
     public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         KBmanager.getMgr().initializeOnce();
@@ -451,8 +476,6 @@ public class TPTPutil {
         finalLines.addAll(fofBody);
         finalLines.addAll(lastComments);
 
-        // reverse the lines again
-//        return TPTP3ProofProcessor.joinNreverseInputLines(finalLines);
         return finalLines;
     }
 
