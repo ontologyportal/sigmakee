@@ -55,13 +55,6 @@ h3 { margin: 8px 0;}
 }
 .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
 .file-name-display { font-family: monospace; font-size: 12px; color: #666; margin-top: 2px;}
-.file-menu-bar { display: flex; justify-content: flex-start; margin-bottom: 4px;}
-.dropdown { position: relative; display: inline-block;}
-.dropdown-file-label { border: 1px solid #ccc; padding: 4px 8px; border-radius: 4px; background-color: #f9f9f9; cursor: pointer;}
-.dropdown-file-label:hover { background-color: #e6e6e6;}
-.dropdown-content a { display: block; padding: 8px 12px; color: #333; text-decoration: none; font-size: 14px;}
-.dropdown-content a:hover { background-color: #f0f0f0;}
-.dropdown-content { display: none; position: absolute; background-color: #fff; min-width: 140px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); border-radius: 4px; z-index: 100; margin-top: 4px;}
 .tab-bar { display: flex; align-items: center; border-radius: 2px 6px 0 0; padding: 0px 8px;}
 .tab { padding:6px 12px;border:1px solid #ccc;border-bottom:none;border-radius:6px 6px 0 0;margin-right:4px;cursor:pointer;user-select:none;font-size:13px}
 .tab .close-btn { margin-left:6px;color:#666;font-weight:700;cursor:pointer;transition:color .2s ease;padding:0 4px}
@@ -81,3 +74,98 @@ h3 { margin: 8px 0;}
 .CodeMirror .cm-operator { color: #aa5500; font-weight: bold; }
 .CodeMirror .cm-markup   { color: #0088cc; }
 .CodeMirror .cm-null     { color: #666; }
+/* Core dropdown container */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown menu */
+.dropdown-content {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 160px;
+  z-index: 100;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Submenu container */
+.submenu {
+  position: relative;
+}
+
+/* Submenu list */
+.submenu-content {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 100%;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  min-width: 160px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Hover to open submenu */
+.submenu:hover .submenu-content {
+  display: block;
+}
+
+/* Basic item styling */
+.dropdown-content a,
+.submenu-content a {
+  display: block;
+  padding: 8px 12px;
+  color: #000;
+  text-decoration: none;
+}
+
+.dropdown-content a:hover,
+.submenu-content a:hover {
+  background-color: #eee;
+}
+/* --- Menu bar labels (File, Format, Check) --- */
+.dropdown-file-label {
+  display: inline-block;
+  padding: 6px 12px;
+  margin-right: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #222;
+  background: #f4f4f4;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.dropdown-file-label:hover {
+  background: #e0e7ff; /* light blue hover */
+  border-color: #99a8ff;
+  color: #111;
+}
+
+.file-menu-bar {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  background: #fafafa;
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+.tab.dragging {
+  opacity: 0.5;
+  border: 2px dashed #999;
+}
+.tab-bar {
+  user-select: none;
+}

@@ -21,7 +21,6 @@ function getWidth() {
 }
 
 function setWidth(id) {
-    // document.getElementById(id).value = screen.width * 0.9;
     document.getElementById(id).value = Math.round(getWidth() * 0.9);
 }
 </script>
@@ -102,13 +101,11 @@ function setWidth(id) {
 %>
 
 <form action="Graph.jsp">
-
     <%
         String pageName = "Graph";
         String pageString = "KB Graph";
     %>
     <%@include file="CommonHeader.jsp" %>
-
 <table ALIGN="LEFT" WIDTH=80%><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
 
       <font face="Arial,helvetica"><b>Relation: </b>

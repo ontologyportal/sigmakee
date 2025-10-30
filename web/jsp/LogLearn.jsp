@@ -1,109 +1,213 @@
-<%@ include	file="Prelude.jsp" %>
-<%@ page import="java.net.URLEncoder, java.nio.charset.Charset" %>
+<%@ include file="Prelude.jsp" %>
+<%@ page import="java.net.URLEncoder, java.nio.charset.Charset, java.io.*, com.articulate.sigma.tp.GenPropFormulas" %>
 
 <html>
-  <head>
-    <title>Sigma KB Browse - Learning Logic</title>
-  </head>
+<head>
+  <title>Sigma KB Browse - Learning Logic</title>
+</head>
 <body BGCOLOR=#FFFFFF>
 
 <%
 /**
-    This software is released under the GNU Public License
-    <http://www.gnu.org/copyleft/gpl.html>.
+ * This software is released under the GNU Public License
+ * http://www.gnu.org/copyleft/gpl.html
+ *
+ * Pease A., and Benzmüller C. (2013).
+ * Sigma: An Integrated Development Environment for Logical Theories.
+ * AI Communications 26, pp79–97.
+ * http://github.com/ontologyportal
+ */
 
-    Please cite the following article in any publication with references:
+// ======================================================
+// SECURITY AND ENVIRONMENT
+// ======================================================
+if ("guest".equals(role)) {
+    response.sendRedirect("KBs.jsp");
+    return;
+}
 
-    Pease A., and Benzmüller C. (2013). Sigma: An Integrated Development Environment
-    for Logical Theories. AI Communications 26, pp79-97.  See also
-    http://github.com/ontologyportal
-*/
-    GenPropFormulas gpf = new GenPropFormulas();
-    String sigmaHome = System.getenv("SIGMA_HOME");
-    if (StringUtil.emptyString(sigmaHome))
-        sigmaHome = "SIGMA_HOME";
-    String kbDir = KBmanager.getMgr().getPref("kbDir");
-    String exFileDir = kbDir + File.separator + "exFiles";
+GenPropFormulas gpf = new GenPropFormulas();
+String kbDir = KBmanager.getMgr().getPref("kbDir");
+String genDir = kbDir + File.separator + "GeneratedFormulas";
+new File(genDir).mkdirs();
 
-    String numVars = request.getParameter("numVars");
-    if (StringUtil.emptyString(numVars))
-        numVars = "3";
-    String depth = request.getParameter("depth");
-    if (StringUtil.emptyString(depth))
-        depth = "5";
-    String action = request.getParameter("submit");
-    String erase = request.getParameter("erase");
+// ======================================================
+// PARAMETERS
+// ======================================================
+String numVars = request.getParameter("numVars");
+String depth = request.getParameter("depth");
+String action = request.getParameter("submit");
+String erase = request.getParameter("erase");
+String generate = request.getParameter("generate");
+String populate = request.getParameter("populate");
+
+if (StringUtil.emptyString(numVars)) numVars = "3";
+if (StringUtil.emptyString(depth)) depth = "5";
+
+int numVarsInt = Math.max(1, Math.min(7, Integer.parseInt(numVars)));
+int depthInt = Math.max(1, Math.min(7, Integer.parseInt(depth)));
 
 %>
-<form action="LogLearn.jsp">
-    <%
-        String pageName = "LogLearn";
-        String pageString = "LogLearn";
-    %>
-    <%@include file="CommonHeader.jsp" %>
 
-    <table align="left" width="80%"><tr><td bgcolor="#AAAAAA">
-	<img src="pixmaps/1pixel.gif" width="1" height="1" border="0"></td></tr></table><br><p>
+<form action="LogLearn.jsp" method="get">
+  <%
+      String pageName = "LogLearn";
+      String pageString = "LogLearn";
+  %>
+  <%@ include file="CommonHeader.jsp" %>
 
-    <p><a href="/sigma/TableauxWorksheet.jsp">Blank Tableau Worksheet</a></p>
-    <h2><b>Create logic problem with solutions</b></h2><P>
-    <table>
-        <tr><td align="right">Number of variables:&nbsp;</td><td><input type="text" name="numVars" size=20 value="<%=numVars %>"></td></tr>
-        <tr><td align="right">Formula depth:&nbsp;</td><td><input type="text" name="depth" size=20 value="<%=depth %>"></td></tr>
-        <tr><td align="right"><input type="submit" name="submit" value="submit">&nbsp;&nbsp;</td>
-        <td><input type="submit" name="erase" value="erase"></td></tr>
-    </table>
+  <table align="left" width="80%">
+    <tr><td bgcolor="#AAAAAA"><img src="pixmaps/1pixel.gif" width="1" height="1"></td></tr>
+  </table><br>
 
+  <p><a href="/sigma/TableauxWorksheet.jsp">Blank Tableau Worksheet</a></p>
+  <h2><b>Create logic problem with solutions</b></h2>
+  <table>
+    <tr>
+      <td align="right">Number of variables:&nbsp;</td>
+      <td><input type="number" name="numVars" min="1" max="7" value="<%=numVars%>"></td>
+    </tr>
+    <tr>
+      <td align="right">Formula depth:&nbsp;</td>
+      <td><input type="number" name="depth" min="1" max="7" value="<%=depth%>"></td>
+    </tr>
+
+    <% if ("admin".equalsIgnoreCase(role)) { %>
+    <tr>
+      <td align="right">Generate new formulas:&nbsp;</td>
+      <td><input type="checkbox" name="generate" value="true"></td>
+    </tr>
+    <tr>
+      <td align="right">Populate all caches:&nbsp;</td>
+      <td><input type="submit" name="populate" value="Populate Cache"></td>
+    </tr>
+    <% } %>
+
+    <tr>
+      <td align="right"><input type="submit" name="submit" value="Submit">&nbsp;&nbsp;</td>
+      <td><input type="submit" name="erase" value="Erase"></td>
+    </tr>
+  </table>
 </form><p>
 
 <%
-    if (action != null && action.equalsIgnoreCase("submit")) {
-        out.println("Generate formulas<br>");
+/* ======================================================
+   ADMIN: POPULATE ALL CACHES (calls populateCachedFormulas)
+   ====================================================== */
+if ("admin".equalsIgnoreCase(role) && populate != null) {
+    out.println("<b>Started populating all caches for numvars=1–7, depth=1–7...</b><br>");
+    try {
+        GenPropFormulas.populateCachedFormulas();
+        out.println("<p><b>Cache population complete!</b></p>");
+    } catch (Exception e) {
+        out.println("<p style='color:red'>Error populating cache: " + e.getMessage() + "</p>");
+        e.printStackTrace();
+    }
+}
+
+/* ======================================================
+   SUBMIT HANDLER (User/Admin)
+   ====================================================== */
+if ("submit".equalsIgnoreCase(action)) {
+
+    boolean admin = "admin".equalsIgnoreCase(role);
+
+    // ---------------------------
+    // ADMIN: Generate new cache entries
+    // ---------------------------
+    if (admin && "true".equals(generate)) {
+        out.println("<b>Generating and caching new formulas...</b><br>");
         gpf.init();
-        if (numVars == null)
-            numVars = "3";
-        if (depth == null)
-            depth = "5";
-        gpf.generateFormulas(10,Integer.parseInt(numVars),Integer.parseInt(depth));
-        out.println();
-        out.println("<hr><br>");
-        out.println("<b>Contradiction</b>:<br> ");
-        for (String s : gpf.contraResults) {
-            out.println(s + "<br>");
-            out.println("CNF: " + gpf.CNF.get(s) + "<br>");
-            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
-            String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
-            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
-        }
-        out.println("<hr><br>");
-        out.println("<b>Tautology</b>:<br>");
-        for (String s : gpf.tautResults) {
-            out.println(s + "<br>");
-            out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
-            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
-            String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
-            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
-        }
-        out.println("<hr><br>");
-        out.println("<b>Satisfiable</b>:<br>");
-        for (String s : gpf.satResults) {
-            out.println(s + "<br>");
-            out.println("<b>CNF</b>: " + gpf.CNF.get(s) + "<br>");
-            out.println("<a href=\"" + gpf.truthTables.get(s) + "\">truth table</a><br>");
-            out.println("<a href=\"" + gpf.tableaux.get(s) + "\">tableau</a><br>");
-            String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
-            out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+        gpf.generateFormulas(10, numVarsInt, depthInt);
+
+        String filePath = genDir + File.separator + "numvar" + numVarsInt + "_depth" + depthInt + ".html";
+        try (PrintWriter pw = new PrintWriter(new FileWriter(filePath, true))) {
+
+            pw.println("<hr><br>");
+            pw.println("<b>Contradiction</b>:<br>");
+            out.println("<hr><br><b>Contradiction</b>:<br>");
+            for (String s : gpf.contraResults) {
+                String cnf = gpf.CNF.get(s);
+                String tt = gpf.truthTables.get(s);
+                String tb = gpf.tableaux.get(s);
+                String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
+
+                out.println(s + "<br>CNF: " + cnf + "<br>");
+                pw.println(s + "<br>CNF: " + cnf + "<br>");
+                out.println("<a href=\"" + tt + "\">truth table</a><br>");
+                pw.println("<a href=\"" + tt + "\">truth table</a><br>");
+                out.println("<a href=\"" + tb + "\">tableau</a><br>");
+                pw.println("<a href=\"" + tb + "\">tableau</a><br>");
+                out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+                pw.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+            }
+
+            pw.println("<hr><br><b>Tautology</b>:<br>");
+            out.println("<hr><br><b>Tautology</b>:<br>");
+            for (String s : gpf.tautResults) {
+                String cnf = gpf.CNF.get(s);
+                String tt = gpf.truthTables.get(s);
+                String tb = gpf.tableaux.get(s);
+                String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
+
+                out.println(s + "<br>CNF: " + cnf + "<br>");
+                pw.println(s + "<br>CNF: " + cnf + "<br>");
+                out.println("<a href=\"" + tt + "\">truth table</a><br>");
+                pw.println("<a href=\"" + tt + "\">truth table</a><br>");
+                out.println("<a href=\"" + tb + "\">tableau</a><br>");
+                pw.println("<a href=\"" + tb + "\">tableau</a><br>");
+                out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+                pw.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+            }
+
+            pw.println("<hr><br><b>Satisfiable</b>:<br>");
+            out.println("<hr><br><b>Satisfiable</b>:<br>");
+            for (String s : gpf.satResults) {
+                String cnf = gpf.CNF.get(s);
+                String tt = gpf.truthTables.get(s);
+                String tb = gpf.tableaux.get(s);
+                String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
+
+                out.println(s + "<br>CNF: " + cnf + "<br>");
+                pw.println(s + "<br>CNF: " + cnf + "<br>");
+                out.println("<a href=\"" + tt + "\">truth table</a><br>");
+                pw.println("<a href=\"" + tt + "\">truth table</a><br>");
+                out.println("<a href=\"" + tb + "\">tableau</a><br>");
+                pw.println("<a href=\"" + tb + "\">tableau</a><br>");
+                out.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+                pw.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+            }
+
+            pw.println("<!--DELIMITER-->");
+            out.println("<p>Saved formulas to: " + filePath + "</p>");
+        } catch (Exception e) {
+            out.println("<p style='color:red'>Error writing cache: " + e.getMessage() + "</p>");
+            e.printStackTrace();
         }
     }
-    if (erase != null && erase.equalsIgnoreCase("erase")) {
-        gpf.init();
+    // ---------------------------
+    // USER (retrieve cached)
+    // ---------------------------
+    else {
+        out.println("<b>Retrieved cached formula:</b><br>");
+        String formulaHtml = GenPropFormulas.getRandomGeneratedFormula(numVarsInt, depthInt);
+        if (formulaHtml != null)
+            out.println(formulaHtml);
+        else
+            out.println("<p>No cached formulas found for numVars=" + numVarsInt +
+                        ", depth=" + depthInt + "</p>");
     }
+}
+
+/* ======================================================
+   ERASE (reset)
+   ====================================================== */
+if (erase != null && erase.equalsIgnoreCase("erase")) {
+    gpf.init();
+    out.println("<p>Reset generator state.</p>");
+}
 %>
-<P>
 
 <%@ include file="Postlude.jsp" %>
 </body>
 </html>
-
