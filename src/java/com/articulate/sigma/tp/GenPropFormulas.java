@@ -212,8 +212,6 @@ public class GenPropFormulas {
             System.err.println("GenPropFormulas.run(): Error writing file " + fname + "\n" + e.getMessage());
             e.printStackTrace();
         }
-
-        // Find path to vampire
         KBmanager mgr = KBmanager.getMgr();
         SimpleElement config = mgr.readConfiguration(KButilities.SIGMA_HOME + File.separator + "KBs");
         for (SimpleElement el : config.getChildElements()) {
@@ -226,7 +224,7 @@ public class GenPropFormulas {
         }
         if (mgr.getPref("vampire").isEmpty())
             KBmanager.getMgr().setPref("vampire","/home/apease/workspace/vampire/vampire");
-        Vampire.mode = Vampire.ModeType.CASC; // default
+        Vampire.mode = Vampire.ModeType.CASC;
         System.out.println("GenPropFormulas.run(): before vampire");
         if (mgr.getPref("eprover").isEmpty())
             KBmanager.getMgr().setPref("eprover","/home/apease/workspace/eprover/PROVER/eprover");
@@ -243,15 +241,19 @@ public class GenPropFormulas {
         if (proof) {
             System.out.println("run(): Proof found: statement " + stmts + " is a contradiction");
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+            // cleanup before returning
+            if (f.exists()) f.delete();
             return SZSonto.CONTRA;
         }
         else if (sat) {
             System.out.println("run(): Saturation: statement " + stmts);
             vamp.output = TPTP3ProofProcessor.joinNreverseInputLines(vamp.output);
+            if (f.exists()) f.delete();
             return SZSonto.SAT;
         }
         else {
             System.out.println("run(): no proof: statement " + stmts);
+            if (f.exists()) f.delete();
             return SZSonto.OTHER;
         }
     }
@@ -263,18 +265,15 @@ public class GenPropFormulas {
     private GenPropFormulas generate(String parentOp, int atomCount, int levels) {
 
         int prob = random.nextInt(levels);
-        if (prob == 0) { // generate an atom
+        if (prob == 0) {
             char atomChar = (char) ('p' + random.nextInt(atomCount));
             return new GenPropFormulas(Character.toString(atomChar),null,null,null);
         }
         else {
-            int index = random.nextInt(OPS.length-1); // don't generate PARENS
-            //System.out.println("generate(): OPS length: " + OPS.length);
-            //System.out.println("generate(): index: " + index);
+            int index = random.nextInt(OPS.length-1);
             String op = OPS[index];
             while (op.equals(parentOp))
                 op = OPS[random.nextInt(OPS.length)];
-            //System.out.println("generate(): op: " + op);
             if ((operator == null ? PARENS == null : operator.equals(PARENS)) ||  (operator == null ? NOT == null : operator.equals(NOT))) {
                 return new GenPropFormulas(null,op,generate(op,atomCount,levels-1),null);
             }
@@ -285,6 +284,199 @@ public class GenPropFormulas {
             }
         }
     }
+
+    /**
+     * Store generated formulas HTML into a per-(numvars,depth) file.
+     * Each entry is delimited with a marker for indexing later.
+     */
+    public static void storeGeneratedFormulas(String html, int numvars, int depth) {
+
+        String filename = System.getProperty("user.home")
+                + "/.sigmakee/KBs/GeneratedFormulas/numvars"
+                + numvars + "_depth" + depth + ".html";
+        File outFile = new File(filename);
+        File parent = outFile.getParentFile();
+        if (parent != null && !parent.exists()) {
+            if (!parent.mkdirs()) {
+                System.err.println("Failed to create directory: " + parent.getAbsolutePath());
+                return;
+            }
+        }
+        try (FileWriter fw = new FileWriter(outFile, true);
+            PrintWriter pw = new PrintWriter(fw)) {
+            pw.println(html);
+        } catch (IOException e) {
+            System.err.println("Error writing generated formulas file: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * Retrieve a specific entry given numvars, depth, and index.
+     * Index starts at 0 (first entry).
+     */
+    public String getGeneratedFormula(int numvars, int depth, int index) {
+
+     String filename = System.getProperty("user.home")
+                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                + numvars + "_depth" + depth + ".html";
+        File inFile = new File(filename);
+        if (!inFile.exists()) {
+            System.err.println("File does not exist: " + filename);
+            return null;
+        }
+        try {
+            String content = new String(java.nio.file.Files.readAllBytes(inFile.toPath()));
+            String[] entries = content.split("<!--DELIMITER-->");
+            if (index < 0 || index >= entries.length) {
+                System.err.println("Index out of range. Total entries: " + entries.length);
+                return null;
+            }
+            return entries[index].trim();
+        } catch (IOException e) {
+            System.err.println("Error reading generated formulas file: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    /**
+     * Retrieve a random entry given numvars and depth.
+     * Returns the HTML of a randomly selected formula entry.
+     */
+    public static String getRandomGeneratedFormula(int numvars, int depth) {
+
+        if (debug) System.out.println("Getting RAND");
+        String filename = System.getProperty("user.home")
+                + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                + numvars + "_depth" + depth + ".html";
+        File inFile = new File(filename);
+        if (!inFile.exists()) {
+            System.err.println("File does not exist: " + filename);
+            return null;
+        }
+        try {
+            String content = new String(java.nio.file.Files.readAllBytes(inFile.toPath()));
+            String[] entries = content.split("<!--DELIMITER-->");
+            if (entries.length == 0) {
+                System.err.println("No entries found in file: " + filename);
+                return null;
+            }
+            java.util.Random rand = new java.util.Random();
+            int index = rand.nextInt(entries.length - 1);
+            if (debug) System.out.println("Getting " + index);
+            return entries[index].trim();
+        } catch (IOException e) {
+            if (debug) System.err.println("Error reading generated formulas file: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+/**
+ * Generate cached formulas for all combinations of numvars and depth
+ * between 1 and 7 (inclusive). This will sequentially create or append
+ * entries into the cache files with the same styling as the JSP.
+ */
+public static void populateCachedFormulas() {
+
+    GenPropFormulas gpf = new GenPropFormulas();
+    for (int numvars = 1; numvars <= 7; numvars++) {
+        for (int depth = 1; depth <= 7; depth++) {
+            if (debug)
+                System.out.println("Generating cache for numvars=" + numvars + ", depth=" + depth);
+            for (int i = 0; i <= 10; i++) {
+                FileWriter fw = null;
+                PrintWriter fileOut = null;
+                try {
+                    gpf.init();
+                    gpf.generateFormulas(10, numvars, depth);
+                    if (gpf.contraResults == null && gpf.tautResults == null && gpf.satResults == null) {
+                        i--;
+                        continue;
+                    }
+
+                    String filePath = System.getProperty("user.home")
+                            + "/.sigmakee/KBs/GeneratedFormulas/numvar"
+                            + numvars + "_depth" + depth + ".html";
+
+                    fw = new FileWriter(filePath, true);
+                    fileOut = new PrintWriter(fw);
+                    fileOut.println("<hr><br>");
+                    fileOut.println("<b>Contradiction</b>:<br>");
+                    for (String s : gpf.contraResults) {
+                        String cnf = gpf.CNF.get(s);
+                        String tt = gpf.truthTables.get(s);
+                        String tb = gpf.tableaux.get(s);
+                        String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
+                        fileOut.println(s + "<br>");
+                        fileOut.println("CNF: " + cnf + "<br>");
+                        fileOut.println("<a href=\"" + tt + "\">truth table</a><br>");
+                        fileOut.println("<a href=\"" + tb + "\">tableau</a><br>");
+                        fileOut.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+                    }
+
+                    fileOut.println("<hr><br>");
+                    fileOut.println("<b>Tautology</b>:<br>");
+                    for (String s : gpf.tautResults) {
+                        String cnf = gpf.CNF.get(s);
+                        String tt = gpf.truthTables.get(s);
+                        String tb = gpf.tableaux.get(s);
+                        String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
+                        fileOut.println(s + "<br>");
+                        fileOut.println("<b>CNF</b>: " + cnf + "<br>");
+                        fileOut.println("<a href=\"" + tt + "\">truth table</a><br>");
+                        fileOut.println("<a href=\"" + tb + "\">tableau</a><br>");
+                        fileOut.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+                    }
+
+                    fileOut.println("<hr><br>");
+                    fileOut.println("<b>Satisfiable</b>:<br>");
+                    for (String s : gpf.satResults) {
+                        String cnf = gpf.CNF.get(s);
+                        String tt = gpf.truthTables.get(s);
+                        String tb = gpf.tableaux.get(s);
+                        String worksheet = URLEncoder.encode(s, Charset.defaultCharset());
+                        fileOut.println(s + "<br>");
+                        fileOut.println("<b>CNF</b>: " + cnf + "<br>");
+                        fileOut.println("<a href=\"" + tt + "\">truth table</a><br>");
+                        fileOut.println("<a href=\"" + tb + "\">tableau</a><br>");
+                        fileOut.println("<a href=\"/sigma/TableauxWorksheet.jsp?f=" + worksheet + "\">tableau worksheet</a><p>");
+                    }
+
+                    fileOut.println("<!--DELIMITER-->");
+                } catch (Exception e) {
+                    System.err.println("Error generating formulas for numvars=" + numvars
+                            + ", depth=" + depth + ": " + e.getMessage());
+                    e.printStackTrace();
+                } finally {
+                    if (fileOut != null) fileOut.close();
+                    try {
+                        if (fw != null) fw.close();
+                    } catch (IOException ignore) {}
+                }
+            }
+        }
+    }
+
+    // Final cleanup: remove any leftover prob*.p temp files
+    cleanupTempProbFiles();
+}
+
+/**
+ * Delete leftover temporary Vampire problem files (prob*.p)
+ */
+private static void cleanupTempProbFiles() {
+    File dir = new File(System.getProperty("user.dir"));
+    File[] tempFiles = dir.listFiles((d, name) -> name.startsWith("prob") && name.endsWith(".p"));
+    if (tempFiles != null) {
+        for (File f : tempFiles) {
+            if (f.delete())
+                System.out.println("Deleted leftover temp file: " + f.getName());
+        }
+    }
+}
+
 
     /** ***************************************************************
      */

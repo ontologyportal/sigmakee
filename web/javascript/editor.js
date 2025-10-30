@@ -78,7 +78,6 @@ cnf(example_cnf, axiom,
   openFileInNewTab("example.tff", exampleTFF);
   openFileInNewTab("example.fof", exampleFOF);
   openFileInNewTab("example.cnf", exampleCNF);
-  toggleDropdown();
   switchTab(0); // Show the first tab by default
 });
 
@@ -256,9 +255,67 @@ function toggleDropdown() {
   content.style.display = isVisible ? "none" : "block";
 }
 
-function newFile(){
-  addTab();
+function newFile(ext) {
+  if (!ext) return;
+
+  // Default suggested name depends on extension
+  let baseName = prompt(`Enter a name for the new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
+  if (baseName === null) return; // user canceled
+
+  // Strip any accidental extra extension
+  baseName = baseName.replace(/\.[^/.]+$/, "");
+
+  // Full filename
+  const fileName = `${baseName}.${ext}`;
+
+  // Add tab (pass full name)
+  addTab(fileName);
+
+  // Set syntax mode
+  const tptpLike = ["tptp", "thf", "tff", "fof", "cnf"];
+  const mode = ext === "kif" ? "kif" : (tptpLike.includes(ext) ? "tptp" : "tptp");
+  codeEditor.setOption("mode", mode);
+
+  // Empty content
+  codeEditor.setValue("");
+  codeEditors[activeTab] = { cm: codeEditor, value: "" };
+
+  toggleDropdown();
 }
+
+function addTab(name = null) {
+  const tabBar = document.getElementById("tabBar");
+  const newIndex = codeEditors.length;
+  const tab = document.createElement("div");
+  tab.className = "tab";
+  tab.setAttribute("data-index", newIndex);
+
+  const label = document.createElement("span");
+  label.textContent = name || `untitled.kif`; // fallback only if truly undefined
+  label.onclick = (e) => {
+    if (e.target.classList.contains("close-btn")) return;
+    switchTab(newIndex);
+  };
+
+  const closeBtn = document.createElement("span");
+  closeBtn.textContent = "×";
+  closeBtn.className = "close-btn";
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    closeTab(newIndex);
+  };
+
+  tab.appendChild(label);
+  tab.appendChild(closeBtn);
+  tabBar.appendChild(tab);
+
+  if (codeEditors.length > activeTab)
+    codeEditors[activeTab] = codeEditor.getValue();
+
+  codeEditors.push({ cm: null, value: "" });
+  switchTab(newIndex, true);
+}
+
 
 function downloadFile() {
   const editorObj = codeEditors[activeTab];
@@ -359,40 +416,6 @@ async function formatBuffer() {
 
 // ------------------------------------------------------------------
 // Tabs Management
-
-function addTab(name = null) {
-  if (!name) {
-  const inputName = prompt("Enter a name for the new file:", "Untitled.kif");
-  if (!inputName) return;
-  name = inputName.trim();
-  }
-  const tabBar = document.getElementById("tabBar");
-  const newIndex = codeEditors.length;
-  const tab = document.createElement("div");
-  tab.className = "tab";
-  tab.setAttribute("data-index", newIndex);
-  const label = document.createElement("span");
-  label.textContent = name;
-  label.onclick = (e) => {
-    if (e.target.classList.contains("close-btn")) return;
-    switchTab(newIndex);
-  };
-  const closeBtn = document.createElement("span");
-  closeBtn.textContent = 'x';
-  closeBtn.className = "close-btn";
-  closeBtn.onclick = (e) => {
-    e.stopPropagation();
-    closeTab(newIndex);
-  };
-  tab.appendChild(label);
-  tab.appendChild(closeBtn);
-  tabBar.appendChild(tab);
-  if (codeEditors.length > activeTab)
-    codeEditors[activeTab] = codeEditor.getValue();
-  codeEditors.push({ cm: null, value: "" });
-  switchTab(newIndex, true);
-  toggleDropdown();
-}
 
 function switchTab(index, isNew = false) {
   const tabs = document.querySelectorAll(".tab");
