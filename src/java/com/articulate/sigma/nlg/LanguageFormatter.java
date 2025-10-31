@@ -420,8 +420,6 @@ public class LanguageFormatter {
         String cleanedText = removeLinks(initialText);
         prompt = prompt + cleanedText;
 
-        System.out.println(prompt);
-
         String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
         if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
 

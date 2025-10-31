@@ -35,28 +35,12 @@
         .proof-caption { color:#666; font-size:.9em; margin-top:4px; }
     </style>
 
-    <!-- === Bouncing Sumo Spinner === -->
     <style>
-        .spin-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(255,255,255,0.85);
-            display: none;
-            z-index: 9999;
-        }
-        .bounce-icon {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 120px;
-            height: 120px;
-            transform: translate(-50%, -50%);
-            animation: bounce 1.2s ease-in-out infinite;
-        }
-        @keyframes bounce {
-            0%, 100% { transform: translate(-50%, -50%) scale(1); }
-            50% { transform: translate(-50%, -60%) scale(1.1); }
-        }
+        .spin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.95); display:none; z-index:9999; }
+        body.busy .spin-overlay { display:block; }   /* spinner visible on the new page until load */
+        .bounce-icon { position:absolute; top:50%; left:50%; width:120px; height:120px;
+            transform:translate(-50%,-50%); animation:bounce 1.2s ease-in-out infinite; }
+        @keyframes bounce { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-60%) scale(1.1)} }
     </style>
 
     <script>
@@ -96,14 +80,21 @@
         function viewSelectedTest() {
             const sel = document.getElementById('testName');
             if (!sel || !sel.value) return;
-            // If you implemented the streaming JSP:
-            const url = 'ViewTest.jsp?name=' + encodeURIComponent(sel.value);
-
-            // If instead you copy tests under /sigma/tests, use:
-            // const url = 'tests/' + encodeURIComponent(sel.value);
+            const name = sel.value.toLowerCase();
+            // .tq via ViewTest.jsp, others directly from /tests/
+            const url = name.endsWith('.tq') || name.endsWith('.tptp') || name.endsWith('.tff')
+                ? ('ViewTest.jsp?name=' + encodeURIComponent(sel.value))
+                : ('tests/' + encodeURIComponent(sel.value));
             window.open(url, '_blank');
         }
     </script>
+
+    <script>
+        window.addEventListener('load', function(){
+            document.body.classList.remove('busy');
+        });
+    </script>
+
 </head>
 <%
     System.out.println("INFO in AskTell.jsp");
@@ -131,6 +122,7 @@
         session.setAttribute("ModensPonens", modensPonens);
     }
     if (modensPonens == null) modensPonens = false;
+    KB.modensPonens = modensPonens;
 
     // ---- Drop-one-premise (persist + global) ----
     Boolean dropOnePremise = (Boolean) session.getAttribute("dropOnePremise");
@@ -225,14 +217,34 @@
         stmt = englishStatement;
     }
 
+    String testFilter = request.getParameter("testFilter");
+    if (testFilter == null) testFilter = (String) session.getAttribute("testFilter");
+    if (testFilter == null) testFilter = "all";
+    session.setAttribute("testFilter", testFilter);
+
     com.articulate.sigma.tp.EProver eProver = null;
     com.articulate.sigma.tp.Vampire vampire = null;
 
     String lineHtml =
             "<table ALIGN='LEFT' WIDTH='40%'><tr><TD BGCOLOR='#AAAAAA'><IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>\n";
+
+    // ---- Global flags for paraphrasing ----
+    System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
+    HTMLformatter.proofParaphraseInEnglish = showEnglish;
+    System.out.println("AskTell.jsp / showProofFromLLM = "+llmProof);
+    LanguageFormatter.paraphraseLLM = llmProof;
+
+    boolean busy = "Run".equalsIgnoreCase(req);
 %>
 
-<body style="face=Arial,Helvetica" bgcolor="#FFFFFF">
+
+<body class="<%= busy ? "busy" : "" %>" aria-busy="<%= busy %>">
+
+<div id="loading" class="spin-overlay">
+    <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
+</div>
+
+
 <form name="AskTell" id="AskTell" action="AskTell.jsp" method="POST">
     <%
         String pageName = "AskTell";
@@ -249,8 +261,11 @@
             <label><input type="radio" name="runSource" value="custom"
                 <%= "test".equals(session.getAttribute("runSource")) ? "" : "checked" %> > Custom query</label>
             &nbsp;&nbsp;
+            <!-- Radio label -->
             <label><input type="radio" name="runSource" value="test"
-                <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> > Saved test (.tq)</label>
+                <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> >
+                Saved test (.tq / .tptp / .tff)
+            </label>
         </div>
 
         <div class="row" id="lblCustom">
@@ -259,18 +274,20 @@
 
         <%
             String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-            File[] tqFiles = (testDir == null) ? new File[0]
-                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq"));
-            if (tqFiles == null) tqFiles = new File[0];
-            Arrays.sort(tqFiles, Comparator.comparing(File::getName));
-            if (selectedTest == null && tqFiles.length > 0) selectedTest = tqFiles[0].getName();
+            File[] allFiles = (testDir == null) ? new File[0]
+                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff"));
+            if (allFiles == null) allFiles = new File[0];
+
+            File[] testFiles = allFiles;
+            Arrays.sort(testFiles, Comparator.comparing(File::getName));
+            if (selectedTest == null && testFiles.length > 0) selectedTest = testFiles[0].getName();
         %>
 
             <!-- ===== Open test in a new page ===== -->
         <div class="row" id="lblTest">
             <b>Test:</b>
             <select name="testName" id="testName">
-                <% for (File f : tqFiles) {
+                <% for (File f : testFiles) {
                     String fname = f.getName();
                     boolean sel = fname.equals(selectedTest);
                 %>
@@ -283,6 +300,15 @@
                style="margin-left:10px; text-decoration:underline; color:#0073e6;">
                 View Test
             </a>
+
+            <div class="row" id="filterRow">
+                Filter:
+                <label><input type="radio" name="testFilter" value="all"  <%= "all".equalsIgnoreCase(testFilter)  ? "checked":"" %>> All</label>
+                <label><input type="radio" name="testFilter" value="tq"   <%= "tq".equalsIgnoreCase(testFilter)   ? "checked":"" %>> tq</label>
+                <label><input type="radio" name="testFilter" value="tptp" <%= "tptp".equalsIgnoreCase(testFilter) ? "checked":"" %>> tptp</label>
+                <label><input type="radio" name="testFilter" value="tff"  <%= "tff".equalsIgnoreCase(testFilter)  ? "checked":"" %>> tff</label>
+            </div>
+            <input type="hidden" name="testFilter" id="testFilterHidden" value="<%= testFilter %>">
 
             <span class="muted">(Uses the configuration below)</span>
         </div>
@@ -359,107 +385,71 @@
         try {
             if ("test".equals(runSource)) {
                 // ---- RUN SAVED TEST ----
-                try { InferenceTestSuite.resetAllForInference(kb); } catch (IOException ignore) {}
-                InferenceTestSuite its = new InferenceTestSuite();
-                String testPath = KBmanager.getMgr().getPref("inferenceTestDir")
-                        + File.separator + session.getAttribute("selectedTest");
-                InferenceTestSuite.InfTestData itd = its.readTestFile(new File(testPath));
-                if (itd == null) {
-                    out.println("<font color='red'>Could not read test file.</font>");
+
+                // Clear All
+                try { InferenceTestSuite.resetAllForInference(kb); }
+                catch (IOException ignore) { System.out.println("ERROR resetAllForInference: " + ignore.getMessage()); }
+
+                String testName = (String) session.getAttribute("selectedTest");
+                String testPath = KBmanager.getMgr().getPref("inferenceTestDir") + File.separator + testName;
+                String ext = testName == null ? "" : testName.toLowerCase();
+
+                int maxAns = Math.max(1, maxAnswers);
+                int tmo    = Math.max(1, timeout);
+                System.out.println("Max Answers = " + maxAns);
+                System.out.println("Time-out    = " + tmo);
+
+                // Common proof processor
+                com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
+                        new com.articulate.sigma.trans.TPTP3ProofProcessor();
+
+                if (ext.endsWith(".tq")) {
+                    // ===== tq tests =====
+                    InferenceTestSuite its = new InferenceTestSuite();
+                    InferenceTestSuite.InfTestData itd = its.readTestFile(new File(testPath));
+                    if (itd == null) {
+                        out.println("<font color='red'>Could not read test file.</font>");
+                    } else {
+                        for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
+                        FormulaPreprocessor fp = new FormulaPreprocessor();
+                        Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
+                        for (Formula q : qs) {
+                            String qstr = q.getFormula();
+                            if ("EProver".equals(inferenceEngine)) {
+                                com.articulate.sigma.tp.EProver eRun = kb.askEProver(qstr, tmo, maxAns);
+                                tpp.parseProofOutput(eRun.output, qstr, kb, eRun.qlist);
+                            } else if ("Vampire".equals(inferenceEngine)) {
+                                setVampMode(vampireMode);
+                                com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
+                                        ? kb.askVampireModensPonens(qstr, tmo, maxAns)
+                                        : kb.askVampire(qstr, tmo, maxAns);
+                                tpp.parseProofOutput(vRun.output, qstr, kb, vRun.qlist);
+                            } else if ("LEO".equals(inferenceEngine)) {
+                                com.articulate.sigma.tp.LEO leoRun = kb.askLeo(qstr, tmo, maxAns);
+                                tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
+                            }
+                        }
+                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                        tpp.processAnswersFromProof(new StringBuilder(), itd.query);
+                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
+                    }
+                } else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
+                    // ===== NEW .tptp / .tff FLOW via askVampireTPTP =====
+                    if (!"Vampire".equals(inferenceEngine)) {
+                        out.println("<span style='color:#b00'>Only Vampire is supported for .tptp/.tff tests.</span><br>");
+                    } else {
+                        setVampMode(vampireMode);
+                        com.articulate.sigma.tp.Vampire vRun = kb.askVampireTPTP(testPath, tmo, maxAns);
+                        // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
+                        String pseudoQuery = "TPTP file: " + new File(testPath).getName();
+                        // Parse + render just like the other flows
+                        tpp.parseProofOutput(vRun.output, pseudoQuery, kb, vRun.qlist);
+                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                        tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
+                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                    }
                 } else {
-                    for (String s : itd.statements) if (!StringUtil.emptyString(s)) kb.tell(s);
-
-                    // Use the maxAns and timeout values from the tq files
-//                    int maxAns = Math.max(1, (itd.expectedAnswers==null)?1:itd.expectedAnswers.size());
-//                    int tmo = InferenceTestSuite.overrideTimeout ? InferenceTestSuite._DEFAULT_TIMEOUT
-//                            : Math.max(1, itd.timeout);
-
-                    // Always use page values, ignore .tq and suite override
-                    int maxAns = Math.max(1, maxAnswers);
-                    int tmo = Math.max(1, timeout);
-
-                    System.out.println("Max Answers = "+maxAns);
-                    System.out.println("Time-out = "+tmo);
-
-                    FormulaPreprocessor fp = new FormulaPreprocessor();
-                    Set<Formula> qs = fp.preProcess(new Formula(itd.query), true, kb);
-
-                    com.articulate.sigma.trans.TPTP3ProofProcessor tpp =
-                            new com.articulate.sigma.trans.TPTP3ProofProcessor();
-
-                    for (Formula q : qs) {
-                        String qstr = q.getFormula();
-                        if ("EProver".equals(inferenceEngine)) {
-                            com.articulate.sigma.tp.EProver eRun = kb.askEProver(qstr, tmo, maxAns);
-                            tpp.parseProofOutput(eRun.output, qstr, kb, eRun.qlist);
-                        } else if ("Vampire".equals(inferenceEngine)) {
-                            if ("CASC".equals(vampireMode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
-                            if ("Avatar".equals(vampireMode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
-                            if ("Custom".equals(vampireMode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
-                            com.articulate.sigma.tp.Vampire vRun = Boolean.TRUE.equals(modensPonens)
-                                    ? kb.askVampireModensPonens(qstr, tmo, maxAns)
-                                    : kb.askVampire(qstr, tmo, maxAns);
-                            tpp.parseProofOutput(vRun.output, qstr, kb, vRun.qlist);
-                        } else if ("LEO".equals(inferenceEngine)) {
-                            com.articulate.sigma.tp.LEO leoRun = kb.askLeo(qstr, tmo, maxAns);
-                            tpp.parseProofOutput(leoRun.output, qstr, kb, leoRun.qlist);
-                        }
-                    }
-
-//                    String link = tpp.createProofDotGraph();
-//                    if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
-
-                    String imgPath = null;
-                    try {
-                        imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
-                    } catch (Exception _ignore) { imgPath = null; }
-
-                    if (imgPath != null && tpp.proof.size() > 0) {
-                        // Ensure the png is inside the webapp so Tomcat can serve it
-                        String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
-                        if (webGraphDir != null) {
-                            File onDisk = new File(imgPath);
-                            File webDir  = new File(webGraphDir);
-                            if (!webDir.exists()) webDir.mkdirs();
-
-                            // Make a unique name to avoid cache/collisions
-                            String baseName = onDisk.getName();              // e.g. proof.dot.png
-                            String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
-                            File webImg = new File(webDir, stamped);
-
-                            try {
-                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
-                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                                String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
-
-                                // Cache-buster on the <img> only, so browser always fetches the latest bitmap
-                                String imgUrl = url + "?v=" + System.currentTimeMillis();
-
-                                // Optional label shows engine/mode on top-left of the image
-                                String badge = "Vampire".equals(inferenceEngine)
-                                        ? ("Vampire (" + vampireMode + ")")
-                                        : inferenceEngine;
-
-                                out.println(
-                                        "<div class='proof-thumb-wrap'>" +
-                                                "<span class='proof-badge'>" + badge + "</span>" +
-                                                "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
-                                                "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
-                                                "</a>" +
-                                                "<div class='proof-caption'>Click to open full-size</div>" +
-                                                "</div>"
-                                );
-                            }
-                            catch (Exception copyEx) {
-                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
-                                        + imgPath + "</span><br>");
-                            }
-                        }
-                    }
-
-                    tpp.processAnswersFromProof(null, itd.query);
-                    out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
+                    out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
             } else {
                 // ---- RUN CUSTOM QUERY (Ask) ----
@@ -468,66 +458,11 @@
                     eProver = kb.askEProver(stmt, timeout, maxAnswers);
                     com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                     tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
-
-//                    String link = tpp.createProofDotGraph();
-//                    out.println("<a href=\"" + link + "\">graphical proof</a><p>");
-
-                    String imgPath = null;
-                    try {
-                        imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
-                    } catch (Exception _ignore) { imgPath = null; }
-
-                    if (imgPath != null && tpp.proof.size() > 0) {
-                        // Ensure the png is inside the webapp so Tomcat can serve it
-                        String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
-                        if (webGraphDir != null) {
-                            File onDisk = new File(imgPath);
-                            File webDir  = new File(webGraphDir);
-                            if (!webDir.exists()) webDir.mkdirs();
-
-                            // Make a unique name to avoid cache/collisions
-                            String baseName = onDisk.getName();              // e.g. proof.dot.png
-                            String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
-                            File webImg = new File(webDir, stamped);
-
-                            try {
-                                java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
-                                        java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                                String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
-
-                                // Cache-buster on the <img> only, so browser always fetches the latest bitmap
-                                String imgUrl = url + "?v=" + System.currentTimeMillis();
-
-                                // Optional label shows engine/mode on top-left of the image
-                                String badge = "Vampire".equals(inferenceEngine)
-                                        ? ("Vampire (" + vampireMode + ")")
-                                        : inferenceEngine;
-
-                                out.println(
-                                        "<div class='proof-thumb-wrap'>" +
-                                                "<span class='proof-badge'>" + badge + "</span>" +
-                                                "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
-                                                "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
-                                                "</a>" +
-                                                "<div class='proof-caption'>Click to open full-size</div>" +
-                                                "</div>"
-                                );
-                            }
-                            catch (Exception copyEx) {
-                                out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
-                                        + imgPath + "</span><br>");
-                            }
-                        }
-                    }
-
-
+                    publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
-                    if ("CASC".equals(vampireMode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
-                    if ("Avatar".equals(vampireMode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
-                    if ("Custom".equals(vampireMode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
+                    setVampMode(vampireMode);
                     vampire = Boolean.TRUE.equals(modensPonens)
                             ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
                             : kb.askVampire(stmt, timeout, maxAnswers);
@@ -535,60 +470,7 @@
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
-
-//                        String link = tpp.createProofDotGraph();
-//                        if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
-
-                        /** Ensure web-visible graph path + build a proper URL */
-                        String imgPath = null;
-                        try {
-                            imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
-                        } catch (Exception _ignore) { imgPath = null; }
-
-                        if (imgPath != null && tpp.proof.size() > 0) {
-                            // Ensure the png is inside the webapp so Tomcat can serve it
-                            String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
-                            if (webGraphDir != null) {
-                                File onDisk = new File(imgPath);
-                                File webDir  = new File(webGraphDir);
-                                if (!webDir.exists()) webDir.mkdirs();
-
-                                // Make a unique name to avoid cache/collisions
-                                String baseName = onDisk.getName();              // e.g. proof.dot.png
-                                String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
-                                File webImg = new File(webDir, stamped);
-
-                                try {
-                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
-                                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                                    String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
-
-                                    // Cache-buster on the <img> only, so browser always fetches the latest bitmap
-                                    String imgUrl = url + "?v=" + System.currentTimeMillis();
-
-                                    // Optional label shows engine/mode on top-left of the image
-                                    String badge = "Vampire".equals(inferenceEngine)
-                                            ? ("Vampire (" + vampireMode + ")")
-                                            : inferenceEngine;
-
-                                    out.println(
-                                            "<div class='proof-thumb-wrap'>" +
-                                                    "<span class='proof-badge'>" + badge + "</span>" +
-                                                    "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
-                                                    "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
-                                                    "</a>" +
-                                                    "<div class='proof-caption'>Click to open full-size</div>" +
-                                                    "</div>"
-                                    );
-                                }
-                                catch (Exception copyEx) {
-                                    out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
-                                            + imgPath + "</span><br>");
-                                }
-                            }
-                        }
-
+                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(vampire.qlist,stmt);
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
@@ -598,59 +480,7 @@
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(kb.leo.output, stmt, kb, kb.leo.qlist);
-
-//                        String link = tpp.createProofDotGraph();
-//                        if (tpp.proof.size() > 0) out.println("<a href=\"" + link + "\">graphical proof</a><p>");
-
-                        String imgPath = null;
-                        try {
-                            imgPath = tpp.createProofDotGraph();   // absolute file path where Graphviz wrote the png
-                        } catch (Exception _ignore) { imgPath = null; }
-
-                        if (imgPath != null && tpp.proof.size() > 0) {
-                            // Ensure the png is inside the webapp so Tomcat can serve it
-                            String webGraphDir = application.getRealPath("/graph"); // e.g. .../webapps/sigma/graph
-                            if (webGraphDir != null) {
-                                File onDisk = new File(imgPath);
-                                File webDir  = new File(webGraphDir);
-                                if (!webDir.exists()) webDir.mkdirs();
-
-                                // Make a unique name to avoid cache/collisions
-                                String baseName = onDisk.getName();              // e.g. proof.dot.png
-                                String stamped  = (System.currentTimeMillis() + "-" + baseName).replaceAll("[^A-Za-z0-9._-]","_");
-                                File webImg = new File(webDir, stamped);
-
-                                try {
-                                    java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(),
-                                            java.nio.file.StandardCopyOption.REPLACE_EXISTING);
-
-                                    String url = request.getContextPath() + "/graph/" + webImg.getName(); // /sigma/graph/...
-
-                                    // Cache-buster on the <img> only, so browser always fetches the latest bitmap
-                                    String imgUrl = url + "?v=" + System.currentTimeMillis();
-
-                                    // Optional label shows engine/mode on top-left of the image
-                                    String badge = "Vampire".equals(inferenceEngine)
-                                            ? ("Vampire (" + vampireMode + ")")
-                                            : inferenceEngine;
-
-                                    out.println(
-                                            "<div class='proof-thumb-wrap'>" +
-                                                    "<span class='proof-badge'>" + badge + "</span>" +
-                                                    "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>" +
-                                                    "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'>" +
-                                                    "</a>" +
-                                                    "<div class='proof-caption'>Click to open full-size</div>" +
-                                                    "</div>"
-                                    );
-                                }
-                                catch (Exception copyEx) {
-                                    out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "
-                                            + imgPath + "</span><br>");
-                                }
-                            }
-                        }
-
+                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(kb.leo.qlist,stmt);
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
@@ -661,35 +491,98 @@
         }
     }
 
-    // ---- Global flags for paraphrasing ----
-    System.out.println("AskTell.jsp / showProofInEnglish = "+showEnglish);
-    HTMLformatter.proofParaphraseInEnglish = showEnglish;
-    System.out.println("AskTell.jsp / showProofFromLLM = "+llmProof);
-    LanguageFormatter.paraphraseLLM = llmProof;
-
     if (status != null && status.toString().length() > 0) { out.println("Status: "); out.println(status.toString()); }
 %>
+
+<%!
+    /** 1) One place to set Vampire mode */
+    void setVampMode(String mode){
+        if ("CASC".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CASC;
+        else if ("Avatar".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.AVATAR;
+        else if ("Custom".equals(mode)) com.articulate.sigma.tp.Vampire.mode = com.articulate.sigma.tp.Vampire.ModeType.CUSTOM;
+    }
+
+    /** 2) Publish the proof graph (the big repeated block) */
+    void publishGraph(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
+                      String inferenceEngine, String vampireMode,
+                      javax.servlet.http.HttpServletRequest request,
+                      javax.servlet.ServletContext application,
+                      javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+        String imgPath=null; try { imgPath = tpp.createProofDotGraph(); } catch (Exception ignore) {}
+        if (imgPath==null || tpp.proof.size()==0) return;
+        String webGraphDir = application.getRealPath("/graph"); if (webGraphDir==null) return;
+        java.io.File onDisk = new java.io.File(imgPath), webDir = new java.io.File(webGraphDir);
+        if (!webDir.exists()) webDir.mkdirs();
+        String base = onDisk.getName(), stamped = (System.currentTimeMillis()+"-"+base).replaceAll("[^A-Za-z0-9._-]","_");
+        java.io.File webImg = new java.io.File(webDir, stamped);
+        try {
+            java.nio.file.Files.copy(onDisk.toPath(), webImg.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            String url = request.getContextPath()+"/graph/"+webImg.getName();
+            String imgUrl = url + "?v=" + System.currentTimeMillis();
+            String badge = "Vampire".equals(inferenceEngine)? ("Vampire ("+vampireMode+")") : inferenceEngine;
+            out.println("<div class='proof-thumb-wrap'>"
+                    + "<span class='proof-badge'>" + badge + "</span>"
+                    + "<a href='" + url + "' target='_blank' title='Open full-size proof graph'>"
+                    + "<img class='proof-thumb' src='" + imgUrl + "' alt='Proof graph thumbnail'></a>"
+                    + "<div class='proof-caption'>Click to open full-size</div></div>");
+        } catch (Exception ex) {
+            out.println("<span style='color:#b00'>Could not publish proof image to /graph. Path: "+imgPath+"</span><br>");
+        }
+    }
+%>
+
 
 <p>
     <%@ include file="Postlude.jsp" %>
 
+        <script>
+            (function(){
+                const form = document.getElementById('AskTell');
+                let clicked = null;
+                form.querySelectorAll('input[type=submit]').forEach(b =>
+                    b.addEventListener('click', e => clicked = e.target.value)
+                );
+                form.addEventListener('submit', function(){
+                    if (clicked === 'Run') {
+                        // show spinner on the OLD page immediately
+                        document.getElementById('loading').style.display = 'block';
+                    }
+                });
+                // hide spinner when the NEW page is fully loaded
+                window.addEventListener('load', () => document.body.classList.remove('busy'));
+                // BFCache: ensure spinner is hidden when navigating back
+                window.addEventListener('pageshow', e => { if (e.persisted) document.body.classList.remove('busy'); });
+            })();
+        </script>
 
-    <div id="loading" class="spin-overlay">
-        <img src="pixmaps/sumo.gif" class="bounce-icon" alt="Loading...">
-    </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function(){
+                const sel = document.getElementById('testName');
+                const radios = document.querySelectorAll('input[name="testFilter"]');
+                const hidden = document.getElementById('testFilterHidden');
+                const form = document.getElementById('AskTell');
+                if (!sel || !radios.length) return;
 
-    <script>
-        (function(){
-            const form = document.getElementById('AskTell');
-            let clicked=null;
-            form.querySelectorAll('input[type=submit]').forEach(b=>b.addEventListener('click',e=>clicked=e.target.value));
-            form.addEventListener('submit', function(){
-                const eng = document.querySelector('input[name="inferenceEngine"]:checked')?.value;
-                if (clicked==='Run' && eng==='Vampire')
-                    document.getElementById('loading').style.display='block';
+                const original = Array.from(sel.options).map(o => ({text:o.text, value:o.value}));
+
+                function applyFilter(kind){
+                    const prev = sel.value;
+                    const match = f => kind === 'all' || f.toLowerCase().endsWith('.' + kind);
+                    sel.innerHTML = '';
+                    original.filter(o => match(o.value)).forEach(o => {
+                        const opt = document.createElement('option'); opt.value=o.value; opt.text=o.text; sel.add(opt);
+                    });
+                    sel.value = Array.from(sel.options).some(o => o.value===prev) ? prev : (sel.options[0]?.value || '');
+                }
+                function currentFilter(){ return document.querySelector('input[name="testFilter"]:checked')?.value || 'all'; }
+
+                // initialize from session-backed radio
+                applyFilter(currentFilter());
+
+                // keep session in sync on change + submit
+                radios.forEach(r => r.addEventListener('change', e => { hidden.value = e.target.value; applyFilter(e.target.value); }));
+                form.addEventListener('submit', () => { hidden.value = currentFilter(); });
             });
-        })();
-    </script>
-
+        </script>
 </body>
 </html>

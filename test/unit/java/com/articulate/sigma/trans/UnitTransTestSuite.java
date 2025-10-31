@@ -10,6 +10,7 @@ import org.junit.runners.Suite;
     SUMOformulaToTPTPformulaTest.class,
 //    SUMOtoTFATest.class,
     TPTP3ProofProcTest.class
+        ,TPTPUtilTest.class
 })
 public class UnitTransTestSuite extends UnitTestBase {
 
