@@ -36,7 +36,7 @@
     </style>
 
     <style>
-        .spin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.85); display:none; z-index:9999; }
+        .spin-overlay { position:fixed; inset:0; background:rgba(255,255,255,.95); display:none; z-index:9999; }
         body.busy .spin-overlay { display:block; }   /* spinner visible on the new page until load */
         .bounce-icon { position:absolute; top:50%; left:50%; width:120px; height:120px;
             transform:translate(-50%,-50%); animation:bounce 1.2s ease-in-out infinite; }
