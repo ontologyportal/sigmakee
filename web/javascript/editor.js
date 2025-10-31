@@ -8,36 +8,63 @@ const uploadForm = document.getElementById('uploadForm');
 let codeEditors = [];
 let activeTab = 0;
 let errors = window.initialErrors || [];
-let errorMarks = window.initialErrorMask || [];
+let errorMarks = [];
+let errorMask = window.initialErrorMask || [];
 let codeEditor;
+
+const $ = (s) => document.querySelector(s);
+const getContent = () => codeEditor.getValue().trim();
+const setEditorContent = (t = "") => codeEditor.setValue(t);
+const setMode = () => codeEditor.setOption("mode", getActiveMode());
+const saveActiveTab = () => codeEditors[activeTab] && (codeEditors[activeTab][1] = codeEditor.getValue());
+const showMessage = (m, err = false) => {
+  const box = $(".scroller.msg");
+  if (!box) return;
+  box.classList.toggle("errors-box", err);
+  box.classList.toggle("success", !err);
+  box.textContent = m;
+};
+
+async function postToServlet(mode, data = {}) {
+  const body = new URLSearchParams({ mode, ...data }).toString();
+  const res = await fetch("EditorServlet", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+      "Accept": "application/json"
+    },
+    body
+  });
+  const text = await res.text();
+  try {
+    return (res.headers.get("content-type") || "").includes("json")
+      ? JSON.parse(text)
+      : { message: text };
+  } catch { return { message: text }; }
+}
+
+function createTabElement(fileName, i) {
+  const tab = document.createElement("div");
+  tab.className = "tab";
+  tab.dataset.index = i;
+  const label = document.createElement("span");
+  label.textContent = fileName;
+  label.onclick = () => switchTab(i);
+  const close = document.createElement("span");
+  close.textContent = "×";
+  close.className = "close-btn";
+  close.onclick = (e) => { e.stopPropagation(); closeTab(i); };
+  tab.append(label, close);
+  return tab;
+}
+
 
 // ------------------------------------------------------------------
 // Event Listeners & Initialization
 
-async function loadKifColors() {
-  const response = await fetch('/sigma/modes/kif.xml');
-  const xmlText = await response.text();
-  const parser = new DOMParser();
-  const xml = parser.parseFromString(xmlText, 'text/xml');
-  const colorMap = {
-    'KEYWORD1': 'keyword1',
-    'KEYWORD2': 'keyword2',
-    'KEYWORD3': 'keyword3',
-    'KEYWORD4': 'keyword4',
-    'COMMENT1': 'comment',
-    'LITERAL1': 'string',
-    'LITERAL2': 'literal',
-    'FUNCTION': 'function',
-  };
-  const keywords = {};
-  for (const type in colorMap)
-    keywords[type] = [...xml.getElementsByTagName(type)].map(n => n.textContent);
-  return { colorMap, keywords };
-}
-
 async function defineModeFromXML(modeName, xmlPath) {
-  const response = await fetch(xmlPath);
-  const xmlText = await response.text();
+  const res = await fetch(xmlPath);
+  const xmlText = await res.text();
   const parser = new DOMParser();
   const xml = parser.parseFromString(xmlText, 'text/xml');
   const tagTypes = [
@@ -62,7 +89,6 @@ async function defineModeFromXML(modeName, xmlPath) {
     'MARKUP': 'markup',
     'NULL': 'null'
   };
-
   CodeMirror.defineMode(modeName, function() {
   return {
     token: function(stream, state) {
@@ -71,17 +97,14 @@ async function defineModeFromXML(modeName, xmlPath) {
       if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
       if (stream.match(/\[[^\]]*\]/)) return classMap['LITERAL1'];
       if (stream.match(/\d+(?:\.\d+)?/)) {
-        const cur = stream.current();
-        const start = stream.start;
-        const end = stream.pos;
-        const prev = start > 0 ? stream.string.charAt(start - 1) : '';
-        const next = end < stream.string.length ? stream.string.charAt(end) : '';
+        const prev = stream.start > 0 ? stream.string.charAt(stream.start - 1) : '';
         const validBefore = !prev || /[\s(]/.test(prev);
+        const next = stream.pos < stream.string.length ? stream.string.charAt(stream.pos) : '';
         const validAfter = !next || /[\s)]/.test(next);
         const noLetterNearby = !(/[A-Za-z]/.test(prev) || /[A-Za-z]/.test(next));
         if (validBefore && validAfter && noLetterNearby)
           return "number";
-        stream.backUp(cur.length);
+        stream.backUp(stream.current().length);
       }
       if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
       for (const type in keywords)
@@ -114,49 +137,25 @@ fileInput.addEventListener('change', () => {
   reader.readAsText(file);
   toggleDropdown();
 });
-
 document.addEventListener("DOMContentLoaded", async function() {
-  await defineModeFromXML("kif", "LanguagesXML/kif.xml");
-  await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
+  await Promise.all([
+    defineModeFromXML("kif", "LanguagesXML/kif.xml"),
+    defineModeFromXML("tptp", "LanguagesXML/tptp.xml")
+  ]);
   initializeCodeMirror();
   if (window.initialErrors || window.initialErrorMask)
     highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
-  const exampleTPTP = `% Example TPTP file
-tff(mortal_rule, axiom,
-    (![X]: (man(X) => mortal(X)))
-).
-
-tff(socrates_fact, axiom,
-    man(socrates)
-).
-
-tff(query, conjecture,
-    mortal(socrates)
-).`;
-  const exampleTHF = `% Example THF (Typed Higher-Order Form)
-thf(example_thf, conjecture,
-    ( ![P: $i > $o, X: $i]: ( P @ X ) )
-).`;
-  const exampleTFF = `% Example TFF (Typed First-Order Form)
-tff(example_tff, axiom,
-    ![X: $i]: ( man(X) => mortal(X) )
-).`;
-  const exampleFOF = `% Example FOF (First-Order Form)
-fof(example_fof, axiom,
-    ![X]: ( man(X) => mortal(X) )
-).`;
-  const exampleCNF = `% Example CNF (Clausal Normal Form)
-cnf(example_cnf, axiom,
-    ( ~man(X) | mortal(X) )
-).`;
-  openFileInNewTab("example.tptp", exampleTPTP);
-  openFileInNewTab("example.thf", exampleTHF);
-  openFileInNewTab("example.tff", exampleTFF);
-  openFileInNewTab("example.fof", exampleFOF);
-  openFileInNewTab("example.cnf", exampleCNF);
+  const examples = {
+    "example.kif": `; Example Kif File\n(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))`,
+    "example.tptp": `% Example TPTP file\n tff(mortal_rule, axiom, (![X]: (man(X) => mortal(X)))).`,
+    "example.thf": `% Example THF (Typed Higher-Order Form)\nthf(example_thf, conjecture, (![P: $i>$o, X: $i]: (P @ X))).`,
+    "example.tff": `% Example TFF (Typed First-Order Form)\ntff(example_tff, axiom, (![X:$i]: (man(X) => mortal(X)))).`,
+    "example.fof": `% Example FOF\nfof(example_fof, axiom, (![X]: (man(X)=>mortal(X)))).`,
+    "example.cnf": `% Example CNF\ncnf(example_cnf, axiom, (~man(X)|mortal(X))).`
+  };
+  Object.entries(examples).forEach(([name, content]) => openFileInNewTab(name, content));
   switchTab(0);
 });
-
 
 // ------------------------------------------------------------------
 // Editor Functions
@@ -213,7 +212,7 @@ function renderErrorBox(errors = [], message = null) {
 function highlightErrors(errors = [], mask = []) {
   for (const m of errorMarks) m.clear();
   errorMarks = [];
-  const editor = codeEditors[activeTab]?.cm || codeEditor;
+  const editor = codeEditor;
   if (!editor) return;
   editor.eachLine(h => {
     editor.removeLineClass(h, "gutter", "error-line-gutter");
@@ -233,9 +232,7 @@ function highlightErrors(errors = [], mask = []) {
     const cls  = (Number(e.type) === 1) ? "warning-text" : "error-text";
     const mark = editor.markText(from, to, { className: cls, title: e.msg || "" });
     errorMarks.push(mark);
-    editor.addLineClass(line, "gutter", cls === "warning-text"
-      ? "warning-line-gutter"
-      : "error-line-gutter");
+    editor.addLineClass(line, "gutter", cls === "warning-text" ? "warning-line-gutter" : "error-line-gutter");
   }
 }
 
@@ -243,183 +240,81 @@ function highlightErrors(errors = [], mask = []) {
 // Menu options
 
 function toggleDropdown() {
-  const content = document.getElementById("dropdownContent");
-  const isVisible = content.style.display === "block";
-  content.style.display = isVisible ? "none" : "block";
-}
-
-function downloadFile() {
-  if (!codeEditor || typeof codeEditor.getValue !== "function") {
-    alert("No active editor instance found.");
-    return;
-  }
-  const codeContent = codeEditor.getValue();
-  if (!codeContent.trim()) {
-    alert("No content to download. Please enter some code first.");
-    return;
-  }
-  const fileName = getActiveFileName();
-  const blob = new Blob([codeContent], { type: "text/plain" });
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  window.URL.revokeObjectURL(url);
-  toggleDropdown();
+  const d = $("#dropdownContent");
+  d.style.display = d.style.display === "block" ? "none" : "block";
 }
 
 function triggerFileUpload() {
-  document.getElementById('kifFile').click();
-  toggleDropdown();
+  $("#kifFile").click();
 }
 
 async function check() {
-  const codeContent = codeEditor.getValue();
-  if (!codeContent.trim()) return alert("Nothing to check.");
+  const text = getContent();
+  if (!text) return alert("Nothing to check.");
   const fileName = getActiveFileName();
-  try {
-    const res = await fetch("EditorServlet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Accept": "application/json"
-      },
-      body: new URLSearchParams({
-        mode: "check",
-        fileName,
-        code: codeContent
-      }).toString()
-    });
-    const isJson = (res.headers.get("content-type") || "").includes("application/json");
-    const payload = isJson ? await res.json() : JSON.parse(await res.text());
-    const serverErrors = Array.isArray(payload.errors) ? payload.errors : [];
-    const mask = Array.isArray(payload.errorMask) ? payload.errorMask : [];
-    renderErrorBox(serverErrors, payload.message);
-    highlightErrors(serverErrors, mask);
-  } catch (err) {
-    console.error("Check failed:", err);
-    alert("Error checking file: " + err);
-  }
+  const { errors = [], errorMask = [], message } = await postToServlet("check", { fileName, code: text });
+  renderErrorBox(errors, message);
+  highlightErrors(errors, errorMask);
 }
 
-
 async function formatBuffer() {
-  check();
-  const codeContent = codeEditor.getValue();
-  if (!codeContent.trim()) {
-    alert("No content to format.");
-    return;
-  }
-  try {
-    const response = await fetch("EditorServlet", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-      },
-      body:
-        "mode=format" +
-        "&fileName=" + encodeURIComponent(getActiveFileName()) +
-        "&code=" + encodeURIComponent(codeContent),
-    });
-    const formatted = await response.text();
-    const oldContent = codeEditor.getValue();
-    if (response.ok && formatted && formatted.trim().length > 0) {
-      codeEditor.setValue(formatted);
-    } else {
-      alert("Formatting failed or produced no output. Keeping original content.");
-      codeEditor.setValue(oldContent);
-    }
-  } catch (e) {
-    console.error("Error formatting file:", e);
-    alert("An error occurred while formatting.");
-  }
+  const text = getContent();
+  if (!text) return alert("No content to format.");
+  const { message } = await postToServlet("format", { fileName: getActiveFileName(), code: text });
+  if (message?.trim()) setEditorContent(message);
 }
 
 // ------------------------------------------------------------------
 // Tabs Management
 
 function addTab(fileName = "untitled.kif") {
-  const tabBar = document.getElementById("tabBar");
-  const index = codeEditors.length;
-
-  const tab = document.createElement("div");
-  tab.className = "tab";
-  tab.dataset.index = index;
-
-  const label = document.createElement("span");
-  label.textContent = fileName;
-  label.onclick = () => switchTab(index);
-
-  const closeBtn = document.createElement("span");
-  closeBtn.textContent = "×";
-  closeBtn.className = "close-btn";
-  closeBtn.onclick = (e) => {
-    e.stopPropagation();
-    closeTab(index);
-  };
-
-  tab.append(label, closeBtn);
+  const tabBar = $("#tabBar");
+  const i = codeEditors.length;
+  const tab = createTabElement(fileName, i);
   tabBar.appendChild(tab);
   codeEditors.push([fileName, ""]);
 }
 
-function switchTab(index, isNew = false) {
-  const tabs = document.querySelectorAll(".tab");
-  tabs.forEach((t, i) => t.classList.toggle("active", i === index));
-
-  // save current buffer before switching
-  if (codeEditors[activeTab]) codeEditors[activeTab][1] = codeEditor.getValue();
-
-  activeTab = index;
-  const newContent = codeEditors[index]?.[1] || "";
-  codeEditor.setValue(isNew ? "" : newContent);
-  codeEditor.setOption("mode", getActiveMode());
+function switchTab(i, isNew = false) {
+  if (i < 0 || i >= codeEditors.length) return;
+  saveActiveTab();
+  document.querySelectorAll(".tab").forEach((t, j) => t.classList.toggle("active", j === i));
+  activeTab = i;
+  setEditorContent(isNew ? "" : codeEditors[i]?.[1] || "");
+  setMode();
 }
 
-function closeTab(index) {
+function closeTab(i) {
   const tabs = document.querySelectorAll(".tab");
-  if (index < 0 || index >= codeEditors.length) return;
-  if (!confirm(`Close "${codeEditors[index][0]}"?`)) return;
-
-  tabs[index].remove();
-  codeEditors.splice(index, 1);
-  if (codeEditors.length === 0) {
-    codeEditor.setValue("");
-    activeTab = 0;
-  } else {
-    const newActive = Math.max(0, index - 1);
-    switchTab(newActive);
-  }
-
-  document.querySelectorAll(".tab").forEach((t, i) => (t.dataset.index = i));
+  if (i < 0 || i >= codeEditors.length) return;
+  if (!confirm(`Close "${codeEditors[i][0]}"?`)) return;
+  tabs[i].remove();
+  codeEditors.splice(i, 1);
+  switchTab(Math.max(0, i - 1));
+  document.querySelectorAll(".tab").forEach((t, j) => (t.dataset.index = j));
 }
 
-function openFileInNewTab(fileName, contents = "") {
-  // Save old tab
-  if (codeEditors[activeTab]) codeEditors[activeTab][1] = codeEditor.getValue();
-
-  addTab(fileName);
+function openFileInNewTab(name, contents = "") {
+  saveActiveTab();
+  addTab(name);
   switchTab(codeEditors.length - 1, true);
-  codeEditor.setValue(contents);
+  setEditorContent(contents);
   codeEditors[activeTab][1] = contents;
-  codeEditor.setOption("mode", getActiveMode());
+  setMode();
 }
 
 function newFile(ext = "kif") {
-  const base = prompt(`Enter a name for the new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
-  if (base === null) return;
-  const cleanName = base.replace(/\.[^/.]+$/, "") + "." + ext;
-  openFileInNewTab(cleanName, "");
+  const base = prompt(`Name for new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
+  if (!base) return;
+  const fileName = base.replace(/\.[^/.]+$/, "") + "." + ext;
+  openFileInNewTab(fileName, "");
   toggleDropdown();
 }
 
 function downloadFile() {
-  const content = codeEditor.getValue();
-  if (!content.trim()) return alert("Nothing to download.");
-  const blob = new Blob([content], { type: "text/plain" });
+  const text = getContent();
+  if (!text) return alert("Nothing to download.");
+  const blob = new Blob([text], { type: "text/plain" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = getActiveFileName();
@@ -428,10 +323,8 @@ function downloadFile() {
   toggleDropdown();
 }
 
-
 // ------------------------------------------------------------------
 // Extraneous for now
-
 function checkFileSize() {
   const fileInput = document.getElementById("kifFile");
   if (fileInput.files.length > 0) {

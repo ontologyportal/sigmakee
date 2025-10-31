@@ -26,7 +26,6 @@
 <form onsubmit="return false;" enctype="multipart/form-data" style="display:none;" id="uploadForm">
   <input type="file" name="kifFile" id="kifFile" accept=".kif,.tptp,.tff,.p,.fof,.cnf,.thf,.txt" required />
 </form>
-
 <script src="/sigma/javascript/editor.js"></script>
 <script>
 window.initialErrors = [
@@ -42,7 +41,6 @@ window.initialErrors = [
     }
   %>
 ];
-
 window.initialErrorMask = [
   <%
     boolean[] mask = (boolean[]) request.getAttribute("errorMask");
@@ -53,7 +51,6 @@ window.initialErrorMask = [
       }
     } %>
   ];
-
 </script>
 <%
   String errorMessage = (String) request.getAttribute("errorMessage");
@@ -65,36 +62,25 @@ window.initialErrorMask = [
 <div class="layout">
   <div>
     <div class="editor-header">
-        <div class="file-menu-bar">
-          <div class="dropdown" id="fileDropdown">
-            <span class="dropdown-file-label" onclick="toggleDropdown()">File</span>
-            <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
-            <span class="dropdown-file-label" onclick="check()">Check</span>
-            <div class="dropdown-content" id="dropdownContent">
-              <a href="#" onclick="newFile()">New</a>
-              <a href="#" onclick="downloadFile()">Download</a>
-              <a href="#" onclick="triggerFileUpload()">Upload</a>
-            </div>
-          </div>
+      <div class="dropdown" id="fileDropdown">
+        <span class="dropdown-file-label" onclick="toggleDropdown()">File</span>
+        <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
+        <span class="dropdown-file-label" onclick="check()">Check</span>
+        <div class="dropdown-content" id="dropdownContent">
+          <a href="#" onclick="newFile()">New</a>
+          <a href="#" onclick="downloadFile()">Download</a>
+          <a href="#" onclick="triggerFileUpload()">Upload</a>
         </div>
-        <% if (fileName != null) { %>
-        <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
-        <% } else { %>
-        <div class="file-name-display" id="file-name"></div>
-        <% } %>
+      </div>
+      <% if (fileName != null) { %>
+      <div class="file-name-display" id="file-name">Uploaded: <%= esc(fileName) %></div>
+      <% } else { %>
+      <div class="file-name-display" id="file-name"></div>
+      <% } %>
     </div>
     <hr class="divider">
-    <div class="tab-bar" id="tabBar">
-        <div class="tab active" data-index="0">
-            <span onclick="switchTab(0)">example.kif</span>
-            <span class="close-btn" onclick="event.stopPropagation(); closeTab(0)">&times;</span>
-        </div>
-    </div>
-    <textarea id="codeEditor" style="display: none;"><%=
-      codeContent != null ? esc(codeContent) :
-      (fileContent != null ? String.join("\n", fileContent) :
-      esc("(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))\n"))
-    %></textarea>
+    <div class="tab-bar" id="tabBar"></div>
+    <textarea id="codeEditor" style="display: none;"></textarea>
   </div>
   <div>
     <div class="scroller msg <%= (errors == null || errors.isEmpty()) ? "success" : "errors-box" %>">
