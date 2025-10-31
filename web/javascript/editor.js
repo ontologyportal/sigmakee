@@ -1,89 +1,18 @@
 const fileInput = document.getElementById('kifFile');
 const fileNameSpan = document.getElementById('file-name');
 const uploadForm = document.getElementById('uploadForm');
-let errorMarks = [];
+
+// codeEditors is a 2-D array, each array within contains the filename and contents.
+// [0] = filename (string)
+// [1] = file contents (string)
 let codeEditors = [];
 let activeTab = 0;
 let errors = window.initialErrors || [];
-let errorMask = window.initialErrorMask || [];
+let errorMarks = window.initialErrorMask || [];
 let codeEditor;
 
 // ------------------------------------------------------------------
-// Event Listeners
-
-fileInput.addEventListener('change', () => {
-  if (fileInput.files.length === 0) {
-    console.warn("No file selected.");
-    return;
-  }
-  const file = fileInput.files[0];
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const contents = e.target.result;
-    openFileInNewTab(file.name, contents);
-  };
-  reader.onerror = (e) => {
-    console.error("Error reading file:", e);
-    alert("Error reading file.");
-  };
-  reader.readAsText(file);
-  toggleDropdown();
-});
-
-document.addEventListener("DOMContentLoaded", async function() {
-  await defineModeFromXML("kif", "LanguagesXML/kif.xml");
-  await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
-  initializeCodeMirror();
-
-  if (window.initialErrors || window.initialErrorMask)
-    highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
-
-  codeEditors.push("");
-
-  const exampleTPTP = `% Example TPTP file
-tff(mortal_rule, axiom,
-    (![X]: (man(X) => mortal(X)))
-).
-
-tff(socrates_fact, axiom,
-    man(socrates)
-).
-
-tff(query, conjecture,
-    mortal(socrates)
-).`;
-
-  const exampleTHF = `% Example THF (Typed Higher-Order Form)
-thf(example_thf, conjecture,
-    ( ![P: $i > $o, X: $i]: ( P @ X ) )
-).`;
-
-  const exampleTFF = `% Example TFF (Typed First-Order Form)
-tff(example_tff, axiom,
-    ![X: $i]: ( man(X) => mortal(X) )
-).`;
-
-  const exampleFOF = `% Example FOF (First-Order Form)
-fof(example_fof, axiom,
-    ![X]: ( man(X) => mortal(X) )
-).`;
-
-  const exampleCNF = `% Example CNF (Clausal Normal Form)
-cnf(example_cnf, axiom,
-    ( ~man(X) | mortal(X) )
-).`;
-
-  openFileInNewTab("example.tptp", exampleTPTP);
-  openFileInNewTab("example.thf", exampleTHF);
-  openFileInNewTab("example.tff", exampleTFF);
-  openFileInNewTab("example.fof", exampleFOF);
-  openFileInNewTab("example.cnf", exampleCNF);
-  switchTab(0); // Show the first tab by default
-});
-
-
-// ------------------------------------------------------------------
-// Syntax highlighting / coloring
+// Event Listeners & Initialization
 
 async function loadKifColors() {
   const response = await fetch('/sigma/modes/kif.xml');
@@ -167,16 +96,85 @@ async function defineModeFromXML(modeName, xmlPath) {
 });
 }
 
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length === 0) {
+    console.warn("No file selected.");
+    return;
+  }
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const contents = e.target.result;
+    openFileInNewTab(file.name, contents);
+  };
+  reader.onerror = (e) => {
+    console.error("Error reading file:", e);
+    alert("Error reading file.");
+  };
+  reader.readAsText(file);
+  toggleDropdown();
+});
+
+document.addEventListener("DOMContentLoaded", async function() {
+  await defineModeFromXML("kif", "LanguagesXML/kif.xml");
+  await defineModeFromXML("tptp", "LanguagesXML/tptp.xml");
+  initializeCodeMirror();
+  if (window.initialErrors || window.initialErrorMask)
+    highlightErrors(window.initialErrors || [], window.initialErrorMask || []);
+  const exampleTPTP = `% Example TPTP file
+tff(mortal_rule, axiom,
+    (![X]: (man(X) => mortal(X)))
+).
+
+tff(socrates_fact, axiom,
+    man(socrates)
+).
+
+tff(query, conjecture,
+    mortal(socrates)
+).`;
+  const exampleTHF = `% Example THF (Typed Higher-Order Form)
+thf(example_thf, conjecture,
+    ( ![P: $i > $o, X: $i]: ( P @ X ) )
+).`;
+  const exampleTFF = `% Example TFF (Typed First-Order Form)
+tff(example_tff, axiom,
+    ![X: $i]: ( man(X) => mortal(X) )
+).`;
+  const exampleFOF = `% Example FOF (First-Order Form)
+fof(example_fof, axiom,
+    ![X]: ( man(X) => mortal(X) )
+).`;
+  const exampleCNF = `% Example CNF (Clausal Normal Form)
+cnf(example_cnf, axiom,
+    ( ~man(X) | mortal(X) )
+).`;
+  openFileInNewTab("example.tptp", exampleTPTP);
+  openFileInNewTab("example.thf", exampleTHF);
+  openFileInNewTab("example.tff", exampleTFF);
+  openFileInNewTab("example.fof", exampleFOF);
+  openFileInNewTab("example.cnf", exampleCNF);
+  switchTab(0);
+});
+
+
 // ------------------------------------------------------------------
 // Editor Functions
 
+function getActiveMode() {
+  if (["tptp", "thf", "tff", "fof", "cnf"].includes(getActiveFileName().split('.').pop().toLowerCase()))
+    return 'tptp';
+  return 'kif';
+}
+
+function getActiveFileName() {
+  return codeEditors[activeTab]?.[0] || "Untitled.kif";
+}
+
 function initializeCodeMirror() {
   const textarea = document.getElementById("codeEditor");
-  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-  let fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
-  let ext = fileName.split('.').pop().toLowerCase();
   codeEditor = CodeMirror.fromTextArea(textarea, {
-    mode: ext === "kif" ? "kif" : "tptp",
+    mode: getActiveMode(),
     lineNumbers: true,
     theme: "default",
     indentUnit: 2,
@@ -216,11 +214,6 @@ function highlightErrors(errors = [], mask = []) {
   for (const m of errorMarks) m.clear();
   errorMarks = [];
   const editor = codeEditors[activeTab]?.cm || codeEditor;
-  errors.forEach((err, i) => {
-    console.log(`editor.highlightErrors(): #${i}:`, JSON.stringify(err, null, 2));
-  });
-  console.log("editor.highlightErrors(): ActiveTab: " + activeTab);
-  console.log("editor.highlightErrors(): Mask: " + mask);
   if (!editor) return;
   editor.eachLine(h => {
     editor.removeLineClass(h, "gutter", "error-line-gutter");
@@ -255,83 +248,17 @@ function toggleDropdown() {
   content.style.display = isVisible ? "none" : "block";
 }
 
-function newFile(ext) {
-  if (!ext) return;
-
-  // Default suggested name depends on extension
-  let baseName = prompt(`Enter a name for the new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
-  if (baseName === null) return; // user canceled
-
-  // Strip any accidental extra extension
-  baseName = baseName.replace(/\.[^/.]+$/, "");
-
-  // Full filename
-  const fileName = `${baseName}.${ext}`;
-
-  // Add tab (pass full name)
-  addTab(fileName);
-
-  // Set syntax mode
-  const tptpLike = ["tptp", "thf", "tff", "fof", "cnf"];
-  const mode = ext === "kif" ? "kif" : (tptpLike.includes(ext) ? "tptp" : "tptp");
-  codeEditor.setOption("mode", mode);
-
-  // Empty content
-  codeEditor.setValue("");
-  codeEditors[activeTab] = { cm: codeEditor, value: "" };
-
-  toggleDropdown();
-}
-
-function addTab(name = null) {
-  const tabBar = document.getElementById("tabBar");
-  const newIndex = codeEditors.length;
-  const tab = document.createElement("div");
-  tab.className = "tab";
-  tab.setAttribute("data-index", newIndex);
-
-  const label = document.createElement("span");
-  label.textContent = name || `untitled.kif`; // fallback only if truly undefined
-  label.onclick = (e) => {
-    if (e.target.classList.contains("close-btn")) return;
-    switchTab(newIndex);
-  };
-
-  const closeBtn = document.createElement("span");
-  closeBtn.textContent = "×";
-  closeBtn.className = "close-btn";
-  closeBtn.onclick = (e) => {
-    e.stopPropagation();
-    closeTab(newIndex);
-  };
-
-  tab.appendChild(label);
-  tab.appendChild(closeBtn);
-  tabBar.appendChild(tab);
-
-  if (codeEditors.length > activeTab)
-    codeEditors[activeTab] = codeEditor.getValue();
-
-  codeEditors.push({ cm: null, value: "" });
-  switchTab(newIndex, true);
-}
-
-
 function downloadFile() {
-  const editorObj = codeEditors[activeTab];
-  const editor = editorObj?.cm || codeEditor;
-  if (!editor || typeof editor.getValue !== "function") {
+  if (!codeEditor || typeof codeEditor.getValue !== "function") {
     alert("No active editor instance found.");
     return;
   }
-  const codeContent = editor.getValue();
+  const codeContent = codeEditor.getValue();
   if (!codeContent.trim()) {
     alert("No content to download. Please enter some code first.");
     return;
   }
-  let fileName = "untitled.kif";
-  const tab = document.querySelector(`.tab[data-index="${activeTab}"] span:not(.close-btn)`);
-  if (tab) fileName = tab.textContent.trim();
+  const fileName = getActiveFileName();
   const blob = new Blob([codeContent], { type: "text/plain" });
   const url = window.URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -344,9 +271,6 @@ function downloadFile() {
   toggleDropdown();
 }
 
-
-
-
 function triggerFileUpload() {
   document.getElementById('kifFile').click();
   toggleDropdown();
@@ -355,8 +279,7 @@ function triggerFileUpload() {
 async function check() {
   const codeContent = codeEditor.getValue();
   if (!codeContent.trim()) return alert("Nothing to check.");
-  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-  const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
+  const fileName = getActiveFileName();
   try {
     const res = await fetch("EditorServlet", {
       method: "POST",
@@ -381,6 +304,7 @@ async function check() {
     alert("Error checking file: " + err);
   }
 }
+
 
 async function formatBuffer() {
   check();
@@ -417,78 +341,96 @@ async function formatBuffer() {
 // ------------------------------------------------------------------
 // Tabs Management
 
-function switchTab(index, isNew = false) {
-  const tabs = document.querySelectorAll(".tab");
-  tabs.forEach((tab, i) => tab.classList.toggle("active", i === index));
-  if (codeEditors.length > activeTab)
-    codeEditors[activeTab] = codeEditor.getValue();
-  activeTab = index;
-  if (isNew) codeEditor.setValue("");
-  else if (codeEditors[index] !== undefined)
-    codeEditor.setValue(codeEditors[index]);
-  const activeTabElem = tabs[index]?.querySelector("span:not(.close-btn)");
-  const fileName = activeTabElem ? activeTabElem.textContent.trim() : "Untitled.kif";
-  const ext = fileName.split(".").pop().toLowerCase();
-  const mode = ext === "kif" ? "kif" : "tptp";
-  codeEditor.setOption("mode", mode);
+function addTab(fileName = "untitled.kif") {
+  const tabBar = document.getElementById("tabBar");
+  const index = codeEditors.length;
+
+  const tab = document.createElement("div");
+  tab.className = "tab";
+  tab.dataset.index = index;
+
+  const label = document.createElement("span");
+  label.textContent = fileName;
+  label.onclick = () => switchTab(index);
+
+  const closeBtn = document.createElement("span");
+  closeBtn.textContent = "×";
+  closeBtn.className = "close-btn";
+  closeBtn.onclick = (e) => {
+    e.stopPropagation();
+    closeTab(index);
+  };
+
+  tab.append(label, closeBtn);
+  tabBar.appendChild(tab);
+  codeEditors.push([fileName, ""]);
 }
 
+function switchTab(index, isNew = false) {
+  const tabs = document.querySelectorAll(".tab");
+  tabs.forEach((t, i) => t.classList.toggle("active", i === index));
+
+  // save current buffer before switching
+  if (codeEditors[activeTab]) codeEditors[activeTab][1] = codeEditor.getValue();
+
+  activeTab = index;
+  const newContent = codeEditors[index]?.[1] || "";
+  codeEditor.setValue(isNew ? "" : newContent);
+  codeEditor.setOption("mode", getActiveMode());
+}
 
 function closeTab(index) {
   const tabs = document.querySelectorAll(".tab");
-  if (index < 0 || index >= tabs.length) return;
-  const tabName = tabs[index].querySelector("span").textContent;
-  const confirmClose = confirm(`Are you sure you want to close "${tabName}"?`);
-  if (!confirmClose) return;
+  if (index < 0 || index >= codeEditors.length) return;
+  if (!confirm(`Close "${codeEditors[index][0]}"?`)) return;
+
   tabs[index].remove();
   codeEditors.splice(index, 1);
-  if (activeTab === index) {
-    if (codeEditors.length > 0) {
-      const newActive = Math.max(0, index - 1);
-      switchTab(newActive);
-    } else {
-      codeEditor.setValue("");
-      activeTab = 0;
-    }
+  if (codeEditors.length === 0) {
+    codeEditor.setValue("");
+    activeTab = 0;
+  } else {
+    const newActive = Math.max(0, index - 1);
+    switchTab(newActive);
   }
-  const updatedTabs = document.querySelectorAll(".tab");
-  updatedTabs.forEach((tab, i) => tab.setAttribute("data-index", i));
+
+  document.querySelectorAll(".tab").forEach((t, i) => (t.dataset.index = i));
 }
 
-function openFileInNewTab(fileName, fileContents) {
-  if (!fileName) return;
-  if (codeEditors.length > activeTab && codeEditor)
-    codeEditors[activeTab].value = codeEditor.getValue();
+function openFileInNewTab(fileName, contents = "") {
+  // Save old tab
+  if (codeEditors[activeTab]) codeEditors[activeTab][1] = codeEditor.getValue();
+
   addTab(fileName);
-  const ext = fileName.split('.').pop().toLowerCase();
-  const mode = ext === 'kif' ? 'kif' : 'tptp';
-  const old = document.querySelector(".CodeMirror");
-  if (old) old.remove();
-  const textarea = document.createElement("textarea");
-  textarea.value = fileContents || "";
-  textarea.id = "codeEditor";
-  document.querySelector(".tab-bar").after(textarea);
-  codeEditor = CodeMirror.fromTextArea(textarea, {
-    mode,
-    lineNumbers: true,
-    theme: "default",
-    indentUnit: 2,
-    tabSize: 2,
-    lineWrapping: true,
-    autoCloseBrackets: true,
-    matchBrackets: true
-  });
-  codeEditors[activeTab] = { cm: codeEditor, value: fileContents || "" };
-  if (fileNameSpan) fileNameSpan.textContent = 'Opened: ' + fileName;
-  console.log(`✅ Opened "${fileName}" as ${mode} with ${fileContents?.length || 0} chars`);
+  switchTab(codeEditors.length - 1, true);
+  codeEditor.setValue(contents);
+  codeEditors[activeTab][1] = contents;
+  codeEditor.setOption("mode", getActiveMode());
 }
+
+function newFile(ext = "kif") {
+  const base = prompt(`Enter a name for the new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
+  if (base === null) return;
+  const cleanName = base.replace(/\.[^/.]+$/, "") + "." + ext;
+  openFileInNewTab(cleanName, "");
+  toggleDropdown();
+}
+
+function downloadFile() {
+  const content = codeEditor.getValue();
+  if (!content.trim()) return alert("Nothing to download.");
+  const blob = new Blob([content], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = getActiveFileName();
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toggleDropdown();
+}
+
 
 // ------------------------------------------------------------------
 // Extraneous for now
-function getActiveFileName() {
-  const activeTabElem = document.querySelector(".tab.active span:not(.close-btn)");
-  return activeTabElem ? activeTabElem.textContent.trim() : "Untitled.tptp";
-}
 
 function checkFileSize() {
   const fileInput = document.getElementById("kifFile");
@@ -502,28 +444,3 @@ function checkFileSize() {
   }
   return true;
 }
-
-const exampleTHF = `% Example THF (Typed Higher-Order Form)
-thf(example_thf, conjecture,
-    ( ![P: $i > $o, X: $i]: ( P @ X ) )
-).`;
-
-const exampleTFF = `% Example TFF (Typed First-Order Form)
-tff(example_tff, axiom,
-    ![X: $i]: ( man(X) => mortal(X) )
-).`;
-
-const exampleFOF = `% Example FOF (First-Order Form)
-fof(example_fof, axiom,
-    ![X]: ( man(X) => mortal(X) )
-).`;
-
-const exampleCNF = `% Example CNF (Clausal Normal Form)
-cnf(example_cnf, axiom,
-    ( ~man(X) | mortal(X) )
-).`;
-
-const exampleP = `% Example P (Propositional)
-p(proposition, conjecture,
-    ( (a & b) => c )
-).`;
