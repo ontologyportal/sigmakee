@@ -2013,21 +2013,41 @@ public class KB implements Serializable {
 
     public Vampire askVampireTPTP(String test_path, int timeout, int maxAnswers){
 
-        List<String> cmds = Arrays.asList(
-                "--input_syntax","tptp",
-                "--proof","tptp"                  // <-- TSTP-style proof lines
-        );
+        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        String includesPath = testDir + File.separator + "includes";
+
+        File test = new File(test_path);
+        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
+
+        if (!includes.isEmpty()) {
+            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
+            if (error != null) {
+                System.err.println(error);
+            }
+        }
+
+        List<String> cmds = new ArrayList<>(Arrays.asList(
+                "--input_syntax", "tptp",
+                "--proof", "tptp"   // <-- TSTP-style proof lines
+        ));
+
+
+        if (!includes.isEmpty()){
+            cmds.add("--include");
+            cmds.add(includesPath);
+        }
+
 
         // STEP 1 - First TPTP pass (main proof)
         Vampire vampire = new Vampire();
 
-        File test = new File(test_path);
-
         try{
             vampire.runCustom(test, timeout, cmds);
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
+            System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
         }
+
+        System.out.println("---- 2 ----");
 
         // STEP 2 - Second TPTP pass (modus Ponens)
         if (modensPonens) {

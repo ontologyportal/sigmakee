@@ -21,6 +21,9 @@ import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
@@ -581,6 +584,48 @@ public class TPTPutil {
 
         // Write minimal TPTP file with authored axioms
         return tpp.proof;
+    }
+
+    public static List<String> extractIncludesFromTPTP(File tptpFile) {
+        List<String> includes = new ArrayList<>();
+        Pattern pattern = Pattern.compile("include\\s*\\(\\s*'([^']+)'\\s*\\)", Pattern.CASE_INSENSITIVE);
+
+        try {
+            try (BufferedReader br = new BufferedReader(new FileReader(tptpFile))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    Matcher m = pattern.matcher(line);
+                    while (m.find()) {
+                        includes.add(m.group(1));  // capture the filename inside quotes
+                    }
+                }
+            }
+        }catch (IOException e) {
+            System.out.println("ERROR: TPTPutil.extractIncludesFromTPTP: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return includes;
+    }
+
+    public static String validateIncludesInTPTPFiles(List<String> includes, String includesPath) {
+
+
+        File incDir = new File(includesPath);
+
+        // 1) Check if includes directory exists
+        if (!incDir.exists() || !incDir.isDirectory()) {
+            return ("Include directory not found: " + includesPath);
+        }
+
+        // 2) Check each include file inside that folder
+        for (String inc : includes) {
+            File f = new File(incDir, inc);
+            if (!f.exists()) {
+                return ("Missing include file: " + f.getAbsolutePath());
+            }
+        }
+
+        return null;
     }
 
 

@@ -3,10 +3,15 @@ package com.articulate.sigma.trans;
 import com.articulate.sigma.UnitTestBase;
 import org.junit.Test;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class TPTPUtilTest extends UnitTestBase {
 
@@ -69,6 +74,82 @@ public class TPTPUtilTest extends UnitTestBase {
         assertEquals("% SZS output end Proof for min-problem", out.get(out.size() - 1));
 
         assertEquals(expected, out);
+    }
+
+    @Test
+    public void testExtractIncludesFromTPTP() throws IOException {
+        // Create a temporary test file
+        File tmp = File.createTempFile("test", ".tptp");
+        tmp.deleteOnExit();
+
+        String content = """
+                include('SUMOMILO.tptp').
+                include('extra_axioms.tptp').
+                fof(kb1, axiom, (s__instance(s__Object, s__Class))).
+                """;
+
+        try (FileWriter fw = new FileWriter(tmp)) {
+            fw.write(content);
+        }
+
+        // Call method under test
+        List<String> includes = TPTPutil.extractIncludesFromTPTP(tmp);
+
+        // Assertions
+        assertEquals("Should detect 2 include statements", 2, includes.size());
+        assertTrue(includes.contains("SUMOMILO.tptp"));
+        assertTrue(includes.contains("extra_axioms.tptp"));
+    }
+
+    @Test
+    public void testExtractIncludesFromTPTP_NoIncludes() throws IOException {
+        File tmp = File.createTempFile("test_no_include", ".tptp");
+        tmp.deleteOnExit();
+        try (FileWriter fw = new FileWriter(tmp)) {
+            fw.write("fof(ax1, axiom, (p(a))).");
+        }
+
+        List<String> includes = TPTPutil.extractIncludesFromTPTP(tmp);
+        assertTrue("Should return empty list when no includes", includes.isEmpty());
+    }
+
+    @Test
+    public void testValidateIncludes_AllExist() throws IOException {
+        File incDir = Files.createTempDirectory("includes_ok").toFile();
+        incDir.deleteOnExit();
+
+        new File(incDir, "SUMOMILO.tptp").createNewFile();
+        new File(incDir, "extra_axioms.tptp").createNewFile();
+
+        List<String> includes = Arrays.asList("SUMOMILO.tptp", "extra_axioms.tptp");
+        String result = TPTPutil.validateIncludesInTPTPFiles(includes, incDir.getAbsolutePath());
+
+        assertNull("Should return null when all includes exist", result);
+    }
+
+    @Test
+    public void testValidateIncludes_MissingFile() throws IOException {
+        File incDir = Files.createTempDirectory("includes_missing").toFile();
+        incDir.deleteOnExit();
+
+        new File(incDir, "SUMOMILO.tptp").createNewFile();
+
+        List<String> includes = Arrays.asList("SUMOMILO.tptp", "extra_axioms.tptp");
+        String result = TPTPutil.validateIncludesInTPTPFiles(includes, incDir.getAbsolutePath());
+
+        assertNotNull("Should detect missing include", result);
+        assertTrue("Error message should mention missing file", result.contains("Missing include file"));
+    }
+
+    @Test
+    public void testValidateIncludes_MissingDirectory() {
+        String badDir = "/nonexistent/path/to/includes";
+        List<String> includes = Collections.singletonList("SUMOMILO.tptp");
+
+        String result = TPTPutil.validateIncludesInTPTPFiles(includes, badDir);
+
+        assertNotNull("Should detect missing include directory", result);
+        assertTrue("Error should mention missing directory", result.contains("Include directory not found"));
     }
 
 }
