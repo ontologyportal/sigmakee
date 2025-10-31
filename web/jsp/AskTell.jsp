@@ -217,6 +217,11 @@
         stmt = englishStatement;
     }
 
+    String testFilter = request.getParameter("testFilter");
+    if (testFilter == null) testFilter = (String) session.getAttribute("testFilter");
+    if (testFilter == null) testFilter = "all";
+    session.setAttribute("testFilter", testFilter);
+
     com.articulate.sigma.tp.EProver eProver = null;
     com.articulate.sigma.tp.Vampire vampire = null;
 
@@ -269,9 +274,11 @@
 
         <%
             String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
-            File[] testFiles = (testDir == null) ? new File[0]
+            File[] allFiles = (testDir == null) ? new File[0]
                     : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff"));
-            if (testFiles == null) testFiles = new File[0];
+            if (allFiles == null) allFiles = new File[0];
+
+            File[] testFiles = allFiles;
             Arrays.sort(testFiles, Comparator.comparing(File::getName));
             if (selectedTest == null && testFiles.length > 0) selectedTest = testFiles[0].getName();
         %>
@@ -293,6 +300,15 @@
                style="margin-left:10px; text-decoration:underline; color:#0073e6;">
                 View Test
             </a>
+
+            <div class="row" id="filterRow">
+                Filter:
+                <label><input type="radio" name="testFilter" value="all"  <%= "all".equalsIgnoreCase(testFilter)  ? "checked":"" %>> All</label>
+                <label><input type="radio" name="testFilter" value="tq"   <%= "tq".equalsIgnoreCase(testFilter)   ? "checked":"" %>> tq</label>
+                <label><input type="radio" name="testFilter" value="tptp" <%= "tptp".equalsIgnoreCase(testFilter) ? "checked":"" %>> tptp</label>
+                <label><input type="radio" name="testFilter" value="tff"  <%= "tff".equalsIgnoreCase(testFilter)  ? "checked":"" %>> tff</label>
+            </div>
+            <input type="hidden" name="testFilter" id="testFilterHidden" value="<%= testFilter %>">
 
             <span class="muted">(Uses the configuration below)</span>
         </div>
@@ -539,5 +555,34 @@
             })();
         </script>
 
+        <script>
+            document.addEventListener('DOMContentLoaded', function(){
+                const sel = document.getElementById('testName');
+                const radios = document.querySelectorAll('input[name="testFilter"]');
+                const hidden = document.getElementById('testFilterHidden');
+                const form = document.getElementById('AskTell');
+                if (!sel || !radios.length) return;
+
+                const original = Array.from(sel.options).map(o => ({text:o.text, value:o.value}));
+
+                function applyFilter(kind){
+                    const prev = sel.value;
+                    const match = f => kind === 'all' || f.toLowerCase().endsWith('.' + kind);
+                    sel.innerHTML = '';
+                    original.filter(o => match(o.value)).forEach(o => {
+                        const opt = document.createElement('option'); opt.value=o.value; opt.text=o.text; sel.add(opt);
+                    });
+                    sel.value = Array.from(sel.options).some(o => o.value===prev) ? prev : (sel.options[0]?.value || '');
+                }
+                function currentFilter(){ return document.querySelector('input[name="testFilter"]:checked')?.value || 'all'; }
+
+                // initialize from session-backed radio
+                applyFilter(currentFilter());
+
+                // keep session in sync on change + submit
+                radios.forEach(r => r.addEventListener('change', e => { hidden.value = e.target.value; applyFilter(e.target.value); }));
+                form.addEventListener('submit', () => { hidden.value = currentFilter(); });
+            });
+        </script>
 </body>
 </html>
