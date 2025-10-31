@@ -82,11 +82,10 @@ public class TPTPUtilTest extends UnitTestBase {
         File tmp = File.createTempFile("test", ".tptp");
         tmp.deleteOnExit();
 
-        String content = """
-                include('SUMOMILO.tptp').
-                include('extra_axioms.tptp').
-                fof(kb1, axiom, (s__instance(s__Object, s__Class))).
-                """;
+        String content =
+                "include('SUMOMILO.tptp').\n" +
+                "include('extra_axioms.tptp').\n" +
+                "fof(kb1, axiom, (s__instance(s__Object, s__Class))).\n";
 
         try (FileWriter fw = new FileWriter(tmp)) {
             fw.write(content);
