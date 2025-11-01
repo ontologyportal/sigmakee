@@ -200,7 +200,7 @@ public class TPTP3Test extends IntegrationTestBase {
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
-            String expected = "[MedicalClinicBuilding, ComplementFn(s__Residence)   ]";
+            String expected = "[MedicalClinicBuilding, ComplementFn(s__Residence)]";
             System.out.println("expected: " + expected);
             String result = tpp.bindings.toString();
             System.out.println("Actual: " + result);
