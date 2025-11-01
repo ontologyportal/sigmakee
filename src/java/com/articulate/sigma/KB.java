@@ -1989,7 +1989,8 @@ public class KB implements Serializable {
                 "--input_syntax","tptp",
                 "--proof","tptp",                  // <-- TSTP-style proof lines
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off"
+                "-fde","none","-updr","off",
+                "-qa","plain"
         );
         try{
             vampire_pomens.runCustom(kb, timeout, cmds);
@@ -2011,6 +2012,7 @@ public class KB implements Serializable {
     }
 
 
+
     public Vampire askVampireTPTP(String test_path, int timeout, int maxAnswers){
 
         String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
@@ -2028,7 +2030,8 @@ public class KB implements Serializable {
 
         List<String> cmds = new ArrayList<>(Arrays.asList(
                 "--input_syntax", "tptp",
-                "--proof", "tptp"   // <-- TSTP-style proof lines
+                "--proof", "tptp",   // <-- TSTP-style proof lines
+                "-qa","plain"
         ));
 
 
@@ -2055,7 +2058,8 @@ public class KB implements Serializable {
                     "--input_syntax","tptp",
                     "--proof","tptp",                  // <-- TSTP-style proof lines
                     "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                    "-fde","none","-updr","off"
+                    "-fde","none","-updr","off",
+                    "-qa","plain"
             );
             List<TPTPFormula> proof = TPTPutil.processProofLines(vampire.output);
             List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);

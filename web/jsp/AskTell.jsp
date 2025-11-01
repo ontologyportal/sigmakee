@@ -43,6 +43,18 @@
         @keyframes bounce { 0%,100%{transform:translate(-50%,-50%) scale(1)} 50%{transform:translate(-50%,-60%) scale(1.1)} }
     </style>
 
+    <style>
+        .answers-card {
+            border:1px solid #d8dee4; border-radius:6px; padding:12px 14px; margin:10px 0 18px;
+            background:#f8fafc;
+        }
+        .answers-card h3 { margin:0 0 8px; font-size:1.05rem; font-weight:600; }
+        .answers-list { margin:0; padding-left:20px; }
+        .answers-list li { margin:4px 0; }
+        .answers-empty { color:#666; font-size:.95em; }
+        .answers-meta { color:#666; font-size:.9em; margin-top:6px; }
+    </style>
+
     <script>
         function toggleVampireOptions() {
             const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
@@ -431,6 +443,12 @@
                         }
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(new StringBuilder(), itd.query);
+
+                        printAnswersBlock(tpp, kbName, language, out);
+                        /* Prevent duplicate answers inside HTMLformatter */
+                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                        if (tpp.bindings   != null) tpp.bindings.clear();
+
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp, itd.query, lineHtml, kbName, language));
                     }
                 } else if (ext.endsWith(".tptp") || ext.endsWith(".tff")) {
@@ -446,6 +464,12 @@
                         tpp.parseProofOutput(vRun.output, pseudoQuery, kb, vRun.qlist);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
+
+                        printAnswersBlock(tpp, kbName, language, out);
+                        /* Prevent duplicate answers inside HTMLformatter */
+                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                        if (tpp.bindings   != null) tpp.bindings.clear();
+
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
                     }
                 } else {
@@ -459,6 +483,12 @@
                     com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                     tpp.parseProofOutput(eProver.output, stmt, kb, eProver.qlist);
                     publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+
+                    printAnswersBlock(tpp, kbName, language, out);
+                    /* Prevent duplicate answers inside HTMLformatter */
+                    if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                    if (tpp.bindings   != null) tpp.bindings.clear();
+
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
@@ -472,6 +502,12 @@
                         tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(vampire.qlist,stmt);
+
+                        printAnswersBlock(tpp, kbName, language, out);
+                        /* Prevent duplicate answers inside HTMLformatter */
+                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                        if (tpp.bindings   != null) tpp.bindings.clear();
+
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
                 } else if ("LEO".equals(inferenceEngine)) {
@@ -482,6 +518,12 @@
                         tpp.parseProofOutput(kb.leo.output, stmt, kb, kb.leo.qlist);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
                         tpp.processAnswersFromProof(kb.leo.qlist,stmt);
+
+                        printAnswersBlock(tpp, kbName, language, out);
+                        /* Prevent duplicate answers inside HTMLformatter */
+                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                        if (tpp.bindings   != null) tpp.bindings.clear();
+
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
                 }
@@ -530,6 +572,58 @@
         }
     }
 %>
+
+<%!
+    void printAnswersBlock(com.articulate.sigma.trans.TPTP3ProofProcessor tpp,
+                           String kbName, String language,
+                           javax.servlet.jsp.JspWriter out) throws java.io.IOException {
+
+        boolean hasMap = (tpp.bindingMap != null && !tpp.bindingMap.isEmpty());
+        boolean hasList = (tpp.bindings != null && !tpp.bindings.isEmpty());
+
+        out.println("<div class='answers-card'>");
+        out.println("<h3>Answers</h3>");
+
+        if (!hasMap && !hasList) {
+            out.println("<div class='answers-empty'>No explicit answer bindings were produced.</div>");
+            out.println("</div>");
+            return;
+        }
+
+        out.println("<ol class='answers-list'>");
+
+        if (hasMap) {
+            // Variable bindings: ?X = term
+            for (java.util.Map.Entry<String,String> e : tpp.bindingMap.entrySet()) {
+                String var = e.getKey();
+                String raw = e.getValue();
+                String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
+                String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
+                out.println("<li><code>" + var + "</code> = "
+                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
+            }
+        } else if (hasList) {
+            // Positional answers: 1. term
+            for (int i = 0; i < tpp.bindings.size(); i++) {
+                String raw = String.valueOf(tpp.bindings.get(i));
+                String term = com.articulate.sigma.trans.TPTP2SUMO.transformTerm(raw);
+                String kbHref = com.articulate.sigma.HTMLformatter.createKBHref(kbName, language);
+                out.println("<li>" + (i+1) + ". "
+                        + "<a href='" + kbHref + "&term=" + term + "'>" + term + "</a></li>");
+            }
+        }
+
+        out.println("</ol>");
+
+        // Handy meta line
+        int count = hasMap ? tpp.bindingMap.size() : tpp.bindings.size();
+        out.println("<div class='answers-meta'>" + count + " answer"
+                + (count==1 ? "" : "s") + " shown.</div>");
+
+        out.println("</div>");
+    }
+%>
+
 
 
 <p>
