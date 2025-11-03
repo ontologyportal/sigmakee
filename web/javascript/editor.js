@@ -1,10 +1,8 @@
+// ======================================================
+// 1. GLOBAL VARIABLES & UTILITIES
+// ======================================================
 const fileInput = document.getElementById('kifFile');
-const fileNameSpan = document.getElementById('file-name');
-const uploadForm = document.getElementById('uploadForm');
 
-// codeEditors is a 2-D array, each array within contains the filename and contents.
-// [0] = filename (string)
-// [1] = file contents (string)
 let codeEditors = [];
 let activeTab = 0;
 let errors = window.initialErrors || [];
@@ -17,13 +15,64 @@ const getContent = () => codeEditor.getValue().trim();
 const setEditorContent = (t = "") => codeEditor.setValue(t);
 const setMode = () => codeEditor.setOption("mode", getActiveMode());
 const saveActiveTab = () => codeEditors[activeTab] && (codeEditors[activeTab][1] = codeEditor.getValue());
-const showMessage = (m, err = false) => {
-  const box = $(".scroller.msg");
-  if (!box) return;
-  box.classList.toggle("errors-box", err);
-  box.classList.toggle("success", !err);
-  box.textContent = m;
-};
+
+// ======================================================
+// 2. DROPDOWN MENU LOGIC
+// ======================================================
+let dropdownRoot, dropdown;
+
+function ensureDropdownEls() {
+  if (!dropdownRoot || !dropdown) {
+    dropdownRoot = document.getElementById('fileDropdown');
+    dropdown     = document.getElementById('dropdownContent');
+    if (dropdownRoot) {
+      dropdownRoot.addEventListener('click', e => e.stopPropagation());
+    }
+  }
+}
+
+function isDropdownOpen(){ 
+  ensureDropdownEls(); 
+  return dropdown && dropdown.style.display === 'block'; 
+}
+
+function openDropdown(){
+  ensureDropdownEls();
+  if (!dropdown) return;
+  dropdown.style.display = 'block';
+  setTimeout(() => {
+    document.addEventListener('click', onDocClick, { passive:true });
+    document.addEventListener('keydown', onEsc, { passive:true });
+  }, 0);
+}
+
+function closeDropdown(){
+  ensureDropdownEls();
+  if (!dropdown) return;
+  dropdown.style.display = 'none';
+  document.removeEventListener('click', onDocClick);
+  document.removeEventListener('keydown', onEsc);
+}
+
+function toggleFileMenu(evt){
+  if (evt) evt.stopPropagation();
+  isDropdownOpen() ? closeDropdown() : openDropdown();
+}
+
+function onDocClick(e) {
+  ensureDropdownEls();
+  if (!dropdownRoot || !dropdown) return;
+  const clickedInside = dropdownRoot.contains(e.target);
+  const isDropdownVisible = dropdown.style.display === 'block';
+  if (isDropdownVisible && !clickedInside)
+    closeDropdown();
+}
+function onEsc(e){ if (e.key === 'Escape') closeDropdown(); }
+document.addEventListener('DOMContentLoaded', ensureDropdownEls);
+
+// ======================================================
+// 3. BACKEND COMMUNICATION (SERVLET API)
+// ======================================================
 
 async function postToServlet(mode, data = {}) {
   const body = new URLSearchParams({ mode, ...data }).toString();
@@ -43,24 +92,9 @@ async function postToServlet(mode, data = {}) {
   } catch { return { message: text }; }
 }
 
-function createTabElement(fileName, i) {
-  const tab = document.createElement("div");
-  tab.className = "tab";
-  tab.dataset.index = i;
-  const label = document.createElement("span");
-  label.textContent = fileName;
-  label.onclick = () => switchTab(i);
-  const close = document.createElement("span");
-  close.textContent = "×";
-  close.className = "close-btn";
-  close.onclick = (e) => { e.stopPropagation(); closeTab(i); };
-  tab.append(label, close);
-  return tab;
-}
-
-
-// ------------------------------------------------------------------
-// Event Listeners & Initialization
+// ======================================================
+// 4. CODEMIRROR MODE DEFINITIONS
+// ======================================================
 
 async function defineModeFromXML(modeName, xmlPath) {
   const res = await fetch(xmlPath);
@@ -90,53 +124,113 @@ async function defineModeFromXML(modeName, xmlPath) {
     'NULL': 'null'
   };
   CodeMirror.defineMode(modeName, function() {
-  return {
-    token: function(stream, state) {
-      if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
-      if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
-      if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
-      if (stream.match(/\[[^\]]*\]/)) return classMap['LITERAL1'];
-      if (stream.match(/\d+(?:\.\d+)?/)) {
-        const prev = stream.start > 0 ? stream.string.charAt(stream.start - 1) : '';
-        const validBefore = !prev || /[\s(]/.test(prev);
-        const next = stream.pos < stream.string.length ? stream.string.charAt(stream.pos) : '';
-        const validAfter = !next || /[\s)]/.test(next);
-        const noLetterNearby = !(/[A-Za-z]/.test(prev) || /[A-Za-z]/.test(next));
-        if (validBefore && validAfter && noLetterNearby)
-          return "number";
-        stream.backUp(stream.current().length);
+    return {
+      token: function(stream, state) {
+        if (commentStart && stream.match(new RegExp(`${commentStart}.*`))) return classMap['COMMENT1'];
+        if (stream.match(/"(?:[^"\\]|\\.)*"/)) return classMap['LITERAL1'];
+        if (stream.match(/'(?:[^'\\]|\\.)*'/)) return classMap['LITERAL1'];
+        if (stream.match(/\[[^\]]*\]/)) return classMap['LITERAL1'];
+        if (stream.match(/\d+(?:\.\d+)?/)) {
+          const prev = stream.start > 0 ? stream.string.charAt(stream.start - 1) : '';
+          const validBefore = !prev || /[\s(]/.test(prev);
+          const next = stream.pos < stream.string.length ? stream.string.charAt(stream.pos) : '';
+          const validAfter = !next || /[\s)]/.test(next);
+          const noLetterNearby = !(/[A-Za-z]/.test(prev) || /[A-Za-z]/.test(next));
+          if (validBefore && validAfter && noLetterNearby)
+            return "number";
+          stream.backUp(stream.current().length);
+        }
+        if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
+        for (const type in keywords)
+          for (const word of keywords[type])
+            if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
+        if (stream.match(/[()]/)) return classMap['MARKUP'];
+        if (stream.match(/[\[\]{}]/)) return "bracket";
+        stream.next();
+        return null;
       }
-      if (stream.match(/\?[A-Za-z0-9_-]+/)) return classMap['KEYWORD4'];
-      for (const type in keywords)
-        for (const word of keywords[type])
-          if (stream.match(new RegExp(`\\b${word}\\b`))) return classMap[type];
-      if (stream.match(/[()]/)) return classMap['MARKUP'];
-      if (stream.match(/[\[\]{}]/)) return "bracket";
-      stream.next();
-      return null;
-    }
-  };
-});
+    };
+  });
 }
 
+// ======================================================
+// 5. FILE HANDLING
+// ======================================================
+
 fileInput.addEventListener('change', () => {
-  if (fileInput.files.length === 0) {
+  const files = fileInput.files;
+  if (!files || files.length === 0) {
     console.warn("No file selected.");
     return;
   }
-  const file = fileInput.files[0];
+  const file = files[0];
   const reader = new FileReader();
   reader.onload = (e) => {
-    const contents = e.target.result;
-    openFileInNewTab(file.name, contents);
+    try {
+      const contents = e.target.result || "";
+      if (typeof contents !== "string") {
+        console.error("Invalid file contents");
+        alert("Unable to read file contents.");
+        return;
+      }
+      openFileInNewTab(file.name, contents);
+    } catch (err) {
+      console.error("Error processing file:", err);
+      alert("Error loading file.");
+    } finally {
+      closeDropdown();
+    }
   };
   reader.onerror = (e) => {
-    console.error("Error reading file:", e);
+    console.error("FileReader error:", e);
     alert("Error reading file.");
+    closeDropdown();
   };
   reader.readAsText(file);
-  toggleDropdown();
 });
+
+function triggerFileUpload() {
+  $("#kifFile").click();
+}
+
+function newFile(ext = "kif") {
+  const allowed = ["kif", "tptp", "thf", "tff", "fof", "cnf"];
+  ext = ext.trim().toLowerCase();
+  if (!allowed.includes(ext)) {
+    alert(`❌ Unsupported base file type: .${ext}`);
+    return;
+  }
+  const base = prompt(`Enter name for new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
+  if (!base) return;
+  const userExtMatch = base.match(/\.([^.]+)$/);
+  const userExt = userExtMatch ? userExtMatch[1].toLowerCase() : ext;
+  if (!allowed.includes(userExt)) {
+    alert(`❌ Unsupported file extension: ".${userExt}"\n\nAllowed types:\n${allowed.map(e => "." + e).join(", ")}`);
+    closeDropdown();
+    return;
+  }
+  const fileName = base.replace(/\.[^/.]+$/, "") + "." + userExt;
+  openFileInNewTab(fileName, "");
+  closeDropdown();
+}
+
+
+function downloadFile() {
+  const text = getContent();
+  if (!text) return alert("Nothing to download.");
+  const blob = new Blob([text], { type: "text/plain" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = getActiveFileName();
+  a.click();
+  URL.revokeObjectURL(a.href);
+  closeDropdown();
+}
+
+// ======================================================
+// 6. INITIALIZATION
+// ======================================================
+
 document.addEventListener("DOMContentLoaded", async function() {
   await Promise.all([
     defineModeFromXML("kif", "LanguagesXML/kif.xml"),
@@ -155,10 +249,12 @@ document.addEventListener("DOMContentLoaded", async function() {
   };
   Object.entries(examples).forEach(([name, content]) => openFileInNewTab(name, content));
   switchTab(0);
+  reorderTabs();
 });
 
-// ------------------------------------------------------------------
-// Editor Functions
+// ======================================================
+// 7. EDITOR CORE FUNCTIONS
+// ======================================================
 
 function getActiveMode() {
   if (["tptp", "thf", "tff", "fof", "cnf"].includes(getActiveFileName().split('.').pop().toLowerCase()))
@@ -236,36 +332,27 @@ function highlightErrors(errors = [], mask = []) {
   }
 }
 
-// ------------------------------------------------------------------
-// Menu options
+// ======================================================
+// 8. TAB MANAGEMENT
+// ======================================================
 
-function toggleDropdown() {
-  const d = $("#dropdownContent");
-  d.style.display = d.style.display === "block" ? "none" : "block";
+function createTabElement(fileName, i) {
+  const tab = document.createElement("div");
+  tab.className = "tab";
+  tab.dataset.index = i;
+  tab.draggable = true;
+  const label = document.createElement("span");
+  label.draggable = false;
+  label.textContent = fileName;
+  label.onclick = () => switchTab(i);
+  const close = document.createElement("span");
+  close.textContent = "×";
+  close.className = "close-btn";
+  close.draggable = false;
+  close.onclick = (e) => { e.stopPropagation(); closeTab(i); };
+  tab.append(label, close);
+  return tab;
 }
-
-function triggerFileUpload() {
-  $("#kifFile").click();
-}
-
-async function check() {
-  const text = getContent();
-  if (!text) return alert("Nothing to check.");
-  const fileName = getActiveFileName();
-  const { errors = [], errorMask = [], message } = await postToServlet("check", { fileName, code: text });
-  renderErrorBox(errors, message);
-  highlightErrors(errors, errorMask);
-}
-
-async function formatBuffer() {
-  const text = getContent();
-  if (!text) return alert("No content to format.");
-  const { message } = await postToServlet("format", { fileName: getActiveFileName(), code: text });
-  if (message?.trim()) setEditorContent(message);
-}
-
-// ------------------------------------------------------------------
-// Tabs Management
 
 function addTab(fileName = "untitled.kif") {
   const tabBar = $("#tabBar");
@@ -303,37 +390,96 @@ function openFileInNewTab(name, contents = "") {
   setMode();
 }
 
-function newFile(ext = "kif") {
-  const base = prompt(`Name for new ${ext.toUpperCase()} file:`, `untitled.${ext}`);
-  if (!base) return;
-  const fileName = base.replace(/\.[^/.]+$/, "") + "." + ext;
-  openFileInNewTab(fileName, "");
-  toggleDropdown();
+function reorderTabs() {
+  const tabBar = document.getElementById("tabBar");
+  if (!tabBar) return;
+  let draggingEl = null;
+  let draggedStart = null;
+  let draggedWasActive = false;
+  let isDragging = false;
+  let dragEndAt = 0;
+  tabBar.addEventListener("click", (e) => {
+    const tab = e.target.closest(".tab");
+    if (!tab || e.target.closest(".close-btn")) return;
+    if (isDragging || (performance.now() - dragEndAt) < 60) return;
+    const idx = Array.prototype.indexOf.call(tabBar.children, tab);
+    switchTab(idx);
+  });
+
+  const reconcileDataToDom = () => {
+    const tabsInDom = Array.from(tabBar.querySelectorAll(".tab"));
+    const oldOrder  = codeEditors.slice();
+    const domOldIdx = tabsInDom.map(t => parseInt(t.dataset.index, 10));
+    codeEditors     = domOldIdx.map(oi => oldOrder[oi]);
+    const mapOldToNew = (oldIdx) => domOldIdx.indexOf(oldIdx);
+    if (draggedWasActive && draggedStart != null) activeTab = mapOldToNew(draggedStart);
+    else activeTab = mapOldToNew(activeTab);
+    tabBar.querySelectorAll(".tab").forEach((t, idx) => {
+      t.dataset.index = idx;
+      const label = t.querySelector("span:first-child");
+      if (label) label.onclick = () => switchTab(idx);
+      const close = t.querySelector(".close-btn");
+      if (close) close.onclick = (ev) => { ev.stopPropagation(); closeTab(idx); };
+    });
+    const current = codeEditors[activeTab];
+    if (current) { setEditorContent(current[1]); setMode(); }
+  };
+
+  tabBar.addEventListener("dragstart", (e) => {
+    const tab = e.target.closest(".tab");
+    if (!tab || !tabBar.contains(tab)) return;
+    saveActiveTab();
+    draggingEl = tab;
+    draggedStart = parseInt(tab.dataset.index, 10);
+    draggedWasActive = (activeTab === draggedStart);
+    isDragging = true;
+    tab.classList.add("dragging");
+    try { e.dataTransfer.setData("text/plain", ""); } catch {}
+    e.dataTransfer.effectAllowed = "move";
+  });
+  
+  tabBar.addEventListener("dragover", (e) => {
+    if (!draggingEl) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+    const over = e.target.closest(".tab");
+    if (!over || over === draggingEl) return;
+    const rect = over.getBoundingClientRect();
+    const before = e.clientX < rect.left + rect.width / 2;
+    if (before) tabBar.insertBefore(draggingEl, over);
+    else        tabBar.insertBefore(draggingEl, over.nextSibling);
+  });
+
+  const finalize = () => {
+    if (!draggingEl) return;
+    draggingEl.classList.remove("dragging");
+    reconcileDataToDom();
+    draggingEl = null;
+    dragEndAt = performance.now();
+    isDragging = false;
+    draggedStart = null;
+    draggedWasActive = false;
+  };
+  tabBar.addEventListener("drop", (e) => { e.preventDefault(); finalize(); });
+  tabBar.addEventListener("dragend", () => { finalize(); });
 }
 
-function downloadFile() {
+// ======================================================
+// 9. EDITOR ACTIONS
+// ======================================================
+
+async function check() {
   const text = getContent();
-  if (!text) return alert("Nothing to download.");
-  const blob = new Blob([text], { type: "text/plain" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = getActiveFileName();
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toggleDropdown();
+  if (!text) return alert("Nothing to check.");
+  const fileName = getActiveFileName();
+  const { errors = [], errorMask = [], message } = await postToServlet("check", { fileName, code: text });
+  renderErrorBox(errors, message);
+  highlightErrors(errors, errorMask);
 }
 
-// ------------------------------------------------------------------
-// Extraneous for now
-function checkFileSize() {
-  const fileInput = document.getElementById("kifFile");
-  if (fileInput.files.length > 0) {
-    const file = fileInput.files[0];
-    const maxSize = 200 * 1024;
-    if (file.size > maxSize) {
-      alert("File is too large. Maximum allowed size is 200 KB.");
-      return false;
-    }
-  }
-  return true;
+async function formatBuffer() {
+  const text = getContent();
+  if (!text) return alert("No content to format.");
+  const { message } = await postToServlet("format", { fileName: getActiveFileName(), code: text });
+  if (message?.trim()) setEditorContent(message);
 }
