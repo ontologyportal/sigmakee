@@ -172,21 +172,163 @@ public class EditorServlet extends HttpServlet {
     }
 
     /** KIF auto-formatter (migrated from KifFileCheckServlet) */
-    public static String formatKif(String contents) {
-        if (contents == null || contents.trim().isEmpty()) return contents;
+    /** KIF auto-formatter that preserves ; comments relative to formulas (no extra classes). */
+public static String formatKif(String contents) {
+    if (contents == null || contents.trim().isEmpty()) return contents;
 
-        KIF kif = new KIF();
-        try (StringReader sr = new StringReader(contents)) {
-            kif.parse(sr);
-        } catch (Exception e) {
-            System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
-            return contents;
-        }
+    // --- 1) Scan original text: collect top-level formula spans and comments (offset,text)
+    final List<int[]> spans = new ArrayList<>();          // each int[]{start, endExclusive}
+    final List<Integer> commentOffsets = new ArrayList<>(); // char offsets of ';'
+    final List<String> commentTexts = new ArrayList<>();    // text after ';' (no newline)
 
+    scanTopLevelSpansAndComments(contents, spans, commentOffsets, commentTexts);
+
+    // --- 2) Parse and render formulas with your existing parser
+    final List<String> formattedForms = new ArrayList<>();
+    KIF kif = new KIF();
+    try (StringReader sr = new StringReader(contents)) {
+        kif.parse(sr);
+    } catch (Exception e) {
+        // If parse fails, fall back to original text (do not lose comments)
+        System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
+        return contents;
+    }
+    for (Formula f : kif.formulasOrdered.values()) {
+        formattedForms.add(f.toString().trim());
+    }
+
+    // --- 3) If counts mismatch, just return concatenated formatted forms + all comments at the end (safe fallback)
+    if (spans.isEmpty() || spans.size() != formattedForms.size()) {
         StringBuilder sb = new StringBuilder();
-        for (Formula f : kif.formulasOrdered.values()) {
-            sb.append(f.toString()).append("\n");
+        for (int i = 0; i < formattedForms.size(); i++) {
+            sb.append(formattedForms.get(i)).append("\n");
+        }
+        // append original comments as standalone lines (to avoid losing them)
+        for (int i = 0; i < commentTexts.size(); i++) {
+            sb.append("; ").append(commentTexts.get(i)).append("\n");
         }
         return sb.toString();
     }
+
+    // --- 4) Assign each comment to a bucket around the nearest formula span
+    // We'll create two comment lists per formula index:
+    //   leading[i]  = comments between previous span end and this span start
+    //   inside[i]   = comments whose offset falls inside this span
+    @SuppressWarnings("unchecked")
+    List<String>[] leading = new List[spans.size()];
+    @SuppressWarnings("unchecked")
+    List<String>[] inside  = new List[spans.size()];
+    for (int i = 0; i < spans.size(); i++) { leading[i] = new ArrayList<>(); inside[i]  = new ArrayList<>(); }
+
+    // Build a flat array of boundaries to allow O(log n) mapping if desired.
+    // Here we do a simple linear sweep since all lists are in source order.
+    int commentIdx = 0;
+    int spanIdx = 0;
+
+    // Sort is unnecessary because our scan preserved source order, but just in case:
+    // (no-op since we didn’t permute them)
+
+    // Walk through comments and place them relative to span boundaries.
+    while (commentIdx < commentOffsets.size()) {
+        int cOff = commentOffsets.get(commentIdx);
+        String cTxt = commentTexts.get(commentIdx);
+
+        // Advance to the span that either contains cOff or starts after it.
+        while (spanIdx < spans.size() && spans.get(spanIdx)[1] <= cOff) {
+            spanIdx++;
+        }
+        if (spanIdx < spans.size()) {
+            int[] span = spans.get(spanIdx);
+            if (cOff < span[0]) {
+                // The comment occurs before this span starts -> it's leading for this span
+                leading[spanIdx].add(cTxt);
+            } else if (cOff >= span[0] && cOff < span[1]) {
+                // The comment lies inside this span
+                inside[spanIdx].add(cTxt);
+            } else {
+                // (shouldn’t happen because we advanced while end <= cOff)
+                // Put as leading of the next span if any, else attach to last span's inside
+                if (spanIdx + 1 < spans.size()) leading[spanIdx + 1].add(cTxt);
+                else inside[spans.size() - 1].add(cTxt);
+            }
+        } else {
+            // Past the last span: attach to the last formula as "inside" (trailing overall)
+            inside[spans.size() - 1].add(cTxt);
+        }
+        commentIdx++;
+    }
+
+    // --- 5) Emit: leading comments (as lines), the formatted formula, then inside comments (as lines)
+    StringBuilder out = new StringBuilder();
+    for (int i = 0; i < formattedForms.size(); i++) {
+        for (String c : leading[i]) out.append("; ").append(c).append("\n");
+        out.append(formattedForms.get(i)).append("\n");
+        for (String c : inside[i]) out.append("; ").append(c).append("\n");
+    }
+    return out.toString();
+}
+
+/**
+ * Scans the text to:
+ *  - collect top-level S-expression spans into 'spans' as [start,endExclusive]
+ *  - collect every ';' line comment as (offset,text) into commentOffsets/commentTexts.
+ *
+ * Rules:
+ *  - Comments start at ';' and terminate at newline. Parens in comments are ignored.
+ *  - Only top-level (depth transitions 0->1 ... ->0) parentheses define formula spans.
+ */
+private static void scanTopLevelSpansAndComments(
+        String s,
+        List<int[]> spans,
+        List<Integer> commentOffsets,
+        List<String> commentTexts
+) {
+    int n = s.length();
+    int depth = 0;
+    int i = 0;
+    int currentSpanStart = -1;
+
+    while (i < n) {
+        char ch = s.charAt(i);
+
+        // Handle line comment: read to end-of-line; ignore parens within comment
+        if (ch == ';') {
+            int commentStart = i;
+            int j = i + 1;
+            while (j < n) {
+                char cj = s.charAt(j);
+                if (cj == '\n' || cj == '\r') break;
+                j++;
+            }
+            // record comment
+            commentOffsets.add(commentStart);
+            // strip leading ';' and optional whitespace
+            String raw = s.substring(commentStart + 1, j);
+            commentTexts.add(raw.stripLeading());
+            // continue after newline (if present)
+            i = j;
+            continue;
+        }
+
+        // Newline normalization: just advance
+        if (ch == '\r') { i++; continue; }
+
+        // Depth tracking for top-level spans
+        if (ch == '(') {
+            if (depth == 0) {
+                currentSpanStart = i;
+            }
+            depth++;
+        } else if (ch == ')') {
+            depth = Math.max(0, depth - 1);
+            if (depth == 0 && currentSpanStart >= 0) {
+                // endExclusive is i+1
+                spans.add(new int[]{ currentSpanStart, i + 1 });
+                currentSpanStart = -1;
+            }
+        }
+        i++;
+    }
+}
+
 }
