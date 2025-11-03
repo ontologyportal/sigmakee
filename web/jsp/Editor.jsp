@@ -11,10 +11,10 @@
 <head>
   <meta charset="UTF-8">
   <title>Editor</title>
-   <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
-   <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
-   <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
-   <link rel="stylesheet" href="Editor.css">
+  <script src="/sigma/javascript/codemirror/codemirror.min.js"></script>
+  <script src="/sigma/javascript/codemirror/placeholder.min.js"></script>
+  <link rel="stylesheet" href="/sigma/javascript/codemirror/codemirror.min.css" />
+  <link rel="stylesheet" href="Editor.css">
 </head>
 <body>
 <%!
@@ -63,11 +63,21 @@ window.initialErrorMask = [
   <div>
     <div class="editor-header">
       <div class="dropdown" id="fileDropdown">
-        <span class="dropdown-file-label" onclick="toggleDropdown()">File</span>
+        <span class="dropdown-file-label" onclick="toggleFileMenu(event)">File</span>
         <span class="dropdown-file-label" onclick="formatBuffer()">Format</span>
         <span class="dropdown-file-label" onclick="check()">Check</span>
         <div class="dropdown-content" id="dropdownContent">
-          <a href="#" onclick="newFile()">New</a>
+          <div class="submenu">
+            <a href="#" class="submenu-label">New ></a>
+            <div class="submenu-content">
+              <a href="#" onclick="newFile('kif')">KIF (.kif)</a>
+              <a href="#" onclick="newFile('tptp')">TPTP (.tptp)</a>
+              <a href="#" onclick="newFile('thf')">THF (.thf)</a>
+              <a href="#" onclick="newFile('tff')">TFF (.tff)</a>
+              <a href="#" onclick="newFile('fof')">FOF (.fof)</a>
+              <a href="#" onclick="newFile('cnf')">CNF (.cnf)</a>
+            </div>
+          </div>
           <a href="#" onclick="downloadFile()">Download</a>
           <a href="#" onclick="triggerFileUpload()">Upload</a>
         </div>

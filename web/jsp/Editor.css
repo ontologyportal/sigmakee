@@ -11,48 +11,10 @@ h3 { margin: 8px 0;}
 .CodeMirror-gutters { background: #f0f0f0; border-right: 1px solid #ddd;}
 .CodeMirror-linenumber { color: #666; padding: 0 8px; min-width: 1.5em;}
 .CodeMirror .error-line { background-color: #ffebee !important;}
-.CodeMirror .error-text {
-  background: none !important;
-  position: relative;
-}
-.CodeMirror .error-text::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0px;
-  height: 4px;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    red 0,
-    red 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  background-size: 6px 4px;
-  pointer-events: none;
-}
-.CodeMirror .warning-text {
-  background: none !important;
-  position: relative;
-}
-.CodeMirror .warning-text::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0px;
-  height: 4px;
-  background-image: repeating-linear-gradient(
-    -45deg,
-    orange 0,
-    orange 1px,
-    transparent 1px,
-    transparent 2px
-  );
-  background-size: 6px 4px;
-  pointer-events: none;
-}
+.CodeMirror .error-text {background: none !important;position: relative;}
+.CodeMirror .error-text::after{content:"";position:absolute;left:0;right:0;bottom:0;height:4px;background-image:repeating-linear-gradient(-45deg,red 0,red 1px,transparent 1px,transparent 2px);background-size:6px 4px;pointer-events:none}
+.CodeMirror .warning-text{background:none!important;position:relative}
+.CodeMirror .warning-text::after{content:"";position:absolute;left:0;right:0;bottom:0px;height:4px;background-image:repeating-linear-gradient(-45deg,orange 0,orange 1px,transparent 1px,transparent 2px);background-size:6px 4px;pointer-events:none}
 .editor-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
 .file-name-display { font-family: monospace; font-size: 12px; color: #666; margin-top: 2px;}
 .tab-bar { display: flex; align-items: center; border-radius: 2px 6px 0 0; padding: 0px 8px;}
@@ -74,98 +36,16 @@ h3 { margin: 8px 0;}
 .CodeMirror .cm-operator { color: #aa5500; font-weight: bold; }
 .CodeMirror .cm-markup   { color: #0088cc; }
 .CodeMirror .cm-null     { color: #666; }
-/* Core dropdown container */
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-/* Dropdown menu */
-.dropdown-content {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  min-width: 160px;
-  z-index: 100;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* Submenu container */
-.submenu {
-  position: relative;
-}
-
-/* Submenu list */
-.submenu-content {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  min-width: 160px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-}
-
-/* Hover to open submenu */
-.submenu:hover .submenu-content {
-  display: block;
-}
-
-/* Basic item styling */
-.dropdown-content a,
-.submenu-content a {
-  display: block;
-  padding: 8px 12px;
-  color: #000;
-  text-decoration: none;
-}
-
+.dropdown {position: relative;display: inline-block;}
+.dropdown-content{display:none;position:absolute;top:100%;left:0;background:#fff;border:1px solid #ccc;border-radius:6px;min-width:160px;z-index:100;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+.submenu{position:relative}
+.submenu-content{display:none;position:absolute;top:0;left:100%;background:#fff;border:1px solid #ccc;border-radius:6px;min-width:160px;box-shadow:0 2px 6px rgba(0,0,0,0.15)}
+.submenu:hover .submenu-content{display:block}
+.dropdown-content a,.submenu-content a{display:block;padding:8px 12px;color:#000;text-decoration:none}
 .dropdown-content a:hover,
-.submenu-content a:hover {
-  background-color: #eee;
-}
-/* --- Menu bar labels (File, Format, Check) --- */
-.dropdown-file-label {
-  display: inline-block;
-  padding: 6px 12px;
-  margin-right: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #222;
-  background: #f4f4f4;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.2s ease;
-}
-
-.dropdown-file-label:hover {
-  background: #e0e7ff; /* light blue hover */
-  border-color: #99a8ff;
-  color: #111;
-}
-
-.file-menu-bar {
-  display: flex;
-  gap: 6px;
-  align-items: center;
-  background: #fafafa;
-  padding: 4px 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-.tab.dragging {
-  opacity: 0.5;
-  border: 2px dashed #999;
-}
-.tab-bar {
-  user-select: none;
-}
+.submenu-content a:hover {background-color: #eee;}
+.dropdown-file-label{display:inline-block;padding:6px 12px;margin-right:8px;font-size:14px;font-weight:500;color:#222;background:#f4f4f4;border:1px solid #ccc;border-radius:4px;cursor:pointer;user-select:none;transition:all .2s ease}
+.dropdown-file-label:hover{background:#e0e7ff;border-color:#99a8ff;color:#111}
+.file-menu-bar{display:flex;gap:6px;align-items:center;background:#fafafa;padding:4px 8px;border:1px solid #ccc;border-radius:6px}
+.tab.dragging{opacity:.5;background-color:#ddd}
+.tab-bar{display:flex;gap:4px}
