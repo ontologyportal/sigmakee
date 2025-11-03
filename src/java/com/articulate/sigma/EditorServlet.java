@@ -202,173 +202,141 @@ public class EditorServlet extends HttpServlet {
         resp.getWriter().write(json.toString());
     }
 
-public static String formatKif(String contents) {
-    if (contents == null || contents.trim().isEmpty()) return contents;
-
-    // 1) Scan original text: spans + comments
-    final List<int[]> spans = new ArrayList<>();            // each int[]{start, endExclusive}
-    final List<Integer> commentOffsets = new ArrayList<>(); // char offsets of ';'
-    final List<String> commentTexts = new ArrayList<>();    // text after ';' (no newline)
-    scanTopLevelSpansAndComments(contents, spans, commentOffsets, commentTexts);
-
-    // 2) Parse and collect formatted strings
-    final List<String> formattedForms = new ArrayList<>();
-    KIF kif = new KIF();
-    try (StringReader sr = new StringReader(contents)) {
-        kif.parse(sr);
-    } catch (Exception e) {
-        System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
-        return contents;
-    }
-
-    // 🔒 Bail out if parser produced no formulas at all
-    if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty()) {
-        return contents;
-    }
-
-    for (Formula f : kif.formulasOrdered.values()) {
-        String s = (f == null) ? "" : f.toString();
-        formattedForms.add(s == null ? "" : s.trim());
-    }
-
-    // 🔒 Bail out if every formula stringified to empty
-    boolean allEmpty = formattedForms.stream().allMatch(s -> s.isEmpty());
-    if (allEmpty) return contents;
-
-    // 3) If we can't align forms-to-spans, safe fallback (avoid outputting empties)
-    if (spans.isEmpty() || spans.size() != formattedForms.size()) {
-        StringBuilder sb = new StringBuilder();
-        for (String s : formattedForms) if (!s.isEmpty()) sb.append(s).append("\n");
-        for (String c : commentTexts) sb.append("; ").append(c).append("\n");
-        String result = sb.toString();
+    public static String formatKif(String contents) {
+        if (contents == null || contents.trim().isEmpty()) return contents;
+        final List<int[]> spans = new ArrayList<>();
+        final List<Integer> commentOffsets = new ArrayList<>();
+        final List<String> commentLines = new ArrayList<>();
+        scanTopLevelSpansAndComments(contents, spans, commentOffsets, commentLines);
+        final List<String> formattedForms = new ArrayList<>();
+        KIF kif = new KIF();
+        try (StringReader sr = new StringReader(contents)) {
+            kif.parse(sr);
+        } catch (Exception e) {
+            System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
+            return contents;
+        }
+        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty()) {
+            return contents;
+        }
+        for (Formula f : kif.formulasOrdered.values()) {
+            String s = (f == null) ? "" : f.toString();
+            formattedForms.add(s == null ? "" : s.trim());
+        }
+        boolean allEmpty = formattedForms.stream().allMatch(s -> s.isEmpty());
+        if (allEmpty) return contents;
+        if (spans.isEmpty() || spans.size() != formattedForms.size()) {
+            StringBuilder sb = new StringBuilder();
+            for (String s : formattedForms) if (!s.isEmpty()) sb.append(s).append("\n");
+            for (String c : commentLines) sb.append(c).append("\n");  // emit raw comment lines
+            String result = sb.toString();
+            return result.trim().isEmpty() ? contents : result;
+        }
+        for (int i = 0; i < formattedForms.size(); i++) {
+            if (formattedForms.get(i).isEmpty()) {
+                int[] span = spans.get(i);
+                String raw = contents.substring(span[0], Math.min(span[1], contents.length())).trim();
+                if (!raw.isEmpty()) formattedForms.set(i, raw);
+            }
+        }
+        int[] extraBlankAfterPrev = new int[spans.size()];
+        for (int i = 1; i < spans.size(); i++) {
+            int prevEnd = spans.get(i - 1)[1];
+            int curStart = spans.get(i)[0];
+            int extra = 0;
+            if (prevEnd < curStart) {
+                String between = contents.substring(prevEnd, curStart);
+                String[] parts = between.split("\\R", -1);
+                for (int idx = 1; idx < parts.length - 1; idx++) {
+                    if (parts[idx].trim().isEmpty()) extra++;
+                    else break; // stop at first non-empty content
+                }
+            }
+            extraBlankAfterPrev[i] = extra;
+        }
+        @SuppressWarnings("unchecked")
+        List<String>[] leading = new List[spans.size()];
+        @SuppressWarnings("unchecked")
+        List<String>[] inside  = new List[spans.size()];
+        for (int i = 0; i < spans.size(); i++) { leading[i] = new ArrayList<>(); inside[i]  = new ArrayList<>(); }
+        int commentIdx = 0, spanIdx = 0;
+        while (commentIdx < commentOffsets.size()) {
+            int cOff = commentOffsets.get(commentIdx);
+            String cLine = commentLines.get(commentIdx);
+            while (spanIdx < spans.size() && spans.get(spanIdx)[1] <= cOff) spanIdx++;
+            if (spanIdx < spans.size()) {
+                int[] span = spans.get(spanIdx);
+                if (cOff < span[0])            leading[spanIdx].add(cLine);
+                else if (cOff < span[1])       inside[spanIdx].add(cLine);
+                else if (spanIdx + 1 < spans.size()) leading[spanIdx + 1].add(cLine);
+                else                           inside[spans.size() - 1].add(cLine);
+            } else {
+                inside[spans.size() - 1].add(cLine);
+            }
+            commentIdx++;
+        }
+        StringBuilder out = new StringBuilder();
+        for (int i = 0; i < formattedForms.size(); i++) {
+            if (i > 0 && extraBlankAfterPrev[i] > 0) {
+                for (int k = 0; k < extraBlankAfterPrev[i]; k++) out.append("\n");
+            }
+            for (String c : leading[i]) out.append(c).append("\n");
+            String form = formattedForms.get(i).trim();
+            if (!form.isEmpty()) out.append(form).append("\n");
+            for (String c : inside[i]) out.append(c).append("\n");
+        }
+        String result = out.toString();
         return result.trim().isEmpty() ? contents : result;
     }
 
-    // --- Per-formula fallback: if formatted form is empty, use the original raw slice
-    for (int i = 0; i < formattedForms.size(); i++) {
-        if (formattedForms.get(i).isEmpty()) {
-            int[] span = spans.get(i);
-            String raw = contents.substring(span[0], Math.min(span[1], contents.length())).trim();
-            if (!raw.isEmpty()) formattedForms.set(i, raw);
-        }
-    }
-
-    // 4) Bucket comments relative to spans
-    @SuppressWarnings("unchecked")
-    List<String>[] leading = new List[spans.size()];
-    @SuppressWarnings("unchecked")
-    List<String>[] inside  = new List[spans.size()];
-    for (int i = 0; i < spans.size(); i++) { leading[i] = new ArrayList<>(); inside[i]  = new ArrayList<>(); }
-
-    int commentIdx = 0, spanIdx = 0;
-    while (commentIdx < commentOffsets.size()) {
-        int cOff = commentOffsets.get(commentIdx);
-        String cTxt = commentTexts.get(commentIdx);
-        while (spanIdx < spans.size() && spans.get(spanIdx)[1] <= cOff) spanIdx++;
-        if (spanIdx < spans.size()) {
-            int[] span = spans.get(spanIdx);
-            if (cOff < span[0])            leading[spanIdx].add(cTxt);
-            else if (cOff < span[1])       inside[spanIdx].add(cTxt);
-            else if (spanIdx + 1 < spans.size()) leading[spanIdx + 1].add(cTxt);
-            else                           inside[spans.size() - 1].add(cTxt);
-        } else {
-            inside[spans.size() - 1].add(cTxt);
-        }
-        commentIdx++;
-    }
-
-    // 5) Emit (skip truly empty forms)
-    StringBuilder out = new StringBuilder();
-    for (int i = 0; i < formattedForms.size(); i++) {
-        for (String c : leading[i]) out.append("; ").append(c).append("\n");
-        String form = formattedForms.get(i).trim();
-        if (!form.isEmpty()) out.append(form).append("\n");
-        for (String c : inside[i]) out.append("; ").append(c).append("\n");
-    }
-
-    String result = out.toString();
-    return result.trim().isEmpty() ? contents : result;
-}
-
-// Add this tiny helper anywhere in the class (e.g., above doPost)
-private static boolean kifParseIsEmpty(String contents) {
-    if (contents == null || contents.trim().isEmpty()) return true;
-    try (StringReader sr = new StringReader(contents)) {
-        KIF kif = new KIF();
-        kif.parse(sr);
-        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty()) return true;
-        for (Formula f : kif.formulasOrdered.values()) {
-            String s = (f == null) ? "" : String.valueOf(f).trim();
-            if (!s.isEmpty()) return false;
-        }
-        return true; // all formulas stringified to empty
-    } catch (Exception e) {
-        // If parsing threw, treat as empty to trigger checker
-        return true;
-    }
-}
-
-/**
- * Scans the text to:
- *  - collect top-level S-expression spans into 'spans' as [start,endExclusive]
- *  - collect every ';' line comment as (offset,text) into commentOffsets/commentTexts.
- *
- * Rules:
- *  - Comments start at ';' and terminate at newline. Parens in comments are ignored.
- *  - Only top-level (depth transitions 0->1 ... ->0) parentheses define formula spans.
- */
-private static void scanTopLevelSpansAndComments(
-        String s,
-        List<int[]> spans,
-        List<Integer> commentOffsets,
-        List<String> commentTexts
-) {
-    int n = s.length();
-    int depth = 0;
-    int i = 0;
-    int currentSpanStart = -1;
-
-    while (i < n) {
-        char ch = s.charAt(i);
-
-        // Handle line comment: read to end-of-line; ignore parens within comment
-        if (ch == ';') {
-            int commentStart = i;
-            int j = i + 1;
-            while (j < n) {
-                char cj = s.charAt(j);
-                if (cj == '\n' || cj == '\r') break;
-                j++;
+    private static void scanTopLevelSpansAndComments(
+            String s,
+            List<int[]> spans,
+            List<Integer> commentOffsets,
+            List<String> commentLines
+    ) {
+        int n = s.length();
+        int depth = 0;
+        int i = 0;
+        int currentSpanStart = -1;
+        boolean inString = false;
+        boolean escaping = false;
+        while (i < n) {
+            char ch = s.charAt(i);
+            if (ch == '"' && !escaping) {
+                inString = !inString;
+                i++;
+                continue;
             }
-            // record comment
-            commentOffsets.add(commentStart);
-            // strip leading ';' and optional whitespace
-            String raw = s.substring(commentStart + 1, j);
-            commentTexts.add(raw.stripLeading());
-            // continue after newline (if present)
-            i = j;
-            continue;
-        }
-
-        // Newline normalization: just advance
-        if (ch == '\r') { i++; continue; }
-
-        // Depth tracking for top-level spans
-        if (ch == '(') {
-            if (depth == 0) {
-                currentSpanStart = i;
+            escaping = (ch == '\\' && !escaping);
+            if (!inString) {
+                if (ch == ';') {
+                    int commentStart = i;
+                    int j = i + 1;
+                    while (j < n) {
+                        char cj = s.charAt(j);
+                        if (cj == '\n' || cj == '\r') break;
+                        j++;
+                    }
+                    commentOffsets.add(commentStart);
+                    String rawLine = s.substring(commentStart, j);
+                    commentLines.add(rawLine);
+                    i = j;
+                    continue;
+                }
+                if (ch == '\r') { i++; continue; }
+                if (ch == '(') {
+                    if (depth == 0) currentSpanStart = i;
+                    depth++;
+                } else if (ch == ')') {
+                    depth = Math.max(0, depth - 1);
+                    if (depth == 0 && currentSpanStart >= 0) {
+                        spans.add(new int[]{ currentSpanStart, i + 1 });
+                        currentSpanStart = -1;
+                    }
+                }
             }
-            depth++;
-        } else if (ch == ')') {
-            depth = Math.max(0, depth - 1);
-            if (depth == 0 && currentSpanStart >= 0) {
-                // endExclusive is i+1
-                spans.add(new int[]{ currentSpanStart, i + 1 });
-                currentSpanStart = -1;
-            }
+            i++;
         }
-        i++;
     }
-}
-
 }
