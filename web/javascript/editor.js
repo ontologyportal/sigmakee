@@ -482,4 +482,5 @@ async function formatBuffer() {
   if (!text) return alert("No content to format.");
   const { message } = await postToServlet("format", { fileName: getActiveFileName(), code: text });
   if (message?.trim()) setEditorContent(message);
+  check();
 }

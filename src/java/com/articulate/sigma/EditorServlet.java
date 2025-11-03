@@ -102,7 +102,37 @@ public class EditorServlet extends HttpServlet {
                 } else {
                     formatted = formatKif(text);
                 }
-                if (formatted == null) {
+
+                // --- Always run a check when formatting (keep it simple)
+                // Use the ORIGINAL text for stable line numbers (safer for UI highlights)
+                List<ErrRec> fmtErrors = Collections.emptyList();
+                String checkMsg = null;
+                try {
+                    if (isTptp) {
+                        fmtErrors = TPTPChecker.check(text, "(web-editor)");
+                    } else {
+                        Future<List<ErrRec>> fut = KifCheckWorker.submit(text);
+                        fmtErrors = fut.get();
+                    }
+                } catch (Exception ce) {
+                    checkMsg = "Check failed: " + ce.getMessage();
+                }
+
+                // Expose simple info in headers (UI can read and show errors)
+                int errCount = (fmtErrors == null) ? 0 : fmtErrors.size();
+                resp.setHeader("X-Has-Errors", (errCount > 0) ? "true" : "false");
+                resp.setHeader("X-Error-Count", String.valueOf(errCount));
+                if (checkMsg != null) resp.setHeader("X-Check-Message", checkMsg);
+
+                // Optional: include first error message for convenience (kept short)
+                if (errCount > 0) {
+                    ErrRec first = fmtErrors.get(0);
+                    String preview = first.msg;
+                    if (preview != null && preview.length() > 200) preview = preview.substring(0, 200);
+                    resp.setHeader("X-First-Error", preview == null ? "" : preview);
+                }
+
+                if (formatted == null || formatted.trim().isEmpty()) {
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     resp.getWriter().write("Failed to format input.");
                 } else {
@@ -114,6 +144,7 @@ public class EditorServlet extends HttpServlet {
             }
             return;
         }
+
         List<ErrRec> errors = Collections.emptyList();
         List<String> lines = Arrays.asList(text.split("\\R", -1));
         boolean[] errorMask = new boolean[lines.size()];
@@ -171,101 +202,110 @@ public class EditorServlet extends HttpServlet {
         resp.getWriter().write(json.toString());
     }
 
-    /** KIF auto-formatter (migrated from KifFileCheckServlet) */
-    /** KIF auto-formatter that preserves ; comments relative to formulas (no extra classes). */
 public static String formatKif(String contents) {
     if (contents == null || contents.trim().isEmpty()) return contents;
 
-    // --- 1) Scan original text: collect top-level formula spans and comments (offset,text)
-    final List<int[]> spans = new ArrayList<>();          // each int[]{start, endExclusive}
+    // 1) Scan original text: spans + comments
+    final List<int[]> spans = new ArrayList<>();            // each int[]{start, endExclusive}
     final List<Integer> commentOffsets = new ArrayList<>(); // char offsets of ';'
     final List<String> commentTexts = new ArrayList<>();    // text after ';' (no newline)
-
     scanTopLevelSpansAndComments(contents, spans, commentOffsets, commentTexts);
 
-    // --- 2) Parse and render formulas with your existing parser
+    // 2) Parse and collect formatted strings
     final List<String> formattedForms = new ArrayList<>();
     KIF kif = new KIF();
     try (StringReader sr = new StringReader(contents)) {
         kif.parse(sr);
     } catch (Exception e) {
-        // If parse fails, fall back to original text (do not lose comments)
         System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
         return contents;
     }
-    for (Formula f : kif.formulasOrdered.values()) {
-        formattedForms.add(f.toString().trim());
+
+    // 🔒 Bail out if parser produced no formulas at all
+    if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty()) {
+        return contents;
     }
 
-    // --- 3) If counts mismatch, just return concatenated formatted forms + all comments at the end (safe fallback)
+    for (Formula f : kif.formulasOrdered.values()) {
+        String s = (f == null) ? "" : f.toString();
+        formattedForms.add(s == null ? "" : s.trim());
+    }
+
+    // 🔒 Bail out if every formula stringified to empty
+    boolean allEmpty = formattedForms.stream().allMatch(s -> s.isEmpty());
+    if (allEmpty) return contents;
+
+    // 3) If we can't align forms-to-spans, safe fallback (avoid outputting empties)
     if (spans.isEmpty() || spans.size() != formattedForms.size()) {
         StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < formattedForms.size(); i++) {
-            sb.append(formattedForms.get(i)).append("\n");
-        }
-        // append original comments as standalone lines (to avoid losing them)
-        for (int i = 0; i < commentTexts.size(); i++) {
-            sb.append("; ").append(commentTexts.get(i)).append("\n");
-        }
-        return sb.toString();
+        for (String s : formattedForms) if (!s.isEmpty()) sb.append(s).append("\n");
+        for (String c : commentTexts) sb.append("; ").append(c).append("\n");
+        String result = sb.toString();
+        return result.trim().isEmpty() ? contents : result;
     }
 
-    // --- 4) Assign each comment to a bucket around the nearest formula span
-    // We'll create two comment lists per formula index:
-    //   leading[i]  = comments between previous span end and this span start
-    //   inside[i]   = comments whose offset falls inside this span
+    // --- Per-formula fallback: if formatted form is empty, use the original raw slice
+    for (int i = 0; i < formattedForms.size(); i++) {
+        if (formattedForms.get(i).isEmpty()) {
+            int[] span = spans.get(i);
+            String raw = contents.substring(span[0], Math.min(span[1], contents.length())).trim();
+            if (!raw.isEmpty()) formattedForms.set(i, raw);
+        }
+    }
+
+    // 4) Bucket comments relative to spans
     @SuppressWarnings("unchecked")
     List<String>[] leading = new List[spans.size()];
     @SuppressWarnings("unchecked")
     List<String>[] inside  = new List[spans.size()];
     for (int i = 0; i < spans.size(); i++) { leading[i] = new ArrayList<>(); inside[i]  = new ArrayList<>(); }
 
-    // Build a flat array of boundaries to allow O(log n) mapping if desired.
-    // Here we do a simple linear sweep since all lists are in source order.
-    int commentIdx = 0;
-    int spanIdx = 0;
-
-    // Sort is unnecessary because our scan preserved source order, but just in case:
-    // (no-op since we didn’t permute them)
-
-    // Walk through comments and place them relative to span boundaries.
+    int commentIdx = 0, spanIdx = 0;
     while (commentIdx < commentOffsets.size()) {
         int cOff = commentOffsets.get(commentIdx);
         String cTxt = commentTexts.get(commentIdx);
-
-        // Advance to the span that either contains cOff or starts after it.
-        while (spanIdx < spans.size() && spans.get(spanIdx)[1] <= cOff) {
-            spanIdx++;
-        }
+        while (spanIdx < spans.size() && spans.get(spanIdx)[1] <= cOff) spanIdx++;
         if (spanIdx < spans.size()) {
             int[] span = spans.get(spanIdx);
-            if (cOff < span[0]) {
-                // The comment occurs before this span starts -> it's leading for this span
-                leading[spanIdx].add(cTxt);
-            } else if (cOff >= span[0] && cOff < span[1]) {
-                // The comment lies inside this span
-                inside[spanIdx].add(cTxt);
-            } else {
-                // (shouldn’t happen because we advanced while end <= cOff)
-                // Put as leading of the next span if any, else attach to last span's inside
-                if (spanIdx + 1 < spans.size()) leading[spanIdx + 1].add(cTxt);
-                else inside[spans.size() - 1].add(cTxt);
-            }
+            if (cOff < span[0])            leading[spanIdx].add(cTxt);
+            else if (cOff < span[1])       inside[spanIdx].add(cTxt);
+            else if (spanIdx + 1 < spans.size()) leading[spanIdx + 1].add(cTxt);
+            else                           inside[spans.size() - 1].add(cTxt);
         } else {
-            // Past the last span: attach to the last formula as "inside" (trailing overall)
             inside[spans.size() - 1].add(cTxt);
         }
         commentIdx++;
     }
 
-    // --- 5) Emit: leading comments (as lines), the formatted formula, then inside comments (as lines)
+    // 5) Emit (skip truly empty forms)
     StringBuilder out = new StringBuilder();
     for (int i = 0; i < formattedForms.size(); i++) {
         for (String c : leading[i]) out.append("; ").append(c).append("\n");
-        out.append(formattedForms.get(i)).append("\n");
+        String form = formattedForms.get(i).trim();
+        if (!form.isEmpty()) out.append(form).append("\n");
         for (String c : inside[i]) out.append("; ").append(c).append("\n");
     }
-    return out.toString();
+
+    String result = out.toString();
+    return result.trim().isEmpty() ? contents : result;
+}
+
+// Add this tiny helper anywhere in the class (e.g., above doPost)
+private static boolean kifParseIsEmpty(String contents) {
+    if (contents == null || contents.trim().isEmpty()) return true;
+    try (StringReader sr = new StringReader(contents)) {
+        KIF kif = new KIF();
+        kif.parse(sr);
+        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty()) return true;
+        for (Formula f : kif.formulasOrdered.values()) {
+            String s = (f == null) ? "" : String.valueOf(f).trim();
+            if (!s.isEmpty()) return false;
+        }
+        return true; // all formulas stringified to empty
+    } catch (Exception e) {
+        // If parsing threw, treat as empty to trigger checker
+        return true;
+    }
 }
 
 /**
