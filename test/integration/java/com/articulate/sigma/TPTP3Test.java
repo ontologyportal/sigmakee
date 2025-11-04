@@ -96,6 +96,7 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             Vampire.mode = Vampire.ModeType.AVATAR;
+            Vampire.askQuestion = true;
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
@@ -103,11 +104,11 @@ public class TPTP3Test extends IntegrationTestBase {
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
             System.out.println("Result: " + result);
-            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 8))
+            if (!StringUtil.emptyString(result) && (tpp.proof.size() == 11))
                 System.out.println("Success");
             else
                 System.err.println("FAIL");
-            assertEquals(8,tpp.proof.size());
+            assertEquals(11,tpp.proof.size());
         }
         catch (Exception e) {
             System.err.println(e.getMessage());
@@ -125,9 +126,11 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             Vampire.mode = Vampire.ModeType.CASC;
+            Vampire.askQuestion = false;
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
+            vampire.output = TPTP3ProofProcessor.joinNreverseInputLines(vampire.output);
             tpp.parseProofOutput(vampire.output, query, kb, vampire.qlist);
             System.out.println(vampire.toString());
             String result = tpp.proof.toString().trim();
@@ -165,6 +168,7 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             Vampire.mode = Vampire.ModeType.CASC;
+            Vampire.askQuestion = false;
             String query = "(subclass ?X Entity)";
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
@@ -195,6 +199,7 @@ public class TPTP3Test extends IntegrationTestBase {
         try {
             KBmanager.getMgr().initializeOnce();
             Vampire.mode = Vampire.ModeType.CASC;
+            Vampire.askQuestion = false;
             String query = "(subclass ?X ?Y)";
             Vampire vampire = kb.askVampire(query,30,1);
             TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();

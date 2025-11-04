@@ -202,6 +202,7 @@ public class KB implements Serializable {
 
     public static boolean dropOnePremiseFormulas = false;
 
+    public static boolean modensPonens = false;
     /***************************************************************
      */
     public KB() {
@@ -1983,14 +1984,19 @@ public class KB implements Serializable {
         // STEP 3
         Vampire vampire_pomens = new Vampire();
         File kb = new File("min-problem.tptp");
-        List<String> cmds = Arrays.asList(
+        List<String> cmds = new ArrayList<>(Arrays.asList(
                 "--input_syntax","tptp",
                 "--proof","tptp",                  // <-- TSTP-style proof lines
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
                 "-fde","none","-updr","off"
-        );
+        ));
+        if (Vampire.askQuestion){
+            cmds.add("-qa");
+            cmds.add("plain");
+        }
+
         try{
-            vampire_pomens.runCustom(kb, 10, cmds);
+            vampire_pomens.runCustom(kb, timeout, cmds);
             vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
         } catch (Exception e){
             System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
@@ -2006,6 +2012,82 @@ public class KB implements Serializable {
 
         // STEP 6
         return vampire_pomens;
+    }
+
+
+
+    public Vampire askVampireTPTP(String test_path, int timeout, int maxAnswers){
+
+        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        String includesPath = testDir + File.separator + "includes";
+
+        File test = new File(test_path);
+        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
+
+        if (!includes.isEmpty()) {
+            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
+            if (error != null) {
+                System.err.println(error);
+            }
+        }
+
+        List<String> cmds = new ArrayList<>(Arrays.asList(
+                "--input_syntax", "tptp",
+                "--proof", "tptp"   // <-- TSTP-style proof lines
+        ));
+
+        if (Vampire.askQuestion){
+            cmds.add("-qa");
+            cmds.add("plain");
+        }
+
+        if (!includes.isEmpty()){
+            cmds.add("--include");
+            cmds.add(includesPath);
+        }
+
+
+        // STEP 1 - First TPTP pass (main proof)
+        Vampire vampire = new Vampire();
+
+        try{
+            vampire.runCustom(test, timeout, cmds);
+        } catch (Exception e){
+            System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
+        }
+
+        System.out.println("---- 2 ----");
+
+        // STEP 2 - Second TPTP pass (modus Ponens)
+        if (modensPonens) {
+            List<String> cmds_modus_ponens = Arrays.asList(
+                    "--input_syntax","tptp",
+                    "--proof","tptp",                  // <-- TSTP-style proof lines
+                    "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
+                    "-fde","none","-updr","off",
+                    "-qa","plain"
+            );
+            List<TPTPFormula> proof = TPTPutil.processProofLines(vampire.output);
+            List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
+            Vampire vampire_pomens = new Vampire();
+            File kb = new File("min-problem.tptp");
+            try{
+                vampire_pomens.runCustom(kb, timeout, cmds_modus_ponens);
+                vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
+            } catch (Exception e){
+                System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
+            }
+
+            // STEP 3 - Drop One Premise Formulas
+            if (dropOnePremiseFormulas) {
+                vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
+            }
+
+            vampire = vampire_pomens;
+        }
+
+        // STEP 6
+        return vampire;
     }
 
 

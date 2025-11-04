@@ -21,6 +21,9 @@ import com.articulate.sigma.utils.FileUtil;
 import com.articulate.sigma.utils.StringUtil;
 import com.articulate.sigma.utils.FileUtil;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
@@ -347,10 +350,17 @@ public class TPTPutil {
     }
 
     /**
-     * Cleans a Vampire proof log file so only the valid proof lines remain.
-     * Keeps only lines between "% SZS output start" and "% SZS output end",
-     * merges multi-line fof(...) statements into single lines,
-     * and returns the processed list ready for TPTP3ProofProcessor.
+     * Cleans and normalizes the contents of a TPTP proof file.
+     *
+     * Steps performed:
+     * 1. Keeps comment lines ("%") that appear before the first fof(...) line and after the last one.
+     * 2. Merges multi-line fof(...) formulas into single lines by concatenating
+     *    their continuation lines until a closing ")." is found.
+     * 3. Returns a cleaned version of the proof containing:
+     *      - Header comments
+     *      - All compacted fof(...) lines
+     *      - Footer comments
+     *
      */
     public static List<String> clearProofFile(List<String> lines) {
 
@@ -373,38 +383,16 @@ public class TPTPutil {
             }
         }
 
-        // --- 0) locate markers and status ---
-        String statusLine = null;
-        int startIdx = -1;
-        int endIdx = -1;
-
-
-        for (int i = 0; i < lines.size(); i++) {
-            String l = lines.get(i);
-            if (statusLine == null && l.contains("% SZS status")) statusLine = l;
-            if (startIdx == -1 && l.contains("% SZS output start")) startIdx = i;
-            if (startIdx != -1 && l.contains("% SZS output end")) { endIdx = i; break; }
-        }
-
-        // Fallback: if we didn't find a proper proof block, return empty (caller can handle)
-        if (startIdx == -1 || endIdx == -1 || endIdx < startIdx) {
-            System.err.println("[clearProofFile] No SZS proof block found.");
-            return new ArrayList<String>();
-        }
-
-        // --- 1) extract the proof section, inclusive of start/end ---
-        List<String> section = new ArrayList<String>(lines.subList(startIdx, endIdx + 1));
-
-        // --- 2) merge multi-line fof(...) into single lines ---
+        // --- merge multi-line fof(...) into single lines ---
         List<String> mergedFofs = new ArrayList<String>();
         StringBuilder current = new StringBuilder();
         boolean insideFof = false;
 
-        for (int i = 0; i < section.size(); i++) {
-            String trimmed = section.get(i).trim();
+        for (int i = 0; i < lines.size(); i++) {
+            String trimmed = lines.get(i).trim();
 
             // skip markers here; we'll add them explicitly later
-            if (trimmed.contains("% SZS output start") || trimmed.contains("% SZS output end")) {
+            if (trimmed.startsWith("%")) {
                 continue;
             }
 
@@ -431,7 +419,25 @@ public class TPTPutil {
         return finalLines;
     }
 
-
+    /**
+     * Processes a TPTP proof file and removes all proof steps
+     * that have only a single premise (e.g., trivial inferences or direct copies).
+     *
+     * Steps performed:
+     * 1. Initializes the Sigma knowledge base (KBmanager) to ensure ontology data is loaded.
+     * 2. Cleans the raw proof lines using clearProofFile(), preserving only header/footer comments
+     *    and merging multi-line fof(...) entries into single lines.
+     * 3. Parses the proof output into structured TPTPFormula objects.
+     * 4. Calls simplifyProof(1) to remove all single-premise proof steps.
+     * 5. Renumbers the remaining proof steps to maintain consistent references.
+     * 6. Reconstructs the proof by:
+     *      - Keeping the original header and footer comments.
+     *      - Converting each remaining TPTPFormula back into fof(...) format.
+     *      - Combining them into a normalized list of proof lines.
+     *
+     * Returns a cleaned proof where all trivial one-premise derivations are dropped,
+     * maintaining logical consistency and readability.
+     */
     public static List<String> dropOnePremiseFormulasFOF(List<String> proofLines) {
         TPTP3ProofProcessor tpp = new TPTP3ProofProcessor();
         KBmanager.getMgr().initializeOnce();
@@ -473,8 +479,7 @@ public class TPTPutil {
         finalLines.addAll(fofBody);
         finalLines.addAll(lastComments);
 
-        // reverse the lines again
-        return TPTP3ProofProcessor.joinNreverseInputLines(finalLines);
+        return finalLines;
     }
 
 
@@ -579,6 +584,48 @@ public class TPTPutil {
 
         // Write minimal TPTP file with authored axioms
         return tpp.proof;
+    }
+
+    public static List<String> extractIncludesFromTPTP(File tptpFile) {
+        List<String> includes = new ArrayList<>();
+        Pattern pattern = Pattern.compile("include\\s*\\(\\s*'([^']+)'\\s*\\)", Pattern.CASE_INSENSITIVE);
+
+        try {
+            try (BufferedReader br = new BufferedReader(new FileReader(tptpFile))) {
+                String line;
+                while ((line = br.readLine()) != null) {
+                    Matcher m = pattern.matcher(line);
+                    while (m.find()) {
+                        includes.add(m.group(1));  // capture the filename inside quotes
+                    }
+                }
+            }
+        }catch (IOException e) {
+            System.out.println("ERROR: TPTPutil.extractIncludesFromTPTP: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return includes;
+    }
+
+    public static String validateIncludesInTPTPFiles(List<String> includes, String includesPath) {
+
+
+        File incDir = new File(includesPath);
+
+        // 1) Check if includes directory exists
+        if (!incDir.exists() || !incDir.isDirectory()) {
+            return ("Include directory not found: " + includesPath);
+        }
+
+        // 2) Check each include file inside that folder
+        for (String inc : includes) {
+            File f = new File(incDir, inc);
+            if (!f.exists()) {
+                return ("Missing include file: " + f.getAbsolutePath());
+            }
+        }
+
+        return null;
     }
 
 

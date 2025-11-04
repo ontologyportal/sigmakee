@@ -20,7 +20,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Stream;
-
 /** *****************************************************************
  * A class that finds problems in a knowledge base.  It is not meant
  * to be instantiated.
@@ -33,8 +32,6 @@ public class Diagnostics {
             Formula.UQUANT,Formula.IF,Formula.IFF, "holds");
 
     public static HashMap<String, HashSet<String>> varLinksParentMap = new HashMap<>(); // parent map for getVariableLinks(Formula f, KB kb)
-    
-    private static final Set<String> FN_WRAPPERS = Set.of("WhenFn", "BeginFn", "EndFn", "attribute");
     
     private static final int RESULT_LIMIT = 100;
 
@@ -1135,8 +1132,58 @@ public class Diagnostics {
             System.out.println();
         }
     }
+    
+    /**
+     * Collects all variables from a list of formula arguments.
+     * Gets direct variable arguments plus ALL variables nested inside functions.
+     * 
+     * @param args the list of formula arguments to examine
+     * @return set of all variables found at any depth
+     */
+    private static HashSet<String> collectVars(List<Formula> args) {
+        HashSet<String> vars = new HashSet<>();
+        for (Formula arg : args) {
+            collectAllVarsFromArg(arg, vars);
+        }
+        return vars;
+    }
 
     /**
+     * Recursively extracts all variables from a formula argument.
+     * Stops at logical operators and quantifiers to avoid crossing formula boundaries.
+     * 
+     * @param f the formula to extract variables from
+     * @param vars the set to add found variables to
+     */
+    private static void collectAllVarsFromArg(Formula f, HashSet<String> vars) {
+        if (f == null || f.empty()) {
+            return;
+        }
+        
+        if (f.isVariable()) {
+            vars.add(f.getFormula());
+            return;
+        }
+        
+        if (f.atom()) {
+            return;
+        }
+        
+        String head = f.car();
+        if (Formula.isLogicalOperator(head) || head.equals(Formula.UQUANT) || head.equals(Formula.EQUANT)) {
+            return;
+        }
+        
+        // recurse into all arguments of functions/predicates
+        List<Formula> args = f.complexArgumentsToArrayList(1);
+        if (args != null) {
+            for (Formula arg : args) {
+                collectAllVarsFromArg(arg, vars);
+            }
+        }
+    }
+
+     /**
      * Builds a map of variable co-occurrences in a formula
      * @param f the formula to analyze
      * @return map from each variable to the set of variables it co-occurs with
@@ -1145,40 +1192,7 @@ public class Diagnostics {
         HashSet<String> parents = new HashSet<>();
         return findOrphanVarsRecurse(f,parents);
     }
-
-    /**
-     * Collects variables from a list of formula arguments.
-     * Gets direct variable arguments (e.g., ?X) plus variables inside wrapper functions 
-     * such as, BeginFn, EndFn, WhenFn.
-     * 
-     * @param args the list of formula arguments to examine
-     * @return set of all variables found directly or inside wrapper functions
-     */
-    private static HashSet<String> collectVarsIncludingFnWrappers(List<Formula> args) {
-        HashSet<String> vars = new HashSet<>();
-        for (Formula arg : args) {
-            if (arg.isVariable()) {
-                // argument such as ?X
-                vars.add(arg.getFormula());
-            } else if (!arg.atom() && !arg.empty()) {
-                // complex formula argument, check for function wrappers
-                String head = arg.car();
-                if (FN_WRAPPERS.contains(head)) {
-                    // extract variables from inside function wrapper such as, e.g., get ?X from (BeginFn ?X)
-                    List<Formula> wrapperArgs = arg.complexArgumentsToArrayList(1);
-                    if (wrapperArgs != null) {
-                        for (Formula inner : wrapperArgs) {
-                            if (inner.isVariable()) {
-                                vars.add(inner.getFormula());
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return vars;
-    }
-
+    
     /**
      * Recursively traverses a formula to find variable co-occurrences.
      * @param f the formula to traverse
@@ -1239,7 +1253,7 @@ public class Diagnostics {
         
         // case 3: (agent, patient, equal, holdsDuring, etc.)
         // collect direct variable args plus vars inside wrapper functions
-        HashSet<String> coVars = collectVarsIncludingFnWrappers(args);
+        HashSet<String> coVars = collectVars(args);
 
         // recurse into arguments with coVars as the new parent context
         // this links any variables found deeper to the variables at this level
@@ -1357,7 +1371,52 @@ public class Diagnostics {
         }
     }
 
-    /*
+    /**
+     * Finds all disconnected variable groups in the graph.
+     * 
+     * @param links the variable co-occurrence map
+     * @return list of disconnected groups, where each group is a set of connected variables
+     */
+    private static ArrayList<HashSet<String>> findDisconnectedGroups(HashMap<String, HashSet<String>> links) {
+        ArrayList<HashSet<String>> groups = new ArrayList<>();
+        HashSet<String> allVisited = new HashSet<>();
+        
+        // find each connected component
+        for (String var : links.keySet()) {
+            if (!allVisited.contains(var)) {
+                HashSet<String> group = new HashSet<>();
+                Stack<String> stack = new Stack<>();
+                stack.push(var);
+                group.add(var);
+                allVisited.add(var);
+                while (!stack.isEmpty()) {
+                    String curr = stack.pop();
+                    if (links.containsKey(curr)) {
+                        for (String neighbor : links.get(curr)) {
+                            if (!allVisited.contains(neighbor)) {
+                                allVisited.add(neighbor);
+                                group.add(neighbor);
+                                stack.push(neighbor);
+                            }
+                        }
+                    }
+                }
+                groups.add(group);
+            }
+        }
+        return groups;
+    }
+
+    /**
+     * Checks if all variables in the co-occurrence graph are connected.
+     * @param links the variable co-occurrence map
+     * @return true if all variables form a single connected component
+     */
+    private static boolean isFullyConnected(HashMap<String, HashSet<String>> links) {
+        return findDisconnectedGroups(links).size() <= 1;
+    }
+
+    /**
      * Parses a KIF file and finds all variables that appear together
      * 
      * @param fKif the KIF file to parse
@@ -1376,27 +1435,65 @@ public class Diagnostics {
             System.err.println("Error in: " + Diagnostics.class.getName() + " parseFormulaFile(): " + e);
             return links;
         }
-
+        boolean foundAnyWarnings = false;
         Set<String> keys = kifInstance.formulaMap.keySet();
         for (String key : keys) {
             Formula f = kifInstance.formulaMap.get(key);
             HashMap<String, HashSet<String>> map = findOrphanVars(f);
+            
+            boolean hasOrphans = false;
+            for (String var : map.keySet()) {
+                if (map.get(var).isEmpty()) {
+                    // variable has no neighbors, check if it's intentional or an error
+                    // a variable appearing multiple times, e.g., on both sides of an implication is intentional usage, not an orphan
+                    int count = countOccurrences(f.getFormula(), var);
+                    if (count == 1) {
+                        System.out.println("\nWARNING in formula: " + f.getFormula());
+                        System.out.println("  Orphan variable found: " + var);
+                        hasOrphans = true;
+                        foundAnyWarnings = true;
+                    }
+                }
+            }
+            
+            if (!hasOrphans && !map.isEmpty()) {
+                ArrayList<HashSet<String>> groups = findDisconnectedGroups(map);
+                if (groups.size() > 1) {
+                    System.out.println("\nWARNING in formula: " + f.getFormula());
+                    System.out.println("  Formula has " + groups.size() + " variable groups that are disconnected from each other:");
+                    for (int i = 0; i < groups.size(); i++) {
+                        System.out.println("    Group " + (i + 1) + ": " + groups.get(i));
+                    }
+                    foundAnyWarnings = true;
+                }
+            }
             mergeResults(links, map);
         }
-
-        System.out.println("\nVariable links from kif file:\n");
-        for (String var : links.keySet()) {
-            System.out.println(var + ": " + links.get(var));
-        }
-
-        int orphanVar = 0;
-        for (String var : links.keySet()) {
-            if (links.get(var).isEmpty()) {
-                System.out.println("\nOrphan variable found: " + var);
-                orphanVar++;
-            }
+        if (!foundAnyWarnings) {
+            System.out.println("\nNo variable connectivity issues found.");
         }
         return links;
+    }
+
+    /**
+     * Counts how many times a substring appears in a string.
+     * 
+     * @param text the string to search in
+     * @param substring the substring to count
+     * @return the number of occurrences
+     */
+    private static int countOccurrences(String text, String substring) {
+        int count = 0;
+        int index = 0;
+        while (true) {
+            index = text.indexOf(substring, index);
+            if (index == -1) {
+                break;
+            }
+            count++;
+            index += substring.length();
+        }
+        return count;
     }
 
     /** ***************************************************************
