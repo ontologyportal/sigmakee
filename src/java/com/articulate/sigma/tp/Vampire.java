@@ -42,6 +42,7 @@ public class Vampire {
                                                  // Custom takes value from env var
     public static ModeType mode = null;
     public static boolean debug = false;
+    public static boolean askQuestion = true;
 
     @Override
     public String toString() {
@@ -58,12 +59,26 @@ public class Vampire {
 
         String space = Formula.SPACE;
         StringBuilder opts = new StringBuilder("--output_axiom_names").append(space).append("on").append(space);
-        if (mode == ModeType.AVATAR)
-            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space).append("-qa").append(space).append("plain").append(space).append("-t").append(space);
-        if (mode == ModeType.CASC)
-            opts.append("--mode").append(space).append("casc").append(space).append("-qa").append(space).append("plain").append(space).append("-t").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
-        if (mode == ModeType.CUSTOM)
+        if (mode == ModeType.AVATAR) {
+            opts.append("-av").append(space).append("on").append(space).append("-p").append(space).append("tptp").append(space);
+            if (askQuestion) {
+                opts.append("-qa").append(space).append("plain").append(space);
+            }
+            opts.append("-t").append(space);
+        }
+        if (mode == ModeType.CASC) {
+            opts.append("--mode").append(space).append("casc").append(space); // NOTE: [--mode casc] is a shortcut for [--mode portfolio --schedule casc --proof tptp]
+            if (askQuestion) {
+                opts.append("-qa").append(space).append("plain").append(space);
+            }
+            opts.append("-t").append(space);
+        }
+        if (mode == ModeType.CUSTOM) {
             opts.append(System.getenv("VAMPIRE_OPTS"));
+            if (askQuestion) {
+                opts.append("-qa").append(space).append("plain").append(space);
+            }
+        }
         String[] optar = opts.toString().split(Formula.SPACE);
         String[] cmds = new String[optar.length + 3];
         cmds[0] = executable.toString();

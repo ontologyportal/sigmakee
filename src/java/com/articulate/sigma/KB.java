@@ -203,7 +203,6 @@ public class KB implements Serializable {
     public static boolean dropOnePremiseFormulas = false;
 
     public static boolean modensPonens = false;
-
     /***************************************************************
      */
     public KB() {
@@ -1985,13 +1984,17 @@ public class KB implements Serializable {
         // STEP 3
         Vampire vampire_pomens = new Vampire();
         File kb = new File("min-problem.tptp");
-        List<String> cmds = Arrays.asList(
+        List<String> cmds = new ArrayList<>(Arrays.asList(
                 "--input_syntax","tptp",
                 "--proof","tptp",                  // <-- TSTP-style proof lines
                 "-av","off","-nm","0","-fsr","off","-fd","off","-bd","off",
-                "-fde","none","-updr","off",
-                "-qa","plain"
-        );
+                "-fde","none","-updr","off"
+        ));
+        if (Vampire.askQuestion){
+            cmds.add("-qa");
+            cmds.add("plain");
+        }
+
         try{
             vampire_pomens.runCustom(kb, timeout, cmds);
             vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
@@ -2030,10 +2033,13 @@ public class KB implements Serializable {
 
         List<String> cmds = new ArrayList<>(Arrays.asList(
                 "--input_syntax", "tptp",
-                "--proof", "tptp",   // <-- TSTP-style proof lines
-                "-qa","plain"
+                "--proof", "tptp"   // <-- TSTP-style proof lines
         ));
 
+        if (Vampire.askQuestion){
+            cmds.add("-qa");
+            cmds.add("plain");
+        }
 
         if (!includes.isEmpty()){
             cmds.add("--include");
