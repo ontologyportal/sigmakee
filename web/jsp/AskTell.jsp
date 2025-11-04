@@ -194,6 +194,14 @@
     catch (Exception ignore) { ollamaUp = false; }
     if (!ollamaUp) { llmProof = false; session.setAttribute("showProofFromLLM", false); }
 
+    Boolean showProofSummary = (Boolean) session.getAttribute("showProofSummary");
+    if (req != null) {
+        showProofSummary = "yes".equalsIgnoreCase(request.getParameter("showProofSummary"));
+        session.setAttribute("showProofSummary", showProofSummary);
+    }
+    if (showProofSummary == null) showProofSummary = false;
+
+
     String eproverExec = KBmanager.getMgr().getPref("eprover");
     String tptpFile = KBmanager.getMgr().getPref("kbDir") + File.separator + "SUMO.tptp";
     File epFile = new File(eproverExec);
@@ -377,7 +385,13 @@
             <%= ollamaUp ? "" : "disabled" %> >
         <label>Use LLM for Paraphrasing</label>
         <% if (!ollamaUp) { %><span title="Ollama is not running.">&#9432;</span><% } %>
+
+        <input type="checkbox" name="showProofSummary" value="yes"
+            <%= Boolean.TRUE.equals(showProofSummary) ? "checked" : "" %> >
+        <label>Show LLM Proof Summary</label><br>
     </fieldset>
+        
+
 
     <div class="row">
         <input type="submit" name="request" value="Run">
