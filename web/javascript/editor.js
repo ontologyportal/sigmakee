@@ -132,9 +132,9 @@ async function defineModeFromXML(modeName, xmlPath) {
         if (stream.match(/\[[^\]]*\]/)) return classMap['LITERAL1'];
         if (stream.match(/\d+(?:\.\d+)?/)) {
           const prev = stream.start > 0 ? stream.string.charAt(stream.start - 1) : '';
-          const validBefore = !prev || /[\s(]/.test(prev);
           const next = stream.pos < stream.string.length ? stream.string.charAt(stream.pos) : '';
-          const validAfter = !next || /[\s)]/.test(next);
+          const validBefore = !prev || !/[A-Za-z0-9_]/.test(prev);
+          const validAfter  = !next || !/[A-Za-z0-9_]/.test(next);
           const noLetterNearby = !(/[A-Za-z]/.test(prev) || /[A-Za-z]/.test(next));
           if (validBefore && validAfter && noLetterNearby)
             return "number";
