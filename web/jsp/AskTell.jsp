@@ -394,6 +394,8 @@
 <%
     // ===== Server-side execution for single "Run" button =====
     if ("Run".equalsIgnoreCase(req) && !syntaxError) {
+        // Always retrieve the proof answers
+        Vampire.askQuestion = true;
         try {
             if ("test".equals(runSource)) {
                 // ---- RUN SAVED TEST ----
