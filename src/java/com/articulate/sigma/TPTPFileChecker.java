@@ -11,7 +11,7 @@ import tptp_parser.TPTPFormula;
 import tptp_parser.TptpLexer;
 import tptp_parser.TptpParser;
 
-public class TPTPChecker {
+public class TPTPFileChecker {
 
     /**
      * Run syntax & warning checks on TPTP content using tptp4X,
@@ -122,15 +122,15 @@ public class TPTPChecker {
                     lines[0] = lines[0].replaceFirst("^\\s+", "");
                 return String.join(System.lineSeparator(), lines);
             } else {
-                System.err.println("[TPTPChecker] STDOUT:\n" + po.out);
-                System.err.println("[TPTPChecker] STDERR:\n" + po.err);
-                System.err.println("[TPTPChecker] Temp file: " + tmp.getAbsolutePath());
-                System.err.println("[TPTPChecker] Formatting failed for: " + fileName);
+                System.err.println("[TPTPFileChecker] STDOUT:\n" + po.out);
+                System.err.println("[TPTPFileChecker] STDERR:\n" + po.err);
+                System.err.println("[TPTPFileChecker] Temp file: " + tmp.getAbsolutePath());
+                System.err.println("[TPTPFileChecker] Formatting failed for: " + fileName);
                 System.err.println(po.err != null && !po.err.isBlank() ? po.err : po.out);
                 return inputText;
             }
         } catch (Throwable t) {
-            System.err.println("[TPTPChecker] Exception formatting " + fileName + ": " + t.getMessage());
+            System.err.println("[TPTPFileChecker] Exception formatting " + fileName + ": " + t.getMessage());
             t.printStackTrace();
             return inputText;
         }
@@ -219,14 +219,14 @@ public class TPTPChecker {
 
 
     private static void showHelp() {
-        System.out.println("Usage: java com.articulate.sigma.TPTPChecker [options]");
+        System.out.println("Usage: java com.articulate.sigma.TPTPFileChecker [options]");
         System.out.println();
         System.out.println("Options:");
         System.out.println("  -f \"<tptp_formula>\"   Format the provided TPTP formula and print the result");
         System.out.println("  -h, --help            Show this help message");
         System.out.println();
         System.out.println("Examples:");
-        System.out.println("  java com.articulate.sigma.TPTPChecker -f \"fof(ax1, axiom, (p => q)).\"");
+        System.out.println("  java com.articulate.sigma.TPTPFileChecker -f \"fof(ax1, axiom, (p => q)).\"");
         System.out.println();
         System.out.println("Note: Requires 'tptp4X' to be installed and available on your PATH.");
     }
@@ -246,7 +246,7 @@ public class TPTPChecker {
             for (int i = 1; i < args.length; i++)
                 sb.append(args[i]).append(" ");
             String inputFormula = sb.toString().trim();
-            TPTPChecker formatter = new TPTPChecker();
+            TPTPFileChecker formatter = new TPTPFileChecker();
             String formatted = formatter.formatTptpText(inputFormula, "(command-line)");
             if (formatted != null) {
                 System.out.println("=== Formatted TPTP ===");

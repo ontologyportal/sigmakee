@@ -266,10 +266,10 @@ if (role != null && role.equalsIgnoreCase("admin")) {
         <B>Filename:</B>&nbsp;<INPUT type="text" name="saveFile" value=<%=kbName%>><BR>
         <INPUT type="submit" NAME="submit" VALUE="Save">
         <select name="saveAs">
-            <option value="OWL">OWL
-            <option value="prolog">Prolog
             <option value="KIF">KIF
             <option value="TPTP">TPTP
+            <option value="OWL">OWL
+            <option value="prolog">Prolog
             <option value="tptpFOL">TPTP FOL
         </select>
     </FORM>
