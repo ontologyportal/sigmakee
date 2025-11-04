@@ -97,7 +97,7 @@ public class EditorServlet extends HttpServlet {
             try {
                 String formatted;
                 if (isTptp) {
-                    TPTPChecker formatter = new TPTPChecker();
+                    TPTPFileChecker formatter = new TPTPFileChecker();
                     formatted = formatter.formatTptpText(text, "(web-editor)");
                 } else {
                     formatted = formatKif(text);
@@ -109,7 +109,7 @@ public class EditorServlet extends HttpServlet {
                 String checkMsg = null;
                 try {
                     if (isTptp) {
-                        fmtErrors = TPTPChecker.check(text, "(web-editor)");
+                        fmtErrors = TPTPFileChecker.check(text, "(web-editor)");
                     } else {
                         Future<List<ErrRec>> fut = KifCheckWorker.submit(text);
                         fmtErrors = fut.get();
@@ -151,7 +151,7 @@ public class EditorServlet extends HttpServlet {
         String errorMessage = null;
         try {
             if (isTptp) {
-                errors = TPTPChecker.check(text, "(web-editor)");
+                errors = TPTPFileChecker.check(text, "(web-editor)");
             } else {
                 Future<List<ErrRec>> future = KifCheckWorker.submit(text);
                 errors = future.get();

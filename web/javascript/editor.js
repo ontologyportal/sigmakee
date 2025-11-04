@@ -242,10 +242,6 @@ document.addEventListener("DOMContentLoaded", async function() {
   const examples = {
     "example.kif": `; Example Kif File\n(=>\n  (instance ?X Man)\n  (attribute ?X Mortal))`,
     "example.tptp": `% Example TPTP file\n tff(mortal_rule, axiom, (![X]: (man(X) => mortal(X)))).`,
-    "example.thf": `% Example THF (Typed Higher-Order Form)\nthf(example_thf, conjecture, (![P: $i>$o, X: $i]: (P @ X))).`,
-    "example.tff": `% Example TFF (Typed First-Order Form)\ntff(example_tff, axiom, (![X:$i]: (man(X) => mortal(X)))).`,
-    "example.fof": `% Example FOF\nfof(example_fof, axiom, (![X]: (man(X)=>mortal(X)))).`,
-    "example.cnf": `% Example CNF\ncnf(example_cnf, axiom, (~man(X)|mortal(X))).`
   };
   Object.entries(examples).forEach(([name, content]) => openFileInNewTab(name, content));
   switchTab(0);
