@@ -86,6 +86,53 @@ public class InferenceTestSuite {
         public List<String> proofText;
     }
 
+    /** Thin wrapper for the JSP buttons: returns PASS/FAIL + time + a tiny HTML summary. */
+    public OneResult runOne(final KB kb,
+                            final String engine,
+                            final int timeoutSec,
+                            final String tqPath,
+                            final boolean modusPonens) {
+        long t0 = System.currentTimeMillis();
+        InfTestData itd;
+        itd = runSingleTestFile(kb, engine, timeoutSec, tqPath, modusPonens);
+
+        System.out.println("---- InferenceTestSuite.runOne(1):");
+        System.out.println(itd.proof);
+
+        if (itd.proof.isEmpty()){
+            OneResult err = new OneResult();
+            err.pass = false;
+            err.millis = System.currentTimeMillis() - t0;
+            err.html = "<div style='color:#b00'><b>ERROR:</b> "
+                    + "An error occurred during the execution"
+                    + "</div>";
+            return err;
+        }
+
+        long ms = System.currentTimeMillis() - t0;
+
+        boolean pass = itd.success && !itd.inconsistent;
+        String statusTag = pass ? "<b style='color:#0a0'>PASS</b>" : "<b style='color:#b00'>FAIL</b>";
+
+        String html =
+                statusTag +
+                        "&nbsp; &bull; &nbsp;" +
+                        "<span>" + ms + " ms </span>" +
+                        "<span class='infoTip' title='Total runtime: includes KB loading, multiple prover calls, and postprocessing.'>&#9432;</span>" +
+                        "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>" +
+                        "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>" +
+                        (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
+
+        OneResult r = new OneResult();
+        r.pass   = pass;
+        r.millis = ms;
+        r.html   = html;
+        r.expected = (itd.expectedAnswers == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.expectedAnswers);
+        r.actual   = (itd.actualAnswers   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.actualAnswers);
+        r.proofText = (itd.proof   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.proof);
+        return r;
+    }
+
     /** Runs exactly one .tq test file (like the inner body of test()) and returns the InfTestData. */
     private InfTestData runSingleTestFile(final KB kb,
                                           final String engine,        // "Vampire" | "EProver" | "LEO"
@@ -151,6 +198,8 @@ public class InferenceTestSuite {
                         }else{
                             vampire = kb.askVampire(q, itd.timeout, maxAnswers);
                         }
+                        System.out.println("vampire-output");
+                        System.out.println(vampire.output);
                         tpp.parseProofOutput(vampire.output, q, kb, vampire.qlist);
                         itd.proof = vampire.output;
                         break;
@@ -198,49 +247,6 @@ public class InferenceTestSuite {
         return itd;
     }
 
-    /** Thin wrapper for the JSP buttons: returns PASS/FAIL + time + a tiny HTML summary. */
-    public OneResult runOne(final KB kb,
-                            final String engine,
-                            final int timeoutSec,
-                            final String tqPath,
-                            final boolean modusPonens) {
-        long t0 = System.currentTimeMillis();
-        InfTestData itd;
-        try {
-            itd = runSingleTestFile(kb, engine, timeoutSec, tqPath, modusPonens);
-        } catch (Exception ex) {
-            OneResult err = new OneResult();
-            err.pass = false;
-            err.millis = System.currentTimeMillis() - t0;
-            err.html = "<div style='color:#b00'><b>ERROR:</b> "
-                    + (ex.getMessage() == null ? ex.getClass().getSimpleName() : ex.getMessage())
-                    + "</div>";
-            return err;
-        }
-        long ms = System.currentTimeMillis() - t0;
-
-        boolean pass = itd.success && !itd.inconsistent;
-        String statusTag = pass ? "<b style='color:#0a0'>PASS</b>" : "<b style='color:#b00'>FAIL</b>";
-
-        String html =
-                statusTag +
-                        "&nbsp; &bull; &nbsp;" +
-                        "<span>" + ms + " ms </span>" +
-                        "<span class='infoTip' title='Total runtime: includes KB loading, multiple prover calls, and postprocessing.'>&#9432;</span>" +
-                        "<div style='color:#666'>Expected: " + esc(String.valueOf(itd.expectedAnswers)) + "</div>" +
-                        "<div style='color:#666'>Actual: "   + esc(String.valueOf(itd.actualAnswers))   + "</div>" +
-                        (itd.inconsistent ? "<div style='color:#b00'>Inconsistency detected</div>" : "");
-
-        OneResult r = new OneResult();
-        r.pass   = pass;
-        r.millis = ms;
-        r.html   = html;
-        r.expected = (itd.expectedAnswers == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.expectedAnswers);
-        r.actual   = (itd.actualAnswers   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.actualAnswers);
-        r.proofText = (itd.proof   == null) ? java.util.Collections.emptyList() : new java.util.ArrayList<>(itd.proof);
-        return r;
-    }
-
     private static String esc(String s){
         if(s==null)return "";
         return s.replace("&","&amp;").replace("<","&lt;")
@@ -254,31 +260,88 @@ public class InferenceTestSuite {
      * TODO: If both answersList and tpp.bindings are a lit of entities,
      *       we enforce that all entity pair should be exactly the same;
      */
+//    private static boolean sameAnswers(List<String> actualAnswerList, List<String> expectedAnswerList) {
+//
+//        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
+//        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
+//        String actualRes;
+//        for (int i = 0; i < actualAnswerList.size(); i++) {
+//            actualRes = actualAnswerList.get(i);
+//            if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
+//                actualRes = normalizeSkolem(TPTP2SUMO.formToSUMO(actualRes));
+//                if (!normalizeSkolem(expectedAnswerList.get(i)).equals(actualRes)) {
+//                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: " +
+//                            actualRes + " and " + expectedAnswerList.get(i));
+//                    return false;    // return false if any pair of answers is different
+//                }
+//            }
+//            else
+//                if (!expectedAnswerList.get(i).equals(actualRes)) {
+//                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different answers: " +
+//                            actualRes + " and " + expectedAnswerList.get(i));
+//                    return false;    // return false if any pair of answers is different
+//                }
+//        }
+//        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): returning true");
+//        return true;
+//    }
+
     private static boolean sameAnswers(List<String> actualAnswerList, List<String> expectedAnswerList) {
 
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
-        if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
-        String actualRes;
+        if (debug) {
+            System.out.println("InferenceTestSuite.sameAnswers(1): expected answers: " + expectedAnswerList);
+            System.out.println("InferenceTestSuite.sameAnswers(1): bindings: " + actualAnswerList);
+        }
+
+        // --- 1. Handle null or empty cases first -----------------------------------------------
+        // If the prover produced no answers:
+        //   - Return true only if the expected list is also empty (no answers expected).
+        if (actualAnswerList == null || actualAnswerList.isEmpty()) {
+            return expectedAnswerList == null || expectedAnswerList.isEmpty();
+        }
+
+        // If the prover and expected lists differ in length, they cannot be identical.
+        if (actualAnswerList.size() != expectedAnswerList.size()) {
+            if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): answer count mismatch");
+            return false;
+        }
+
+        // --- 2. Compare answers element by element ----------------------------------------------
         for (int i = 0; i < actualAnswerList.size(); i++) {
-            actualRes = actualAnswerList.get(i);
+            String actualRes = actualAnswerList.get(i);
+            String expectedRes = expectedAnswerList.get(i);
+
+            // If the actual result is a Skolem relation (an existential witness term)
+            // then normalize it for comparison with the expected answer.
             if (TPTP3ProofProcessor.isSkolemRelation(actualRes)) {
                 actualRes = normalizeSkolem(TPTP2SUMO.formToSUMO(actualRes));
-                if (!normalizeSkolem(expectedAnswerList.get(i)).equals(actualRes)) {
-                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: " +
-                            actualRes + " and " + expectedAnswerList.get(i));
-                    return false;    // return false if any pair of answers is different
+
+                // Compare normalized Skolemized answers.
+                if (!normalizeSkolem(expectedRes).equals(actualRes)) {
+                    if (debug) {
+                        System.out.println("InferenceTestSuite.sameAnswers(1): different skolem answers: "
+                                + actualRes + " and " + expectedRes);
+                    }
+                    return false;  // Mismatch → FAIL
                 }
             }
-            else
-                if (!expectedAnswerList.get(i).equals(actualRes)) {
-                    if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): different answers: " +
-                            actualRes + " and " + expectedAnswerList.get(i));
-                    return false;    // return false if any pair of answers is different
+            // Otherwise, do a direct string comparison for normal (non-Skolem) answers.
+            else {
+                if (!expectedRes.equals(actualRes)) {
+                    if (debug) {
+                        System.out.println("InferenceTestSuite.sameAnswers(1): different answers: "
+                                + actualRes + " and " + expectedRes);
+                    }
+                    return false;  // Mismatch → FAIL
                 }
+            }
         }
+
+        // --- 3. All checks passed ---------------------------------------------------------------
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(1): returning true");
         return true;
     }
+
 
     /** ***************************************************************
      * Compare the expected answers to the returned answers.  Return
@@ -293,6 +356,8 @@ public class InferenceTestSuite {
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): expected answers: " + answerList);
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): tpp proof size: " + tpp.proof.size());
         if (debug) System.out.println("InferenceTestSuite.sameAnswers(2): bindings: " + tpp.bindings);
+        // TODO: tpp may be null for other reasons.
+        // TODO: Here it says that if the prover produced no answers, we return true only if the expected list is also empty (no answers expected).
         if ((tpp == null || tpp.proof.isEmpty()) && (answerList == null || answerList.contains("no")))
             return true;         // return true if no answers are found in the inference engine
         if (answerList != null && !answerList.isEmpty()) {
