@@ -239,15 +239,24 @@
                 String tqBase = parts.length>0 ? parts[0] : "unknown.tq";
                 tqSeen.add(tqBase);
 
+                // Calculate the PASS/FAIL/ERROR sums for the Summary table
                 Boolean pass = (Boolean) val.get("pass");
-                if (pass != null) { cells++; if (pass) passCnt++; else failCnt++; }
-
-                // crude error detection from rendered html
-                String html = (String) val.get("html");
-                if (html != null) {
-                    String hl = html.toLowerCase();
-                    if (hl.contains("error")) errCnt++;
+                if (pass != null) {
+                    cells++;
+                    if (pass) passCnt++;
+                    else {
+                        String html = (String) val.get("html");
+                        if (html != null) {
+                            String hl = html.toLowerCase();
+                            if (hl.contains("fail")) {
+                                failCnt++;
+                            }else{
+                                errCnt++;
+                            }
+                        }
+                    }
                 }
+
 
                 String proofPath = (String) val.get("proofPath"); // absolute path we stored earlier
                 if (proofPath != null) {
@@ -364,7 +373,7 @@
                     pw.println("<td>");
                     pw.println("<div class='file'>"+esc(name)+"</div>");
                     if (tqSeen.contains(name)) {
-                        pw.println("<div class='tiny'><a href='tests/"+esc(name)+"' download>View original .tq</a></div>");
+                        pw.println("<div class='tiny'><a href='tests/"+esc(name)+"' target='_blank'>View original .tq</a></div>");
                     } else {
                         pw.println("<div class='tiny'>- not run yet -</div>");
                     }
@@ -429,15 +438,10 @@
                 catch (Exception ignore) {}
             }
 
-
             // Redirect to the exported index (web path)
             String webHtml = request.getContextPath() + "/exports/" + stamp + "/index.html";
             String webZip  = request.getContextPath() + "/exports/" + stamp + ".zip";
             out.println("<script>window.open('"+webHtml+"','_blank');</script>");
-            out.println("<div class='tiny' style='margin:10px 0 0 24px'>"
-                    + "<a href='"+webZip+"' download>Download ZIP</a>"
-                    + " &nbsp;|&nbsp; <a href='"+webHtml+"' target='_blank'>Open Report</a>"
-                    + "</div>");
         }
     }
 %>
