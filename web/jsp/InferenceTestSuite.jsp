@@ -232,8 +232,7 @@
                 String html = (String) val.get("html");
                 if (html != null) {
                     String hl = html.toLowerCase();
-                    if (hl.contains("error") || hl.contains("exception") || hl.contains("timeout") || hl.contains("szs status counter"))
-                        errCnt++;
+                    if (hl.contains("error")) errCnt++;
                 }
 
                 String proofPath = (String) val.get("proofPath"); // absolute path we stored earlier
@@ -264,6 +263,7 @@
                 }
             }
 
+
             // Build static HTML
             String title = "Inference Test Results - " + stamp;
             File index = new File(bundleDir, "index.html");
@@ -275,7 +275,6 @@
             Arrays.sort(files, java.util.Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
             int totalFiles = files.length;
             int totalTests = totalFiles * 2; // Normal + MP per file
-            int notRunFiles = 0;
             Set<String> validKeys = new HashSet<>();
             for (File tf : files) {
                 String name = tf.getName();
@@ -289,8 +288,6 @@
                 if (validKeys.contains(k)) runTests++;
             }
             int notRunTests = Math.max(0, totalTests - runTests);
-
-
 
             try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(index, false), true)) {
                 pw.println("<!doctype html><html><head><meta charset='utf-8'><title>"+esc(title)+"</title>");
@@ -307,7 +304,21 @@
                 pw.println(".tiny{font-size:12px;color:#666}");
                 pw.println(".file{font-weight:700}");
                 pw.println("</style></head><body>");
-                // Summary
+
+                // Download .zip file button
+                pw.println("<div id='zipBtn' style='display:none;margin:10px 0;'>"
+                        + "<a id='zipLink' href='#' download "
+                        + "style='background:#555;color:#fff;text-decoration:none;border-radius:4px;padding:6px 12px;'>"
+                        + "Download ZIP</a></div>");
+                pw.println("<script>(function(){"
+                        + "var z='"+esc(request.getContextPath()+"/exports/"+stamp+".zip")+"';"
+                        + "fetch(z,{method:'HEAD'}).then(function(r){if(r.ok){"
+                        + "document.getElementById('zipLink').href=z;"
+                        + "document.getElementById('zipBtn').style.display='block';}})"
+                        + ".catch(function(){});"
+                        + "})();</script>");
+
+                // Summary table
                 int total = cells;
                 int passRate = (total==0)?0:(int)Math.round((passCnt*100.0)/total);
                 pw.println("<div class='summary'>");
@@ -326,6 +337,7 @@
                 pw.println("<th style='width:40%'>File</th><th style='width:30%'>Normal</th><th style='width:30%'>ModusPonens</th>");
                 pw.println("</tr></thead><tbody>");
 
+                // Table body
                 for (File tf : files) {
                     String name = tf.getName();
                     String kN = name + "|normal";
@@ -375,9 +387,43 @@
                 out.println("<script>alert('Export failed: "+esc(String.valueOf(ex))+"');</script>");
             }
 
+            // --- Create ZIP file ---
+            File zipFile    = new File(exportRoot, stamp + ".zip");
+            File zipTemp    = new File(exportRoot, stamp + ".zip.part");
+            try (java.util.zip.ZipOutputStream zos =
+                         new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(zipTemp))) {
+                java.nio.file.Path base = bundleDir.toPath();
+                java.nio.file.Files.walk(base).forEach(p -> {
+                    try {
+                        if (java.nio.file.Files.isDirectory(p)) return;
+                        String rel = base.relativize(p).toString().replace("\\","/");
+                        zos.putNextEntry(new java.util.zip.ZipEntry(rel));
+                        java.nio.file.Files.copy(p, zos);
+                        zos.closeEntry();
+                    } catch (Exception ignore) {}
+                });
+                // stream closes here
+            } catch (Exception ignore) {}
+
+            // Try atomic move; fall back to replace
+            try {
+                java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (Exception moveEx) {
+                // If ATOMIC_MOVE not supported, do best-effort replace
+                try { java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }
+                catch (Exception ignore) {}
+            }
+
+
             // Redirect to the exported index (web path)
-            String webRoot = request.getContextPath() + "/exports/" + stamp + "/index.html";
-            out.println("<script>window.open('"+webRoot+"','_blank');</script>");
+            String webHtml = request.getContextPath() + "/exports/" + stamp + "/index.html";
+            String webZip  = request.getContextPath() + "/exports/" + stamp + ".zip";
+            out.println("<script>window.open('"+webHtml+"','_blank');</script>");
+            out.println("<div class='tiny' style='margin:10px 0 0 24px'>"
+                    + "<a href='"+webZip+"' download>Download ZIP</a>"
+                    + " &nbsp;|&nbsp; <a href='"+webHtml+"' target='_blank'>Open Report</a>"
+                    + "</div>");
         }
     }
 %>
