@@ -44,20 +44,8 @@
                 String tqPath = inferenceTestDir + File.separator + tqName;
                 boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
 
+                // Test RUN
                 InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
-
-                String proofsRoot = application.getRealPath("/proofs");
-                if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
-                File sessionProofDir = new File(proofsRoot, session.getId());
-                if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-
-                String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
-                File proofFile = new File(sessionProofDir, base);
-                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
-                    if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
-                } catch (Exception ignore) {}
-
-                String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
 
                 Map<String,Object> cellMap2 = (Map<String,Object>) session.getAttribute("cellMap");
                 if (cellMap2 == null) { cellMap2 = new HashMap<>(); session.setAttribute("cellMap", cellMap2); }
@@ -70,9 +58,28 @@
                 cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
                 cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
                 cell.put("html",     r.html);
-                cell.put("proofUrl", proofUrl);
-                cell.put("proofPath", proofFile.getAbsolutePath());
+
+                // Check for Errors
+                boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
+                if (proofExists){
+                    String proofsRoot = application.getRealPath("/proofs");
+                    if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
+                    File sessionProofDir = new File(proofsRoot, session.getId());
+                    if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
+
+                    String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
+                    File proofFile = new File(sessionProofDir, base);
+                    try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
+                        if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
+                    } catch (Exception ignore) {}
+
+                    String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
+                    cell.put("proofUrl", proofUrl);
+                    cell.put("proofPath", proofFile.getAbsolutePath());
+                }
+
                 cellMap2.put(key, cell);
+
             } catch (Throwable ignore) {}
 
             // ---- compute next step ----
@@ -110,33 +117,6 @@
             // ---- call your single-test method (add this to InferenceTestSuite) ----
             InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
 
-            // web-visible root for proofs (with fallback)
-            String proofsRoot = application.getRealPath("/proofs");
-            if (proofsRoot == null) {
-                proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
-            }
-            File sessionProofDir = new File(proofsRoot, session.getId());
-            if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-
-            // unique, safe filename
-            String base = (tqName + "-" + mode + "-" + System.currentTimeMillis() + ".txt")
-                    .replaceAll("[^A-Za-z0-9._-]", "_");
-            File proofFile = new File(sessionProofDir, base);
-
-            // write file (each proof line on its own line)
-            try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
-                if (r.proofText != null) {
-                    for (String proof_line : r.proofText) {
-                        pw.println(proof_line);
-                    }
-                }
-            } catch (Exception ioex) {
-                // optional: log or display warning
-            }
-
-            // browser URL
-            String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
-
             Map<String,Object> cell = new HashMap<>();
             String key = tqName + "|" + mode;
             cell.put("pass",   r.pass);
@@ -145,9 +125,43 @@
             cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
             cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
             cell.put("html",     r.html);
-            cell.put("proofUrl", proofUrl);                         // <-- add
-            cell.put("proofPath", proofFile.getAbsolutePath());     // optional
+
             cellMap.put(key, cell);
+
+            // save the proof if exist
+            boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
+            if (proofExists){
+                // web-visible root for proofs (with fallback)
+                String proofsRoot = application.getRealPath("/proofs");
+                if (proofsRoot == null) {
+                    proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
+                }
+                File sessionProofDir = new File(proofsRoot, session.getId());
+                if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
+
+                // unique, safe filename
+                String base = (tqName + "-" + mode + "-" + System.currentTimeMillis() + ".txt")
+                        .replaceAll("[^A-Za-z0-9._-]", "_");
+                File proofFile = new File(sessionProofDir, base);
+
+                // write file (each proof line on its own line)
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
+                    if (r.proofText != null) {
+                        for (String proof_line : r.proofText) {
+                            pw.println(proof_line);
+                        }
+                    }
+                } catch (Exception ioex) {
+                    // optional: log or display warning
+                }
+
+                // browser URL
+                String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
+
+                cell.put("proofUrl", proofUrl);                         // <-- add
+                cell.put("proofPath", proofFile.getAbsolutePath());     // optional
+            }
+
 
         } catch (Throwable ex) {
         }
