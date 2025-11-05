@@ -1377,7 +1377,7 @@ public class Diagnostics {
      * @param links the variable co-occurrence map
      * @return list of disconnected groups, where each group is a set of connected variables
      */
-    private static ArrayList<HashSet<String>> findDisconnectedGroups(HashMap<String, HashSet<String>> links) {
+    public static ArrayList<HashSet<String>> findDisconnectedGroups(HashMap<String, HashSet<String>> links) {
         ArrayList<HashSet<String>> groups = new ArrayList<>();
         HashSet<String> allVisited = new HashSet<>();
         
@@ -1482,7 +1482,7 @@ public class Diagnostics {
      * @param substring the substring to count
      * @return the number of occurrences
      */
-    private static int countOccurrences(String text, String substring) {
+    public static int countOccurrences(String text, String substring) {
         int count = 0;
         int index = 0;
         while (true) {

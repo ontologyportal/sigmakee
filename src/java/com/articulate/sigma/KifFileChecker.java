@@ -186,27 +186,53 @@ public class KifFileChecker {
             }
         }
     }
-    
-    /** ***************************************************************
-     * Check for orphan variables — variables that do not co-occur
-     * with any others in the same logical context.
+
+    /**
+     * Check for disconnected variable groups
+     * @param fileName          logical filename
+     * @param f                 formula to check
+     * @param formulaText       raw text of the formula
+     * @param formulaStartLine  buffer line offset of the formula
+     * @param msgs              list to collect error records
      */
     public static void CheckOrphanVars(String fileName, Formula f, String formulaText, int formulaStartLine, List<ErrRec> msgs) {
-
         HashMap<String, HashSet<String>> cooccurs = Diagnostics.findOrphanVars(f);
-        for (Map.Entry<String, HashSet<String>> entry : cooccurs.entrySet()) {
-            String var = entry.getKey();
-            HashSet<String> linked = entry.getValue();
-
-            if (linked == null || linked.isEmpty()) {
-                int[] rel = findLineInFormula(formulaText, var);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1)
-                            + (rel[0] >= 0 ? rel[0] : 0);
-                int absCol = rel[1] >= 0 ? rel[1] : 0;
-                String[] lines = formulaText.split("\n", -1);
-                String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
-                msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + var.length(),
-                        "Orphan variable (no co-occurrence): " + offendingLine));
+        
+        // check for disconnected variable groups
+        if (!cooccurs.isEmpty()) {
+            ArrayList<HashSet<String>> groups = Diagnostics.findDisconnectedGroups(cooccurs);
+            
+            ArrayList<HashSet<String>> multiVarGroups = new ArrayList<>();
+            for (HashSet<String> group : groups) {
+                if (group.size() > 1) {  // only include groups with 2 or more variables
+                    multiVarGroups.add(group);
+                }
+            }
+            
+            if (multiVarGroups.size() > 1) {
+                // build error message showing all disconnected groups
+                StringBuilder groupMsg = new StringBuilder();
+                groupMsg.append("Formula has ").append(multiVarGroups.size()).append(" disconnected variable groups: ");
+                
+                for (int i = 0; i < multiVarGroups.size(); i++) {
+                    groupMsg.append("Group ").append(i + 1).append(": ").append(multiVarGroups.get(i));
+                    
+                    // add separator between groups
+                    if (i < multiVarGroups.size() - 1) {
+                        groupMsg.append("; ");
+                    }
+                }
+                
+                // calculate the line number for error location
+                int absLine;
+                if (formulaStartLine > 0) {
+                    absLine = formulaStartLine - 1;
+                } else {
+                    absLine = f.startLine - 1;
+                }
+                
+                // add the error message
+                msgs.add(new ErrRec(0, fileName, absLine, 0, formulaText.length(), groupMsg.toString()));
             }
         }
     }
