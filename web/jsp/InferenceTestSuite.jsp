@@ -44,20 +44,8 @@
                 String tqPath = inferenceTestDir + File.separator + tqName;
                 boolean modusPonens = "mp".equalsIgnoreCase(modeAll);
 
+                // Test RUN
                 InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
-
-                String proofsRoot = application.getRealPath("/proofs");
-                if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
-                File sessionProofDir = new File(proofsRoot, session.getId());
-                if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-
-                String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
-                File proofFile = new File(sessionProofDir, base);
-                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
-                    if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
-                } catch (Exception ignore) {}
-
-                String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
 
                 Map<String,Object> cellMap2 = (Map<String,Object>) session.getAttribute("cellMap");
                 if (cellMap2 == null) { cellMap2 = new HashMap<>(); session.setAttribute("cellMap", cellMap2); }
@@ -70,9 +58,28 @@
                 cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
                 cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
                 cell.put("html",     r.html);
-                cell.put("proofUrl", proofUrl);
-                cell.put("proofPath", proofFile.getAbsolutePath());
+
+                // Check for Errors
+                boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
+                if (proofExists){
+                    String proofsRoot = application.getRealPath("/proofs");
+                    if (proofsRoot == null) proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
+                    File sessionProofDir = new File(proofsRoot, session.getId());
+                    if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
+
+                    String base = (tqName + "-" + modeAll + "-" + System.currentTimeMillis() + ".txt").replaceAll("[^A-Za-z0-9._-]", "_");
+                    File proofFile = new File(sessionProofDir, base);
+                    try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
+                        if (r.proofText != null) for (String pl : r.proofText) pw.println(pl);
+                    } catch (Exception ignore) {}
+
+                    String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
+                    cell.put("proofUrl", proofUrl);
+                    cell.put("proofPath", proofFile.getAbsolutePath());
+                }
+
                 cellMap2.put(key, cell);
+
             } catch (Throwable ignore) {}
 
             // ---- compute next step ----
@@ -110,33 +117,6 @@
             // ---- call your single-test method (add this to InferenceTestSuite) ----
             InferenceTestSuite.OneResult r = its.runOne(kb, engine, timeout, tqPath, modusPonens);
 
-            // web-visible root for proofs (with fallback)
-            String proofsRoot = application.getRealPath("/proofs");
-            if (proofsRoot == null) {
-                proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
-            }
-            File sessionProofDir = new File(proofsRoot, session.getId());
-            if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
-
-            // unique, safe filename
-            String base = (tqName + "-" + mode + "-" + System.currentTimeMillis() + ".txt")
-                    .replaceAll("[^A-Za-z0-9._-]", "_");
-            File proofFile = new File(sessionProofDir, base);
-
-            // write file (each proof line on its own line)
-            try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
-                if (r.proofText != null) {
-                    for (String proof_line : r.proofText) {
-                        pw.println(proof_line);
-                    }
-                }
-            } catch (Exception ioex) {
-                // optional: log or display warning
-            }
-
-            // browser URL
-            String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
-
             Map<String,Object> cell = new HashMap<>();
             String key = tqName + "|" + mode;
             cell.put("pass",   r.pass);
@@ -145,9 +125,43 @@
             cell.put("expected", r.expected == null ? java.util.Collections.emptyList() : r.expected);
             cell.put("actual",   r.actual   == null ? java.util.Collections.emptyList() : r.actual);
             cell.put("html",     r.html);
-            cell.put("proofUrl", proofUrl);                         // <-- add
-            cell.put("proofPath", proofFile.getAbsolutePath());     // optional
+
             cellMap.put(key, cell);
+
+            // save the proof if exist
+            boolean proofExists = r.proofText != null && !r.proofText.isEmpty();
+            if (proofExists){
+                // web-visible root for proofs (with fallback)
+                String proofsRoot = application.getRealPath("/proofs");
+                if (proofsRoot == null) {
+                    proofsRoot = System.getProperty("java.io.tmpdir") + File.separator + "sigma_proofs";
+                }
+                File sessionProofDir = new File(proofsRoot, session.getId());
+                if (!sessionProofDir.exists()) sessionProofDir.mkdirs();
+
+                // unique, safe filename
+                String base = (tqName + "-" + mode + "-" + System.currentTimeMillis() + ".txt")
+                        .replaceAll("[^A-Za-z0-9._-]", "_");
+                File proofFile = new File(sessionProofDir, base);
+
+                // write file (each proof line on its own line)
+                try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(proofFile))) {
+                    if (r.proofText != null) {
+                        for (String proof_line : r.proofText) {
+                            pw.println(proof_line);
+                        }
+                    }
+                } catch (Exception ioex) {
+                    // optional: log or display warning
+                }
+
+                // browser URL
+                String proofUrl = request.getContextPath() + "/proofs/" + session.getId() + "/" + proofFile.getName();
+
+                cell.put("proofUrl", proofUrl);                         // <-- add
+                cell.put("proofPath", proofFile.getAbsolutePath());     // optional
+            }
+
 
         } catch (Throwable ex) {
         }
@@ -191,6 +205,248 @@
         return;  // stop rendering this request
     }
 %>
+
+<%
+    if ("export".equalsIgnoreCase(request.getParameter("action"))) {
+        Map<String,Object> cellMapX = (Map<String,Object>) session.getAttribute("cellMap");
+        if (cellMapX == null || cellMapX.isEmpty()) {
+            out.println("<script>alert('Nothing to export yet. Run some tests first.');</script>");
+        } else {
+            // Resolve export root (web-visible). Falls back to tmp if running outside a WAR.
+            String root = application.getRealPath("/exports");
+            if (root == null) root = System.getProperty("java.io.tmpdir") + File.separator + "sigma_exports";
+            File exportRoot = new File(root);
+            if (!exportRoot.exists()) exportRoot.mkdirs();
+
+            String stamp = new java.text.SimpleDateFormat("yyyyMMdd-HHmmss").format(new java.util.Date());
+            File bundleDir   = new File(exportRoot, stamp);
+            File proofsDir   = new File(bundleDir, "proofs");
+            File testsDir    = new File(bundleDir, "tests");
+            proofsDir.mkdirs(); testsDir.mkdirs();
+
+            // Tally + gather tq names used.
+            int passCnt=0, failCnt=0, errCnt=0, cells=0;
+            Set<String> tqSeen = new java.util.TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+
+            // Copy proof files and build a rewritten link map (absolute->relative).
+            Map<String,String> proofRelMap = new HashMap<>();
+            for (Object e : cellMapX.entrySet()) {
+                Map.Entry me = (Map.Entry)e;
+                String key = (String) me.getKey();               // "<tq>|normal" or "<tq>|mp"
+                Map val    = (Map) me.getValue();
+
+                String[] parts = key.split("\\|", 2);
+                String tqBase = parts.length>0 ? parts[0] : "unknown.tq";
+                tqSeen.add(tqBase);
+
+                // Calculate the PASS/FAIL/ERROR sums for the Summary table
+                Boolean pass = (Boolean) val.get("pass");
+                if (pass != null) {
+                    cells++;
+                    if (pass) passCnt++;
+                    else {
+                        String html = (String) val.get("html");
+                        if (html != null) {
+                            String hl = html.toLowerCase();
+                            if (hl.contains("fail")) {
+                                failCnt++;
+                            }else{
+                                errCnt++;
+                            }
+                        }
+                    }
+                }
+
+
+                String proofPath = (String) val.get("proofPath"); // absolute path we stored earlier
+                if (proofPath != null) {
+                    File src = new File(proofPath);
+                    if (src.exists()) {
+                        String safeName = src.getName().replaceAll("[^A-Za-z0-9._-]","_");
+                        File dst = new File(proofsDir, safeName);
+                        try {
+                            java.nio.file.Files.copy(src.toPath(), dst.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                            proofRelMap.put(proofPath, "proofs/" + safeName);  // for offline relative linking
+                        } catch (Exception ignore) {}
+                    }
+                }
+            }
+
+            // Copy original .tq files into /tests
+            String itDir = KBmanager.getMgr().getPref("inferenceTestDir");
+            if (itDir != null) {
+                for (String tq : tqSeen) {
+                    try {
+                        File src = new File(itDir, tq);
+                        if (src.exists()) {
+                            File dst = new File(testsDir, tq);
+                            java.nio.file.Files.copy(src.toPath(), dst.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+                        }
+                    } catch (Exception ignore) {}
+                }
+            }
+
+
+            // Build static HTML
+            String title = "Inference Test Results - " + stamp;
+            File index = new File(bundleDir, "index.html");
+
+            // For totals & not-run counts, list files in dir to mirror UI order
+            File dir = (itDir==null)?null:new File(itDir);
+            File[] files = (dir==null)?new File[0]:dir.listFiles((d,n)->n.toLowerCase().endsWith(".tq"));
+            if (files == null) files = new File[0];
+            Arrays.sort(files, java.util.Comparator.comparing(File::getName, String.CASE_INSENSITIVE_ORDER));
+            int totalFiles = files.length;
+            int totalTests = totalFiles * 2; // Normal + MP per file
+            Set<String> validKeys = new HashSet<>();
+            for (File tf : files) {
+                String name = tf.getName();
+                validKeys.add(name + "|normal");
+                validKeys.add(name + "|mp");
+            }
+
+            int runTests = 0;
+            for (Object e : cellMapX.keySet()) {
+                String k = (String) e;
+                if (validKeys.contains(k)) runTests++;
+            }
+            int notRunTests = Math.max(0, totalTests - runTests);
+
+            try (java.io.PrintWriter pw = new java.io.PrintWriter(new java.io.FileWriter(index, false), true)) {
+                pw.println("<!doctype html><html><head><meta charset='utf-8'><title>"+esc(title)+"</title>");
+                pw.println("<style>");
+                pw.println("body{font-family:Arial,Helvetica,sans-serif;margin:24px;color:#222}");
+                pw.println(".summary{margin:0 auto 18px auto;max-width:1100px;padding:12px;border:1px solid #ddd;border-radius:6px;background:#fafafa}");
+                pw.println(".pill{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:700}");
+                pw.println(".pass{background:#e7f7ea;color:#1a7f2b;border:1px solid #bfe6c6}");
+                pw.println(".fail{background:#fdeaea;color:#b21c1c;border:1px solid #f1c0c0}");
+                pw.println(".error{background:#fff3cd;color:#8a6d3b;border:1px solid #f3e6a1}");
+                pw.println("table{border-collapse:collapse;width:100%;max-width:1100px;margin:0 auto;background:#fff}");
+                pw.println("th,td{border:1px solid #ddd;padding:8px;vertical-align:top;text-align:left}");
+                pw.println("th{background:#f5f7fa}");
+                pw.println(".tiny{font-size:12px;color:#666}");
+                pw.println(".file{font-weight:700}");
+                pw.println("</style></head><body>");
+
+                // Download .zip file button
+                pw.println("<div id='zipBtn' style='display:none;margin:10px 0;'>"
+                        + "<a id='zipLink' href='#' download "
+                        + "style='background:#555;color:#fff;text-decoration:none;border-radius:4px;padding:6px 12px;'>"
+                        + "Download ZIP</a></div>");
+                pw.println("<script>(function(){"
+                        + "var z='"+esc(request.getContextPath()+"/exports/"+stamp+".zip")+"';"
+                        + "fetch(z,{method:'HEAD'}).then(function(r){if(r.ok){"
+                        + "document.getElementById('zipLink').href=z;"
+                        + "document.getElementById('zipBtn').style.display='block';}})"
+                        + ".catch(function(){});"
+                        + "})();</script>");
+
+                // Summary table
+                int total = cells;
+                int passRate = (total==0)?0:(int)Math.round((passCnt*100.0)/total);
+                pw.println("<div class='summary'>");
+                pw.println("<h2 style='margin:6px 0'>Inference Test Results</h2>");
+                pw.println("<div class='tiny'>Generated: "+esc(new java.util.Date().toString())+"</div>");
+                pw.println("<div style='margin-top:8px'>");
+                pw.println("<span class='pill pass'>PASS: "+passCnt+"</span> ");
+                pw.println("<span class='pill fail' style='margin-left:6px'>FAIL: "+failCnt+"</span> ");
+                pw.println("<span class='pill error' style='margin-left:6px'>ERROR: "+errCnt+"</span> ");
+                pw.println("<span class='tiny' style='margin-left:10px'>Pass-rate: "+passRate+"%</span><br>");
+                pw.println("<span class='tiny'>Total test files: "+totalFiles+" &nbsp;&nbsp;Total tests: "+totalTests+" &nbsp;&nbsp; Run: "+runTests+" &nbsp;&nbsp; Not run: "+notRunTests+"</span><br>");
+                pw.println("</div></div>");
+
+                // Table header
+                pw.println("<table><thead><tr>");
+                pw.println("<th style='width:40%'>File</th><th style='width:30%'>Normal</th><th style='width:30%'>ModusPonens</th>");
+                pw.println("</tr></thead><tbody>");
+
+                // Table body
+                for (File tf : files) {
+                    String name = tf.getName();
+                    String kN = name + "|normal";
+                    String kM = name + "|mp";
+                    Map cN = (Map) cellMapX.get(kN);
+                    Map cM = (Map) cellMapX.get(kM);
+
+                    pw.println("<tr>");
+                    // File column with relative link to copied .tq if present
+                    pw.println("<td>");
+                    pw.println("<div class='file'>"+esc(name)+"</div>");
+                    if (tqSeen.contains(name)) {
+                        pw.println("<div class='tiny'><a href='tests/"+esc(name)+"' target='_blank'>View original .tq</a></div>");
+                    } else {
+                        pw.println("<div class='tiny'>- not run yet -</div>");
+                    }
+                    pw.println("</td>");
+
+                    // writer for a cell WITHOUT extra PASS/FAIL pill (you already show status in your HTML)
+                    java.util.function.Consumer<Map> writeCell = (cell) -> {
+                        try {
+                            if (cell == null) { pw.println("<span class='tiny'>- not run yet -</span>"); return; }
+                            Long millis = (Long) cell.get("millis");
+                            String html = (String) cell.get("html");
+                            String meta = (String) cell.get("meta");
+                            String rel = null; String proofPath = (String) cell.get("proofPath");
+                            if (proofPath != null) rel = proofRelMap.get(proofPath);
+//                            if (millis != null) pw.println("<div class='tiny'>"+millis+" ms</div>");
+                            if (meta != null) pw.println("<div>"+meta+"</div>");
+                            if (html != null)  pw.println("<div>"+html+"</div>");
+                            if (rel != null) pw.println("<div class='tiny' style='margin-top:6px'><a href='"+esc(rel)+"' target='_blank'>View proof</a></div>");
+                        } catch(Exception ignore){}
+                    };
+
+                    pw.println("<td>"); writeCell.accept(cN); pw.println("</td>");
+                    pw.println("<td>"); writeCell.accept(cM); pw.println("</td>");
+                    pw.println("</tr>");
+                }
+                pw.println("</tbody></table>");
+
+                pw.println("<div class='tiny' style='max-width:1100px;margin:12px auto 0 auto'>");
+                pw.println("This page is a static snapshot. Proofs and tests are in ./proofs and ./tests.");
+                pw.println("</div>");
+
+                pw.println("</body></html>");
+            } catch (Exception ex) {
+                out.println("<script>alert('Export failed: "+esc(String.valueOf(ex))+"');</script>");
+            }
+
+            // --- Create ZIP file ---
+            File zipFile    = new File(exportRoot, stamp + ".zip");
+            File zipTemp    = new File(exportRoot, stamp + ".zip.part");
+            try (java.util.zip.ZipOutputStream zos =
+                         new java.util.zip.ZipOutputStream(new java.io.FileOutputStream(zipTemp))) {
+                java.nio.file.Path base = bundleDir.toPath();
+                java.nio.file.Files.walk(base).forEach(p -> {
+                    try {
+                        if (java.nio.file.Files.isDirectory(p)) return;
+                        String rel = base.relativize(p).toString().replace("\\","/");
+                        zos.putNextEntry(new java.util.zip.ZipEntry(rel));
+                        java.nio.file.Files.copy(p, zos);
+                        zos.closeEntry();
+                    } catch (Exception ignore) {}
+                });
+                // stream closes here
+            } catch (Exception ignore) {}
+
+            // Try atomic move; fall back to replace
+            try {
+                java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (Exception moveEx) {
+                // If ATOMIC_MOVE not supported, do best-effort replace
+                try { java.nio.file.Files.move(zipTemp.toPath(), zipFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING); }
+                catch (Exception ignore) {}
+            }
+
+            // Redirect to the exported index (web path)
+            String webHtml = request.getContextPath() + "/exports/" + stamp + "/index.html";
+            String webZip  = request.getContextPath() + "/exports/" + stamp + ".zip";
+            out.println("<script>window.open('"+webHtml+"','_blank');</script>");
+        }
+    }
+%>
+
+
 
 <%!
     private static void deleteRecursive(java.io.File f) {
@@ -360,9 +616,13 @@
 
         <!-- Left: Run-All buttons -->
         <div class="runAllGroup">
-            <button type="button" class="runAllBtn" onclick="startRunAll('normal')"> Run All (Normal)</button>
-            <button type="button" class="runAllBtn mp" onclick="startRunAll('mp')"> Run All (MP)</button>
-            <button type="button" class="runAllBtn both" onclick="startRunAll('both')"> Run All (Both)</button>
+            <button type="button" class="runAllBtn" onclick="startRunAll('normal')">Run All (Normal)</button>
+            <button type="button" class="runAllBtn mp" onclick="startRunAll('mp')">Run All (MP)</button>
+            <button type="button" class="runAllBtn both" onclick="startRunAll('both')">Run All (Both)</button>
+            <button type="button" class="runAllBtn" style="background:#555;"
+                    onclick="document.getElementById('runnerForm').action.value='export';document.getElementById('runnerForm').submit();">
+                Export HTML
+            </button>
         </div>
 
         <!-- Right: Configuration box -->
@@ -546,6 +806,8 @@
 %>
 
 <hr style="margin:24px 0; border:0; border-top:1px solid #ddd; width:70%; margin-left:auto; margin-right:auto;">
+
+
 
 <div style="width:70%; margin:0 auto 20px auto; display:flex; justify-content:space-between; align-items:center;">
     <div>
