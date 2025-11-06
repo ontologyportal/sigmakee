@@ -811,11 +811,6 @@
 
 <div style="width:70%; margin:0 auto 20px auto; display:flex; justify-content:space-between; align-items:center;">
     <div>
-        <form method="post" style="margin-left:auto;">
-            <input type="hidden" name="action" value="export">
-            <button type="submit" class="runAllBtn" title="Export a static HTML snapshot">Export HTML</button>
-        </form>
-
         <form method="post" onsubmit="return confirm('This will fully reload the KB and clear user assertions. Continue?');">
             <input type="hidden" name="action" value="reloadKB">
             <!-- preserve current UI selections (optional) -->
