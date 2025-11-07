@@ -450,6 +450,80 @@ public class LanguageFormatter {
                 .trim();
     }
 
+    /**
+     * Generate a natural language summary of a proof using Ollama LLM
+     * @param proofSteps List of proof steps as strings
+     * @return HTML formatted proof summary
+     */
+    public static String generateProofSummary(List<String> proofSteps) {
+        if (proofSteps == null || proofSteps.isEmpty()) {
+            return "";
+        }
+        
+        // Check if Ollama is available
+        if (!checkOllamaHealth()) {
+            return "<div style='color:#666; font-style:italic;'>Proof summary unavailable (Ollama is offline)</div>";
+        }
+        
+        // Prepare the proof steps as a string
+        StringBuilder proofText = new StringBuilder();
+        for (int i = 0; i < proofSteps.size(); i++) {
+            String step = proofSteps.get(i);
+            // Clean HTML tags and links from the proof step
+            step = step.replaceAll("<[^>]*>", "").trim();
+            if (!step.isEmpty()) {
+                proofText.append("Step ").append(i + 1).append(": ").append(step).append("\n");
+            }
+        }
+
+        String cleanedText = proofText.toString()
+        .replaceAll("forall|exists|instance|=>|<=", "")
+        .replaceAll("[()]", "")
+        .replaceAll("\\?\\w+", "")
+        .replaceAll("\\s{2,}", " ")
+        .trim();
+        
+        // prompt for Ollama
+                String prompt =
+            "You are an expert explainer of formal logic who writes for students and curious readers.\n\n"
+          + "Below is a proof written in structured English based on formal logic steps.\n"
+          + "Your goal is to explain the proof like a story: describe what the argument assumes, "
+          + "what reasoning or transformations happen, and how those lead to the final conclusion.\n\n"
+          + "Write 3–5 sentences that are smooth, intuitive, and human-readable — "
+          + "as if you were explaining the reasoning to an intelligent student who’s new to logic.\n\n"
+          + "Avoid quoting variable names, step numbers, or symbols like 'forall', 'exists', or 'QED'. "
+          + "Instead, use natural phrases such as 'the proof begins by assuming…', "
+          + "'it considers what would happen if…', or 'eventually it concludes that…'.\n\n"
+          + "End with a clear statement of what the proof shows or confirms.\n\n"
+          + "Proof text:\n"
+          + cleanedText
+          + "\n\n"
+          + "Now write the explanation as a clear and intuitive short narrative paragraph:";
+ 
+        String model = "llama3.2";
+        String ollamaHost = KBmanager.getMgr().getPref("ollamaHost");
+        if (StringUtil.emptyString(ollamaHost)) ollamaHost = OLLAMA_HOST;
+        
+        OllamaClient ollama = new OllamaClient(ollamaHost);
+        
+        try {
+            String summary = ollama.generate(model, prompt);
+            if (!StringUtil.emptyString(summary)) {
+                // Format the summary in a nice HTML box
+                return "<div style='background:#f8f9fa; border:1px solid #dee2e6; border-radius:4px; "
+                     + "padding:12px; margin:15px 0;'>"
+                     + "<h4 style='margin:0 0 8px 0; color:#495057;'>Proof Summary</h4>"
+                     + "<p style='margin:0; line-height:1.6; color:#212529;'>" 
+                     + summary + "</p></div>";
+            }
+        } catch (IOException e) {
+            System.out.println("ERROR | LanguageFormatter | generateProofSummary: " + e);
+            return "<div style='color:#b00;'>Error generating proof summary: " + e.getMessage() + "</div>";
+        }
+        
+        return "";
+    }
+
     /*****************************************************************
      * Modify the given variable map so that given key is mapped to a surface form for the entity which includes
      * the given property.
