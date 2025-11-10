@@ -35,7 +35,7 @@ window.initialErrors = [
         boolean first = true;
         for (ErrRec e : errs) {
             if (!first) out.print(", ");
-            out.print("{ line: " + e.line + ", start: " + e.start + ", end: " + e.end + " }");
+            out.print(e);
             first = false;
         }
     }

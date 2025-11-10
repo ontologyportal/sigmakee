@@ -289,17 +289,19 @@ function renderErrorBox(errors = [], message = null) {
     box.classList.remove("errors-box");
     box.classList.add("success");
     box.textContent = "✅ No errors found.";
-  } else {
-    box.classList.remove("success");
-    box.classList.add("errors-box");
-    box.textContent = errors.map(e => {
-      const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
-      const lineHuman = (Number(e.line) ?? 0) + 1;
-      const colHuman  = (Number(e.start) ?? 0) + 1;
-      return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
-    }).join("\n\n");
+    return;
   }
+  box.classList.remove("success");
+  box.classList.add("errors-box");
+  box.textContent = errors.map(e => {
+    const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
+    const file = getActiveFileName() || "(buffer)";
+    const lineHuman = (Number(e.line) ?? 0) + 1;
+    const msg = e.msg || "";
+    return `${sev} in ${file} at line ${lineHuman}: ${msg}`;
+  }).join("\n\n");
 }
+
 
 function highlightErrors(errors = [], mask = []) {
   for (const m of errorMarks) m.clear();
