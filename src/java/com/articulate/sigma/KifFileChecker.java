@@ -537,7 +537,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = startLine; i < Math.min(endLine, bufferLines.length); i++) {
+        for (int i = startLine - 1; i < Math.min(endLine, bufferLines.length); i++) {
             sb.append(bufferLines[i]).append("\n");
         }
         return sb.toString();
