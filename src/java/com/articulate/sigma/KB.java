@@ -2046,7 +2046,6 @@ public class KB implements Serializable {
             cmds.add(includesPath);
         }
 
-
         // STEP 1 - First TPTP pass (main proof)
         Vampire vampire = new Vampire();
 
@@ -2055,8 +2054,6 @@ public class KB implements Serializable {
         } catch (Exception e){
             System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
         }
-
-        System.out.println("---- 2 ----");
 
         // STEP 2 - Second TPTP pass (modus Ponens)
         if (modensPonens) {
@@ -2090,11 +2087,58 @@ public class KB implements Serializable {
         return vampire;
     }
 
+    public Vampire askVampireHOL(String test_path, int timeout, int maxAnswers) {
+
+        String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
+        String includesPath = testDir + File.separator + "includes";
+
+        File test = new File(test_path);
+        List<String> includes = TPTPutil.extractIncludesFromTPTP(test);
+
+        if (!includes.isEmpty()) {
+            String error = TPTPutil.validateIncludesInTPTPFiles(includes, includesPath);
+            if (error != null) {
+                System.err.println(error);
+            }
+        }
+
+        List<String> cmds = new ArrayList<>(Arrays.asList(
+                "--input_syntax", "tptp",
+                "--proof", "tptp",   // <-- TSTP-style proof lines
+                "--output_axiom_names","on",
+                "--mode","portfolio",
+                "--schedule","snake_slh"
+        ));
+
+        if (Vampire.askQuestion){
+            cmds.add("-qa");
+            cmds.add("plain");
+        }
+
+        if (!includes.isEmpty()){
+            cmds.add("--include");
+            cmds.add(includesPath);
+        }
+
+        // STEP 1 - First TPTP pass (main proof)
+        Vampire vampire = new Vampire();
+
+        vampire.logic = Vampire.Logic.FOL;
+
+        try{
+            vampire.runCustom(test, timeout, cmds);
+        } catch (Exception e){
+            System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
+        }
+
+        return vampire;
+    }
 
 
-    /***************************************************************
-     * Return a SUMO-formatted proof string
-     */
+
+        /***************************************************************
+         * Return a SUMO-formatted proof string
+         */
     public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
 
         StringBuilder sb = new StringBuilder();

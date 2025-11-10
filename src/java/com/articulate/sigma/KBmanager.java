@@ -95,6 +95,7 @@ public class KBmanager implements Serializable {
                     "typePrefix",
                     "userBrowserLimit",
                     "vampire",
+                    "vampire_hol",
                     "verbnet"
             );
 

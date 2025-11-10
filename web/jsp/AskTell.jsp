@@ -94,7 +94,7 @@
             if (!sel || !sel.value) return;
             const name = sel.value.toLowerCase();
             // .tq via ViewTest.jsp, others directly from /tests/
-            const url = name.endsWith('.tq') || name.endsWith('.tptp') || name.endsWith('.tff')
+            const url = name.endsWith('.tq') || name.endsWith('.tptp') || name.endsWith('.tff') || name.endsWith('.thf')
                 ? ('ViewTest.jsp?name=' + encodeURIComponent(sel.value))
                 : ('tests/' + encodeURIComponent(sel.value));
             window.open(url, '_blank');
@@ -276,7 +276,7 @@
             <!-- Radio label -->
             <label><input type="radio" name="runSource" value="test"
                 <%= "test".equals(session.getAttribute("runSource")) ? "checked" : "" %> >
-                Saved test (.tq / .tptp / .tff)
+                Saved test (.tq / .tptp / .tff / .thf)
             </label>
         </div>
 
@@ -287,7 +287,7 @@
         <%
             String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
             File[] allFiles = (testDir == null) ? new File[0]
-                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff"));
+                    : new File(testDir).listFiles((d,n) -> n.endsWith(".tq") || n.endsWith(".tptp") || n.endsWith(".tff") || n.endsWith(".thf"));
             if (allFiles == null) allFiles = new File[0];
 
             File[] testFiles = allFiles;
@@ -319,6 +319,7 @@
                 <label><input type="radio" name="testFilter" value="tq"   <%= "tq".equalsIgnoreCase(testFilter)   ? "checked":"" %>> tq</label>
                 <label><input type="radio" name="testFilter" value="tptp" <%= "tptp".equalsIgnoreCase(testFilter) ? "checked":"" %>> tptp</label>
                 <label><input type="radio" name="testFilter" value="tff"  <%= "tff".equalsIgnoreCase(testFilter)  ? "checked":"" %>> tff</label>
+                <label><input type="radio" name="testFilter" value="thf"  <%= "thf".equalsIgnoreCase(testFilter)  ? "checked":"" %>> thf</label>
             </div>
             <input type="hidden" name="testFilter" id="testFilterHidden" value="<%= testFilter %>">
 
@@ -474,7 +475,29 @@
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
                     }
-                } else {
+                } else if (ext.endsWith(".thf")) {
+                    if (!"Vampire".equals(inferenceEngine)) {
+                        out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
+                    } else {
+                        setVampMode(vampireMode);
+                        com.articulate.sigma.tp.Vampire vRun = kb.askVampireHOL(testPath, tmo, maxAns);
+                        // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
+                        String pseudoQuery = "TPTP file: " + new File(testPath).getName();
+                        // Parse + render just like the other flows
+                        System.out.println("--- DEBUG thf output----");
+                        System.out.println(vRun.output);
+                        tpp.parseProofOutput(vRun.output, pseudoQuery, kb, vRun.qlist);
+                        publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
+                        tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
+
+                        printAnswersBlock(tpp, kbName, language, out);
+                        /* Prevent duplicate answers inside HTMLformatter */
+                        if (tpp.bindingMap != null) tpp.bindingMap.clear();
+                        if (tpp.bindings   != null) tpp.bindings.clear();
+
+                        out.println(HTMLformatter.formatTPTP3ProofResult(tpp, pseudoQuery, lineHtml, kbName, language));
+                    }
+            } else {
                     out.println("<font color='red'>Unsupported test file type: " + ext + "</font>");
                 }
             } else {
