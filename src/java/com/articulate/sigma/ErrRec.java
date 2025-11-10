@@ -30,4 +30,22 @@ public class ErrRec {
         String sev = (type == WARNING) ? "WARNING" : "ERROR";
         return sev + " in " + file + " at line " + (line + 1) + ": " + msg;
     }
+
+    /** ***************************************************************
+     * Override equals() for deep comparison of all fields.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null || getClass() != obj.getClass())
+            return false;
+        ErrRec other = (ErrRec) obj;
+        return this.type == other.type &&
+               this.line == other.line &&
+               this.start == other.start &&
+               this.end == other.end &&
+               (this.file == null ? other.file == null : this.file.equals(other.file)) &&
+               (this.msg == null ? other.msg == null : this.msg.equals(other.msg));
+    }
 }
