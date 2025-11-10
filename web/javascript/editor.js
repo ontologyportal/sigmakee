@@ -294,7 +294,7 @@ function renderErrorBox(errors = [], message = null) {
     box.classList.add("errors-box");
     box.textContent = errors.map(e => {
       const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
-      const lineHuman = (Number(e.line) ?? 0) + 1;
+      const lineHuman = (Number(e.line-1) ?? 0);
       const colHuman  = (Number(e.start) ?? 0) + 1;
       return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
     }).join("\n\n");

@@ -174,14 +174,14 @@ public class KifFileChecker {
                 }
             }
             if (foundQuant != null) {
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + rel[0];
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + rel[0];
                 int absCol = rel[1];
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
                 msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + foundQuant.length(), errorMessage + offendingLine));
             } else {
                 errorMessage += " (no quantifier found in text)";
-                msgs.add(new ErrRec(0, fileName, f.startLine - 1, 0, 1, errorMessage));
+                msgs.add(new ErrRec(0, fileName, f.startLine, 0, 1, errorMessage));
             }
         }
     }
@@ -225,9 +225,9 @@ public class KifFileChecker {
                 // calculate the line number for error location
                 int absLine;
                 if (formulaStartLine > 0) {
-                    absLine = formulaStartLine - 1;
+                    absLine = formulaStartLine;
                 } else {
-                    absLine = f.startLine - 1;
+                    absLine = f.startLine;
                 }
                 
                 // add the error message
@@ -249,7 +249,7 @@ public class KifFileChecker {
         String errorMessage = "Existential quantifier in antecedent - ";
         if (Diagnostics.existentialInAntecedent(f)) {
             int[] rel = findLineInFormula(formulaText, "exists");
-            int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
             int absCol = rel[1] >= 0 ? rel[1] : 0;
             String[] lines = formulaText.split("\n", -1);
             String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -272,7 +272,7 @@ public class KifFileChecker {
         if (singleUse != null) {
             for (String v : singleUse) {
                 int[] rel = findLineInFormula(formulaText, v);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -296,7 +296,7 @@ public class KifFileChecker {
         if (unquant != null) {
             for (String uq : unquant) {
                 int[] rel = findLineInFormula(formulaText, uq);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -349,7 +349,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             if (token != null)
                 rel = findLineInFormula(formulaText, token);
             if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + rel);
-            int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1)
+            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
                         + ((rel[0] >= 0) ? rel[0] : 0);
             int absCol = (rel[1] >= 0) ? rel[1] : 1;
 
@@ -370,7 +370,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             if (token != null)
                 rel = findLineInFormula(formulaText, token);
 
-            int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1)
+            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
                         + ((rel[0] >= 0) ? rel[0] : 0);
             int absCol = (rel[1] >= 0) ? rel[1] : 1;
 
@@ -397,7 +397,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
     private static void CheckSUMOtoTFAformErrors(String fileName, Formula f, int formulaStartLine, Set<Formula> processed, List<ErrRec> msgs) {
 
         if (SUMOtoTFAform.errors != null && !SUMOtoTFAform.errors.isEmpty() && processed.size() == 1) {
-            int line = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1);
+            int line = (formulaStartLine > 0 ? formulaStartLine : f.startLine);
             for (String er : SUMOtoTFAform.errors)
                 msgs.add(new ErrRec(0, fileName, line, 1, 2, er));
             SUMOtoTFAform.errors.clear();
@@ -432,7 +432,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
                 }
                 int[] rel = {-1, -1};
                 if (token != null) rel = findLineInFormula(formulaText, token);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + ((rel[0] >= 0) ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + ((rel[0] >= 0) ? rel[0] : 0);
                 int absCol = (rel[1] >= 0) ? rel[1] : 1;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : formulaText.trim();
@@ -460,7 +460,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             boolean coveredByLocal = localIndividuals.contains(t) || localSubclasses.contains(t);
             if (!coveredByLocal && Diagnostics.termNotBelowEntity(t, kb)) {
                 int[] rel = findLineInFormula(formulaText, t);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -499,7 +499,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             for (String er : sv.errors) {
                 int line = getLineNum(er);
                 int offset  = getOffset(er);
-                msgs.add(new ErrRec(1, fileName, (line == 0 ? line : line - 1), Math.max(offset, 1), Math.max(offset, 1) + 1, er));
+                msgs.add(new ErrRec(1, fileName, (line == 0 ? line : line), Math.max(offset, 1), Math.max(offset, 1) + 1, er));
             }
         }
     }
@@ -537,7 +537,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             return "";
         }
         StringBuilder sb = new StringBuilder();
-        for (int i = startLine - 1; i < Math.min(endLine, bufferLines.length); i++) {
+        for (int i = startLine; i < Math.min(endLine, bufferLines.length); i++) {
             sb.append(bufferLines[i]).append("\n");
         }
         return sb.toString();
@@ -667,12 +667,12 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             for (String er : kif.errorSet) {
                 int line = getLineNum(er);
                 int col  = getOffset(er);
-                msgs.add(new ErrRec(0, fileName, line == 0 ? line : line - 1, Math.max(col, 1), Math.max(col, 1) + 1, er));
+                msgs.add(new ErrRec(0, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, er));
             }
             for (String warn : kif.warningSet) {
                 int line = getLineNum(warn);
                 int col  = getOffset(warn);
-                msgs.add(new ErrRec(1, fileName, line == 0 ? line : line - 1, Math.max(col, 1), Math.max(col, 1) + 1, warn));
+                msgs.add(new ErrRec(1, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, warn));
             }
         }
         return retVal;
