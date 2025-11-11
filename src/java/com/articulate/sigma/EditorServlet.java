@@ -155,7 +155,7 @@ public class EditorServlet extends HttpServlet {
         }
         if (errors != null) {
             for (ErrRec er : errors) {
-                int ln = er.line + 1;
+                int ln = er.line;
                 if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
             }
         }

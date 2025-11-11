@@ -294,7 +294,7 @@ function renderErrorBox(errors = [], message = null) {
     box.classList.add("errors-box");
     box.textContent = errors.map(e => {
       const sev = Number(e.type) === 1 ? "WARNING" : "ERROR";
-      const lineHuman = (Number(e.line-1) ?? 0);
+      const lineHuman = (Number(e.line) ?? 0);
       const colHuman  = (Number(e.start) ?? 0) + 1;
       return `${sev} ${e.file ? e.file : "(buffer)"}:${lineHuman}:${colHuman}\n${e.msg || ""}`;
     }).join("\n\n");
@@ -318,7 +318,7 @@ function highlightErrors(errors = [], mask = []) {
   if (!Array.isArray(errors) || errors.length === 0) return;
   const lastLine = Math.max(0, editor.lineCount() - 1);
   for (const e of errors) {
-    const line = Math.max(0, Math.min(Number(e.line ?? 0), lastLine));
+    const line = Math.max(0, Math.min(Number(e.line - 1 ?? 0), lastLine));
     const from = { line, ch: e.start };
     const to   = { line, ch: e.end };
     const cls  = (Number(e.type) === 1) ? "warning-text" : "error-text";

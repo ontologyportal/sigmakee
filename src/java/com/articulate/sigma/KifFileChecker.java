@@ -148,6 +148,9 @@ public class KifFileChecker {
             CheckTermsBelowEntity(fileName, f, formulaStartLine, formulaText, kb, localIndividuals, localSubclasses, msgs);
         }
         SortMessages(msgs);
+        if (debug) for (ErrRec e : msgs) {
+            System.out.println(e);
+        }
         return msgs;
     }
 
