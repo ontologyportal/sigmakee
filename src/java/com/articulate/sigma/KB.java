@@ -2110,10 +2110,11 @@ public class KB implements Serializable {
                 "--schedule","snake_slh"
         ));
 
-        if (Vampire.askQuestion){
-            cmds.add("-qa");
-            cmds.add("plain");
-        }
+        // This HOL Vampire version (4.8) does not support "-qa plain"
+//        if (Vampire.askQuestion){
+//            cmds.add("-qa");
+//            cmds.add("plain");
+//        }
 
         if (!includes.isEmpty()){
             cmds.add("--include");
@@ -2123,7 +2124,7 @@ public class KB implements Serializable {
         // STEP 1 - First TPTP pass (main proof)
         Vampire vampire = new Vampire();
 
-        vampire.logic = Vampire.Logic.FOL;
+        vampire.logic = Vampire.Logic.HOL;
 
         try{
             vampire.runCustom(test, timeout, cmds);

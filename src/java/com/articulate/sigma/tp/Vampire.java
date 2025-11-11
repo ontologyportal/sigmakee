@@ -242,7 +242,7 @@ public class Vampire {
 
         output = new ArrayList<>();
         String vampex = "";
-        if (logic == Logic.FOL) {
+        if (logic == Logic.HOL) {
             vampex = KBmanager.getMgr().getPref("vampire_hol");
         }else{
             vampex = KBmanager.getMgr().getPref("vampire");
