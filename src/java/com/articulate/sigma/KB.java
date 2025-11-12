@@ -2129,9 +2129,40 @@ public class KB implements Serializable {
         try{
             vampire.runCustom(test, timeout, cmds);
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
+            System.out.println("-- ERROR KB.askVampireHOL runCustom: "+e.getMessage());
         }
 
+        // STEP 2 - Second TPTP pass (modus Ponens)
+//        if (modensPonens) {
+//            List<String> cmds_modus_ponens = Arrays.asList(
+//                    "--input_syntax", "tptp",
+//                    "--proof", "tptp",                  // <-- TSTP-style proof lines
+//                    "--output_axiom_names", "on",
+//                    "--mode", "portfolio",
+//                    "--schedule", "snake_slh",
+//                    "-av", "off", "-nm", "0", "-fsr", "off", "-fd", "off", "-bd", "off",
+//                    "-fde", "none", "-updr", "off"
+//            );
+//            List<TPTPFormula> proof = TPTPutil.processProofLines(vampire.output);
+//            List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
+//            Vampire vampire_pomens = new Vampire();
+//            vampire_pomens.logic = Vampire.Logic.HOL;
+//            File kb = new File("min-problem.tptp");
+//            try {
+//                vampire_pomens.runCustom(kb, timeout, cmds_modus_ponens);
+//                vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
+//            } catch (Exception e) {
+//                System.out.println("-- ERROR KB.askVampireModusPonens: " + e.getMessage());
+//            }
+//
+//            // STEP 3 - Drop One Premise Formulas
+//            if (dropOnePremiseFormulas) {
+//                vampire_pomens.output = TPTPutil.fixNegatedQuantifiers(vampire_pomens.output);
+//                vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
+//            }
+//
+//            vampire = vampire_pomens;
+//        }
         return vampire;
     }
 

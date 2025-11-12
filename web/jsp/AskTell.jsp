@@ -493,10 +493,10 @@
 
                         tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);
 
-                        System.out.println("-- DEBUG Output AFTER parseProof");
-                        for (TPTPFormula lin: tpp.proof){
-                            System.out.println(lin.toString());
-                        }
+//                        System.out.println("-- DEBUG Output AFTER parseProof");
+//                        for (TPTPFormula lin: tpp.proof){
+//                            System.out.println(lin.toString());
+//                        }
 
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
 //                        tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
