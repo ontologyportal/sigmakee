@@ -1328,6 +1328,29 @@ public class TPTP3ProofProcessor {
         return result;
     }
 
+    public static List<String> reorderVampire4_8 (List<String> cleaned){
+        // Extract only proof section
+        int start = -1, end = -1;
+        for (int i = 0; i < cleaned.size(); i++) {
+            if (cleaned.get(i).contains("SZS output start")) start = i;
+            if (cleaned.get(i).contains("SZS output end"))   { end = i; break; }
+        }
+        List<String> before = (start > 0) ? cleaned.subList(0, start) : Collections.emptyList();
+        List<String> proof  = (start >= 0 && end > start) ? new ArrayList<>(cleaned.subList(start+1, end)) : new ArrayList<>();
+        List<String> after  = (end >= 0 && end+1 < cleaned.size()) ? cleaned.subList(end+1, cleaned.size()) : Collections.emptyList();
+
+        // Reorder only the proof lines
+        List<String> proofReordered = TPTP3ProofProcessor.reorderVampireProofAnyDialect(proof);
+
+        // Put it back together
+        List<String> normalized = new ArrayList<>(before);
+        normalized.add(cleaned.get(start));
+        normalized.addAll(proofReordered);
+        normalized.add(cleaned.get(end));
+        normalized.addAll(after);
+        return normalized;
+    }
+
 
     /**
      * Reorder a Vampire 4.8-style reverse proof into 5.0-style forward order.
@@ -1342,7 +1365,15 @@ public class TPTP3ProofProcessor {
         final Set<String> DIALECTS = new LinkedHashSet<>(Arrays.asList("fof(", "tff(", "thf(", "cnf("));
 
         // id is the 1st argument inside the parentheses, up to the first comma.
-        final Pattern HEAD_ID = Pattern.compile("^\\s*(fof|tff|thf|cnf)\\(([^,\\s]+)\\s*,", Pattern.CASE_INSENSITIVE);
+        final Pattern HEAD_ID =
+                Pattern.compile("^\\s*(fof|tff|thf|cnf)\\(([^,\\s]+)\\s*,", Pattern.CASE_INSENSITIVE);
+
+        // Grab only parents from the [...] that follows inference(...) or introduced(...)
+        final Pattern PARENTS =
+                Pattern.compile("(?:inference|introduced)\\([^\\]]*\\[(.*?)\\]\\)", Pattern.CASE_INSENSITIVE);
+
+        // Only accept formula ids like f1234
+        final Pattern FORMULA_ID = Pattern.compile("\\bf\\d+\\b", Pattern.CASE_INSENSITIVE);
 
         // Parent ids inside the block: be liberal—Vampire usually uses fNNN.
         // We accept tokens like f123, t456, c789, etc.
@@ -1374,22 +1405,28 @@ public class TPTP3ProofProcessor {
             if (collecting) {
                 cur.add(ln);
                 if (trimmed.endsWith(").")) {
-                    // close the block
                     String blockText = String.join("\n", cur);
                     Matcher m = HEAD_ID.matcher(cur.get(0));
                     String id = null;
-                    if (m.find()) id = m.group(2); // raw id token (e.g., f95855)
+                    if (m.find()) id = m.group(2); // raw id token (e.g., f5276)
+
                     if (id == null) {
                         // If we cannot parse, treat as non-formula noise
                         suffix.addAll(cur);
                     } else {
-                        // Collect parents by scanning the whole block for id-like tokens inside [...] regions.
-                        // We do not try to be clever about which [...] is "the parent list": we just gather all id tokens.
+                        // NEW: collect parents only from [ ... ] inside inference(...) / introduced(...)
                         Set<String> parents = new LinkedHashSet<>();
-                        Matcher tok = ANY_ID_TOKEN.matcher(blockText);
-                        while (tok.find()) {
-                            String t = tok.group();
-                            if (!t.equalsIgnoreCase(id)) parents.add(t);
+
+                        Matcher br = PARENTS.matcher(blockText);
+                        while (br.find()) {
+                            String inside = br.group(1);              // content of [...]
+                            Matcher ids = FORMULA_ID.matcher(inside); // f123, f77, etc.
+                            while (ids.find()) {
+                                String pid = ids.group();
+                                if (!pid.equalsIgnoreCase(id)) {
+                                    parents.add(pid);
+                                }
+                            }
                         }
                         boolean containsFalse = blockText.contains("$false");
                         items.add(new ProofItem(id, blockText, parents, appearanceIdx++, containsFalse));
@@ -1467,8 +1504,10 @@ public class TPTP3ProofProcessor {
         }
 
         // Cycle or parse oddity: bail out, keep original
-        if (topo.size() != reachable.size()) return new ArrayList<>(lines);
-
+        if (topo.size() != reachable.size()) {
+            if (debug) System.out.println("RVPA: topo/reachable mismatch, returning original order");
+            return new ArrayList<>(lines);
+        }
         // Unreachable formula blocks (rare noise): keep them in their original order before the reachable ones
         List<ProofItem> unreachable = new ArrayList<>();
         for (ProofItem it : items) if (!reachable.contains(it.id)) unreachable.add(it);

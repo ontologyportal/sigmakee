@@ -487,16 +487,10 @@
 
                         List<String> cleaned = TPTPutil.clearProofFile(vRun.output);
                         // Vampire version 4.8→5.0 reordering…
-                        List<String> normalized = TPTP3ProofProcessor.reorderVampireProofAnyDialect(cleaned);
-                        // NEW: fix bare negated quantifiers so ANTLR accepts them
-                        normalized = TPTPutil.fixNegatedQuantifiers(normalized);
+                        List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+                        normalized = THFutil.preprocessTHFProof(normalized);
 
                         tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);
-
-//                        System.out.println("-- DEBUG Output AFTER parseProof");
-//                        for (TPTPFormula lin: tpp.proof){
-//                            System.out.println(lin.toString());
-//                        }
 
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);
 //                        tpp.processAnswersFromProof(vRun.qlist, pseudoQuery);
