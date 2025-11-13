@@ -57,19 +57,44 @@
 
     <script>
         function toggleVampireOptions() {
-            const vamp = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
-            const casc = document.getElementById('CASC');
+            const vamp   = document.querySelector('input[name="inferenceEngine"][value="Vampire"]');
+            const casc   = document.getElementById('CASC');
             const avatar = document.getElementById('Avatar');
             const custom = document.getElementById('Custom');
-            const mp = document.getElementById('ModensPonens');
-            const drop = document.getElementById('dropOnePremise');
+            const mp     = document.getElementById('ModensPonens');
+            const drop   = document.getElementById('dropOnePremise');
+
+            // NEW: check if .thf filter is selected
+            const thfRadio = document.querySelector('input[name="testFilter"][value="thf"]');
+            const isThf = thfRadio && thfRadio.checked;
+
+            // If .thf → always disable Modus Ponens + Drop One Premise
+            if (isThf) {
+                if (mp)   { mp.checked = false;   mp.disabled = true; }
+                if (drop) { drop.checked = false; drop.disabled = true; }
+
+                // Still keep Vampire mode radios tied to Vampire on/off
+                const vampireOn = vamp && vamp.checked && !vamp.disabled;
+                [casc, avatar, custom].forEach(el => { if (el) el.disabled = !vampireOn; });
+                return; // THF overrides the rest of the logic
+            }
+
+            // Original behavior when NOT in THF mode
             const vampireOn = vamp && vamp.checked && !vamp.disabled;
-            [casc, avatar, custom, mp].forEach(el => { if (el) el.disabled = !vampireOn; });
+            [casc, avatar, custom, mp].forEach(el => { if (el) el && (el.disabled = !vampireOn); });
+
             const mpOn = vampireOn && mp && mp.checked;
-            if (drop) { drop.disabled = !mpOn; if (!mpOn) drop.checked = false; }
+            if (drop) {
+                drop.disabled = !mpOn;
+                if (!mpOn) drop.checked = false;
+            }
+            // Disable Custom until it gets fixed and tested!
+            custom.checked = false; custom.disabled = true;
+
         }
+
         function toggleRunSource() {
-            const src = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
+            const src  = document.querySelector('input[name="runSource"]:checked')?.value || 'custom';
             const ta   = document.getElementById('stmtArea');
             const test = document.getElementById('testName');
             const lblC = document.getElementById('lblCustom');
@@ -80,9 +105,18 @@
             lblC.style.opacity = isTest ? .5 : 1;
             lblT.style.opacity = isTest ? 1 : .5;
         }
-        window.onload = function(){ toggleVampireOptions(); toggleRunSource();
+
+        window.onload = function () {
+            toggleVampireOptions();
+            toggleRunSource();
+
             document.querySelectorAll('input[name="inferenceEngine"], #ModensPonens')
                 .forEach(el => el.addEventListener('change', toggleVampireOptions));
+
+            // NEW: when .thf / other filters change, re-apply logic
+            document.querySelectorAll('input[name="testFilter"]')
+                .forEach(el => el.addEventListener('change', toggleVampireOptions));
+
             document.querySelectorAll('input[name="runSource"]')
                 .forEach(el => el.addEventListener('change', toggleRunSource));
         };
@@ -346,7 +380,7 @@
         Choose an inference engine:<br>
 
         <input type="radio" name="inferenceEngine" value="LEO" <% if ("LEO".equals(inferenceEngine)) {%>checked<%}%>
-               onclick="toggleVampireOptions()"> LEO-III <br>
+               onclick="toggleVampireOptions()" <% if (kb.leo == null) { %> disabled <% } %>> LEO-III <br>
 
         <input type="radio" name="inferenceEngine" value="EProver" <% if ("EProver".equals(inferenceEngine)) {%>checked<%}%>
                onclick="toggleVampireOptions()" <% if (kb.eprover == null) { %> disabled <% } %> > EProver <br>
@@ -363,6 +397,7 @@
 
         <input type="checkbox" id="ModensPonens" name="ModensPonens" value="yes" <% if (modensPonens) { out.print(" CHECKED"); } %> >
         <label for="ModensPonens">Modens Ponens</label>
+
         <span title="Runs Vampire with modus-ponens-only routine over authored axioms">&#9432;</span>
         [ <input type="checkbox" name="dropOnePremise" id="dropOnePremise" value="true"
         <% if (Boolean.TRUE.equals(dropOnePremise)) { out.print(" CHECKED"); } %> >
