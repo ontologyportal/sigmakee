@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * Print CLI usage information.
@@ -142,12 +142,14 @@ public class KifFileChecker {
             CheckOrphanVars(fileName, f, formulaText, formulaStartLine, msgs);
             CheckUnquantInConsequent(fileName, f, formulaText, formulaStartLine, msgs);
             Set<Formula> processed = CheckFormulaPreprocess(fileName, kb, f, formulaStartLine, msgs);
-            System.out.println(processed);
             CheckSUMOtoTFAformErrors(fileName, f, formulaStartLine, processed, msgs);
             CheckIsValidFormula(fileName, f, formulaStartLine, kb, formulaText, msgs);
             CheckTermsBelowEntity(fileName, f, formulaStartLine, formulaText, kb, localIndividuals, localSubclasses, msgs);
         }
         SortMessages(msgs);
+        if (debug) for (ErrRec e : msgs) {
+            System.out.println(e);
+        }
         return msgs;
     }
 
@@ -174,14 +176,14 @@ public class KifFileChecker {
                 }
             }
             if (foundQuant != null) {
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + rel[0];
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + rel[0];
                 int absCol = rel[1];
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
                 msgs.add(new ErrRec(0, fileName, absLine, absCol, absCol + foundQuant.length(), errorMessage + offendingLine));
             } else {
                 errorMessage += " (no quantifier found in text)";
-                msgs.add(new ErrRec(0, fileName, f.startLine - 1, 0, 1, errorMessage));
+                msgs.add(new ErrRec(0, fileName, f.startLine, 0, 1, errorMessage));
             }
         }
     }
@@ -225,9 +227,9 @@ public class KifFileChecker {
                 // calculate the line number for error location
                 int absLine;
                 if (formulaStartLine > 0) {
-                    absLine = formulaStartLine - 1;
+                    absLine = formulaStartLine;
                 } else {
-                    absLine = f.startLine - 1;
+                    absLine = f.startLine;
                 }
                 
                 // add the error message
@@ -249,7 +251,7 @@ public class KifFileChecker {
         String errorMessage = "Existential quantifier in antecedent - ";
         if (Diagnostics.existentialInAntecedent(f)) {
             int[] rel = findLineInFormula(formulaText, "exists");
-            int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
             int absCol = rel[1] >= 0 ? rel[1] : 0;
             String[] lines = formulaText.split("\n", -1);
             String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -272,7 +274,7 @@ public class KifFileChecker {
         if (singleUse != null) {
             for (String v : singleUse) {
                 int[] rel = findLineInFormula(formulaText, v);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -296,7 +298,7 @@ public class KifFileChecker {
         if (unquant != null) {
             for (String uq : unquant) {
                 int[] rel = findLineInFormula(formulaText, uq);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -305,86 +307,85 @@ public class KifFileChecker {
         }
     }
 
-/** ***************************************************************
- * Run FormulaPreprocessor and record errors/warnings.
- * Computes accurate absolute line/column using findLineInFormula()
- * by locating the offending token inside the formula text.
- * @param fileName         logical filename
- * @param kb               knowledge base
- * @param f                formula to preprocess
- * @param formulaStartLine buffer line offset
- * @param msgs             list to collect error records
- * @return processed formula set
- */
-public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formula f,
-                                                  int formulaStartLine, List<ErrRec> msgs) {
+    /** ***************************************************************
+     * Run FormulaPreprocessor and record errors/warnings.
+     * Computes accurate absolute line/column using findLineInFormula()
+     * by locating the offending token inside the formula text.
+     * @param fileName         logical filename
+     * @param kb               knowledge base
+     * @param f                formula to preprocess
+     * @param formulaStartLine buffer line offset
+     * @param msgs             list to collect error records
+     * @return processed formula set
+     */
+    public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formula f,
+                                                    int formulaStartLine, List<ErrRec> msgs) {
 
-    FormulaPreprocessor fp = SUMOtoTFAform.fp;
-    Set<Formula> processed = fp.preProcess(f, false, kb);
+        FormulaPreprocessor fp = SUMOtoTFAform.fp;
+        Set<Formula> processed = fp.preProcess(f, false, kb);
 
-    // Retrieve the original text of the formula to locate offending tokens
-    String formulaText = f.getFormula();
-    if (formulaText == null) formulaText = "";
+        // Retrieve the original text of the formula to locate offending tokens
+        String formulaText = f.getFormula();
+        if (formulaText == null) formulaText = "";
 
-    // Helper function to extract the token after "relation" or before "in formula:"
-    java.util.function.Function<String, String> extractToken = (String msg) -> {
-        // Try to grab token after "relation" first
-        Matcher m = Pattern.compile("relation\\s+([\\w-]+)").matcher(msg);
-        if (m.find()) return m.group(1);
-        // Try to grab something before "in formula"
-        m = Pattern.compile("([\\w-]+)\\s+in formula").matcher(msg);
-        if (m.find()) return m.group(1);
-        // Fallback: find first bareword in parentheses
-        m = Pattern.compile("\\(([\\w-]+)\\s").matcher(msg);
-        if (m.find()) return m.group(1);
-        return null;
-    };
-    
-    // Handle Errors
-    if (f.errors != null) {
-        for (String er : f.errors) {
-            if (debug) System.out.println("CheckFormulaPreprocess(): addingError = " + er);
-            String token = extractToken.apply(er);
-            int[] rel = {-1, -1};
-            if (token != null)
-                rel = findLineInFormula(formulaText, token);
-            if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + rel);
-            int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1)
-                        + ((rel[0] >= 0) ? rel[0] : 0);
-            int absCol = (rel[1] >= 0) ? rel[1] : 1;
+        // Helper function to extract the token after "relation" or before "in formula:"
+        java.util.function.Function<String, String> extractToken = (String msg) -> {
+            // Try to grab token after "relation" first
+            Matcher m = Pattern.compile("relation\\s+([\\w-]+)").matcher(msg);
+            if (m.find()) return m.group(1);
+            // Try to grab something before "in formula"
+            m = Pattern.compile("([\\w-]+)\\s+in formula").matcher(msg);
+            if (m.find()) return m.group(1);
+            // Fallback: find first bareword in parentheses
+            m = Pattern.compile("\\(([\\w-]+)\\s").matcher(msg);
+            if (m.find()) return m.group(1);
+            return null;
+        };
+        
+        // Handle Errors
+        if (f.errors != null) {
+            for (String er : f.errors) {
+                if (debug) System.out.println("CheckFormulaPreprocess(): addingError = " + er);
+                String token = extractToken.apply(er);
+                int[] rel = {-1, -1};
+                if (token != null)
+                    rel = findLineInFormula(formulaText, token);
+                if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + rel);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
+                            + ((rel[0] >= 0) ? rel[0] : 0);
+                int absCol = (rel[1] >= 0) ? rel[1] : 1;
 
-            msgs.add(new ErrRec(
-                0, fileName,
-                absLine, absCol, absCol + (token != null ? token.length() : 1),
-                er
-            ));
+                msgs.add(new ErrRec(
+                    0, fileName,
+                    absLine, absCol, absCol + (token != null ? token.length() : 1),
+                    er
+                ));
+            }
         }
-    }
 
-    // Handle Warnings
-    if (f.warnings != null) {
-        for (String w : f.warnings) {
-            if (debug) System.out.println("CheckFormulaPreprocess(): addingWarning = " + w);
-            String token = extractToken.apply(w);
-            int[] rel = {-1, -1};
-            if (token != null)
-                rel = findLineInFormula(formulaText, token);
+        // Handle Warnings
+        if (f.warnings != null) {
+            for (String w : f.warnings) {
+                if (debug) System.out.println("CheckFormulaPreprocess(): addingWarning = " + w);
+                String token = extractToken.apply(w);
+                int[] rel = {-1, -1};
+                if (token != null)
+                    rel = findLineInFormula(formulaText, token);
 
-            int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1)
-                        + ((rel[0] >= 0) ? rel[0] : 0);
-            int absCol = (rel[1] >= 0) ? rel[1] : 1;
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
+                            + ((rel[0] >= 0) ? rel[0] : 0);
+                int absCol = (rel[1] >= 0) ? rel[1] : 1;
 
-            msgs.add(new ErrRec(
-                1, fileName,
-                absLine, absCol, absCol + (token != null ? token.length() : 1),
-                w
-            ));
+                msgs.add(new ErrRec(
+                    1, fileName,
+                    absLine, absCol, absCol + (token != null ? token.length() : 1),
+                    w
+                ));
+            }
         }
+
+        return processed;
     }
-
-    return processed;
-}
-
 
     /** ***************************************************************
      * Check for translation errors after SUMO → TFA conversion.
@@ -394,10 +395,10 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
      * @param processed        processed formulas
      * @param msgs             list to collect error records
      */
-    private static void CheckSUMOtoTFAformErrors(String fileName, Formula f, int formulaStartLine, Set<Formula> processed, List<ErrRec> msgs) {
+    public static void CheckSUMOtoTFAformErrors(String fileName, Formula f, int formulaStartLine, Set<Formula> processed, List<ErrRec> msgs) {
 
         if (SUMOtoTFAform.errors != null && !SUMOtoTFAform.errors.isEmpty() && processed.size() == 1) {
-            int line = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1);
+            int line = (formulaStartLine > 0 ? formulaStartLine : f.startLine);
             for (String er : SUMOtoTFAform.errors)
                 msgs.add(new ErrRec(0, fileName, line, 1, 2, er));
             SUMOtoTFAform.errors.clear();
@@ -416,7 +417,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
      * @param formulaText      raw text of the formula
      * @param msgs             list to collect error records
      */
-    private static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
+    public static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
 
         if (!KButilities.isValidFormula(kb, formulaText)) {
             if (formulaText == null)
@@ -432,7 +433,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
                 }
                 int[] rel = {-1, -1};
                 if (token != null) rel = findLineInFormula(formulaText, token);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + ((rel[0] >= 0) ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + ((rel[0] >= 0) ? rel[0] : 0);
                 int absCol = (rel[1] >= 0) ? rel[1] : 1;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : formulaText.trim();
@@ -460,7 +461,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             boolean coveredByLocal = localIndividuals.contains(t) || localSubclasses.contains(t);
             if (!coveredByLocal && Diagnostics.termNotBelowEntity(t, kb)) {
                 int[] rel = findLineInFormula(formulaText, t);
-                int absLine = (formulaStartLine > 0 ? formulaStartLine - 1 : f.startLine - 1) + (rel[0] >= 0 ? rel[0] : 0);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine) + (rel[0] >= 0 ? rel[0] : 0);
                 int absCol = rel[1] >= 0 ? rel[1] : 0;
                 String[] lines = formulaText.split("\n", -1);
                 String offendingLine = (rel[0] >= 0 && rel[0] < lines.length) ? lines[rel[0]].trim() : "";
@@ -499,7 +500,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             for (String er : sv.errors) {
                 int line = getLineNum(er);
                 int offset  = getOffset(er);
-                msgs.add(new ErrRec(1, fileName, (line == 0 ? line : line - 1), Math.max(offset, 1), Math.max(offset, 1) + 1, er));
+                msgs.add(new ErrRec(1, fileName, (line == 0 ? line : line), Math.max(offset, 1), Math.max(offset, 1) + 1, er));
             }
         }
     }
@@ -667,12 +668,12 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
             for (String er : kif.errorSet) {
                 int line = getLineNum(er);
                 int col  = getOffset(er);
-                msgs.add(new ErrRec(0, fileName, line == 0 ? line : line - 1, Math.max(col, 1), Math.max(col, 1) + 1, er));
+                msgs.add(new ErrRec(0, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, er));
             }
             for (String warn : kif.warningSet) {
                 int line = getLineNum(warn);
                 int col  = getOffset(warn);
-                msgs.add(new ErrRec(1, fileName, line == 0 ? line : line - 1, Math.max(col, 1), Math.max(col, 1) + 1, warn));
+                msgs.add(new ErrRec(1, fileName, line == 0 ? line : line, Math.max(col, 1), Math.max(col, 1) + 1, warn));
             }
         }
         return retVal;
