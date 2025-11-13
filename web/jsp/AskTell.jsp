@@ -516,13 +516,15 @@
                     } else {
                         setVampMode(vampireMode);
                         com.articulate.sigma.tp.Vampire vRun = kb.askVampireHOL(testPath, tmo, maxAns);
+
                         // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
                         String pseudoQuery = "TPTP file: " + new File(testPath).getName();
-                        // Parse + render just like the other flows
 
                         List<String> cleaned = TPTPutil.clearProofFile(vRun.output);
+
                         // Vampire version 4.8→5.0 reordering…
                         List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+
                         normalized = THFutil.preprocessTHFProof(normalized);
 
                         tpp.parseProofOutput(normalized, pseudoQuery, kb, vRun.qlist);

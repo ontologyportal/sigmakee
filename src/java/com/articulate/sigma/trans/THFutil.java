@@ -6,11 +6,31 @@ import java.util.List;
 public class THFutil {
 
 
+    public static List<String> preprocessTHFProof(List<String> lines) {
+        List<String> out = new ArrayList<>(lines.size());
+        boolean inProof = false;
+
+        lines = fixNegatedQuantifiers(lines);
+
+        for (String line : lines) {
+            if (line.contains("SZS output start")) { inProof = true;  out.add(line); continue; }
+            if (line.contains("SZS output end"))   { inProof = false; out.add(line); continue; }
+            if (!inProof) { out.add(line); continue; }
+
+            String work = line;
+            if (work.matches("^\\d+\\..*")) { int p = work.indexOf('.'); work = work.substring(p + 1).trim(); } // strips index number (.1) if exists
+
+            if (work.trim().startsWith("thf(") || work.trim().startsWith("tff(")) {
+                work = normalizeTHFForFOFVisitor(work);
+            }
+            out.add(work);
+        }
+        return out;
+    }
+
     /**
      * Wraps THF/TFF negated quantifiers so that "~ ? [..] : ..." becomes "~( ? [..] : ... )".
      * This matches the ANTLR parser's rule thf_unary_formula := '~' '(' thf_logic_formula ')'.
-     *
-     * You should run this BEFORE feeding lines to TPTPVisitor.parseString().
      */
     public static List<String> fixNegatedQuantifiers(List<String> lines) {
         List<String> out = new ArrayList<>(lines.size());
@@ -142,27 +162,6 @@ public class THFutil {
         return i;
     }
 
-    public static List<String> preprocessTHFProof(List<String> lines) {
-        List<String> out = new ArrayList<>(lines.size());
-        boolean inProof = false;
-
-        lines = fixNegatedQuantifiers(lines);
-
-        for (String line : lines) {
-            if (line.contains("SZS output start")) { inProof = true;  out.add(line); continue; }
-            if (line.contains("SZS output end"))   { inProof = false; out.add(line); continue; }
-            if (!inProof) { out.add(line); continue; }
-
-            String work = line;
-            if (work.matches("^\\d+\\..*")) { int p = work.indexOf('.'); work = work.substring(p + 1).trim(); }
-
-            if (work.trim().startsWith("thf(") || work.trim().startsWith("tff(")) {
-                work = normalizeTHFForFOFVisitor(work);  // now includes negation rewrite
-            }
-            out.add(work);
-        }
-        return out;
-    }
 
     private static String normalizeTHFForFOFVisitor(String s){
         int funIdx=s.indexOf("thf("); if(funIdx<0) return s;
@@ -182,7 +181,6 @@ public class THFutil {
     }
 
 // ~! [..] : Φ  ->  ? [..] : ~(Φ)
-// ~? [..] : Φ  ->  ! [..] : ~(Φ)
 // whitespace tolerant: "~ ! ["
     private static String rewriteNegatedBinders(String s) {
         StringBuilder out = new StringBuilder(s.length());
@@ -231,7 +229,7 @@ public class THFutil {
     }
 
     // ![X,Y: w] : Φ  ->  ![X]:(![Y]:(Φ))   and drops ": w" types.
-// Also supports matrices NOT wrapped in parentheses after ':'.
+    // Also supports matrices NOT wrapped in parentheses after ':'.
     private static String expandAndUntypeBinders(String s) {
         StringBuilder out = new StringBuilder(s.length());
         for (int i = 0; i < s.length(); ) {
