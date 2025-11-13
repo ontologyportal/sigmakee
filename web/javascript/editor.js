@@ -1,6 +1,8 @@
 // ======================================================
 // 1. GLOBAL VARIABLES & UTILITIES
 // ======================================================
+const debug = true;
+
 const fileInput = document.getElementById('kifFile');
 
 let codeEditors = [];
@@ -469,6 +471,9 @@ async function check() {
   if (!text) return alert("Nothing to check.");
   const fileName = getActiveFileName();
   const { errors = [], errorMask = [], message } = await postToServlet("check", { fileName, code: text });
+  if (debug) for (e in errors) {
+    console.log(errors);
+  }
   renderErrorBox(errors, message);
   highlightErrors(errors, errorMask);
 }

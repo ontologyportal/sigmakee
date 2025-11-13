@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
  */
 public class KifFileChecker {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
 
     /** ***************************************************************
      * Print CLI usage information.
@@ -142,7 +142,6 @@ public class KifFileChecker {
             CheckOrphanVars(fileName, f, formulaText, formulaStartLine, msgs);
             CheckUnquantInConsequent(fileName, f, formulaText, formulaStartLine, msgs);
             Set<Formula> processed = CheckFormulaPreprocess(fileName, kb, f, formulaStartLine, msgs);
-            System.out.println(processed);
             CheckSUMOtoTFAformErrors(fileName, f, formulaStartLine, processed, msgs);
             CheckIsValidFormula(fileName, f, formulaStartLine, kb, formulaText, msgs);
             CheckTermsBelowEntity(fileName, f, formulaStartLine, formulaText, kb, localIndividuals, localSubclasses, msgs);
@@ -308,86 +307,85 @@ public class KifFileChecker {
         }
     }
 
-/** ***************************************************************
- * Run FormulaPreprocessor and record errors/warnings.
- * Computes accurate absolute line/column using findLineInFormula()
- * by locating the offending token inside the formula text.
- * @param fileName         logical filename
- * @param kb               knowledge base
- * @param f                formula to preprocess
- * @param formulaStartLine buffer line offset
- * @param msgs             list to collect error records
- * @return processed formula set
- */
-public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formula f,
-                                                  int formulaStartLine, List<ErrRec> msgs) {
+    /** ***************************************************************
+     * Run FormulaPreprocessor and record errors/warnings.
+     * Computes accurate absolute line/column using findLineInFormula()
+     * by locating the offending token inside the formula text.
+     * @param fileName         logical filename
+     * @param kb               knowledge base
+     * @param f                formula to preprocess
+     * @param formulaStartLine buffer line offset
+     * @param msgs             list to collect error records
+     * @return processed formula set
+     */
+    public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formula f,
+                                                    int formulaStartLine, List<ErrRec> msgs) {
 
-    FormulaPreprocessor fp = SUMOtoTFAform.fp;
-    Set<Formula> processed = fp.preProcess(f, false, kb);
+        FormulaPreprocessor fp = SUMOtoTFAform.fp;
+        Set<Formula> processed = fp.preProcess(f, false, kb);
 
-    // Retrieve the original text of the formula to locate offending tokens
-    String formulaText = f.getFormula();
-    if (formulaText == null) formulaText = "";
+        // Retrieve the original text of the formula to locate offending tokens
+        String formulaText = f.getFormula();
+        if (formulaText == null) formulaText = "";
 
-    // Helper function to extract the token after "relation" or before "in formula:"
-    java.util.function.Function<String, String> extractToken = (String msg) -> {
-        // Try to grab token after "relation" first
-        Matcher m = Pattern.compile("relation\\s+([\\w-]+)").matcher(msg);
-        if (m.find()) return m.group(1);
-        // Try to grab something before "in formula"
-        m = Pattern.compile("([\\w-]+)\\s+in formula").matcher(msg);
-        if (m.find()) return m.group(1);
-        // Fallback: find first bareword in parentheses
-        m = Pattern.compile("\\(([\\w-]+)\\s").matcher(msg);
-        if (m.find()) return m.group(1);
-        return null;
-    };
-    
-    // Handle Errors
-    if (f.errors != null) {
-        for (String er : f.errors) {
-            if (debug) System.out.println("CheckFormulaPreprocess(): addingError = " + er);
-            String token = extractToken.apply(er);
-            int[] rel = {-1, -1};
-            if (token != null)
-                rel = findLineInFormula(formulaText, token);
-            if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + rel);
-            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
-                        + ((rel[0] >= 0) ? rel[0] : 0);
-            int absCol = (rel[1] >= 0) ? rel[1] : 1;
+        // Helper function to extract the token after "relation" or before "in formula:"
+        java.util.function.Function<String, String> extractToken = (String msg) -> {
+            // Try to grab token after "relation" first
+            Matcher m = Pattern.compile("relation\\s+([\\w-]+)").matcher(msg);
+            if (m.find()) return m.group(1);
+            // Try to grab something before "in formula"
+            m = Pattern.compile("([\\w-]+)\\s+in formula").matcher(msg);
+            if (m.find()) return m.group(1);
+            // Fallback: find first bareword in parentheses
+            m = Pattern.compile("\\(([\\w-]+)\\s").matcher(msg);
+            if (m.find()) return m.group(1);
+            return null;
+        };
+        
+        // Handle Errors
+        if (f.errors != null) {
+            for (String er : f.errors) {
+                if (debug) System.out.println("CheckFormulaPreprocess(): addingError = " + er);
+                String token = extractToken.apply(er);
+                int[] rel = {-1, -1};
+                if (token != null)
+                    rel = findLineInFormula(formulaText, token);
+                if (debug) System.out.println("CheckFormulaPreprocess(): rel = " + rel);
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
+                            + ((rel[0] >= 0) ? rel[0] : 0);
+                int absCol = (rel[1] >= 0) ? rel[1] : 1;
 
-            msgs.add(new ErrRec(
-                0, fileName,
-                absLine, absCol, absCol + (token != null ? token.length() : 1),
-                er
-            ));
+                msgs.add(new ErrRec(
+                    0, fileName,
+                    absLine, absCol, absCol + (token != null ? token.length() : 1),
+                    er
+                ));
+            }
         }
-    }
 
-    // Handle Warnings
-    if (f.warnings != null) {
-        for (String w : f.warnings) {
-            if (debug) System.out.println("CheckFormulaPreprocess(): addingWarning = " + w);
-            String token = extractToken.apply(w);
-            int[] rel = {-1, -1};
-            if (token != null)
-                rel = findLineInFormula(formulaText, token);
+        // Handle Warnings
+        if (f.warnings != null) {
+            for (String w : f.warnings) {
+                if (debug) System.out.println("CheckFormulaPreprocess(): addingWarning = " + w);
+                String token = extractToken.apply(w);
+                int[] rel = {-1, -1};
+                if (token != null)
+                    rel = findLineInFormula(formulaText, token);
 
-            int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
-                        + ((rel[0] >= 0) ? rel[0] : 0);
-            int absCol = (rel[1] >= 0) ? rel[1] : 1;
+                int absLine = (formulaStartLine > 0 ? formulaStartLine : f.startLine)
+                            + ((rel[0] >= 0) ? rel[0] : 0);
+                int absCol = (rel[1] >= 0) ? rel[1] : 1;
 
-            msgs.add(new ErrRec(
-                1, fileName,
-                absLine, absCol, absCol + (token != null ? token.length() : 1),
-                w
-            ));
+                msgs.add(new ErrRec(
+                    1, fileName,
+                    absLine, absCol, absCol + (token != null ? token.length() : 1),
+                    w
+                ));
+            }
         }
+
+        return processed;
     }
-
-    return processed;
-}
-
 
     /** ***************************************************************
      * Check for translation errors after SUMO → TFA conversion.
@@ -397,7 +395,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
      * @param processed        processed formulas
      * @param msgs             list to collect error records
      */
-    private static void CheckSUMOtoTFAformErrors(String fileName, Formula f, int formulaStartLine, Set<Formula> processed, List<ErrRec> msgs) {
+    public static void CheckSUMOtoTFAformErrors(String fileName, Formula f, int formulaStartLine, Set<Formula> processed, List<ErrRec> msgs) {
 
         if (SUMOtoTFAform.errors != null && !SUMOtoTFAform.errors.isEmpty() && processed.size() == 1) {
             int line = (formulaStartLine > 0 ? formulaStartLine : f.startLine);
@@ -419,7 +417,7 @@ public static Set<Formula> CheckFormulaPreprocess(String fileName, KB kb, Formul
      * @param formulaText      raw text of the formula
      * @param msgs             list to collect error records
      */
-    private static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
+    public static void CheckIsValidFormula(String fileName, Formula f, int formulaStartLine, KB kb, String formulaText, List<ErrRec> msgs) {
 
         if (!KButilities.isValidFormula(kb, formulaText)) {
             if (formulaText == null)
