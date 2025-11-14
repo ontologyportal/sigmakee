@@ -76,6 +76,8 @@
                 // Still keep Vampire mode radios tied to Vampire on/off
                 const vampireOn = vamp && vamp.checked && !vamp.disabled;
                 [casc, avatar, custom].forEach(el => { if (el) el.disabled = !vampireOn; });
+
+                custom.checked = false; custom.disabled = true;
                 return; // THF overrides the rest of the logic
             }
 
