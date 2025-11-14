@@ -517,7 +517,7 @@
                         out.println("<span style='color:#b00'>Only Vampire is supported for .thf tests.</span><br>");
                     } else {
                         setVampMode(vampireMode);
-                        com.articulate.sigma.tp.Vampire vRun = kb.askVampireHOL(testPath, tmo, maxAns);
+                        com.articulate.sigma.tp.Vampire vRun = kb.askVampireTHF(testPath, tmo, maxAns);
 
                         // Provide a friendly “query label” (TPTP problems don’t have a KIF query string)
                         String pseudoQuery = "TPTP file: " + new File(testPath).getName();
@@ -561,10 +561,21 @@
                     out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     if (!StringUtil.emptyString(tpp.status)) out.println("Status: " + tpp.status);
                 } else if ("Vampire".equals(inferenceEngine)) {
+
+                    Formula f = new Formula();
+                    f.read(stmt);
                     setVampMode(vampireMode);
-                    vampire = Boolean.TRUE.equals(modensPonens)
-                            ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
-                            : kb.askVampire(stmt, timeout, maxAnswers);
+                    boolean isHOL = f.isHigherOrder(kb);
+                    if (isHOL){ // Higher-Order Formula
+                        System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
+
+                    }else { // First-Order Formula
+                        System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
+                        vampire = Boolean.TRUE.equals(modensPonens)
+                                ? kb.askVampireModensPonens(stmt, timeout, maxAnswers)
+                                : kb.askVampire(stmt, timeout, maxAnswers);
+                    }
+
                     if (vampire == null || vampire.output == null) out.println("<font color='red'>Error. No response from Vampire.</font>");
                     else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
@@ -579,6 +590,8 @@
 
                         out.println(HTMLformatter.formatTPTP3ProofResult(tpp,stmt,lineHtml,kbName,language));
                     }
+
+
                 } else if ("LEO".equals(inferenceEngine)) {
                     kb.leo = kb.askLeo(stmt,timeout,maxAnswers);
                     if (kb.leo == null || kb.leo.output == null) out.println("<font color='red'>Error. No response from LEO-III.</font>");

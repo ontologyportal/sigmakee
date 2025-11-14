@@ -1971,7 +1971,6 @@ public class KB implements Serializable {
      * @param maxAnswers
      * @return
      */
-
     public Vampire askVampireModensPonens(String suoKifFormula, int timeout, int maxAnswers){
 
         // STEP 1
@@ -2015,7 +2014,17 @@ public class KB implements Serializable {
     }
 
 
-
+    /**
+     * Executes a Vampire theorem prover query on a given TPTP problem file.
+     * This method validates included files in TPTP format, processes the result
+     * by running multiple configurations of Vampire, and optionally applies
+     * modus ponens reasoning or drops one-premise formulas.
+     *
+     * @param test_path The file path to the TPTP problem file to be processed.
+     * @param timeout The maximum amount of time (in seconds) allowed for the inference process.
+     * @param maxAnswers The maximum number of answers to retrieve from the theorem prover.
+     * @return A Vampire object containing the results of the theorem prover execution, including output and proofs.
+     */
     public Vampire askVampireTPTP(String test_path, int timeout, int maxAnswers){
 
         String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
@@ -2087,7 +2096,18 @@ public class KB implements Serializable {
         return vampire;
     }
 
-    public Vampire askVampireHOL(String test_path, int timeout, int maxAnswers) {
+
+    /**
+     * Executes the Vampire automated theorem prover with higher-order logic (HOL) mode
+     * on a given THF problem file. This method processes the includes
+     * and runs the Vampire prover with the specified parameters.
+     *
+     * @param test_path The file path of the TPTP problem to be processed.
+     * @param timeout The maximum amount of time (in seconds) that Vampire is allowed to run.
+     * @param maxAnswers The maximum number of answers that Vampire should produce (not currently used in logic).
+     * @return A Vampire instance populated with the results of the proof attempt.
+     */
+    public Vampire askVampireTHF(String test_path, int timeout, int maxAnswers) {
 
         String testDir = KBmanager.getMgr().getPref("inferenceTestDir");
         String includesPath = testDir + File.separator + "includes";
@@ -2129,7 +2149,7 @@ public class KB implements Serializable {
         try{
             vampire.runCustom(test, timeout, cmds);
         } catch (Exception e){
-            System.out.println("-- ERROR KB.askVampireHOL runCustom: "+e.getMessage());
+            System.out.println("-- ERROR KB.askVampireTHF runCustom: "+e.getMessage());
         }
 
         // STEP 2 - Second TPTP pass (modus Ponens)
