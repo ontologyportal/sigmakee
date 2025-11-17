@@ -568,6 +568,11 @@
                     boolean isHOL = f.isHigherOrder(kb);
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
+                        vampire = kb.askVampireHOL(stmt, timeout, maxAnswers);
+                        List<String> cleaned = TPTPutil.clearProofFile(vampire.output);
+                        // Vampire version 4.8→5.0 reordering…
+                        List<String> normalized = TPTP3ProofProcessor.reorderVampire4_8(cleaned);
+                        vampire.output = THFutil.preprocessTHFProof(normalized);
 
                     }else { // First-Order Formula
                         System.out.println(" -- First Order Formula Detected - Attempring to run normal Vampire");
@@ -576,8 +581,9 @@
                                 : kb.askVampire(stmt, timeout, maxAnswers);
                     }
 
-                    if (vampire == null || vampire.output == null) out.println("<font color='red'>Error. No response from Vampire.</font>");
-                    else {
+                    if (vampire == null || vampire.output == null){
+                        out.println("<font color='red'>Error. No response from Vampire.</font>");
+                    } else {
                         com.articulate.sigma.trans.TPTP3ProofProcessor tpp = new com.articulate.sigma.trans.TPTP3ProofProcessor();
                         tpp.parseProofOutput(vampire.output, stmt, kb, vampire.qlist);
                         publishGraph(tpp, inferenceEngine, vampireMode, request, application, out);

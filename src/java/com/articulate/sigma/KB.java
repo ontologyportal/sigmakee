@@ -71,7 +71,9 @@ import com.google.common.collect.Sets;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -2055,7 +2057,7 @@ public class KB implements Serializable {
             cmds.add(includesPath);
         }
 
-        // STEP 1 - First TPTP pass (main proof)
+        // First TPTP pass (main proof)
         Vampire vampire = new Vampire();
 
         try{
@@ -2064,7 +2066,7 @@ public class KB implements Serializable {
             System.out.println("-- ERROR KB.askVampireTPTP runCustom: "+e.getMessage());
         }
 
-        // STEP 2 - Second TPTP pass (modus Ponens)
+        // Second TPTP pass (modus Ponens)
         if (modensPonens) {
             List<String> cmds_modus_ponens = Arrays.asList(
                     "--input_syntax","tptp",
@@ -2084,15 +2086,13 @@ public class KB implements Serializable {
                 System.out.println("-- ERROR KB.askVampireModusPonens: "+e.getMessage());
             }
 
-            // STEP 3 - Drop One Premise Formulas
+            // Drop One Premise Formulas
             if (dropOnePremiseFormulas) {
                 vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
             }
 
             vampire = vampire_pomens;
         }
-
-        // STEP 6
         return vampire;
     }
 
@@ -2131,64 +2131,204 @@ public class KB implements Serializable {
         ));
 
         // This HOL Vampire version (4.8) does not support "-qa plain"
-//        if (Vampire.askQuestion){
-//            cmds.add("-qa");
-//            cmds.add("plain");
-//        }
-
         if (!includes.isEmpty()){
             cmds.add("--include");
             cmds.add(includesPath);
         }
 
-        // STEP 1 - First TPTP pass (main proof)
         Vampire vampire = new Vampire();
-
         vampire.logic = Vampire.Logic.HOL;
-
         try{
             vampire.runCustom(test, timeout, cmds);
         } catch (Exception e){
             System.out.println("-- ERROR KB.askVampireTHF runCustom: "+e.getMessage());
         }
-
-        // STEP 2 - Second TPTP pass (modus Ponens)
-//        if (modensPonens) {
-//            List<String> cmds_modus_ponens = Arrays.asList(
-//                    "--input_syntax", "tptp",
-//                    "--proof", "tptp",                  // <-- TSTP-style proof lines
-//                    "--output_axiom_names", "on",
-//                    "--mode", "portfolio",
-//                    "--schedule", "snake_slh",
-//                    "-av", "off", "-nm", "0", "-fsr", "off", "-fd", "off", "-bd", "off",
-//                    "-fde", "none", "-updr", "off"
-//            );
-//            List<TPTPFormula> proof = TPTPutil.processProofLines(vampire.output);
-//            List<TPTPFormula> authored_lines = TPTPutil.writeMinTPTP(proof);
-//            Vampire vampire_pomens = new Vampire();
-//            vampire_pomens.logic = Vampire.Logic.HOL;
-//            File kb = new File("min-problem.tptp");
-//            try {
-//                vampire_pomens.runCustom(kb, timeout, cmds_modus_ponens);
-//                vampire_pomens.output = TPTPutil.clearProofFile(vampire_pomens.output);
-//            } catch (Exception e) {
-//                System.out.println("-- ERROR KB.askVampireModusPonens: " + e.getMessage());
-//            }
-//
-//            // STEP 3 - Drop One Premise Formulas
-//            if (dropOnePremiseFormulas) {
-//                vampire_pomens.output = TPTPutil.fixNegatedQuantifiers(vampire_pomens.output);
-//                vampire_pomens.output = TPTPutil.dropOnePremiseFormulasFOF(vampire_pomens.output);
-//            }
-//
-//            vampire = vampire_pomens;
-//        }
         return vampire;
+    }
+
+    /**
+     * Ask Vampire HOL using the existing <kbName>.thf axioms.
+     * Input  : SUO-KIF query string (stmt).
+     * Output : Vampire object with HOL proof output.
+     */
+    public Vampire askVampireHOL(String stmt, int timeout, int maxAnswers) {
+
+        KBmanager mgr = KBmanager.getMgr();
+        Vampire v = new Vampire();
+
+        try {
+            String kbDir = mgr.getPref("kbDir");
+            String sep   = File.separator;
+
+            if (debug) {
+                System.out.println("KB.askVampireHOL(): kbDir: " + kbDir);
+                System.out.println("KB.askVampireHOL(): stmt: " + stmt);
+                System.out.println("KB.askVampireHOL(): timeout: " + timeout + " maxAnswers: " + maxAnswers);
+            }
+
+            // 1. Locate the base THF axioms file: <kbName>.thf (e.g., SUMO.thf)
+            String kbThfFile = this.name + ".thf";
+            String kbThfPath = kbDir + sep + kbThfFile;
+            File thfAxioms = new File(kbThfPath);
+            if (!thfAxioms.exists()) {
+                System.out.println("KB.askVampireHOL(): no such file: " + kbThfPath + ". Creating it.");
+                // Generate SUMO.thf using the modal THF exporter
+                THFnew.transModalTHF(this);
+            }
+
+            // 2. Create a temporary THF problem file for this specific query.
+            String problemPath = kbDir + sep + "hol_query_" + System.currentTimeMillis() + ".thf";
+
+            if (debug)
+                System.out.println("KB.askVampireHOL(): Problem THF file: " + problemPath);
+
+            // 1) Copy SUMO.thf to the problem file in one shot
+            Path source = Paths.get(kbThfPath);
+            Path target = Paths.get(problemPath);
+            Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+            if (debug)
+                System.out.println("KB.askVampireHOL(): Copied axioms to problem file.");
+
+            try (BufferedWriter out = new BufferedWriter(new FileWriter(problemPath, true))) {
+
+                out.newLine();
+                out.write("% --------------------");
+                out.newLine();
+                out.write("% User HOL conjecture");
+                out.newLine();
+                out.write("% --------------------");
+                out.newLine();
+
+                // 2b. Translate the SUO-KIF query (stmt) into THF using Modals + THFnew.
+
+                // Original SUO-KIF query
+                Formula f = new Formula();
+                f.read(stmt);
+
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
+
+                // Expand modal structure and insert world arguments (?W1, ?W2, …)
+                Formula modalized = Modals.processModals(f, this);
+
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): Modalized Formula: " + modalized.getFormula());
+
+                // Preprocess (Skolemization / simplifications / etc.)
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                // second argument "true" indicates this is a query/conjecture
+                Set<Formula> processed = fp.preProcess(modalized, true, this);
+
+                if (debug) {
+                    System.out.println("KB.askVampireHOL(): Number of preprocessed formulas: " + processed.size());
+                    for (Formula pfDbg : processed)
+                        System.out.println("KB.askVampireHOL(): Preprocessed formula: " + pfDbg.getFormula());
+                }
+
+                // Build the type map similarly to THFnew.oneTrans(...)
+                modalized.varTypeCache.clear();  // force recomputation of types
+                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(modalized, this);
+                typeMap.putAll(modalized.varTypeCache);
+
+                if (debug)
+                    System.out.println("KB.askVampireHOL(): Initial typeMap: " + typeMap);
+
+                // Add a fresh world variable and mark it as type "World"
+                String worldVar = THFnew.makeWorldVar(this, f);
+                Set<String> wTypes = new HashSet<>();
+                wTypes.add("World");
+                typeMap.put(worldVar, wTypes);
+
+                if (debug) {
+                    System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
+                    System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
+                }
+
+                int conjIndex = 0;
+
+                /*
+                 * For each preprocessed query formula:
+                 * 1 - Fix variable-arity predicate names after adding worlds.
+                 * 2 - If it’s an (instance ?X Class) fact, make it hold in all worlds.
+                 * 3 - Translate it to THF using the same logic as axioms.
+                 * 4 - Emit it as a thf(...,conjecture,...) clause in the query file.
+                 */
+                for (Formula pf : processed) {
+
+                    if (debug)
+                        System.out.println("KB.askVampireHOL(): Processing pf: " + pf.getFormula());
+
+                    // 1) Handle variable-arity predicates
+                    if (THFnew.variableArity(this, pf.car())) {
+                        if (debug)
+                            System.out.println("KB.askVampireHOL(): variableArity predicate: " + pf.car() +
+                                    " – adjusting arity.");
+                        pf = THFnew.adjustArity(this, pf);   // same hack as in oneTrans()
+                        if (debug)
+                            System.out.println("KB.askVampireHOL(): After adjustArity: " + pf.getFormula());
+                    }
+
+                    // 2) Special case: (instance ?X Class) -> forall worldVar (instance ?X Class worldVar)
+                    if (pf.getFormula().startsWith("(instance ") &&
+                            pf.getFormula().endsWith("Class)")) {
+
+                        if (debug)
+                            System.out.println("KB.askVampireHOL(): instance ?X Class pattern detected.");
+
+                        pf.read("(forall (" + worldVar + ") " +
+                                pf.getFormula().substring(0, pf.getFormula().length() - 1) +
+                                " " + worldVar + "))");
+
+                        Set<String> types = new HashSet<>();
+                        types.add("World");
+                        pf.varTypeCache.put(worldVar, types);
+
+                        if (debug)
+                            System.out.println("KB.askVampireHOL(): After wrapping with forall worldVar: " +
+                                    pf.getFormula());
+                    }
+
+                    // 3) Convert the (possibly updated) Formula to THF (query = true).
+                    String thfQuery = THFnew.process(new Formula(pf), typeMap, true);
+
+                    if (debug)
+                        System.out.println("KB.askVampireHOL(): THF query: " + thfQuery);
+
+                    // 4) Emit as a TPTP THF conjecture.
+                    String conjName = "user_conj_" + (conjIndex++);
+                    String thfLine = "thf(" + conjName + ",conjecture," + thfQuery + ").\n";
+                    out.write(thfLine);
+
+                    if (debug)
+                        System.out.println("KB.askVampireHOL(): Wrote conjecture: " + thfLine.trim());
+                }
+            }
+
+            if (debug)
+                System.out.println("KB.askVampireHOL(): Calling askVampireTHF() with: " + problemPath);
+
+            // Reuse existing THF runner (must call Vampire HOL executable)
+            v = askVampireTHF(problemPath, timeout, maxAnswers);
+
+            if (debug && v != null) {
+                System.out.println("KB.askVampireHOL(): askVampireTHF() returned Vampire object.");
+                System.out.println("KB.askVampireHOL(): Vampire output is " +
+                        (v.output == null ? "null" : "non-null"));
+            }
+
+            return v;
+        }
+        catch (Exception e) {
+            System.out.println("KB.askVampireHOL(): Exception: " + e.getMessage());
+            e.printStackTrace();
+            return null;
+        }
     }
 
 
 
-        /***************************************************************
+    /***************************************************************
          * Return a SUMO-formatted proof string
          */
     public String askVampireFormat(String suoKifFormula, int timeout, int maxAnswers) {
