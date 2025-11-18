@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class THFnew {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
     public static int axNum = 0;
 
     /** *************************************************************
