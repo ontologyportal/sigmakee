@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 public class THFnew {
 
-    public static boolean debug = true;
+    public static boolean debug = false;
     public static int axNum = 0;
 
     /** *************************************************************
@@ -159,8 +159,9 @@ public class THFnew {
             if (Character.isDigit(ttype))
                 ttype = StreamTokenizer_s.TT_NUMBER;
             boolean hasArguments = false; // if it's a modal op, don't add the __m suffix
-            if (Modals.regHOLpred.contains(f.getFormula()))
-                hasArguments = true;
+            // Non-modal mode: no special treatment for modal predicates.
+//            if (Modals.regHOLpred.contains(f.getFormula()))
+//                hasArguments = true;
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,hasArguments);
         }
         Formula car = f.carAsFormula();
@@ -208,12 +209,16 @@ public class THFnew {
         if (debug) System.out.println("THFnew.getTHFtype(): typeMap(v): " + v + ":" + typeMap.get(v));
         if (typeMap.get(v) == null)
             return "$i";
+
+        // IMPORTANT: Formula variables should be $o, not $i.
         if (typeMap.get(v).contains("Formula"))
-            return "(w > $o)";
-        if (typeMap.get(v).contains("World"))
-            return "w";
-        if (typeMap.get(v).contains("Modal"))
-            return "m";
+            return "$o";
+//        if (typeMap.get(v).contains("Formula"))
+//            return "(w > $o)";
+//        if (typeMap.get(v).contains("World"))
+//            return "w";
+//        if (typeMap.get(v).contains("Modal"))
+//            return "m";
         return "$i";
     }
 
@@ -320,48 +325,47 @@ public class THFnew {
 
     /** ***************************************************************
      */
-    public static void oneTrans(KB kb, Formula f, Writer bw) throws IOException {
+        public static void oneTrans(KB kb, Formula f, Writer bw) throws IOException {
 
-        bw.write("% original: " + f.getFormula() + "\n" +
-                "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
-        Formula res = Modals.processModals(f, kb);
-        if (res != null) {
-            FormulaPreprocessor fp = new FormulaPreprocessor();
-            Set<Formula> processed = fp.preProcess(res, false, kb);
-            if (debug) System.out.println("THFnew.oneTrans(): res.varTypeCache: " + res.varTypeCache);
-            if (debug) System.out.println("THFnew.oneTrans(): processed: " + processed);
-            if (debug) System.out.println("THFnew.oneTrans(): accreln sig: " + kb.kbCache.getSignature("accreln"));
-            res.varTypeCache.clear(); // clear so it really computes the types instead of just returning the type cache
-            Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(res, kb);
-            if (debug) System.out.println("THFnew.oneTrans(): typeMap(1): " + typeMap);
-            typeMap.putAll(res.varTypeCache);
-            if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
-            Set<String> types = new HashSet<>();
-            types.add("World");
-            String worldVar = makeWorldVar(kb,f);
-            typeMap.put(worldVar,types);
-            if (debug) System.out.println("THFnew.oneTrans(): typeMap(3): " + typeMap);
-            for (Formula fnew : processed) {
-                if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " + variableArity(kb,fnew.car()));
-                if (variableArity(kb,fnew.car()))
-                    fnew = adjustArity(kb,fnew);   // hack to correct arity after adding world argument
-                if (fnew.getFormula().startsWith("(instance ") &&
-                        fnew.getFormula().endsWith("Class)")) {
-                    fnew.read("(forall (" + worldVar + ") " +
-                            fnew.getFormula().substring(0, fnew.getFormula().length() - 1) +
-                            " " + worldVar + "))");
-                    types = new HashSet<>();
-                    types.add("World");
-                    fnew.varTypeCache.put(worldVar,types);  // add the "World" type for the ?W since this is post-processModals()
+            bw.write("% original: " + f.getFormula() + "\n" +
+                    "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+
+            // *** NON-MODAL: do NOT call Modals.processModals ***
+            Formula res = f;
+
+            if (res != null) {
+                FormulaPreprocessor fp = new FormulaPreprocessor();
+                Set<Formula> processed = fp.preProcess(res, false, kb);
+
+                if (debug) System.out.println("THFnew.oneTrans(): res.varTypeCache: " + res.varTypeCache);
+                if (debug) System.out.println("THFnew.oneTrans(): processed: " + processed);
+
+                res.varTypeCache.clear();
+                Map<String, Set<String>> typeMap = fp.findAllTypeRestrictions(res, kb);
+                if (debug) System.out.println("THFnew.oneTrans(): typeMap(1): " + typeMap);
+                typeMap.putAll(res.varTypeCache);
+                if (debug) System.out.println("THFnew.oneTrans(): typeMap(2): " + typeMap);
+
+                // *** NON-MODAL: no worldVar, no World types added ***
+
+                for (Formula fnew : processed) {
+                    if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " +
+                            variableArity(kb,fnew.car()));
+
+                    // you can keep this hack or drop it; it’s harmless without worlds
+                    if (variableArity(kb, fnew.car()))
+                        fnew = adjustArity(kb, fnew);
+
+                    // *** NON-MODAL: no special (instance ?X Class) wrappings ***
+
+                    if (bw == null)
+                        System.out.println(process(new Formula(fnew), typeMap, false));
+                    else
+                        bw.write("thf(ax" + axNum++ + ",axiom," +
+                                process(new Formula(fnew), typeMap, false) + ").\n");
                 }
-                if (bw == null)
-                    System.out.println(process(new Formula(fnew), typeMap, false));
-                else
-                    bw.write("thf(ax" + axNum++ + ",axiom," +
-                            process(new Formula(fnew), typeMap, false) + ").\n");
             }
         }
-    }
 
     /** ***************************************************************
      */
@@ -374,6 +378,43 @@ public class THFnew {
      * Formulas to exclude from the translation
      */
     public static boolean exclude(Formula f, KB kb, Writer out) throws IOException {
+
+        String kif = f.getFormula();
+
+        // --- 1) Drop modal / propositional-attitude schema axioms in non-modal mode ---
+
+        // (domain knows 1 CognitiveAgent), (range knows 2 Formula), etc.
+        List<String> ar0 = f.complexArgumentsToArrayListString(0);
+        if (!ar0.isEmpty()) {
+            String pred = ar0.get(0);
+
+            boolean isDomainLike =
+                    "domain".equals(pred) ||
+                            "range".equals(pred) ||
+                            "domainSubclass".equals(pred) ||
+                            "rangeSubclass".equals(pred) ||
+                            "domainDomainSubclass".equals(pred);
+
+            if (isDomainLike && ar0.size() > 1) {
+                String relName = ar0.get(1);   // the relation being typed, e.g. knows
+
+                // Any schema about these “modal-ish” relations is trouble in THF.
+                if ("knows".equals(relName) ||
+                        "believes".equals(relName) ||
+                        "desires".equals(relName) ||
+                        "modalAttribute".equals(relName)) {
+
+                    out.write("% exclude(): modal schema axiom: " + kif + "\n");
+                    return true;
+                }
+            }
+        }
+
+        // TEMP: drop all modalAttribute axioms to fully disable modal logic
+        if (f.getFormula().contains("modalAttribute")) {
+            out.write("% exclude(): modalAttribute axiom (modal semantics disabled)\n");
+            return true;
+        }
 
         if (debug) System.out.println("exclude(): " + f);
         if (f.getFormula().contains("\"")) {
@@ -394,7 +435,8 @@ public class THFnew {
             }
             for (String s : ar) {
                 if (Formula.listP(s) && exclude(new Formula(s),kb,out)) {
-                    out.write("% excluded(): interior list: " + f);
+                    String kif_var = f.getFormula().replace("\n", " ");
+                    out.write("% excluded(): interior list: " + kif_var);
                     return true;
                 }
                 if (debug) System.out.println("exclude(): arguments: " + ar);
@@ -448,9 +490,9 @@ public class THFnew {
             pred.equals("format") ||
             pred.equals("externalImage") ||
             pred.equals("comment") ||
-            pred.equals("knows") ||  // handled in header
-            pred.equals("believes") ||  //handled in header
-            pred.equals("desires") ||  //handled in header
+//            pred.equals("knows") ||  // handled in header
+//            pred.equals("believes") ||  //handled in header
+//            pred.equals("desires") ||  //handled in header
             //StringUtil.isNumeric(pred) ||
             pred.equals(Formula.EQUAL) ||
             pred.equals("=") ||
@@ -481,12 +523,17 @@ public class THFnew {
                 range = t;
                 first = false;
             }
-            else if (kb.isInstanceOf(t,"Formula") || t.equals("Formula"))
-                sb.append("$o > ");
-            else if (kb.isInstanceOf(t,"World") || t.equals("World"))
-                sb.append("w > ");
-            else
-                sb.append("$i > ");
+//            else if (kb.isInstanceOf(t,"Formula") || t.equals("Formula"))
+//                sb.append("$o > ");
+//            else if (kb.isInstanceOf(t,"World") || t.equals("World"))
+//                sb.append("w > ");
+            else{
+                // Arguments: Formula → $o, everything else → $i
+                if (kb.isInstanceOf(t,"Formula") || "Formula".equals(t))
+                    sb.append("$o > ");
+                else
+                    sb.append("$i > ");
+            }
         }
         //if (sb.length() > 2)
         //    sb.delete(sb.length()-2,sb.length());  // remove final arg separator
@@ -523,31 +570,63 @@ public class THFnew {
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
                 List<String> sig = kb.kbCache.signatures.get(t);
-                if (debug) System.out.println("THFnew.writeTypes(): sig " + sig + " for " + t);
-                if (!Formula.isLogicalOperator(t) && !t.equals("equals")) { // make sure to update the signature
-                    sig.add("World");
+                if (sig == null) {
+                    sig = new ArrayList<>();
+                    sig.add("");                  // dummy 0th element
+                    kb.kbCache.signatures.put(t, sig);
                 }
+
+                // REMOVE this block in non-modal mode:
+//                if (!Formula.isLogicalOperator(t) && !t.equals("equals")) { // make sure to update the signature
+//                    sig.add("World");
+//                }
+
+                // --- FIX: normalize signatures for __n variants ---
+                // Pattern: base__3, base__4, base__6, ...
+                Matcher m = Pattern.compile("(.+)__(\\d+)$").matcher(t);
+                if (m.matches()) {
+                    int suffix = Integer.parseInt(m.group(2));
+                    int desiredSize = suffix + 1;
+
+                    // pad if too short
+                    while (sig.size() < desiredSize) {
+                        sig.add("Entity");             // generic sort -> $i
+                    }
+                    // trim if too long (e.g., leftover "World")
+                    if (sig.size() > desiredSize) {
+                        sig = new ArrayList<>(sig.subList(0, desiredSize));
+                        kb.kbCache.signatures.put(t, sig);
+                    }
+                }
+
+                if (debug)
+                    System.out.println("THFnew.writeTypes(): normalized sig " + sig + " for " + t);
+
+                // (no world-arg injection in non-modal mode)
                 if (t == null) {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
                     continue;
                 }
-                boolean isFunction = false;
-                if (kb.isInstanceOf(t,"Function")) {
-                    out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                            SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : ("); // write signature
-                    isFunction = true;
-                }
-                else
-                    out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                            SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + " : ("); // write signature
+
+                boolean isFunction = kb.isInstanceOf(t,"Function");
+                out.write("thf(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) +
+                        "_tp,type,(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) +
+                        " : (");
+
                 String sigStr = sigString(sig,kb,isFunction);
                 out.write(sigStr + "))).\n");
-                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
+
+                out.write("thf(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) +
+                        "_tp,type,(" +
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) +
+                        " : $i)).\n");
             }
-            else if (Modals.modalAttributes.contains(t))
-                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $m)).\n"); // write relation constant
+//            else if (Modals.modalAttributes.contains(t))
+//                out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
+//                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $m)).\n"); // write relation constant
             else
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true)+ " : $i)).\n");
@@ -568,14 +647,18 @@ public class THFnew {
         String filename = kbDir + sep + kb.name + ".thf";
          try (Writer fstream = new FileWriter(filename);
             Writer out = new BufferedWriter(fstream)) {
-            out.write(Modals.getTHFHeader() + "\n");
+            // DISABLE MODALS
+//            out.write(Modals.getTHFHeader() + "\n");
+             out.write("% Non-modal THF translation (Modals disabled)\n");
+
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
                 if (debug) System.out.println("THFnew.transModalTHF(): " + f);
                 if (!exclude(f,kb,out))
                     oneTrans(kb,f,out);
                 else {
-                    out.write("% excluded: " + f.getFormula() + "\n" +
+                    String kif = f.getFormula().replace("\n", " ");
+                    out.write("% excluded: " + kif + "\n" +
                             "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
             }
