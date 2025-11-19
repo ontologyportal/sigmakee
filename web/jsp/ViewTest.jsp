@@ -10,7 +10,7 @@
         response.setStatus(400); out.print("Bad request"); return;
     }
     String lower = name.toLowerCase();
-    boolean okExt = lower.endsWith(".tq") || lower.endsWith(".tptp") || lower.endsWith(".tff");
+    boolean okExt = lower.endsWith(".tq") || lower.endsWith(".tptp") || lower.endsWith(".tff") || lower.endsWith(".thf");
     if (!okExt) { response.setStatus(400); out.print("Unsupported extension"); return; }
 
     String base = KBmanager.getMgr().getPref("inferenceTestDir");

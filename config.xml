@@ -35,6 +35,7 @@
   <preference name="typePrefix" value="yes" />
   <preference name="userBrowserLimit" value="25" />
   <preference name="vampire" value="/home/theuser/Programs/vampire/build/vampire" />
+  <preference name="vampire_hol" value="/home/theuser/Programs/vampire/build_hol/vampire" />
   <preference name="ollamaHost" value="http://127.0.0.1:11434"/>
 
   <kb name="SUMO" >

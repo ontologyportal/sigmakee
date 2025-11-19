@@ -441,22 +441,22 @@ public class THFnew {
     public static boolean excludeForTypedef(String pred, Writer out) throws IOException {
 
         if (pred.equals("documentation") ||
-            pred.equals("termFormat") ||
-            pred.equals("conventionalShortName") ||
-            pred.equals("externalImage") ||
-            pred.equals("abbreviation") ||
-            pred.equals("format") ||
-            pred.equals("externalImage") ||
-            pred.equals("comment") ||
-            pred.equals("knows") ||  // handled in header
-            pred.equals("believes") ||  //handled in header
-            pred.equals("desires") ||  //handled in header
-            //StringUtil.isNumeric(pred) ||
-            pred.equals(Formula.EQUAL) ||
-            pred.equals("=") ||
-            pred.equals(Formula.LOG_FALSE) ||
-            pred.equals(Formula.LOG_TRUE) ||
-            Formula.isLogicalOperator(pred)) {
+                pred.equals("termFormat") ||
+                pred.equals("conventionalShortName") ||
+                pred.equals("externalImage") ||
+                pred.equals("abbreviation") ||
+                pred.equals("format") ||
+                pred.equals("externalImage") ||
+                pred.equals("comment") ||
+                pred.equals("knows") ||  // handled in header
+                pred.equals("believes") ||  //handled in header
+                pred.equals("desires") ||  //handled in header
+                //StringUtil.isNumeric(pred) ||
+                pred.equals(Formula.EQUAL) ||
+                pred.equals("=") ||
+                pred.equals(Formula.LOG_FALSE) ||
+                pred.equals(Formula.LOG_TRUE) ||
+                Formula.isLogicalOperator(pred)) {
             out.write("% excludeForTypedef(): " + pred + "\n");
             return true;
         }
@@ -566,8 +566,8 @@ public class THFnew {
 
         if (debug) System.out.println("\n\nTHFnew.transModalTHF()");
         String filename = kbDir + sep + kb.name + ".thf";
-         try (Writer fstream = new FileWriter(filename);
-            Writer out = new BufferedWriter(fstream)) {
+        try (Writer fstream = new FileWriter(filename);
+             Writer out = new BufferedWriter(fstream)) {
             out.write(Modals.getTHFHeader() + "\n");
             writeTypes(kb,out);
             for (Formula f : kb.formulaMap.values()) {
