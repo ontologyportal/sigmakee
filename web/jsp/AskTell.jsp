@@ -565,7 +565,8 @@
                     Formula f = new Formula();
                     f.read(stmt);
                     setVampMode(vampireMode);
-                    boolean isHOL = f.isHigherOrder(kb);
+//                    boolean isHOL = f.isHigherOrder(kb);
+                    boolean isHOL = false;
                     if (isHOL){ // Higher-Order Formula
                         System.out.println(" -- Higher Order Formula Detected - Attempring to run Vampire HOL ");
                         vampire = kb.askVampireHOL(stmt, timeout, maxAnswers);

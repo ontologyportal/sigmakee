@@ -2210,8 +2210,7 @@ public class KB implements Serializable {
                     System.out.println("KB.askVampireHOL(): Original Formula: " + f.getFormula());
 
                 // Expand modal structure and insert world arguments (?W1, ?W2, …)
-//                Formula modalized = Modals.processModals(f, this);
-                Formula modalized = f;    // no modal processing
+                Formula modalized = Modals.processModals(f, this);
 
                 if (debug)
                     System.out.println("KB.askVampireHOL(): Modalized Formula: " + modalized.getFormula());
@@ -2236,15 +2235,15 @@ public class KB implements Serializable {
                     System.out.println("KB.askVampireHOL(): Initial typeMap: " + typeMap);
 
                 // Add a fresh world variable and mark it as type "World"
-//                String worldVar = THFnew.makeWorldVar(this, f);
-//                Set<String> wTypes = new HashSet<>();
-//                wTypes.add("World");
-//                typeMap.put(worldVar, wTypes);
+                String worldVar = THFnew.makeWorldVar(this, f);
+                Set<String> wTypes = new HashSet<>();
+                wTypes.add("World");
+                typeMap.put(worldVar, wTypes);
 
-//                if (debug) {
-//                    System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
-//                    System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
-//                }
+                if (debug) {
+                    System.out.println("KB.askVampireHOL(): worldVar: " + worldVar);
+                    System.out.println("KB.askVampireHOL(): typeMap after adding worldVar: " + typeMap);
+                }
 
                 int conjIndex = 0;
 
@@ -2270,25 +2269,25 @@ public class KB implements Serializable {
                             System.out.println("KB.askVampireHOL(): After adjustArity: " + pf.getFormula());
                     }
 
-                    // 2) Special case: (instance ?X Class) -> forall worldVar (instance ?X Class worldVar)
-//                    if (pf.getFormula().startsWith("(instance ") &&
-//                            pf.getFormula().endsWith("Class)")) {
-//
-//                        if (debug)
-//                            System.out.println("KB.askVampireHOL(): instance ?X Class pattern detected.");
-//
-//                        pf.read("(forall (" + worldVar + ") " +
-//                                pf.getFormula().substring(0, pf.getFormula().length() - 1) +
-//                                " " + worldVar + "))");
-//
-//                        Set<String> types = new HashSet<>();
-//                        types.add("World");
-//                        pf.varTypeCache.put(worldVar, types);
-//
-//                        if (debug)
-//                            System.out.println("KB.askVampireHOL(): After wrapping with forall worldVar: " +
-//                                    pf.getFormula());
-//                    }
+//                     2) Special case: (instance ?X Class) -> forall worldVar (instance ?X Class worldVar)
+                    if (pf.getFormula().startsWith("(instance ") &&
+                            pf.getFormula().endsWith("Class)")) {
+
+                        if (debug)
+                            System.out.println("KB.askVampireHOL(): instance ?X Class pattern detected.");
+
+                        pf.read("(forall (" + worldVar + ") " +
+                                pf.getFormula().substring(0, pf.getFormula().length() - 1) +
+                                " " + worldVar + "))");
+
+                        Set<String> types = new HashSet<>();
+                        types.add("World");
+                        pf.varTypeCache.put(worldVar, types);
+
+                        if (debug)
+                            System.out.println("KB.askVampireHOL(): After wrapping with forall worldVar: " +
+                                    pf.getFormula());
+                    }
 
                     // 3) Convert the (possibly updated) Formula to THF (query = true).
                     String thfQuery = THFnew.process(new Formula(pf), typeMap, true);
