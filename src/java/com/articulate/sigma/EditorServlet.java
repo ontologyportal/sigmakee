@@ -87,11 +87,11 @@ public class EditorServlet extends HttpServlet {
         }
         if (fileName == null) fileName = "Untitled.kif";
         boolean isTptp = fileName.toLowerCase().endsWith(".tptp")
-                || fileName.toLowerCase().endsWith(".tff")
-                || fileName.toLowerCase().endsWith(".p")
-                || fileName.toLowerCase().endsWith(".fof")
-                || fileName.toLowerCase().endsWith(".cnf")
-                || fileName.toLowerCase().endsWith(".thf");
+            || fileName.toLowerCase().endsWith(".tff")
+            || fileName.toLowerCase().endsWith(".p")
+            || fileName.toLowerCase().endsWith(".fof")
+            || fileName.toLowerCase().endsWith(".cnf")
+            || fileName.toLowerCase().endsWith(".thf");
         if ("format".equalsIgnoreCase(mode) || "format".equalsIgnoreCase(action)) {
             resp.setContentType("text/plain; charset=UTF-8");
             try {
@@ -102,9 +102,6 @@ public class EditorServlet extends HttpServlet {
                 } else {
                     formatted = formatKif(text);
                 }
-
-                // --- Always run a check when formatting (keep it simple)
-                // Use the ORIGINAL text for stable line numbers (safer for UI highlights)
                 List<ErrRec> fmtErrors = Collections.emptyList();
                 String checkMsg = null;
                 try {
@@ -117,14 +114,10 @@ public class EditorServlet extends HttpServlet {
                 } catch (Exception ce) {
                     checkMsg = "Check failed: " + ce.getMessage();
                 }
-
-                // Expose simple info in headers (UI can read and show errors)
                 int errCount = (fmtErrors == null) ? 0 : fmtErrors.size();
                 resp.setHeader("X-Has-Errors", (errCount > 0) ? "true" : "false");
                 resp.setHeader("X-Error-Count", String.valueOf(errCount));
                 if (checkMsg != null) resp.setHeader("X-Check-Message", checkMsg);
-
-                // Optional: include first error message for convenience (kept short)
                 if (errCount > 0) {
                     ErrRec first = fmtErrors.get(0);
                     String preview = first.msg;
@@ -162,7 +155,7 @@ public class EditorServlet extends HttpServlet {
         }
         if (errors != null) {
             for (ErrRec er : errors) {
-                int ln = er.line + 1; // ErrRec is 0-based; mask is 1-based for readability
+                int ln = er.line;
                 if (ln >= 1 && ln <= errorMask.length) errorMask[ln - 1] = true;
             }
         }
@@ -171,9 +164,8 @@ public class EditorServlet extends HttpServlet {
         StringBuilder json = new StringBuilder(4096);
         json.append("{\"ok\":true");
         json.append(",\"fileName\":\"").append(jsonEscape(fileName)).append("\"");
-        if (errorMessage != null) {
+        if (errorMessage != null)
             json.append(",\"message\":\"").append(jsonEscape(errorMessage)).append("\"");
-        }
         json.append(",\"errors\":[");
         if (errors != null) {
             for (int i = 0; i < errors.size(); i++) {
@@ -216,9 +208,8 @@ public class EditorServlet extends HttpServlet {
             System.err.println("EditorServlet.formatKif(): parse failed - returning original: " + e.getMessage());
             return contents;
         }
-        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty()) {
+        if (kif.formulasOrdered == null || kif.formulasOrdered.isEmpty())
             return contents;
-        }
         for (Formula f : kif.formulasOrdered.values()) {
             String s = (f == null) ? "" : f.toString();
             formattedForms.add(s == null ? "" : s.trim());
@@ -249,7 +240,7 @@ public class EditorServlet extends HttpServlet {
                 String[] parts = between.split("\\R", -1);
                 for (int idx = 1; idx < parts.length - 1; idx++) {
                     if (parts[idx].trim().isEmpty()) extra++;
-                    else break; // stop at first non-empty content
+                    else break;
                 }
             }
             extraBlankAfterPrev[i] = extra;
@@ -277,9 +268,8 @@ public class EditorServlet extends HttpServlet {
         }
         StringBuilder out = new StringBuilder();
         for (int i = 0; i < formattedForms.size(); i++) {
-            if (i > 0 && extraBlankAfterPrev[i] > 0) {
+            if (i > 0 && extraBlankAfterPrev[i] > 0)
                 for (int k = 0; k < extraBlankAfterPrev[i]; k++) out.append("\n");
-            }
             for (String c : leading[i]) out.append(c).append("\n");
             String form = formattedForms.get(i).trim();
             if (!form.isEmpty()) out.append(form).append("\n");

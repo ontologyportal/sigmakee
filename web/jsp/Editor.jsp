@@ -113,7 +113,7 @@ window.initialErrorMask = [
       java.util.Set<Integer> errorLines = new java.util.HashSet<>();
       for (ErrRec e : errors) {
           if (e.line >= 0)
-              errorLines.add(e.line + 1);
+              errorLines.add(e.line);
       }
       boolean first = true;
       for (ErrRec e : errors) {
