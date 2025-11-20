@@ -34,8 +34,15 @@ public class Modals {
     public static final List<String> regHOLpred = new ArrayList<>(
             Arrays.asList("considers","sees","believes","knows","holdsDuring","desires"));
 
-    public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList("Possibility",
-            "Necessity", "Permission", "Obligation", "Prohibition"));
+    public static final Set<String> modalAttributes = new HashSet<>(Arrays.asList(
+            "Possibility",
+            "Necessity",
+            "Permission",
+            "Obligation",
+            "Prohibition",
+            // ISSUE 5
+            "Likely"
+    ));
 
     /***************************************************************
      * Handle the predicates given in regHOLpred, which have a parameter
@@ -78,42 +85,66 @@ public class Modals {
             return f;
         if (f.empty())
             return f;
+
         if (f.listP()) {
             if (regHOLpred.contains(f.car()))
                 return handleHOLpred(f,kb,worldNum);
             if (f.car().equals("modalAttribute"))
                 return handleModalAttribute(f,kb,worldNum);
-            //System.out.println("Modals.processRecurse(): " + f);
+
             int argStart = 1;
             if (Formula.isQuantifier(f.car()))
                 argStart = 2;
+
             List<Formula> flist = f.complexArgumentsToArrayList(argStart);
             StringBuilder fstring = new StringBuilder();
             fstring.append(Formula.LP).append(f.car());
-            if (argStart == 2) // append quantifier list without processing
+
+            // Append quantifier variable list as-is
+            if (argStart == 2)
                 fstring.append(Formula.SPACE).append(f.getStringArgument(1));
+
+            // Recursively process arguments
             for (Formula arg : flist)
                 fstring.append(Formula.SPACE).append(processRecurse(arg,kb,worldNum));
+
+            // Close the term / formula
             if (Formula.isLogicalOperator(f.car()) || (f.car().equals(Formula.EQUAL)))
+                // Pure logical symbols: no world argument
                 fstring.append(Formula.RP);
             else {
-                fstring.append(" ?W").append(worldNum).append(Formula.RP);
-                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
-                if (sig == null) {
-                    if (!Formula.isVariable(f.car()))
-                        System.err.println("Error in processRecurse(): null signature for " + f.car());
-                    else {
-                        Formula result = new Formula();
-                        result.read(fstring.toString());
-                        return result;
-                    }
+                // ONLY modal relations get a world argument.
+                if (THFnew.MODAL_RELATIONS.contains(f.car()) && worldNum != null) {
+                    fstring.append(" ?W").append(worldNum);
                 }
-                sig.add("World");
+                fstring.append(Formula.RP);
+
+//                fstring.append(" ?W").append(worldNum).append(Formula.RP);
+//                List<String> sig = kb.kbCache.signatures.get(f.car()); // make sure to update the signature
+//                if (sig == null) {
+//                    if (!Formula.isVariable(f.car()))
+//                        System.err.println("Error in processRecurse(): null signature for " + f.car());
+//                    else {
+//                        Formula result = new Formula();
+//                        result.read(fstring.toString());
+//                        return result;
+//                    }
+//                }
+//                sig.add("World");
+
+                // Signatures are read-only here; no mutation.
+                List<String> sig = kb.kbCache.signatures.get(f.car());
+                if (sig == null && !Formula.isVariable(f.car())) {
+                    System.err.println("Error in processRecurse(): null signature for " + f.car());
+                }
+
             }
+
             Formula result = new Formula();
             result.read(fstring.toString());
             return result;
         }
+
         return f;
     }
 

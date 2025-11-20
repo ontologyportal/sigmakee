@@ -13,6 +13,26 @@ public class THFnew {
     public static boolean debug = false;
     public static int axNum = 0;
 
+    // ISSUE 1
+    public static final Set<String> MODAL_RELATIONS = new HashSet<>(Arrays.asList(
+            "believes",
+            "knows",
+            "desires",
+            "modalAttribute"
+            // (you can add more here if you *explicitly* design them as modal)
+    ));
+
+    // ISSUE 2
+    // Symbols whose types are defined explicitly in Modals.getTHFHeader().
+    private static final Set<String> RESERVED_MODAL_SYMBOLS =
+            new HashSet<>(Arrays.asList(
+                    "accreln",
+                    "accrelnP",
+                    "knows",
+                    "believes",
+                    "desires"
+            ));
+
     /** *************************************************************
      */
     private static String processQuant(Formula f, String op,
@@ -209,7 +229,9 @@ public class THFnew {
         if (typeMap.get(v) == null)
             return "$i";
         if (typeMap.get(v).contains("Formula"))
-            return "(w > $o)";
+//            return "(w > $o)";
+            // ISSUE 4
+            return "$o";
         if (typeMap.get(v).contains("World"))
             return "w";
         if (typeMap.get(v).contains("Modal"))
@@ -341,19 +363,40 @@ public class THFnew {
             String worldVar = makeWorldVar(kb,f);
             typeMap.put(worldVar,types);
             if (debug) System.out.println("THFnew.oneTrans(): typeMap(3): " + typeMap);
+
+            // ISSUE 4
+            // NEW: force “FORMULA” variables to be of type Formula
+            Set<String> allVars = res.collectAllVariables();
+            for (String v : allVars) {
+                if (v == null)
+                    continue;
+                String bare = v.startsWith("?") ? v.substring(1) : v;
+                if (bare.toUpperCase().contains("FORMULA")) {
+                    Set<String> ts = typeMap.get(v);
+                    if (ts == null) {
+                        ts = new HashSet<>();
+                        typeMap.put(v, ts);
+                    }
+                    ts.add("Formula");
+                }
+            }
+            if (debug) System.out.println("THFnew.oneTrans(): typeMap(4): " + typeMap);
+
+
             for (Formula fnew : processed) {
                 if (debug) System.out.println("THFnew.oneTrans(): variableArity(kb,fnew.car()): " + variableArity(kb,fnew.car()));
                 if (variableArity(kb,fnew.car()))
                     fnew = adjustArity(kb,fnew);   // hack to correct arity after adding world argument
-                if (fnew.getFormula().startsWith("(instance ") &&
-                        fnew.getFormula().endsWith("Class)")) {
-                    fnew.read("(forall (" + worldVar + ") " +
-                            fnew.getFormula().substring(0, fnew.getFormula().length() - 1) +
-                            " " + worldVar + "))");
-                    types = new HashSet<>();
-                    types.add("World");
-                    fnew.varTypeCache.put(worldVar,types);  // add the "World" type for the ?W since this is post-processModals()
-                }
+                //ISSUE 1
+//                if (fnew.getFormula().startsWith("(instance ") &&
+//                        fnew.getFormula().endsWith("Class)")) {
+//                    fnew.read("(forall (" + worldVar + ") " +
+//                            fnew.getFormula().substring(0, fnew.getFormula().length() - 1) +
+//                            " " + worldVar + "))");
+//                    types = new HashSet<>();
+//                    types.add("World");
+//                    fnew.varTypeCache.put(worldVar,types);  // add the "World" type for the ?W since this is post-processModals()
+//                }
                 if (bw == null)
                     System.out.println(process(new Formula(fnew), typeMap, false));
                 else
@@ -519,14 +562,37 @@ public class THFnew {
 
         writeIntegerTypes(kb,out);
         for (String t : kb.terms) {
+
+            // ISSUE 2
+            // 1. Skip modal helper symbols – they already have correct types in the header.
+            if (RESERVED_MODAL_SYMBOLS.contains(t)) {
+                continue;
+            }
+
             if (excludeForTypedef(t,out))
                 continue;
             if (kb.isInstanceOf(t,"Relation")) {
-                List<String> sig = kb.kbCache.signatures.get(t);
-                if (debug) System.out.println("THFnew.writeTypes(): sig " + sig + " for " + t);
-                if (!Formula.isLogicalOperator(t) && !t.equals("equals")) { // make sure to update the signature
-                    sig.add("World");
+
+//                List<String> sig = kb.kbCache.signatures.get(t);
+//                if (debug) System.out.println("THFnew.writeTypes(): sig " + sig + " for " + t);
+//                if (!Formula.isLogicalOperator(t) && !t.equals("equals")) { // make sure to update the signature
+//                    sig.add("World");
+//                }
+                List<String> baseSig = kb.kbCache.signatures.get(t);
+                if (baseSig == null) {
+                    System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
+                    continue;
                 }
+
+                // Work on a local copy to build the THF type
+                List<String> sig = new ArrayList<>(baseSig);
+                if (!Formula.isLogicalOperator(t) && !t.equals("equals")) {
+                    // ISSUE 1
+                    if (MODAL_RELATIONS.contains(t)) {
+                        sig.add("World");
+                    }
+                }
+
                 if (t == null) {
                     System.err.println("Error in THFnew.writeTypes(): bad sig for " + t);
                     continue;
@@ -545,9 +611,10 @@ public class THFnew {
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $i)).\n"); // write relation constant
             }
+            // ISSUE 3
             else if (Modals.modalAttributes.contains(t))
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
-                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : $m)).\n"); // write relation constant
+                        SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),false) + " : m)).\n"); // write relation constant
             else
                 out.write("thf(" + SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true) + "_tp,type,(" +
                         SUMOformulaToTPTPformula.translateWord(t,t.charAt(0),true)+ " : $i)).\n");

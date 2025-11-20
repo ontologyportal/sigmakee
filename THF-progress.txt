@@ -1,0 +1,57 @@
+Updates Process:
+
+0) Work on local signature copy instead of modifying the kb.cache all the times.
+
+1)
+
+Error Message:
+- Non-boolean term vAPP($i,sTfun(w,$o),vAPP($i,sTfun($i,sTfun(w,$o)),s__instance,X4),s__BinaryRelation) of sort sTfun(w,$o) is used in a formula context
+
+Description:
+- instance signature is treated as Modal $i > $i > w > $o instead of $i > $i > $o
+
+Solution:
+- Create a set of Modal relations that we check before introducing the World arg.
+
+
+2)
+
+Error Message:
+- Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Obligation) have different types/not well-typed!
+
+thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
+
+
+
+3)
+
+Error Message:
+Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Obligation) have different types/not well-typed!
+
+thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
+
+Description:
+
+Modal attributes (Obligation, Permission, etc.) were incorrectly typed as $m instead of m, causing Vampire to see conflicting types.
+Fixed exporter to emit : m and excluded these symbols from auto-generated $i types.
+
+4)
+
+Error Message:
+Non-boolean term X25 of sort $i is used in a formula context
+
+thf(ax227,axiom,( ! [V__FORMULA:$i,V__W1:w,V__W2:w] : (((((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA) => ~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA)))) & (~(((s__accrelnP @ s__Permission @ V__W1 @ V__W2) => ~(V__FORMULA))) => ((s__accrelnP @ s__Obligation @ V__W1 @ V__W2) => V__FORMULA))) ) )).
+
+Description:
+V__FORMULA is declared as an individual ($i), but it is used as a formula (on the right of => and under ~), so Vampire expects it to have type $o.
+
+
+5)
+
+Error Message:
+Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Likely) have different types/not well-typed!]
+
+thf(ax269,axiom,( ! [V__CLOTHING:$i,V__W1:w,V__W2:w] : (((s__instance @ V__CLOTHING @ s__Clothing) => ((s__accrelnP @ s__Likely @ V__W1 @ V__W2) => ( ? [V__FABRIC:$i] : (((s__instance @ V__FABRIC @ s__Fabric) & (s__part @ V__FABRIC @ V__CLOTHING)))))) ) )).
+
+Description:
+The problematic bit is that s__accrelnP expects a Modal as its first argument, but s__Likely is currently being typed as a plain $i individual, not as a modal.
