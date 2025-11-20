@@ -24,6 +24,7 @@ import org.junit.runners.Suite;
     KBcacheUnitTest.class,
     KIFTest.class,
     KifFileCheckerTest.class,
+    TPTPFileCheckerTest.class,
     KButilitiesTest.class,
     KBmanagerInitTest.class,
     PredVarInstTest.class,
