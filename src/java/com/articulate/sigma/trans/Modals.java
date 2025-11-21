@@ -41,7 +41,14 @@ public class Modals {
             "Obligation",
             "Prohibition",
             // ISSUE 5
-            "Likely"
+            "Likely",
+            // ISSUE 7
+            "Unlikely",
+            // ISSUE 9
+            "Legal",
+            "Law",
+            "Illegal",
+            "Promise"
     ));
 
     /***************************************************************
@@ -216,7 +223,9 @@ public class Modals {
                 "thf(desires_tp,type,(s__desires : m)).\n" +
                 "thf(desires_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__desires @ P @ W @ W))).\n" +
                 "thf(knows_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__knows @ P @ W @ W))).\n" +
-                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n";
+                "thf(believes_accreln_refl,axiom,(! [W:w, P:$i] : (s__accreln @ s__believes @ P @ W @ W))).\n" +
+                // ISSUE 6
+                "thf(holdsDuring_tp,type,(s__holdsDuring : m)).\n";
     }
 
     /***************************************************************

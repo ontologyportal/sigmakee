@@ -55,3 +55,101 @@ thf(ax269,axiom,( ! [V__CLOTHING:$i,V__W1:w,V__W2:w] : (((s__instance @ V__CLOTH
 
 Description:
 The problematic bit is that s__accrelnP expects a Modal as its first argument, but s__Likely is currently being typed as a plain $i individual, not as a modal.
+
+
+6)
+
+Error Message:
+[% Exception at proof search level, Parsing Error on line 2488, Immediate (shared) subterms of term/literal vAPP(m,sTfun($i,sTfun(w,sTfun(w,$o))),s__accreln,s__holdsDuring) have different types/not well-typed!]
+
+Description:
+The problematic bit is that s__accreln expects a Modal as its first argument, but s__holdsDuring is currently being typed as a plain $i individual, not as a modal.
+
+
+7)
+
+Error Message:
+Immediate (shared) subterms of term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Unlikely) have different types/not well-typed!
+
+
+thf(ax427,axiom,( ! [V__OBJECT:$i,V__R:$i,V__U:$i,V__W1:w,V__W2:w,V__INST:$i] : ((((s__subclass @ V__OBJECT @ s__Object) & (s__instance @ V__OBJECT @ s__Class) & (s__instance @ V__R @ s__RealNumber) & (s__instance @ V__U @ s__UnitOfMeasure) & (s__instance @ V__INST @ s__Object)) => (((s__defaultMinimumSphereRadius @ V__OBJECT @ (s__MeasureFn @ V__R @ V__U)) & (s__instance @ V__INST @ V__OBJECT) & (s__attribute @ V__INST @ s__Sphere)) => ((s__accrelnP @ s__Unlikely @ V__W1 @ V__W2) => ( ? [V__RADIUS:$i] : (((s__instance @ V__RADIUS @ s__RealNumber) & ((s__sphereRadius @ V__INST @ (s__MeasureFn @ V__RADIUS @ V__U)) & (s__lessThan @ V__RADIUS @ V__R)))))))) ) )).
+
+Description:
+The problematic bit is that s__accreln expects a Modal as its first argument, but s__Unlikely is currently being typed as a plain $i individual, not as a modal.
+
+
+8)
+
+% excluded(): interior list: (meltingPoint Tungsten
+  (MeasureFn 3680.0 KelvinDegree))% excluded: (meltingPoint Tungsten (MeasureFn 3680.0 KelvinDegree))
+
+Description:
+ Excluded code is been printed in multiple lines, without % in front.
+
+
+9)
+
+Error Message:
+Immediate (shared) subterms of term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Legal) have different types/not well-typed!
+
+thf(ax938,axiom,( ! [V__X:$i,V__W1:w,V__W2:w] : (((s__instance @ V__X @ s__Object) => ((s__attribute @ V__X @ s__USNonPrescriptionDrug) => ((s__accrelnP @ s__Legal @ V__W1 @ V__W2) => ( ? [V__B:$i] : (((s__instance @ V__B @ s__Buying) & (s__objectTransferred @ V__B @ V__X) & ~(( ? [V__P:$i] : (((s__instance @ V__P @ s__Prescription) & (s__refers @ V__P @ V__X))))))))))) ) )).
+
+Description:
+The problematic bit is that s__accreln expects a Modal as its first argument, but s__Legal is currently being typed as a plain $i individual, not as a modal.
+
+
+10)
+
+Error Message:
+[% Exception at proof search level, Parsing Error on line 7232, Immediate (shared) subterms of  term/literal vAPP($i,sTfun($i,sTfun($i,$o)),s__domain,s__knows) have different types/not well-typed!]
+
+thf(ax1237,axiom,(s__domain @ s__knows @ n__1 @ s__CognitiveAgent)).
+
+Description:
+	s__domain : ($i > $i > $i > $o) → first arg must be an $i.
+	s__knows : m → not an $i, so s__domain @ s__knows @ ... is ill-typed.
+	(domain knows 1 CognitiveAgent) is being translated as if knows were an $i-valued symbol.
+
+Solution:
+Exclude them.
+
+11)
+
+Error Message:
+[% Exception at proof search level, Parsing Error on line 7234, Immediate (shared) subterms of  term/literal vAPP($i,$o,vAPP($i,sTfun($i,$o),s__subAttribute,s__Warranty),s__Obligation) have different types/not well-typed!]
+
+thf(ax1237,axiom,(s__subAttribute @ s__Warranty @ s__Obligation)).
+
+Description:
+
+subAttribute expectes $i and $i and we gave it $i and m.
+thf(s__subAttribute_tp,type,(s__subAttribute : ($i > $i > $o))).
+thf(s__Obligation_tp,type,(s__Obligation : m)).
+thf(s__Warranty_tp,type,(s__Warranty : $i)).
+
+Solution:
+Exclude them.
+
+12)
+
+[% Exception at proof search level, Parsing Error on line 7256, Immediate (shared) subterms of  term/literal vAPP(m,sTfun(w,sTfun(w,$o)),s__accrelnP,s__Law) have different types/not well-typed!]
+
+thf(ax1245,axiom,( ! [V__TEXT:$i,V__TIME1:$i,V__W1:w,V__W2:w,V__W3:w] : ((((s__instance @ V__TEXT @ s__Object) & (s__instance @ V__TIME1 @ s__TimeInterval)) => (((s__accreln @ s__holdsDuring @ V__TIME1 @ V__W1 @ V__W2) => ((s__accrelnP @ s__Law @ V__W2 @ V__W3) => V__TEXT)) => ( ? [V__TIME2:$i] : (((s__instance @ V__TIME2 @ s__TimeInterval) & (((s__accreln @ s__holdsDuring @ V__TIME2 @ V__W1 @ V__W2) => (s__attribute @ V__TEXT @ s__LegislativeBill)) & (s__earlier @ V__TIME2 @ V__TIME1))))))) ) )).
+
+SUO-KIF:
+
+(=>
+   (holdsDuring ?TIME1 (modalAttribute ?TEXT Law))
+   (exists (?TIME2)
+      (and
+         (holdsDuring ?TIME2 (attribute ?TEXT LegislativeBill))
+         (earlier ?TIME2 ?TIME1))))
+
+Solution:
+Include Law in the modalAttributes list.
+
+
+
+
+
+

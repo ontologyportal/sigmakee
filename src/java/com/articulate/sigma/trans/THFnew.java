@@ -30,7 +30,8 @@ public class THFnew {
                     "accrelnP",
                     "knows",
                     "believes",
-                    "desires"
+                    "desires",
+                    "holdsDuring" // ISSUE 6
             ));
 
     /** *************************************************************
@@ -430,14 +431,33 @@ public class THFnew {
         if (f.isGround()) {
             if (debug) System.out.println("exclude(): is ground: " + f);
             List<String> ar = f.complexArgumentsToArrayListString(0);
-            if (protectedRelation(ar.get(0)) && Modals.modalAttributes.contains(ar.get(1))) {
-                out.write("% exclude(): modal attribute in protected relation: " + ar.get(0) +
-                        Formula.SPACE + ar.get(1) + "\n");
-                return true;  // defined as type "$m" directly in THF
+
+            // ISSUE 11
+            // NEW: exclude domain axioms for modal operators
+            if (protectedRelation(ar.get(0))) {
+                for (int i = 1; i < ar.size(); i++) {
+                    if (Modals.modalAttributes.contains(ar.get(i))) {
+                        out.write("% exclude(): modal attribute in protected relation: " +
+                                ar.get(0) + " " + ar.get(i) + "\n");
+                        return true;
+                    }
+                }
             }
+
+            // ISSUE 10
+            // NEW: exclude domain axioms for modal operators
+            if (ar.get(0).equals("domain") && RESERVED_MODAL_SYMBOLS.contains(ar.get(1))) {
+                out.write("% exclude(): modal operator in domain: " + ar.get(1) + "\n");
+                return true;
+            }
+
+
+
             for (String s : ar) {
                 if (Formula.listP(s) && exclude(new Formula(s),kb,out)) {
-                    out.write("% excluded(): interior list: " + f);
+                    // ISSUE 8
+                    String flat = f.toString().replace("\n", " ").replace("\r", " ");
+                    out.write("% excluded(): interior list: " + flat + "\n");
                     return true;
                 }
                 if (debug) System.out.println("exclude(): arguments: " + ar);
@@ -493,7 +513,8 @@ public class THFnew {
                 pred.equals("comment") ||
                 pred.equals("knows") ||  // handled in header
                 pred.equals("believes") ||  //handled in header
-                pred.equals("desires") ||  //handled in header
+                pred.equals("desires") ||
+                pred.equals("holdsDuring") || // ISSUE 6
                 //StringUtil.isNumeric(pred) ||
                 pred.equals(Formula.EQUAL) ||
                 pred.equals("=") ||
@@ -642,8 +663,13 @@ public class THFnew {
                 if (!exclude(f,kb,out))
                     oneTrans(kb,f,out);
                 else {
-                    out.write("% excluded: " + f.getFormula() + "\n" +
-                            "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+                    // ISSUE 8
+                    String flatFormula = f.getFormula().replace("\n", " ").replace("\r", " ");
+                    out.write("% excluded: " + flatFormula + "\n");
+                    out.write("% from file " + f.sourceFile + " at line " + f.startLine + "\n");
+
+//                    out.write("% excluded: " + f.getFormula() + "\n" +
+//                            "% from file " + f.sourceFile + " at line " + f.startLine + "\n");
                 }
             }
             System.out.println("\n\nTHFnew.transModalTHF(): Result written to file " + filename);
