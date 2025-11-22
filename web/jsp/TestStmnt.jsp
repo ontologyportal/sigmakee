@@ -13,7 +13,7 @@
     http://github.com/ontologyportal
 */
 
-if (!role.equalsIgnoreCase("admin")) {
+if (!role.equalsIgnoreCase("admin") && !role.equalsIgnoreCase("user")) {
     response.sendRedirect("login.html");
     return;
 }
@@ -105,9 +105,7 @@ if (!role.equalsIgnoreCase("admin")) {
     <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0><BR>
     <textarea rows="5" cols="70" name="stmt"><%=stmt%></textarea>
     <br>
-<% if (role != null && role.equalsIgnoreCase("admin")) { %>
     <INPUT type="submit" name="request" value="Test"><BR>
-<% } %>
 </FORM>
 <table ALIGN='LEFT' WIDTH='80%'><tr><TD BGCOLOR='#AAAAAA'>
 <IMG SRC='pixmaps/1pixel.gif' width=1 height=1 border=0></TD></tr></table><BR>
