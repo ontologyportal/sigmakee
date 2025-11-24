@@ -175,6 +175,7 @@ public class THFnew {
         if (debug) System.out.println("THFnew.processRecurse(): typeMap: " + typeMap);
         if (f == null)
             return "";
+
         if (f.atom()) {
             int ttype = f.getFormula().charAt(0);
             if (Character.isDigit(ttype))
@@ -184,14 +185,14 @@ public class THFnew {
                 hasArguments = true;
             return SUMOformulaToTPTPformula.translateWord(f.getFormula(),ttype,hasArguments);
         }
+
         Formula car = f.carAsFormula();
-        //System.out.println("THFnew.processRecurse(): car: " + car);
-        //System.out.println("THFnew.processRecurse(): car: " + car.theFormula);
         List<String> args = f.complexArgumentsToArrayListString(1);
         if (car.listP()) {
             System.err.println("Error in THFnew.processRecurse(): formula " + f);
             return "";
         }
+
         if (Formula.isLogicalOperator(car.getFormula()))
             return processLogOp(f,car,args,typeMap);
         else if (car.getFormula().equals(Formula.EQUAL))
@@ -213,9 +214,32 @@ public class THFnew {
                     argStr.append(processRecurse(new Formula(s),typeMap));
                 argStr.append(" @ ");
             }
+
+            // ISSUE 13
             argStr.delete(argStr.length()-2,argStr.length());  // remove final arg separator
-            String result = Formula.LP + SUMOformulaToTPTPformula.translateWord(car.getFormula(),
-                    StreamTokenizer.TT_WORD,true) + " @ " + argStr.substring(0,argStr.length()-1) + Formula.RP;
+
+            // Translate predicate name to TPTP
+            String functor = SUMOformulaToTPTPformula.translateWord(
+                    car.getFormula(), StreamTokenizer.TT_WORD, true);
+
+            // FIX: ensure variable-arity predicates use the right numeric suffix
+            // e.g. s__partition__4 with 5 args -> s__partition__5
+            java.util.regex.Matcher m = java.util.regex.Pattern
+                    .compile("^(s__[A-Za-z0-9]+__)(\\d+)$")
+                    .matcher(functor);
+            if (m.matches()) {
+                int argCount = args.size();
+                int oldN = Integer.parseInt(m.group(2));
+                if (argCount != oldN) {
+                    functor = m.group(1) + argCount;
+                }
+            }
+
+            String result = Formula.LP + functor + " @ " +
+                    argStr.substring(0, argStr.length()-1) + Formula.RP;
+
+//            String result = Formula.LP + SUMOformulaToTPTPformula.translateWord(car.getFormula(),
+//                    StreamTokenizer.TT_WORD,true) + " @ " + argStr.substring(0,argStr.length()-1) + Formula.RP;
             //if (debug) System.out.println("THFnew.processRecurse(): result: " + result);
             return result;
         }
