@@ -13,211 +13,6 @@ import tptp_parser.TptpParser;
 
 public class TPTPFileChecker {
 
-    /**
-     * Run syntax & warning checks on TPTP content using tptp4X,
-     * returning a list of ErrRec diagnostics.
-     *
-     * @param contents TPTP text to check
-     * @return list of ErrRec objects (errors & warnings)
-     */
-    public static List<ErrRec> check(String contents) {
-        return check(contents, "(buffer)");
-    }
-
-    /**
-     * Run syntax & warning checks on TPTP content using tptp4X,
-     * returning a list of ErrRec diagnostics.
-     *
-     * @param contents TPTP text to check
-     * @param fileName pseudo filename used in diagnostics
-     * @return list of ErrRec objects
-     */
-    public static List<ErrRec> check(String contents, String fileName) {
-        List<ErrRec> results = new ArrayList<>();
-        if (contents == null || contents.isBlank())
-            return results;
-        results.addAll(checkWithAntlr(contents, fileName));
-        try {
-            File tmp = writeTempFile(contents, ".tptp");
-            ProcessOutput po = runTptp4x(tmp, "-w", "-z", "-u", "machine");
-            if (!po.err.isBlank())
-                results.addAll(parseTptpOutput(fileName, po.err, 2));
-            if (!po.out.isBlank())
-                results.addAll(parseTptpOutput(fileName, po.out, 1));
-        } catch (Throwable t) {
-            results.add(new ErrRec(0, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
-        }
-        return results;
-    }
-
-
-    /**
-     * Parse TPTP text using the ANTLR-based TPTPVisitor.
-     * Returns ErrRecs for any syntax problems or empty results.
-     */
-    private static List<ErrRec> checkWithAntlr(String contents, String fileName) {
-        List<ErrRec> errs = new ArrayList<>();
-
-        try {
-            TPTPVisitor visitor = new TPTPVisitor();
-            Map<String, TPTPFormula> parsed = visitor.parseString(contents);
-            if (parsed == null || parsed.isEmpty()) {
-                errs.add(new ErrRec(0, fileName, 0, 0, 1,
-                        "ANTLR parser found no valid formulas in input"));
-            }
-        } catch (Exception e) {
-            errs.add(new ErrRec(0, fileName, 0, 0, 1,
-                    "ANTLR parse error: " + e.getMessage()));
-        }
-        return errs;
-    }
-
-
-    /**
-     * Parse TPTP4X output lines into ErrRec objects.
-     * This is a simple parser; you can make it smarter later to extract line numbers.
-     *
-     * @param fileName pseudo filename
-     * @param text raw stdout or stderr from tptp4X
-     * @param severity 1 = warning, 2 = error
-     */
-    private static List<ErrRec> parseTptpOutput(String fileName, String text, int severity) {
-        List<ErrRec> recs = new ArrayList<>();
-        String[] lines = text.split("\\R");
-        for (String line : lines) {
-            if (line.isBlank()) continue;
-            int lineNum = 0;
-            int start = 0;
-            int end = 1;
-            String msg = line;
-            java.util.regex.Matcher m = java.util.regex.Pattern
-                    .compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)")
-                    .matcher(line);
-            if (m.find()) {
-                try {
-                    lineNum = Integer.parseInt(m.group(1)) - 1;
-                    start = Integer.parseInt(m.group(2)) - 1;
-                    end = start + 1;
-                } catch (NumberFormatException ignored) { }
-            }
-            if (line.contains("SZS status") || line.contains("SyntaxError") || m.find())
-                recs.add(new ErrRec(0, fileName, lineNum, start, end, msg));
-        }
-        return recs;
-    }
-
-    /**
-     * Format TPTP input text using tptp4X pretty-printing.
-     * @param inputText Raw TPTP input.
-     * @param fileName  Optional name of the file (used for error messages only).
-     * @return Formatted TPTP text, or null if formatting failed.
-     */
-    public static String formatTptpText(String inputText, String fileName) {
-        try {
-            File tmp = writeTempFile(inputText, ".tptp");
-            ProcessOutput po = runTptp4x(tmp, "-ftptp", "-uhuman");
-            if (po.code == 0 && po.out != null && !po.out.isBlank()) {
-                String[] lines = po.out.split("\\R", -1);
-                if (lines.length > 0)
-                    lines[0] = lines[0].replaceFirst("^\\s+", "");
-                return String.join(System.lineSeparator(), lines);
-            } else {
-                System.err.println("[TPTPFileChecker] STDOUT:\n" + po.out);
-                System.err.println("[TPTPFileChecker] STDERR:\n" + po.err);
-                System.err.println("[TPTPFileChecker] Temp file: " + tmp.getAbsolutePath());
-                System.err.println("[TPTPFileChecker] Formatting failed for: " + fileName);
-                System.err.println(po.err != null && !po.err.isBlank() ? po.err : po.out);
-                return inputText;
-            }
-        } catch (Throwable t) {
-            System.err.println("[TPTPFileChecker] Exception formatting " + fileName + ": " + t.getMessage());
-            t.printStackTrace();
-            return inputText;
-        }
-    }
-
-    /**
-     * Utility: Write text to a temporary file.
-     */
-    private static File writeTempFile(String text, String extension) throws IOException {
-        File tempFile = File.createTempFile("tptp_format_", extension);
-        tempFile.deleteOnExit();
-        try (FileWriter writer = new FileWriter(tempFile)) {
-            writer.write(text);
-        }
-        return tempFile;
-    }
-
-    /**
-     * Utility: Run tptp4X and capture output.
-     */
-    private static ProcessOutput runTptp4x(File inputFile, String... args) throws IOException, InterruptedException {
-        String[] cmd = new String[args.length + 2];
-        cmd[0] = "tptp4X";
-        System.arraycopy(args, 0, cmd, 1, args.length);
-        cmd[cmd.length - 1] = inputFile.getAbsolutePath(); 
-        ProcessBuilder pb = new ProcessBuilder(cmd);
-        pb.redirectErrorStream(false);
-        Process process = pb.start();
-        String out = new String(process.getInputStream().readAllBytes());
-        String err = new String(process.getErrorStream().readAllBytes());
-        int code = process.waitFor();
-        return new ProcessOutput(code, out, err);
-    }
-
-    /**
-     * Simple holder for process output.
-     */
-    private static class ProcessOutput {
-        final int code;
-        final String out;
-        final String err;
-        ProcessOutput(int code, String out, String err) {
-            this.code = code;
-            this.out = out;
-            this.err = err;
-        }
-    }
-
-    private static List<ErrRec> parseWithAntlr(String contents, String fileName) {
-        List<ErrRec> results = new ArrayList<>();
-        try {
-            CharStream input = CharStreams.fromString(contents);
-            TptpLexer lexer = new TptpLexer(input);
-            CommonTokenStream tokens = new CommonTokenStream(lexer);
-            TptpParser parser = new TptpParser(tokens);
-            parser.removeErrorListeners();
-            parser.addErrorListener(new BaseErrorListener() {
-                @Override
-                public void syntaxError(Recognizer<?, ?> recognizer,
-                                        Object offendingSymbol,
-                                        int line, int charPositionInLine,
-                                        String msg, RecognitionException e) {
-                    results.add(new ErrRec(
-                            0, 
-                            fileName,
-                            line - 1,
-                            charPositionInLine,
-                            charPositionInLine + 1,
-                            "ANTLR syntax error: " + msg
-                    ));
-                }
-            });
-            parser.tptp_file();
-        } catch (Throwable t) {
-            results.add(new ErrRec(
-                    0,
-                    fileName,
-                    0,
-                    0,
-                    1,
-                    "ANTLR parse failed: " + t.getMessage()
-            ));
-        }
-        return results;
-    }
-
-
     private static void showHelp() {
         System.out.println("Usage: java com.articulate.sigma.TPTPFileChecker [options]");
         System.out.println();
@@ -260,5 +55,200 @@ public class TPTPFileChecker {
             showHelp();
             System.exit(1);
         }
+    }
+
+    /**
+     * Run syntax & warning checks on TPTP content using tptp4X,
+     * returning a list of ErrRec diagnostics.
+     *
+     * @param contents TPTP text to check
+     * @return list of ErrRec objects (errors & warnings)
+     */
+    public static List<ErrRec> check(String contents) {
+
+        return check(contents, "(buffer)");
+    }
+
+    /**
+     * Run syntax & warning checks on TPTP content using tptp4X,
+     * returning a list of ErrRec diagnostics.
+     *
+     * @param contents TPTP text to check
+     * @param fileName pseudo filename used in diagnostics
+     * @return list of ErrRec objects
+     */
+    public static List<ErrRec> check(String contents, String fileName) {
+
+        List<ErrRec> results = new ArrayList<>();
+        if (contents == null || contents.isBlank())
+            return results;
+        results.addAll(checkWithAntlr(contents, fileName));
+        try {
+            File tmp = writeTempFile(contents, ".tptp");
+            ProcessOutput po = runTptp4x(tmp, "-w", "-z", "-u", "machine");
+            if (!po.err.isBlank())
+                results.addAll(parseTptpOutput(fileName, po.err, 2));
+            if (!po.out.isBlank())
+                results.addAll(parseTptpOutput(fileName, po.out, 1));
+        } catch (Throwable t) {
+            results.add(new ErrRec(0, fileName, 0, 0, 1, "tptp4X check failed: " + t.getMessage()));
+        }
+        return results;
+    }
+
+    /**
+     * Parse TPTP text using the ANTLR-based TPTPVisitor.
+     * Returns ErrRecs for any syntax problems or empty results.
+     */
+    public static List<ErrRec> checkWithAntlr(String contents, String fileName) {
+
+        List<ErrRec> errs = new ArrayList<>();
+        try {
+            TPTPVisitor visitor = new TPTPVisitor();
+            Map<String, TPTPFormula> parsed = visitor.parseString(contents);
+            if (parsed == null || parsed.isEmpty()) {
+                errs.add(new ErrRec(0, fileName, 0, 0, 1,
+                        "ANTLR parser found no valid formulas in input"));
+            }
+        } catch (Exception e) {
+            errs.add(new ErrRec(0, fileName, 0, 0, 1,
+                    "ANTLR parse error: " + e.getMessage()));
+        }
+        return errs;
+    }
+
+
+    /**
+     * Parse TPTP4X output lines into ErrRec objects.
+     * This is a simple parser; you can make it smarter later to extract line numbers.
+     *
+     * @param fileName pseudo filename
+     * @param text raw stdout or stderr from tptp4X
+     * @param severity 1 = warning, 2 = error
+     */
+    private static List<ErrRec> parseTptpOutput(String fileName, String text, int severity) {
+
+        List<ErrRec> recs = new ArrayList<>();
+        String[] lines = text.split("\\R");
+        for (String line : lines) {
+            if (line.isBlank()) continue;
+            int lineNum = 0;
+            int start = 0;
+            int end = 1;
+            String msg = line;
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile("Line\\s+(\\d+)\\s+Char\\s+(\\d+)").matcher(line);
+            if (m.find()) {
+                try {
+                    lineNum = Integer.parseInt(m.group(1)) - 1;
+                    start = Integer.parseInt(m.group(2)) - 1;
+                    end = start + 1;
+                } catch (NumberFormatException ignored) { }
+            }
+            if (line.contains("SZS status") || line.contains("SyntaxError") || m.find())
+                recs.add(new ErrRec(0, fileName, lineNum, start, end, msg));
+        }
+        return recs;
+    }
+
+    /**
+     * Format TPTP input text using tptp4X pretty-printing.
+     * @param inputText Raw TPTP input.
+     * @param fileName  Optional name of the file (used for error messages only).
+     * @return Formatted TPTP text, or null if formatting failed.
+     */
+    public static String formatTptpText(String inputText, String fileName) {
+        
+        try {
+            File tmp = writeTempFile(inputText, ".tptp");
+            ProcessOutput po = runTptp4x(tmp, "-ftptp", "-uhuman");
+            if (po.code == 0 && po.out != null && !po.out.isBlank()) {
+                String[] lines = po.out.split("\\R", -1);
+                if (lines.length > 0)
+                    lines[0] = lines[0].replaceFirst("^\\s+", "");
+                return String.join(System.lineSeparator(), lines);
+            } else {
+                System.err.println("[TPTPFileChecker] STDOUT:\n" + po.out);
+                System.err.println("[TPTPFileChecker] STDERR:\n" + po.err);
+                System.err.println("[TPTPFileChecker] Temp file: " + tmp.getAbsolutePath());
+                System.err.println("[TPTPFileChecker] Formatting failed for: " + fileName);
+                System.err.println(po.err != null && !po.err.isBlank() ? po.err : po.out);
+                return inputText;
+            }
+        } catch (Throwable t) {
+            System.err.println("[TPTPFileChecker] Exception formatting " + fileName + ": " + t.getMessage());
+            t.printStackTrace();
+            return inputText;
+        }
+    }
+
+    /**
+     * Utility: Write text to a temporary file.
+     */
+    private static File writeTempFile(String text, String extension) throws IOException {
+        
+        File tempFile = File.createTempFile("tptp_format_", extension);
+        tempFile.deleteOnExit();
+        try (FileWriter writer = new FileWriter(tempFile)) {
+            writer.write(text);
+        }
+        return tempFile;
+    }
+
+    /**
+     * Utility: Run tptp4X and capture output.
+     */
+    private static ProcessOutput runTptp4x(File inputFile, String... args) throws IOException, InterruptedException {
+        
+        String[] cmd = new String[args.length + 2];
+        cmd[0] = "tptp4X";
+        System.arraycopy(args, 0, cmd, 1, args.length);
+        cmd[cmd.length - 1] = inputFile.getAbsolutePath(); 
+        ProcessBuilder pb = new ProcessBuilder(cmd);
+        pb.redirectErrorStream(false);
+        Process process = pb.start();
+        String out = new String(process.getInputStream().readAllBytes());
+        String err = new String(process.getErrorStream().readAllBytes());
+        int code = process.waitFor();
+        return new ProcessOutput(code, out, err);
+    }
+
+    /**
+     * Simple holder for process output.
+     */
+    private static class ProcessOutput {
+        
+        final int code;
+        final String out;
+        final String err;
+        ProcessOutput(int code, String out, String err) {
+            this.code = code;
+            this.out = out;
+            this.err = err;
+        }
+    }
+
+    private static List<ErrRec> parseWithAntlr(String contents, String fileName) {
+
+        List<ErrRec> results = new ArrayList<>();
+        try {
+            CharStream input = CharStreams.fromString(contents);
+            TptpLexer lexer = new TptpLexer(input);
+            CommonTokenStream tokens = new CommonTokenStream(lexer);
+            TptpParser parser = new TptpParser(tokens);
+            parser.removeErrorListeners();
+            parser.addErrorListener(new BaseErrorListener() {
+                @Override
+                public void syntaxError(Recognizer<?, ?> recognizer,
+                                        Object offendingSymbol,
+                                        int line, int charPositionInLine,
+                                        String msg, RecognitionException e) {
+                    results.add(new ErrRec( 0, fileName, line - 1, charPositionInLine, charPositionInLine + 1, "ANTLR syntax error: " + msg));
+                }
+            });
+            parser.tptp_file();
+        } catch (Throwable t) {
+            results.add(new ErrRec( 0, fileName, 0, 0, 1, "ANTLR parse failed: " + t.getMessage()));
+        }
+        return results;
     }
 }
